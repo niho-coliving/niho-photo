@@ -2,12 +2,38 @@
 //! コマンドの引数の確かめを使わないもの。C2 #18390 で移した）。
 
 use super::*;
+use crate::capabilities::{validate_photo, CapabilityStage};
+use crate::image_info::{detected_ut_type, read_raster_info};
 use crate::remembered::{remembered_path, Remembered, RememberedLimits, RememberedStore};
 use crate::test_support::library::*;
 use crate::test_support::set_modified;
 use std::fs;
 use std::os::unix::fs::{symlink, PermissionsExt};
 use std::sync::atomic::{AtomicUsize, Ordering};
+
+#[cfg(target_os = "macos")]
+fn convert_with_sips(source: &Path, format: &str, output: &Path) {
+  let status = std::process::Command::new("/usr/bin/sips")
+    .args(["-s", "format", format])
+    .arg(source)
+    .arg("--out")
+    .arg(output)
+    .status()
+    .expect("the public macOS runner provides /usr/bin/sips");
+  assert!(status.success(), "unsupported capability: sips cannot encode {format}");
+}
+
+#[cfg(target_os = "macos")]
+fn make_raster_seed_with_sips(source: &Path, output: &Path) {
+  let status = std::process::Command::new("/usr/bin/sips")
+    .args(["-z", "24", "32", "-s", "format", "png"])
+    .arg(source)
+    .arg("--out")
+    .arg(output)
+    .status()
+    .expect("the public macOS runner provides /usr/bin/sips");
+  assert!(status.success(), "sips cannot make the synthetic PNG fixture");
+}
 
 // --- 走査の規則 ---
 
@@ -79,6 +105,63 @@ fn photo_kind_follows_the_open_dialog_extensions_ignoring_case() {
     assert!(is_package(name), "{name}");
   }
   assert!(!is_package("Apps and photos"));
+}
+
+#[cfg(target_os = "macos")]
+#[test]
+fn folder_and_individual_additions_validate_real_imageio_rasters() {
+  const PNG_2X2: &[u8] = &[
+    0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0x00, 0x00, 0x00, 0x0d, 0x49, 0x48, 0x44, 0x52, 0x00, 0x00, 0x00,
+    0x02, 0x00, 0x00, 0x00, 0x02, 0x08, 0x02, 0x00, 0x00, 0x00, 0xfd, 0xd4, 0x9a, 0x73, 0x00, 0x00, 0x00, 0x14, 0x49,
+    0x44, 0x41, 0x54, 0x78, 0xda, 0x63, 0xf8, 0xcf, 0xc0, 0xc0, 0xc0, 0xc0, 0xc0, 0xc4, 0xc0, 0xc0, 0xc0, 0xc0, 0xc0,
+    0x00, 0x00, 0x0d, 0x1d, 0x01, 0x03, 0x6a, 0xc2, 0x9b, 0xe9, 0x00, 0x00, 0x00, 0x00, 0x49, 0x45, 0x4e, 0x44, 0xae,
+    0x42, 0x60, 0x82,
+  ];
+
+  let fixture = Fixture::new("real-imageio-raster");
+  let seed = fixture.dir.join("seed.png");
+  fs::write(&seed, PNG_2X2).unwrap();
+  let png = fixture.root().join("actual.PnG");
+  make_raster_seed_with_sips(&seed, &png);
+  let jpeg = fixture.root().join("actual.JpEg");
+  let tiff = fixture.root().join("actual.TiFf");
+  let heic = fixture.root().join("actual.HeIc");
+  convert_with_sips(&png, "jpeg", &jpeg);
+  convert_with_sips(&png, "tiff", &tiff);
+  convert_with_sips(&png, "heic", &heic);
+
+  let actual = [&png, &jpeg, &tiff, &heic];
+  let library = fixture.library();
+  let folder = library.add_folder(&fixture.root()).unwrap();
+  let individually_added = library.add_photos(&actual.iter().map(|path| (*path).clone()).collect::<Vec<_>>());
+  assert_eq!(folder["photos"].as_array().unwrap().len(), actual.len());
+  assert_eq!(individually_added.len(), actual.len());
+
+  for path in actual {
+    let capability = validate_photo(path, CapabilityStage::Decoder).unwrap();
+    let detected = detected_ut_type(path).expect("ImageIO reports the type from actual bytes");
+    assert!(capability
+      .ut_types
+      .iter()
+      .any(|expected| expected.eq_ignore_ascii_case(&detected)));
+    assert_eq!(read_raster_info(path).unwrap().display_dimensions(), Some((32, 24)));
+  }
+
+  let disguised = fixture.root().join("png-as-jpeg.JpG");
+  fs::write(&disguised, PNG_2X2).unwrap();
+  assert_eq!(
+    validate_photo(&disguised, CapabilityStage::Decoder).unwrap_err().code,
+    code::FORMAT_MISMATCH
+  );
+  assert_eq!(detected_ut_type(&disguised).as_deref(), Some("public.png"));
+
+  let corrupt = fixture.root().join("corrupt.TiFf");
+  fs::write(&corrupt, b"II").unwrap();
+  assert_eq!(
+    validate_photo(&corrupt, CapabilityStage::Decoder).unwrap_err().code,
+    code::FORMAT_MISMATCH
+  );
+  assert!(read_raster_info(&corrupt).is_err());
 }
 
 #[test]
@@ -353,7 +436,7 @@ fn thumbnails_are_cached_by_path_size_modified_time_and_dimension() {
   assert_ne!(library.thumbnail(&entry, 64).unwrap(), first);
   assert_eq!(calls.load(Ordering::SeqCst), 2);
   // 中身（大きさ）が変わった
-  fs::write(&path, "rewritten by another app").unwrap();
+  fs::write(&path, b"\xff\xd8\xffrewritten by another app").unwrap();
   library.thumbnail(&entry, 128).unwrap();
   assert_eq!(calls.load(Ordering::SeqCst), 3);
   // 大きさは同じで更新時刻だけ変わった

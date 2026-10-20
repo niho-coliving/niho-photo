@@ -41,11 +41,25 @@ impl Fixture {
     self.dir.join("root")
   }
 
-  /// `root` の下にファイルを作る（途中のフォルダも作る。中身は名前）。
+  /// `root` の下にファイルを作る（途中のフォルダも作る）。写真拡張子なら共通validatorを通る最小signatureを置く。
+  /// これはpicker/validator境界用の合成入力で、実decoderの受入fixtureではない。
   pub fn file(&self, relative: &str) -> PathBuf {
     let path = self.root().join(relative);
     fs::create_dir_all(path.parent().unwrap()).unwrap();
-    fs::write(&path, format!("photo {relative}")).unwrap();
+    let extension = path
+      .extension()
+      .and_then(|extension| extension.to_str())
+      .unwrap_or_default()
+      .to_ascii_lowercase();
+    let bytes: Vec<u8> = match extension.as_str() {
+      "jpg" | "jpeg" => b"\xff\xd8\xffsynthetic jpeg".to_vec(),
+      "png" => [PNG_SIGNATURE.as_slice(), b"synthetic png"].concat(),
+      "tif" | "tiff" => b"II*\0synthetic tiff".to_vec(),
+      "rw2" => b"IIU\0synthetic rw2".to_vec(),
+      "heic" | "heif" => b"\0\0\0\x14ftypheic\0\0\0\0mif1".to_vec(),
+      _ => format!("synthetic photo {relative}").into_bytes(),
+    };
+    fs::write(&path, bytes).unwrap();
     path
   }
 

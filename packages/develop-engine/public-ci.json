@@ -6,7 +6,9 @@
   "cargoManifests": [
     "Cargo.toml"
   ],
-  "swiftPackages": [],
+  "swiftPackages": [
+    "tools/apple-raw-linear"
+  ],
   "rustToolchain": "1.98.1",
   "wasm": true
 }
