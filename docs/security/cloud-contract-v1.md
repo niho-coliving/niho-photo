@@ -29,7 +29,7 @@ API request は TLS 上で NIHO access token を送ります。private server �
 | Share 失効 | `DELETE /shares/{shareId}` | caller の revoke 権限を検証し、繰り返し実行しても同じ最終状態にする |
 | Share 一覧 | `GET /shares?resourceType=…&resourceId=…&cursor=…&limit=…` | request fields はURL queryだけで渡し、GET bodyを送らない。serverが認可contextとresource recordからownerを検証し、callerが管理できるresourceだけを返す。cursorはopaqueとする |
 
-`ShareListRequest` は `resourceType` と `resourceId` をselectorとして受け取り、`cursor` と `limit` を任意queryにします。owner、tenant、workspaceはqueryから受け付けず、serverの認証済みcontextとresource recordから判断します。Request / response のfieldとTypeScript typeは `packages/niho-cloud-contract/src/v1.ts` に定義します。値の形やHTTPでの配置を変えるときは同ファイル、仕様、test vectorを一緒に更新します。
+`CLOUD_OPERATION_TRANSPORTS` は6 operationすべてのmethod・path・request配置を機械可読に定義します。upload start / download start / share create はJSON、upload completeはpathとJSON、share revokeはpath、share listはqueryを使います。`ShareListRequest` は `resourceType` と `resourceId` をselectorとして受け取り、`cursor` と `limit` を任意queryにします。owner、tenant、workspaceはqueryから受け付けず、serverの認証済みcontextとresource recordから判断します。Request / responseのfieldとHTTP配置を変えるときは同ファイル、仕様、test vectorを一緒に更新します。
 
 ## Capability と idempotency
 

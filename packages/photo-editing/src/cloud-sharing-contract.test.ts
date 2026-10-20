@@ -51,7 +51,14 @@ describe("Docs / Photo cloud contract v1", () => {
       "share.list",
     ]);
     expect(CLOUD_ERROR_CODES).toEqual(requiredErrorCodes);
-    expect(CLOUD_OPERATION_TRANSPORTS["share.list"]).toEqual({ method: "GET", path: "/shares", requestLocation: "query" });
+    expect(CLOUD_OPERATION_TRANSPORTS).toEqual({
+      "upload.start": { method: "POST", path: "/uploads", requestLocation: "json" },
+      "upload.complete": { method: "POST", path: "/uploads/{uploadId}/complete", requestLocation: "path-and-json" },
+      "download.start": { method: "POST", path: "/downloads", requestLocation: "json" },
+      "share.create": { method: "POST", path: "/shares", requestLocation: "json" },
+      "share.revoke": { method: "DELETE", path: "/shares/{shareId}", requestLocation: "path" },
+      "share.list": { method: "GET", path: "/shares", requestLocation: "query" },
+    });
     const query = { resourceType: "photo", resourceId: "photo-test" } satisfies CloudOperationMap["share.list"]["request"];
     expect(query).not.toHaveProperty("resource");
   });
