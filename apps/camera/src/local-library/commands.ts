@@ -159,13 +159,21 @@ export function createCameraCommands(invoke: Invoke = tauriInvoke) {
   return {
     /** フォルダの選択ダイアログで選んだフォルダを足す。閉じたら null。 */
     addFolder: async () => (await call<{ folder: LibraryFolder | null }>("camera_library_add_folder")).folder,
+    /** 写真の選択ダイアログで選んだ写真を足す。閉じたら空。 */
+    addPhotos: async () => (await call<{ photos: LibraryEntry[] }>("camera_library_add_photos")).photos,
     /** 覚えたフォルダ・写真のうち、いまあるもの。 */
     remembered: () => call<RememberedLibrary>("camera_library_remembered"),
+    /** 「選んだ写真」だけを読み直す（覚えたフォルダは再走査しない）。 */
+    selectedPhotos: async () => (await call<{ photos: LibraryEntry[] }>("camera_library_selected_photos")).photos,
     listFolder: async (folderId: string) =>
       (await call<{ folder: LibraryFolder }>("camera_library_list_folder", { folderId })).folder,
     /** 覚えたフォルダを一覧から外す（フォルダと写真は消さない）。 */
     forgetFolder: async (folderId: string) => {
       await call<Record<string, never>>("camera_library_forget_folder", { folderId });
+    },
+    /** 「選んだ写真」の参照をすべて一覧から外す。 */
+    forgetPhotos: async () => {
+      await call<Record<string, never>>("camera_library_forget_photos");
     },
     openPhotos: (entryIds: string[]) => call<OpenPhotosResult>("camera_photo_open", { entryIds }),
     closePhotos: async (photoIds: string[]) => {

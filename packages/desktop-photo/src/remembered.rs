@@ -13,7 +13,8 @@
 //! - 読めない・壊れた・知らない版・大きすぎる（8MB を超える）ファイルと、シンボリックリンクは空として扱い、次に覚える
 //!   ときに上書きする。形の違う項目・絶対パスでない項目・同じパスの 2 つ目以降・上限を超えた項目は読み飛ばす。
 //! - いま見つからないパス（SD カードを抜いた・消した）も消さない（戻れば `photo_editing_remembered` にまた出る）。
-//!   個別に忘れるのはフォルダの「一覧から外す」（NIHO camera。{@link RememberedStore::forget_folder}。中の写真は消さない）だけ。
+//!   個別に忘れるのはフォルダの「一覧から外す」（NIHO camera。{@link RememberedStore::forget_folder}。中の写真は消さない）。
+//!   選んだ写真はまとめて一覧から外せる（{@link RememberedStore::forget_photos}。元の写真とフォルダ登録には触れない）。
 //!   `cache_purge`（Mac を返す・渡すとき）は置き場ごと消す（`purge`。パスにユーザー名やフォルダ名が入るため）。
 //! - パスはページへ渡さない（ページには `library.rs` が振る `folderId` / `entryId` だけ）。ログにも書かない。
 //! - 覚えられないパス（UTF-8 でない・JSON の文字列にして 2KB を超える。macOS のパスは 1KB まで）は覚えない
@@ -105,6 +106,10 @@ impl RememberedStore {
     }
   }
 
+  pub(crate) fn max_photos(&self) -> usize {
+    self.limits.max_photos
+  }
+
   fn lock(&self) -> MutexGuard<'_, ()> {
     self.guard.lock().unwrap_or_else(|poison| poison.into_inner())
   }
@@ -151,6 +156,31 @@ impl RememberedStore {
   /// 一度に選んだ写真を覚える（選んだ順に先頭へ。同じパスは先頭へ動かす）。
   pub fn remember_photos(&self, photos: &[PathBuf], now: SystemTime) -> io::Result<()> {
     self.remember(Kind::Photos, photos, now)
+  }
+
+  /// 選んだ写真をすべて一覧から外す。元の写真と覚えたフォルダには触れない。置き場が無ければ false。
+  /// 置き場があるのに読めない場合は、参照が残っている可能性があるため成功として扱わない。
+  pub fn forget_photos(&self) -> io::Result<bool> {
+    let _guard = self.lock();
+    match fs::symlink_metadata(&self.path) {
+      Err(err) if err.kind() == io::ErrorKind::NotFound => return Ok(false),
+      Err(err) => return Err(err),
+      Ok(metadata) if !metadata.is_file() || metadata.len() > MAX_REMEMBERED_FILE_BYTES => {
+        return Err(io::Error::new(
+          io::ErrorKind::InvalidData,
+          "remembered store is unreadable",
+        ));
+      }
+      Ok(_) => {}
+    }
+    let mut remembered = self
+      .read()
+      .ok_or_else(|| io::Error::new(io::ErrorKind::InvalidData, "remembered store is unreadable"))?;
+    if remembered.photos.is_empty() {
+      return Ok(false);
+    }
+    remembered.photos.clear();
+    self.write(&remembered).map(|()| true)
   }
 
   fn remember(&self, kind: Kind, paths: &[PathBuf], now: SystemTime) -> io::Result<()> {

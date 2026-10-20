@@ -28,6 +28,8 @@ describe("createCameraCommands", () => {
           return { folder };
         case "camera_library_list_folder":
           return { folder };
+        case "camera_library_add_photos":
+          return { photos: [{ entryId: "photo-entry" }] };
         case "camera_photo_save_settings":
           return { revision: 3 };
         case "camera_export_to_folder":
@@ -40,8 +42,10 @@ describe("createCameraCommands", () => {
     });
 
     await expect(commands.addFolder()).resolves.toEqual(folder);
+    await expect(commands.addPhotos()).resolves.toEqual([{ entryId: "photo-entry" }]);
     await expect(commands.listFolder("folder-1")).resolves.toEqual(folder);
     await commands.forgetFolder("folder-1");
+    await commands.forgetPhotos();
     await expect(commands.saveSettings("photo-1", { exposure: 0.3 }, 2)).resolves.toBe(3);
     await commands.developSource("photo-1");
     await commands.developSource("photo-1", {
@@ -66,8 +70,10 @@ describe("createCameraCommands", () => {
 
     expect(calls).toEqual([
       { command: "camera_library_add_folder", args: undefined },
+      { command: "camera_library_add_photos", args: undefined },
       { command: "camera_library_list_folder", args: { request: { folderId: "folder-1" } } },
       { command: "camera_library_forget_folder", args: { request: { folderId: "folder-1" } } },
+      { command: "camera_library_forget_photos", args: undefined },
       {
         command: "camera_photo_save_settings",
         args: { request: { photoId: "photo-1", developSettings: { exposure: 0.3 }, expectedRevision: 2 } },

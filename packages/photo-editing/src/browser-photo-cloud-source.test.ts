@@ -22,6 +22,7 @@ import {
   isBrowserCloudPhotoInFilter,
   isBrowserCloudPhotoInPlace,
   isBrowserCloudRawPhoto,
+  isBrowserSelectedPhotosPlace,
   type BrowserCloudListFilter,
 } from "./browser-photo-cloud-source";
 
@@ -135,6 +136,16 @@ describe("木と印", () => {
     // PNG は絞り込まないときだけ
     expect(isBrowserCloudPhotoInFilter(cloudPhoto({ fileExtension: "png" }), BROWSER_CLOUD_NO_LIST_FILTER)).toBe(true);
     expect(isBrowserCloudPhotoInFilter(cloudPhoto({ fileExtension: "png" }), { kind: "jpeg", edited: null })).toBe(false);
+  });
+
+  it("「選んだ写真」は folderId と混ぜず明示的な localSource で読み、一覧内の行だけを絞り込む", () => {
+    const filter: BrowserCloudListFilter = { kind: "jpeg", edited: false };
+    expect(isBrowserSelectedPhotosPlace("selected")).toBe(true);
+    expect(isBrowserSelectedPhotosPlace("folder:selected")).toBe(false);
+    expect(browserCloudPlaceListFilter("selected")).toEqual({ localSource: "selected" });
+    expect(browserCloudListParams("selected", filter)).toEqual({ localSource: "selected", kind: "jpeg", edited: false });
+    expect(canFilterBrowserCloudPlace("selected")).toBe(true);
+    expect(isBrowserCloudPhotoInPlace(cloudPhoto({ hasOriginal: false }), "selected")).toBe(true);
   });
 
   it("開かずに分かる直せない理由: 記事の画像・RAW・TIFF / HEIC・10MiB 超の PNG・64MiB 超の JPEG。JPEG / PNG は開くまで分からない（null）", () => {

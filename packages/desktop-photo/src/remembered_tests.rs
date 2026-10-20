@@ -256,6 +256,46 @@ fn a_failed_write_keeps_the_previous_file() {
 }
 
 #[test]
+fn forgetting_photos_preserves_folders_and_fails_if_the_store_cannot_be_read() {
+  let temp = TempDir::new("forget-photos");
+  let store = temp.store(RememberedLimits::default());
+  assert!(!store.forget_photos().unwrap());
+  store.remember_folder(Path::new(SD), at(1)).unwrap();
+  store
+    .remember_photos(
+      &[
+        path("/test-data/users/staff/a.jpg"),
+        path("/test-data/users/staff/b.nef"),
+      ],
+      at(2),
+    )
+    .unwrap();
+  assert!(store.forget_photos().unwrap());
+  assert_eq!(store.load().folders, [entry(SD, 1)]);
+  assert!(store.load().photos.is_empty());
+  assert!(!store.forget_photos().unwrap());
+
+  temp.write(b"not json");
+  assert!(
+    store.forget_photos().is_err(),
+    "unknown references must not be reported as forgotten"
+  );
+  assert_eq!(fs::read(temp.file()).unwrap(), b"not json");
+
+  let blocked = TempDir::new("forget-photos-write-failure");
+  let blocked_store = blocked.store(RememberedLimits::default());
+  blocked_store
+    .remember_photos(&[path("/test-data/users/staff/stays.jpg")], at(3))
+    .unwrap();
+  fs::create_dir_all(blocked.file().with_extension("json.tmp")).unwrap();
+  assert!(blocked_store.forget_photos().is_err());
+  assert_eq!(
+    blocked_store.load().photos,
+    [entry("/test-data/users/staff/stays.jpg", 3)]
+  );
+}
+
+#[test]
 fn broken_unknown_or_too_large_files_are_read_as_empty_and_overwritten() {
   let temp = TempDir::new("broken");
   let store = temp.store(RememberedLimits::default());

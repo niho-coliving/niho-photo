@@ -17,7 +17,18 @@ npm run lint --workspace apps/camera
 cargo test --locked --manifest-path packages/desktop-photo/Cargo.toml
 ```
 
-ログインは不要です。フォルダ一覧、JPEG/PNG表示、元画像の保存、補正設定とプリセットの管理はこのMac内で行います。RAW現像・補正描画・背景除去に必要なエンジン/sidecar/modelは #9 で移行します。未導入時は能力判定により利用できない操作を表示します。WASMは公開engine配置入口からハッシュ検証して取り込み、欠落ならローカル機能で起動、壊れた配置はビルドを止めます。
+ログインは不要です。フォルダまたは個別の写真を選び、JPEG/PNG表示、元画像の保存、補正設定とプリセットの管理をこのMac内で行います。個別写真の画面、復元、失敗時の扱いは [この Mac の写真ソース](../../docs/features/local-photo-sources.md) を参照してください。RAW現像・補正描画・背景除去に必要なエンジン/sidecar/modelは #9 で移行します。未導入時は能力判定により利用できない操作を表示します。WASMは公開engine配置入口からハッシュ検証して取り込み、欠落ならローカル機能で起動、壊れた配置はビルドを止めます。
+
+`allow-camera-library` が同梱UIへ許可するライブラリコマンドは次のとおりです。パスを受け取る・返すコマンドはありません。
+
+| コマンド | 用途 |
+| --- | --- |
+| `camera_library_add_folder` | ネイティブpickerでフォルダを1つ追加 |
+| `camera_library_add_photos` | ネイティブpickerで写真を複数追加 |
+| `camera_library_remembered` | 現在表示できる保存済みフォルダ・個別写真を取得 |
+| `camera_library_list_folder` | 不透明な `folderId` のフォルダを取得 |
+| `camera_library_forget_folder` | フォルダ参照だけを外す |
+| `camera_library_forget_photos` | 個別写真の参照をすべて外す |
 
 アカウント/OAuthは #3、クラウド共有は #8。自動更新クライアントと公開鍵はコードに含みますが既定で無効です。公式release権限、署名、公証、SBOM、更新有効化は #2 の範囲です。
 

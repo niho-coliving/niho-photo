@@ -7,7 +7,7 @@
 //! photo-editing/remembered.json`）の解決だけを持つ。パスは画面へ渡さない。
 
 use crate::error::{invalid_request, parse_request, run_blocking, CameraError};
-use crate::photos::photos;
+use crate::photos::{photos, CameraPhotos};
 use crate::{app_log, dialog};
 use niho_desktop_photo::library::{
   folder_not_found, is_valid_id, make_with_macos_tools, photo_not_found, LibraryConfig, PhotoLibrary, RememberedBudget,
@@ -19,6 +19,8 @@ use serde::Deserialize;
 use serde_json::{json, Value};
 use std::sync::Arc;
 use tauri::Manager;
+
+const INVALID_PHOTOS_MESSAGE: &str = "選んだ写真を追加できませんでした。写真を選び直してください。";
 
 pub struct LibraryState(pub Arc<PhotoLibrary>);
 
@@ -89,6 +91,24 @@ pub fn validate_thumbnail_request(request: &ThumbnailRequest) -> Result<(), Came
   Ok(())
 }
 
+fn added_photos_value(
+  library: &PhotoLibrary,
+  photo_state: &CameraPhotos,
+  picked: &[std::path::PathBuf],
+) -> Result<Value, CameraError> {
+  let selected = library.add_photos(picked);
+  if selected.is_empty() {
+    return Err(CameraError::new(
+      niho_desktop_photo::common::code::INVALID_REQUEST,
+      INVALID_PHOTOS_MESSAGE,
+    ));
+  }
+  // annotate_has_edits は `photos` を持つオブジェクトを辿る。同じ応答オブジェクトをそのまま返し、パスは足さない。
+  let mut value = json!({ "photos": selected });
+  photo_state.annotate_has_edits(&mut value);
+  Ok(value)
+}
+
 // ---------------------------------------------------------------------------
 // コマンド
 
@@ -107,6 +127,18 @@ pub async fn camera_library_add_folder(app: tauri::AppHandle) -> Result<Value, C
   .await
 }
 
+/// 写真の選択ダイアログで選んだ写真を覚え、安全な一覧行だけを返す（`{ photos }`）。閉じたら空。選んだものが
+/// すべて無効なら、パスを含まない失敗を返す。有効な写真が 1 枚でもあれば、無効なものだけ飛ばして続ける。
+#[tauri::command]
+pub async fn camera_library_add_photos(app: tauri::AppHandle) -> Result<Value, CameraError> {
+  let picked = dialog::pick_photos().await?;
+  if picked.is_empty() {
+    return Ok(json!({ "photos": [] }));
+  }
+  let (library, photo_state) = (library(&app)?, photos(&app)?);
+  run_blocking(move || added_photos_value(&library, &photo_state, &picked)).await
+}
+
 /// 覚えたフォルダ・写真のうち、いまあるもの（`{ folders, photos }`）。見つからないものは黙って出さない（覚えたまま）。
 #[tauri::command]
 pub async fn camera_library_remembered(app: tauri::AppHandle) -> Result<Value, CameraError> {
@@ -115,6 +147,18 @@ pub async fn camera_library_remembered(app: tauri::AppHandle) -> Result<Value, C
     let mut remembered = library.remembered();
     photos.annotate_has_edits(&mut remembered);
     Ok(remembered)
+  })
+  .await
+}
+
+/// 「選んだ写真」だけを読み直す。覚えたフォルダの再走査は行わない（`{ photos }`）。
+#[tauri::command]
+pub async fn camera_library_selected_photos(app: tauri::AppHandle) -> Result<Value, CameraError> {
+  let (library, photos) = (library(&app)?, photos(&app)?);
+  run_blocking(move || {
+    let mut selected = json!({ "photos": library.selected_photos() });
+    photos.annotate_has_edits(&mut selected);
+    Ok(selected)
   })
   .await
 }
@@ -146,10 +190,24 @@ pub async fn camera_library_forget_folder(app: tauri::AppHandle, request: Option
   .await
 }
 
+/// 「選んだ写真」を一覧から外す。元の写真・フォルダ登録・補正には触れない（`{}`）。
+#[tauri::command]
+pub async fn camera_library_forget_photos(app: tauri::AppHandle) -> Result<Value, CameraError> {
+  let library = library(&app)?;
+  run_blocking(move || {
+    library.forget_photos()?;
+    Ok(json!({}))
+  })
+  .await
+}
+
 #[cfg(test)]
 mod tests {
   use super::*;
   use niho_desktop_photo::common::code;
+  use niho_desktop_photo::saved_settings::SavedSettingsStore;
+  use niho_desktop_photo::test_support::library::Fixture;
+  use std::time::SystemTime;
 
   #[test]
   fn folder_and_thumbnail_requests_are_checked_before_touching_the_library() {
@@ -189,5 +247,29 @@ mod tests {
     let parsed: Result<FolderRequest, _> =
       parse_request(Some(json!({ "folderId": "f", "path": "/test-data/users/x" })));
     assert_eq!(parsed.unwrap_err().code, code::INVALID_REQUEST);
+  }
+
+  #[test]
+  fn added_photos_response_marks_saved_edits_and_never_contains_a_path() {
+    let fixture = Fixture::new("camera-add-photos");
+    let path = fixture.file("edited.jpg");
+    let photo_state = CameraPhotos::new(Some(SavedSettingsStore::new(
+      fixture.app_data().join(crate::photos::EDITS_DIR_NAME),
+      crate::photos::edits_limits(),
+    )));
+    let (photo_id, _) = photo_state.open("temporary", &path).unwrap();
+    photo_state
+      .save(&photo_id, &json!({ "exposure": 0.3 }), 0, SystemTime::now())
+      .unwrap();
+
+    let value = added_photos_value(&fixture.library(), &photo_state, std::slice::from_ref(&path)).unwrap();
+    assert_eq!(value["photos"][0]["hasEdits"], json!(true));
+    assert!(!value.to_string().contains(fixture.dir.to_string_lossy().as_ref()));
+    assert_eq!(
+      added_photos_value(&fixture.library(), &photo_state, &[fixture.dir.join("missing.jpg")])
+        .unwrap_err()
+        .message,
+      INVALID_PHOTOS_MESSAGE
+    );
   }
 }
