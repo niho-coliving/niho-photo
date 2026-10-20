@@ -8435,7 +8435,7 @@
     {
       "path": "packages/niho-cloud-contract/README.md",
       "source": {
-        "repository": "niho-docs",
+        "repository": "niho-coliving/niho-docs",
         "commit": "6572d1bf7ebcc2a4556b3a12d444c5422c5dec2f",
         "path": "packages/niho-cloud-contract/README.md",
         "sha256": "02f5ff833b6fe9cbefdf5244d728fdd0126f9e346e9adffd9b7ce2723373054f"
@@ -8446,7 +8446,7 @@
     {
       "path": "packages/niho-cloud-contract/package.json",
       "source": {
-        "repository": "niho-docs",
+        "repository": "niho-coliving/niho-docs",
         "commit": "6572d1bf7ebcc2a4556b3a12d444c5422c5dec2f",
         "path": "packages/niho-cloud-contract/package.json",
         "sha256": "cd310f81e8fcc3b8b518c3f92a600940914433c0cc7df0aa1c09a94352166858"
@@ -8457,7 +8457,7 @@
     {
       "path": "packages/niho-cloud-contract/src/mock.ts",
       "source": {
-        "repository": "niho-docs",
+        "repository": "niho-coliving/niho-docs",
         "commit": "6572d1bf7ebcc2a4556b3a12d444c5422c5dec2f",
         "path": "packages/niho-cloud-contract/src/mock.ts",
         "sha256": "f7aaf48d2925444ddb831f3708d3998d178993a7152340d6160bf962b01234ce"
@@ -8468,7 +8468,7 @@
     {
       "path": "packages/niho-cloud-contract/src/v1.ts",
       "source": {
-        "repository": "niho-docs",
+        "repository": "niho-coliving/niho-docs",
         "commit": "6572d1bf7ebcc2a4556b3a12d444c5422c5dec2f",
         "path": "packages/niho-cloud-contract/src/v1.ts",
         "sha256": "0227a9ed01dfb8616064a26955be4e0b31501372bc3365372c9f2c72c14bbe50"
@@ -8479,7 +8479,7 @@
     {
       "path": "packages/niho-cloud-contract/test-support/reference-model.ts",
       "source": {
-        "repository": "niho-docs",
+        "repository": "niho-coliving/niho-docs",
         "commit": "6572d1bf7ebcc2a4556b3a12d444c5422c5dec2f",
         "path": "packages/niho-cloud-contract/test-support/reference-model.ts",
         "sha256": "3d0b9bd2d9630f8dacdc42c0609a35d9c5ec967a51504c9c998dd73e98d32205"
@@ -8490,7 +8490,7 @@
     {
       "path": "packages/niho-cloud-contract/v1/security-cases.json",
       "source": {
-        "repository": "niho-docs",
+        "repository": "niho-coliving/niho-docs",
         "commit": "6572d1bf7ebcc2a4556b3a12d444c5422c5dec2f",
         "path": "packages/niho-cloud-contract/v1/security-cases.json",
         "sha256": "755892a82d57c6ea6b0def5cdc597ba21198c8b23d3e29436c098128f01f1bda"
@@ -8501,7 +8501,7 @@
     {
       "path": "docs/security/cloud-contract-v1.md",
       "source": {
-        "repository": "niho-docs",
+        "repository": "niho-coliving/niho-docs",
         "commit": "6572d1bf7ebcc2a4556b3a12d444c5422c5dec2f",
         "path": "docs/security/cloud-contract-v1.md",
         "sha256": "cd80ff772cf1971bb764d09d29106ea7af63a93765f4eee18e758270c2f64d4c"
@@ -10293,7 +10293,7 @@
   ],
   "externalSources": [
     {
-      "repository": "niho-docs",
+      "repository": "niho-coliving/niho-docs",
       "commit": "6572d1bf7ebcc2a4556b3a12d444c5422c5dec2f"
     }
   ]
