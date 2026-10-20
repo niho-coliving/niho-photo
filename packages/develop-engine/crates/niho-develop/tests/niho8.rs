@@ -158,8 +158,8 @@ fn presets_and_xmp_keep_the_explicit_candidate() {
         None,
     )
     .unwrap();
-    assert_eq!(applied.engine, ENGINE_NIHO_8);
-    let written = xmp::settings_to_xmp(&applied, &xmp::XmpWriteOptions::default());
+    assert_eq!(applied.settings.engine, ENGINE_NIHO_8);
+    let written = xmp::settings_to_xmp(&applied.settings, &xmp::XmpWriteOptions::default());
     assert!(written
         .not_written
         .iter()

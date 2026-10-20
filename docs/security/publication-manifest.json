@@ -8618,8 +8618,8 @@
     },
     {
       "path": "packages/develop-engine/crates/niho-develop/tests/niho8.rs",
-      "sha256": "45564ac8d273e4dd21ef2f9f90c77b2b71bd7b32a4176e2907e1973d10aa42f8",
-      "origin": "公開Issue #26/#27/#29 のため公開済み数式・既存primitiveから独立実装した研究用コード・合成テスト・日本語手順。非公開の写真・参照画素・パス・履歴・第三者ソースを含まない。"
+      "sha256": "9fbf4752ce8dfcd2aa61e720a6b1067a92ce199203541fbcc1f116a9b7cc428e",
+      "origin": "公開Issue #26/#27/#29 のため公開済み数式・既存primitiveから独立実装した研究用コード・合成テスト・日本語手順。非公開の写真・参照画素・パス・履歴・第三者ソースを含まない。\n変更理由: 既存PresetResultのsettingsを介してengineとXMP保持を検証する。"
     }
   ],
   "excludedSources": [
