@@ -56,6 +56,16 @@ export function isCropAspectSelected(current: string, chip: string): boolean {
   return current === chip || swapDevelopAspect(current) === chip;
 }
 
+/**
+ * 縦横比のメニューのボタンに出す今の比率の名前。固定の比率は今の向きのまま（入れ替えた `5:4` は「5:4」）、`originalSwapped` は
+ * 「元の比率」。
+ */
+export function cropAspectLabel(current: string): string {
+  const chip = PHOTO_EDITING_CROP_ASPECTS.find((candidate) => candidate.aspect === current);
+  if (chip) return chip.label;
+  return current === "originalSwapped" ? PHOTO_EDITING_CROP_ASPECT_ORIGINAL_LABEL : current;
+}
+
 /** 縦横を入れ替えられる比率か（`free`・`1:1`・読めない値は入れ替えても同じ）。 */
 export function canSwapCropAspect(current: string): boolean {
   return swapDevelopAspect(current) !== current;

@@ -173,6 +173,16 @@ function AdjustmentSwitch(props: {
   );
 }
 
+/**
+ * 色温度・色かぶり補正の線の薄い色の帯（Lightroom と同じ。L6 #55）。色温度は 青 → 黄、色かぶり補正は 緑 → 赤紫。真ん中は線の色に
+ * 近い中間の色にして、帯の端だけ色を見せる。
+ */
+const WHITE_BALANCE_TRACK_CLASS_NAMES: Record<"temperature" | "tint", string> = {
+  temperature:
+    "[&::-webkit-slider-runnable-track]:bg-[linear-gradient(90deg,#9CBBF0,#E4E0D8_50%,#F0C978)] [&::-moz-range-track]:bg-[linear-gradient(90deg,#9CBBF0,#E4E0D8_50%,#F0C978)]",
+  tint: "[&::-webkit-slider-runnable-track]:bg-[linear-gradient(90deg,#A9D59A,#E4E0D8_50%,#EBA6DB)] [&::-moz-range-track]:bg-[linear-gradient(90deg,#A9D59A,#E4E0D8_50%,#EBA6DB)]",
+};
+
 /** 白黒の間は描画に効かない項目（値は保つ。白黒をオフに戻すと元の値で効く）。 */
 const GRAYSCALE_INACTIVE_KEYS: ReadonlySet<PhotoEditingControlKey> = new Set<PhotoEditingControlKey>(["vibrance", "saturation"]);
 /**
@@ -191,7 +201,7 @@ export type PhotoEditingControlSliderProps = {
   onChange: (value: number, phase: PhotoEditingSliderPhase) => void;
   onReset: () => void;
   entry?: PhotoEditingSliderEntry;
-  /** 既定値のまま（スマホのチップに値を添えない）。補正と相対の白は 0、絶対の白は撮影時の値のとき */
+  /** 既定値のまま（スマホのチップに値を添えない・PC の値を太字にしない）。補正と相対の白は 0、絶対の白は撮影時の値のとき */
   isDefault: boolean;
 };
 
@@ -416,10 +426,11 @@ export function PhotoEditingAdjustmentGroups(props: {
           disabled={disabled || (definition.key === "grainSize" && readEffectValue(settings, "grainAmount") === 0)}
           onChange={(next, phase) => change((current) => writeEffectValue(current, definition.key, next), phase)}
           onReset={() => change((current) => writeEffectValue(current, definition.key, definition.defaultValue), "commit")}
+          changed={value !== definition.defaultValue}
         />
       );
     }
-    // `isDefault` はスマホのチップだけが使う（PC のスライダーには渡さない）
+    // `isDefault` はスマホのチップ（値を添えるか）と PC の値の「変更あり」の目印（L6 #55）が使う
     const slider = sliderFor(control);
     return (
       <PhotoEditingSlider
@@ -435,6 +446,8 @@ export function PhotoEditingAdjustmentGroups(props: {
         onChange={slider.onChange}
         onReset={slider.onReset}
         entry={slider.entry}
+        changed={!slider.isDefault}
+        trackClassName={control.kind === "whiteBalance" ? WHITE_BALANCE_TRACK_CLASS_NAMES[control.channel] : undefined}
       />
     );
   };
