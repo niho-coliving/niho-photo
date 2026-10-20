@@ -75,6 +75,66 @@ describe("PhotoCloudShareController", () => {
     expect(flow.getSnapshot().phase).toBe("created");
   });
 
+  it("retains an uncertain create across sheet closure and rejects a fresh key on reopen", async () => {
+    const create = vi.fn()
+      .mockResolvedValueOnce({ ok: false, error: { code: "temporarily_unavailable", requestId: "hidden", retryable: true } })
+      .mockResolvedValueOnce({
+        ok: true,
+        value: {
+          share: { shareId: "share-a", resource: TARGET_A, permission: "read", expiresAt: EXPIRES_AT, revokedAt: null },
+          shareUrl: "https://share.invalid/resumed",
+          replayed: true,
+        },
+      });
+    const client = createCloudMockClient({ "share.create": create });
+    const firstKeys = vi.fn(() => "original-key");
+    const first = controller(client, firstKeys);
+    first.create(EXPIRES_AT);
+    await settle();
+    first.close();
+    expect(first.getSnapshot().shareUrl).toBeNull();
+
+    const freshKeys = vi.fn(() => "unsafe-new-key");
+    const reopened = controller(client, freshKeys);
+    expect(reopened.getSnapshot()).toMatchObject({ phase: "cancelled", reconciliationNeeded: true, resumableMutation: "create", shareUrl: null });
+    reopened.create("2026-11-20T00:00:00.000Z");
+    expect(freshKeys).not.toHaveBeenCalled();
+    reopened.resumeMutation();
+    await settle();
+    expect(create).toHaveBeenCalledTimes(2);
+    expect(create.mock.calls[1]?.[0]).toBe(create.mock.calls[0]?.[0]);
+    expect(create.mock.calls[1]?.[1]).toBe(create.mock.calls[0]?.[1]);
+    expect(reopened.getSnapshot().phase).toBe("created");
+  });
+
+  it("retains a cancelled in-flight create across sheet closure", async () => {
+    const pending = deferred<Awaited<ReturnType<ReturnType<typeof createCloudMockClient>["share.create"]>>>();
+    const share = { shareId: "share-a", resource: TARGET_A, permission: "read" as const, expiresAt: EXPIRES_AT, revokedAt: null };
+    const create = vi.fn()
+      .mockImplementationOnce(() => pending.promise)
+      .mockResolvedValueOnce({ ok: true, value: { share, shareUrl: "https://share.invalid/replayed", replayed: true } });
+    const client = createCloudMockClient({ "share.create": create });
+    const first = controller(client, vi.fn(() => "original-key"));
+    first.create(EXPIRES_AT);
+    first.cancel();
+    first.close();
+
+    const newKeys = vi.fn(() => "unsafe-new-key");
+    const reopened = controller(client, newKeys);
+    expect(reopened.getSnapshot()).toMatchObject({ phase: "cancelled", reconciliationNeeded: true, shareUrl: null });
+    reopened.create(EXPIRES_AT);
+    expect(newKeys).not.toHaveBeenCalled();
+    pending.resolve({ ok: true, value: { share, shareUrl: "https://share.invalid/stale", replayed: false } });
+    await settle();
+    expect(first.getSnapshot().shareUrl).toBeNull();
+    expect(reopened.getSnapshot().shareUrl).toBeNull();
+
+    reopened.resumeMutation();
+    await settle();
+    expect(create.mock.calls[1]?.[1]).toBe(create.mock.calls[0]?.[1]);
+    expect(reopened.getSnapshot().shareUrl).toBe("https://share.invalid/replayed");
+  });
+
   it("ignores a cancelled response and reconciles a remotely-created share by listing", async () => {
     const pending = deferred<Awaited<ReturnType<ReturnType<typeof createCloudMockClient>["share.create"]>>>();
     const share = { shareId: "share-a", resource: TARGET_A, permission: "read" as const, expiresAt: EXPIRES_AT, revokedAt: null };
@@ -244,6 +304,34 @@ describe("PhotoCloudShareController", () => {
     await settle();
     expect(flow.getSnapshot().items[0]?.revokedAt).not.toBeNull();
     expect(flow.getSnapshot().shareUrl).toBeNull();
+  });
+
+  it("loads later share pages so their links can be revoked", async () => {
+    const firstShare = { shareId: "share-first", resource: TARGET_A, permission: "read" as const, expiresAt: EXPIRES_AT, revokedAt: null };
+    const laterShare = { ...firstShare, shareId: "share-later" };
+    const list = vi.fn(async (request: { cursor?: string }) => ({
+      ok: true as const,
+      value: request.cursor === "next-page"
+        ? { items: [laterShare], nextCursor: null }
+        : { items: [firstShare], nextCursor: "next-page" },
+    }));
+    const revoke = vi.fn(async () => ({ ok: true as const, value: { shareId: laterShare.shareId, revokedAt: "2026-10-20T00:00:00.000Z", replayed: false } }));
+    const flow = controller(createCloudMockClient({ "share.list": list, "share.revoke": revoke }));
+    flow.refresh();
+    await settle();
+    expect(flow.getSnapshot()).toMatchObject({ nextCursor: "next-page", phase: "ready" });
+    flow.loadMore();
+    flow.loadMore();
+    await settle();
+    expect(list).toHaveBeenCalledTimes(2);
+    expect(list.mock.calls[1]?.[0]).toMatchObject({ cursor: "next-page" });
+    expect(flow.getSnapshot().items.map((item) => item.shareId)).toEqual(["share-first", "share-later"]);
+    expect(flow.getSnapshot().nextCursor).toBeNull();
+
+    flow.revoke(laterShare.shareId);
+    await settle();
+    expect(revoke).toHaveBeenCalledOnce();
+    expect(flow.getSnapshot().items[1]?.revokedAt).not.toBeNull();
   });
 
   it("retries revoke with the same key and payload", async () => {

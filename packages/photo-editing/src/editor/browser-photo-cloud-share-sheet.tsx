@@ -83,8 +83,9 @@ function ShareList(props: {
   onConfirmingShareIdChange: (shareId: string | null) => void;
   onRevoke: (shareId: string) => void;
   onRefresh: () => void;
+  onLoadMore: () => void;
 }) {
-  const busy = props.state.phase === "listing" || props.state.phase === "revoking" || props.state.mutationInFlight;
+  const busy = props.state.phase === "listing" || props.state.phase === "revoking" || props.state.mutationInFlight || props.state.listLoadingMore;
   return (
     <section aria-labelledby="photo-cloud-share-list-heading" className={PANEL_CLASS_NAME}>
       <div className="flex items-center justify-between gap-3">
@@ -104,7 +105,9 @@ function ShareList(props: {
         <p role="status" className="mt-2 text-sm text-niho-text-sub">共有一覧を読み込み中…</p>
       ) : props.state.items.length === 0 ? (
         <p className="mt-2 text-sm text-niho-text-muted">
-          {props.state.phase === "target-confirmation" || props.state.reconciliationNeeded
+          {props.state.nextCursor
+            ? "さらに表示すると、他の共有を確認できます。"
+            : props.state.phase === "target-confirmation" || props.state.reconciliationNeeded
             ? "更新すると、現在の共有を確認できます。"
             : "共有中のリンクはありません。"}
         </p>
@@ -158,6 +161,16 @@ function ShareList(props: {
           })}
         </ul>
       )}
+      {props.state.nextCursor ? (
+        <button
+          type="button"
+          disabled={busy}
+          onClick={props.onLoadMore}
+          className={cn(PHOTO_EDITING_SECONDARY_BUTTON_CLASS_NAME, "mt-3 h-11")}
+        >
+          {props.state.listLoadingMore ? "読み込み中…" : "さらに表示"}
+        </button>
+      ) : null}
     </section>
   );
 }
@@ -344,6 +357,7 @@ export function BrowserPhotoCloudShareSheet(props: {
                 controller.revoke(shareId);
               }}
               onRefresh={() => controller.refresh()}
+              onLoadMore={() => controller.loadMore()}
             />
           ) : null}
 

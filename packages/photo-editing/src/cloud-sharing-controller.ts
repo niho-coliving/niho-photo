@@ -32,6 +32,8 @@ export type PhotoCloudSharePhase =
 export interface PhotoCloudShareState {
   readonly phase: PhotoCloudSharePhase;
   readonly items: readonly ShareListItem[];
+  readonly nextCursor: string | null;
+  readonly listLoadingMore: boolean;
   readonly shareUrl: string | null;
   readonly message: string | null;
   readonly errorCode: CloudErrorCode | null;
@@ -55,6 +57,35 @@ type RevokeMutation = {
 
 type ShareMutation = CreateMutation | RevokeMutation;
 type RetryAction = "create" | "list" | "revoke" | null;
+
+// Only an uncertain operation's key and payload survive sheet closure. Bearer URLs never do.
+// The host must keep the same CloudClient instance for a share session.
+const pendingByClient = new WeakMap<CloudClient, Map<string, ShareMutation>>();
+
+function resourceKey(resource: CloudResourceRef): string {
+  return JSON.stringify([
+    resource.resourceType, resource.resourceId, resource.ownerType,
+    resource.ownerId, resource.tenantId, resource.workspaceId,
+  ]);
+}
+
+function pendingFor(client: CloudClient, target: CloudResourceRef | null): ShareMutation | null {
+  return target ? pendingByClient.get(client)?.get(resourceKey(target)) ?? null : null;
+}
+
+function rememberPending(client: CloudClient, target: CloudResourceRef, mutation: ShareMutation): void {
+  let byResource = pendingByClient.get(client);
+  if (!byResource) {
+    byResource = new Map();
+    pendingByClient.set(client, byResource);
+  }
+  byResource.set(resourceKey(target), mutation);
+}
+
+function forgetPending(client: CloudClient, target: CloudResourceRef | null): void {
+  if (!target) return;
+  pendingByClient.get(client)?.delete(resourceKey(target));
+}
 
 const ERROR_COPY: Readonly<Record<CloudErrorCode, string>> = {
   invalid_request: "共有の内容を確認できませんでした。画面を閉じて、もう一度やり直してください。",
@@ -122,6 +153,8 @@ function initialState(access: PhotoCloudSharingAccess, target: CloudResourceRef 
     return {
       ...unavailablePhase(access),
       items: [],
+      nextCursor: null,
+      listLoadingMore: false,
       shareUrl: null,
       errorCode: null,
       pendingRevokeShareId: null,
@@ -133,6 +166,8 @@ function initialState(access: PhotoCloudSharingAccess, target: CloudResourceRef 
   return {
     phase: target ? "target-confirmation" : "not-found-permission",
     items: [],
+    nextCursor: null,
+    listLoadingMore: false,
     shareUrl: null,
     message: target ? null : "この写真はクラウド共有の対象として確認できませんでした。",
     errorCode: null,
@@ -140,6 +175,20 @@ function initialState(access: PhotoCloudSharingAccess, target: CloudResourceRef 
     resumableMutation: null,
     mutationInFlight: false,
     reconciliationNeeded: false,
+  };
+}
+
+function restoredState(access: PhotoCloudSharingAccess, target: CloudResourceRef | null, mutation: ShareMutation | null): PhotoCloudShareState {
+  const base = initialState(access, target);
+  if (!mutation) return base;
+  return {
+    ...base,
+    phase: access === "available" ? "cancelled" : base.phase,
+    message: access === "available"
+      ? "前の共有操作が完了している場合があります。共有一覧を確認してから、同じ操作を再開してください。"
+      : base.message,
+    resumableMutation: mutation.kind,
+    reconciliationNeeded: true,
   };
 }
 
@@ -177,7 +226,8 @@ export class PhotoCloudShareController {
     this.#target = options.target;
     this.#createIdempotencyKey = options.createIdempotencyKey ?? (() => globalThis.crypto.randomUUID());
     this.#now = options.now ?? Date.now;
-    this.#state = initialState(options.access, options.target);
+    this.#activeMutation = pendingFor(options.client, options.target);
+    this.#state = restoredState(options.access, options.target, this.#activeMutation);
   }
 
   readonly subscribe = (listener: () => void): (() => void) => {
@@ -228,6 +278,7 @@ export class PhotoCloudShareController {
 
   setTarget(target: CloudResourceRef | null): void {
     if (sameResource(target, this.#target)) return;
+    if (this.#activeMutation && this.#target) rememberPending(this.#client, this.#target, this.#activeMutation);
     this.#target = target;
     this.#resetContext();
   }
@@ -235,11 +286,11 @@ export class PhotoCloudShareController {
   #resetContext(): void {
     this.#contextVersion += 1;
     this.#responseVersion += 1;
-    this.#activeMutation = null;
+    this.#activeMutation = pendingFor(this.#client, this.#target);
     this.#retryAction = null;
     this.#inFlightMutation = null;
     this.#listInFlight = null;
-    this.#publish(initialState(this.#access, this.#target));
+    this.#publish(restoredState(this.#access, this.#target, this.#activeMutation));
   }
 
   create(expiresAt: string): void {
@@ -331,6 +382,7 @@ export class PhotoCloudShareController {
     }
 
     this.#activeMutation = null;
+    forgetPending(this.#client, this.#target);
     this.#retryAction = null;
     if (mutation.kind === "create") {
       const value = result.value as ShareCreateResponse;
@@ -368,19 +420,40 @@ export class PhotoCloudShareController {
   refresh(): void {
     if (this.#access !== "available" || !this.#target || this.#listInFlight ||
       (this.#inFlightMutation && !this.#state.reconciliationNeeded)) return;
+    this.#requestList(null, true);
+  }
+
+  loadMore(): void {
+    if (this.#access !== "available" || !this.#target || !this.#state.nextCursor || this.#listInFlight ||
+      (this.#inFlightMutation && !this.#state.reconciliationNeeded)) return;
+    this.#requestList(this.#state.nextCursor, false);
+  }
+
+  #requestList(cursor: string | null, replace: boolean): void {
+    if (!this.#target) return;
     const context = this.#contextVersion;
     const response = ++this.#responseVersion;
     const operation = { context, response };
     this.#listInFlight = operation;
     this.#retryAction = "list";
-    this.#patch({
+    this.#patch(replace ? {
       phase: "listing",
       shareUrl: null,
       message: null,
       errorCode: null,
       pendingRevokeShareId: null,
+      nextCursor: null,
+      listLoadingMore: false,
+    } : {
+      listLoadingMore: true,
+      message: null,
+      errorCode: null,
     });
-    const request = { resourceType: this.#target.resourceType, resourceId: this.#target.resourceId } as const;
+    const request = {
+      resourceType: this.#target.resourceType,
+      resourceId: this.#target.resourceId,
+      ...(cursor ? { cursor } : {}),
+    } as const;
     void this.#client["share.list"](request).catch(() => ({
       ok: false as const,
       error: { code: "temporarily_unavailable" as const, requestId: "client-transport", retryable: true },
@@ -392,11 +465,16 @@ export class PhotoCloudShareController {
         return;
       }
       this.#retryAction = null;
+      const items = replace
+        ? result.value.items
+        : [...this.#state.items, ...result.value.items.filter((item) => !this.#state.items.some((existing) => existing.shareId === item.shareId))];
       this.#patch({
         phase: "ready",
-        items: result.value.items,
+        items,
+        nextCursor: result.value.nextCursor,
+        listLoadingMore: false,
         shareUrl: null,
-        message: result.value.items.length === 0 ? "共有中のリンクはありません。" : null,
+        message: items.length === 0 && !result.value.nextCursor ? "共有中のリンクはありません。" : null,
         errorCode: null,
         pendingRevokeShareId: null,
         mutationInFlight: this.#inFlightMutation !== null,
@@ -407,7 +485,10 @@ export class PhotoCloudShareController {
   #applyError(error: CloudError, action: Exclude<RetryAction, null>): void {
     const phase = phaseForError(error);
     if (phase !== "retryable-failure") {
-      if (action !== "list") this.#activeMutation = null;
+      if (action !== "list") {
+        this.#activeMutation = null;
+        forgetPending(this.#client, this.#target);
+      }
       this.#retryAction = null;
     }
     this.#patch({
@@ -416,6 +497,7 @@ export class PhotoCloudShareController {
       message: photoCloudShareErrorMessage(error.code),
       errorCode: error.code,
       pendingRevokeShareId: null,
+      listLoadingMore: false,
       resumableMutation: action === "list"
         ? this.#state.resumableMutation
         : phase === "retryable-failure"
@@ -447,13 +529,14 @@ export class PhotoCloudShareController {
   }
 
   close(): void {
+    if (this.#activeMutation && this.#target) rememberPending(this.#client, this.#target, this.#activeMutation);
     this.#contextVersion += 1;
     this.#responseVersion += 1;
     this.#activeMutation = null;
     this.#retryAction = null;
     this.#inFlightMutation = null;
     this.#listInFlight = null;
-    this.#state = { ...this.#state, phase: "cancelled", shareUrl: null, items: [] };
+    this.#state = { ...this.#state, phase: "cancelled", shareUrl: null, items: [], nextCursor: null, listLoadingMore: false };
   }
 
   dispose(): void {

@@ -154,4 +154,56 @@ describe("BrowserPhotoCloudShareSheet", () => {
     });
     expect(document.querySelector("[role='alert']")?.textContent).toContain("クラウド共有の対象として確認できません");
   });
+
+  it("offers more pages before later active links can be revoked", async () => {
+    const first = { shareId: "expired-first", resource: TARGET, permission: "read" as const, expiresAt: "2020-01-01T00:00:00.000Z", revokedAt: null };
+    const later = { shareId: "active-later", resource: TARGET, permission: "read" as const, expiresAt: "2026-10-27T00:00:00.000Z", revokedAt: null };
+    const list = vi.fn(async (request: { cursor?: string }) => ({
+      ok: true as const,
+      value: request.cursor === "next-page"
+        ? { items: [later], nextCursor: null }
+        : { items: [first], nextCursor: "next-page" },
+    }));
+    await render(binding({ client: createCloudMockClient({ "share.list": list }) }));
+    await act(async () => button("更新").click());
+    await settle();
+    expect(button("さらに表示").disabled).toBe(false);
+    expect(Array.from(document.querySelectorAll("button")).some((element) => element.textContent?.includes("共有を停止"))).toBe(false);
+
+    await act(async () => button("さらに表示").click());
+    await settle();
+    expect(list).toHaveBeenCalledTimes(2);
+    expect(button("共有を停止").disabled).toBe(false);
+  });
+
+  it("reopens an uncertain share with its original idempotency key", async () => {
+    const create = vi.fn()
+      .mockResolvedValueOnce({ ok: false, error: { code: "temporarily_unavailable", requestId: "hidden", retryable: true } })
+      .mockImplementationOnce(async (request) => ({
+        ok: true,
+        value: {
+          share: { shareId: "resumed-share", resource: TARGET, permission: "read", expiresAt: request.expiresAt, revokedAt: null },
+          shareUrl: "https://share.invalid/replayed",
+          replayed: true,
+        },
+      }));
+    const cloudBinding = binding({ client: createCloudMockClient({ "share.create": create }) });
+    await render(cloudBinding);
+    await act(async () => button("共有リンクを作る").click());
+    await settle();
+    expect(document.querySelector("[role='alert']")?.textContent).toContain("接続できませんでした");
+
+    await act(async () => button("閉じる").click());
+    await act(async () => root.render(<></>));
+    await render(cloudBinding);
+    expect(document.querySelector("[role='dialog']")?.textContent).toContain("前の共有操作が完了している場合があります");
+    expect(Array.from(document.querySelectorAll("button")).some((element) => element.textContent?.includes("共有リンクを作る"))).toBe(false);
+
+    await act(async () => button("処理を再開").click());
+    await settle();
+    expect(create).toHaveBeenCalledTimes(2);
+    expect(create.mock.calls[1]?.[0]).toBe(create.mock.calls[0]?.[0]);
+    expect(create.mock.calls[1]?.[1]).toBe(create.mock.calls[0]?.[1]);
+    expect(document.querySelector<HTMLInputElement>("#photo-cloud-share-url")?.value).toBe("https://share.invalid/replayed");
+  });
 });
