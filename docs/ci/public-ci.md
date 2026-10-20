@@ -80,7 +80,7 @@ gitleaks git --redact=100 --ignore-gitleaks-allow --no-banner --log-opts='--all'
 gitleaks dir --redact=100 --ignore-gitleaks-allow --no-banner .
 ```
 
-PRの公開CI実行、dependency graph更新、外部forkでの初回承認から集約checkまでをGitHubで確認してから、[repository-settings.md](../security/repository-settings.md) の順序でrulesetへ登録します。workflowの追加だけではGitHub側のrequired checks設定は変更されません。コードやworkflowを変更できるPR自身の検査だけでは、その検査の悪意ある改変を完全には防げないため、CI定義・公開境界にはCODEOWNERSレビューが必要です。
+PRの公開CI実行、dependency graph更新、外部forkでの初回承認から集約checkまでをGitHubで確認してから、[repository-settings.md](../security/repository-settings.md) の順序でrulesetへ登録します。workflowの追加だけではGitHub側のrequired checks設定は変更されません。コードやworkflowを変更できるPR自身の検査だけでは、その検査の悪意ある改変を完全には防げません。CI定義・公開境界の差分と実行結果はメンテナーが確認し、CODEOWNERSは担当者の案内に使います。CODEOWNERS承認はマージ条件ではありません。
 
 ## 現像workspaceの検査
 
