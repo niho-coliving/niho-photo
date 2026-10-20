@@ -2672,9 +2672,10 @@
         "path": "packages/develop-engine/crates/niho-develop/src/raw_chroma.rs",
         "sha256": "c1112a2ac5af26b7c591362a44930271e675d7e29910ae395ff20795a52a8d51"
       },
-      "outputSha256": "b2fe04dfe5660d6b3b621642f890c2ee04389a84e0d695d04d72e716af61e264",
+      "outputSha256": "9c1053e2ce4000ccc7de0f060857830ce348e5ec8582c654b7dd401f6641c09b",
       "modifications": [
-        "明示v5のカラーNR範囲を連続拡張し、float haloの内部点処理の二重計算と将来版試験を修正する"
+        "明示v5のカラーNR範囲を連続拡張し、float haloの内部点処理の二重計算と将来版試験を修正する",
+        "明示CNR上位範囲の平坦部色ノイズ低減と輝度維持および旧範囲完全一致を独立合成で検証する"
       ]
     },
     {
