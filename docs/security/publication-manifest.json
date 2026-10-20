@@ -8931,8 +8931,8 @@
     },
     {
       "path": "apps/camera/scripts/e2e/progressive-open.js",
-      "sha256": "e0b57d3c92ac4783329317e9eb73b3d0ab437486a8317f03e2f8bd4696421166",
-      "origin": "Issue #13のため独立作成した実UI検証probe。専用e2e bundleだけを操作し、実画像・元の名前・path・画像hashを公開出力しない。\n変更理由: 画像情報を含まないE2E待機段階traceを追加。\n変更理由: 画面未描画の失敗をpreset変化なしへ誤分類しない。\n変更理由: 通常の正規入力fallbackも実paintで完了と判定し、遅い測定値を除外しない。"
+      "sha256": "753723bdccfc4588720845442ed6670926e715c616fb0b70be5e09d8ebd81550",
+      "origin": "Issue #13のため独立作成した実UI検証probe。専用e2e bundleだけを操作し、実画像・元の名前・path・画像hashを公開出力しない。\n変更理由: 画像情報を含まないE2E待機段階traceを追加。\n変更理由: 画面未描画の失敗をpreset変化なしへ誤分類しない。\n変更理由: 通常の正規入力fallbackも実paintで完了と判定し、遅い測定値を除外しない。\n変更理由: warmを同一アプリ内の正規表示から一覧へ戻る再表示として計測しnativeの区間開始を渡す"
     },
     {
       "path": "apps/camera/scripts/measure-progressive-open.mjs",
@@ -8946,13 +8946,13 @@
     },
     {
       "path": "apps/camera/scripts/probe-progressive-open.py",
-      "sha256": "5d3435a29ad05ef1c749b88d6bc22ff16dbe198f379948662f733312c046805d",
-      "origin": "Issue #13のため独立作成した実UI検証probe。専用e2e bundleだけを操作し、実画像・元の名前・path・画像hashを公開出力しない。\n変更理由: UIの待機段階だけを非公開traceへ残す。\n変更理由: 専用native logから許可した区間の有限な時間だけをprobe集計へ渡す。\n変更理由: probeごとに試験窓の表示と短いuser-active assertionを保持。"
+      "sha256": "a52efb3d279a8489e6b5fc9c424d8a419e4bf1601ad0e0a8ddacc0160ef4b9ff",
+      "origin": "Issue #13のため独立作成した実UI検証probe。専用e2e bundleだけを操作し、実画像・元の名前・path・画像hashを公開出力しない。\n変更理由: UIの待機段階だけを非公開traceへ残す。\n変更理由: 専用native logから許可した区間の有限な時間だけをprobe集計へ渡す。\n変更理由: probeごとに試験窓の表示と短いuser-active assertionを保持。\n変更理由: warmのアプリ再起動primeを除き同一session再表示のT0以後のnative時間だけを集計する"
     },
     {
       "path": "docs/features/progressive-raw-open.md",
-      "sha256": "28f82c56949eaf51f44a1278e2fac132e9c073cc7aa5fb83d7613c772ef7b60c",
-      "origin": "Issue #13のため公開SSOT上で独立作成。段階RAW openの契約と合成入力による統合検証。利用者画像・原本名・非公開ソース・認証情報を含まない。\n変更理由: 長時間実UI計測のdisplay awake条件と自動解除を明記。\n変更理由: fallbackの遅い回も性能集計へ含める条件を明記。\n変更理由: 未解決のpreset操作を確定してからengineを替える契約を明記。\n変更理由: 無人の専用Macでforeground計測を行う条件を明記。\n変更理由: 検証したhook名と入力指標および書き出し前のプリセット確定契約を明記する"
+      "sha256": "cec4a61a20ecd31dbfaf1602f297b447817e12e5dcb62160497275ef4c42ebe1",
+      "origin": "Issue #13のため公開SSOT上で独立作成。段階RAW openの契約と合成入力による統合検証。利用者画像・原本名・非公開ソース・認証情報を含まない。\n変更理由: 長時間実UI計測のdisplay awake条件と自動解除を明記。\n変更理由: fallbackの遅い回も性能集計へ含める条件を明記。\n変更理由: 未解決のpreset操作を確定してからengineを替える契約を明記。\n変更理由: 無人の専用Macでforeground計測を行う条件を明記。\n変更理由: 検証したhook名と入力指標および書き出し前のプリセット確定契約を明記する\n変更理由: 同一アプリ内でのwarm再表示と計測外primeを区別して再現条件を記録する"
     },
     {
       "path": "packages/photo-editing/src/editor/use-browser-photo-export-delete.test.tsx",

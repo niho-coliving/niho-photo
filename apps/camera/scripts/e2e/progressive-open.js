@@ -72,10 +72,25 @@
       .find((element) => element.textContent.trim() === (config.addPhotos ? "写真を選ぶ" : "フォルダを追加") && !element.disabled));
     add.click();
     stage = "grid";
-    const tile = await waitFor(() => [...document.querySelectorAll("button[title]")]
-      .find((element) => element.title === config.fileName && !element.disabled));
+    const findTile = () => [...document.querySelectorAll("button[title]")]
+      .find((element) => element.title === config.fileName && !element.disabled);
+    let tile = await waitFor(findTile);
     await delay(3000);
+    if (config.mode === "warm") {
+      // 再表示は同じアプリ・同じsessionで測る。アプリを再起動してnative cacheだけ残す条件とは分ける。
+      stage = "warm-prime";
+      tile.dispatchEvent(new MouseEvent("dblclick", { bubbles: true, cancelable: true }));
+      await waitFor(() => exposure() && (events.some((event) => event.stage === "canonicalReady") ||
+        (!events.some((event) => event.stage === "proxyReady") && events.some((event) => event.stage === "finalVisible"))), 30000);
+      const grid = await waitFor(() => document.querySelector('button[aria-label="一覧"]:not([disabled])'));
+      grid.click();
+      await waitFor(() => grid.getAttribute("aria-pressed") === "true" && findTile());
+      await delay(100);
+      tile = await waitFor(findTile);
+      events.length = 0;
+    }
     stage = "open";
+    const nativeMeasurementStartedMs = Date.now();
     const t0 = performance.now();
     tile.dispatchEvent(new MouseEvent("dblclick", { bubbles: true, cancelable: true }));
     await waitFor(() => exposure() && presetButtons().length > 1 && signature() !== null);
@@ -130,7 +145,7 @@
       proxyReadyMs: events.find((event) => event.stage === "proxyReady")?.elapsedMs ?? null,
       canonicalReadyMs: events.find((event) => event.stage === "canonicalReady")?.elapsedMs ??
         (!events.some((event) => event.stage === "proxyReady") ? events.find((event) => event.stage === "finalVisible")?.elapsedMs ?? null : null),
-      settingsRetained: retained, presetRetained: selected });
+      settingsRetained: retained, presetRetained: selected, nativeMeasurementStartedMs });
   } catch (error) {
     report({ ok: false, case: config.label, mode: config.mode, iteration: config.iteration, stage,
       ...observations, reason: error instanceof Error && ["timeout", "preset-frame-missing", "settings-changed-on-handoff", "preset-selection-lost", "paint-not-presented"].includes(error.message) ? error.message : "ui-probe-failed", uiEventStages: events.map((event) => event.stage) });

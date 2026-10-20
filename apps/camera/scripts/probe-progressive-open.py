@@ -82,6 +82,7 @@ def main():
         result = json.loads(report.read_text())
         if not result.get("ok"):
             raise RuntimeError("UI probe failed at " + str(result.get("stage", "unknown")))
+        native_started_ms = result.get("nativeMeasurementStartedMs", native_started_ms)
         native_times = {}
         allowed = {"nativeHash", "cacheLookup", "cacheStore", "info", "decode", "lens", "whiteBalance", "color", "downsample", "encode"}
         native_log = Path.home() / "Library/Logs" / BENCH_IDENTIFIER / "camera.log"
@@ -102,11 +103,7 @@ def main():
         result["nativeStagesMs"] = native_times
         return result
 
-    # warmの最初の1回は計測外で同じpathのnative cacheを作る。
-    primed = work / "warm-primed"
-    if args.condition == "warm" and not primed.exists():
-        launch(0)
-        primed.touch()
+    # warmは各launch内で正規入力まで開き、一覧へ戻って同じsessionを再表示する。
     result = launch(args.iteration)
     print(json.dumps({"stagesMs": {
         **result["nativeStagesMs"],

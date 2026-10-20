@@ -41,6 +41,6 @@ node apps/camera/scripts/measure-progressive-open.mjs \
   --probe-arg --iteration --probe-arg '{iteration}' --runs 20
 ```
 
-probeは写真を1枚だけ選んだ一覧を作り、段2のidle準備後にT0を開始します。露光とpresetが両方有効な状態で、最初の露光入力のstate反映と二度のrAF後の変更画を`editable`とし、presetも別操作で描画を検証します。暫定previewを取得できず正規入力を直接開いた回も除外せず、最初のFinal実paintを正規準備完了として遅い実測値を集計に含めます。warmの最初の1回は計測外でprimeします。
+probeは写真を1枚だけ選んだ一覧を作り、段2のidle準備後にT0を開始します。露光とpresetが両方有効な状態で、最初の露光入力のstate反映と二度のrAF後の変更画を`editable`とし、presetも別操作で描画を検証します。暫定previewを取得できず正規入力を直接開いた回も除外せず、最初のFinal実paintを正規準備完了として遅い実測値を集計に含めます。warmは各反復で同じアプリ内で正規入力まで計測外で開き、一覧へ戻って同じsessionを再表示します。アプリ再起動後にnative cacheだけを残す条件とは区別します。
 
-専用bundleの設定とWebKit storageは反復ごとに初期化し、native cacheはcoldだけ消します。試験専用の`foreground`モードで窓を最前面に保つため、無人の試験Macで実行します。各probeでも一時的なuser-active assertionを作り直します。probe自体は直列です。集計processの実行中だけ`caffeinate`で画面と本体のidle sleepを止め、終了時に解除します。元画像は読み取りだけで、公開出力は許可した時間と検証結果だけです。失敗時のログ・script・reportは渡したcache内でローカルに確認します。
+専用bundleの設定とWebKit storageは反復ごとに初期化し、native cacheはcoldだけ消します。warmのnative区間も再表示のT0以後だけを集計し、計測外primeを混ぜません。試験専用の`foreground`モードで窓を最前面に保つため、無人の試験Macで実行します。各probeでも一時的なuser-active assertionを作り直します。probe自体は直列です。集計processの実行中だけ`caffeinate`で画面と本体のidle sleepを止め、終了時に解除します。元画像は読み取りだけで、公開出力は許可した時間と検証結果だけです。失敗時のログ・script・reportは渡したcache内でローカルに確認します。
