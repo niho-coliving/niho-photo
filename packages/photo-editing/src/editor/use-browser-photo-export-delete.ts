@@ -173,6 +173,8 @@ export function useBrowserPhotoExportAndDelete(params: {
   selectedItem: BrowserItem | null;
   /** 一覧で選んでいる複数枚（選択した順）。1 枚書き出しは `selectedItem` を使う。 */
   selectedItems?: readonly BrowserItem[];
+  /** 受け付けた非同期プリセット操作は、書き出しによる編集ロックの前に確定する。 */
+  pendingEdits?: { hasPending: () => boolean; waitForPending: () => Promise<void> };
   operationRef: MutableRefObject<BrowserPhotoOperationKind | null>;
   setOperation: (operation: BrowserPhotoOperation | null) => void;
   saveGenerationRef: MutableRefObject<number>;
@@ -236,6 +238,13 @@ export function useBrowserPhotoExportAndDelete(params: {
 
   // 写真・複数選択の順を替えたら、待っていた写真は捨てる
   const selectedKey = (params.selectedItems ?? (selectedItem ? [selectedItem] : [])).map((item) => item.key).join("\u001f") || null;
+  const selectedKeyRef = useRef(selectedKey);
+  selectedKeyRef.current = selectedKey;
+  const settleAcceptedEdits = async (): Promise<boolean> => {
+    const key = selectedKeyRef.current;
+    await params.pendingEdits?.waitForPending();
+    return mountedRef.current && latestAccessRef.current.spotId === spotId && selectedKeyRef.current === key && !operationRef.current;
+  };
   useEffect(() => {
     if (pendingShareRef.current && pendingShareRef.current.key !== selectedKey) setPendingShare(null);
   }, [selectedKey, setPendingShare]);
@@ -566,6 +575,7 @@ export function useBrowserPhotoExportAndDelete(params: {
     if (format === "png" && !cutout) return "skipped";
     const rendersImage = format !== "original";
     if (rendersImage && jpegRoute === null) return "skipped";
+    if (rendersImage && params.pendingEdits?.hasPending() && (!(await settleAcceptedEdits()) || operationRef.current)) return "skipped";
     // 原寸の書き出しを出しているときだけ（できる・更新が要る版）。背景除去の原寸は camera の口
     const exportNative =
       params.capabilities.nativeExport || params.capabilities.nativeExportUpdateRequired ? library.exportNative : undefined;
@@ -710,6 +720,7 @@ export function useBrowserPhotoExportAndDelete(params: {
       return "skipped";
     }
     const key = targets.map((target) => target.key).join("\u001f");
+    if (params.pendingEdits?.hasPending() && (!(await settleAcceptedEdits()) || operationRef.current)) return "skipped";
     clearPendingShare();
     const controller = new AbortController();
     exportAbortRef.current?.abort();
@@ -772,6 +783,7 @@ export function useBrowserPhotoExportAndDelete(params: {
     const selected = (params.selectedItems ?? []).filter((item) => !item.adding);
     // 複数枚に背景除去は当てない（PNG は 1 枚の書き出しだけ。C4 移行元設計）
     if (format === "png" || selected.length < 2 || operationRef.current) return "skipped";
+    if (format !== "original" && params.pendingEdits?.hasPending() && (!(await settleAcceptedEdits()) || operationRef.current)) return "skipped";
     const targets: BrowserPhotoBatchExportTarget[] = selected.map((item) => ({
       photoId: item.photo.id,
       fileName: item.photo.fileName,
@@ -919,6 +931,7 @@ export function useBrowserPhotoExportAndDelete(params: {
     const chooseExportFolder = folderExport ? library.chooseExportFolder : undefined;
     const selected = (params.selectedItems ?? []).filter((item) => !item.adding);
     if (!exportNative || !chooseExportFolder || selected.length < 2 || operationRef.current) return "skipped";
+    if (params.pendingEdits?.hasPending() && (!(await settleAcceptedEdits()) || operationRef.current)) return "skipped";
     const itemsById = new Map(selected.map((item) => [item.photo.id, item]));
     const targets = selected.map((item) => ({ photoId: item.photo.id, fileName: item.photo.fileName }));
     const controller = new AbortController();

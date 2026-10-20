@@ -6523,14 +6523,15 @@
         "path": "packages/photo-editing/src/editor/browser-photo-editing-workbench.tsx",
         "sha256": "f655136ae0c985d793822ca8bef1668dba26ffd4bb8f13d2ba3d6c2ccb13ceb6"
       },
-      "outputSha256": "64bebfddd74a2a0063b208401d2a73b86fe9ce0dea96aa86ce9070180b4cdeeb",
+      "outputSha256": "4dde0bdffdb01c7dd69467a04e0a333c3d5164c012ca1a613d2b2e61f5ab2793",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
         "任意の個別写真ソース契約と選んだ写真のUI、復元、取消、再試行、失敗時参照保持を追加",
         "Issue #13の段階表示、provisional draft、canonical handoffと書き出し境界を実装。",
         "Issue 13 progressive RAW open implementation",
-        "PCとmobileのpreset見本を暫定中は先読みせず操作を優先。"
+        "PCとmobileのpreset見本を暫定中は先読みせず操作を優先。",
+        "書き出し制御へ未完了プリセット操作の待機契約を渡す"
       ]
     },
     {
@@ -7065,13 +7066,14 @@
         "path": "packages/photo-editing/src/editor/use-browser-photo-export-delete.ts",
         "sha256": "c1c209ddbe8cc049adb5c06c323c0f96e316cb28a8302293ca0f531f88d00592"
       },
-      "outputSha256": "e6c9f6f0b9789790cc5e625007f298208da38031ae33141c8d39dfb3f5a3a1a2",
+      "outputSha256": "519d47c3ca67e82ddf69b33c42793faa43f6cdc83c5a58c9696d6b1b249a54fb",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
         "Issue #13の段階表示、provisional draft、canonical handoffと書き出し境界を実装。",
         "Issue 13 progressive RAW open implementation",
-        "Issue 13 canonical export waiting status"
+        "Issue 13 canonical export waiting status",
+        "未完了プリセットを編集ロック前に確定して補正と重複書き出しを保護する"
       ]
     },
     {
@@ -8894,8 +8896,8 @@
     },
     {
       "path": "packages/photo-editing/src/editor/use-browser-photo-export-delete.test.tsx",
-      "sha256": "fdffb574516823f97e0f98c23f626e2c67cb499db894efbe53235d5f517029e6",
-      "origin": "Issue #13のため独立作成。actual export hookと公開fixtureだけで、補正書き出しのcanonical待機とRAW original copyの非待機を検証。外部画像・非公開コード・個体metadataを含まない。\n変更理由: 書出しhost境界のmockを実際の保存関数型に限定。"
+      "sha256": "ff003afd2eb27c8aaa3c0455755289ad2681b2feb983e0848a7e2416ffffbc78",
+      "origin": "Issue #13のため独立作成。actual export hookと公開fixtureだけで、補正書き出しのcanonical待機とRAW original copyの非待機を検証。外部画像・非公開コード・個体metadataを含まない。\n変更理由: 書出しhost境界のmockを実際の保存関数型に限定。\n変更理由: プリセット確定待機と重複書き出しおよびRAW原本非待機を実経路で検証する"
     },
     {
       "path": "packages/photo-editing/src/editor/use-browser-photo-progressive-open.test.tsx",

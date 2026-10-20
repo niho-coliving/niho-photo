@@ -116,6 +116,8 @@ let runExport: (
   options: { size: "long2048" | "width1080" | "full"; jpegRoute: "engine" | "canvas" | "webImage" | "native" | null },
 ) => Promise<BrowserPhotoExportResult>;
 let openedRefForTest: { current: OpenedSource | null };
+let operationRefForTest: { current: "export" | "delete" | "bulk" | null };
+let pendingEdits: { hasPending: () => boolean; waitForPending: ReturnType<typeof vi.fn<() => Promise<void>>> };
 let engine: DevelopEngine;
 let downloadOriginal: ReturnType<typeof vi.fn>;
 let saveFile = vi.fn<PhotoEditingHost["saveFile"]>();
@@ -124,6 +126,7 @@ function Harness() {
   const mountedRef = useRef(true);
   const latestAccessRef = useRef({ canEdit: true, cloudOriginalsAllowed: true, spotId: "spot" });
   const operationRef = useRef<"export" | "delete" | "bulk" | null>(null);
+  operationRefForTest = operationRef;
   const saveGenerationRef = useRef(0);
   const viewModeRef = useRef<"grid" | "loupe">("loupe");
   const engineRef = useRef(engine);
@@ -138,6 +141,7 @@ function Harness() {
     mountedRef,
     latestAccessRef,
     selectedItem: target,
+    pendingEdits,
     operationRef,
     setOperation: vi.fn(),
     saveGenerationRef,
@@ -176,6 +180,7 @@ function Harness() {
 beforeEach(async () => {
   (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
   vi.useFakeTimers();
+  pendingEdits = { hasPending: () => false, waitForPending: vi.fn(async () => undefined) };
   engine = {
     exportWorkingCopyJpeg: vi.fn(async () => new Uint8Array([1, 2, 3])),
     exportJpeg: vi.fn(async () => new Uint8Array([1, 2, 3])),
@@ -219,6 +224,25 @@ afterEach(async () => {
 });
 
 describe("useBrowserPhotoExportAndDelete canonical guard integration", () => {
+  it("受け付けたプリセットを確定してから編集をロックし、同時の重複exportを抑える", async () => {
+    let finish!: () => void;
+    pendingEdits.hasPending = () => true;
+    pendingEdits.waitForPending.mockImplementation(() => new Promise<void>((resolve) => { finish = resolve; }));
+    openedRefForTest.current = canonicalOpened();
+    const first = runExport("jpeg", { size: "long2048", jpegRoute: "engine" });
+    const completeFirst = finish;
+    const second = runExport("jpeg", { size: "long2048", jpegRoute: "engine" });
+    expect(operationRefForTest.current).toBeNull();
+    expect(engine.exportWorkingCopyJpeg).not.toHaveBeenCalled();
+    await act(async () => {
+      completeFirst();
+      finish();
+      expect(await first).toBe("done");
+      expect(await second).toBe("skipped");
+    });
+    expect(engine.exportWorkingCopyJpeg).toHaveBeenCalledTimes(1);
+  });
+
   it("補正を焼くfull-quality exportはcanonical handoffまでengineを呼ばない", async () => {
     let result: BrowserPhotoExportResult | undefined;
     const pending = runExport("jpeg", { size: "long2048", jpegRoute: "engine" }).then((value) => {
@@ -239,11 +263,14 @@ describe("useBrowserPhotoExportAndDelete canonical guard integration", () => {
   });
 
   it("RAW original copyはprovisional中でもcanonicalを待たない", async () => {
+    pendingEdits.hasPending = () => true;
+    pendingEdits.waitForPending.mockImplementation(() => new Promise<void>(() => undefined));
     let result: BrowserPhotoExportResult | undefined;
     await act(async () => {
       result = await runExport("original", { size: "long2048", jpegRoute: null });
     });
     expect(downloadOriginal).toHaveBeenCalledTimes(1);
+    expect(pendingEdits.waitForPending).not.toHaveBeenCalled();
     expect(engine.exportWorkingCopyJpeg).not.toHaveBeenCalled();
     expect(vi.getTimerCount()).toBe(0);
     expect(result).toBe("done");

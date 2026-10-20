@@ -534,6 +534,7 @@ export function BrowserPhotoEditingWorkbench(props: {
     latestAccessRef,
     selectedItem,
     selectedItems,
+    pendingEdits: presets,
     operationRef,
     setOperation,
     saveGenerationRef,
