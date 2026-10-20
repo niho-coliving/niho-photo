@@ -78,6 +78,8 @@ test("未承認binaryとテキスト画像も拒否し、公開可能台帳のex
   await rejected(f, /公開許可未確認/);
   f.manifest.importedFiles.push({ path: name, source: { repository: "niho-app", commit: baseline, path: name, sha256: digest(bytes) }, outputSha256: digest(bytes), modifications: [] });
   await f.save();
+  await f.put("docs/legal/asset-inventory.csv", `${header}${candidate},${name},${digest(bytes)},${bytes.length},icon,独立作成した合成のアイコン,権利とmetadataを確認中,独立再配布禁止,確認待ち\n`);
+  await rejected(f, /公開許可未確認/);
   await f.put("docs/legal/asset-inventory.csv", `${header}${candidate},${name},${digest(bytes)},${bytes.length},icon,独立作成した合成のアイコン,オーナーの公開許可を確認済み,独立再配布禁止,公開可能\n`);
   assert.deepEqual(await f.check(), []);
   const changed = Buffer.from([137, 80, 78, 71, 0, 14, 10]);

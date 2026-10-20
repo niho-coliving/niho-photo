@@ -82,7 +82,7 @@ export async function verifyPublication(root) {
   if (manifest.schemaVersion !== 1 || !commit.test(manifest.sourceBaseline?.commit ?? "") || !manifest.sourceBaseline?.repository || !commit.test(manifest.auditedCandidate?.commit ?? "") || !Array.isArray(manifest.importedFiles) || !Array.isArray(manifest.generatedFiles) || !Array.isArray(manifest.excludedSources) || !Array.isArray(manifest.deferredScopes)) throw new Error("公開manifestのschemaが不正です");
   const inventory = parseInventory(await readFile(path.join(root, "docs/legal/asset-inventory.csv"), "utf8"));
   for (const row of inventory) {
-    if (!commit.test(row.source_commit) || !validPath(row.source_path) || !sha256.test(row.sha256) || !Number.isSafeInteger(Number(row.size_bytes)) || Number(row.size_bytes) < 0 || !["公開可能", "要置換", "非公開維持"].includes(row.decision)) fail("資産台帳の記録不正");
+    if (!commit.test(row.source_commit) || !validPath(row.source_path) || !sha256.test(row.sha256) || !Number.isSafeInteger(Number(row.size_bytes)) || Number(row.size_bytes) < 0 || !["公開可能", "確認待ち", "要置換", "非公開維持"].includes(row.decision)) fail("資産台帳の記録不正");
   }
   const approved = new Map();
   for (const [kind, entries] of [["imported", manifest.importedFiles], ["generated", manifest.generatedFiles]]) {
