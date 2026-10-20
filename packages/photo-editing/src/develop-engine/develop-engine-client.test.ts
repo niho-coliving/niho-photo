@@ -530,7 +530,7 @@ describe("createDevelopEngine", () => {
     worker.respond({
       type: "ready",
       id: worker.lastRequest("init").id,
-      version: "niho-develop 0.18.0 (engine niho-11)",
+      version: "niho-develop 0.19.0 (engine niho-11)",
       colorPoints: true,
     });
 

@@ -20,6 +20,7 @@ import {
   newDevelopSettingsEngine,
   pasteDevelopSettings,
   readBrowserAdjustmentsFromDevelopSettings,
+  readDevelopDetail,
   readDevelopSettings,
   resetDevelopSettingsColors,
   signedWorkingCopyState,
@@ -70,6 +71,54 @@ describe("neutralDevelopSettings", () => {
     const { engine: _six, ...six } = neutralDevelopSettings(null);
     const { engine: _two, ...two } = neutralDevelopSettings(null, { raw: true });
     expect(six).toEqual(two);
+  });
+});
+
+describe("developSettings detail v5", () => {
+  const neutralDetail = {
+    sharpening: { amount: 0, radius: 1, detail: 25, masking: 0 },
+    luminanceNoiseReduction: 0,
+  };
+
+  it("存在だけでv5を要求し、zeroとcolor NRの明示zeroを厳格にroundtripする", () => {
+    expect(readDevelopDetail(neutralDetail)).toEqual(neutralDetail);
+    const settings = { ...neutralDevelopSettings(), v: 5 as const, detail: neutralDetail };
+    expect(readDevelopSettings(settings)).toEqual(settings);
+    expect(isEditableDevelopSettings(settings)).toBe(true);
+    expect(developSettingsVersion(settings)).toBe(5);
+    expect(isNeutralDevelopColors(settings)).toBe(true);
+    expect(isNeutralDevelopColors({ ...settings, detail: { ...neutralDetail, colorNoiseReduction: 0 } })).toBe(true);
+    expect(copyDevelopSettings(settings)).toHaveProperty("detail", neutralDetail);
+    expect(readDevelopSettings({ ...settings, v: 4 })).toBeNull();
+  });
+
+  it("空・partial・未知キー・非有限・範囲外を拒否する", () => {
+    for (const detail of [
+      {},
+      { sharpening: neutralDetail.sharpening },
+      { ...neutralDetail, future: 1 },
+      { ...neutralDetail, sharpening: { ...neutralDetail.sharpening, future: 1 } },
+      { ...neutralDetail, luminanceNoiseReduction: Number.NaN },
+      { ...neutralDetail, colorNoiseReduction: 101 },
+      { ...neutralDetail, sharpening: { ...neutralDetail.sharpening, radius: 0.49 } },
+    ]) {
+      expect(readDevelopDetail(detail)).toBeNull();
+      expect(readDevelopSettings({ ...neutralDevelopSettings(), v: 5, detail })).toBeNull();
+    }
+  });
+
+  it("active detailはneutralでなく、初期化で外し、貼り付けではcloneする", () => {
+    const active: DevelopSettings = {
+      ...neutralDevelopSettings(),
+      v: 5,
+      detail: { ...neutralDetail, sharpening: { ...neutralDetail.sharpening, amount: 40 } },
+    };
+    expect(isNeutralDevelopColors(active)).toBe(false);
+    expect(resetDevelopSettingsColors(active, null)).not.toHaveProperty("detail");
+    const pasted = pasteDevelopSettings(neutralDevelopSettings(), copyDevelopSettings(active));
+    expect(pasted.v).toBe(5);
+    expect(pasted.detail).toEqual(active.detail);
+    expect(pasted.detail).not.toBe(active.detail);
   });
 });
 

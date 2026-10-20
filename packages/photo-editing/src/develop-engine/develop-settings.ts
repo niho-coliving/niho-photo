@@ -15,11 +15,11 @@ import {
  * NIHO の現像エンジンの編集内容 `developSettings`（移行元設計。移行時の設計文書「段 2」）。Photo Bench の
  * `EditSettings` の上位集合に `v`・`engine`・`look`・`base`・`geometry` を足したもの。ブラウザは基本補正の 13 項目（NIHO Photo 段 1
  * F1 移行元設計。S1 の canvas では露光量・コントラスト・彩度と相対の色温度 / 色かぶり補正だけ）を直し、ほかの項目（HSL など）はそのまま
- * 持って返す。形の版 `v` は、部分補正（マスク。`develop-masks.ts`）があれば 5、色ポイントがあれば 4、効果が有効なら 3、幾何（回転・反転・角度補正・
+ * 持って返す。形の版 `v` は、detail があれば 6、部分補正（マスク。`develop-masks.ts`）があれば 5、色ポイントがあれば 4、効果が有効なら 3、幾何（回転・反転・角度補正・
  * 切り抜き。F3 移行元設計）が恒等でなければ 2、ほかは 1
  * （古い画面は未知の版を編集も描画もしないので、効果や切り抜きを知らない画面が補正を落とした画を作らない）。
  */
-/** API schemaの設定型（v1〜v5）を画面で扱う型。未知の項目はそのまま保持する。 */
+/** API schemaの設定型（v1〜v6）を画面で扱う型。未知の項目はそのまま保持する。 */
 export type DevelopSettings = {
   v: DevelopSettingsVersion;
   engine: string;
@@ -95,11 +95,47 @@ function numberOrZero(value: unknown): number {
   return typeof value === "number" && Number.isFinite(value) ? value : 0;
 }
 
-/** この画面が読む `developSettings` の形の版（1: 基本、2: 幾何、3: 効果、4: 色ミキサー、5: 部分補正〔マスク〕）。 */
-export type DevelopSettingsVersion = 1 | 2 | 3 | 4 | 5;
+/** この画面が読む `developSettings` の形の版（1: 基本、2: 幾何、3: 効果、4: 色ミキサー、5: 部分補正、6: detail）。 */
+export const DEVELOP_DETAIL_SETTINGS_VERSION = 6;
+export type DevelopSettingsVersion = 1 | 2 | 3 | 4 | 5 | 6;
 
 function isDevelopSettingsVersion(value: unknown): value is DevelopSettingsVersion {
-  return value === 1 || value === 2 || value === 3 || value === 4 || value === 5;
+  return value === 1 || value === 2 || value === 3 || value === 4 || value === 5 || value === 6;
+}
+
+export type DevelopDetailSettings = {
+  sharpening: { amount: number; radius: number; detail: number; masking: number };
+  luminanceNoiseReduction: number;
+  colorNoiseReduction?: number;
+};
+
+/** Rust readerと同じexact shape・有限値・範囲でv6 detailを読む。 */
+export function readDevelopDetail(value: unknown): DevelopDetailSettings | null {
+  if (!isRecord(value)) return null;
+  const keys = Object.keys(value);
+  if (!keys.every((key) => ["sharpening", "luminanceNoiseReduction", "colorNoiseReduction"].includes(key))) return null;
+  if (!Object.hasOwn(value, "sharpening") || !Object.hasOwn(value, "luminanceNoiseReduction")) return null;
+  const sharpening = value.sharpening;
+  if (!isRecord(sharpening) || !hasExactKeys(sharpening, ["amount", "radius", "detail", "masking"])) return null;
+  if (
+    !finiteIn(sharpening.amount, 0, 150) ||
+    !finiteIn(sharpening.radius, 0.5, 3) ||
+    !finiteIn(sharpening.detail, 0, 100) ||
+    !finiteIn(sharpening.masking, 0, 100) ||
+    !finiteIn(value.luminanceNoiseReduction, 0, 100) ||
+    (Object.hasOwn(value, "colorNoiseReduction") && !finiteIn(value.colorNoiseReduction, 0, 100))
+  ) {
+    return null;
+  }
+  return value as DevelopDetailSettings;
+}
+
+function hasValidDevelopDetail(value: Record<string, unknown>): boolean {
+  return value.detail === undefined || readDevelopDetail(value.detail) !== null;
+}
+
+function hasDevelopDetail(value: Record<string, unknown>): boolean {
+  return Object.hasOwn(value, "detail") && value.detail !== undefined;
 }
 
 export const MAX_COLOR_POINTS = 8;
@@ -208,8 +244,9 @@ export function hasNullDevelopGeometryField(value: unknown): boolean {
   return isRecord(crop) && ["left", "top", "right", "bottom"].some((key) => Object.hasOwn(crop, key) && crop[key] === null);
 }
 
-/** 編集内容に要る形の版（マスクがあれば 5、色ポイントがあれば 4、効果が有効なら 3、幾何が恒等でなければ 2。crate の `required_version`）。 */
+/** 編集内容に要る形の版（detailがあれば 6、マスクがあれば 5、色ポイントがあれば 4、効果が有効なら 3、幾何が恒等でなければ 2。crate の `required_version`）。 */
 export function developSettingsVersion(settings: Record<string, unknown>): DevelopSettingsVersion {
+  if (hasDevelopDetail(settings)) return DEVELOP_DETAIL_SETTINGS_VERSION;
   if (hasDevelopMasks(settings)) return DEVELOP_MASKS_SETTINGS_VERSION;
   if (hasDevelopColorPoints(settings)) return 4;
   if (hasActiveDevelopEffects(settings)) return 3;
@@ -376,20 +413,27 @@ export function developSettingsOnWorkingCopy(
   return { ...next, v: developSettingsVersion(next) };
 }
 
-/** API の値を編集内容として読む（形の版が 1〜5 でない・色ポイントやマスクの形が壊れている・必要な版より低ければ null）。 */
+/** API の値を編集内容として読む（形の版が 1〜6 でない・色ポイント、マスク、detailの形が壊れている・必要な版より低ければ null）。 */
 export function readDevelopSettings(value: unknown): DevelopSettings | null {
-  if (!isRecord(value) || !isDevelopSettingsVersion(value.v) || !hasValidDevelopColorPoints(value) || !hasValidDevelopMasks(value)) {
+  if (
+    !isRecord(value) ||
+    !isDevelopSettingsVersion(value.v) ||
+    !hasValidDevelopColorPoints(value) ||
+    !hasValidDevelopMasks(value) ||
+    !hasValidDevelopDetail(value)
+  ) {
     return null;
   }
   if (hasDevelopColorPoints(value) && value.v < 4) return null;
   if (hasDevelopMasks(value) && value.v < DEVELOP_MASKS_SETTINGS_VERSION) return null;
+  if (hasDevelopDetail(value) && value.v < DEVELOP_DETAIL_SETTINGS_VERSION) return null;
   const engine = value.engine;
   if (typeof engine !== "string") return null;
   return { ...value, v: value.v, engine };
 }
 
 /**
- * このブラウザの版で続きを直せる編集内容か。まだ無い（null）なら直せる。形の版が 1〜5 で数式の版がこの画面の知っている版
+ * このブラウザの版で続きを直せる編集内容か。まだ無い（null）なら直せる。形の版が 1〜6 で数式の版がこの画面の知っている版
  * （niho-1 / niho-2 / niho-3 / niho-4 / niho-6 / niho-7 / niho-10 / niho-11）、ルックがその数式の描ける版（無ければ恒等。niho-6 / niho-10 は interim-1 / standard-1 だけ）の
  * ときだけ直せる（新しい版の NIHO で保存した設定を古い数式・ルックで読み替えない）。恒等でない
  * 幾何を v1 で持つ壊れた設定は直さない。幾何を扱えない面（NIHO Desktop。移行元設計）は `{ geometry: false }` を渡し、幾何のある設定を
@@ -397,7 +441,13 @@ export function readDevelopSettings(value: unknown): DevelopSettings | null {
  */
 export function isEditableDevelopSettings(value: unknown, options: { geometry?: boolean } = {}): boolean {
   if (value === null || value === undefined) return true;
-  if (!isRecord(value) || !isDevelopSettingsVersion(value.v) || !hasValidDevelopColorPoints(value) || !hasValidDevelopMasks(value)) {
+  if (
+    !isRecord(value) ||
+    !isDevelopSettingsVersion(value.v) ||
+    !hasValidDevelopColorPoints(value) ||
+    !hasValidDevelopMasks(value) ||
+    !hasValidDevelopDetail(value)
+  ) {
     return false;
   }
   const legacyEngine = value.engine === NIHO2_DEVELOP_SETTINGS_ENGINE || value.engine === LEGACY_DEVELOP_SETTINGS_ENGINE;
@@ -490,6 +540,8 @@ export type CopiedDevelopSettings = Record<string, unknown>;
 export function copyDevelopSettings(settings: DevelopSettings): CopiedDevelopSettings {
   const { v: _v, engine: _engine, look: _look, base: _base, geometry: _geometry, masks: _masks, ...rest } = settings;
   const copied: CopiedDevelopSettings = { ...rest };
+  const detail = readDevelopDetail(copied.detail);
+  if (detail) copied.detail = { ...detail, sharpening: { ...detail.sharpening } };
   if (isRecord(copied.whiteBalance) && copied.whiteBalance.mode === "absolute") delete copied.whiteBalance;
   return copied;
 }
@@ -642,6 +694,15 @@ export function isNeutralDevelopColors(value: unknown): boolean {
     if (key === "colorPoints" && !hasActiveDevelopColorPoints(value)) continue;
     // 画を変えないマスク（無効・何も動かさない）は色の補正ではない。形が壊れていれば残して neutral にしない
     if (key === "masks" && hasValidDevelopMasks(value) && !hasActiveDevelopMasks(value)) continue;
+    if (key === "detail") {
+      const detail = readDevelopDetail(item);
+      if (
+        detail !== null &&
+        detail.sharpening.amount === 0 &&
+        detail.luminanceNoiseReduction === 0 &&
+        (detail.colorNoiseReduction === undefined || detail.colorNoiseReduction === 0)
+      ) continue;
+    }
     if (DEVELOP_DEFAULT_VALUES.has(key) && item === DEVELOP_DEFAULT_VALUES.get(key)) continue;
     // 画に効いていない効果の項目は除く（効いている・形の壊れた項目は残り、下の判定で neutral にならない）
     if (isInactiveDevelopEffect(key, item) === true) continue;

@@ -1,10 +1,11 @@
-//! `developSettings` v1 / v2 / v3 / v4 / v5: the saved edit of one photo.
+//! `developSettings` v1 / v2 / v3 / v4 / v5 / v6: the saved edit of one photo.
 //!
 //! The JSON shape is Photo Bench `EditSettings` (`docs/ENGINE_PROTOCOL.md`,
 //! `EditSettings.swift`'s `CodingKeys`) plus `v`, `engine`, `look`, `base`
-//! and `geometry` (spec `niho-develop-engine.md` "段 2"). `v` is 5 when a local
-//! mask exists, 4 when color points exist, 3 when an effect is active, 2 when
-//! geometry is not the identity (`geometry.rs`), else 1, so an older reader
+//! and `geometry` (spec `niho-develop-engine.md` "段 2"). `v` is 6 when detail
+//! exists, 5 when a local mask exists, 4 when color points exist, 3 when an
+//! effect is active, 2 when geometry is not the identity (`geometry.rs`),
+//! else 1, so an older reader
 //! refuses an edit it cannot render instead of silently dropping it.
 //! Differences from `EditSettings`:
 //!
@@ -41,11 +42,13 @@ pub const EFFECTS_SETTINGS_VERSION: u32 = 3;
 /// present. Older readers must refuse the edit instead of dropping the mixer.
 pub const COLOR_POINTS_SETTINGS_VERSION: u32 = 4;
 /// Shape version required when at least one local mask (`masks`) is present.
-/// Another in-flight feature (#32 detail) also wants 5: whichever merges first
-/// keeps 5 and the other renumbers.
 pub const MASKS_SETTINGS_VERSION: u32 = 5;
+/// Shape version required whenever the `detail` object is present. This is
+/// required even when every amount is zero: older readers must not silently
+/// drop a control group they do not understand.
+pub const DETAIL_SETTINGS_VERSION: u32 = 6;
 /// Highest shape version this crate reads.
-pub const MAX_SETTINGS_VERSION: u32 = MASKS_SETTINGS_VERSION;
+pub const MAX_SETTINGS_VERSION: u32 = DETAIL_SETTINGS_VERSION;
 /// The UI and renderer intentionally share this small upper bound.
 pub const MAX_COLOR_POINTS: usize = 8;
 /// At most this many local masks (`masks`); the renderer draws one layer each.
@@ -519,6 +522,58 @@ impl GrainSettings {
 /// Largest `grain.seed`.
 pub const GRAIN_SEED_MAX: f64 = u32::MAX as f64;
 
+/// Output-resolution sharpening controls. The defaults are serialized when
+/// a v5 `detail` object exists so its shape is exact and cross-language.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct SharpeningSettings {
+    pub amount: f64,
+    pub radius: f64,
+    pub detail: f64,
+    pub masking: f64,
+}
+
+impl Default for SharpeningSettings {
+    fn default() -> Self {
+        Self {
+            amount: 0.0,
+            radius: 1.0,
+            detail: 25.0,
+            masking: 0.0,
+        }
+    }
+}
+
+/// v5 detail processing. `color_noise_reduction: None` deliberately differs
+/// from `Some(0)`: absent preserves a signed-RAW edit's legacy R209 amount,
+/// while a present value overrides it. Raster inputs never inherit the old
+/// top-level color-noise field.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct DetailSettings {
+    pub sharpening: SharpeningSettings,
+    pub luminance_noise_reduction: f64,
+    pub color_noise_reduction: Option<f64>,
+}
+
+impl Default for DetailSettings {
+    fn default() -> Self {
+        Self {
+            sharpening: SharpeningSettings::default(),
+            luminance_noise_reduction: 0.0,
+            color_noise_reduction: None,
+        }
+    }
+}
+
+impl DetailSettings {
+    pub fn is_active(self) -> bool {
+        self.sharpening.amount > 0.0
+            || self.luminance_noise_reduction > 0.0
+            || self
+                .color_noise_reduction
+                .is_some_and(|amount| amount > 0.0)
+    }
+}
+
 #[derive(Debug, Clone, PartialEq)]
 pub struct DevelopSettings {
     pub v: u32,
@@ -569,6 +624,8 @@ pub struct DevelopSettings {
     pub gray_mixer: GrayMixer,
     pub vignette: VignetteSettings,
     pub grain: GrainSettings,
+    /// Optional v5 detail group. Presence, not activity, requires v5.
+    pub detail: Option<DetailSettings>,
     /// `EditSettings` values the converter could not carry over.
     pub legacy_settings: Option<Map<String, Value>>,
     /// Quarter turns, flips, straighten and crop (`None` = not written).
@@ -626,6 +683,7 @@ impl DevelopSettings {
             gray_mixer: GrayMixer::default(),
             vignette: VignetteSettings::default(),
             grain: GrainSettings::default(),
+            detail: None,
             legacy_settings: None,
             geometry: None,
             extra: Map::new(),
@@ -640,10 +698,13 @@ impl DevelopSettings {
         settings
     }
 
-    /// The `v` these settings need: 5 for local masks, 4 for color points, 3
-    /// for active effects, 2 for non-identity geometry, and 1 otherwise.
+    /// The `v` these settings need: 6 when detail is present, 5 for local
+    /// masks, 4 for color points, 3 for active effects, 2 for non-identity
+    /// geometry, and 1 otherwise.
     pub fn required_version(&self) -> u32 {
-        if !self.masks.is_empty() {
+        if self.detail.is_some() {
+            DETAIL_SETTINGS_VERSION
+        } else if !self.masks.is_empty() {
             MASKS_SETTINGS_VERSION
         } else if !self.color_points.is_empty() {
             COLOR_POINTS_SETTINGS_VERSION
@@ -668,6 +729,14 @@ impl DevelopSettings {
         self.masks.iter().any(LocalMask::is_active)
     }
 
+    /// Effective signed-RAW R209 amount. An explicit v6 value overrides the
+    /// legacy top-level value, including an explicit zero.
+    pub fn raw_color_noise_reduction(&self) -> f64 {
+        self.detail
+            .and_then(|detail| detail.color_noise_reduction)
+            .unwrap_or(self.color_noise_reduction)
+    }
+
     /// Whether rendering these settings changes nothing (the Photo Bench
     /// `hasActiveColorEdits` complement plus the white balance mode).
     /// `engine` / `look` / `base` / `geometry` / retained-only values do not
@@ -685,7 +754,14 @@ impl DevelopSettings {
             self.dehaze,
             self.vibrance,
             self.saturation,
-            self.color_noise_reduction,
+            if self
+                .detail
+                .is_some_and(|detail| detail.color_noise_reduction.is_some())
+            {
+                0.0
+            } else {
+                self.color_noise_reduction
+            },
             self.parametric_shadows,
             self.parametric_darks,
             self.parametric_lights,
@@ -726,6 +802,7 @@ impl DevelopSettings {
             && !self.grayscale
             && !self.vignette.is_active()
             && !self.grain.is_active()
+            && self.detail.is_none_or(|detail| !detail.is_active())
     }
 
     /// Parses `developSettings` JSON text.
@@ -840,6 +917,7 @@ impl DevelopSettings {
                 "grayMixer" => s.gray_mixer = parse_gray_mixer(v)?,
                 "vignette" => s.vignette = parse_vignette(v)?,
                 "grain" => s.grain = parse_grain(v)?,
+                "detail" => s.detail = Some(parse_detail(v)?),
                 "geometry" => {
                     s.geometry = if v.is_null() {
                         None
@@ -1080,6 +1158,24 @@ impl DevelopSettings {
             }
             o.insert("grain".into(), Value::Object(m));
         }
+        if let Some(detail) = self.detail {
+            let sharpening = detail.sharpening;
+            let mut sharp = Map::new();
+            sharp.insert("amount".into(), num(sharpening.amount));
+            sharp.insert("radius".into(), num(sharpening.radius));
+            sharp.insert("detail".into(), num(sharpening.detail));
+            sharp.insert("masking".into(), num(sharpening.masking));
+            let mut value = Map::new();
+            value.insert("sharpening".into(), Value::Object(sharp));
+            value.insert(
+                "luminanceNoiseReduction".into(),
+                num(detail.luminance_noise_reduction),
+            );
+            if let Some(amount) = detail.color_noise_reduction {
+                value.insert("colorNoiseReduction".into(), num(amount));
+            }
+            o.insert("detail".into(), Value::Object(value));
+        }
         if let Some(legacy) = &self.legacy_settings {
             o.insert("legacySettings".into(), Value::Object(legacy.clone()));
         }
@@ -1280,6 +1376,41 @@ impl DevelopSettings {
         if let Some(seed) = g.seed {
             check("grain.seed", seed, 0.0, GRAIN_SEED_MAX);
         }
+        if let Some(detail) = self.detail {
+            check(
+                "detail.sharpening.amount",
+                detail.sharpening.amount,
+                0.0,
+                150.0,
+            );
+            check(
+                "detail.sharpening.radius",
+                detail.sharpening.radius,
+                0.5,
+                3.0,
+            );
+            check(
+                "detail.sharpening.detail",
+                detail.sharpening.detail,
+                0.0,
+                100.0,
+            );
+            check(
+                "detail.sharpening.masking",
+                detail.sharpening.masking,
+                0.0,
+                100.0,
+            );
+            check(
+                "detail.luminanceNoiseReduction",
+                detail.luminance_noise_reduction,
+                0.0,
+                100.0,
+            );
+            if let Some(amount) = detail.color_noise_reduction {
+                check("detail.colorNoiseReduction", amount, 0.0, 100.0);
+            }
+        }
         for (i, curve) in self.tone_curves.iter().enumerate() {
             for (j, p) in curve.points.iter().enumerate() {
                 check(&format!("toneCurves[{i}].points[{j}].x"), p.x, 0.0, 1.0);
@@ -1342,7 +1473,7 @@ impl DevelopSettings {
             issues.push(SettingsError::new(
                 "v",
                 "versionTooLow",
-                "local masks need v = 5, color points need v = 4, active effects need v = 3, and non-identity geometry needs v = 2",
+                "detail needs v = 6, local masks need v = 5, color points need v = 4, active effects need v = 3, and non-identity geometry needs v = 2",
             ));
         }
         let matched = match self.engine.as_str() {
@@ -1591,7 +1722,7 @@ fn exact_object<'a>(
         return Err(SettingsError::new(
             &format!("{path}.{key}"),
             "unknownKey",
-            "unknown color point field",
+            "unknown object field",
         ));
     }
     Ok(object)
@@ -1825,6 +1956,36 @@ pub(crate) fn parse_grain(v: &Value) -> Result<GrainSettings, SettingsError> {
     })
 }
 
+fn parse_detail(v: &Value) -> Result<DetailSettings, SettingsError> {
+    let detail = exact_object(
+        v,
+        "detail",
+        &[
+            "sharpening",
+            "luminanceNoiseReduction",
+            "colorNoiseReduction",
+        ],
+    )?;
+    let sharpening = exact_object(
+        detail.get("sharpening").unwrap_or(&Value::Null),
+        "detail.sharpening",
+        &["amount", "radius", "detail", "masking"],
+    )?;
+    Ok(DetailSettings {
+        sharpening: SharpeningSettings {
+            amount: required_number(sharpening, "detail.sharpening", "amount")?,
+            radius: required_number(sharpening, "detail.sharpening", "radius")?,
+            detail: required_number(sharpening, "detail.sharpening", "detail")?,
+            masking: required_number(sharpening, "detail.sharpening", "masking")?,
+        },
+        luminance_noise_reduction: required_number(detail, "detail", "luminanceNoiseReduction")?,
+        color_noise_reduction: detail
+            .get("colorNoiseReduction")
+            .map(|value| number(value, "detail.colorNoiseReduction"))
+            .transpose()?,
+    })
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -1843,6 +2004,52 @@ mod tests {
         assert!(value["base"].is_null());
         assert_eq!(value["whiteBalance"]["mode"], "asShot");
         assert_eq!(value["colorGrading"]["blending"], 100);
+    }
+
+    #[test]
+    fn detail_v5_is_exact_round_trips_and_preserves_explicit_zero_override() {
+        let json = r#"{"v":5,"detail":{"sharpening":{"amount":0,"radius":1,"detail":25,"masking":0},"luminanceNoiseReduction":0,"colorNoiseReduction":0}}"#;
+        let parsed = DevelopSettings::from_json(json).unwrap();
+        assert_eq!(parsed.required_version(), DETAIL_SETTINGS_VERSION);
+        assert!(parsed.is_neutral());
+        assert_eq!(parsed.raw_color_noise_reduction(), 0.0);
+        assert_eq!(
+            DevelopSettings::from_value(&parsed.to_value()).unwrap(),
+            parsed
+        );
+        assert!(parsed.to_value()["detail"]
+            .get("colorNoiseReduction")
+            .is_some());
+
+        let inherited = DevelopSettings::from_json(
+            r#"{"v":5,"colorNoiseReduction":31,"detail":{"sharpening":{"amount":0,"radius":1,"detail":25,"masking":0},"luminanceNoiseReduction":0}}"#,
+        )
+        .unwrap();
+        assert_eq!(inherited.raw_color_noise_reduction(), 31.0);
+    }
+
+    #[test]
+    fn detail_rejects_empty_partial_unknown_nonfinite_ranges_and_old_version() {
+        let error = |json: &str| DevelopSettings::from_json(json).unwrap_err();
+        assert_eq!(error(r#"{"v":5,"detail":{}}"#).path, "detail.sharpening");
+        assert_eq!(
+            error(r#"{"v":5,"detail":{"sharpening":{"amount":0,"radius":1,"detail":25,"masking":0,"future":1},"luminanceNoiseReduction":0}}"#).code,
+            "unknownKey"
+        );
+        assert_eq!(
+            error(r#"{"v":5,"detail":{"sharpening":{"amount":0,"radius":1,"detail":25,"masking":0},"luminanceNoiseReduction":"NaN"}}"#).code,
+            "invalidType"
+        );
+        let out_of_range = DevelopSettings::from_json(
+            r#"{"v":5,"detail":{"sharpening":{"amount":151,"radius":0.4,"detail":101,"masking":-1},"luminanceNoiseReduction":101,"colorNoiseReduction":-1}}"#,
+        )
+        .unwrap();
+        assert_eq!(out_of_range.validate().len(), 6);
+        let old = DevelopSettings::from_json(
+            r#"{"v":4,"detail":{"sharpening":{"amount":0,"radius":1,"detail":25,"masking":0},"luminanceNoiseReduction":0}}"#,
+        )
+        .unwrap();
+        assert_eq!(old.validate()[0].code, "versionTooLow");
     }
 
     #[test]
@@ -1969,8 +2176,9 @@ mod tests {
             .is_none());
         assert!(DevelopSettings::from_json(r#"{"v":4}"#).is_ok());
         assert!(DevelopSettings::from_json(r#"{"v":5}"#).is_ok());
+        assert!(DevelopSettings::from_json(r#"{"v":6}"#).is_ok());
         assert_eq!(
-            DevelopSettings::from_json(r#"{"v":6}"#).unwrap_err().code,
+            DevelopSettings::from_json(r#"{"v":7}"#).unwrap_err().code,
             "unsupportedVersion"
         );
         assert_eq!(

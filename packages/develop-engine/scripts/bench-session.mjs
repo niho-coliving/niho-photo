@@ -22,6 +22,9 @@
 //         releasePrep (Final) -> reopen (free, open, Final 1280 again).
 //         Each release becomes the next step's current settings; reopen keeps both edits.
 //   full: open -> first (Final at the working size) -> reopen.
+//   detail: open -> Final 2048 -> six Interactive 1280 detail drags ->
+//         Final 2048. Intended for the Issue #32 Studio 1-second gate; it
+//         reports measurements only and never turns an unmeasured run green.
 //   editor: what the editor's worker does after opening: open -> first ->
 //         thumbnails (the bundled presets at 96px on thumbnail(256), as
 //         use-browser-preset-thumbnails.ts) -> auto (autoSettings, warmed
@@ -123,7 +126,7 @@ async function run() {
   const sum = (a, b) => [a[0] + b[0], a[1] + b[1]];
   let currentSettings = { ...kase.settings };
   const json = (overrides = {}) => JSON.stringify({ ...currentSettings, ...overrides });
-  const firstMax = scenario === "full" ? 0 : UI_MAX;
+  const firstMax = scenario === "full" ? 0 : scenario === "detail" ? 2048 : UI_MAX;
 
   let [developer, ms] = timed(() => pkg.Developer.openWorkingCopy(png, meta));
   record("open", ms);
@@ -157,7 +160,31 @@ async function run() {
     steps.at(-1).autoSha256 = sha256(auto);
     thumbnail.free();
   }
-  if (scenario === "ui" || scenario === "editor") {
+  if (scenario === "detail") {
+    const baseDetail = currentSettings.detail ?? {
+      sharpening: { amount: 70, radius: 1, detail: 25, masking: 20 },
+      luminanceNoiseReduction: 40,
+      colorNoiseReduction: 25,
+    };
+    const frames = [];
+    const times = [];
+    for (let i = 0; i < DRAG_FRAMES; i++) {
+      const settings = {
+        ...currentSettings,
+        v: Math.max(5, currentSettings.v ?? 1),
+        detail: { ...baseDetail, sharpening: { ...baseDetail.sharpening, amount: 40 + i * 10 } },
+      };
+      const [value, timing] = timed(() => developer.render(JSON.stringify(settings), UI_MAX, true));
+      frames.push(value);
+      times.push(timing);
+      currentSettings = settings;
+    }
+    const total = times.reduce(sum);
+    record("detailDrag1280", [total[0] / times.length, total[1] / times.length], frames);
+    steps.at(-1).frameMs = times.map((timing) => timing[0]);
+    [frame, ms] = timed(() => developer.render(json(), 2048, false));
+    record("detailFinal2048", ms, [frame]);
+  } else if (scenario === "ui" || scenario === "editor") {
     for (const [name, key] of [
       ["Tail", "contrast"],
       ["Prep", "highlights"],
