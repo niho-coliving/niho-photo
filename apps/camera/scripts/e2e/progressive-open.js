@@ -37,6 +37,19 @@
     const group = [...document.querySelectorAll('[role="group"]')].find((element) => /プリセット/u.test(labelOf(element)));
     return group ? [...group.querySelectorAll('li > button')].filter((element) => !element.disabled) : [];
   };
+  const presetEntry = () => document.querySelector('button[aria-label="プリセットの一覧"]:not([disabled])');
+  const showPresets = async () => {
+    if (presetButtons().length > 1) return;
+    const entry = await waitFor(presetEntry);
+    entry.click();
+    await waitFor(() => presetButtons().length > 1);
+  };
+  const showAdjustments = async () => {
+    const entry = document.querySelector('nav[aria-label="道具"] button[aria-label="補正"]:not([disabled])');
+    if (!entry || entry.getAttribute("aria-pressed") === "true") return;
+    entry.click();
+    await waitFor(exposure);
+  };
   const mainCanvas = () => [...document.querySelectorAll("canvas")]
     .filter((canvas) => canvas.width >= 512 && canvas.height >= 256 && canvas.getBoundingClientRect().width > 0)
     .sort((left, right) => right.width * right.height - left.width * left.height)[0];
@@ -93,7 +106,7 @@
     const nativeMeasurementStartedMs = Date.now();
     const t0 = performance.now();
     tile.dispatchEvent(new MouseEvent("dblclick", { bubbles: true, cancelable: true }));
-    await waitFor(() => exposure() && presetButtons().length > 1 && signature() !== null);
+    await waitFor(() => exposure() && (presetButtons().length > 1 || presetEntry()) && signature() !== null);
     const initial = signature();
     const slider = exposure();
     const valueBefore = slider.value;
@@ -111,6 +124,8 @@
     let presetAt = null;
     let presetPaintMs = null;
     stage = "preset-paint";
+    await showPresets();
+    const presetReadyAt = performance.now();
     for (const button of presetButtons().slice(1, 4)) {
       const before = signature();
       const presetInputAt = performance.now();
@@ -127,9 +142,11 @@
       }
     }
     if (presetAt === null) throw new Error("preset-frame-missing");
-    observations.timeToEditableMs = exposureAt - t0;
+    observations.timeToEditableMs = Math.max(exposureAt, presetReadyAt) - t0;
     observations.inputAcceptedMs = acceptedMs;
     observations.exposurePaintMs = exposurePaintMs;
+    const chosenPreset = presetButtons().find((button, index) => index > 0 && button.getAttribute("aria-current") === "true")?.textContent;
+    await showAdjustments();
     const values = sliderValues();
     stage = "canonical";
     await waitFor(() => events.some((event) => event.stage === "canonicalReady") ||
@@ -137,10 +154,11 @@
     await delay(100);
     const retained = JSON.stringify(values) === JSON.stringify(sliderValues());
     if (!retained) throw new Error("settings-changed-on-handoff");
-    const selected = presetButtons().some((button, index) => index > 0 && button.getAttribute("aria-current") === "true");
+    await showPresets();
+    const selected = presetButtons().some((button, index) => index > 0 && button.getAttribute("aria-current") === "true" && button.textContent === chosenPreset);
     if (!selected) throw new Error("preset-selection-lost");
     report({ ok: true, case: config.label, mode: config.mode, iteration: config.iteration,
-      timeToEditableMs: exposureAt - t0,
+      timeToEditableMs: Math.max(exposureAt, presetReadyAt) - t0,
       inputAcceptedMs: acceptedMs, exposurePaintMs, presetPaintMs,
       proxyReadyMs: events.find((event) => event.stage === "proxyReady")?.elapsedMs ?? null,
       canonicalReadyMs: events.find((event) => event.stage === "canonicalReady")?.elapsedMs ??
