@@ -1,0 +1,41 @@
+name: 不具合報告
+description: 公開クライアントの不具合を報告する
+title: "[bug] "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        未修正の脆弱性、token、内部URL、個人情報、実写真・RAWは貼らないでください。脆弱性はSecurity Advisoriesから非公開で報告してください。
+  - type: input
+    id: version
+    attributes:
+      label: 版・commit
+      description: 例：アプリ版、または公開commit SHA
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: 環境
+      description: OS版、Mac機種、対象形式など。端末固有IDは書かないでください。
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: 再現手順
+      description: 合成fixtureまたは公開許可済みの最小例で再現してください。
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: 期待した動作
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: 実際の動作
+    validations:
+      required: true

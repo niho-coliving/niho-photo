@@ -1,0 +1,27 @@
+name: 機能提案
+description: 公開クライアントの改善を提案する
+title: "[feature] "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        非公開API・本番権限・secretを公開Issueへ書かないでください。
+  - type: textarea
+    id: problem
+    attributes:
+      label: 解決したい問題
+      description: 利用者がどの場面で困るかを具体的に書いてください。
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: 提案する動作
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: 代替案・補足
+    validations:
+      required: false

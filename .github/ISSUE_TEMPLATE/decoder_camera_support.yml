@@ -1,0 +1,34 @@
+name: Decoder・カメラ対応
+description: RAWや画像形式、カメラ機種の対応を提案する
+title: "[decoder] "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        実写真・RAWやEXIFを公開Issueへ添付しないでください。fixtureが必要な場合は生成手順付きの合成データ、または権利確認済みの公開可能な例を提案してください。
+  - type: input
+    id: camera
+    attributes:
+      label: メーカー・機種
+    validations:
+      required: true
+  - type: input
+    id: format
+    attributes:
+      label: 形式・codec
+      description: 例：RW2、DNG、HEIC
+    validations:
+      required: true
+  - type: textarea
+    id: behavior
+    attributes:
+      label: 現在の動作と期待する動作
+    validations:
+      required: true
+  - type: textarea
+    id: fixture
+    attributes:
+      label: 権利確認済みfixtureの用意方法
+      description: ファイル自体を公開フォームに添付しないでください。
+    validations:
+      required: false
