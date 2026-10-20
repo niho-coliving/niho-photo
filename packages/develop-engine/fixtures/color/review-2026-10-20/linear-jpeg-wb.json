@@ -1,0 +1,289 @@
+{
+  "adaptation": "Bradford XYZ",
+  "displayComparison": "matrix isolation: clip linear sRGB and quantize to 8-bit; not a full pipeline or preset gate",
+  "fitAxisMetrics": {
+    "meanDeltaE00": 6.611238635677335,
+    "meanGate": 0.5,
+    "meanGateMet": false,
+    "p99DeltaE00": 25.071368731349565,
+    "variants": [
+      {
+        "meanDeltaE00": 16.80022967261031,
+        "p99DeltaE00": 29.838677962084383,
+        "samples": 4913,
+        "sliders": {
+          "temperature": -80.0,
+          "tint": 0.0
+        },
+        "variant": "temp_m80"
+      },
+      {
+        "meanDeltaE00": 3.862118800796226,
+        "p99DeltaE00": 12.155739466457224,
+        "samples": 4913,
+        "sliders": {
+          "temperature": -30.0,
+          "tint": 0.0
+        },
+        "variant": "temp_m30"
+      },
+      {
+        "meanDeltaE00": 7.5640283409409514,
+        "p99DeltaE00": 12.154356147057703,
+        "samples": 4913,
+        "sliders": {
+          "temperature": 30.0,
+          "tint": 0.0
+        },
+        "variant": "temp_p30"
+      },
+      {
+        "meanDeltaE00": 14.572722754709783,
+        "p99DeltaE00": 24.76047421816573,
+        "samples": 4913,
+        "sliders": {
+          "temperature": 80.0,
+          "tint": 0.0
+        },
+        "variant": "temp_p80"
+      },
+      {
+        "meanDeltaE00": 5.1615342620091536,
+        "p99DeltaE00": 8.874965737195213,
+        "samples": 4913,
+        "sliders": {
+          "temperature": 0.0,
+          "tint": -50.0
+        },
+        "variant": "tint_m50"
+      },
+      {
+        "meanDeltaE00": 1.8292202870608127,
+        "p99DeltaE00": 3.328363489238225,
+        "samples": 4913,
+        "sliders": {
+          "temperature": 0.0,
+          "tint": -20.0
+        },
+        "variant": "tint_m20"
+      },
+      {
+        "meanDeltaE00": 0.7738785266979948,
+        "p99DeltaE00": 2.6856354273046548,
+        "samples": 4913,
+        "sliders": {
+          "temperature": 0.0,
+          "tint": 20.0
+        },
+        "variant": "tint_p20"
+      },
+      {
+        "meanDeltaE00": 2.3261764405932714,
+        "p99DeltaE00": 7.957386517564325,
+        "samples": 4913,
+        "sliders": {
+          "temperature": 0.0,
+          "tint": 50.0
+        },
+        "variant": "tint_p50"
+      }
+    ]
+  },
+  "fitData": [
+    "temp_m80",
+    "temp_m30",
+    "temp_p30",
+    "temp_p80",
+    "tint_m50",
+    "tint_m20",
+    "tint_p20",
+    "tint_p50"
+  ],
+  "heldOutDuringFit": [
+    "wb_cool",
+    "wb_warm"
+  ],
+  "inputSpace": "linear ProPhoto D50",
+  "mapping": {
+    "baseKelvin": 5000.0,
+    "miredDeltas": [
+      159.99838092501494,
+      90.56833846597365,
+      0.0,
+      -62.606220311582746,
+      -145.51729791479383
+    ],
+    "temperatureSliderKnots": [
+      -80.0,
+      -30.0,
+      0.0,
+      30.0,
+      80.0
+    ],
+    "tintSliderKnots": [
+      -50.0,
+      -20.0,
+      0.0,
+      20.0,
+      50.0
+    ],
+    "tintValues": [
+      -51.87620325793887,
+      -16.19125757662723,
+      0.0,
+      18.55241255956706,
+      60.455535470925625
+    ]
+  },
+  "productionJpegWbChanged": false,
+  "promotionBlockedBy": [
+    "mean CIEDE2000 gate if validationAllTen.meanGateMet is false",
+    "independent Lightroom preset plus WB references are unavailable"
+  ],
+  "schema": "niho.linear-jpeg-wb-research.v1",
+  "status": "research-only-not-production",
+  "timingsMs": {
+    "fit": 2828.940834,
+    "validation": 69.432625
+  },
+  "validationAllTen": {
+    "meanDeltaE00": 6.331456948256456,
+    "meanGate": 0.5,
+    "meanGateMet": false,
+    "p99DeltaE00": 24.6629657166697,
+    "variants": [
+      {
+        "meanDeltaE00": 16.80022967261031,
+        "p99DeltaE00": 29.838677962084383,
+        "samples": 4913,
+        "sliders": {
+          "temperature": -80.0,
+          "tint": 0.0
+        },
+        "variant": "temp_m80"
+      },
+      {
+        "meanDeltaE00": 3.862118800796226,
+        "p99DeltaE00": 12.155739466457224,
+        "samples": 4913,
+        "sliders": {
+          "temperature": -30.0,
+          "tint": 0.0
+        },
+        "variant": "temp_m30"
+      },
+      {
+        "meanDeltaE00": 7.5640283409409514,
+        "p99DeltaE00": 12.154356147057703,
+        "samples": 4913,
+        "sliders": {
+          "temperature": 30.0,
+          "tint": 0.0
+        },
+        "variant": "temp_p30"
+      },
+      {
+        "meanDeltaE00": 14.572722754709783,
+        "p99DeltaE00": 24.76047421816573,
+        "samples": 4913,
+        "sliders": {
+          "temperature": 80.0,
+          "tint": 0.0
+        },
+        "variant": "temp_p80"
+      },
+      {
+        "meanDeltaE00": 5.1615342620091536,
+        "p99DeltaE00": 8.874965737195213,
+        "samples": 4913,
+        "sliders": {
+          "temperature": 0.0,
+          "tint": -50.0
+        },
+        "variant": "tint_m50"
+      },
+      {
+        "meanDeltaE00": 1.8292202870608127,
+        "p99DeltaE00": 3.328363489238225,
+        "samples": 4913,
+        "sliders": {
+          "temperature": 0.0,
+          "tint": -20.0
+        },
+        "variant": "tint_m20"
+      },
+      {
+        "meanDeltaE00": 0.7738785266979948,
+        "p99DeltaE00": 2.6856354273046548,
+        "samples": 4913,
+        "sliders": {
+          "temperature": 0.0,
+          "tint": 20.0
+        },
+        "variant": "tint_p20"
+      },
+      {
+        "meanDeltaE00": 2.3261764405932714,
+        "p99DeltaE00": 7.957386517564325,
+        "samples": 4913,
+        "sliders": {
+          "temperature": 0.0,
+          "tint": 50.0
+        },
+        "variant": "tint_p50"
+      },
+      {
+        "meanDeltaE00": 3.61157053205234,
+        "p99DeltaE00": 11.39317495529067,
+        "samples": 4913,
+        "sliders": {
+          "temperature": -30.0,
+          "tint": -20.0
+        },
+        "variant": "wb_cool"
+      },
+      {
+        "meanDeltaE00": 6.8130898650932386,
+        "p99DeltaE00": 10.993828992573661,
+        "samples": 4913,
+        "sliders": {
+          "temperature": 30.0,
+          "tint": 20.0
+        },
+        "variant": "wb_warm"
+      }
+    ]
+  },
+  "validationHeldOutCombinations": {
+    "meanDeltaE00": 5.212330198572788,
+    "meanGate": 0.5,
+    "meanGateMet": false,
+    "p99DeltaE00": 11.04313517762526,
+    "variants": [
+      {
+        "meanDeltaE00": 3.61157053205234,
+        "p99DeltaE00": 11.39317495529067,
+        "samples": 4913,
+        "sliders": {
+          "temperature": -30.0,
+          "tint": -20.0
+        },
+        "variant": "wb_cool"
+      },
+      {
+        "meanDeltaE00": 6.8130898650932386,
+        "p99DeltaE00": 10.993828992573661,
+        "samples": 4913,
+        "sliders": {
+          "temperature": 30.0,
+          "tint": 20.0
+        },
+        "variant": "wb_warm"
+      }
+    ]
+  },
+  "measurementSourceCommit": "ffdc46ad31d1619c48a3e1499465a6c8a712b23c",
+  "measurementHost": "Mac Studio",
+  "measurementDate": "2026-10-20",
+  "rustToolchain": "1.98.1"
+}

@@ -4,6 +4,8 @@ NIHO所有コード・モデル・校正値の公開SSOT。ソースと資産に
 
 Rust workspaceはRAW decode、色計算、DCP入出力、現像、WASM境界と診断CLIの8 crateを含む。decoder `rawler = =0.8.0` はLGPL-2.1の段1専用で、段2とそのWASMはdecoderに依存しない。各crateは `publish = false` / `UNLICENSED`。
 
+評価中の公開候補は [niho-8 float cube](NIHO8.md) と [Issue #26/#27 research paths](RESEARCH26-27.md) に分離している。いずれも product default ではなく、外部 gate 未完了の品質主張をしない。
+
 ```sh
 cargo +1.98.1 test --locked --manifest-path packages/develop-engine/Cargo.toml
 cargo +1.98.1 build --locked --config packages/develop-engine/.cargo/config.toml --manifest-path packages/develop-engine/Cargo.toml --target wasm32-unknown-unknown -p niho-develop-wasm
