@@ -11,7 +11,7 @@ export function workflowFailures(workflow) {
   if (Object.keys(workflow.on ?? {}).sort().join(",") !== "pull_request,push") fail("workflow eventはpull_request/pushのみ");
   if (JSON.stringify(workflow.on?.push) !== JSON.stringify({ branches: ["main"] }) || JSON.stringify(workflow.on?.pull_request) !== "{}") fail("全PRとmain pushを検査する必要あり");
   if (workflow.concurrency?.["cancel-in-progress"] !== true || typeof workflow.concurrency?.group !== "string") fail("concurrencyが必要");
-  if (/\$\{\{[^}]*\b(?:secrets|vars)\s*[.\[]|\bid-token\b|pull_request_target/.test(JSON.stringify(workflow))) fail("secret/権限付きcontextは禁止");
+  if (/\$\{\{[^}]*\b(?:secrets|vars)\b[^}]*\}\}|\bid-token\b|pull_request_target/.test(JSON.stringify(workflow))) fail("secret/権限付きcontextは禁止");
   const aggregate = workflow.jobs?.aggregate;
   if (aggregate?.name !== "Public CI required" || aggregate.if !== "always()") fail("安定aggregate checkが必要");
   if (Object.keys(workflow.jobs ?? {}).filter((name) => name !== "aggregate").sort().join(",") !== [...(aggregate?.needs ?? [])].sort().join(",")) fail("aggregateは全jobに依存する必要あり");

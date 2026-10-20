@@ -14,6 +14,8 @@ for (const [name, mutate] of [
   ["production environment", (w) => { w.jobs.native.environment = "production"; }],
   ["privileged event", (w) => { w.on["pull_request" + "_target"] = {}; }],
   ["secret reference", (w) => { w.jobs.plan.env = { TOKEN: "${{ secrets." + "SYNTHETIC }}" }; }],
+  ["serialized secrets context", (w) => { w.jobs.plan.env = { TOKEN: "${{ toJSON(secrets) }}" }; }],
+  ["serialized vars context", (w) => { w.jobs.plan.env = { TOKEN: "${{ toJSON(vars) }}" }; }],
   ["shell injection", (w) => { w.jobs.plan.steps.push({ run: "echo '${{ github.event.pull_request.title }}'" }); }],
   ["aggregate bypass", (w) => { w.jobs.aggregate.needs = ["plan"]; }],
   ["concurrency disabled", (w) => { w.concurrency["cancel-in-progress"] = false; }],
