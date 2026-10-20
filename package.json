@@ -1,0 +1,22 @@
+{
+  "name": "niho-photo",
+  "version": "0.1.0",
+  "private": true,
+  "description": "NIHO photoの公開クライアント共通基盤",
+  "workspaces": [
+    "packages/ui",
+    "packages/photo-editing"
+  ],
+  "scripts": {
+    "typecheck": "npm run typecheck --workspaces",
+    "test": "npm run test --workspaces",
+    "lint": "npm run lint --workspaces",
+    "format:check": "node scripts/check-format.mjs",
+    "verify:publication": "node scripts/verify-publication.mjs",
+    "verify": "npm run verify:publication && npm run format:check && npm run typecheck && npm test && npm run lint"
+  },
+  "engines": {
+    "node": "24.x"
+  },
+  "license": "UNLICENSED"
+}
