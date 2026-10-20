@@ -5022,8 +5022,10 @@
         "path": "packages/develop-engine/crates/niho-develop-render/src/lib.rs",
         "sha256": "a9ac3a784a2eb9250747dc2eaabc10c958c1a10d71c7ca16ffdd0d96b40456bc"
       },
-      "outputSha256": "a9ac3a784a2eb9250747dc2eaabc10c958c1a10d71c7ca16ffdd0d96b40456bc",
-      "modifications": []
+      "outputSha256": "aa468ef96507b57f3c8dbdae2c484d7aa56afaae6e3b6a3e7ef4bc0c88e7b463",
+      "modifications": [
+        "公開Issue #26/#27/#29: 旧版を保つfloat cube候補、研究用WB/H-Sプローブ、合成検証と計測契約を追加。"
+      ]
     },
     {
       "path": "packages/develop-engine/crates/niho-develop-render/src/main.rs",
@@ -5044,8 +5046,11 @@
         "path": "packages/develop-engine/crates/niho-develop-render/tests/cli.rs",
         "sha256": "8ddf42804ccd8202fb8834bc499d2d03a331eb0ff96e020421a776f2286ef9bd"
       },
-      "outputSha256": "8ddf42804ccd8202fb8834bc499d2d03a331eb0ff96e020421a776f2286ef9bd",
-      "modifications": []
+      "outputSha256": "b83ca2f3a076317e59cfc81c58931dcb17b5e4c00414c7b42b744edb37ba3eb4",
+      "modifications": [
+        "公開Issue #26/#27/#29: 旧版を保つfloat cube候補、研究用WB/H-Sプローブ、合成検証と計測契約を追加。",
+        "新engine受入と未知版拒否の境界を更新し、既存wasm CIで候補のFinal/Interactive固定画素を検証する。"
+      ]
     },
     {
       "path": "packages/develop-engine/crates/niho-develop-wasm/Cargo.toml",
@@ -5367,8 +5372,10 @@
         "path": "packages/develop-engine/crates/niho-develop/src/color_ops.rs",
         "sha256": "cd0c61a609a12094f4f95b019c1671187e1d320b95c36b34da5c87dc7c3835d1"
       },
-      "outputSha256": "cd0c61a609a12094f4f95b019c1671187e1d320b95c36b34da5c87dc7c3835d1",
-      "modifications": []
+      "outputSha256": "989173ee1e35e2f8f83d59d7c0377e0ac0ab6b90ce7730c41910c86cba975227",
+      "modifications": [
+        "公開Issue #26/#27/#29: 旧版を保つfloat cube候補、研究用WB/H-Sプローブ、合成検証と計測契約を追加。"
+      ]
     },
     {
       "path": "packages/develop-engine/crates/niho-develop/src/convert.rs",
@@ -5488,8 +5495,10 @@
         "path": "packages/develop-engine/crates/niho-develop/src/lib.rs",
         "sha256": "1591d49effaa779c8e23ad6877508ccf336565eec8336d5b4e6faa3b5d3846b0"
       },
-      "outputSha256": "1591d49effaa779c8e23ad6877508ccf336565eec8336d5b4e6faa3b5d3846b0",
-      "modifications": []
+      "outputSha256": "c22b1276b79d365adaf15a98de7942329368eb085cb0f9fb05e1489b9f24a984",
+      "modifications": [
+        "公開Issue #26/#27/#29: 旧版を保つfloat cube候補、研究用WB/H-Sプローブ、合成検証と計測契約を追加。"
+      ]
     },
     {
       "path": "packages/develop-engine/crates/niho-develop/src/look.rs",
@@ -5510,8 +5519,10 @@
         "path": "packages/develop-engine/crates/niho-develop/src/lut.rs",
         "sha256": "d0b9d65a032d449a1f234d6e65ecc328dd44f6fe51ede51d602c5c58aae7e96e"
       },
-      "outputSha256": "d0b9d65a032d449a1f234d6e65ecc328dd44f6fe51ede51d602c5c58aae7e96e",
-      "modifications": []
+      "outputSha256": "171c263e2978ce26e7049232f80ee992330c307e613daa61a236f9e39f2e408a",
+      "modifications": [
+        "公開Issue #26/#27/#29: 旧版を保つfloat cube候補、研究用WB/H-Sプローブ、合成検証と計測契約を追加。"
+      ]
     },
     {
       "path": "packages/develop-engine/crates/niho-develop/src/niho3.rs",
@@ -5554,8 +5565,10 @@
         "path": "packages/develop-engine/crates/niho-develop/src/niho6.rs",
         "sha256": "6383017c670ab330829ebd61fde9e374e58f468440969b75cb64f1f4e8d376fd"
       },
-      "outputSha256": "6383017c670ab330829ebd61fde9e374e58f468440969b75cb64f1f4e8d376fd",
-      "modifications": []
+      "outputSha256": "a5fd4fc8eae33e304795649646dec98b95f61efa4526fa86cdf7158e38bf3dc0",
+      "modifications": [
+        "公開Issue #26/#27/#29: 旧版を保つfloat cube候補、研究用WB/H-Sプローブ、合成検証と計測契約を追加。"
+      ]
     },
     {
       "path": "packages/develop-engine/crates/niho-develop/src/niho6_response.rs",
@@ -5609,8 +5622,10 @@
         "path": "packages/develop-engine/crates/niho-develop/src/pipeline.rs",
         "sha256": "d982d76cf1b5d34526f700e5edfcef00ae8647d22b845c0f7234ed340ba9d641"
       },
-      "outputSha256": "d982d76cf1b5d34526f700e5edfcef00ae8647d22b845c0f7234ed340ba9d641",
-      "modifications": []
+      "outputSha256": "f96100f58f2e04ec047bd0c38e1430d9b76b17313b47d802a34bb12efcf4d3d8",
+      "modifications": [
+        "公開Issue #26/#27/#29: 旧版を保つfloat cube候補、研究用WB/H-Sプローブ、合成検証と計測契約を追加。"
+      ]
     },
     {
       "path": "packages/develop-engine/crates/niho-develop/src/raw_chroma.rs",
@@ -5719,8 +5734,10 @@
         "path": "packages/develop-engine/crates/niho-develop/src/settings.rs",
         "sha256": "756a24a09d738b2341974d92d89b82f55b42eb6060b6e0c99ee4a532947a1b47"
       },
-      "outputSha256": "756a24a09d738b2341974d92d89b82f55b42eb6060b6e0c99ee4a532947a1b47",
-      "modifications": []
+      "outputSha256": "7459cdc1956c1e68412a9da7ae6360f60dce79c55af7208bc7c4139238bf11af",
+      "modifications": [
+        "公開Issue #26/#27/#29: 旧版を保つfloat cube候補、研究用WB/H-Sプローブ、合成検証と計測契約を追加。"
+      ]
     },
     {
       "path": "packages/develop-engine/crates/niho-develop/src/spatial.rs",
@@ -5741,8 +5758,10 @@
         "path": "packages/develop-engine/crates/niho-develop/src/tone_ops.rs",
         "sha256": "394b07235a9b58a8f3756a1391bcc1b286eeda30f348f3334ebc4db4c42a2ef8"
       },
-      "outputSha256": "394b07235a9b58a8f3756a1391bcc1b286eeda30f348f3334ebc4db4c42a2ef8",
-      "modifications": []
+      "outputSha256": "e9583a92e5b6315365baee8789654816c6734f2278e7be9e7e1f5cd99a29fb29",
+      "modifications": [
+        "公開Issue #26/#27/#29: 旧版を保つfloat cube候補、研究用WB/H-Sプローブ、合成検証と計測契約を追加。"
+      ]
     },
     {
       "path": "packages/develop-engine/crates/niho-develop/src/wb_table.rs",
@@ -5763,8 +5782,10 @@
         "path": "packages/develop-engine/crates/niho-develop/src/xmp.rs",
         "sha256": "be5ddce69eceafb334c173ee92af3614c044039b103903ad1dfef24758f1ec45"
       },
-      "outputSha256": "be5ddce69eceafb334c173ee92af3614c044039b103903ad1dfef24758f1ec45",
-      "modifications": []
+      "outputSha256": "90564d45b4b74011d48de33eb5717afa575d64e18cee8914d136d65c4094043e",
+      "modifications": [
+        "公開Issue #26/#27/#29: 旧版を保つfloat cube候補、研究用WB/H-Sプローブ、合成検証と計測契約を追加。"
+      ]
     },
     {
       "path": "packages/develop-engine/crates/niho-develop/src/xmp/amount.rs",
@@ -5785,8 +5806,10 @@
         "path": "packages/develop-engine/crates/niho-develop/src/xmp/write.rs",
         "sha256": "f583b51766c756fe31b623949a8174abd304ff660a7793e332b3153faf2aa749"
       },
-      "outputSha256": "f583b51766c756fe31b623949a8174abd304ff660a7793e332b3153faf2aa749",
-      "modifications": []
+      "outputSha256": "ac370a40e924f0b59674b062c04b51501dc7b06521099b9ae865ff2481533a96",
+      "modifications": [
+        "公開Issue #26/#27/#29: 旧版を保つfloat cube候補、研究用WB/H-Sプローブ、合成検証と計測契約を追加。"
+      ]
     },
     {
       "path": "packages/develop-engine/crates/niho-develop/tests/auto.rs",
@@ -6144,8 +6167,11 @@
         "path": "packages/develop-engine/crates/niho-develop/tests/niho6_cross_target.rs",
         "sha256": "eba5bf799e46cf4c475d9d60d4a7092993dfbe766722b890f2f78e165a3f3da5"
       },
-      "outputSha256": "eba5bf799e46cf4c475d9d60d4a7092993dfbe766722b890f2f78e165a3f3da5",
-      "modifications": []
+      "outputSha256": "44450dca1474be560e7d164cf8a7ad5d11e9a0f049c3c286f782b1ec0c13d047",
+      "modifications": [
+        "新engine受入と未知版拒否の境界を更新し、既存wasm CIで候補のFinal/Interactive固定画素を検証する。",
+        "実測に基づくWB節点別fit、旧版を維持する候補のnative/wasm固定hashと再現可能な性能計測を整備。"
+      ]
     },
     {
       "path": "packages/develop-engine/crates/niho-develop/tests/niho6_working_copy.rs",
@@ -8641,8 +8667,8 @@
     },
     {
       "path": "packages/develop-engine/README.md",
-      "sha256": "9b50996a622b88566bc59c929efe3276843e812a29461ec6b4dd97faf2b6d400",
-      "origin": "#9で独立作成。所有測定対・metadataを除いた所有RAW/参照画像、検証tool、公開build/test契約または第三者license全文。詳細はdocs/migration/raw-engine.mdと資産台帳に記録。"
+      "sha256": "413cd3fe309dcdbeedda925df35542c545bef04758d38033df4ffbb3ae6a0a73",
+      "origin": "#9で独立作成。所有測定対・metadataを除いた所有RAW/参照画像、検証tool、公開build/test契約または第三者license全文。詳細はdocs/migration/raw-engine.mdと資産台帳に記録。\n変更理由: 公開Issue #26/#27/#29: 旧版を保つfloat cube候補、研究用WB/H-Sプローブ、合成検証と計測契約を追加。"
     },
     {
       "path": "packages/develop-engine/crates/niho-base-raw/README.md",
@@ -8893,6 +8919,86 @@
       "path": "packages/photo-editing/src/editor/photo-editing-presets-panel-variants.test.tsx",
       "sha256": "b044699a340836f23b7cc5d87ccf9d6a543ad09ff8f45df541e884c7fcc30160",
       "origin": "niho-photo#51 のため新規作成。右端の道具の帯と右パネルの面の部品・test。"
+    },
+    {
+      "path": "packages/develop-engine/NIHO8.md",
+      "sha256": "d125741c5661caa41fa06258b5cce8eafffa9b0deb86b9a4fbce69dbf78c3583",
+      "origin": "公開Issue #26/#27/#29 のため公開済み数式・既存primitiveから独立実装した研究用コード・合成テスト・日本語手順。非公開の写真・参照画素・パス・履歴・第三者ソースを含まない。\n変更理由: 実測に基づくWB節点別fit、旧版を維持する候補のnative/wasm固定hashと再現可能な性能計測を整備。\n変更理由: Studio実測の段差・WB gate未達・wasm初期解析と継続編集の性能をsource SHA付きで記録。\n変更理由: 57場面のfloat対比較と6場面の原理式Bのgate未達を、匿名数値・残作業として記録。"
+    },
+    {
+      "path": "packages/develop-engine/RESEARCH26-27.md",
+      "sha256": "0eaf15ac385b234c3ea8035dc9bd37ed18a38baad75c3bbdcb54fb495e7e8459",
+      "origin": "公開Issue #26/#27/#29 のため公開済み数式・既存primitiveから独立実装した研究用コード・合成テスト・日本語手順。非公開の写真・参照画素・パス・履歴・第三者ソースを含まない。\n変更理由: 暗所A/Bで現行niho-6を基準とし、H/S以外の色・黒レベル等を同じ数式で比較する。\n変更理由: 実測に基づくWB節点別fit、旧版を維持する候補のnative/wasm固定hashと再現可能な性能計測を整備。\n変更理由: 非公開出力をrepository外へ限定しsealed独立評価を拒否する、匿名集計の再現手順を追加。\n変更理由: Studio実測の段差・WB gate未達・wasm初期解析と継続編集の性能をsource SHA付きで記録。\n変更理由: 57場面のfloat対比較と6場面の原理式Bのgate未達を、匿名数値・残作業として記録。\n変更理由: 教師上の次候補fitとownerの撮影作業を区別し、独立評価前の未達判定であることを明確化。"
+    },
+    {
+      "path": "packages/develop-engine/crates/niho-develop/examples/analytic_hs_probe.rs",
+      "sha256": "7a81a2cabd84d445acb30922b0f5d831072afb1d25e20a6f5475061670823aa1",
+      "origin": "公開Issue #26/#27/#29 のため公開済み数式・既存primitiveから独立実装した研究用コード・合成テスト・日本語手順。非公開の写真・参照画素・パス・履歴・第三者ソースを含まない。\n変更理由: 暗所A/Bで現行niho-6を基準とし、H/S以外の色・黒レベル等を同じ数式で比較する。"
+    },
+    {
+      "path": "packages/develop-engine/crates/niho-develop/examples/linear_jpeg_wb_fit.rs",
+      "sha256": "50a2516485f6fcec6f2be0083026469be97bb8c5fc0c6608083896a707152a5f",
+      "origin": "公開Issue #26/#27/#29 のため公開済み数式・既存primitiveから独立実装した研究用コード・合成テスト・日本語手順。非公開の写真・参照画素・パス・履歴・第三者ソースを含まない。\n変更理由: 実測に基づくWB節点別fit、旧版を維持する候補のnative/wasm固定hashと再現可能な性能計測を整備。"
+    },
+    {
+      "path": "packages/develop-engine/crates/niho-develop/examples/niho8_measure.rs",
+      "sha256": "6a2c452bf1df3df6f93e61212deca8294b2eaf82b8f54a8470158ba19aaf0892",
+      "origin": "公開Issue #26/#27/#29 のため公開済み数式・既存primitiveから独立実装した研究用コード・合成テスト・日本語手順。非公開の写真・参照画素・パス・履歴・第三者ソースを含まない。"
+    },
+    {
+      "path": "packages/develop-engine/crates/niho-develop/src/research/analytic_hs.rs",
+      "sha256": "821b18e256f14d28045785d2040d693ea6b91b22352cd7bc5fbb62526bac3149",
+      "origin": "公開Issue #26/#27/#29 のため公開済み数式・既存primitiveから独立実装した研究用コード・合成テスト・日本語手順。非公開の写真・参照画素・パス・履歴・第三者ソースを含まない。\n変更理由: 有界EV適用後の浮動小数点overflowも非有限出力として拒否。\n変更理由: 暗所A/Bで現行niho-6を基準とし、H/S以外の色・黒レベル等を同じ数式で比較する。"
+    },
+    {
+      "path": "packages/develop-engine/crates/niho-develop/src/research/linear_jpeg_wb.rs",
+      "sha256": "a4c4ce9c9ae2eb202bc5ba018055bcb1c5d02e9682abab6ff837fdd469f2f643",
+      "origin": "公開Issue #26/#27/#29 のため公開済み数式・既存primitiveから独立実装した研究用コード・合成テスト・日本語手順。非公開の写真・参照画素・パス・履歴・第三者ソースを含まない。\n変更理由: 表示色評価で使用するProPhotoからsRGBへの行列importを補正。\n変更理由: 実測に基づくWB節点別fit、旧版を維持する候補のnative/wasm固定hashと再現可能な性能計測を整備。"
+    },
+    {
+      "path": "packages/develop-engine/crates/niho-develop/src/research/mod.rs",
+      "sha256": "35ea6f84d1d46b781371658dbbdf68f4a742ee1660a881476a6f985e893c05fd",
+      "origin": "公開Issue #26/#27/#29 のため公開済み数式・既存primitiveから独立実装した研究用コード・合成テスト・日本語手順。非公開の写真・参照画素・パス・履歴・第三者ソースを含まない。"
+    },
+    {
+      "path": "packages/develop-engine/crates/niho-develop/tests/niho8.rs",
+      "sha256": "9783610b158502303471a645233537d33041c50b45e152aae929d60bdc470220",
+      "origin": "公開Issue #26/#27/#29 のため公開済み数式・既存primitiveから独立実装した研究用コード・合成テスト・日本語手順。非公開の写真・参照画素・パス・履歴・第三者ソースを含まない。\n変更理由: 既存PresetResultのsettingsを介してengineとXMP保持を検証する。\n変更理由: 候補の一発描画・crop・drag release・旧版へ戻す精度cacheの一致を回帰検証。"
+    },
+    {
+      "path": "packages/develop-engine/tools/color-review-wasm-bench.cjs",
+      "sha256": "e4663199c62a7602aa3a134f4317f36355a639d7dca51a0bb83f82ac722a7286",
+      "origin": "公開Issue #29 のため独立作成した合成1024×768 PNGとNode/wasm性能計測。Node標準ライブラリのみ、非公開写真・参照画素・依存を含まない。"
+    },
+    {
+      "path": "packages/develop-engine/tools/color-review-teachers.py",
+      "sha256": "3339ba4cb57737dce3a1ef9ae7d2efded00265fecf90bbd1369e9b39906d8dab",
+      "origin": "公開Issue #26/#29 のため独立実装した既存colorcheck呼出用の開発教師比較tool。入力は利用者指定、非公開の写真・パス・scene名・参照画素をsourceへ含めず匿名数値だけを公開する。\n変更理由: Rerender reused teacher jobs and record current renderer settings and input hashes"
+    },
+    {
+      "path": "packages/develop-engine/fixtures/color/review-2026-10-20/float-cubes.json",
+      "sha256": "0c719ab3947ce36b961493c184e6c2a9303d77de142c8581074254659889bcca",
+      "origin": "2026-10-20のStudio実測。公開済みLUTまたは独立した合成画像から計測し、source commit・実行環境・適用範囲とともに数値だけを記録。実写真・非公開参照画素を含まない。"
+    },
+    {
+      "path": "packages/develop-engine/fixtures/color/review-2026-10-20/linear-jpeg-wb.json",
+      "sha256": "b1a4fff8d50fc3e7cfa5c948b37a354b4b403fd196369210584c28e641f3f72f",
+      "origin": "2026-10-20のStudio実測。公開済みLUTまたは独立した合成画像から計測し、source commit・実行環境・適用範囲とともに数値だけを記録。実写真・非公開参照画素を含まない。"
+    },
+    {
+      "path": "packages/develop-engine/fixtures/color/review-2026-10-20/wasm-performance.json",
+      "sha256": "83f878d7d79600d57cf87bc03c3a0a3a1915459a71872986eff2344582165015",
+      "origin": "2026-10-20のStudio実測。公開済みLUTまたは独立した合成画像から計測し、source commit・実行環境・適用範囲とともに数値だけを記録。実写真・非公開参照画素を含まない。"
+    },
+    {
+      "path": "packages/develop-engine/fixtures/color/review-2026-10-20/teacher-development.json",
+      "sha256": "c675b216a4e38cb6ff48ce894ae65a1dfb5762c5215ebec98db9b3bd88922a77",
+      "origin": "owner所有の既存非公開教師をStudioで比較した匿名集計のみ。source commit・renderer hash・測定手順・cohort件数を記録し、写真・scene名・私有path・参照画素・個別結果は公開しない。独立評価画像の参照は0枚。"
+    },
+    {
+      "path": "packages/develop-engine/tools/colorcheck/tests/test_teacher_render_cache.py",
+      "sha256": "a692f09a376b34cedf40a6278b9bb45f12e84ee8c43ee19c15bed786947dc6a9",
+      "origin": "PR #33の教師render再利用を防ぐため独立作成した公開CI unittest。subprocessをstubし合成bytesだけを使い、実写真・第三者資産を含まない。"
     }
   ],
   "excludedSources": [

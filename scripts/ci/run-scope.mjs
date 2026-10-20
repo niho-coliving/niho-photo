@@ -43,6 +43,7 @@ export async function scopeCommands(root, scope) {
       if (scope !== "develop-engine" || metadata.rustToolchain !== "1.98.1" || metadata.ownedFixturesAudited !== true) throw new Error("現像WASMの固定toolchain・実RAW監査契約が必要です");
       commands.push(["python3", ["packages/develop-engine/tools/independent-profile/check.py"]]);
       commands.push(["python3", ["-m", "unittest", "discover", "-s", "packages/develop-engine/tools/asset-audit", "-p", "test_*.py"]]);
+      commands.push(["python3", ["-m", "unittest", "discover", "-s", "packages/develop-engine/tools/colorcheck/tests", "-p", "test_teacher_render_cache.py"]]);
       commands.push(["cargo", [...cargoPrefix, "build", "--locked", "--config", "packages/develop-engine/.cargo/config.toml", "--manifest-path", "packages/develop-engine/Cargo.toml", "--target", "wasm32-unknown-unknown", "-p", "niho-develop-wasm"]]);
       commands.push(["cargo", [...cargoPrefix, "install", "wasm-bindgen-cli", "--version", "0.2.129", "--locked"]]);
       commands.push(["cargo", [...cargoPrefix, "test", "--locked", "--config", "packages/develop-engine/.cargo/config.toml", "--manifest-path", "packages/develop-engine/Cargo.toml", "--target", "wasm32-unknown-unknown", "-p", "niho-develop", "--test", "camera_linear_codec_cross_target", "--test", "niho6_cross_target", "--test", "niho7_cross_target"]]);
