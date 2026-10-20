@@ -279,6 +279,6 @@ fn the_bundle_registers_only_the_camera_deep_link_scheme() {
     serde_json::from_str(include_str!("../tauri.conf.json")).expect("tauri.conf.json を解釈できない");
   assert_eq!(
     config["plugins"]["deep-link"]["desktop"]["schemes"],
-    serde_json::Value::Null
+    serde_json::json!(["niho-camera"])
   );
 }

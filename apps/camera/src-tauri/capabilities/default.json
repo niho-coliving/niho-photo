@@ -9,6 +9,7 @@
     "macOS"
   ],
   "permissions": [
+    "allow-camera-account",
     "allow-camera-app-info",
     "allow-camera-library",
     "allow-camera-photos",

@@ -66,10 +66,16 @@ export function repositoryFiles(root) {
   return [...tracked, ...extra];
 }
 
+export function runtimeTokenPath(name) {
+  const lower = name.toLowerCase();
+  return /(?:^|\/)(?:account-secrets|oauth-tokens|runtime-tokens)(?:\/|$)/.test(lower) ||
+    /(?:^|\/)(?:pending|tokens?|access[-_]token|refresh[-_]token|id[-_]token|account[-_]session|oauth[-_]session|credentials)(?:\.(?:json|jsonl|txt|bin|token|bak|backup))?$/.test(lower);
+}
+
 function pathForbidden(name, policy) {
   const lower = name.toLowerCase();
   const basename = path.posix.basename(lower);
-  return [...forbiddenPrefixes, ...policy.forbiddenPathPrefixes].some((prefix) => lower.startsWith(prefix.toLowerCase())) ||
+  return runtimeTokenPath(name) || [...forbiddenPrefixes, ...policy.forbiddenPathPrefixes].some((prefix) => lower.startsWith(prefix.toLowerCase())) ||
     [...forbiddenNames, ...policy.forbiddenBasenames].includes(basename) || /^\.env(?:\.|$)/.test(basename) ||
     [...forbiddenExtensions, ...policy.forbiddenExtensions].includes(path.posix.extname(lower)) ||
     /(?:^|\/)(?:\.git|node_modules|target)(?:\/|$)/.test(lower);

@@ -12,3 +12,14 @@ coverage/
 **/__pycache__/
 **/.build/
 packages/develop-engine/fixtures/golden/out/
+
+# OAuth実値はOS資格情報ストアだけ。runtimeのコピーをGit候補にしない。
+**/account-secrets/
+**/oauth-tokens/
+**/runtime-tokens/
+**/tokens.json
+**/access-token.json
+**/refresh-token.json
+**/id-token.json
+**/account-session.json
+**/oauth-session.json
