@@ -750,10 +750,11 @@
         "path": "packages/photo-editing/src/editor/browser-photo-editing-footer.tsx",
         "sha256": "448c53cf1da0a5f3b41e1d507d2ac5d618a39c0b300571ad95a670bdba86bca0"
       },
-      "outputSha256": "79697bb74c09b38dfd2432571dadfc337a4a6809a2423812b67098400bc9e823",
+      "outputSha256": "0a36c44436185190ea8f72371ca6c70438ae939c4340bfe0f42861600ac665fb",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
-        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。"
+        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
+        "信頼済みhost接続時だけ共有操作を表示する任意のボタンを追加。"
       ]
     },
     {
@@ -944,11 +945,12 @@
         "path": "packages/photo-editing/src/editor/browser-photo-editing-workbench-folders.test.tsx",
         "sha256": "2466702c26e46adadb579736eb8edef22cc420e4b0189283fd7d4b762a62869e"
       },
-      "outputSha256": "d4a377aa24b55fc0321ec1010328f0bf8322591b3bf5cc8b1e3dd383075cd025",
+      "outputSha256": "5abb9859608e4afd6b33cab1349f9682c8f14d8202f95eee36738edb92839f12",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
-        "任意の個別写真ソース契約と選んだ写真のUI、復元、取消、再試行、失敗時参照保持を追加"
+        "任意の個別写真ソース契約と選んだ写真のUI、復元、取消、再試行、失敗時参照保持を追加",
+        "クラウド写真の共有接続有無と本番機能の無効状態を合成テストで確認。"
       ]
     },
     {
@@ -959,11 +961,12 @@
         "path": "packages/photo-editing/src/editor/browser-photo-editing-workbench.tsx",
         "sha256": "f655136ae0c985d793822ca8bef1668dba26ffd4bb8f13d2ba3d6c2ccb13ceb6"
       },
-      "outputSha256": "bc6e411e1cff57a51128b98dcf83bec995166353bc9acd8c2094f058f2fdee02",
+      "outputSha256": "d58882406266338b3d1582b9bbf97007b7b8212e4e25120f38cd094368963c83",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
-        "任意の個別写真ソース契約と選んだ写真のUI、復元、取消、再試行、失敗時参照保持を追加"
+        "任意の個別写真ソース契約と選んだ写真のUI、復元、取消、再試行、失敗時参照保持を追加",
+        "クラウド共有UIを任意の信頼済みhost接続口へ限定し、Cameraのlocal-only境界を維持。"
       ]
     },
     {
@@ -8758,13 +8761,38 @@
     },
     {
       "path": "packages/photo-editing/src/cloud-sharing-contract.ts",
-      "sha256": "a8a579d089e0f8bf1ed44ed1ee69a8e465ba6d17d510a2d744211ed602c0f89f",
-      "origin": "共有Docs contractの型・HTTP query配置・決定的mockをPhoto編集workspaceへ公開するre-export。"
+      "sha256": "b18550a154dac36fd9f1ed9f347e03a62dd850b8f2dab6f630f9250e78f6f35b",
+      "origin": "共有Docs contractの型・HTTP query配置・決定的mockをPhoto編集workspaceへ公開するre-export。\n変更理由: Photo共有クライアントとmockの公開型を追加。"
     },
     {
       "path": "packages/photo-editing/src/cloud-sharing-contract.test.ts",
       "sha256": "bf2b8750f99efb6364e2ed3475ab3a53f92d532ca217cc7033c65c6ec9121452",
       "origin": "Docs共通の負例vector・reference model・mock検証にPhoto packageのre-export確認を加えた独立合成テスト。\n変更理由: Docs固定SHAの全operation HTTP method・path・request配置をPhotoでも検証する。"
+    },
+    {
+      "path": "packages/photo-editing/src/cloud-sharing-controller.test.ts",
+      "sha256": "48f13821b85691ab6e006905401fc1baaf03fe9e7be70ce49121f88086f8cd42",
+      "origin": "Issue #8 の共有状態遷移、競合、同一キー再試行、権限エラーを合成入力で検証する独立新規テスト。"
+    },
+    {
+      "path": "packages/photo-editing/src/cloud-sharing-controller.ts",
+      "sha256": "6246115891f096992f9b50dc060663dd15087a4b9c77096cdd9cd489bc36d222",
+      "origin": "Issue #8 の公開契約に基づく共有状態機械を独立新規作成。実token・実写真・private API情報を含まない。"
+    },
+    {
+      "path": "packages/photo-editing/src/cloud-sharing-preview-mock.ts",
+      "sha256": "bba27ccbbe9cb298ac140e3a1333643a36f1f3e164acbc82a606ec4f047f8930",
+      "origin": "Issue #8 の共有フロー確認用に合成URLとメモリ内状態だけを使う独立新規mock。"
+    },
+    {
+      "path": "packages/photo-editing/src/editor/browser-photo-cloud-share-sheet.test.tsx",
+      "sha256": "5104b2789cfa8a26e4f0b720b997eb1d4eaf1aebeeede898ef3fd980f7595a48",
+      "origin": "Issue #8 の共有UIを合成resourceとmockで検証する独立新規component test。"
+    },
+    {
+      "path": "packages/photo-editing/src/editor/browser-photo-cloud-share-sheet.tsx",
+      "sha256": "ad1abf31463309fc914ed4e9fc7bab13625fe6cf4d6c7d0561918ec7a77b9cef",
+      "origin": "Issue #8 の共有対象確認、リンク表示と失効、通信・権限・容量エラーUIを独立新規作成。\n変更理由: 共有URLは再表示できないため、作成成功時にコピー期限を明示。"
     }
   ],
   "excludedSources": [

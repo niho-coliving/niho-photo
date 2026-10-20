@@ -82,6 +82,11 @@ import {
 } from "./browser-photo-editing-albums";
 import { BrowserPhotoEditingAdjustments } from "./browser-photo-editing-adjustments";
 import { BrowserPhotoEditingBulkMenu } from "./browser-photo-editing-bulk-menu";
+import {
+  BrowserPhotoCloudShareSheet,
+  type BrowserPhotoCloudSharingBinding,
+} from "./browser-photo-cloud-share-sheet";
+export type { BrowserPhotoCloudSharingBinding } from "./browser-photo-cloud-share-sheet";
 import type { BrowserPhotoFavoriteControl } from "./browser-photo-editing-favorite-button";
 import { BrowserPhotoListFilterControl } from "./browser-photo-editing-filter";
 import { BrowserPhotoEditingFolderTree } from "./browser-photo-editing-folder-tree";
@@ -249,6 +254,11 @@ export function BrowserPhotoEditingWorkbench(props: {
   articlePrepareForInsert?: MutableRefObject<((photoIds: readonly string[]) => Promise<BrowserPhotoPrepareForInsertResult>) | null>;
   /** 記事へ写真を入れる間は、同じ編集面から対象のクラウド写真を消せないようにする。 */
   disableCloudDelete?: boolean;
+  /**
+   * 公開クラウド共有の trusted host 接続口。省略時は共有操作を一切表示しない。
+   * Camera は private integration が入るまで渡さず、ローカル専用を保つ。
+   */
+  cloudSharing?: BrowserPhotoCloudSharingBinding;
 }) {
   const queryClient = useQueryClient();
   // 写真の出どころ（接続口 PhotoLibrary。web は拠点のクラウドの写真置き場、NIHO camera はこの Mac のフォルダ。移行元設計）
@@ -335,6 +345,7 @@ export function BrowserPhotoEditingWorkbench(props: {
   const saveGenerationRef = useRef(0);
   const [status, setStatus] = useState<FooterStatus | null>(null);
   const [exportSheetOpen, setExportSheetOpen] = useState(false);
+  const [cloudShareSheetOpen, setCloudShareSheetOpen] = useState(false);
   const batchExportFocusPendingRef = useRef(false);
   const [wide, setWide] = useState(isWideWindow);
   // アプリの都合
@@ -1961,6 +1972,16 @@ export function BrowserPhotoEditingWorkbench(props: {
             disabled: !props.canEdit || batchBusy || operation !== null,
             onClick: () => currentAlbumId ? void removeSelectedFromCurrentAlbum() : setAlbumAddOpen(true),
           } : undefined}
+          shareAction={props.cloudSharing && library.place === "cloud" ? {
+            disabled:
+              props.cloudSharing.access === "unavailable" ||
+              selectedItem === null ||
+              selectedItem.adding ||
+              selection.count > 1 ||
+              batchBusy ||
+              operation !== null,
+            onClick: () => setCloudShareSheetOpen(true),
+          } : undefined}
           showCompare={editable}
           // 切り抜き・背景除去の間は補正前を見せない（押せない表示）
           compareDisabled={controlsDisabled || cropping || cutoutActive}
@@ -2017,6 +2038,13 @@ export function BrowserPhotoEditingWorkbench(props: {
         onAdd={addSelectedToAlbum}
         onCreate={albumLibrary.createAlbum}
       />
+      {cloudShareSheetOpen && props.cloudSharing && selectedItem && !selectedItem.adding ? (
+        <BrowserPhotoCloudShareSheet
+          binding={props.cloudSharing}
+          photoId={selectedItem.photo.id}
+          onClose={() => setCloudShareSheetOpen(false)}
+        />
+      ) : null}
     </section>
   );
 }
