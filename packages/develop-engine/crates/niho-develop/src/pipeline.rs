@@ -54,7 +54,7 @@ use crate::relative_wb::relative_matrix;
 use crate::resize::{bilinear_downscale, bilinear_downscale_with, Filter};
 use crate::settings::{
     DevelopSettings, VignetteStyle, WhiteBalanceMode, ENGINE_NIHO_2, ENGINE_NIHO_3, ENGINE_NIHO_4,
-    ENGINE_NIHO_5, ENGINE_NIHO_6, ENGINE_NIHO_7,
+    ENGINE_NIHO_5, ENGINE_NIHO_6, ENGINE_NIHO_7, ENGINE_NIHO_8, ENGINE_NIHO_9,
 };
 use crate::spatial::{
     self, adaptive_parameters, AdaptivePath, AdaptiveStats, Plane, Quality, SpatialParams,
@@ -228,7 +228,7 @@ pub fn bake_color_cube_for(s: &DevelopSettings, dimension: usize, raw: bool) -> 
     if raw
         && matches!(
             s.engine.as_str(),
-            ENGINE_NIHO_3 | ENGINE_NIHO_4 | ENGINE_NIHO_5 | ENGINE_NIHO_7
+            ENGINE_NIHO_3 | ENGINE_NIHO_4 | ENGINE_NIHO_5 | ENGINE_NIHO_7 | ENGINE_NIHO_9
         )
     {
         Cube::bake_float(&transform)
@@ -346,7 +346,7 @@ pub fn settings_cubes(
     let dimension = if raw
         && matches!(
             s.engine.as_str(),
-            ENGINE_NIHO_3 | ENGINE_NIHO_4 | ENGINE_NIHO_5 | ENGINE_NIHO_7
+            ENGINE_NIHO_3 | ENGINE_NIHO_4 | ENGINE_NIHO_5 | ENGINE_NIHO_7 | ENGINE_NIHO_9
         ) {
         CUBE_DIMENSION
     } else {
@@ -367,7 +367,7 @@ pub fn settings_cubes(
             && !(raw
                 && matches!(
                     s.engine.as_str(),
-                    ENGINE_NIHO_3 | ENGINE_NIHO_4 | ENGINE_NIHO_5 | ENGINE_NIHO_7
+                    ENGINE_NIHO_3 | ENGINE_NIHO_4 | ENGINE_NIHO_5 | ENGINE_NIHO_7 | ENGINE_NIHO_9
                 )))
     {
         None
@@ -380,7 +380,7 @@ pub fn settings_cubes(
             _ if raw
                 && matches!(
                     s.engine.as_str(),
-                    ENGINE_NIHO_3 | ENGINE_NIHO_4 | ENGINE_NIHO_5 | ENGINE_NIHO_7
+                    ENGINE_NIHO_3 | ENGINE_NIHO_4 | ENGINE_NIHO_5 | ENGINE_NIHO_7 | ENGINE_NIHO_9
                 ) =>
             {
                 Some(Arc::new(bake_raw_post_ops_cube_niho3(
@@ -403,7 +403,7 @@ pub fn settings_cubes(
             && !(raw
                 && matches!(
                     s.engine.as_str(),
-                    ENGINE_NIHO_3 | ENGINE_NIHO_4 | ENGINE_NIHO_5 | ENGINE_NIHO_7
+                    ENGINE_NIHO_3 | ENGINE_NIHO_4 | ENGINE_NIHO_5 | ENGINE_NIHO_7 | ENGINE_NIHO_9
                 ))) {
         None
     } else {
@@ -1006,7 +1006,9 @@ fn niho6_one_shot(
     raster: &Raster,
     s: &DevelopSettings,
 ) -> Option<Result<Raster, crate::niho6::PrepareError>> {
-    if s.engine != ENGINE_NIHO_6 || !crate::niho6::uses_response(s) {
+    if !matches!(s.engine.as_str(), ENGINE_NIHO_6 | ENGINE_NIHO_8)
+        || !crate::niho6::uses_response(s)
+    {
         return None;
     }
     let space = crate::niho6::SourceSpace::LinearSrgb;
@@ -1129,21 +1131,22 @@ fn render_linear(
     // niho-6: the prepared image (niho6.rs) holds the learned share of
     // Highlights <= 0 and Shadows >= 0; the legacy local pass keeps the other
     // directions and `LEGACY_SHARE` of those (R24).
-    let (spatial_highlights, spatial_shadows) = if s.engine == ENGINE_NIHO_6 {
-        let legacy = |v: f64, learned: bool| {
-            if learned {
-                v * crate::niho6::LEGACY_SHARE
-            } else {
-                v
-            }
+    let (spatial_highlights, spatial_shadows) =
+        if matches!(s.engine.as_str(), ENGINE_NIHO_6 | ENGINE_NIHO_8) {
+            let legacy = |v: f64, learned: bool| {
+                if learned {
+                    v * crate::niho6::LEGACY_SHARE
+                } else {
+                    v
+                }
+            };
+            (
+                legacy(s.highlights, s.highlights < 0.0),
+                legacy(s.shadows, s.shadows > 0.0),
+            )
+        } else {
+            (s.highlights, s.shadows)
         };
-        (
-            legacy(s.highlights, s.highlights < 0.0),
-            legacy(s.shadows, s.shadows > 0.0),
-        )
-    } else {
-        (s.highlights, s.shadows)
-    };
     let spatial_on =
         spatial_highlights != 0.0 || spatial_shadows != 0.0 || s.texture != 0.0 || s.clarity != 0.0;
     let input_matrix = input;
@@ -1154,7 +1157,7 @@ fn render_linear(
     let mut stats = stats_cache;
     let jpeg_white_balance = if matches!(
         s.engine.as_str(),
-        ENGINE_NIHO_2 | ENGINE_NIHO_3 | ENGINE_NIHO_6
+        ENGINE_NIHO_2 | ENGINE_NIHO_3 | ENGINE_NIHO_6 | ENGINE_NIHO_8
     ) && s.white_balance.mode == WhiteBalanceMode::Relative
     {
         PreparedJpegWhiteBalance::new(s.relative_temperature, s.relative_tint)
@@ -1163,7 +1166,7 @@ fn render_linear(
     };
     let relative = if !matches!(
         s.engine.as_str(),
-        ENGINE_NIHO_2 | ENGINE_NIHO_3 | ENGINE_NIHO_6
+        ENGINE_NIHO_2 | ENGINE_NIHO_3 | ENGINE_NIHO_6 | ENGINE_NIHO_8
     ) && s.white_balance.mode == WhiteBalanceMode::Relative
     {
         relative_matrix(s.relative_temperature, s.relative_tint)
@@ -1496,7 +1499,7 @@ fn niho6_working_copy_one_shot(
     s: &DevelopSettings,
 ) -> Option<Result<LinearImage, crate::niho6::PrepareError>> {
     if !matches!(wc.meta, WorkingCopyMeta::Raster { .. })
-        || s.engine != ENGINE_NIHO_6
+        || !matches!(s.engine.as_str(), ENGINE_NIHO_6 | ENGINE_NIHO_8)
         || !crate::niho6::uses_response(s)
     {
         return None;
@@ -1614,7 +1617,7 @@ fn render_working_copy_with(
                 white_balance,
                 matches!(
                     s.engine.as_str(),
-                    ENGINE_NIHO_4 | ENGINE_NIHO_5 | ENGINE_NIHO_7
+                    ENGINE_NIHO_4 | ENGINE_NIHO_5 | ENGINE_NIHO_7 | ENGINE_NIHO_9
                 )
                 .then(|| crate::niho4_response::Camera::from_calibration(dcp_sha256))
                 .flatten(),
@@ -1967,7 +1970,11 @@ fn render_raw(
                 oetf3(
                     if matches!(
                         s.engine.as_str(),
-                        ENGINE_NIHO_3 | ENGINE_NIHO_4 | ENGINE_NIHO_5 | ENGINE_NIHO_7
+                        ENGINE_NIHO_3
+                            | ENGINE_NIHO_4
+                            | ENGINE_NIHO_5
+                            | ENGINE_NIHO_7
+                            | ENGINE_NIHO_9
                     ) {
                         output_transform_clip(linear)
                     } else {
@@ -2002,7 +2009,7 @@ fn render_raw(
         }),
         None if matches!(
             s.engine.as_str(),
-            ENGINE_NIHO_3 | ENGINE_NIHO_4 | ENGINE_NIHO_5 | ENGINE_NIHO_7
+            ENGINE_NIHO_3 | ENGINE_NIHO_4 | ENGINE_NIHO_5 | ENGINE_NIHO_7 | ENGINE_NIHO_9
         ) && out_fx.is_none() =>
         {
             let encoder = crate::fastmath::niho3_srgb8();
@@ -2012,7 +2019,7 @@ fn render_raw(
         }
         None if matches!(
             s.engine.as_str(),
-            ENGINE_NIHO_3 | ENGINE_NIHO_4 | ENGINE_NIHO_5 | ENGINE_NIHO_7
+            ENGINE_NIHO_3 | ENGINE_NIHO_4 | ENGINE_NIHO_5 | ENGINE_NIHO_7 | ENGINE_NIHO_9
         ) =>
         {
             let fx = out_fx.expect("NIHO 3 output effects");

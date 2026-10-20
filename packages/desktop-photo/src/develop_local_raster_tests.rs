@@ -317,6 +317,11 @@ fn native_signed_export_defaults_follow_render_version_and_known_calibration() {
     serde_json::from_slice::<Value>(&fs::read(harness.sidecars.join("last-settings.json")).unwrap()).unwrap()
   };
 
+  let hue_stable = run("export-known-signed-niho9", "0.17.0", false);
+  assert_eq!(
+    (&hue_stable["engine"], &hue_stable["look"]),
+    (&json!("niho-9"), &json!("niho-standard-5"))
+  );
   let current = run("export-known-signed-niho7", "0.16.0", false);
   assert_eq!(
     (&current["engine"], &current["look"]),

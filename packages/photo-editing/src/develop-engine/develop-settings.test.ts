@@ -30,12 +30,12 @@ import {
 const CROP = { rotate: 90, flipH: false, flipV: false, angle: -2.5, crop: { left: 0.1, top: 0, right: 0.9, bottom: 1 } };
 
 describe("neutralDevelopSettings", () => {
-  it("JPEG / PNG を直接描く新規設定は v1・niho-6・NIHO 標準ルック（S8）を使う（#18397）", () => {
-    expect(DEVELOP_SETTINGS_ENGINE).toBe("niho-6");
+  it("JPEG / PNG を直接描く新規設定は v1・niho-8・NIHO 標準ルックを使う", () => {
+    expect(DEVELOP_SETTINGS_ENGINE).toBe("niho-8");
     expect(NIHO2_DEVELOP_SETTINGS_ENGINE).toBe("niho-2");
     expect(neutralDevelopSettings()).toEqual({
       v: 1,
-      engine: "niho-6",
+      engine: "niho-8",
       look: "niho-standard-1",
       base: null,
       exposure: 0,
@@ -53,17 +53,17 @@ describe("neutralDevelopSettings", () => {
     expect(isNeutralDevelopSettings(neutralDevelopSettings("raw-apple.d8.p1.e1.cal-none"))).toBe(true);
   });
 
-  it("新規の数式は base で決める: 直接描く・raster の作業コピーは niho-6、RAW・版の分からない作業コピー・RAW の写真は niho-2（#18397）", () => {
-    expect(neutralDevelopSettings(null).engine).toBe("niho-6");
-    expect(neutralDevelopSettings("raster.ci2.p2.e2.icc-srgb")).toMatchObject({ engine: "niho-6", base: "raster.ci2.p2.e2.icc-srgb" });
+  it("新規の数式は base で決める: 直接描く・raster の作業コピーは niho-8、RAW・版の分からない作業コピー・RAW の写真は niho-2", () => {
+    expect(neutralDevelopSettings(null).engine).toBe("niho-8");
+    expect(neutralDevelopSettings("raster.ci2.p2.e2.icc-srgb")).toMatchObject({ engine: "niho-8", base: "raster.ci2.p2.e2.icc-srgb" });
     expect(neutralDevelopSettings("raw-apple.d8.p1.e1.cal-none").engine).toBe("niho-2");
     expect(neutralDevelopSettings("raw-apple.d8.p3.e4.cal-signed").engine).toBe("niho-2");
     expect(neutralDevelopSettings("fixture-base").engine).toBe("niho-2");
     // base: null でも RAW の写真（作業コピーの無い RAW など）は呼び出し側が明示する
     expect(neutralDevelopSettings(null, { raw: true })).toEqual({ ...neutralDevelopSettings(null), engine: "niho-2" });
     expect(neutralDevelopSettings("raster.ci2.p2.e2.icc-srgb", { raw: true }).engine).toBe("niho-2");
-    expect(newDevelopSettingsEngine(null)).toBe("niho-6");
-    expect(newDevelopSettingsEngine("raster.x")).toBe("niho-6");
+    expect(newDevelopSettingsEngine(null)).toBe("niho-8");
+    expect(newDevelopSettingsEngine("raster.x")).toBe("niho-8");
     expect(newDevelopSettingsEngine("raw-apple.d8.p0.e1.cal-none")).toBe("niho-2");
     expect(newDevelopSettingsEngine(null, { raw: true })).toBe("niho-2");
     // niho-6 と niho-2 の neutral は数式の版だけが違う（同じ画になる）
@@ -96,14 +96,14 @@ describe("developSettingsOnWorkingCopy（#16944）", () => {
     expect(developSettingsOnWorkingCopy(null, "raw-apple.d8.p1.e1.cal-none").look).toBe("niho-standard-1");
   });
 
-  it("未保存なら raster の作業コピーは niho-6、unsigned RAW の作業コピー・版の分からない作業コピーは niho-2 で初期化する（#18397）", () => {
+  it("未保存なら raster の作業コピーは niho-8、unsigned RAW の作業コピー・版の分からない作業コピーは niho-2 で初期化する", () => {
     expect(developSettingsOnWorkingCopy(null, "raster.ci1.p1.e1.icc-srgb")).toMatchObject({
-      engine: "niho-6",
+      engine: "niho-8",
       look: "niho-standard-1",
       base: "raster.ci1.p1.e1.icc-srgb",
     });
     expect(developSettingsOnWorkingCopy(null, "raster.ci2.p2.e2.icc-srgb", { kind: "raster", encoding: "jpeg8" }).engine).toBe(
-      "niho-6",
+      "niho-8",
     );
     expect(developSettingsOnWorkingCopy(null, "raw-apple.d8.p1.e1.cal-none", { kind: "raw" })).toMatchObject({
       engine: "niho-2",
@@ -118,7 +118,8 @@ describe("developSettingsOnWorkingCopy（#16944）", () => {
     expect(developSettingsOnWorkingCopy(direct, raster)).toEqual({ ...direct, base: raster });
     expect(developSettingsOnWorkingCopy({ ...direct, look: "niho-interim-1" }, raster).look).toBe("niho-interim-1");
     const { look: _look, ...noLook } = direct;
-    expect(developSettingsOnWorkingCopy(noLook, raster)).toMatchObject({ engine: "niho-6", look: "niho-interim-1" });
+    expect(developSettingsOnWorkingCopy(noLook, raster)).toMatchObject({ engine: "niho-8", look: "niho-interim-1" });
+    expect(developSettingsOnWorkingCopy({ ...direct, engine: "niho-6" }, raster).engine).toBe("niho-6");
 
     const mismatch = (run: () => unknown) => {
       try {
@@ -157,20 +158,23 @@ describe("developSettingsOnWorkingCopy（#16944）", () => {
     expect(() => developSettingsOnWorkingCopy(neutralDevelopSettings(base), base, meta)).toThrow(DevelopSettingsBaseMismatchError);
   });
 
-  it("対応校正の未保存signedだけniho-7へ初期化し、保存済みniho-3/niho-4を維持する", () => {
+  it("対応校正の未保存signedだけniho-9へ初期化し、保存済みniho-3/niho-4/niho-7を維持する", () => {
     const base = "raw-apple.d8.p3.e4.cal-panasonic-dc-s5-apple-v4.lens-apple";
     const meta = { kind: "raw", encoding: { kind: "signed-gamma18-v1", ceiling: 2 },
       dcpSha256: "apple-ciraw8/linear-prophoto-d50/cal-panasonic-dc-s5-apple-v4" };
-    expect(developSettingsOnWorkingCopy(null, base, meta)).toMatchObject({ engine: "niho-7", look: "niho-standard-5" });
+    expect(developSettingsOnWorkingCopy(null, base, meta)).toMatchObject({ engine: "niho-9", look: "niho-standard-5" });
     const saved = { ...neutralDevelopSettings(base), engine: "niho-3", look: "niho-standard-2" };
     expect(developSettingsOnWorkingCopy(saved, base, meta)).toEqual(saved);
     const savedNiho4 = { ...saved, engine: "niho-4", look: "niho-standard-3" };
     expect(developSettingsOnWorkingCopy(savedNiho4, base, meta)).toEqual(savedNiho4);
+    const savedNiho7 = { ...saved, engine: "niho-7", look: "niho-standard-5" };
+    expect(developSettingsOnWorkingCopy(savedNiho7, base, meta)).toEqual(savedNiho7);
     expect(developSettingsOnWorkingCopy(null, base, { ...meta, dcpSha256: "cal-unknown" })).toMatchObject({ engine: "niho-3" });
     expect(() => developSettingsOnWorkingCopy({ ...saved, engine: "niho-4", look: "niho-standard-3" }, base,
       { ...meta, dcpSha256: "cal-unknown" })).toThrow(DevelopSettingsBaseMismatchError);
     expect(isEditableDevelopSettings({ v: 1, engine: "niho-4", look: "niho-standard-3" })).toBe(true);
     expect(isEditableDevelopSettings({ v: 1, engine: "niho-7", look: "niho-standard-5" })).toBe(true);
+    expect(isEditableDevelopSettings({ v: 1, engine: "niho-9", look: "niho-standard-5" })).toBe(true);
     expect(() => developSettingsOnWorkingCopy({ ...saved, engine: "niho-7", look: "niho-standard-5" }, base,
       { ...meta, dcpSha256: "cal-unknown" })).toThrow(DevelopSettingsBaseMismatchError);
     for (const [otherBase, otherMeta] of [
@@ -215,7 +219,7 @@ describe("developSettingsOnWorkingCopy（#16944）", () => {
 });
 
 describe("isEditableDevelopSettings", () => {
-  it("まだ無いか、v1〜v3 で数式が niho-1 / niho-2 / niho-6 なら直せる（未知の版・切り抜きを低い v で持つ値は直さない）", () => {
+  it("まだ無いか、v1〜v3 で既知の数式なら直せる（未知の版・切り抜きを低い v で持つ値は直さない）", () => {
     expect(isEditableDevelopSettings(null)).toBe(true);
     expect(isEditableDevelopSettings(undefined)).toBe(true);
     expect(isEditableDevelopSettings({ v: 1, engine: "niho-1" })).toBe(true);
@@ -231,7 +235,7 @@ describe("isEditableDevelopSettings", () => {
     expect(isEditableDevelopSettings("niho-1")).toBe(false);
   });
 
-  it("niho-6 は NIHO 標準ルック（standard-1）・恒等（interim-1）・ルック無しだけを直せる（#18397）", () => {
+  it("niho-6 / niho-8 は raster ルックだけ、niho-7 / niho-9 は standard-5 だけを直せる", () => {
     expect(isEditableDevelopSettings(neutralDevelopSettings())).toBe(true);
     expect(isEditableDevelopSettings({ v: 1, engine: "niho-6" })).toBe(true);
     expect(isEditableDevelopSettings({ v: 1, engine: "niho-6", look: "niho-standard-1" })).toBe(true);
@@ -242,10 +246,13 @@ describe("isEditableDevelopSettings", () => {
     expect(isEditableDevelopSettings({ v: 1, engine: "niho-6", look: "niho-standard-3" })).toBe(false);
     expect(isEditableDevelopSettings({ v: 1, engine: "niho-6", look: "niho-standard-9" })).toBe(false);
     expect(isEditableDevelopSettings({ v: 1, engine: "niho-6", look: null })).toBe(false);
+    expect(isEditableDevelopSettings({ v: 1, engine: "niho-8", look: "niho-standard-1" })).toBe(true);
     expect(isEditableDevelopSettings({ v: 1, engine: "niho-5" })).toBe(false);
     expect(isEditableDevelopSettings({ v: 1, engine: "niho-7" })).toBe(false);
     expect(isEditableDevelopSettings({ v: 1, engine: "niho-7", look: "niho-standard-5" })).toBe(true);
     expect(isEditableDevelopSettings({ v: 1, engine: "niho-7", look: "niho-standard-3" })).toBe(false);
+    expect(isEditableDevelopSettings({ v: 1, engine: "niho-9", look: "niho-standard-5" })).toBe(true);
+    expect(isEditableDevelopSettings({ v: 1, engine: "niho-9", look: "niho-standard-3" })).toBe(false);
     expect(isEditableDevelopSettings({ v: 1, engine: "niho-4", look: "niho-standard-5" })).toBe(false);
     expect(isEditableDevelopSettings({ v: 1, engine: "niho-8", look: "niho-standard-5" })).toBe(false);
   });
@@ -325,7 +332,7 @@ describe("幾何（回転・反転・角度補正・切り抜き。#17138）", (
   });
 
   it("「初期化」は今の数式を保ち、今の編集内容が無ければ base の neutral と同じ数式にする（#18397）", () => {
-    expect(resetDevelopSettingsColors(null, null).engine).toBe("niho-6");
+    expect(resetDevelopSettingsColors(null, null).engine).toBe("niho-8");
     expect(resetDevelopSettingsColors(null, "raster.ci2.p2.e2.icc-srgb")).toEqual(neutralDevelopSettings("raster.ci2.p2.e2.icc-srgb"));
     expect(resetDevelopSettingsColors(null, "raw-apple.d8.p1.e1.cal-none")).toMatchObject({
       engine: "niho-2",
@@ -336,7 +343,7 @@ describe("幾何（回転・反転・角度補正・切り抜き。#17138）", (
       ...neutralDevelopSettings(),
       engine: "niho-2",
     });
-    expect(resetDevelopSettingsColors({ ...neutralDevelopSettings("raster.x"), exposure: 0.8 }, "raster.x").engine).toBe("niho-6");
+    expect(resetDevelopSettingsColors({ ...neutralDevelopSettings("raster.x"), exposure: 0.8 }, "raster.x").engine).toBe("niho-8");
   });
 
   it("切り抜いただけの写真は neutral ではない（オリジナルのままでは見せられない）が、色は neutral（初期化を押せない）", () => {
@@ -689,8 +696,8 @@ describe("補正のコピーと貼り付け（F5a-2 #17140）", () => {
     expect(pasteDevelopSettings(bare, withoutWhiteBalance)).not.toHaveProperty("whiteBalance");
   });
 
-  it("貼り付け先の数式（niho-6 / RAW の作業コピーの niho-2）は写し元によらず保つ（#18397）", () => {
-    expect(pasteDevelopSettings(neutralDevelopSettings(), copied).engine).toBe("niho-6");
+  it("貼り付け先の数式（niho-8 / RAW の作業コピーの niho-2）は写し元によらず保つ", () => {
+    expect(pasteDevelopSettings(neutralDevelopSettings(), copied).engine).toBe("niho-8");
     expect(pasteDevelopSettings(neutralDevelopSettings("raw-apple.d8.p1.e1.cal-none"), copied)).toMatchObject({
       engine: "niho-2",
       base: "raw-apple.d8.p1.e1.cal-none",

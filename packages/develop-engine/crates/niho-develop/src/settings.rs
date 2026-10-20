@@ -52,6 +52,10 @@ pub const ENGINE_NIHO_5: &str = "niho-5";
 pub const ENGINE_NIHO_6: &str = "niho-6";
 /// NIHO 5 plus the fixed R23 non-FX residual / R42 FX30 shoulder.
 pub const ENGINE_NIHO_7: &str = "niho-7";
+/// `niho-6` raster renderer with hue-stable global / HSL saturation.
+pub const ENGINE_NIHO_8: &str = "niho-8";
+/// `niho-7` signed-RAW renderer with hue-stable global / HSL saturation.
+pub const ENGINE_NIHO_9: &str = "niho-9";
 
 pub fn is_known_engine(engine: &str) -> bool {
     matches!(
@@ -63,6 +67,8 @@ pub fn is_known_engine(engine: &str) -> bool {
             | ENGINE_NIHO_5
             | ENGINE_NIHO_6
             | ENGINE_NIHO_7
+            | ENGINE_NIHO_8
+            | ENGINE_NIHO_9
     )
 }
 /// Look versions (`look`): `niho-interim-1` is the identity and the default
@@ -777,7 +783,7 @@ impl DevelopSettings {
             ENGINE_NIHO_3 => s.look == LOOK_NIHO_STANDARD_2,
             ENGINE_NIHO_4 => s.look == LOOK_NIHO_STANDARD_3,
             ENGINE_NIHO_5 => s.look == LOOK_NIHO_STANDARD_4,
-            ENGINE_NIHO_7 => s.look == LOOK_NIHO_STANDARD_5,
+            ENGINE_NIHO_7 | ENGINE_NIHO_9 => s.look == LOOK_NIHO_STANDARD_5,
             _ => !matches!(
                 s.look.as_str(),
                 LOOK_NIHO_STANDARD_2
@@ -787,8 +793,10 @@ impl DevelopSettings {
             ),
         };
         if !matched {
-            let message = if s.engine == ENGINE_NIHO_7 || s.look == LOOK_NIHO_STANDARD_5 {
-                "niho-7 requires niho-standard-5, and niho-standard-5 requires niho-7"
+            let message = if matches!(s.engine.as_str(), ENGINE_NIHO_7 | ENGINE_NIHO_9)
+                || s.look == LOOK_NIHO_STANDARD_5
+            {
+                "niho-7/niho-9 require niho-standard-5, and niho-standard-5 requires niho-7/niho-9"
             } else if s.engine == ENGINE_NIHO_5 || s.look == LOOK_NIHO_STANDARD_4 {
                 "niho-5 requires niho-standard-4, and niho-standard-4 requires niho-5"
             } else if s.engine == ENGINE_NIHO_4 || s.look == LOOK_NIHO_STANDARD_3 {
@@ -841,7 +849,7 @@ impl DevelopSettings {
         // caller explicitly supplied a non-default NIHO 3-only control.
         if matches!(
             self.engine.as_str(),
-            ENGINE_NIHO_3 | ENGINE_NIHO_4 | ENGINE_NIHO_5 | ENGINE_NIHO_7
+            ENGINE_NIHO_3 | ENGINE_NIHO_4 | ENGINE_NIHO_5 | ENGINE_NIHO_7 | ENGINE_NIHO_9
         ) || self.color_noise_reduction != 0.0
             || self.color_noise_reduction_detail != 50.0
             || self.color_noise_reduction_smoothness != 50.0
@@ -1161,7 +1169,7 @@ impl DevelopSettings {
             ENGINE_NIHO_3 => self.look == LOOK_NIHO_STANDARD_2,
             ENGINE_NIHO_4 => self.look == LOOK_NIHO_STANDARD_3,
             ENGINE_NIHO_5 => self.look == LOOK_NIHO_STANDARD_4,
-            ENGINE_NIHO_7 => self.look == LOOK_NIHO_STANDARD_5,
+            ENGINE_NIHO_7 | ENGINE_NIHO_9 => self.look == LOOK_NIHO_STANDARD_5,
             _ => !matches!(
                 self.look.as_str(),
                 LOOK_NIHO_STANDARD_2
@@ -1171,8 +1179,10 @@ impl DevelopSettings {
             ),
         };
         if !matched {
-            let message = if self.engine == ENGINE_NIHO_7 || self.look == LOOK_NIHO_STANDARD_5 {
-                "niho-7 requires niho-standard-5, and niho-standard-5 requires niho-7"
+            let message = if matches!(self.engine.as_str(), ENGINE_NIHO_7 | ENGINE_NIHO_9)
+                || self.look == LOOK_NIHO_STANDARD_5
+            {
+                "niho-7/niho-9 require niho-standard-5, and niho-standard-5 requires niho-7/niho-9"
             } else if self.engine == ENGINE_NIHO_5 || self.look == LOOK_NIHO_STANDARD_4 {
                 "niho-5 requires niho-standard-4, and niho-standard-4 requires niho-5"
             } else if self.engine == ENGINE_NIHO_4 || self.look == LOOK_NIHO_STANDARD_3 {
@@ -1587,7 +1597,7 @@ mod tests {
             ENGINE_NIHO_2
         );
         assert_eq!(
-            DevelopSettings::from_json(r#"{"engine":"niho-9"}"#)
+            DevelopSettings::from_json(r#"{"engine":"niho-10"}"#)
                 .unwrap_err()
                 .code,
             "unsupportedEngine"

@@ -61,7 +61,7 @@ use std::{fmt, sync::Arc};
 
 /// Latest formula version this bundle can render. Settings constructors keep
 /// their own compatibility defaults; this advertises reader capability.
-pub const ENGINE_VERSION: &str = settings::ENGINE_NIHO_7;
+pub const ENGINE_VERSION: &str = settings::ENGINE_NIHO_9;
 /// Crate version (build artifacts are published per version).
 pub const CRATE_VERSION: &str = env!("CARGO_PKG_VERSION");
 
@@ -195,7 +195,10 @@ pub fn render(
     let settings = parse_settings(settings_json)?;
     if matches!(
         settings.engine.as_str(),
-        settings::ENGINE_NIHO_4 | settings::ENGINE_NIHO_5 | settings::ENGINE_NIHO_7
+        settings::ENGINE_NIHO_4
+            | settings::ENGINE_NIHO_5
+            | settings::ENGINE_NIHO_7
+            | settings::ENGINE_NIHO_9
     ) {
         return Err(Error::IncompatibleWorkingCopy(format!(
             "{} supports signed RAW working copies only",
@@ -204,7 +207,11 @@ pub fn render(
     }
     if rendered_geometry(&settings).is_none() {
         let raster = decode::decode_raster(input, options.max_dimension, options.filter)?;
-        if settings.engine == settings::ENGINE_NIHO_6 && niho6::uses_response(&settings) {
+        if matches!(
+            settings.engine.as_str(),
+            settings::ENGINE_NIHO_6 | settings::ENGINE_NIHO_8
+        ) && niho6::uses_response(&settings)
+        {
             // The decoded size is the output size: the Session renders it as is.
             return Session::new(SessionSource::Raster(raster), options.filter).render(
                 &settings,
@@ -266,17 +273,24 @@ pub fn render_camera_linear(
     }
     if matches!(
         settings.engine.as_str(),
-        settings::ENGINE_NIHO_4 | settings::ENGINE_NIHO_5 | settings::ENGINE_NIHO_7
+        settings::ENGINE_NIHO_4
+            | settings::ENGINE_NIHO_5
+            | settings::ENGINE_NIHO_7
+            | settings::ENGINE_NIHO_9
     ) {
         return Err(Error::IncompatibleWorkingCopy(format!(
             "{} supports signed RAW working copies only",
             settings.engine
         )));
     }
-    if settings.engine == settings::ENGINE_NIHO_6 {
-        return Err(Error::IncompatibleWorkingCopy(
-            "niho-6 supports JPEG / PNG originals and raster working copies only".into(),
-        ));
+    if matches!(
+        settings.engine.as_str(),
+        settings::ENGINE_NIHO_6 | settings::ENGINE_NIHO_8
+    ) {
+        return Err(Error::IncompatibleWorkingCopy(format!(
+            "{} supports JPEG / PNG originals and raster working copies only",
+            settings.engine
+        )));
     }
     camera_linear::validate_work_meta(meta)?;
     match settings.base.as_deref() {
@@ -827,11 +841,15 @@ impl Session {
                 ..
             }
         );
-        if settings.engine == settings::ENGINE_NIHO_6 {
+        if matches!(
+            settings.engine.as_str(),
+            settings::ENGINE_NIHO_6 | settings::ENGINE_NIHO_8
+        ) {
             if raw {
-                return Err(Error::IncompatibleWorkingCopy(
-                    "niho-6 supports JPEG / PNG originals and raster working copies only".into(),
-                ));
+                return Err(Error::IncompatibleWorkingCopy(format!(
+                    "{} supports JPEG / PNG originals and raster working copies only",
+                    settings.engine
+                )));
             }
             return Ok(niho6::uses_response(settings).then_some(RawEngine::Niho6));
         }
@@ -840,6 +858,7 @@ impl Session {
             settings::ENGINE_NIHO_4 => Some(RawEngine::Niho4),
             settings::ENGINE_NIHO_5 => Some(RawEngine::Niho4),
             settings::ENGINE_NIHO_7 => Some(RawEngine::Niho4),
+            settings::ENGINE_NIHO_9 => Some(RawEngine::Niho4),
             _ => None,
         };
         if signed && engine.is_none() {
@@ -851,7 +870,7 @@ impl Session {
             return Err(Error::IncompatibleWorkingCopy(
                 if matches!(
                     settings.engine.as_str(),
-                    settings::ENGINE_NIHO_5 | settings::ENGINE_NIHO_7
+                    settings::ENGINE_NIHO_5 | settings::ENGINE_NIHO_7 | settings::ENGINE_NIHO_9
                 ) {
                     format!(
                         "{} RAW requires encoding signed-gamma18-v1",
@@ -864,7 +883,10 @@ impl Session {
         }
         if matches!(
             settings.engine.as_str(),
-            settings::ENGINE_NIHO_4 | settings::ENGINE_NIHO_5 | settings::ENGINE_NIHO_7
+            settings::ENGINE_NIHO_4
+                | settings::ENGINE_NIHO_5
+                | settings::ENGINE_NIHO_7
+                | settings::ENGINE_NIHO_9
         ) && !raw
         {
             return Err(Error::IncompatibleWorkingCopy(format!(
@@ -1364,7 +1386,12 @@ impl Session {
         }
         let use_niho3 = self.niho3_mode(settings)?;
         // niho-6: a candidate's Highlights / Shadows need the prepared master.
-        if use_niho3.is_some() || settings.engine == settings::ENGINE_NIHO_6 {
+        if use_niho3.is_some()
+            || matches!(
+                settings.engine.as_str(),
+                settings::ENGINE_NIHO_6 | settings::ENGINE_NIHO_8
+            )
+        {
             // Auto candidates use an isolated Session so their full-source
             // preparation, canonical 750 analysis, geometry, and rendering
             // are identical to normal NIHO 3 frames without mutating the

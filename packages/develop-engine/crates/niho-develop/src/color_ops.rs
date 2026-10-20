@@ -29,6 +29,78 @@ fn clamp01(v: Rgb) -> Rgb {
     ]
 }
 
+#[inline]
+fn linear_srgb_to_oklab_f64(rgb: Rgb) -> Rgb {
+    let l = 0.412_221_470_8 * rgb[0] + 0.536_332_536_3 * rgb[1] + 0.051_445_992_9 * rgb[2];
+    let m = 0.211_903_498_2 * rgb[0] + 0.680_699_545_1 * rgb[1] + 0.107_396_956_6 * rgb[2];
+    let s = 0.088_302_461_9 * rgb[0] + 0.281_718_837_6 * rgb[1] + 0.629_978_700_5 * rgb[2];
+    let (l_, m_, s_) = (libm::cbrt(l), libm::cbrt(m), libm::cbrt(s));
+    [
+        0.210_454_255_3 * l_ + 0.793_617_785 * m_ - 0.004_072_046_8 * s_,
+        1.977_998_495_1 * l_ - 2.428_592_205 * m_ + 0.450_593_709_9 * s_,
+        0.025_904_037_1 * l_ + 0.782_771_766_2 * m_ - 0.808_675_766 * s_,
+    ]
+}
+
+#[inline]
+fn oklab_to_linear_srgb_f64(lab: Rgb) -> Rgb {
+    let l_ = lab[0] + 0.396_337_777_4 * lab[1] + 0.215_803_757_3 * lab[2];
+    let m_ = lab[0] - 0.105_561_345_8 * lab[1] - 0.063_854_172_8 * lab[2];
+    let s_ = lab[0] - 0.089_484_177_5 * lab[1] - 1.291_485_548 * lab[2];
+    let (l, m, s) = (l_ * l_ * l_, m_ * m_ * m_, s_ * s_ * s_);
+    [
+        4.076_741_662_1 * l - 3.307_711_591_3 * m + 0.230_969_929_2 * s,
+        -1.268_438_004_6 * l + 2.609_757_401_1 * m - 0.341_319_396_5 * s,
+        -0.004_196_086_3 * l - 0.703_418_614_7 * m + 1.707_614_701 * s,
+    ]
+}
+
+/// Keep the output lightness and chroma while restoring the OKLab hue of the
+/// same color with only the authored HSL hue / luminance changes. Extended
+/// gamut values deliberately remain unclipped. Close to neutral gray the hue
+/// is undefined, so the rotation fades continuously to zero.
+fn restore_saturation_hue(output: Rgb, reference: Rgb) -> Rgb {
+    if !output.iter().chain(reference.iter()).all(|v| v.is_finite()) {
+        return output;
+    }
+    let output_lab = linear_srgb_to_oklab_f64(mat_vec(&PROPHOTO_TO_SRGB, output));
+    let reference_lab = linear_srgb_to_oklab_f64(mat_vec(&PROPHOTO_TO_SRGB, reference));
+    if !output_lab
+        .iter()
+        .chain(reference_lab.iter())
+        .all(|v| v.is_finite())
+    {
+        return output;
+    }
+    let output_chroma = libm::hypot(output_lab[1], output_lab[2]);
+    let reference_chroma = libm::hypot(reference_lab[1], reference_lab[2]);
+    let usable_chroma = output_chroma.min(reference_chroma);
+    if usable_chroma <= 1e-12 {
+        return output;
+    }
+    // A very narrow neutral-only transition avoids leaving partially
+    // corrected, visibly chromatic colors. At C >= 0.002 the intended hue is
+    // restored exactly; below it the residual is visually undefined.
+    let weight = smoothstep(usable_chroma / 0.002);
+    let output_hue = libm::atan2(output_lab[2], output_lab[1]);
+    let reference_hue = libm::atan2(reference_lab[2], reference_lab[1]);
+    let delta = wrap180((reference_hue - output_hue) * 180.0 / core::f64::consts::PI)
+        * core::f64::consts::PI
+        / 180.0;
+    let hue = output_hue + weight * delta;
+    let corrected_lab = [
+        output_lab[0],
+        output_chroma * libm::cos(hue),
+        output_chroma * libm::sin(hue),
+    ];
+    let corrected = mat_vec(&SRGB_TO_PROPHOTO, oklab_to_linear_srgb_f64(corrected_lab));
+    if corrected.iter().all(|v| v.is_finite()) {
+        corrected
+    } else {
+        output
+    }
+}
+
 /// Python's `%` for a positive modulus.
 #[inline]
 fn pymod(x: f64, m: f64) -> f64 {
@@ -793,6 +865,7 @@ pub struct PreparedColorOps {
     vibrance: f64,
     saturation: f64,
     hsl: Vec<(HslBand, HslAdjustment)>,
+    hsl_without_saturation: Vec<(HslBand, HslAdjustment)>,
     /// `Some` in black & white.
     gray_mix: Option<[f64; 8]>,
     /// The values are past the ACR3 default curve (a RAW working copy).
@@ -804,6 +877,8 @@ pub struct PreparedColorOps {
     /// `niho-6` on a JPEG / PNG (#18397): Vibrance is the frozen RAW response
     /// ([`crate::niho3::vibrance`]) without the RAW profile before it.
     raster_niho6: bool,
+    /// `niho-8` / `niho-9`: remove only saturation-induced OKLab hue drift.
+    hue_stable_saturation: bool,
 }
 
 impl PreparedColorOps {
@@ -824,6 +899,20 @@ impl PreparedColorOps {
             vibrance: settings.vibrance,
             saturation: settings.saturation,
             hsl: settings.hsl.entries().to_vec(),
+            hsl_without_saturation: settings
+                .hsl
+                .entries()
+                .iter()
+                .map(|(band, adjustment)| {
+                    (
+                        *band,
+                        HslAdjustment {
+                            saturation: 0.0,
+                            ..*adjustment
+                        },
+                    )
+                })
+                .collect(),
             gray_mix: settings.grayscale.then_some(settings.gray_mixer.bands),
             grading: settings.color_grading.clone(),
             directions: GradeDirections::new(&settings.color_grading),
@@ -834,6 +923,7 @@ impl PreparedColorOps {
                         | crate::settings::ENGINE_NIHO_4
                         | crate::settings::ENGINE_NIHO_5
                         | crate::settings::ENGINE_NIHO_7
+                        | crate::settings::ENGINE_NIHO_9
                 ),
             // #18397: `niho-6` JPEG / PNG takes the NIHO 4 HSL luminance too
             // (Lightroom's HSL luminance on a JPEG matches the RAW one, not
@@ -845,9 +935,21 @@ impl PreparedColorOps {
                     crate::settings::ENGINE_NIHO_4
                         | crate::settings::ENGINE_NIHO_5
                         | crate::settings::ENGINE_NIHO_7
-                ) | (false, crate::settings::ENGINE_NIHO_6)
+                        | crate::settings::ENGINE_NIHO_9
+                ) | (
+                    false,
+                    crate::settings::ENGINE_NIHO_6 | crate::settings::ENGINE_NIHO_8
+                )
             ),
-            raster_niho6: !toned && settings.engine == crate::settings::ENGINE_NIHO_6,
+            raster_niho6: !toned
+                && matches!(
+                    settings.engine.as_str(),
+                    crate::settings::ENGINE_NIHO_6 | crate::settings::ENGINE_NIHO_8
+                ),
+            hue_stable_saturation: matches!(
+                settings.engine.as_str(),
+                crate::settings::ENGINE_NIHO_8 | crate::settings::ENGINE_NIHO_9
+            ),
         }
     }
 
@@ -878,8 +980,18 @@ impl PreparedColorOps {
         } else {
             vibrance(value, self.vibrance)
         };
+        let saturation_is_active = self.saturation != 0.0
+            || self
+                .hsl
+                .iter()
+                .any(|(_, adjustment)| adjustment.saturation != 0.0);
+        let reference = (self.hue_stable_saturation && saturation_is_active)
+            .then(|| hsl_with_luminance(v, &self.hsl_without_saturation, self.niho4_luminance));
         v = saturation(v, self.saturation);
         v = hsl_with_luminance(v, &self.hsl, self.niho4_luminance);
+        if let Some(reference) = reference {
+            v = restore_saturation_hue(v, reference);
+        }
         color_grading_with(v, &self.grading, &self.directions)
     }
 
@@ -911,6 +1023,7 @@ pub fn needs_color_ops(settings: &DevelopSettings) -> bool {
             | crate::settings::ENGINE_NIHO_4
             | crate::settings::ENGINE_NIHO_5
             | crate::settings::ENGINE_NIHO_7
+            | crate::settings::ENGINE_NIHO_9
     ) && !settings.grayscale)
         || settings.grayscale
         || settings.vibrance != 0.0

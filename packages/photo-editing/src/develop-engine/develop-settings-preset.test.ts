@@ -101,12 +101,12 @@ describe("presetDevelopSettings", () => {
     expect(presetDevelopSettings(base, { ...base, contrast: 12 }).engine).toBe("niho-1");
   });
 
-  it("niho-6・signed の写真は Rust と同じく niho-2 へ昇格させず、写真の数式のまま（#18397）", () => {
+  it("niho-8・signed の写真は Rust と同じく niho-2 へ昇格させず、写真の数式のまま", () => {
     const relative = { relativeTemperature: 20, relativeTint: -10, whiteBalance: { mode: "relative" } };
     const raster: DevelopSettings = neutralDevelopSettings();
-    expect(raster.engine).toBe("niho-6");
-    expect(presetDevelopSettings(raster, { ...raster, ...relative, engine: "niho-2" })).toMatchObject({ engine: "niho-6", ...relative });
-    expect(presetDevelopSettings(raster, { ...raster, contrast: 12 }).engine).toBe("niho-6");
+    expect(raster.engine).toBe("niho-8");
+    expect(presetDevelopSettings(raster, { ...raster, ...relative, engine: "niho-2" })).toMatchObject({ engine: "niho-8", ...relative });
+    expect(presetDevelopSettings(raster, { ...raster, contrast: 12 }).engine).toBe("niho-8");
     const signed: DevelopSettings = { ...neutralDevelopSettings("raw-apple.d8.p3.e4.cal-signed"), engine: "niho-3", look: "niho-standard-2" };
     expect(presetDevelopSettings(signed, { ...signed, ...relative, engine: "niho-2" }).engine).toBe("niho-3");
     const signed7: DevelopSettings = { ...signed, engine: "niho-7", look: "niho-standard-5" };
@@ -115,6 +115,8 @@ describe("presetDevelopSettings", () => {
       look: "niho-standard-5",
       ...relative,
     });
+    const signed9: DevelopSettings = { ...signed7, engine: "niho-9" };
+    expect(presetDevelopSettings(signed9, { ...signed9, ...relative, engine: "niho-2" }).engine).toBe("niho-9");
     // RAW の作業コピーの新規（niho-2）はそのまま
     const raw: DevelopSettings = neutralDevelopSettings("raw-apple.d8.p1.e1.cal-none");
     expect(presetDevelopSettings(raw, { ...raw, ...relative }).engine).toBe("niho-2");

@@ -6,7 +6,7 @@
 
 use niho_develop::decode::{self, LinearImage};
 use niho_develop::settings::{
-    HslAdjustment, HslBand, ENGINE_NIHO_2, ENGINE_NIHO_6, LOOK_NIHO_STANDARD_1,
+    HslAdjustment, HslBand, ENGINE_NIHO_2, ENGINE_NIHO_6, ENGINE_NIHO_8, LOOK_NIHO_STANDARD_1,
 };
 use niho_develop::{
     encode, parse_settings, render, xmp, DevelopSettings, Error, Filter, Quality, RenderOptions,
@@ -72,6 +72,25 @@ fn engine_is_raster_only_and_keeps_the_raster_looks() {
         matches!(error, Error::IncompatibleWorkingCopy(_)),
         "{error}"
     );
+}
+
+#[test]
+fn niho8_keeps_niho6_neutral_tone_and_response_pixels() {
+    let input = fixture("dsc02072.jpg");
+    for mut niho6 in [tone(0.0, 0.0), tone(-60.0, 45.0), tone(35.0, -40.0)] {
+        niho6.blacks = 30.0;
+        niho6.vibrance = 20.0;
+        niho6.hsl.set(
+            HslBand::Yellow,
+            HslAdjustment {
+                hue: 20.0,
+                luminance: 25.0,
+                ..HslAdjustment::default()
+            },
+        );
+        let niho8 = with_engine(niho6.clone(), ENGINE_NIHO_8);
+        assert_eq!(one_shot(&input, &niho6, 640), one_shot(&input, &niho8, 640));
+    }
 }
 
 #[test]

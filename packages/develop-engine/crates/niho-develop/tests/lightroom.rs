@@ -18,6 +18,81 @@ use std::path::PathBuf;
 
 mod common;
 
+/// Keeps private comparison images outside the repository and prints only
+/// per-variant aggregates. This is a diagnostic, not a synthetic reference.
+#[test]
+#[ignore = "requires owner's round10 Lightroom exports through NIHO_LR_MEASURE_DIR"]
+fn hue_stable_raster_against_lightroom() {
+    use niho_develop::settings::{ENGINE_NIHO_6, ENGINE_NIHO_8};
+    let root = std::path::PathBuf::from(
+        std::env::var_os("NIHO_LR_MEASURE_DIR").expect("NIHO_LR_MEASURE_DIR is required"),
+    )
+    .join("round10");
+    let mut rows: BTreeMap<String, Vec<(f64, f64)>> = BTreeMap::new();
+    let mut inputs: Vec<_> = std::fs::read_dir(root.join("round10-jpeg"))
+        .expect("round10 inputs are required")
+        .map(|entry| entry.unwrap().path())
+        .filter(|path| {
+            path.file_name()
+                .and_then(|name| name.to_str())
+                .is_some_and(|name| {
+                    name.ends_with("_hsl_blue.jpg") || name.ends_with("_hsl_orange.jpg")
+                })
+        })
+        .collect();
+    inputs.sort();
+    assert_eq!(
+        inputs.len(),
+        16,
+        "requires eight scenes and both HSL variants"
+    );
+    for path in inputs {
+        let name = path.file_name().unwrap();
+        let variant = if name.to_str().unwrap().ends_with("_hsl_blue.jpg") {
+            "blue"
+        } else {
+            "orange"
+        };
+        let input = std::fs::read(&path).expect("comparison input");
+        let reference =
+            std::fs::read(root.join("lr-export-jpeg").join(name)).expect("comparison reference");
+        let xmp_text = embedded_xmp(&input).expect("input settings");
+        let mut settings = xmp::preset_settings(&xmp_text, None).unwrap().settings;
+        let raster = decode::decode_raster(&input, 1500, Filter::Lanczos3).unwrap();
+        let lr = decode::decode_raster(&reference, 1500, Filter::Lanczos3).unwrap();
+        assert_eq!(
+            (raster.image.width, raster.image.height),
+            (lr.image.width, lr.image.height)
+        );
+        let reference_rgb: Vec<_> = lr
+            .image
+            .data
+            .iter()
+            .map(|value| niho_develop::output::encode_srgb8(*value))
+            .collect();
+        let mut means = [0.0; 2];
+        for (index, engine) in [ENGINE_NIHO_6, ENGINE_NIHO_8].into_iter().enumerate() {
+            settings.engine = engine.into();
+            let (frame, _, _) = render_raster(&raster, &settings, Quality::Final, None, None);
+            means[index] = common::compare(&frame.rgba, &reference_rgb).mean;
+            assert!(means[index].is_finite());
+        }
+        rows.entry(variant.into())
+            .or_default()
+            .push((means[0], means[1]));
+    }
+    for (variant, values) in rows {
+        let count = values.len() as f64;
+        let old = values.iter().map(|value| value.0).sum::<f64>() / count;
+        let new = values.iter().map(|value| value.1).sum::<f64>() / count;
+        println!(
+            "HSL {variant}: scenes={} mean DeltaE00 niho6={old:.6} niho8={new:.6} change={:+.6}",
+            values.len(),
+            new - old
+        );
+    }
+}
+
 fn embedded_xmp(bytes: &[u8]) -> Option<String> {
     let mut decoder = image::codecs::jpeg::JpegDecoder::new(std::io::Cursor::new(bytes)).ok()?;
     let xmp = decoder.xmp_metadata().ok()??;

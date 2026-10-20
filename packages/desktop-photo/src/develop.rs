@@ -81,6 +81,7 @@ const SIGNED_ENCODING_FORMAT: &str = "png16-signed-g18";
 const SIGNED_MIN_TOOL_VERSION: &str = "0.5.0";
 const SIGNED_MIN_RENDER_VERSION: &str = "0.11.0";
 const NIHO7_MIN_RENDER_VERSION: &str = "0.16.0";
+const NIHO9_MIN_RENDER_VERSION: &str = "0.17.0";
 pub(crate) const SIGNED_REGISTRY_SNAPSHOT: &[u8] = include_bytes!("../calibration/apple-signed-registry.json");
 
 #[derive(Clone, Copy)]
@@ -3712,9 +3713,12 @@ impl PhotoDevelop {
           if let Value::Object(settings) = &mut effective_settings {
             let known = supports_known_signed_raw(&made.meta);
             let niho7 = known && version_at_least(&sidecars.develop_render_version, NIHO7_MIN_RENDER_VERSION);
+            let niho9 = known && version_at_least(&sidecars.develop_render_version, NIHO9_MIN_RENDER_VERSION);
             settings.insert(
               "engine".into(),
-              json!(if niho7 {
+              json!(if niho9 {
+                "niho-9"
+              } else if niho7 {
                 "niho-7"
               } else if known {
                 "niho-4"
