@@ -1,0 +1,40 @@
+{
+  "schemaVersion": 1,
+  "maxFileBytes": 2097152,
+  "forbiddenPathPrefixes": [
+    "apps/api/",
+    "apps/web/",
+    "ops/",
+    "infra/",
+    "archive/",
+    "private/",
+    "secrets/",
+    "release/",
+    "target/",
+    "node_modules/"
+  ],
+  "forbiddenBasenames": [
+    ".env",
+    "id_rsa",
+    "id_ed25519",
+    "credentials.json",
+    "service-account.json"
+  ],
+  "forbiddenExtensions": [
+    ".p12",
+    ".p8",
+    ".pem",
+    ".key",
+    ".mobileprovision",
+    ".cer",
+    ".crt",
+    ".db",
+    ".sqlite",
+    ".onnx",
+    ".mlmodel",
+    ".mlmodelc",
+    ".dcp"
+  ],
+  "assetManifestRequired": true,
+  "assetManifestPath": "docs/security/publication-manifest.json"
+}
