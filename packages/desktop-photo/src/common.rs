@@ -16,6 +16,12 @@ pub mod code {
   pub const NOT_FOUND: &str = "notFound";
   pub const CANCELLED: &str = "cancelled";
   pub const DECODE_FAILED: &str = "decodeFailed";
+  /// 拡張子とmagic bytes（macOSで取得できる場合は実UTType）が一致しない。
+  pub const FORMAT_MISMATCH: &str = "formatMismatch";
+  /// Finder/iCloud/同期ドライブ上だけにあり、このMacへまだ取得されていない。
+  pub const DOWNLOAD_REQUIRED: &str = "downloadRequired";
+  /// capability registryに無い形式、または要求段階を提供しない形式。
+  pub const UNSUPPORTED_FORMAT: &str = "unsupportedFormat";
   pub const PROFILE_MISSING: &str = "profileMissing";
   pub const PRESET_INVALID: &str = "presetInvalid";
   pub const EXPORT_FAILED: &str = "exportFailed";
@@ -58,6 +64,23 @@ impl PageError {
       code: code.to_string(),
       message: message.to_string(),
     }
+  }
+}
+
+/// 静的な公開code/message。native内部の別error型へ移しても文言の正本を複製せず、`&'static str`を保つ。
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct StaticPageError {
+  pub code: &'static str,
+  pub message: &'static str,
+}
+
+impl StaticPageError {
+  pub const fn new(code: &'static str, message: &'static str) -> Self {
+    Self { code, message }
+  }
+
+  pub fn into_page_error(self) -> PageError {
+    PageError::new(self.code, self.message)
   }
 }
 
