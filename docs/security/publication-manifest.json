@@ -3241,9 +3241,10 @@
         "path": "apps/camera/src-tauri/src/cutout.rs",
         "sha256": "6237d483a9322882c99b3c8efb96a13dbc7667b175e725e7fd911732e4e45ab4"
       },
-      "outputSha256": "a5e02f2ccc6720f56d55e2711ab31a5a4a58a4e6f041c9ef4c40045321b0a399",
+      "outputSha256": "f8b897634c9bae5ae6b235e541779f7a840944a840898170e5d9ce47b062954d",
       "modifications": [
-        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。"
+        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
+        "テスト用の同期ラッパーをテストビルドに限定し、公開native lintを通す。"
       ]
     },
     {
@@ -3287,8 +3288,10 @@
         "path": "apps/camera/src-tauri/src/develop.rs",
         "sha256": "e8031f4461b78fd3a74d9011ace89081814e737868a33ee4e39f7b98e39bacb8"
       },
-      "outputSha256": "e8031f4461b78fd3a74d9011ace89081814e737868a33ee4e39f7b98e39bacb8",
-      "modifications": []
+      "outputSha256": "5863620d03179fe93bb7b0bcdac54f438487113930bef576b19e0f54ac7c99a1",
+      "modifications": [
+        "書き出しcommand境界の引数設計を明記し、Clippyの引数数lintを局所的に許容する。"
+      ]
     },
     {
       "path": "apps/camera/src-tauri/src/develop_tests.rs",

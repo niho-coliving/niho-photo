@@ -205,6 +205,7 @@ fn ensure_jpeg_extension(path: PathBuf) -> PathBuf {
 }
 
 /// フォルダへの書き出し: 同じ名前があれば `-2`… を付けて、上書きせずに書く（書けた名前を返す）。
+#[allow(clippy::too_many_arguments)] // command境界の保存状態と出力先を明示的に受け取る。
 pub fn export_into_folder(
   develop: &PhotoDevelop,
   photos: &CameraPhotos,

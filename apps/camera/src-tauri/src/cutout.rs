@@ -273,6 +273,7 @@ impl PhotoCutout {
   }
 
   /// `detect`: 推論して、被写体ごとのマスクを置き場に置き、`detect` の 1 行（`durationMs` を除く）を返す。
+  #[cfg(test)]
   pub fn detect(&self, input: &Path) -> Result<Value, PageError> {
     self.detect_cancellable(input, &AtomicBool::new(false))
   }
@@ -378,6 +379,7 @@ impl PhotoCutout {
   }
 
   /// `compose`: 現像した画像にマスク・ブラシ・背景を当てて書き出し、`compose` の 1 行を返す。ブラシの JSON は一時ファイルに書いて渡す。
+  #[cfg(test)]
   pub fn compose(&self, request: &ComposeRequest) -> Result<Value, PageError> {
     self.compose_cancellable(request, &AtomicBool::new(false))
   }

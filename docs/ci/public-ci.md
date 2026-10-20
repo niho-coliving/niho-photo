@@ -39,6 +39,8 @@ cameraなら `cargoManifests` は例えば `src-tauri/Cargo.toml`、Swift sideca
 
 ## 公開ガードとmanifestの更新
 
+Dependency reviewの脆弱性例外は [限定例外の記録](../security/dependency-exceptions.md) に根拠と見直し条件を記載します。
+
 `publication-manifest.json` のschemaVersion 1と出典baselineを維持します。apps/packagesの全ファイルは、出典hashとoutput hashを持つimported、または独立した生成元を持つgeneratedとして明示します。登録の削除・追加、出典の変更は自動化せずPRでレビューします。既存ファイルの公開後の編集は次で1ファイルずつ更新できます。
 
 ```bash
