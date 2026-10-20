@@ -8633,8 +8633,8 @@
     },
     {
       "path": "apps/camera/scripts/e2e/progressive-open.js",
-      "sha256": "e58df32fade6f1b5149d3898960652ab353226e7a0ec6d4ba99c62ae49987ee1",
-      "origin": "Issue #13のため独立作成した実UI検証probe。専用e2e bundleだけを操作し、実画像・元の名前・path・画像hashを公開出力しない。\n変更理由: 画像情報を含まないE2E待機段階traceを追加。\n変更理由: 画面未描画の失敗をpreset変化なしへ誤分類しない。"
+      "sha256": "e0b57d3c92ac4783329317e9eb73b3d0ab437486a8317f03e2f8bd4696421166",
+      "origin": "Issue #13のため独立作成した実UI検証probe。専用e2e bundleだけを操作し、実画像・元の名前・path・画像hashを公開出力しない。\n変更理由: 画像情報を含まないE2E待機段階traceを追加。\n変更理由: 画面未描画の失敗をpreset変化なしへ誤分類しない。\n変更理由: 通常の正規入力fallbackも実paintで完了と判定し、遅い測定値を除外しない。"
     },
     {
       "path": "apps/camera/scripts/measure-progressive-open.mjs",
@@ -8673,8 +8673,8 @@
     },
     {
       "path": "docs/features/progressive-raw-open.md",
-      "sha256": "8265cc781075e19dd8aae7a827ed49778ef1397b4557ca4d974869f668756067",
-      "origin": "Issue #13のため公開SSOT上で独立作成。段階RAW openの契約と合成入力による統合検証。利用者画像・原本名・非公開ソース・認証情報を含まない。\n変更理由: 長時間実UI計測のdisplay awake条件と自動解除を明記。"
+      "sha256": "8f01e58b256b9541c6b6401ad58ff0a473073dea700c1969d5ddeddcee5d4032",
+      "origin": "Issue #13のため公開SSOT上で独立作成。段階RAW openの契約と合成入力による統合検証。利用者画像・原本名・非公開ソース・認証情報を含まない。\n変更理由: 長時間実UI計測のdisplay awake条件と自動解除を明記。\n変更理由: fallbackの遅い回も性能集計へ含める条件を明記。"
     },
     {
       "path": "packages/desktop-account/Cargo.lock",
@@ -8893,8 +8893,8 @@
     },
     {
       "path": "packages/photo-editing/src/editor/use-browser-photo-progressive-open.test.tsx",
-      "sha256": "59e08b44698cc556d7358813a13776fe092b78e288f65aea13fb6e11ec878cd9",
-      "origin": "Issue #13のため独立作成。actual React hooksと合成library/engine/frameだけで、provisional編集、canonical handoff、history、retry、abort、旧frame遮断を検証。外部画像・非公開コード・個体metadataを含まない。\n変更理由: 公開signed RAW契約に合う合成metadataで実hookの正規切替を検証。"
+      "sha256": "97a56214b2610f3207f30fccb3eb3ea294ebc19bcd3a6ef1a54a8c458aa75d33",
+      "origin": "Issue #13のため独立作成。actual React hooksと合成library/engine/frameだけで、provisional編集、canonical handoff、history、retry、abort、旧frame遮断を検証。外部画像・非公開コード・個体metadataを含まない。\n変更理由: 公開signed RAW契約に合う合成metadataで実hookの正規切替を検証。\n変更理由: preview取得失敗でも正規入力の実hookで補正を続けられる回帰を追加。"
     },
     {
       "path": "packages/photo-editing/src/fixtures/cutout-brush-parity.json",

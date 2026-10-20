@@ -117,7 +117,8 @@
     observations.exposurePaintMs = exposurePaintMs;
     const values = sliderValues();
     stage = "canonical";
-    await waitFor(() => events.some((event) => event.stage === "canonicalReady"), 30000);
+    await waitFor(() => events.some((event) => event.stage === "canonicalReady") ||
+      (!events.some((event) => event.stage === "proxyReady") && events.some((event) => event.stage === "finalVisible")), 30000);
     await delay(100);
     const retained = JSON.stringify(values) === JSON.stringify(sliderValues());
     if (!retained) throw new Error("settings-changed-on-handoff");
@@ -127,7 +128,8 @@
       timeToEditableMs: exposureAt - t0,
       inputAcceptedMs: acceptedMs, exposurePaintMs, presetPaintMs,
       proxyReadyMs: events.find((event) => event.stage === "proxyReady")?.elapsedMs ?? null,
-      canonicalReadyMs: events.find((event) => event.stage === "canonicalReady")?.elapsedMs ?? null,
+      canonicalReadyMs: events.find((event) => event.stage === "canonicalReady")?.elapsedMs ??
+        (!events.some((event) => event.stage === "proxyReady") ? events.find((event) => event.stage === "finalVisible")?.elapsedMs ?? null : null),
       settingsRetained: retained, presetRetained: selected });
   } catch (error) {
     report({ ok: false, case: config.label, mode: config.mode, iteration: config.iteration, stage,

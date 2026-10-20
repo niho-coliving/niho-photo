@@ -470,6 +470,21 @@ describe("useBrowserPhotoOpen progressive RAW integration", () => {
     expect(current.settings.base).toBe(BASE_VERSION);
   });
 
+  it("暫定previewを取得できないRAWも正規入力で開き、補正と通常保存を続ける", async () => {
+    const canonical = createEngine({ marker: 9 });
+    engineFactory.mockReturnValue(canonical);
+    const fixture = createLibrary(async () => readyWork());
+    vi.mocked(fixture.library.loadInteractivePreview!).mockRejectedValue(new Error("preview unavailable"));
+    const target = item("fallback");
+    await mount(fixture.library, [target]);
+    await run(() => current.openItem(target));
+    expect(current.opened?.input?.kind).toBe("workingCopy");
+    expect(current.settings).toMatchObject({ engine: "niho-7", base: BASE_VERSION });
+    await run(() => current.changeSettings((settings) => ({ ...settings, exposure: 0.4 }), "commit"));
+    expect(current.settings.exposure).toBe(0.4);
+    expect(fixture.saveProvisionalDraft).not.toHaveBeenCalled();
+  });
+
   it("canonical待ちのcrop操作とundoを実hookで処理し、crop表示をcanonical engineで描いてactive/historyを保つ", async () => {
     const canonicalFrame = deferred<DevelopFrame | null>();
     const provisional = createEngine({ marker: 1 });
