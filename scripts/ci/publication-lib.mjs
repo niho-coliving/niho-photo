@@ -77,7 +77,9 @@ function pathForbidden(name, policy) {
 
 export function containsPrivateReference(text) {
   // 値はエラーに含めない。公開ドキュメント内の移行元の名前だけはURLではないため許容。
-  if (/(?:^|[\s\x22\x27\x60(=])(?:\/(?:Users|Volumes|home|private)\/|[A-Z]:\\Users\\)/m.test(text)) return true;
+  // JSON/JS文字列のescaped backslashも通常のpath separatorに揃えて検査する。
+  const normalizedPaths = text.replace(/\\+/g, "/");
+  if (/(?:^|[\s\x22\x27\x60(=])(?:\/(?:Users|Volumes|home|private|root)\/|[a-z]:\/Users\/)/im.test(normalizedPaths)) return true;
   if (/-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----/.test(text)) return true;
   const urls = text.match(/(?:https?|ssh|git\+https|git\+ssh):\/\/[^\s<>"'`]+|git@[A-Za-z0-9.-]+:[^\s<>"'`]+/gi) ?? [];
   return urls.some((url) => {

@@ -8494,13 +8494,13 @@
     },
     {
       "path": "packages/develop-engine/tools/asset-audit/sanitize_rw2.py",
-      "sha256": "ff588be0d23de1133e951e56a9b86464cc804ff464fe7e52ad2b07901a4388d0",
-      "origin": "#9で独立作成。所有測定対・metadataを除いた所有RAW/参照画像、検証tool、公開build/test契約または第三者license全文。詳細はdocs/migration/raw-engine.mdと資産台帳に記録。\n変更理由: 未解釈ヘッダーバイトを出力へ継承しないため再構築"
+      "sha256": "d0bb1715f97c46f8b165065372a828b4474649759dfda48c3e422308cec407c9",
+      "origin": "#9で独立作成。所有測定対・metadataを除いた所有RAW/参照画像、検証tool、公開build/test契約または第三者license全文。詳細はdocs/migration/raw-engine.mdと資産台帳に記録。\n変更理由: 未解釈ヘッダーバイトを出力へ継承しないため再構築\n変更理由: RW2監査出力の入力・出力path aliasを事前拒否する。"
     },
     {
       "path": "packages/develop-engine/tools/asset-audit/test_sanitize_rw2.py",
-      "sha256": "18887e46351644b10ebdb661bfdd8c40e9980f3d1c4138cf299e3c40c90a513f",
-      "origin": "#9で独立作成。所有測定対・metadataを除いた所有RAW/参照画像、検証tool、公開build/test契約または第三者license全文。詳細はdocs/migration/raw-engine.mdと資産台帳に記録。\n変更理由: 未解釈ヘッダー情報の除去回帰テストを追加"
+      "sha256": "0c2e4bb7f152aa11daf230d8ebadb1d4c0e2db59f6a3cc6745ed30df8b744f35",
+      "origin": "#9で独立作成。所有測定対・metadataを除いた所有RAW/参照画像、検証tool、公開build/test契約または第三者license全文。詳細はdocs/migration/raw-engine.mdと資産台帳に記録。\n変更理由: 未解釈ヘッダー情報の除去回帰テストを追加\n変更理由: RW2監査path alias時に原本を保護するCLI回帰を追加する。"
     },
     {
       "path": "packages/develop-engine/tools/independent-profile/check.py",

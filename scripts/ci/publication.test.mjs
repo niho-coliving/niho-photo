@@ -190,6 +190,19 @@ test("private絶対pathとprivate-key headerを値を表示せず拒否する", 
   assert.ok(failures.every((v) => !v.includes("example-person") && !v.includes("hidden-photo")));
 });
 
+test("JSONでescapeされたWindows pathとLinux root pathを値を表示せず拒否する", async (t) => {
+  const f = await fixture(t);
+  const slash = String.fromCharCode(92);
+  const marker = "private-marker";
+  const windowsPath = "c:" + slash + slash + "Users" + slash + slash + marker + slash + slash + "photo.jpg";
+  const rootPath = "/" + "root/" + marker + "/photo.jpg";
+  await f.put("docs/windows-reference.md", JSON.stringify({ path: windowsPath }));
+  await f.put("docs/linux-reference.md", JSON.stringify({ path: rootPath }));
+  const failures = await f.check();
+  assert.equal(failures.filter((v) => /非公開参照/.test(v)).length, 2);
+  assert.ok(failures.every((v) => !v.includes(marker)));
+});
+
 test("登録したDCPでも独立測定・検証証拠が無ければ拒否する", async (t) => {
   const f = await fixture(t);
   const name = "packages/example/profiles/independent.dcp";

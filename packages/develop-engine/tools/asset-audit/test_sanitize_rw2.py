@@ -1,6 +1,11 @@
 """Container safety unit tests. Actual RW2 acceptance is mandatory in Rust fixture_pipeline."""
 import struct
+import os
+import subprocess
+import sys
+import tempfile
 import unittest
+from pathlib import Path
 from sanitize_rw2 import sanitize, entries, scalar
 
 
@@ -50,6 +55,37 @@ class SanitizationTests(unittest.TestCase):
         struct.pack_into('<I', source, 26 + 6 * 12 + 8, 0xffffffff)
         with self.assertRaises(ValueError):
             sanitize(bytes(source))
+
+    def test_cli_rejects_audit_aliases_before_writing(self):
+        source_bytes = self.sample()
+        script = Path(__file__).with_name('sanitize_rw2.py')
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            source = root / 'source.rw2'
+            source.write_bytes(source_bytes)
+            output = root / 'output.rw2'
+
+            for output_path, audit_path in [
+                (output, source),
+                (output, output),
+            ]:
+                result = subprocess.run(
+                    [sys.executable, str(script), str(source), str(output_path), '--audit', str(audit_path)],
+                    capture_output=True, text=True, check=False,
+                )
+                self.assertNotEqual(result.returncode, 0)
+                self.assertEqual(source.read_bytes(), source_bytes)
+                self.assertFalse(output.exists())
+
+            hardlink = root / 'source-hardlink.rw2'
+            os.link(source, hardlink)
+            result = subprocess.run(
+                [sys.executable, str(script), str(source), str(output), '--audit', str(hardlink)],
+                capture_output=True, text=True, check=False,
+            )
+            self.assertNotEqual(result.returncode, 0)
+            self.assertEqual(source.read_bytes(), source_bytes)
+            self.assertFalse(output.exists())
 
 
 if __name__ == '__main__':

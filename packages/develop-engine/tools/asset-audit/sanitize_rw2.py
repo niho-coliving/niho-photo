@@ -96,14 +96,34 @@ def sanitize(data):
     return output, audit
 
 
+def paths_alias(paths):
+    """Return true when any paths resolve to the same file, including hard links."""
+    try:
+        resolved = [path.resolve() for path in paths]
+        for index, left in enumerate(paths):
+            for right_index in range(index + 1, len(paths)):
+                right = paths[right_index]
+                if resolved[index] == resolved[right_index]:
+                    return True
+                if left.exists() and right.exists() and left.samefile(right):
+                    return True
+    except OSError as error:
+        raise ValueError('paths could not be safely compared') from error
+    return False
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('source', type=Path)
     parser.add_argument('output', type=Path)
     parser.add_argument('--audit', type=Path, required=True)
     args = parser.parse_args()
-    if args.source.resolve() == args.output.resolve() or (args.output.exists() and args.source.samefile(args.output)):
-        parser.error('source and output must differ')
+    try:
+        aliases = paths_alias([args.source, args.output, args.audit])
+    except ValueError:
+        parser.error('source, output, and audit paths must be safely distinguishable')
+    if aliases:
+        parser.error('source, output, and audit paths must differ')
     output, audit = sanitize(args.source.read_bytes())
     args.output.write_bytes(output)
     args.audit.write_text(json.dumps(audit, indent=2) + '\n')
