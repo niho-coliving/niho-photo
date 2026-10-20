@@ -207,11 +207,14 @@ pub fn sharpen_linear_srgb(
                 + pixel[2] * REC709_LUMA_F32[2]
         })
         .collect();
-    let scale = whole_long_edge.max(1) as f64 / 1500.0;
-    let radius = libm::round(settings.radius * scale).clamp(1.0, 24.0) as usize;
-    let fine_radius = libm::round(settings.radius * 0.45 * scale).clamp(1.0, 12.0) as usize;
-    let broad = box_mean(&luma, width, height, radius);
-    let fine = box_mean(&luma, width, height, fine_radius);
+    // Keep the authored radius continuous. Rounding it to an integer box
+    // made adjacent values such as 1.1 and 1.2 exactly the same operation.
+    // A truncated Gaussian has a bounded footprint while preserving smooth
+    // changes in sigma; each normalized 1-D kernel is built once and reused
+    // for the horizontal and vertical passes.
+    let sigma = sharpening_sigma(whole_long_edge, settings);
+    let broad = gaussian_mean(&luma, width, height, sigma);
+    let fine = gaussian_mean(&luma, width, height, (sigma * 0.45).max(1.0 / 1024.0));
     let detail_weight = (settings.detail / 100.0) as f32;
     let gain = (settings.amount / 100.0) as f32;
     let threshold = (settings.masking / 100.0) as f32 * 0.075;
@@ -244,15 +247,28 @@ pub fn sharpen_linear_srgb(
     Ok(())
 }
 
+fn sharpening_sigma(whole_long_edge: usize, settings: SharpeningSettings) -> f64 {
+    let scale = whole_long_edge.max(1) as f64 / 1500.0;
+    (settings.radius * scale).clamp(1.0 / 1024.0, 24.0)
+}
+
+/// Maximum pixel reach read by [`sharpen_linear_srgb`]. Geometry plans use
+/// this to size an internal crop halo. A halo clipped by the actual photo
+/// boundary may be smaller; the filter clamps at that photo boundary.
+pub fn sharpening_reach(whole_long_edge: usize, settings: SharpeningSettings) -> usize {
+    libm::ceil(3.0 * sharpening_sigma(whole_long_edge, settings)) as usize
+}
+
 fn box_mean(source: &[f32], width: usize, height: usize, radius: usize) -> Vec<f32> {
     let mut horizontal = vec![0.0; source.len()];
     let diameter = radius * 2 + 1;
     for y in 0..height {
         let row = &source[y * width..(y + 1) * width];
         let mut sum = row[0] * radius as f32;
-        for x in 0..=radius.min(width - 1) {
-            sum += row[x];
+        for value in row.iter().take(radius.min(width - 1) + 1) {
+            sum += *value;
         }
+        sum += row[width - 1] * radius.saturating_sub(width - 1) as f32;
         for x in 0..width {
             horizontal[y * width + x] = sum / diameter as f32;
             let remove = row[x.saturating_sub(radius)];
@@ -266,11 +282,54 @@ fn box_mean(source: &[f32], width: usize, height: usize, radius: usize) -> Vec<f
         for y in 0..=radius.min(height - 1) {
             sum += horizontal[y * width + x];
         }
+        sum += horizontal[(height - 1) * width + x] * radius.saturating_sub(height - 1) as f32;
         for y in 0..height {
             output[y * width + x] = sum / diameter as f32;
             let remove = horizontal[y.saturating_sub(radius) * width + x];
             let add = horizontal[(y + radius + 1).min(height - 1) * width + x];
             sum += add - remove;
+        }
+    }
+    output
+}
+
+fn gaussian_mean(source: &[f32], width: usize, height: usize, sigma: f64) -> Vec<f32> {
+    let radius = libm::ceil(3.0 * sigma) as usize;
+    let mut kernel = Vec::with_capacity(radius + 1);
+    let mut total = 1.0f64;
+    kernel.push(1.0f32);
+    for offset in 1..=radius {
+        let x = offset as f64;
+        let weight = libm::exp(-(x * x) / (2.0 * sigma * sigma));
+        kernel.push(weight as f32);
+        total += 2.0 * weight;
+    }
+    let inverse = (1.0 / total) as f32;
+    for weight in &mut kernel {
+        *weight *= inverse;
+    }
+
+    let mut horizontal = vec![0.0f32; source.len()];
+    for y in 0..height {
+        let row = &source[y * width..(y + 1) * width];
+        for x in 0..width {
+            let mut sum = row[x] * kernel[0];
+            for (offset, weight) in kernel.iter().copied().enumerate().skip(1) {
+                sum += weight * (row[x.saturating_sub(offset)] + row[(x + offset).min(width - 1)]);
+            }
+            horizontal[y * width + x] = sum;
+        }
+    }
+    let mut output = vec![0.0f32; source.len()];
+    for y in 0..height {
+        for x in 0..width {
+            let mut sum = horizontal[y * width + x] * kernel[0];
+            for (offset, weight) in kernel.iter().copied().enumerate().skip(1) {
+                sum += weight
+                    * (horizontal[y.saturating_sub(offset) * width + x]
+                        + horizontal[(y + offset).min(height - 1) * width + x]);
+            }
+            output[y * width + x] = sum;
         }
     }
     output
@@ -287,6 +346,89 @@ mod tests {
             .map(|value| (value - mean).powi(2))
             .sum::<f32>()
             / values.len() as f32
+    }
+
+    fn reference_box_mean(source: &[f32], width: usize, height: usize, radius: usize) -> Vec<f32> {
+        let diameter = radius * 2 + 1;
+        let area = (diameter * diameter) as f32;
+        (0..height)
+            .flat_map(|y| {
+                (0..width).map(move |x| {
+                    let mut sum = 0.0f32;
+                    for dy in 0..diameter {
+                        let sy = (y + dy).saturating_sub(radius).min(height - 1);
+                        for dx in 0..diameter {
+                            let sx = (x + dx).saturating_sub(radius).min(width - 1);
+                            sum += source[sy * width + sx];
+                        }
+                    }
+                    sum / area
+                })
+            })
+            .collect()
+    }
+
+    #[test]
+    fn box_mean_matches_independent_clamped_convolution_on_tiny_images() {
+        for (width, height) in [(1, 1), (1, 5), (5, 1), (2, 2)] {
+            let source: Vec<f32> = (0..width * height)
+                .map(|index| 0.125 + index as f32 * 0.25)
+                .collect();
+            for radius in 0..=9 {
+                let actual = box_mean(&source, width, height, radius);
+                let expected = reference_box_mean(&source, width, height, radius);
+                for (actual, expected) in actual.iter().zip(expected) {
+                    assert!(
+                        (actual - expected).abs() <= 2e-6,
+                        "{width}x{height} radius {radius}: {actual} vs {expected}"
+                    );
+                }
+                let constant = vec![0.375; width * height];
+                assert!(box_mean(&constant, width, height, radius)
+                    .iter()
+                    .all(|value| (*value - 0.375).abs() <= 2e-6));
+            }
+        }
+    }
+
+    #[test]
+    fn active_detail_keeps_tiny_constant_colors_constant() {
+        for (width, height) in [(1, 1), (1, 7), (7, 1), (2, 2)] {
+            let source = vec![0.18, 0.42, 0.77].repeat(width * height);
+            let reduced = reduce_noise(
+                &source,
+                width,
+                height,
+                9_000,
+                SourceSpace::LinearSrgb,
+                DetailSettings {
+                    luminance_noise_reduction: 100.0,
+                    ..DetailSettings::default()
+                },
+                None,
+            )
+            .unwrap();
+            for (actual, expected) in reduced.iter().zip(&source) {
+                assert!((actual - expected).abs() <= 2e-6);
+            }
+            let mut sharpened = source.clone();
+            sharpen_linear_srgb(
+                &mut sharpened,
+                width,
+                height,
+                9_000,
+                SharpeningSettings {
+                    amount: 150.0,
+                    radius: 3.0,
+                    detail: 100.0,
+                    masking: 0.0,
+                },
+            )
+            .unwrap();
+            for (actual, expected) in sharpened.iter().zip(&source) {
+                assert!((actual - expected).abs() <= 1e-5);
+            }
+        }
     }
 
     #[test]
@@ -334,7 +476,7 @@ mod tests {
     }
 
     #[test]
-    fn sharpening_amount_zero_is_exact_and_detail_and_masking_act() {
+    fn sharpening_amount_zero_is_exact_and_continuous_radius_acts() {
         let (width, height) = (31, 9);
         let mut source = vec![0.3; width * height * 3];
         for y in 0..height {
@@ -372,10 +514,131 @@ mod tests {
         let low = apply(0.0, 0.0);
         let high = apply(100.0, 0.0);
         assert_ne!(low, high, "detail must change the high-frequency weight");
-        let masked = apply(25.0, 100.0);
-        assert!((masked[3] - source[3]).abs() < (low[3] - source[3]).abs() + 1e-6);
         let edge = (height / 2 * width + width / 2 - 1) * 3;
         assert!((low[edge] - source[edge]).abs() > 0.01);
+
+        let at_radius = |radius| {
+            let mut value = source.clone();
+            sharpen_linear_srgb(
+                &mut value,
+                width,
+                height,
+                1500,
+                SharpeningSettings {
+                    amount: 100.0,
+                    radius,
+                    detail: 35.0,
+                    masking: 0.0,
+                },
+            )
+            .unwrap();
+            value
+        };
+        let mut previous = at_radius(0.5);
+        for step in 6..=30 {
+            let current = at_radius(step as f64 / 10.0);
+            assert_ne!(previous, current, "radius {} must act", step as f64 / 10.0);
+            previous = current;
+        }
+    }
+
+    #[test]
+    fn masking_suppresses_seeded_flat_noise_but_preserves_the_real_edge() {
+        let (width, height) = (96, 48);
+        let mut state = 0x32d3_91abu32;
+        let mut source = Vec::with_capacity(width * height * 3);
+        for _y in 0..height {
+            for x in 0..width {
+                state ^= state << 13;
+                state ^= state >> 17;
+                state ^= state << 5;
+                let noise = (state as f32 / u32::MAX as f32 - 0.5) * 0.035;
+                let value = if x < width / 2 { 0.3 } else { 0.7 };
+                source.extend_from_slice(&[value + noise; 3]);
+            }
+        }
+        let apply = |masking, detail| {
+            let mut output = source.clone();
+            sharpen_linear_srgb(
+                &mut output,
+                width,
+                height,
+                1500,
+                SharpeningSettings {
+                    amount: 120.0,
+                    radius: 1.35,
+                    detail,
+                    masking,
+                },
+            )
+            .unwrap();
+            output
+        };
+        let unmasked = apply(0.0, 25.0);
+        let masked = apply(100.0, 25.0);
+        let flat_delta_variance = |rendered: &[f32]| {
+            let mut deltas = Vec::new();
+            for y in 4..height - 4 {
+                for x in 4..width / 2 - 8 {
+                    let index = (y * width + x) * 3 + 1;
+                    deltas.push(rendered[index] - source[index]);
+                }
+            }
+            variance(&deltas)
+        };
+        assert!(flat_delta_variance(&masked) < flat_delta_variance(&unmasked) * 0.35);
+        let edge_response = |rendered: &[f32]| {
+            let y = height / 2;
+            let left = (y * width + width / 2 - 1) * 3 + 1;
+            let right = (y * width + width / 2) * 3 + 1;
+            (rendered[right] - rendered[left]) - (source[right] - source[left])
+        };
+        assert!(edge_response(&masked) > 0.01);
+        let low_detail = apply(0.0, 0.0);
+        let high_detail = apply(0.0, 100.0);
+        let high_frequency_response = |rendered: &[f32]| {
+            let mut total = 0.0f32;
+            for y in 4..height - 4 {
+                for x in 4..width / 2 - 8 {
+                    let i = (y * width + x) * 3 + 1;
+                    total += (rendered[i] - source[i]).abs();
+                }
+            }
+            total
+        };
+        assert!(
+            (high_frequency_response(&high_detail) - high_frequency_response(&low_detail)).abs()
+                > 0.01
+        );
+    }
+
+    #[test]
+    fn sharpening_is_luma_only_and_keeps_signed_headroom_finite() {
+        let mut rgb = vec![-0.12, 0.08, 1.25, 0.15, 0.35, 1.52, 0.7, 0.9, 2.1];
+        let original = rgb.clone();
+        sharpen_linear_srgb(
+            &mut rgb,
+            3,
+            1,
+            1500,
+            SharpeningSettings {
+                amount: 150.0,
+                radius: 1.2,
+                detail: 65.0,
+                masking: 0.0,
+            },
+        )
+        .unwrap();
+        for (before, after) in original.chunks_exact(3).zip(rgb.chunks_exact(3)) {
+            let delta = [
+                after[0] - before[0],
+                after[1] - before[1],
+                after[2] - before[2],
+            ];
+            assert!((delta[0] - delta[1]).abs() <= 1e-6);
+            assert!((delta[1] - delta[2]).abs() <= 1e-6);
+            assert!(after.iter().all(|value| value.is_finite()));
+        }
     }
 
     #[test]
