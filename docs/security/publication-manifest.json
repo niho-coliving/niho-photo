@@ -4059,7 +4059,7 @@
         "path": "packages/desktop-photo/src/library_tests.rs",
         "sha256": "7eea84c71f88468f287f2eea5f906dcd878c05294a5bd5d8c4b2442d5eb4861d"
       },
-      "outputSha256": "414f56b4f9cd5b6f6d2c869c64bec3b3a7744c1bee7ee56b3a56525c57374e38",
+      "outputSha256": "a46e162892c21ab018875d9f97fd6bb36a6f05cd588cbb48bcafbbd737a5774b",
       "modifications": [
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
         "private絶対path guardに合わせ、合成テスト用のpathを予約済み/test-data配下へ正規化。実装の挙動は変更しない。",
@@ -4071,7 +4071,8 @@
         "実ImageIO UTIを能力レジストリの許可値と照合する回帰へ調整。",
         "実ファイル長で一覧metadataを検証し、HEIF別名も実ImageIO回帰へ含める。",
         "Issue 13 progressive RAW open implementation",
-        "最新mainのUI・共有機能と段階RAW openを統合し、既存の境界と補正保持を両立する。"
+        "最新mainのUI・共有機能と段階RAW openを統合し、既存の境界と補正保持を両立する。",
+        "squash済みの形式対応PRと統合した際に重複した同一の合成fixture helperを一本化する"
       ]
     },
     {
