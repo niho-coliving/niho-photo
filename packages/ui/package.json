@@ -1,0 +1,59 @@
+{
+  "name": "niho-ui",
+  "private": true,
+  "version": "0.1.0",
+  "description": "写真編集が使う共有UI部品。",
+  "exports": {
+    "./admin-field-classes": "./src/admin-field-classes.ts",
+    "./app-dialog": "./src/app-dialog.ts",
+    "./cn": "./src/cn.ts",
+    "./components/app-dialog-host": "./src/components/app-dialog-host.tsx",
+    "./components/confirm-dialog": "./src/components/confirm-dialog.tsx",
+    "./components/dialog": "./src/components/dialog.tsx",
+    "./components/modal-action-banner": "./src/components/modal-action-banner.tsx",
+    "./components/niho-heart": "./src/components/niho-heart.tsx",
+    "./components/popover": "./src/components/popover.tsx",
+    "./components/skeleton": "./src/components/skeleton.tsx",
+    "./components/spinner": "./src/components/spinner.tsx",
+    "./dismiss-layers": "./src/dismiss-layers.ts",
+    "./drag-transfer": "./src/drag-transfer.ts",
+    "./inert-attribute": "./src/inert-attribute.ts",
+    "./local-storage-safe": "./src/local-storage-safe.ts",
+    "./package.json": "./package.json"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "lint": "eslint .",
+    "test": "vitest run"
+  },
+  "peerDependencies": {
+    "@radix-ui/react-dialog": "^1.1.23",
+    "@radix-ui/react-popover": "^1.1.23",
+    "clsx": "^2.1.1",
+    "lucide-react": "^1.48.0",
+    "react": "^18.3.0 || ^19.0.0",
+    "react-dom": "^18.3.0 || ^19.0.0",
+    "tailwind-merge": "^3.7.0"
+  },
+  "devDependencies": {
+    "@radix-ui/react-dialog": "^1.1.23",
+    "@radix-ui/react-popover": "^1.1.23",
+    "@types/node": "^24",
+    "@types/react": "^18",
+    "@types/react-dom": "^18",
+    "@typescript-eslint/parser": "^8.70.1",
+    "clsx": "^2.1.1",
+    "eslint": "^10.11.0",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "jsdom": "^29.1.1",
+    "lucide-react": "^1.48.0",
+    "react": "^18.3.0",
+    "react-dom": "^18.3.0",
+    "tailwind-merge": "^3.7.0",
+    "typescript": "^5.7.2",
+    "vitest": "^4.1.11"
+  },
+  "engines": {
+    "node": "24.x"
+  }
+}
