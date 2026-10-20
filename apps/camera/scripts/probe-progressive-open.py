@@ -3,12 +3,14 @@
 import argparse
 import fcntl
 import json
+import math
 import os
 from pathlib import Path
 import shutil
 import signal
 import subprocess
 import sys
+import time
 
 BENCH_IDENTIFIER = "life.niho.photo.raw-bench"
 parser = argparse.ArgumentParser(description=__doc__)
@@ -63,6 +65,7 @@ def main():
                    NIHO_CAMERA_E2E_WINDOW="visible", NIHO_CAMERA_E2E_PICK_PHOTOS=str(source),
                    NIHO_APPLE_RAW_LINEAR_PATH=runtime["apple"], NIHO_DEVELOP_RENDER_PATH=runtime["render"],
                    NIHO_DEVELOP_CALIBRATION_DIR=runtime["calibration"], NIHO_CAMERA_SIGNED_RAW="1")
+        native_started_ms = int(time.time() * 1000)
         with (work / "app.log").open("w") as log:
             process = subprocess.Popen([str(bundle / "Contents/MacOS/niho_camera")],
                                        env=env, stdout=log, stderr=subprocess.STDOUT, start_new_session=True)
@@ -79,6 +82,24 @@ def main():
         result = json.loads(report.read_text())
         if not result.get("ok"):
             raise RuntimeError("UI probe failed at " + str(result.get("stage", "unknown")))
+        native_times = {}
+        allowed = {"nativeHash", "cacheLookup", "cacheStore", "info", "decode", "lens", "whiteBalance", "color", "downsample", "encode"}
+        native_log = Path.home() / "Library/Logs" / BENCH_IDENTIFIER / "camera.log"
+        for log_path in [native_log.with_name("camera.log.1"), native_log]:
+            if not log_path.exists():
+                continue
+            for line in log_path.read_text().splitlines():
+                try:
+                    record = json.loads(line)
+                    if record.get("epochMs", 0) < native_started_ms or record.get("kind") not in ["camera.photo_stage", "photo_editing.develop_stage"]:
+                        continue
+                    data = record.get("data", {})
+                    stage, elapsed = data.get("stage"), data.get("elapsedMs")
+                    if stage in allowed and type(elapsed) in [int, float] and math.isfinite(elapsed) and elapsed >= 0:
+                        native_times[stage] = native_times.get(stage, 0) + elapsed
+                except (ValueError, TypeError):
+                    continue
+        result["nativeStagesMs"] = native_times
         return result
 
     # warmの最初の1回は計測外で同じpathのnative cacheを作る。
@@ -88,6 +109,7 @@ def main():
         primed.touch()
     result = launch(args.iteration)
     print(json.dumps({"stagesMs": {
+        **result["nativeStagesMs"],
         "editable": result["timeToEditableMs"], "inputAccepted": result["inputAcceptedMs"],
         "renderUpdated": result["exposurePaintMs"], "presetRenderUpdated": result["presetPaintMs"],
         **({"proxyReady": result["proxyReadyMs"]} if result.get("proxyReadyMs") is not None else {}),

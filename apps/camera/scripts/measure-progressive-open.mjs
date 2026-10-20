@@ -8,6 +8,7 @@ import { spawn } from "node:child_process";
 const ALLOWED_STAGES = new Set([
   "nativeHash",
   "cacheLookup",
+  "cacheStore",
   "info",
   "decode",
   "lens",
