@@ -1,14 +1,17 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ChevronRight, Folder, Laptop, MoreHorizontal, Plus } from "lucide-react";
+import { ChevronRight, Folder, FolderOpen, Images, Laptop, MoreHorizontal, Plus } from "lucide-react";
 
 import type { PhotoLibraryFolder } from "../library/photo-library";
 import {
   PHOTO_EDITING_ADD_FOLDER_LABEL,
+  PHOTO_EDITING_ADD_SELECTED_PHOTOS_LABEL,
   PHOTO_EDITING_FOLDERS_LOAD_FAILED_TEXT,
   PHOTO_EDITING_FORGET_FOLDER_LABEL,
   PHOTO_EDITING_LOCAL_PLACE_LABEL,
+  PHOTO_EDITING_FORGET_SELECTED_PHOTOS_LABEL,
+  PHOTO_EDITING_SELECTED_PHOTOS_LABEL,
   photoEditingFolderMenuLabel,
   photoEditingFolderToggleLabel,
 } from "../photo-editing-copy";
@@ -29,15 +32,41 @@ export function BrowserPhotoEditingFolderTree(props: {
   /** 木を読めなかった */
   error: boolean;
   selectedFolderId: string | null;
+  selectedPhotos?: boolean;
+  /** `null` は読み込み中。0 のとき行を出さない。 */
+  selectedPhotoCount?: number | null;
   /** 「＋」と「⋯」を押せない（書き出し・一括の補正の途中など） */
   disabled?: boolean;
   onAddFolder: () => void;
+  onAddPhotos?: () => void;
   onSelectFolder: (folderId: string) => void;
+  onSelectSelectedPhotos?: () => void;
   onForgetFolder: (folder: PhotoLibraryFolder) => void;
+  onForgetSelectedPhotos?: () => void;
   onRetry: () => void;
 }) {
   const [expanded, setExpanded] = useState<ReadonlySet<string>>(() => new Set());
   const { folders, selectedFolderId } = props;
+  const addItems = [
+    {
+      key: "folder",
+      label: PHOTO_EDITING_ADD_FOLDER_LABEL,
+      icon: <FolderOpen className="h-4 w-4" aria-hidden />,
+      disabled: props.disabled,
+      onSelect: props.onAddFolder,
+    },
+    ...(props.onAddPhotos
+      ? [
+          {
+            key: "photos",
+            label: PHOTO_EDITING_ADD_SELECTED_PHOTOS_LABEL,
+            icon: <Images className="h-4 w-4" aria-hidden />,
+            disabled: props.disabled,
+            onSelect: props.onAddPhotos,
+          },
+        ]
+      : []),
+  ];
   // 選んだフォルダが閉じた段の下に隠れないよう、上の段を開く（自分で閉じた段は、選び直すまで閉じたまま）
   useEffect(() => {
     if (!folders || !selectedFolderId) return;
@@ -134,17 +163,70 @@ export function BrowserPhotoEditingFolderTree(props: {
           <Laptop className="h-4 w-4 shrink-0 text-niho-text-muted" aria-hidden />
           {PHOTO_EDITING_LOCAL_PLACE_LABEL}
         </h3>
-        <button
-          type="button"
-          aria-label={PHOTO_EDITING_ADD_FOLDER_LABEL}
-          title={PHOTO_EDITING_ADD_FOLDER_LABEL}
-          disabled={props.disabled}
-          onClick={props.onAddFolder}
-          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-niho-accent-ink transition hover:bg-niho-pale/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-niho-accent-ink disabled:cursor-not-allowed disabled:opacity-40"
-        >
-          <Plus className="h-5 w-5" aria-hidden />
-        </button>
+        {props.onAddPhotos ? <PhotoEditingMenu variant="browser" align="end" items={addItems}>
+          <button
+            type="button"
+            aria-haspopup="menu"
+            aria-label="フォルダや写真を追加"
+            title="フォルダや写真を追加"
+            disabled={props.disabled}
+            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-niho-accent-ink transition hover:bg-niho-pale/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-niho-accent-ink disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            <Plus className="h-5 w-5" aria-hidden />
+          </button>
+        </PhotoEditingMenu> : (
+          <button
+            type="button"
+            aria-label={PHOTO_EDITING_ADD_FOLDER_LABEL}
+            title={PHOTO_EDITING_ADD_FOLDER_LABEL}
+            disabled={props.disabled}
+            onClick={props.onAddFolder}
+            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-niho-accent-ink transition hover:bg-niho-pale/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-niho-accent-ink disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            <Plus className="h-5 w-5" aria-hidden />
+          </button>
+        )}
       </div>
+      {props.selectedPhotoCount != null && props.selectedPhotoCount > 0 ? (
+        <div className="mb-1 flex min-w-0 items-center gap-1">
+          <button
+            type="button"
+            aria-current={props.selectedPhotos ? "true" : undefined}
+            onClick={props.onSelectSelectedPhotos}
+            className={cn(
+              "flex min-h-11 min-w-0 flex-1 items-center gap-2 rounded-xl px-3 text-left text-sub font-bold",
+              props.selectedPhotos ? "bg-niho-accent-soft text-niho-accent-ink" : "text-niho-text hover:bg-niho-pale/60",
+            )}
+          >
+            <Images className="h-4 w-4 shrink-0" aria-hidden />
+            <span className="min-w-0 flex-1 truncate">{PHOTO_EDITING_SELECTED_PHOTOS_LABEL}</span>
+            <span className="tabular-nums text-xs">{props.selectedPhotoCount}</span>
+          </button>
+          <PhotoEditingMenu
+            variant="browser"
+            align="end"
+            items={[
+              {
+                key: "forget-selected",
+                label: PHOTO_EDITING_FORGET_SELECTED_PHOTOS_LABEL,
+                disabled: props.disabled,
+                opensDialog: true,
+                onSelect: props.onForgetSelectedPhotos ?? (() => undefined),
+              },
+            ]}
+          >
+            <button
+              type="button"
+              aria-haspopup="menu"
+              aria-label={`${PHOTO_EDITING_SELECTED_PHOTOS_LABEL}のメニュー`}
+              title={`${PHOTO_EDITING_SELECTED_PHOTOS_LABEL}のメニュー`}
+              className="flex h-11 w-8 shrink-0 items-center justify-center rounded-lg text-niho-text-muted hover:text-niho-text"
+            >
+              <MoreHorizontal className="h-4 w-4" aria-hidden />
+            </button>
+          </PhotoEditingMenu>
+        </div>
+      ) : null}
       {props.error ? (
         <div className="space-y-1 px-3 py-2 text-xs text-niho-danger">
           <p>{PHOTO_EDITING_FOLDERS_LOAD_FAILED_TEXT}</p>

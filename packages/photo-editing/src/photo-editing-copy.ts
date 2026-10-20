@@ -543,6 +543,8 @@ export function photoEditingBulkUndoResultStatus(params: {
 export const PHOTO_EDITING_LOCAL_PLACE_LABEL = "この Mac";
 /** 見出しの「＋」の読み上げ名・空状態の見出しと主ボタン。 */
 export const PHOTO_EDITING_ADD_FOLDER_LABEL = "フォルダを追加";
+export const PHOTO_EDITING_ADD_SELECTED_PHOTOS_LABEL = "写真を選ぶ";
+export const PHOTO_EDITING_SELECTED_PHOTOS_LABEL = "選んだ写真";
 /** フォルダが 1 つも無いときの空状態の本文。 */
 export const PHOTO_EDITING_ADD_FOLDER_EMPTY_TEXT =
   "写真のあるフォルダを選ぶと、ここに並びます。元のファイルは動かさず、書き換えません。";
@@ -569,5 +571,11 @@ export function photoEditingFolderToggleLabel(name: string, expanded: boolean): 
 export const PHOTO_EDITING_FOLDERS_LOAD_FAILED_TEXT = "フォルダを読み込めませんでした。";
 export const PHOTO_EDITING_ADD_FOLDER_FAILED_TEXT = "フォルダを追加できませんでした。";
 export const PHOTO_EDITING_FORGET_FOLDER_FAILED_TEXT = "一覧から外せませんでした。";
+export const PHOTO_EDITING_ADD_SELECTED_PHOTOS_FAILED_TEXT = "写真を追加できませんでした。もう一度お試しください。";
+export const PHOTO_EDITING_FORGET_SELECTED_PHOTOS_LABEL = "一覧から外す";
+export const PHOTO_EDITING_FORGET_SELECTED_PHOTOS_TITLE = "選んだ写真を一覧から外しますか？";
+export const PHOTO_EDITING_FORGET_SELECTED_PHOTOS_DESCRIPTION =
+  "選んだ写真を一覧から外します。元の写真、フォルダ、保存した補正は消えません。";
+export const PHOTO_EDITING_FORGET_SELECTED_PHOTOS_FAILED_TEXT = "選んだ写真を一覧から外せませんでした。";
 /** この Mac の写真の一覧を読めなかった（クラウドの「クラウドの写真を読み込めませんでした。」の代わり）。 */
 export const PHOTO_EDITING_LOCAL_PHOTOS_LOAD_FAILED_TEXT = "写真を読み込めませんでした。";

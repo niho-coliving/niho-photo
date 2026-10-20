@@ -17,6 +17,7 @@ import {
   canFavoriteBrowserCloudPhoto,
   canFilterBrowserCloudPlace,
   isBrowserCloudPhotoPlace,
+  isBrowserSelectedPhotosPlace,
   isBrowserCloudRawPhoto,
 } from "../browser-photo-cloud-source";
 import {
@@ -51,6 +52,9 @@ import {
   PHOTO_EDITING_FOLDERS_LOAD_FAILED_TEXT,
   PHOTO_EDITING_LOCAL_PHOTOS_LOAD_FAILED_TEXT,
   PHOTO_EDITING_LOCAL_PLACE_LABEL,
+  PHOTO_EDITING_ADD_FOLDER_LABEL,
+  PHOTO_EDITING_ADD_SELECTED_PHOTOS_LABEL,
+  PHOTO_EDITING_SELECTED_PHOTOS_LABEL,
 } from "../photo-editing-copy";
 import { movePhotoEditingPhotoId } from "../photo-editing-selection";
 import { photoEditingTileGeometry } from "../photo-editing-tile-geometry";
@@ -132,7 +136,7 @@ import {
 import { PhotoEditingCropTools } from "./photo-editing-crop-tools";
 import { PhotoEditingCutoutTools } from "./photo-editing-cutout-tools";
 import { PhotoEditingDropOverlay } from "./photo-editing-drop-overlay";
-import { PhotoEditingAddFolderEmptyState } from "./photo-editing-empty-states";
+import { PhotoEditingAddFolderEmptyState, PhotoEditingAddPhotosEmptyState } from "./photo-editing-empty-states";
 import { PhotoEditingGrid, countPhotoEditingGridColumns, type PhotoEditingGridItem } from "./photo-editing-grid";
 import { PhotoEditingMenu, type PhotoEditingMenuItem } from "./photo-editing-menu";
 import { PhotoEditingPresetsPanel } from "./photo-editing-presets-panel";
@@ -263,7 +267,7 @@ export function BrowserPhotoEditingWorkbench(props: {
     // 変わっても一覧から外さない = 1 枚の表示を閉じない）。一覧へ戻ると、止めていた間に古くなった一覧を読み直す（staleTime 0）。
     // 条件が無ければ今までどおり（戻っても読み直さない）
     enabled:
-      (!folderMode || browserPlaceFolderId(listView.place) !== null) &&
+      (!folderMode || browserPlaceFolderId(listView.place) !== null || isBrowserSelectedPhotosPlace(listView.place)) &&
       (viewMode !== "loupe" || listView.filter.edited === null),
     sort: listView.sort,
     ...browserCloudListParams(listView.place, listView.filter),
@@ -436,7 +440,7 @@ export function BrowserPhotoEditingWorkbench(props: {
   } = open;
   const currentAlbumId = browserCloudPlaceAlbumId(place);
   // この Mac のフォルダの木と、選んでいるフォルダ（フォルダのある写真の出どころだけ。C3 移行元設計）
-  const folders = useBrowserPhotoFolders({ library, place, selectPlace, setStatus, mountedRef });
+  const folders = useBrowserPhotoFolders({ library, spotId: props.spotId, place, selectPlace, setStatus, mountedRef });
 
   const deleteAlbum = async (albumId: string) => {
     if (albumId === currentAlbumId && !(await selectPlace("photos"))) throw new Error("could not leave album");
@@ -825,7 +829,10 @@ export function BrowserPhotoEditingWorkbench(props: {
         case "selectAll":
           // ⌘A（Ctrl+A）: 一覧の「写真」（この Mac はフォルダ）で、今読み込んである分をすべて選ぶ（1 枚で見ている間・記事の画像は
           // ブラウザの全選択のまま）
-          if (viewModeRef.current !== "grid" || (place !== "photos" && browserPlaceFolderId(place) === null)) return;
+          if (
+            viewModeRef.current !== "grid" ||
+            (place !== "photos" && !isBrowserSelectedPhotosPlace(place) && browserPlaceFolderId(place) === null)
+          ) return;
           event.preventDefault();
           if (!operationRef.current) selection.selectAll();
           return;
@@ -1177,9 +1184,11 @@ export function BrowserPhotoEditingWorkbench(props: {
   const breadcrumbFileName = viewMode === "loupe" && selectedItem ? selectedItem.photo.fileName : null;
   // この Mac のフォルダの面は「この Mac › <フォルダ名>」（フォルダを選んでいなければ「この Mac」だけ）
   const breadcrumbFolderName = folderMode
-    ? folders.selectedFolderId === null
-      ? null
-      : browserPhotoPlaceLabel(place, [], folders.tree ?? [])
+    ? folders.selected
+      ? PHOTO_EDITING_SELECTED_PHOTOS_LABEL
+      : folders.selectedFolderId === null
+        ? null
+        : browserPhotoPlaceLabel(place, [], folders.tree ?? [])
     : undefined;
   useEffect(() => {
     if (breadcrumbFolderName !== undefined) {
@@ -1335,7 +1344,7 @@ export function BrowserPhotoEditingWorkbench(props: {
     </div>
   ) : isBrowserCloudPhotoPlace(place) ? (
     <div className="flex shrink-0 items-center gap-0.5">
-      <BrowserPhotoListSortControl value={listSort} onChange={list.setSort} />
+      {!isBrowserSelectedPhotosPlace(place) ? <BrowserPhotoListSortControl value={listSort} onChange={list.setSort} /> : null}
       {canFilterBrowserCloudPlace(place) ? (
         <BrowserPhotoListFilterControl
           filter={listView.filter}
@@ -1392,7 +1401,7 @@ export function BrowserPhotoEditingWorkbench(props: {
     : null;
 
   // この Mac のフォルダの面で、フォルダを選んでいない（木を読み込み中・読めなかった・フォルダが無い・木を読んで選び直している途中）
-  const folderUnselected = folderMode && folders.selectedFolderId === null;
+  const folderUnselected = folderMode && !folders.selected && folders.selectedFolderId === null;
   const folderPlaceholder = !folderUnselected ? null : folders.error ? (
     <div className="space-y-3 text-center">
       <p className="text-sub text-niho-danger">{PHOTO_EDITING_FOLDERS_LOAD_FAILED_TEXT}</p>
@@ -1400,8 +1409,39 @@ export function BrowserPhotoEditingWorkbench(props: {
         もう一度読み込む
       </button>
     </div>
-  ) : folders.tree !== null && folders.tree.length === 0 ? (
-    <PhotoEditingAddFolderEmptyState
+  ) : folders.tree !== null && folders.tree.length === 0 && folders.selectedCount === 0 ? (
+    library.selectedPhotos ? <PhotoEditingAddPhotosEmptyState
+      action={
+        <PhotoEditingMenu
+          variant="browser"
+          items={[
+            {
+              key: "folder",
+              label: PHOTO_EDITING_ADD_FOLDER_LABEL,
+              icon: <FolderOpen className="h-4 w-4" aria-hidden />,
+              disabled: folders.busy || operation !== null || batchBusy,
+              onSelect: () => void folders.addFolder(),
+            },
+            {
+              key: "photos",
+              label: PHOTO_EDITING_ADD_SELECTED_PHOTOS_LABEL,
+              icon: <Laptop className="h-4 w-4" aria-hidden />,
+              disabled: folders.busy || operation !== null || batchBusy,
+              onSelect: () => void folders.addPhotos(),
+            },
+          ]}
+        >
+          <button
+            type="button"
+            aria-haspopup="menu"
+            disabled={folders.busy || operation !== null || batchBusy}
+            className={cn(PHOTO_EDITING_EMPTY_STATE_BUTTON_CLASS_NAME, "min-h-11")}
+          >
+            フォルダや写真を追加
+          </button>
+        </PhotoEditingMenu>
+      }
+    /> : <PhotoEditingAddFolderEmptyState
       disabled={folders.busy || operation !== null || batchBusy}
       onAdd={() => void folders.addFolder()}
     />
@@ -1503,10 +1543,15 @@ export function BrowserPhotoEditingWorkbench(props: {
             folders={folders.tree}
             error={folders.error}
             selectedFolderId={folders.selectedFolderId}
+            selectedPhotos={folders.selected}
+            selectedPhotoCount={folders.selectedCount}
             disabled={folders.busy || operation !== null || batchBusy}
             onAddFolder={() => void folders.addFolder()}
+            onAddPhotos={library.selectedPhotos ? () => void folders.addPhotos() : undefined}
             onSelectFolder={(folderId) => { if (!batchBusy) void selectPlace(browserFolderPlace(folderId)); }}
+            onSelectSelectedPhotos={library.selectedPhotos ? () => { if (!batchBusy) void selectPlace("selected"); } : undefined}
             onForgetFolder={(folder) => void folders.forgetFolder(folder)}
+            onForgetSelectedPhotos={library.selectedPhotos ? () => void folders.forgetSelectedPhotos() : undefined}
             onRetry={folders.retry}
           />
         ) : (

@@ -168,6 +168,8 @@ export type PhotoLibrary = {
    * `folderId` で渡す（library は選んだフォルダを持たない）。クラウドは持たない
    */
   readonly folders?: PhotoLibraryFolders;
+  /** ネイティブの選択ダイアログで追加した、この Mac の写真。あるときだけ「選んだ写真」のソースを出す。 */
+  readonly selectedPhotos?: PhotoLibrarySelectedPhotos;
   /** お気に入り（♥。`capabilities.favorites`） */
   readonly favorites?: PhotoLibraryFavorites;
   /** アルバム（`capabilities.albums`） */
@@ -408,6 +410,8 @@ export type PhotoLibraryListQuery = {
   edited?: boolean;
   /** フォルダ（{@link PhotoLibraryFolder.folderId}。そのフォルダとその下の写真）。フォルダの無い置き場（クラウド）は読まない */
   folderId?: string;
+  /** この Mac の仮想ソース。`folderId` と同時には指定しない。 */
+  localSource?: "selected";
 };
 
 export type PhotoLibraryListPage = {
@@ -696,6 +700,16 @@ export type PhotoLibraryFolders = {
   add(): Promise<PhotoLibraryFolder | null>;
   /** 覚えたフォルダを忘れる（写真は消さない） */
   forget(folderId: string): Promise<void>;
+};
+
+/** ネイティブの選択ダイアログで覚えた写真。元のファイルは変更せず、忘れるのは参照だけ。 */
+export type PhotoLibrarySelectedPhotos = {
+  /** 現在も読める写真の数。見つからない写真は数えない。 */
+  count(options?: PhotoLibraryRequestOptions): Promise<number>;
+  /** 複数の写真を選ぶ。ダイアログを閉じたら空。返す行は選択順で、一覧は `localSource: "selected"` で読む。 */
+  add(): Promise<PhotoLibraryItem[]>;
+  /** 選んだ写真の参照をすべて忘れる。元の写真・フォルダ登録・補正には触れない。 */
+  forget(): Promise<void>;
 };
 
 export type PhotoLibraryArticleReference = { photoId: string; articleCount: number };

@@ -21,7 +21,7 @@ npm run verify
 
 個別に実行する場合は `npm run typecheck`、`npm test`、`npm run lint`、`npm run format:check`、`npm run verify:publication` を使います。各workspaceは `npm -C packages/photo-editing test` などでも検証できます。`npm run lint` でHooksと文字サイズの規約を、`npm run format:check` で移植ファイルの改行と行末空白を、`git diff --check` で変更箇所の空白を確認します。
 
-`niho-photo-editing` は編集ロジックとReact部品、`niho-ui` は必要最小限のUIを提供します。ホストがCSS・写真の読み書き・保存・実行環境を提供する構成です。Macアプリは `apps/camera` にあります。Macの前提環境と実行方法は [camera README](apps/camera/README.md)、命名・端末データ互換は [Mac移植計画](docs/migration/mac-client.md) を参照してください。
+`niho-photo-editing` は編集ロジックとReact部品、`niho-ui` は必要最小限のUIを提供します。ホストがCSS・写真の読み書き・保存・実行環境を提供する構成です。Macアプリは `apps/camera` にあります。Macの前提環境と実行方法は [camera README](apps/camera/README.md)、フォルダ・個別写真の契約は [この Mac の写真ソース](docs/features/local-photo-sources.md)、命名・端末データ互換は [Mac移植計画](docs/migration/mac-client.md) を参照してください。
 
 ```sh
 npm run dev --workspace apps/camera

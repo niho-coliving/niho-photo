@@ -13,11 +13,17 @@ import {
 import {
   browserFolderPlace,
   browserPlaceFolderId,
+  isBrowserSelectedPhotosPlace,
   type BrowserCloudPlace,
 } from "../browser-photo-cloud-source";
 import type { PhotoLibrary, PhotoLibraryFolder, PhotoLibraryPlace } from "../library/photo-library";
 import {
   PHOTO_EDITING_ADD_FOLDER_FAILED_TEXT,
+  PHOTO_EDITING_ADD_SELECTED_PHOTOS_FAILED_TEXT,
+  PHOTO_EDITING_FORGET_SELECTED_PHOTOS_DESCRIPTION,
+  PHOTO_EDITING_FORGET_SELECTED_PHOTOS_FAILED_TEXT,
+  PHOTO_EDITING_FORGET_SELECTED_PHOTOS_LABEL,
+  PHOTO_EDITING_FORGET_SELECTED_PHOTOS_TITLE,
   PHOTO_EDITING_FORGET_FOLDER_CONFIRM_LABEL,
   PHOTO_EDITING_FORGET_FOLDER_FAILED_TEXT,
   PHOTO_EDITING_FORGET_FOLDER_TITLE,
@@ -47,6 +53,8 @@ import type { FooterStatus } from "./browser-photo-editing-model";
  * 読む）。クラウドの場所の既定と同じ値なので、フォルダの面では「フォルダの場所でない = 選んでいない」と読む。
  */
 export const BROWSER_NO_FOLDER_PLACE: BrowserCloudPlace = "photos";
+const BROWSER_SELECTED_SOURCE_STORAGE_VALUE = "source:selected";
+const EMPTY_PHOTO_LIBRARY_FOLDERS: readonly PhotoLibraryFolder[] = [];
 
 /** この端末に覚えた最後のフォルダの鍵（置き場ごと）。 */
 export function browserPhotoLastFolderStorageKey(place: PhotoLibraryPlace): string {
@@ -95,8 +103,25 @@ export function resolveBrowserPhotoFolder(
   return folders[0]?.folderId ?? null;
 }
 
+/** 木と「選んだ写真」を読んだときに復元する、この Mac の場所。 */
+export function resolveBrowserPhotoLocalSource(
+  folders: readonly PhotoLibraryFolder[],
+  selectedCount: number,
+  current: BrowserCloudPlace,
+  remembered: string | null,
+): BrowserCloudPlace {
+  if (isBrowserSelectedPhotosPlace(current) && selectedCount > 0) return "selected";
+  const currentFolder = browserPlaceFolderId(current);
+  if (currentFolder && findPhotoLibraryFolder(folders, currentFolder)) return current;
+  if (remembered === BROWSER_SELECTED_SOURCE_STORAGE_VALUE && selectedCount > 0) return "selected";
+  if (remembered && findPhotoLibraryFolder(folders, remembered)) return browserFolderPlace(remembered);
+  if (folders[0]) return browserFolderPlace(folders[0].folderId);
+  return selectedCount > 0 ? "selected" : BROWSER_NO_FOLDER_PLACE;
+}
+
 export function useBrowserPhotoFolders(params: {
-  library: Pick<PhotoLibrary, "place" | "folders">;
+  library: Pick<PhotoLibrary, "place" | "folders" | "selectedPhotos">;
+  spotId: string;
   /** 今の場所（`folder:<folderId>` のときだけフォルダを選んでいる） */
   place: BrowserCloudPlace;
   /** 場所を移る（開いていた写真の保存・破棄の確認を済ませる。移れなければ false） */
@@ -106,6 +131,7 @@ export function useBrowserPhotoFolders(params: {
 }) {
   const { library, place, setStatus, mountedRef } = params;
   const foldersTool = library.folders;
+  const selectedTool = library.selectedPhotos;
   const queryClient = useQueryClient();
   const queryKey = photoEditingQueryKeys.folders(library.place);
   const storageKey = browserPhotoLastFolderStorageKey(library.place);
@@ -119,7 +145,19 @@ export function useBrowserPhotoFolders(params: {
     staleTime: 0,
     refetchOnWindowFocus: false,
   });
-  const tree = foldersTool ? (query.data ?? null) : null;
+  const selectedQueryKey = photoEditingQueryKeys.selectedPhotos(library.place);
+  const selectedQuery = useQuery({
+    queryKey: selectedQueryKey,
+    queryFn: ({ signal }) => {
+      if (!selectedTool) throw new Error("photo library has no selected photos");
+      return selectedTool.count({ signal });
+    },
+    enabled: selectedTool !== undefined,
+    staleTime: 0,
+    refetchOnWindowFocus: false,
+  });
+  const tree = foldersTool ? (query.data ?? null) : EMPTY_PHOTO_LIBRARY_FOLDERS;
+  const selectedCount = selectedTool ? (selectedQuery.data ?? null) : 0;
   const selectedFolderId = foldersTool ? browserPlaceFolderId(place) : null;
   const selectedFolder = tree && selectedFolderId ? findPhotoLibraryFolder(tree, selectedFolderId) : null;
 
@@ -130,17 +168,18 @@ export function useBrowserPhotoFolders(params: {
 
   // 選んだフォルダをこの端末に覚える
   useEffect(() => {
-    if (selectedFolderId) writeLocalStorageItemSafely(storageKey, selectedFolderId);
-  }, [selectedFolderId, storageKey]);
+    if (isBrowserSelectedPhotosPlace(place)) writeLocalStorageItemSafely(storageKey, BROWSER_SELECTED_SOURCE_STORAGE_VALUE);
+    else if (selectedFolderId) writeLocalStorageItemSafely(storageKey, selectedFolderId);
+  }, [place, selectedFolderId, storageKey]);
 
   // 木を読んだら（読み直したら）、今のフォルダが木に無いときだけ選び直す（場所を替えただけでは走らない）
   useEffect(() => {
-    if (!tree) return;
-    const current = browserPlaceFolderId(placeRef.current);
-    const next = resolveBrowserPhotoFolder(tree, current, readLocalStorageItemSafely(storageKey));
+    if (!tree || selectedCount === null) return;
+    const current = placeRef.current;
+    const next = resolveBrowserPhotoLocalSource(tree, selectedCount, current, readLocalStorageItemSafely(storageKey));
     if (next === current) return;
-    void selectPlaceRef.current(next ? browserFolderPlace(next) : BROWSER_NO_FOLDER_PLACE);
-  }, [storageKey, tree]);
+    void selectPlaceRef.current(next);
+  }, [selectedCount, storageKey, tree]);
 
   const [busy, setBusy] = useState(false);
   const busyRef = useRef(false);
@@ -160,6 +199,12 @@ export function useBrowserPhotoFolders(params: {
   );
 
   const reload = useCallback(() => queryClient.invalidateQueries({ queryKey }), [queryClient, queryKey]);
+  const reloadSelected = useCallback(async () => {
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: selectedQueryKey }),
+      queryClient.invalidateQueries({ queryKey: photoEditingQueryKeys.cloudPhotos(params.spotId) }),
+    ]);
+  }, [params.spotId, queryClient, selectedQueryKey]);
 
   const addFolder = useCallback(
     () =>
@@ -183,6 +228,25 @@ export function useBrowserPhotoFolders(params: {
         await reload();
       }),
     [foldersTool, mountedRef, queryClient, queryKey, reload, run, setStatus, storageKey],
+  );
+
+  const addPhotos = useCallback(
+    () =>
+      run(async () => {
+        if (!selectedTool) return;
+        let photos;
+        try {
+          photos = await selectedTool.add();
+        } catch {
+          if (mountedRef.current) setStatus({ kind: "error", text: PHOTO_EDITING_ADD_SELECTED_PHOTOS_FAILED_TEXT });
+          return;
+        }
+        if (photos.length === 0 || !mountedRef.current) return;
+        writeLocalStorageItemSafely(storageKey, BROWSER_SELECTED_SOURCE_STORAGE_VALUE);
+        await selectPlaceRef.current("selected");
+        await reloadSelected();
+      }),
+    [mountedRef, reloadSelected, run, selectedTool, setStatus, storageKey],
   );
 
   const forgetFolder = useCallback(
@@ -223,18 +287,58 @@ export function useBrowserPhotoFolders(params: {
     [foldersTool, mountedRef, queryClient, queryKey, reload, run, setStatus, storageKey],
   );
 
+  const forgetSelectedPhotos = useCallback(
+    () =>
+      run(async () => {
+        if (!selectedTool || selectedCount === null || selectedCount === 0) return;
+        const confirmed = await appDialog.confirm({
+          title: PHOTO_EDITING_FORGET_SELECTED_PHOTOS_TITLE,
+          description: PHOTO_EDITING_FORGET_SELECTED_PHOTOS_DESCRIPTION,
+          confirmLabel: PHOTO_EDITING_FORGET_SELECTED_PHOTOS_LABEL,
+        });
+        if (!confirmed || !mountedRef.current) return;
+        const remembered = readLocalStorageItemSafely(storageKey);
+        const next = resolveBrowserPhotoLocalSource(tree ?? [], 0, BROWSER_NO_FOLDER_PLACE, remembered);
+        if (isBrowserSelectedPhotosPlace(placeRef.current)) {
+          const moved = await selectPlaceRef.current(next);
+          if (!moved || !mountedRef.current) return;
+        }
+        try {
+          await selectedTool.forget();
+        } catch {
+          if (mountedRef.current) setStatus({ kind: "error", text: PHOTO_EDITING_FORGET_SELECTED_PHOTOS_FAILED_TEXT });
+          return;
+        }
+        if (readLocalStorageItemSafely(storageKey) === BROWSER_SELECTED_SOURCE_STORAGE_VALUE) {
+          removeLocalStorageItemSafely(storageKey);
+        }
+        queryClient.setQueryData(selectedQueryKey, 0);
+        await reloadSelected();
+      }),
+    [mountedRef, queryClient, reloadSelected, run, selectedCount, selectedQueryKey, selectedTool, setStatus, storageKey, tree],
+  );
+
   return {
     /** フォルダの面を出す（写真の出どころに `folders` がある） */
-    enabled: foldersTool !== undefined,
+    enabled: foldersTool !== undefined || selectedTool !== undefined,
     tree,
     pending: foldersTool !== undefined && query.isPending,
-    error: foldersTool !== undefined && query.isError && tree === null,
+    error:
+      (foldersTool !== undefined && query.isError && tree === null) ||
+      (selectedTool !== undefined && selectedQuery.isError && selectedCount === null),
     selectedFolderId,
     selectedFolder,
+    selected: selectedTool !== undefined && isBrowserSelectedPhotosPlace(place),
+    selectedCount,
     busy,
-    retry: () => void query.refetch(),
+    retry: () => {
+      if (foldersTool) void query.refetch();
+      if (selectedTool) void selectedQuery.refetch();
+    },
     addFolder,
+    addPhotos,
     forgetFolder,
+    forgetSelectedPhotos,
   };
 }
 
