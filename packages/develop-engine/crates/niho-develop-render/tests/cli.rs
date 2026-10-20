@@ -777,6 +777,7 @@ fn settings_loader_accepts_all_formula_versions_and_rejects_unknown() {
         ("niho-5", "niho-standard-4"),
         ("niho-6", "niho-standard-1"),
         ("niho-7", "niho-standard-5"),
+        ("niho-8", "niho-standard-1"),
         ("niho-10", "niho-standard-1"),
         ("niho-11", "niho-standard-5"),
     ] {
@@ -792,16 +793,17 @@ fn settings_loader_accepts_all_formula_versions_and_rejects_unknown() {
     .unwrap_err();
     assert_eq!(error.code, niho_develop_render::ErrorCode::InvalidSettings);
     let unsupported_engine =
-        niho_develop_render::load_settings(r#"{"v":1,"engine":"niho-8"}"#).unwrap_err();
+        niho_develop_render::load_settings(r#"{"v":1,"engine":"niho-9","look":"niho-standard-5"}"#)
+            .unwrap_err();
     assert_eq!(
         unsupported_engine.code,
         niho_develop_render::ErrorCode::UnsupportedSettings
     );
     assert!(unsupported_engine
         .message
-        .contains("niho-1 through niho-7, niho-10, or niho-11"));
+        .contains("niho-1 through niho-8, niho-10, and niho-11"));
     let missing_engine = niho_develop_render::load_settings(r#"{"v":1}"#).unwrap_err();
     assert!(missing_engine
         .message
-        .contains("niho-1 through niho-7, niho-10, or niho-11"));
+        .contains("niho-1 through niho-8, niho-10, and niho-11"));
 }

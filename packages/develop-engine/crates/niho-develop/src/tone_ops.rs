@@ -841,6 +841,7 @@ impl PreparedPostOps {
                     | crate::settings::ENGINE_NIHO_11
                     | crate::settings::ENGINE_NIHO_6
                     | crate::settings::ENGINE_NIHO_10
+                    | crate::settings::ENGINE_NIHO_8
             ) && amount > 0.0;
             if niho3_positive {
                 let q = (amount / 100.0).clamp(0.0, 1.0);

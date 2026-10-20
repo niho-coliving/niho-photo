@@ -79,15 +79,10 @@ fn niho10_keeps_niho6_neutral_tone_and_response_pixels() {
     let input = fixture("dsc02072.jpg");
     for mut niho6 in [tone(0.0, 0.0), tone(-60.0, 45.0), tone(35.0, -40.0)] {
         niho6.blacks = 30.0;
-        niho6.vibrance = 20.0;
-        niho6.hsl.set(
-            HslBand::Yellow,
-            HslAdjustment {
-                hue: 20.0,
-                luminance: 25.0,
-                ..HslAdjustment::default()
-            },
-        );
+        // Engine 10 intentionally changes hue handling when Vibrance / HSL
+        // edits are active. Keep those neutral here so this comparison only
+        // asserts the shared NIHO 6 tone-response path.
+        niho6.vibrance = 0.0;
         let niho10 = with_engine(niho6.clone(), ENGINE_NIHO_10);
         assert_eq!(
             one_shot(&input, &niho6, 640),

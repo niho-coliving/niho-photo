@@ -1063,13 +1063,17 @@ impl PreparedColorOps {
                         | crate::settings::ENGINE_NIHO_11
                 ) | (
                     false,
-                    crate::settings::ENGINE_NIHO_6 | crate::settings::ENGINE_NIHO_10
+                    crate::settings::ENGINE_NIHO_6
+                        | crate::settings::ENGINE_NIHO_8
+                        | crate::settings::ENGINE_NIHO_10
                 )
             ),
             raster_niho6: !toned
                 && matches!(
                     settings.engine.as_str(),
-                    crate::settings::ENGINE_NIHO_6 | crate::settings::ENGINE_NIHO_10
+                    crate::settings::ENGINE_NIHO_6
+                        | crate::settings::ENGINE_NIHO_8
+                        | crate::settings::ENGINE_NIHO_10
                 ),
             hue_stable_saturation: matches!(
                 settings.engine.as_str(),

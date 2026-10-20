@@ -146,13 +146,14 @@ impl Cube {
     /// NIHO 3's frozen R115 cube: 64 nodes per edge with f32 entries (the
     /// research name "float64grid" referred to the 64-edge grid, not f64 values).
     pub fn bake_float(transform: &dyn Fn([f64; 3]) -> [f64; 3]) -> Self {
-        Self::bake_with_precision(CUBE_DIMENSION, true, transform)
+        Self::bake_float_with_dimension(CUBE_DIMENSION, transform)
     }
 
-    /// A float-entry cube at an explicit dimension. Independent OKLCH points
-    /// use this because 8-bit node quantization can dominate small chroma
-    /// changes. Callers without points keep the historical byte cube.
+    /// Bakes an `n^3` cube with unquantized f32 entries. This keeps the same
+    /// gamma-1.8 grid, clamps and trilinear application as [`Cube::bake`];
+    /// only the 8-bit entry quantization is omitted.
     pub fn bake_float_with_dimension(n: usize, transform: &dyn Fn([f64; 3]) -> [f64; 3]) -> Self {
+        assert!(n >= 2, "a color cube needs at least two nodes per edge");
         Self::bake_with_precision(n, true, transform)
     }
 
@@ -393,5 +394,19 @@ mod tests {
         // Above 1 clamps like CIColorCube.
         assert_eq!(cube.apply([2.0, -1.0, 0.5])[0], 1.0);
         assert_eq!(cube.apply([2.0, -1.0, 0.5])[1], 0.0);
+    }
+
+    #[test]
+    fn dimension_aware_float_baker_keeps_unquantized_entries() {
+        let quantized = Cube::bake_with_dimension(5, &|v| v);
+        let float = Cube::bake_float_with_dimension(5, &|v| v);
+        assert_eq!(float.dimension(), 5);
+        let coordinate = [0.37f32, 0.51, 0.83];
+        let q = quantized.lookup_encoded(coordinate);
+        let f = float.lookup_encoded(coordinate);
+        assert_ne!(q, f);
+        for channel in 0..3 {
+            assert!((f[channel] - coordinate[channel]).abs() < 2e-6);
+        }
     }
 }
