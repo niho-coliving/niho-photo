@@ -27,7 +27,7 @@ export function workflowFailures(workflow) {
   };
   if (dependencyReview.length !== 1 || JSON.stringify(dependencyReview[0].with) !== JSON.stringify(reviewInputs)) fail("依存レビューの検査範囲・例外は監査済み設定に固定する");
   for (const job of Object.values(workflow.jobs ?? {})) {
-    if (!["ubuntu-24.04", "macos-14"].includes(job["runs-on"])) fail("GitHub-hosted runnerのみ");
+    if (!["ubuntu-24.04", "macos-14", "macos-26"].includes(job["runs-on"])) fail("GitHub-hosted runnerのみ");
     if (job.environment || job.permissions || job.uses || job.container || job.services) fail("jobへの権限/環境/再利用workflow追加は禁止");
     if (!Number.isInteger(job["timeout-minutes"]) || job["timeout-minutes"] > 30) fail("30分以内のtimeoutが必要");
     let checkout = false;

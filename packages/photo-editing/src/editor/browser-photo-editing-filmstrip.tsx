@@ -45,12 +45,14 @@ export function BrowserPhotoEditingFilmstrip(props: {
   items: ReadonlyArray<BrowserPhotoEditingGridItem>;
   /** 開いている写真 */
   activeKey: string | null;
-  onOpen: (key: string) => void;
+  onOpen: (key: string) => void | Promise<void>;
   onArrowKey: (event: ReactKeyboardEvent<HTMLButtonElement>) => void;
 }) {
   const stripRef = useRef<HTMLElement | null>(null);
   const activeTileRef = useRef<HTMLButtonElement | null>(null);
   const { activeKey } = props;
+  const activeKeyRef = useRef(activeKey);
+  activeKeyRef.current = activeKey;
   // Tab で止まる升（開いている写真。帯に無ければ押せる最初の升）
   const tabStopKey = props.items.some((item) => item.key === activeKey && !item.adding)
     ? activeKey
@@ -88,7 +90,15 @@ export function BrowserPhotoEditingFilmstrip(props: {
                 title={item.fileName}
                 disabled={adding}
                 tabIndex={item.key === tabStopKey ? 0 : -1}
-                onClick={() => props.onOpen(item.key)}
+                onClick={(event) => {
+                  const clickedTile = event.currentTarget;
+                  const restoreFocusAfterOpen = () => {
+                    if (clickedTile === document.activeElement && activeKeyRef.current !== item.key) {
+                      activeTileRef.current?.focus({ preventScroll: true });
+                    }
+                  };
+                  void Promise.resolve(props.onOpen(item.key)).then(restoreFocusAfterOpen, restoreFocusAfterOpen);
+                }}
                 onKeyDown={(event) => {
                   if (event.key === "ArrowLeft" || event.key === "ArrowRight") props.onArrowKey(event);
                 }}

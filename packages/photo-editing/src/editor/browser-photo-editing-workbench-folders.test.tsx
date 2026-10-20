@@ -204,7 +204,9 @@ async function settle() {
   }
 }
 
-async function render(library: PhotoLibrary) {
+type WorkbenchExtraProps = Partial<Parameters<typeof BrowserPhotoEditingWorkbench>[0]>;
+
+async function render(library: PhotoLibrary, extra: WorkbenchExtraProps = {}) {
   await act(async () => {
     root.render(
       <QueryClientProvider client={client}>
@@ -216,6 +218,7 @@ async function render(library: PhotoLibrary) {
             active
             openCloudPhotoId={null}
             onOpenCloudPhotoHandled={() => undefined}
+            {...extra}
           />
         </PhotoLibraryProvider>
       </QueryClientProvider>,
@@ -224,12 +227,12 @@ async function render(library: PhotoLibrary) {
   await settle();
 }
 
-async function remount(library: PhotoLibrary) {
+async function remount(library: PhotoLibrary, extra: WorkbenchExtraProps = {}) {
   await act(async () => root.unmount());
   client.clear();
   client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   root = createRoot(container);
-  await render(library);
+  await render(library, extra);
 }
 
 async function click(element: Element | null | undefined) {
@@ -653,6 +656,37 @@ describe("1 枚の下のフィルムストリップ（L5 #54）", () => {
     await click(tile(gridOrder()[0]));
     expect(container.querySelector('section[aria-label="写真の一覧"]')).toBeNull();
     expect(filmstrip()).toBeNull();
+  });
+});
+
+describe("NIHO photo の窓いっぱいの見た目（appearance・treeHidden・treeFooter。niho-photo#50）", () => {
+  it("既定（card）は web の角丸の枠と固定の高さのまま、左の木の底には何も出さない", async () => {
+    const fake = fakeLibrary({ tree: [TRAVEL], photos: { f1: [photo("p1", "IMG_0001.JPG")] } });
+    await render(fake.library);
+    const surface = container.querySelector('section[aria-label="ブラウザ写真編集"]');
+    expect(surface?.className).toContain("rounded-2xl");
+    expect(surface?.className).not.toContain("flex-1");
+    expect(surface?.querySelector(".grid")?.className).toContain("lg:h-[calc(100dvh-12rem)]");
+    expect(tree().textContent).not.toContain("版");
+  });
+
+  it("fill は枠と固定の高さを付けず親の高さに合わせ、木の底に 1 行、treeHidden で木を出さない", async () => {
+    const fake = fakeLibrary({ tree: [TRAVEL], photos: { f1: [photo("p1", "IMG_0001.JPG")] } });
+    await render(fake.library, { appearance: "fill", treeFooter: <span>版 1.2.3</span> });
+    const surface = container.querySelector('section[aria-label="ブラウザ写真編集"]');
+    expect(surface?.className).toContain("flex-1");
+    expect(surface?.className).not.toContain("rounded-2xl");
+    const grid = surface?.querySelector(".grid");
+    expect(grid?.className).not.toContain("lg:h-[calc(100dvh-12rem)]");
+    expect(grid?.className).toContain("flex-1");
+    expect(grid?.className).toContain("lg:grid-cols-[14rem_minmax(0,1fr)]");
+    expect(tree().textContent).toContain("版 1.2.3");
+
+    await remount(fake.library, { appearance: "fill", treeHidden: true });
+    expect(container.querySelector('aside[aria-label="写真の場所"]')).toBeNull();
+    expect(container.querySelector('section[aria-label="ブラウザ写真編集"] .grid')?.className).toContain("lg:grid-cols-[minmax(0,1fr)]");
+    // 一覧はそのまま読めている
+    expect(tile("IMG_0001.JPG")).toBeDefined();
   });
 });
 

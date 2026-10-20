@@ -181,6 +181,18 @@ describe("BrowserPhotoEditingFilmstrip", () => {
     outside.remove();
   });
 
+  it("写真の切替を取り消したら、Tabで止まる開いている写真へフォーカスを戻す", async () => {
+    await render({ activeKey: "a" });
+    onOpen.mockImplementationOnce(async () => undefined);
+    tile("c.JPG").focus();
+    await act(async () => {
+      tile("c.JPG").click();
+      await Promise.resolve();
+    });
+    expect(onOpen).toHaveBeenCalledWith("c");
+    expect(document.activeElement).toBe(tile("a.JPG"));
+  });
+
   it("写真が無ければ帯を出さない", async () => {
     await render({ items: [], activeKey: null });
     expect(strip()).toBeNull();

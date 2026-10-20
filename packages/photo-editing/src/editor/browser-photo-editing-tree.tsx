@@ -68,6 +68,8 @@ function showsAddButton(place: BrowserCloudPlace): boolean {
 }
 
 type PlaceProps = {
+  /** PC の木の底に出す 1 行（NIHO photo の「版」。木だけ。狭い幅の上段には出さない） */
+  footer?: ReactNode;
   place: BrowserCloudPlace;
   counts: BrowserPhotoTreeCounts;
   albums?: readonly BrowserPhotoAlbumSummary[];
@@ -209,7 +211,7 @@ export function BrowserPhotoEditingTree(props: PlaceProps) {
   const visible = visibleBrowserPhotoPlaces(props.place, props.counts);
   const albums = props.albums ?? [];
   return (
-    <aside aria-label="写真の場所" className="hidden min-h-0 overflow-y-auto border-r border-niho-border bg-white p-3 lg:block">
+    <aside aria-label="写真の場所" className="hidden min-h-0 flex-col overflow-y-auto border-r border-niho-border bg-[var(--photo-editing-surface,white)] p-3 lg:flex">
       <div className="mb-1 flex min-h-11 items-center justify-between gap-2 px-1">
         <h3 className="text-sub font-bold text-niho-text">写真</h3>
         {showsAddButton(props.place) ? props.addButton : null}
@@ -311,6 +313,11 @@ export function BrowserPhotoEditingTree(props: PlaceProps) {
           );
         })}
       </ul>
+      {props.footer ? (
+        <div className="sticky bottom-0 -mx-3 -mb-3 mt-auto border-t border-niho-border bg-[var(--photo-editing-surface,white)] px-3 py-2 text-xs text-niho-text-muted">
+          {props.footer}
+        </div>
+      ) : null}
     </aside>
   );
 }

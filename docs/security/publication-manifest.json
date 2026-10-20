@@ -615,10 +615,11 @@
         "path": "packages/photo-editing/src/editor/browser-photo-editing-adjustments.tsx",
         "sha256": "2473ef7ca64f61e5ce7a72efb21f436f799f04a90a3a73b114cba15b7b5d23b1"
       },
-      "outputSha256": "48a2cae8eb279b7137657b30058e3de461956f8925f34a685ff8e977de06c224",
+      "outputSha256": "afc2fd27845fff09433e228e2213ae7cd955b4e72fc1344d8ae4fd88465d43bb",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
-        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。"
+        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
+        "Issue #50のMac画面配置・表示色・パネル・版位置の変更。"
       ]
     },
     {
@@ -724,11 +725,12 @@
         "path": "packages/photo-editing/src/editor/browser-photo-editing-folder-tree.tsx",
         "sha256": "9b60d2ed952bd8af30a3199cb82df81ed1909f4aa3aa77a603a48798b5cd0a81"
       },
-      "outputSha256": "ae9c847a1f1d9756f0849f70c6cba2b5296b4dc31117e938b2758788a8be3e2d",
+      "outputSha256": "8ce3dd7210d8babcedb6f2bd871836cb48317e09917cecb77a8ac1713de07c87",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
-        "任意の個別写真ソース契約と選んだ写真のUI、復元、取消、再試行、失敗時参照保持を追加"
+        "任意の個別写真ソース契約と選んだ写真のUI、復元、取消、再試行、失敗時参照保持を追加",
+        "Issue #50のMac画面配置・表示色・パネル・版位置の変更。"
       ]
     },
     {
@@ -775,10 +777,11 @@
         "path": "packages/photo-editing/src/editor/browser-photo-editing-grid.tsx",
         "sha256": "2284b5463f202d550fc6ba7d65147b994badecdb28ee3b0bccefb70d7e90ad2d"
       },
-      "outputSha256": "4bba238a01b555c7415a533e4d915ac3b30f568c3c4b7f7ab62059bd43958311",
+      "outputSha256": "aa219e8943b2cb1546b86e49ba29495eb8cf305a591fcefecaaee4328ebe7f03",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
-        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。"
+        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
+        "Issue #50のMac画面配置・表示色・パネル・版位置の変更。"
       ]
     },
     {
@@ -789,10 +792,11 @@
         "path": "packages/photo-editing/src/editor/browser-photo-editing-loupe.tsx",
         "sha256": "51859688628c86e65c882ff94a59b6324ecb621ac9f759121c7c3d7ed4ccc35a"
       },
-      "outputSha256": "0aff9a80e17c46c51e8e2f9c90c3acc6b04e6d013cff5fd909157dab235bda5a",
+      "outputSha256": "0bac3de26861b66f41a18eb4484938848572577e3053bd3108e1958aae3d1464",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
-        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。"
+        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
+        "Issue #50のMac画面配置・表示色・パネル・版位置の変更。"
       ]
     },
     {
@@ -929,11 +933,12 @@
         "path": "packages/photo-editing/src/editor/browser-photo-editing-tree.tsx",
         "sha256": "2291c76ce46a907e917c9a33160c36f1b069c9a4a9f71ad64b2c21c6c9849a28"
       },
-      "outputSha256": "7c4719de9c3ec40a8089982a1d776c5a94c01881d365d69be0be05800e5b6ee8",
+      "outputSha256": "66970fb7bb2333ef1a159a95a598d8157d7c563251f92cbfe4a71bb174aaa20b",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
-        "任意の個別写真ソース契約と選んだ写真のUI、復元、取消、再試行、失敗時参照保持を追加"
+        "任意の個別写真ソース契約と選んだ写真のUI、復元、取消、再試行、失敗時参照保持を追加",
+        "Issue #50のMac画面配置・表示色・パネル・版位置の変更。"
       ]
     },
     {
@@ -944,12 +949,14 @@
         "path": "packages/photo-editing/src/editor/browser-photo-editing-workbench-folders.test.tsx",
         "sha256": "2466702c26e46adadb579736eb8edef22cc420e4b0189283fd7d4b762a62869e"
       },
-      "outputSha256": "0434e103af9eb7c91e25b48266e8e0ea3342da6c90285ac524ff1a9c0e0f4cb5",
+      "outputSha256": "59693d44f6b6508c52af902d470a5e13fe8670c5bd94db5c346cee76ce6338ad",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
         "任意の個別写真ソース契約と選んだ写真のUI、復元、取消、再試行、失敗時参照保持を追加",
-        "公開repoでの機能変更（#54）: 1 枚の面の下にフィルムストリップを置き、切り抜き・背景除去の間は ← → で写真を替えないようにした。"
+        "公開repoでの機能変更（#54）: 1 枚の面の下にフィルムストリップを置き、切り抜き・背景除去の間は ← → で写真を替えないようにした。",
+        "Issue #50のMac画面配置・表示色・パネル・版位置の変更。",
+        "PR #59 の main 競合解消と切替拒否時のフォーカス復元"
       ]
     },
     {
@@ -960,12 +967,14 @@
         "path": "packages/photo-editing/src/editor/browser-photo-editing-workbench.tsx",
         "sha256": "f655136ae0c985d793822ca8bef1668dba26ffd4bb8f13d2ba3d6c2ccb13ceb6"
       },
-      "outputSha256": "cc11b50f41cb1e4ecfdb59a4be0b4f8128edb3b69e424c18f95bae747875c073",
+      "outputSha256": "b9de65f05303d67083f839c7269181b99696e9333636faaa43db448807524d66",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
         "任意の個別写真ソース契約と選んだ写真のUI、復元、取消、再試行、失敗時参照保持を追加",
-        "公開repoでの機能変更（#54）: 1 枚の面の下にフィルムストリップを置き、切り抜き・背景除去の間は ← → で写真を替えないようにした。"
+        "公開repoでの機能変更（#54）: 1 枚の面の下にフィルムストリップを置き、切り抜き・背景除去の間は ← → で写真を替えないようにした。",
+        "Issue #50のMac画面配置・表示色・パネル・版位置の変更。",
+        "PR #59 の main 競合解消と切替拒否時のフォーカス復元"
       ]
     },
     {
@@ -1222,8 +1231,10 @@
         "path": "packages/photo-editing/src/editor/photo-editing-grid.test.tsx",
         "sha256": "7d3c1c32e7bea6ab62c3eca9f3a7455ae4a6a9c51b3349111c9923049f6a386a"
       },
-      "outputSha256": "7d3c1c32e7bea6ab62c3eca9f3a7455ae4a6a9c51b3349111c9923049f6a386a",
-      "modifications": []
+      "outputSha256": "cafb0050a52e12de39ca55eef48bc0d77285916bda13c8a8e54d87a60a44bcc0",
+      "modifications": [
+        "Issue #50の背景色トークン変更に合わせ既存testを更新。"
+      ]
     },
     {
       "path": "packages/photo-editing/src/editor/photo-editing-grid.tsx",
@@ -1233,10 +1244,11 @@
         "path": "packages/photo-editing/src/editor/photo-editing-grid.tsx",
         "sha256": "1b6e669fa72c10a2fd80f68fdc8ccb7141b06d6073741e87118a07cd1ad4a6a2"
       },
-      "outputSha256": "ec8de6ab41a220f84634fa7d2bc06a586798f6d7865d7f30aa91164f3239c855",
+      "outputSha256": "f437a4999c6dc44ec1edb92c9ebbf726753bb6abc304593067e0ea9211adf45b",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
-        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。"
+        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
+        "Issue #50のMac画面配置・表示色・パネル・版位置の変更。"
       ]
     },
     {
@@ -3344,10 +3356,12 @@
         "path": "apps/camera/src-tauri/src/develop_tests.rs",
         "sha256": "0c9ccc1e8f0b08d82be8fe379737b89ca17a4fe751b802bc4716b06d17ebed62"
       },
-      "outputSha256": "5e23a8e81c8db30418bab466649cc9b40ea0161c9fa960f2d36fb16d98e545c6",
+      "outputSha256": "058180864f1ac215516522392cad1115a6ccdac23260bea6e9fbf15723d52e60",
       "modifications": [
         "別のopen photoへのexport上書き拒否テストを追加",
-        "全open photoの保護判定に合わせて回帰テスト更新"
+        "全open photoの保護判定に合わせて回帰テスト更新",
+        "Issue #5の共有入力能力レジストリ、段階別検証、公開回帰契約に合わせて更新。",
+        "Issue #5親レビューに従い形式検査・エラー保持・実decoder公開CI回帰を補強。"
       ]
     },
     {
@@ -3449,8 +3463,12 @@
         "path": "apps/camera/src-tauri/src/photos.rs",
         "sha256": "c4a821c9654687fc6f2ab7304d9d7e1b3d8baeb3b5245b12816408bb405b7090"
       },
-      "outputSha256": "c4a821c9654687fc6f2ab7304d9d7e1b3d8baeb3b5245b12816408bb405b7090",
-      "modifications": []
+      "outputSha256": "5fa3e601d45944346312d1a61117f90c4e8c5ccc7e8f424318426b260408da75",
+      "modifications": [
+        "Issue #5の共有入力能力レジストリ、段階別検証、公開回帰契約に合わせて更新。",
+        "Issue #5親レビューに従い形式検査・エラー保持・実decoder公開CI回帰を補強。",
+        "存在しない写真は形式判定より先にnotFoundを返し、従来のエラー契約を保つ。"
+      ]
     },
     {
       "path": "apps/camera/src-tauri/src/photos_tests.rs",
@@ -3460,8 +3478,11 @@
         "path": "apps/camera/src-tauri/src/photos_tests.rs",
         "sha256": "c329e74686abd160a1d785c59f1499f23c85299ba83d2971dd5f0671dc5f43ad"
       },
-      "outputSha256": "c329e74686abd160a1d785c59f1499f23c85299ba83d2971dd5f0671dc5f43ad",
-      "modifications": []
+      "outputSha256": "555555a269036abd8d9e42e0a9d14e8a6dc5ec6166416917a4afb85fafb9f34d",
+      "modifications": [
+        "Issue #5の共有入力能力レジストリ、段階別検証、公開回帰契約に合わせて更新。",
+        "Issue #5親レビューに従い形式検査・エラー保持・実decoder公開CI回帰を補強。"
+      ]
     },
     {
       "path": "apps/camera/src-tauri/src/presets.rs",
@@ -3495,8 +3516,10 @@
         "path": "apps/camera/src-tauri/src/save.rs",
         "sha256": "9f5ecafc5bf8518c3aea303fabae2a5ede4a959129af6618705d4184119dde87"
       },
-      "outputSha256": "9f5ecafc5bf8518c3aea303fabae2a5ede4a959129af6618705d4184119dde87",
-      "modifications": []
+      "outputSha256": "31fe0ec6d77ddde3c991a03e47d643176fe621d18668a0e44f6f4aefbf0cc692",
+      "modifications": [
+        "共通photo validator導入後も、原本上書き防止テストが有効なJPEG fixtureを使う。"
+      ]
     },
     {
       "path": "apps/camera/src-tauri/src/thumbnail_scheme.rs",
@@ -3544,10 +3567,11 @@
         "path": "apps/camera/src/App.test.tsx",
         "sha256": "a6e473f6f16afb180c6be04a32b8a2560bfc69c30f8f077300156bcd291ddb98"
       },
-      "outputSha256": "25dd65fb4f53850946b0d3f4147fa08d3abf8ba3bb9ca4f57df7d7a3ae26d7c4",
+      "outputSha256": "12364bbdd9e72e08a43fa79784a46e5c4a26e2c0de32c099bf9ac8a8bf26b3d6",
       "modifications": [
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
-        "複合空状態の写真追加アクションに期待値を更新。 / 選択写真専用commandをApp test fixtureにも追加。"
+        "複合空状態の写真追加アクションに期待値を更新。 / 選択写真専用commandをApp test fixtureにも追加。",
+        "Issue #50のMac画面配置・表示色・パネル・版位置の変更。"
       ]
     },
     {
@@ -3558,10 +3582,11 @@
         "path": "apps/camera/src/App.tsx",
         "sha256": "ca49b85f8269569ef243f5b0164751b3347c1cc268f906ce53dd984aa470c19e"
       },
-      "outputSha256": "da2389a8c6aa3a3979a9864d02fe79d9f6250512c4cfd7df92d09af9ae84af56",
+      "outputSha256": "4c5c054e907f7485f9a057326792045c216b409d0848f4f347bfcd9df14f6140",
       "modifications": [
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
-        "Issue #3のpublic OAuth/PKCE、ローカル専用UI、安全契約と公開依存を新規接続。実issuer・署名検証器が未契約のため本番接続は無効。"
+        "Issue #3のpublic OAuth/PKCE、ローカル専用UI、安全契約と公開依存を新規接続。実issuer・署名検証器が未契約のため本番接続は無効。",
+        "Issue #50のMac画面配置・表示色・パネル・版位置の変更。"
       ]
     },
     {
@@ -3629,9 +3654,11 @@
         "path": "apps/camera/src/local-library/commands.test.ts",
         "sha256": "4d35f3d9038ba356958dceed47cfe690ee9def1d3746964d2da42f40c43d681f"
       },
-      "outputSha256": "57aff6b30d0d064d0bc9e065a8b4d5cd4638adb149b5560f5fd542368ae8dcfe",
+      "outputSha256": "759d5d3599bc892a3f6b4c58f8e01fd84a966a937bcc6913f243abe00c24e75d",
       "modifications": [
-        "個別写真の追加・件数・一覧・参照削除を不透明なentryIdの既存経路へ接続"
+        "個別写真の追加・件数・一覧・参照削除を不透明なentryIdの既存経路へ接続",
+        "Issue #5の形式不一致、未取得、対象外形式をTS adapterが保持する回帰テストを追加。",
+        "Issue #5親レビューに従い形式検査・エラー保持・実decoder公開CI回帰を補強。"
       ]
     },
     {
@@ -3689,9 +3716,10 @@
         "path": "apps/camera/src/local-library/local-photo-library.test.ts",
         "sha256": "e86937a17a1b2655448cdcf9d43313df2d5b53c37ec16172b6eaa81371d4e1aa"
       },
-      "outputSha256": "a94cb3c1c256727194489e511252e3efa8b4886ee6a7966203ba6e40c3ead961",
+      "outputSha256": "8b4af8a47c42c36789ed0027d1e1fab2ee08892f3169722ee8026ec3b4d276e7",
       "modifications": [
-        "個別写真の追加・件数・一覧・参照削除を不透明なentryIdの既存経路へ接続 / 選択写真取得の専用IPC経路をテスト。"
+        "個別写真の追加・件数・一覧・参照削除を不透明なentryIdの既存経路へ接続 / 選択写真取得の専用IPC経路をテスト。",
+        "Issue #5親レビューに従い形式検査・エラー保持・実decoder公開CI回帰を補強。"
       ]
     },
     {
@@ -3702,10 +3730,11 @@
         "path": "apps/camera/src/local-library/local-photo-library.ts",
         "sha256": "bda72efc4c68731a2695be4906aedba55368d065dafbad6d577906ffa8441ed8"
       },
-      "outputSha256": "9724c868ac805f11d3faf191076d04517dbfa7fb66e2c46f73c5099765be0dd8",
+      "outputSha256": "b84ce730ae7eff7f4b28fe021d34ed715b112127cf946d3daf52c31de087beb0",
       "modifications": [
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
-        "個別写真の追加・件数・一覧・参照削除を不透明なentryIdの既存経路へ接続 / 選択写真一覧でフォルダ再走査commandを呼ばない。"
+        "個別写真の追加・件数・一覧・参照削除を不透明なentryIdの既存経路へ接続 / 選択写真一覧でフォルダ再走査commandを呼ばない。",
+        "Issue #5親レビューに従い形式検査・エラー保持・実decoder公開CI回帰を補強。"
       ]
     },
     {
@@ -3727,8 +3756,10 @@
         "path": "apps/camera/src/styles.css",
         "sha256": "7af8bc23fd3975b031725ace28bb5e108bef8c882a76cec549f7a6ed109e11fd"
       },
-      "outputSha256": "7af8bc23fd3975b031725ace28bb5e108bef8c882a76cec549f7a6ed109e11fd",
-      "modifications": []
+      "outputSha256": "7515816d14e96eb95907cf3c1f5718ddc46600e0c12b6ff08284d76cee58262d",
+      "modifications": [
+        "Issue #50のMac画面配置・表示色・パネル・版位置の変更。"
+      ]
     },
     {
       "path": "apps/camera/tailwind.config.cjs",
@@ -3824,9 +3855,11 @@
         "path": "packages/desktop-photo/src/common.rs",
         "sha256": "7c731ee473fdc9ce1c80d5dda1c10a2a010beb9a7f7c31cfeea02f29510c885e"
       },
-      "outputSha256": "020839a1b0f95b058640a99a4b642cd8790abab072a7b70b99eb865ccc58d722",
+      "outputSha256": "602025938cdfeddad863fef04508670ef4bfee67ae0ec99f9e9e925648525080",
       "modifications": [
-        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。"
+        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
+        "Issue #5の共有入力能力レジストリと段階別検証に合わせて更新。",
+        "Issue #5親レビューに従い形式検査・エラー保持・実decoder公開CI回帰を補強。"
       ]
     },
     {
@@ -3851,9 +3884,11 @@
         "path": "packages/desktop-photo/src/develop.rs",
         "sha256": "7f13c1e41e82bf4bc91bef5e4a8b61f092ab0b986a6a95c5559c2246bb74d864"
       },
-      "outputSha256": "31ee8cd1bf3722395654721e40ce7f725a69f8d7d3d9800276c6829bcff2683f",
+      "outputSha256": "de1f89bbb2026173d478ec2b22e49efe3e2b6070ec992050c43ef74a5b829339",
       "modifications": [
-        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。"
+        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
+        "Issue #5の共有入力能力レジストリ、段階別検証、公開回帰契約に合わせて更新。",
+        "Issue #5親レビューに従い形式検査・エラー保持・実decoder公開CI回帰を補強。"
       ]
     },
     {
@@ -3864,9 +3899,11 @@
         "path": "packages/desktop-photo/src/develop_local_raster_tests.rs",
         "sha256": "b45869e304ecb1bfa8cc4c3aea903fd7771f60c1b140f6f3c7be2f9f2b929bc2"
       },
-      "outputSha256": "9e2dbc74f5b024c44da52f90000de14057edcc770a797d65b3cc6ba04c801ec6",
+      "outputSha256": "9bf3f66fea5b55645d79db3683ad9bce566d018d7128b6537ae8d877c71d2f03",
       "modifications": [
-        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。"
+        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
+        "Issue #5の共有入力能力レジストリ、段階別検証、公開回帰契約に合わせて更新。",
+        "Issue #5親レビューに従い形式検査・エラー保持・実decoder公開CI回帰を補強。"
       ]
     },
     {
@@ -3892,9 +3929,11 @@
         "path": "packages/desktop-photo/src/image_info.rs",
         "sha256": "7cad0cf1b01e454c141f0eea845c5d3603db6b5a4bcd401714dab42c84eb1574"
       },
-      "outputSha256": "ee95e5ac36675f4b9a30d92dbb2db5aeac0db8a148f8251f1e01b58eb9c033c0",
+      "outputSha256": "88e3731ed7d68e2a45109ed930bc46d86ca5ce5fa79cd7f31a53b639fac97551",
       "modifications": [
-        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。"
+        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
+        "Issue #5の共有入力能力レジストリ、段階別検証、公開回帰契約に合わせて更新。",
+        "Issue #5親レビューに従い形式検査・エラー保持・実decoder公開CI回帰を補強。"
       ]
     },
     {
@@ -3905,9 +3944,11 @@
         "path": "packages/desktop-photo/src/lib.rs",
         "sha256": "1a92d8609a630c62643da3fe4a53adaf3b86ef3704edc287d7a0d4c32227618e"
       },
-      "outputSha256": "10181f0e0e9eccce1b90d85885ab110c96555edc245c10ea94455cc28d316d6b",
+      "outputSha256": "5683266fb6ed312f2f2417b630d913b1fb274b2cc92d590353586bb5c3261b0c",
       "modifications": [
-        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。"
+        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
+        "Issue #5の共有入力能力レジストリ、段階別検証、公開回帰契約に合わせて更新。",
+        "Issue #5親レビューに従い形式検査・エラー保持・実decoder公開CI回帰を補強。"
       ]
     },
     {
@@ -3918,10 +3959,12 @@
         "path": "packages/desktop-photo/src/library.rs",
         "sha256": "df0c406952e647fd8df9c44345e0c7020f7c328c3c48501eaf3d9a79e819b488"
       },
-      "outputSha256": "bedb242f7c6bb914711390f9dbe63fcb00634f0775f6438a41fcc8539060d9c8",
+      "outputSha256": "ca46cbd91b60cf1f32bb5ab2fdbf57468326995d71650b8d70322fee6490971b",
       "modifications": [
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
-        "個別選択写真の上限付きセッション保持と安全な参照削除、および既存の全件応答契約の検証を追加 / 利用可能写真を確認してから選択上限を適用。"
+        "個別選択写真の上限付きセッション保持と安全な参照削除、および既存の全件応答契約の検証を追加 / 利用可能写真を確認してから選択上限を適用。",
+        "Issue #5の共有入力能力レジストリ、段階別検証、公開回帰契約に合わせて更新。",
+        "Issue #5親レビューに従い形式検査・エラー保持・実decoder公開CI回帰を補強。"
       ]
     },
     {
@@ -3932,8 +3975,10 @@
         "path": "packages/desktop-photo/src/library_forget_tests.rs",
         "sha256": "c71423bedc3459a20066134ecfbc3ba5aea4787f2611e87196e8c29c24b145a5"
       },
-      "outputSha256": "c71423bedc3459a20066134ecfbc3ba5aea4787f2611e87196e8c29c24b145a5",
-      "modifications": []
+      "outputSha256": "f828fb3401d4bc15a3fac99b49224d08ea4c472615a26e395068e36b32318308",
+      "modifications": [
+        "合成写真の内容変更後も、フォルダ忘却が写真の元bytesを保持することを検証する。"
+      ]
     },
     {
       "path": "packages/desktop-photo/src/library_tests.rs",
@@ -3943,12 +3988,17 @@
         "path": "packages/desktop-photo/src/library_tests.rs",
         "sha256": "7eea84c71f88468f287f2eea5f906dcd878c05294a5bd5d8c4b2442d5eb4861d"
       },
-      "outputSha256": "8e945fc93968d5ca0787267bacb1cfa37532556e9ac05e2f59c63240ed41507d",
+      "outputSha256": "5a47828d7bbab03633701c10a0b476153f213fb5255fe3fbe1102fe909aad283",
       "modifications": [
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
         "private絶対path guardに合わせ、合成テスト用のpathを予約済み/test-data配下へ正規化。実装の挙動は変更しない。",
         "公開現像workspace向けにLibRaw由来値と参照を除去。独立測定DCP・合成テスト・metadata正規化・公開契約と書式へ調整。",
-        "個別選択写真の上限付きセッション保持と安全な参照削除、および既存の全件応答契約の検証を追加 / 未接続写真が選択上限を消費しない回帰テスト。 / Rustfmtで新規回帰テストの整形を統一。"
+        "個別選択写真の上限付きセッション保持と安全な参照削除、および既存の全件応答契約の検証を追加 / 未接続写真が選択上限を消費しない回帰テスト。 / Rustfmtで新規回帰テストの整形を統一。",
+        "Issue #5の共有入力能力レジストリ、段階別検証、公開回帰契約に合わせて更新。",
+        "Issue #5親レビューに従い形式検査・エラー保持・実decoder公開CI回帰を補強。",
+        "合成PNGを32x24へ拡大してHEIC encoder回帰を安定化。",
+        "実ImageIO UTIを能力レジストリの許可値と照合する回帰へ調整。",
+        "実ファイル長で一覧metadataを検証し、HEIF別名も実ImageIO回帰へ含める。"
       ]
     },
     {
@@ -4060,9 +4110,11 @@
         "path": "packages/desktop-photo/src/test_support/library.rs",
         "sha256": "097dbf9955ffcd1cbf1e01c8fd532914c1c3fb26c0f3041988ba4d48a4d6b236"
       },
-      "outputSha256": "1b359dbbcc98a83e2dca57ab460fa25ca77b7a6b75ba05c5e36436725944d54d",
+      "outputSha256": "6d46092fce7c3c267733b8f95db21a3ade176ab84a3f649c7d56c05784716476",
       "modifications": [
-        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。"
+        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
+        "Issue #5の共有入力能力レジストリ、段階別検証、公開回帰契約に合わせて更新。",
+        "Issue #5親レビューに従い形式検査・エラー保持・実decoder公開CI回帰を補強。"
       ]
     },
     {
@@ -6657,8 +6709,10 @@
         "path": "packages/develop-engine/tools/apple-raw-linear/Package.swift",
         "sha256": "7b55e1a10565cac949c8ab088310414646035c868d2dc94a0e095767f1eb7508"
       },
-      "outputSha256": "7b55e1a10565cac949c8ab088310414646035c868d2dc94a0e095767f1eb7508",
-      "modifications": []
+      "outputSha256": "7247bd228cf79aa6000957fc48f82ff4dd2489f7c0076f3cab8e84c92f947bac",
+      "modifications": [
+        "Issue #5親レビューに従い形式検査・エラー保持・実decoder公開CI回帰を補強。"
+      ]
     },
     {
       "path": "packages/develop-engine/tools/apple-raw-linear/README.md",
@@ -7088,8 +7142,10 @@
         "path": "packages/develop-engine/tools/apple-raw-linear/Tests/apple-raw-linearTests/RasterTests.swift",
         "sha256": "30dfd94290e7303f0f5f0fa9632d3800e3282f81fd6071bc71855f0973b901b0"
       },
-      "outputSha256": "30dfd94290e7303f0f5f0fa9632d3800e3282f81fd6071bc71855f0973b901b0",
-      "modifications": []
+      "outputSha256": "623ff69f090966cccac5c2b73c660fa7012e25223e9a4e3cecb32c43850a9ad4",
+      "modifications": [
+        "Issue #5親レビューに従い形式検査・エラー保持・実decoder公開CI回帰を補強。"
+      ]
     },
     {
       "path": "packages/develop-engine/tools/apple-raw-linear/Tests/apple-raw-linearTests/SignedWorkingCopyTests.swift",
@@ -8515,6 +8571,11 @@
   ],
   "generatedFiles": [
     {
+      "path": "packages/desktop-photo/src/capabilities.rs",
+      "sha256": "fa479ac2df91c88af6f68726dfb8a2d335c4f7b5ecd2f7613dc9a836bc49f963",
+      "origin": "Issue #5のため独立作成。公開仕様から拡張子・MIME・UTType・magic bytes・処理段階の能力レジストリと権利安全な合成signatureテストを実装。外部コード・画像・個体metadataを含まない。\n変更理由: Issue #5親レビューに従い形式検査・エラー保持・実decoder公開CI回帰を補強。\n変更理由: AVIFをHEICと誤認しない拡張子不一致回帰を追加。"
+    },
+    {
       "path": "packages/photo-editing/src/fixtures/cutout-brush-parity.json",
       "sha256": "13d6754635b45a621dda5322dff2fe68ecfcb99ed97db5f86c93b332f1e4f5b3",
       "origin": "公開移植用に新規作成した5×5整数ランプ。中央行をeraseし中央の1画素をrestoreする手計算の期待値。外部画像・モデル・元fixtureのデータは含まない。"
@@ -8617,7 +8678,7 @@
     {
       "path": "packages/develop-engine/public-ci.json",
       "sha256": "037b44592b92776d7de822c5d90c376a3d1d27092ed1b4749434155b64eda8cb",
-      "origin": "#9で独立作成。所有測定対・metadataを除いた所有RAW/参照画像、検証tool、公開build/test契約または第三者license全文。詳細はdocs/migration/raw-engine.mdと資産台帳に記録。"
+      "origin": "#9で独立作成。所有測定対・metadataを除いた所有RAW/参照画像、検証tool、公開build/test契約または第三者license全文。詳細はdocs/migration/raw-engine.mdと資産台帳に記録。\n変更理由: Issue #5親レビューに従い形式検査・エラー保持・実decoder公開CI回帰を補強。\n変更理由: Swift regressionをmacOS 26専用jobへ分離し、macOS 14のnative scopeはRust/WASM検査だけにする。"
     },
     {
       "path": "packages/develop-engine/tools/asset-audit/sanitize_rw2.py",
@@ -8771,13 +8832,13 @@
     },
     {
       "path": "packages/photo-editing/src/editor/browser-photo-editing-filmstrip.tsx",
-      "sha256": "c4296fd14d51a5c9cd84191dd70db577db2a7e5604154745a82c9cf778f3f5bd",
-      "origin": "公開repoで新規作成（#54）: 1 枚の面の下のフィルムストリップ（今の一覧のサムネイルの帯）。既存の公開部品（PhotoEditingTileImage・niho-ui の cn）だけを使い、非公開ソース・実写真を含まない。"
+      "sha256": "b03f56b4aaec23c0871f4d0c4b1135f0c2193159e79dba3590802d1d5c69ff58",
+      "origin": "公開repoで新規作成（#54）: 1 枚の面の下のフィルムストリップ（今の一覧のサムネイルの帯）。既存の公開部品（PhotoEditingTileImage・niho-ui の cn）だけを使い、非公開ソース・実写真を含まない。\n変更理由: PR #59 の main 競合解消と切替拒否時のフォーカス復元"
     },
     {
       "path": "packages/photo-editing/src/editor/browser-photo-editing-filmstrip.test.tsx",
-      "sha256": "320662c5289b39c01ee2c0b1e2f56f6876aaa696c2f9dd227e3b6f85496df486",
-      "origin": "公開repoで新規作成（#54）: フィルムストリップの合成テスト（予約済み .test ドメインの URL と架空の写真名だけを使う）。"
+      "sha256": "b593231648719b6e3557f36fb11ba2555612d234c5694cca0ef9cdc381862b26",
+      "origin": "公開repoで新規作成（#54）: フィルムストリップの合成テスト（予約済み .test ドメインの URL と架空の写真名だけを使う）。\n変更理由: PR #59 の main 競合解消と切替拒否時のフォーカス復元"
     }
   ],
   "excludedSources": [
@@ -10277,6 +10338,7 @@
   ],
   "deferredScopes": [],
   "issues": [
+    5,
     7,
     9,
     11

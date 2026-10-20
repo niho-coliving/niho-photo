@@ -629,6 +629,21 @@ describe("working copies", () => {
     await expect(fake.library.ensureWorkingCopy("e-png")).resolves.toEqual({ kind: "notApplicable" });
     await expect(fake.library.retryWorkingCopy("e-jpg")).resolves.toEqual({ kind: "notApplicable" });
   });
+
+  it("keeps native capability guidance through the real working-copy adapter", async () => {
+    const failures = [
+      ["e-raw", "formatMismatch", "写真の拡張子と中身の形式が一致しません。正しい写真を選び直してください。"],
+      ["e-heic", "downloadRequired", "写真がこのMacにありません。Finderでダウンロードしてから、もう一度開いてください。"],
+      ["e-jpg", "unsupportedFormat", "この写真形式には対応していません。対応形式の写真を選んでください。"],
+    ] as const;
+    const fake = fakeNative({
+      sources: Object.fromEntries(failures.map(([entryId, code, message]) => [entryId, new CameraCommandError(code, message)])),
+    });
+
+    for (const [entryId, , message] of failures) {
+      await expect(fake.library.ensureWorkingCopy(entryId)).resolves.toEqual({ kind: "incompatible", message });
+    }
+  });
 });
 
 describe("export, presets and errors", () => {
