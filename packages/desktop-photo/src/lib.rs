@@ -47,6 +47,7 @@
 // いるので Windows ではビルドしない（Windows の NIHO Desktop は web だけの shell。中身は空の crate になる）。
 #![cfg(not(target_os = "windows"))]
 
+pub mod capabilities;
 pub mod common;
 pub mod develop;
 pub mod image_info;

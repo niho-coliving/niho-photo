@@ -197,6 +197,16 @@ describe("createCameraCommands", () => {
     });
   });
 
+  it("keeps capability failure codes and stage-specific guidance from native", () => {
+    for (const [code, message] of [
+      ["formatMismatch", "サムネイル作成時に写真の形式が一致しません。"],
+      ["downloadRequired", "Finderでダウンロードしてから、もう一度お試しください。"],
+      ["unsupportedFormat", "この写真形式には対応していません。"],
+    ]) {
+      expect(toCameraCommandError({ code, message })).toMatchObject({ code, message, currentRevision: null });
+    }
+  });
+
   it("keeps presets on this Mac through the preset commands", async () => {
     const preset = { id: "preset-1", name: "夕方", xmp: "<x:xmpmeta/>", source: "xmp", createdAt: "1970-01-01T00:00:00.001Z" };
     const { calls, commands } = recording(({ command }) =>

@@ -1,14 +1,15 @@
 import { useEffect, useMemo, useState } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { X } from "lucide-react";
+import { PanelLeft, X } from "lucide-react";
 import icon from "../src-tauri/icons/128x128.png";
 
 import { BrowserPhotoEditingWorkbench } from "niho-photo-editing/editor/browser-photo-editing-workbench";
 import { PhotoLibraryProvider } from "niho-photo-editing/library/photo-library-context";
-import { readLocalStorageItemSafely, writeLocalStorageItemSafely } from "niho-ui/local-storage-safe";
+import { readLocalStorageItemSafely, removeLocalStorageItemSafely, writeLocalStorageItemSafely } from "niho-ui/local-storage-safe";
 import { AppDialogHost } from "niho-ui/components/app-dialog-host";
 
 import { readAppInfo, type CameraAppInfo } from "./camera-bridge";
+import { CameraAccount } from "./camera-account";
 import { CameraHeaderBreadcrumb } from "./camera-header-breadcrumb";
 import { CameraUpdateNotice, type WatchUpdate } from "./camera-update-notice";
 import { createCameraCommands, type CameraCommands } from "./local-library/commands";
@@ -18,6 +19,8 @@ import { createLocalPhotoLibrary } from "./local-library/local-photo-library";
 
 /** 初回の案内（旧 NIHO camera の補正は引き継がない）を閉じたことを、この端末に覚える鍵。 */
 export const PHOTO_BENCH_NOTICE_DISMISSED_KEY = "niho-camera:photo-bench-notice-dismissed";
+/** 左のパネル（この Mac のフォルダの木）を隠していることを、この端末に覚える鍵（値は "1"）。 */
+export const PHOTO_TREE_HIDDEN_KEY = "niho-camera:photo-tree-hidden";
 export const PHOTO_BENCH_NOTICE_TEXT =
   "旧 NIHO camera（Photo Bench）で保存した補正は引き継がれません。写真はそのまま開いて直せます。";
 
@@ -72,11 +75,26 @@ function usePhotoBenchNotice(commands: Pick<CameraCommands, "photoBenchEditsFoun
   return { shown, dismiss };
 }
 
+/** 左のパネルの表示 / 非表示（header の「左のパネル」。この端末に覚える）。 */
+function useTreeHidden() {
+  const [hidden, setHidden] = useState(() => readLocalStorageItemSafely(PHOTO_TREE_HIDDEN_KEY) === "1");
+  const toggle = () => {
+    setHidden((current) => {
+      const next = !current;
+      if (next) writeLocalStorageItemSafely(PHOTO_TREE_HIDDEN_KEY, "1");
+      else removeLocalStorageItemSafely(PHOTO_TREE_HIDDEN_KEY);
+      return next;
+    });
+  };
+  return { hidden, toggle };
+}
+
 /**
  * NIHO photo の画面（spec「画面」）。共通の編集面（packages/photo-editing の `BrowserPhotoEditingWorkbench`）を、この Mac の
  * `PhotoLibrary`（native のフォルダ・写真・現像）と同梱の wasm で動かす。左にフォルダ、中央に写真、右に補正（どれも編集面の部品）。
- * 窓のタイトルバーにアイコンと名前を一度だけ表示し、その下の帯は表示中の場所（編集面のパンくず）に使う。
- * 版は下の目立たない 1 行。自動更新で新しい版を入れたときだけ、その下に 1 行の案内。
+ * 窓のタイトルバーにアイコンと名前を一度だけ表示し、その下の帯は左端の「左のパネル」（木の表示 / 非表示）と表示中の場所（編集面のパンくず）に使う。
+ * 編集面は窓の底まで使い（`appearance="fill"`）、版は左の木の底の目立たない 1 行。自動更新で新しい版を入れたときだけ、編集面の上に 1 行の案内
+ * （niho-photo#50）。
  */
 export function App({ commands, loadAppInfo = readAppInfo, watchUpdate }: AppProps) {
   const native = commands ?? cameraCommands();
@@ -86,6 +104,7 @@ export function App({ commands, loadAppInfo = readAppInfo, watchUpdate }: AppPro
   const [queryClient] = useState(createQueryClient);
   const [appInfo, setAppInfo] = useState<CameraAppInfo | null>(null);
   const notice = usePhotoBenchNotice(native);
+  const tree = useTreeHidden();
 
   useEffect(() => {
     let active = true;
@@ -109,28 +128,41 @@ export function App({ commands, loadAppInfo = readAppInfo, watchUpdate }: AppPro
           className="flex h-11 shrink-0 select-none items-center gap-3 border-b border-niho-border px-3 sm:px-4"
           data-tauri-drag-region
         >
+          <button
+            type="button"
+            aria-label="左のパネル"
+            aria-pressed={!tree.hidden}
+            title="左のパネル"
+            onClick={tree.toggle}
+            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-niho-text-sub transition hover:bg-niho-pale/60 hover:text-niho-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-niho-accent-ink aria-pressed:bg-niho-accent-soft aria-pressed:text-niho-accent-ink"
+          >
+            <PanelLeft className="h-[18px] w-[18px]" aria-hidden />
+          </button>
           <div className="min-w-0 flex-1" data-tauri-drag-region>
             <CameraHeaderBreadcrumb />
           </div>
+          <CameraAccount />
         </header>
-        <main className="min-h-0 flex-1 overflow-auto px-4 pt-3">
-          <CameraUpdateNotice watch={watchUpdate} />
-          {notice.shown ? (
-            <div
-              role="status"
-              className="mb-3 flex items-center gap-3 rounded-xl border border-niho-border bg-white px-4 py-2.5 text-sm text-niho-text-sub"
-            >
-              <p className="min-w-0 flex-1">{PHOTO_BENCH_NOTICE_TEXT}</p>
-              <button
-                type="button"
-                aria-label="案内を閉じる"
-                onClick={notice.dismiss}
-                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-niho-text-muted transition hover:bg-niho-pale/60 hover:text-niho-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-niho-accent-ink"
+        <main className="flex min-h-0 flex-1 flex-col">
+          <div className="shrink-0 px-4 pt-3 empty:hidden">
+            <CameraUpdateNotice watch={watchUpdate} />
+            {notice.shown ? (
+              <div
+                role="status"
+                className="mb-3 flex items-center gap-3 rounded-xl border border-niho-border bg-white px-4 py-2.5 text-sm text-niho-text-sub"
               >
-                <X className="h-4 w-4" aria-hidden />
-              </button>
-            </div>
-          ) : null}
+                <p className="min-w-0 flex-1">{PHOTO_BENCH_NOTICE_TEXT}</p>
+                <button
+                  type="button"
+                  aria-label="案内を閉じる"
+                  onClick={notice.dismiss}
+                  className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-niho-text-muted transition hover:bg-niho-pale/60 hover:text-niho-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-niho-accent-ink"
+                >
+                  <X className="h-4 w-4" aria-hidden />
+                </button>
+              </div>
+            ) : null}
+          </div>
           <PhotoLibraryProvider library={library} host={host}>
             <BrowserPhotoEditingWorkbench
               spotId="local"
@@ -142,12 +174,12 @@ export function App({ commands, loadAppInfo = readAppInfo, watchUpdate }: AppPro
               onOpenCloudPhotoHandled={() => undefined}
               disableCloudDelete
               cutout={cutout}
+              appearance="fill"
+              treeHidden={tree.hidden}
+              treeFooter={appInfo ? <span>版 {appInfo.appVersion}</span> : null}
             />
           </PhotoLibraryProvider>
         </main>
-        <footer className="flex h-7 shrink-0 items-center justify-end px-4 text-xs text-niho-text-muted">
-          {appInfo ? <span>版 {appInfo.appVersion}</span> : null}
-        </footer>
       </div>
     </QueryClientProvider>
   );

@@ -1,0 +1,7 @@
+{
+  "schemaVersion": 1,
+  "syntheticFixtures": true,
+  "unsigned": true,
+  "cargoManifests": ["Cargo.toml"],
+  "swiftPackages": []
+}

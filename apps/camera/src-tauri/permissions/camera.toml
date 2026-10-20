@@ -42,3 +42,8 @@ commands.allow = ["camera_save_file", "camera_export_original"]
 identifier = "allow-camera-updates"
 description = "Allows the bundled NIHO photo UI to read whether the startup update check downloaded a newer signed version (it applies on the next launch). The check runs natively at startup; the page cannot check, install or restart."
 commands.allow = ["camera_update_status"]
+
+[[permission]]
+identifier = "allow-camera-account"
+description = "同梱のmain画面に固定分類のアカウント状態と操作だけを許可する。URL、token、プロフィール、権限claimは受け渡さない。"
+commands.allow = ["camera_account_state", "camera_account_login", "camera_account_cancel", "camera_account_logout", "camera_account_refresh"]

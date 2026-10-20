@@ -1,0 +1,22 @@
+{
+  "name": "niho-desktop-account",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Photo/Docs共通の公開アカウント安全契約とUI状態",
+  "exports": { ".": "./src/index.ts" },
+  "scripts": {
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "test": "vitest run",
+    "lint": "eslint src"
+  },
+  "devDependencies": {
+    "@typescript-eslint/parser": "^8.70.1",
+    "eslint": "^10.11.0",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "typescript": "^5.9.3",
+    "vitest": "^4.1.11"
+  },
+  "engines": { "node": "24.x" },
+  "license": "UNLICENSED"
+}
