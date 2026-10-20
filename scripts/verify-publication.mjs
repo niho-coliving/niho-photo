@@ -43,16 +43,19 @@ for (const entry of [...manifest.importedFiles, ...manifest.generatedFiles]) {
   }
 }
 
-async function checkPackageTree(directory) {
-  for (const item of await readdir(path.join(root, directory), { withFileTypes: true })) {
-    const name = `${directory}/${item.name}`;
-    if (["node_modules", "coverage", "dist", ".vitest"].includes(item.name)) continue;
+const generatedDirectories = new Set([".git", "node_modules"]);
+async function checkRepositoryTree(directory = "") {
+  const absoluteDirectory = directory ? path.join(root, directory) : root;
+  for (const item of await readdir(absoluteDirectory, { withFileTypes: true })) {
+    if (item.isDirectory() && generatedDirectories.has(item.name)) continue;
+    const name = directory ? `${directory}/${item.name}` : item.name;
+    checkPath(name);
     if (item.isSymbolicLink()) failures.push(`未承認のsymlink: ${name}`);
-    else if (item.isDirectory()) await checkPackageTree(name);
-    else if (!approved.has(name)) failures.push(`allowlist外のpackageファイル: ${name}`);
+    else if (item.isDirectory()) await checkRepositoryTree(name);
+    else if (name.startsWith("packages/") && !approved.has(name)) failures.push(`allowlist外のpackageファイル: ${name}`);
   }
 }
-await checkPackageTree("packages");
+await checkRepositoryTree();
 
 const lock = await readJson("package-lock.json");
 for (const [name, dependency] of Object.entries(lock.packages ?? {})) {
