@@ -1601,11 +1601,12 @@
         "path": "packages/photo-editing/src/editor/use-browser-photo-open.ts",
         "sha256": "2755ea206c0fe9edc8df05ff40d78326310449cb9d509e75a291fdc3822a1d2e"
       },
-      "outputSha256": "380313b9e1f51a3f65eab2d96bd7f4c2db49d51b75c27d5de9b297b2e07e8191",
+      "outputSha256": "b5edd8babba54c381ee63be2315b0436ab87c2189d6ed4985894c77f2eed36f5",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
-        "色点のサンプル座標と回帰試験を整合し、操作中640pxと確定解像度を分ける"
+        "色点のサンプル座標と回帰試験を整合し、操作中640pxと確定解像度を分ける",
+        "一時プレビューの有効点判定に厳格な既存colorPointsリーダーを用いる"
       ]
     },
     {
@@ -5360,14 +5361,15 @@
         "path": "packages/develop-engine/crates/niho-develop/src/color_ops.rs",
         "sha256": "cd0c61a609a12094f4f95b019c1671187e1d320b95c36b34da5c87dc7c3835d1"
       },
-      "outputSha256": "3da6bb0ea7e4e05ca18c663d90093fbb6a52ce9cf0e01451d6b1111ae205884a",
+      "outputSha256": "c47f19eab99f75756dff5699644441f97813164cfba986202214b4ccaffe1b70",
       "modifications": [
         "Issue #28の色相安定engine追加と互換回帰を反映。",
         "新しい色相保持エンジンと新旧バイナリの能力境界・数値回帰を整合。",
         "Issue #30 Oklch色ミキサーとengine 10/11対応を反映",
         "色ポイントを画素単位で適用する後段処理を分離",
         "Issue #30のactive-point画素cache向けf32 OKLCH kernelとf64参照比較を追加。",
-        "点補正の選択plane cacheと精度・依存関係・headroom回帰を整備"
+        "点補正の選択plane cacheと精度・依存関係・headroom回帰を整備",
+        "灰色近傍の色相数値誤差をplane生成時だけf64参照で抑えて最小範囲の選択精度を守る"
       ]
     },
     {

@@ -84,6 +84,15 @@ pub fn prophoto_to_oklch(value: Rgb) -> Rgb {
 pub(crate) fn cached_prophoto_to_oklch(value: [f32; 3]) -> [f32; 3] {
     let lab = linear_srgb_to_oklab(mat_vec_f32(&PROPHOTO_TO_SRGB_F32, value));
     let chroma = libm::sqrtf(lab[1] * lab[1] + lab[2] * lab[2]);
+    // Hue becomes numerically sensitive near gray; pay for the f64
+    // reference once when constructing the plane, never on warm drags.
+    if chroma < 0.001 {
+        let mut lch = prophoto_to_oklch(value.map(f64::from)).map(|v| v as f32);
+        if lch[2] >= 360.0 {
+            lch[2] = 0.0;
+        }
+        return lch;
+    }
     let hue = if chroma <= 1e-12 {
         0.0
     } else {

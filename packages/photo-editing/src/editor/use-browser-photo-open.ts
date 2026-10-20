@@ -23,6 +23,7 @@ import type {
 import { usePhotoLibrary } from "../library/photo-library-context";
 import {
   developSettingsKey,
+  developColorPoints,
   hasSavedDevelopSettings,
   isNeutralDevelopSettings,
   neutralDevelopSettings,
@@ -495,7 +496,7 @@ export function useBrowserPhotoOpen(params: {
     const interactive = previewing ? previewInteractive : dragging;
     // Point selections stay exact while dragging; only the temporary preview
     // is smaller. Final render, sampling, saved previews and export keep their size.
-    const activePoints = shownSettings.colorPoints?.some((point) =>
+    const activePoints = developColorPoints(shownSettings).some((point) =>
       point.delta.hue !== 0 || point.delta.chromaScale !== 1 || point.delta.lightness !== 0);
     const maxDimension = interactive && activePoints
       ? DEVELOP_COLOR_POINT_DRAG_MAX_DIMENSION : DEVELOP_PREVIEW_MAX_DIMENSION;
