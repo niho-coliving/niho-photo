@@ -8893,8 +8893,8 @@
     },
     {
       "path": "packages/photo-editing/src/editor/use-browser-photo-progressive-open.test.tsx",
-      "sha256": "97a56214b2610f3207f30fccb3eb3ea294ebc19bcd3a6ef1a54a8c458aa75d33",
-      "origin": "Issue #13のため独立作成。actual React hooksと合成library/engine/frameだけで、provisional編集、canonical handoff、history、retry、abort、旧frame遮断を検証。外部画像・非公開コード・個体metadataを含まない。\n変更理由: 公開signed RAW契約に合う合成metadataで実hookの正規切替を検証。\n変更理由: preview取得失敗でも正規入力の実hookで補正を続けられる回帰を追加。"
+      "sha256": "174021d846e697a6f1ab8364c14c3ada388e0a56fd3a32eba4cd095d8997fa94",
+      "origin": "Issue #13のため独立作成。actual React hooksと合成library/engine/frameだけで、provisional編集、canonical handoff、history、retry、abort、旧frame遮断を検証。外部画像・非公開コード・個体metadataを含まない。\n変更理由: 公開signed RAW契約に合う合成metadataで実hookの正規切替を検証。\n変更理由: preview取得失敗でも正規入力の実hookで補正を続けられる回帰を追加。\n変更理由: fallback後の補正を実際にflushし通常保存のbaseと値まで検証。"
     },
     {
       "path": "packages/photo-editing/src/fixtures/cutout-brush-parity.json",

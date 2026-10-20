@@ -483,6 +483,10 @@ describe("useBrowserPhotoOpen progressive RAW integration", () => {
     await run(() => current.changeSettings((settings) => ({ ...settings, exposure: 0.4 }), "commit"));
     expect(current.settings.exposure).toBe(0.4);
     expect(fixture.saveProvisionalDraft).not.toHaveBeenCalled();
+    await run(async () => { expect(await current.returnToGrid()).toBe(true); });
+    expect(fixture.saveDevelopSettings).toHaveBeenCalledWith(
+      target.photo.id, expect.objectContaining({ exposure: 0.4, base: BASE_VERSION }), expect.any(Object),
+    );
   });
 
   it("canonical待ちのcrop操作とundoを実hookで処理し、crop表示をcanonical engineで描いてactive/historyを保つ", async () => {
