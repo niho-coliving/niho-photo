@@ -8515,8 +8515,8 @@
     },
     {
       "path": "packages/develop-engine/tools/independent-profile/requirements-extract.txt",
-      "sha256": "fdf1dc893b2f0d210b79aff0118558a397aa6c63258b6c70303b0fbaddcbc052",
-      "origin": "#9で独立作成。所有測定対・metadataを除いた所有RAW/参照画像、検証tool、公開build/test契約または第三者license全文。詳細はdocs/migration/raw-engine.mdと資産台帳に記録。"
+      "sha256": "172e9ac1e2fee27cbad9a1ac0d62b903960e8c86e287f1c8f9851def49c70afd",
+      "origin": "#9で独立作成。所有測定対・metadataを除いた所有RAW/参照画像、検証tool、公開build/test契約または第三者license全文。詳細はdocs/migration/raw-engine.mdと資産台帳に記録。\n変更理由: Dependency reviewで検出されたPillow 12.0.0の脆弱性を修正するため13.0.0へ更新。"
     }
   ],
   "excludedSources": [
