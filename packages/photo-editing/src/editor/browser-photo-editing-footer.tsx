@@ -183,6 +183,8 @@ export function BrowserPhotoEditingFooter(props: {
   albumAction?: { label: string; disabled: boolean; onClick: () => void };
   /** Trusted host が明示的にクラウド共有を接続したときだけ出す。 */
   shareAction?: { disabled: boolean; onClick: () => void };
+  /** Trusted host が個人クラウドを接続した、この Mac の選択中の 1 枚だけに出す。 */
+  copyToCloudAction?: { disabled: boolean; onClick: () => void };
   /** 「補正前」を出す（1 枚で補正の入力を開けている） */
   showCompare: boolean;
   compareDisabled: boolean;
@@ -255,6 +257,16 @@ export function BrowserPhotoEditingFooter(props: {
           className={cn(PHOTO_EDITING_SECONDARY_BUTTON_CLASS_NAME, "h-11")}
         >
           共有
+        </button>
+      ) : null}
+      {props.copyToCloudAction ? (
+        <button
+          type="button"
+          disabled={props.copyToCloudAction.disabled}
+          onClick={props.copyToCloudAction.onClick}
+          className={cn(PHOTO_EDITING_SECONDARY_BUTTON_CLASS_NAME, "h-11")}
+        >
+          クラウドにコピー
         </button>
       ) : null}
       {props.showCompare ? (

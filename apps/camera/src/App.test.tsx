@@ -1,8 +1,11 @@
 import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import type { PhotoLibrary } from "niho-photo-editing/library/photo-library";
 import { App, PHOTO_BENCH_NOTICE_DISMISSED_KEY, PHOTO_BENCH_NOTICE_TEXT, PHOTO_TREE_HIDDEN_KEY } from "./App";
 import { createCameraCommands, type Invoke } from "./local-library/commands";
+import { createLocalPhotoEditingHost } from "./local-library/local-photo-editing-host";
+import { createLocalPhotoLibrary } from "./local-library/local-photo-library";
 
 // React 18 の act を jsdom で使う
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
@@ -27,9 +30,23 @@ afterEach(async () => {
   Object.defineProperty(window, "innerWidth", { configurable: true, value: initialInnerWidth });
 });
 
-function fakeCommands(options: { photoBenchEdits: boolean; rememberedFolder?: boolean }) {
+function fakeCommands(options: { photoBenchEdits: boolean; rememberedFolder?: boolean; rememberedPhoto?: boolean }) {
   const calls: string[] = [];
-  const folder = { folderId: "test-folder", name: "検証用", children: [], photos: [], truncated: false };
+  const photo = {
+    entryId: "opaque-local-photo",
+    fileName: "海辺.jpg",
+    kind: "raster" as const,
+    sizeBytes: 1024,
+    modifiedAt: "2026-10-20T00:00:00.000Z",
+    hasEdits: false,
+  };
+  const folder = {
+    folderId: "test-folder",
+    name: "検証用",
+    children: [],
+    photos: options.rememberedPhoto ? [photo] : [],
+    truncated: false,
+  };
   let folders = options.rememberedFolder ? [folder] : [];
   const invoke: Invoke = async <T,>(command: string) => {
     calls.push(command);
@@ -50,6 +67,17 @@ function fakeCommands(options: { photoBenchEdits: boolean; rememberedFolder?: bo
     return answers[command] as T;
   };
   return { calls, commands: createCameraCommands(invoke) };
+}
+
+function cloudLibrary(commands: ReturnType<typeof fakeCommands>["commands"]): PhotoLibrary {
+  const local = createLocalPhotoLibrary(commands);
+  const { folders: _folders, selectedPhotos: _selectedPhotos, ...shared } = local;
+  return {
+    ...shared,
+    place: "cloud",
+    initialCapabilities: { ...local.initialCapabilities, place: "cloud" },
+    capabilities: async () => ({ ...(await local.capabilities()), place: "cloud" }),
+  };
 }
 
 /** 読み込み（react-query・木）が落ち着くまで待つ。 */
@@ -150,6 +178,135 @@ describe("App", () => {
     expect(notice()).toBeNull();
     expect(calls).toContain("camera_library_remembered");
     expect(calls).toContain("camera_develop_status");
+    expect(container.querySelector('[role="group"][aria-label="写真の保存先"]')).toBeNull();
+    expect(Array.from(container.querySelectorAll("button")).some((button) => button.textContent === "クラウドにコピー")).toBe(false);
+  });
+
+  it("shows personal cloud tabs only for an explicit trusted binding and remounts the shared workbench by source", async () => {
+    const { commands } = fakeCommands({ photoBenchEdits: false });
+    const library = cloudLibrary(commands);
+    await act(async () => {
+      root.render(
+        <App
+          commands={commands}
+          loadAppInfo={async () => null}
+          watchUpdate={async () => () => undefined}
+          cloudBinding={{
+            library,
+            host: createLocalPhotoEditingHost(commands),
+            actorId: "personal-user-1",
+            copyLocalPhoto: async () => ({ cloudPhotoId: null }),
+          }}
+        />,
+      );
+    });
+    await settle();
+
+    const sourceSwitch = () => container.querySelector('[role="group"][aria-label="写真の保存先"]');
+    expect(sourceSwitch()).not.toBeNull();
+    const sourceButton = (label: string) => Array.from(sourceSwitch()?.querySelectorAll<HTMLButtonElement>("button") ?? [])
+      .find((button) => button.textContent === label);
+    const cloudTab = sourceButton("クラウド");
+    expect(sourceButton("この Mac")?.getAttribute("aria-pressed")).toBe("true");
+
+    await act(async () => cloudTab?.click());
+    await settle();
+    expect(sourceButton("クラウド")?.getAttribute("aria-pressed")).toBe("true");
+    expect(container.querySelector('nav[aria-label="表示中の場所"]')?.textContent).toContain("クラウド");
+  });
+
+  it("copies only the selected local photo, blocks duplicates, and offers the returned cloud photo", async () => {
+    const { commands } = fakeCommands({ photoBenchEdits: false, rememberedFolder: true, rememberedPhoto: true });
+    const progress: Array<(fraction: number | null) => void> = [];
+    let finish: ((result: { cloudPhotoId: string | null }) => void) | null = null;
+    const copyLocalPhoto = vi.fn((_photoId: string, options: { onProgress: (fraction: number | null) => void }) => {
+      progress.push(options.onProgress);
+      return new Promise<{ cloudPhotoId: string | null }>((resolve) => {
+        finish = resolve;
+      });
+    });
+    await act(async () => {
+      root.render(
+        <App
+          commands={commands}
+          loadAppInfo={async () => null}
+          watchUpdate={async () => () => undefined}
+          cloudBinding={{
+            library: cloudLibrary(commands),
+            host: createLocalPhotoEditingHost(commands),
+            actorId: "personal-user-1",
+            copyLocalPhoto,
+          }}
+        />,
+      );
+    });
+    await settle();
+
+    const sourceSwitch = () => container.querySelector('[role="group"][aria-label="写真の保存先"]');
+    await act(async () => {
+      container.querySelector<HTMLButtonElement>('button[title="海辺.jpg"]')?.click();
+    });
+    const copyButton = () => Array.from(container.querySelectorAll<HTMLButtonElement>("button"))
+      .find((button) => button.textContent === "クラウドにコピー");
+    expect(copyButton()).not.toBeUndefined();
+
+    await act(async () => {
+      copyButton()?.click();
+      copyButton()?.click();
+      await Promise.resolve();
+    });
+    expect(copyLocalPhoto).toHaveBeenCalledTimes(1);
+    expect(copyLocalPhoto.mock.calls[0]?.[0]).toBe("opaque-local-photo");
+    expect(copyButton()?.disabled).toBe(true);
+
+    await act(async () => progress[0]?.(0.42));
+    expect(container.textContent).toContain("クラウドにコピー中… 42%");
+    await act(async () => {
+      Array.from(sourceSwitch()?.querySelectorAll<HTMLButtonElement>("button") ?? [])
+        .find((button) => button.textContent === "クラウド")?.click();
+      await Promise.resolve();
+    });
+    expect(Array.from(sourceSwitch()?.querySelectorAll<HTMLButtonElement>("button") ?? [])
+      .find((button) => button.getAttribute("aria-pressed") === "true")?.textContent).toBe("この Mac");
+    await act(async () => finish?.({ cloudPhotoId: "opaque-cloud-photo" }));
+    await settle();
+    expect(container.textContent).toContain("クラウドにコピーしました。");
+    const openButton = Array.from(container.querySelectorAll<HTMLButtonElement>("button"))
+      .find((button) => button.textContent === "クラウドで開く");
+    expect(openButton).not.toBeUndefined();
+    await act(async () => openButton?.click());
+    await settle();
+    expect(container.querySelector('nav[aria-label="表示中の場所"]')?.textContent).toContain("クラウド");
+  });
+
+  it("keeps a rejected cloud copy as a failure and does not offer opening cloud", async () => {
+    const { commands } = fakeCommands({ photoBenchEdits: false, rememberedFolder: true, rememberedPhoto: true });
+    await act(async () => {
+      root.render(
+        <App
+          commands={commands}
+          loadAppInfo={async () => null}
+          watchUpdate={async () => () => undefined}
+          cloudBinding={{
+            library: cloudLibrary(commands),
+            host: createLocalPhotoEditingHost(commands),
+            actorId: "personal-user-1",
+            copyLocalPhoto: async () => { throw new Error("private detail"); },
+          }}
+        />,
+      );
+    });
+    await settle();
+    await act(async () => container.querySelector<HTMLButtonElement>('button[title="海辺.jpg"]')?.click());
+    await act(async () => {
+      Array.from(container.querySelectorAll<HTMLButtonElement>("button"))
+        .find((button) => button.textContent === "クラウドにコピー")?.click();
+      await Promise.resolve();
+    });
+    await settle();
+    expect(container.textContent).toContain("クラウドにコピーできませんでした。もう一度お試しください。");
+    expect(container.textContent).not.toContain("クラウドにコピーしました。");
+    expect(container.textContent).not.toContain("クラウドで開く");
   });
 
   it("leaves out the version line when the app info is unavailable", async () => {

@@ -1,6 +1,7 @@
 /**
  * 写真編集の react-query の鍵（NIHO camera C1 移行元設計）。編集面（packages/photo-editing）とアプリ（web の `queryKeys.admin.photoEditing`）が
- * 同じ鍵で読み書きする（読み直し・書き換えの接頭辞がそろう）。`spotId` は写真の出どころの単位（web は拠点。ほかのアプリは決まった値）。
+ * 同じ鍵で読み書きする（読み直し・書き換えの接頭辞がそろう）。既存名の `spotId` は認可上の拠点 ID ではなく写真の出どころの
+ * namespace（web は拠点、NIHO photo の個人クラウドは本人と local / cloud の組）として扱う。
  */
 export const photoEditingQueryKeys = {
   /** 拠点で取り込んだプリセット（API） */
@@ -48,7 +49,9 @@ export const photoEditingQueryKeys = {
   /** クラウドの使用量と上限（設定サブタブの「クラウド」。一覧の 1 件だけを読んで `usage` を使う） */
   cloudUsage: (spotId: string | null | undefined) => ["admin", "photoEditing", "cloudUsage", spotId] as const,
   /** 写真のフォルダの木（`PhotoLibrary.folders.tree`。置き場ごと。NIHO camera C3 移行元設計） */
-  folders: (place: "cloud" | "local") => ["admin", "photoEditing", "folders", place] as const,
+  folders: (place: "cloud" | "local", ownerScope?: string) =>
+    ["admin", "photoEditing", "folders", place, ownerScope ?? null] as const,
   /** この Mac の「選んだ写真」の現在も読める件数。 */
-  selectedPhotos: (place: "cloud" | "local") => ["admin", "photoEditing", "selectedPhotos", place] as const,
+  selectedPhotos: (place: "cloud" | "local", ownerScope?: string) =>
+    ["admin", "photoEditing", "selectedPhotos", place, ownerScope ?? null] as const,
 };
