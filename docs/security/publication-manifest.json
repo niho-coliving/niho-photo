@@ -8582,13 +8582,13 @@
     },
     {
       "path": "packages/develop-engine/NIHO8.md",
-      "sha256": "231f39846be1c49e428f4a608b5dff6aeeddc24984bd0f239b4ea6bada99e474",
-      "origin": "公開Issue #26/#27/#29 のため公開済み数式・既存primitiveから独立実装した研究用コード・合成テスト・日本語手順。非公開の写真・参照画素・パス・履歴・第三者ソースを含まない。\n変更理由: 実測に基づくWB節点別fit、旧版を維持する候補のnative/wasm固定hashと再現可能な性能計測を整備。"
+      "sha256": "d941956cea270bf9dfd6c3e0018b617684def397dabaee951ab4b3c3d1af40a1",
+      "origin": "公開Issue #26/#27/#29 のため公開済み数式・既存primitiveから独立実装した研究用コード・合成テスト・日本語手順。非公開の写真・参照画素・パス・履歴・第三者ソースを含まない。\n変更理由: 実測に基づくWB節点別fit、旧版を維持する候補のnative/wasm固定hashと再現可能な性能計測を整備。\n変更理由: Studio実測の段差・WB gate未達・wasm初期解析と継続編集の性能をsource SHA付きで記録。"
     },
     {
       "path": "packages/develop-engine/RESEARCH26-27.md",
-      "sha256": "6d93b33544218e35428598042012c13a2e7173a493fad2cf252e15f20f241378",
-      "origin": "公開Issue #26/#27/#29 のため公開済み数式・既存primitiveから独立実装した研究用コード・合成テスト・日本語手順。非公開の写真・参照画素・パス・履歴・第三者ソースを含まない。\n変更理由: 暗所A/Bで現行niho-6を基準とし、H/S以外の色・黒レベル等を同じ数式で比較する。\n変更理由: 実測に基づくWB節点別fit、旧版を維持する候補のnative/wasm固定hashと再現可能な性能計測を整備。\n変更理由: 非公開出力をrepository外へ限定しsealed独立評価を拒否する、匿名集計の再現手順を追加。"
+      "sha256": "ce386e3d4e10cccb3c1c3df7a49c04130842819f0c1c84bc8b437d76bc28435b",
+      "origin": "公開Issue #26/#27/#29 のため公開済み数式・既存primitiveから独立実装した研究用コード・合成テスト・日本語手順。非公開の写真・参照画素・パス・履歴・第三者ソースを含まない。\n変更理由: 暗所A/Bで現行niho-6を基準とし、H/S以外の色・黒レベル等を同じ数式で比較する。\n変更理由: 実測に基づくWB節点別fit、旧版を維持する候補のnative/wasm固定hashと再現可能な性能計測を整備。\n変更理由: 非公開出力をrepository外へ限定しsealed独立評価を拒否する、匿名集計の再現手順を追加。\n変更理由: Studio実測の段差・WB gate未達・wasm初期解析と継続編集の性能をsource SHA付きで記録。"
     },
     {
       "path": "packages/develop-engine/crates/niho-develop/examples/analytic_hs_probe.rs",
@@ -8634,6 +8634,21 @@
       "path": "packages/develop-engine/tools/color-review-teachers.py",
       "sha256": "48d951ef3161c3e0972de03248422820db6476bf7dc9a3b5fd6a2afbf5c15f37",
       "origin": "公開Issue #26/#29 のため独立実装した既存colorcheck呼出用の開発教師比較tool。入力は利用者指定、非公開の写真・パス・scene名・参照画素をsourceへ含めず匿名数値だけを公開する。"
+    },
+    {
+      "path": "packages/develop-engine/fixtures/color/review-2026-10-20/float-cubes.json",
+      "sha256": "0c719ab3947ce36b961493c184e6c2a9303d77de142c8581074254659889bcca",
+      "origin": "2026-10-20のStudio実測。公開済みLUTまたは独立した合成画像から計測し、source commit・実行環境・適用範囲とともに数値だけを記録。実写真・非公開参照画素を含まない。"
+    },
+    {
+      "path": "packages/develop-engine/fixtures/color/review-2026-10-20/linear-jpeg-wb.json",
+      "sha256": "b1a4fff8d50fc3e7cfa5c948b37a354b4b403fd196369210584c28e641f3f72f",
+      "origin": "2026-10-20のStudio実測。公開済みLUTまたは独立した合成画像から計測し、source commit・実行環境・適用範囲とともに数値だけを記録。実写真・非公開参照画素を含まない。"
+    },
+    {
+      "path": "packages/develop-engine/fixtures/color/review-2026-10-20/wasm-performance.json",
+      "sha256": "83f878d7d79600d57cf87bc03c3a0a3a1915459a71872986eff2344582165015",
+      "origin": "2026-10-20のStudio実測。公開済みLUTまたは独立した合成画像から計測し、source commit・実行環境・適用範囲とともに数値だけを記録。実写真・非公開参照画素を含まない。"
     }
   ],
   "excludedSources": [

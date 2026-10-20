@@ -17,7 +17,9 @@ cargo +1.98.1 run --release --locked \
   > /tmp/linear-jpeg-wb-fit.json
 ```
 
-この worker では Cargo/fitting を実行していないため実測値は未記入である。Studio 結果で `validationAllTen.meanGateMet` が false なら候補は calibration gate 不合格、true でも preset + WB の独立 Lightroom reference が無いため production へ入れない。
+2026-10-20、Studioで固定Rust 1.98.1のfitを実行した。[公開chartの測定結果](fixtures/color/review-2026-10-20/linear-jpeg-wb.json)は全10条件meanΔE00=6.3315、fit未使用の2複合条件mean=5.2123で、各条件mean≤0.5のgateに未達だった。このBradford候補は採用しない。表示色の測定結果であり、方式一般の不可能性を示すものではない。
+
+Studio 結果で `validationAllTen.meanGateMet` が false なら候補は calibration gate 不合格、true でも preset + WB の独立 Lightroom reference が無いため production へ入れない。
 
 ## #26 analytic image-adaptive H/S candidate B
 

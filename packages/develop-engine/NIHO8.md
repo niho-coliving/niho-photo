@@ -19,7 +19,7 @@
 - 入力8bit量子化のないlinear f32合成 1024-step sky / skin ramp（rasterとlegacy RAW） の隣接差 `>= 2`、同値隣接、最大隣接差
 - 1024×64ランプのnative cold render時間（wasm性能gateとは区別）
 
-Mac Studio で exact reviewed SHA を push 後に実行する（この文書を追加した worker では Cargo 実行を禁止しているため、数値は未記入であり合格主張もしない）。
+Mac Studioでexact commitをpush後に実行する。2026-10-20の測定結果とsource commitは下記JSONへ記録した。
 
 ```sh
 cargo +1.98.1 run --release --locked \
@@ -51,3 +51,12 @@ wasm-bindgen --target nodejs --out-dir /tmp/niho8-wasm \
   packages/develop-engine/target/wasm32-unknown-unknown/release/niho_develop_wasm.wasm
 node packages/develop-engine/tools/color-review-wasm-bench.cjs /tmp/niho8-wasm/niho_develop_wasm.js
 ```
+
+
+## 2026-10-20の計測
+
+[float cube測定](fixtures/color/review-2026-10-20/float-cubes.json)では、linear f32の1024段ランプの隣接差≥2は、legacy RAWの空色が1→0、肌色は0→0。rasterの空・肌はともに0→0だった。この入力ではRAWの1件だけ改善し、rasterの段差減少を実証したとは言わない。公開golden inputとの差はJSONに残し、Photo Bench/Lightroomへの一致とは区別する。
+
+[Studio/Node/wasm SIMD計測](fixtures/color/review-2026-10-20/wasm-performance.json)は合成1024×768・同一設定で、niho-8の編集中5フレームの最大65.2ms、初回drag後の確定描画448.9ms、解析込み最初のInteractive966.0msだった。継続編集100ms・確定1秒の目安はこの環境では維持したが、初回解析は100ms内に収まらない（niho-6も1148.3ms）。各engineは同一processで6→8の順に測るため、cold値を公平な速度比較や実ブラウザ全般の保証には使わない。
+
+既存niho-6のFinalと候補niho-8のFinal/Interactive固定画素テストはnative/wasm両方で一致した。candidateでも保存されたengineの意味は固定する。今後WBや暗所H/Sの式を採用する場合は別engineとして追加し、niho-8の画素を後から変えない。
