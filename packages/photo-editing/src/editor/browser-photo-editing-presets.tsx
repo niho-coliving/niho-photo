@@ -11,6 +11,7 @@ import {
 import { isNeutralDevelopColors, type DevelopSettings } from "../develop-engine/develop-settings";
 import { PHOTO_EDITING_PRESET_AMOUNT_LABEL } from "../photo-editing-copy";
 
+import type { BrowserPhotoPresetsVariant } from "./browser-photo-editing-model";
 import type { PhotoEditingPresetSaveInput } from "./photo-editing-preset-dialogs";
 import { PhotoEditingPresetsPanel, type PhotoEditingPresetSaveCurrent } from "./photo-editing-presets-panel";
 import { PhotoEditingSlider } from "./photo-editing-slider";
@@ -56,6 +57,13 @@ export function BrowserPhotoEditingPresets(props: {
   dragging: boolean;
   /** wasm にある口（面が 1 回確かめて覚える。`useBrowserPhotoPresetSupport`） */
   support: BrowserPhotoPresetSupport;
+  /**
+   * 描き方（niho-photo#51）。`row` は補正の面の 1 行（今のプリセット名と一覧を開くボタンだけ。見本は描かない）、`panel` はプリセットの
+   * 面いっぱいの一覧。どちらか一方だけを描く（見本の計算を 2 つ起こさない）
+   */
+  variant: BrowserPhotoPresetsVariant;
+  /** `row` の今のプリセット名・一覧のボタンを押した（プリセットの面を開く） */
+  onOpenPanel?: () => void;
 }) {
   const { presets, settings, engineRef, support } = props;
   const amountSliderId = useId();
@@ -64,7 +72,8 @@ export function BrowserPhotoEditingPresets(props: {
   const thumbnails = useBrowserPresetThumbnails({
     mountedRef: props.mountedRef,
     engineRef,
-    supported: support.thumbnails,
+    // 1 行の形は見本を描かない（計算も起こさない）
+    supported: support.thumbnails && props.variant !== "row",
     photoKey: props.photoKey,
     // 選ばれているプリセットがあれば当てる前の補正、無ければ今の補正に当てた絵
     base: presets.selectedBase ?? settings,
@@ -118,6 +127,8 @@ export function BrowserPhotoEditingPresets(props: {
       belowList={amountSlider}
       saveCurrent={support.settingsToXmp ? saveCurrent : undefined}
       onSpotPresetKeysChange={presets.reconcileSpotPresetKeys}
+      variant={props.variant}
+      onOpenPanel={props.onOpenPanel}
     />
   );
 }

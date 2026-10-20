@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState, type MutableRefObject, type ReactElement, type ReactNode } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { FolderOpen, Laptop, Plus, Trash2 } from "lucide-react";
+import { Contrast, Crop, FolderOpen, Laptop, Plus, Scissors, SlidersHorizontal, Trash2 } from "lucide-react";
 
 import { formatPhotoCloudUsage } from "../photo-library-usage";
 import { inertAttribute } from "niho-ui/inert-attribute";
@@ -54,7 +54,11 @@ import {
   PHOTO_EDITING_LOCAL_PLACE_LABEL,
   PHOTO_EDITING_ADD_FOLDER_LABEL,
   PHOTO_EDITING_ADD_SELECTED_PHOTOS_LABEL,
+  PHOTO_EDITING_PRESETS_TITLE,
   PHOTO_EDITING_SELECTED_PHOTOS_LABEL,
+  PHOTO_EDITING_TOOL_ADJUST_LABEL,
+  PHOTO_EDITING_TOOL_CROP_LABEL,
+  PHOTO_EDITING_TOOL_CUTOUT_LABEL,
 } from "../photo-editing-copy";
 import { movePhotoEditingPhotoId } from "../photo-editing-selection";
 import { photoEditingTileGeometry } from "../photo-editing-tile-geometry";
@@ -114,6 +118,7 @@ import {
   type ArrowKeyEvent,
   type BrowserPhotoAccess,
   type BrowserPhotoOperation,
+  type BrowserPhotoAdjustPanel,
   type BrowserPhotoOperationKind,
   type BrowserPhotoTool,
   type BrowserViewMode,
@@ -126,6 +131,7 @@ import {
   browserPhotoBatchFavoriteLabel,
 } from "./browser-photo-editing-selection-bar";
 import { BrowserPhotoEditingPresets } from "./browser-photo-editing-presets";
+import { BrowserPhotoEditingToolRail, type BrowserPhotoEditingToolRailItem } from "./browser-photo-editing-tool-rail";
 import {
   BrowserPhotoEditingPlaceTabs,
   BrowserPhotoEditingTree,
@@ -719,7 +725,9 @@ export function BrowserPhotoEditingWorkbench(props: {
   }, [crop, cropping, cutoutBlocksCrop, wasmPhotoKey]);
   /** 右パネルの今の道具（理由だけを出している「切り抜き」も「切り抜き」） */
   const toolValue: BrowserPhotoTool = cropping ? "crop" : cutoutActive ? "cutout" : cropBlocked ? "crop" : "adjust";
-  /** この写真で使える道具（「補正」のほかに無ければ切り替えを出さない） */
+  /** 道具が「補正」の間に右パネルに出す面（右端の帯の「プリセット」「補正」。写真を替えても保つ。niho-photo#51） */
+  const [adjustPanel, setAdjustPanel] = useState<BrowserPhotoAdjustPanel>("adjust");
+  /** この写真で使える道具（右端の帯に並べる） */
   const tools: BrowserPhotoTool[] = ["adjust"];
   if (crop.available) tools.push("crop");
   if (cutout.available) tools.push("cutout");
@@ -780,6 +788,58 @@ export function BrowserPhotoEditingWorkbench(props: {
     }),
     [readyDevelopEngine],
   );
+  // 右パネルのプリセット（帯の「プリセット」と補正の面のプリセットの行）を出せる写真。S1 の canvas（段 2 を使えない）には出さない。
+  // 狭い幅は右パネルを見せない（wasm も起こさない）ので、プリセットも読まない
+  const presetsAvailable = !canvasOnly && wide;
+  // プリセットを出せない写真は補正の面（選んだ面は覚えたままにし、出せる写真に戻ったらその面に戻す）
+  const shownAdjustPanel: BrowserPhotoAdjustPanel = presetsAvailable ? adjustPanel : "adjust";
+  /** 道具が「補正」の間の面を選ぶ（ほかの道具の間は、補正の道具に戻してから） */
+  const chooseAdjustPanel = (next: BrowserPhotoAdjustPanel) => {
+    if (toolValue !== "adjust") chooseTool("adjust");
+    setAdjustPanel(next);
+  };
+  // 右端の道具の帯（niho-photo#51）。切り抜き・背景除去に入る・出るのは今までの切り替えと同じ間だけ押せる。補正とプリセットの
+  // 行き来は見せ方だけなので、補正の道具の間はいつでも押せる
+  const toolSwitchDisabled = controlsDisabled || cutout.running;
+  const toolRailItems: BrowserPhotoEditingToolRailItem[] = [];
+  if (presetsAvailable) {
+    toolRailItems.push({
+      key: "presets",
+      label: PHOTO_EDITING_PRESETS_TITLE,
+      icon: Contrast,
+      pressed: toolValue === "adjust" && shownAdjustPanel === "presets",
+      disabled: toolValue !== "adjust" && toolSwitchDisabled,
+      onSelect: () => chooseAdjustPanel("presets"),
+    });
+  }
+  toolRailItems.push({
+    key: "adjust",
+    label: PHOTO_EDITING_TOOL_ADJUST_LABEL,
+    icon: SlidersHorizontal,
+    pressed: toolValue === "adjust" && shownAdjustPanel === "adjust",
+    disabled: toolValue !== "adjust" && toolSwitchDisabled,
+    onSelect: () => chooseAdjustPanel("adjust"),
+  });
+  if (tools.includes("crop")) {
+    toolRailItems.push({
+      key: "crop",
+      label: PHOTO_EDITING_TOOL_CROP_LABEL,
+      icon: Crop,
+      pressed: toolValue === "crop",
+      disabled: toolSwitchDisabled,
+      onSelect: () => chooseTool("crop"),
+    });
+  }
+  if (tools.includes("cutout")) {
+    toolRailItems.push({
+      key: "cutout",
+      label: PHOTO_EDITING_TOOL_CUTOUT_LABEL,
+      icon: Scissors,
+      pressed: toolValue === "cutout",
+      disabled: toolSwitchDisabled,
+      onSelect: () => chooseTool("cutout"),
+    });
+  }
   // スマホで直せる拠点の狭い幅は、直せる写真の 1 枚を全画面の編集の層で開く（F6c 移行元設計）。直せない写真は今の表示のまま
   const mobileEditorItem = mobileLayer && showAdjustments ? loupeItem : null;
 
@@ -1566,12 +1626,13 @@ export function BrowserPhotoEditingWorkbench(props: {
           "grid grid-cols-1 grid-rows-[minmax(0,1fr)_auto] lg:grid-rows-[minmax(0,1fr)_3.5rem]",
           // web の写真編集タブは画面の高さから引いた固定の高さ。NIHO photo（fill）は親の flex に合わせて窓の底まで
           props.appearance === "fill" ? "min-h-0 flex-1" : "min-h-[520px] lg:h-[calc(100dvh-12rem)] lg:min-h-[620px]",
+          // 右パネルがあるときは、その右に道具の帯（niho-photo#51）
           props.treeHidden
             ? showAdjustments
-              ? "lg:grid-cols-[minmax(0,1fr)_19rem]"
+              ? "lg:grid-cols-[minmax(0,1fr)_15.5rem_2.75rem]"
               : "lg:grid-cols-[minmax(0,1fr)]"
             : showAdjustments
-              ? "lg:grid-cols-[14rem_minmax(0,1fr)_19rem]"
+              ? "lg:grid-cols-[14rem_minmax(0,1fr)_15.5rem_2.75rem]"
               : "lg:grid-cols-[14rem_minmax(0,1fr)]",
         )}
       >
@@ -1883,35 +1944,32 @@ export function BrowserPhotoEditingWorkbench(props: {
                 : undefined
             }
             presets={
-              // S1 の canvas（段 2 を使えない）の写真には出さない。作業コピーを待っている間・閲覧のみ・操作の途中は押せない。
-              // 狭い幅は右パネルを見せない（wasm も起こさない）ので、プリセットも読まない
-              canvasOnly || !wide ? undefined : (
-                <BrowserPhotoEditingPresets
-                  spotId={props.spotId}
-                  canEdit={props.canEdit}
-                  builtinPresets={builtinPresets}
-                  presets={presets}
-                  // 別の端末の補正を読み直している間は当てない（読み直した補正が入る）
-                  staleReloading={staleReloading || draftRecoveryPending}
-                  mountedRef={mountedRef}
-                  engineRef={develop.engineRef}
-                  photoKey={wasmPhotoKey}
-                  settings={settings}
-                  dragging={open.dragging}
-                  support={presetSupport}
-                />
-              )
-            }
-            tool={
-              tools.length > 1
-                ? {
-                    tools,
-                    value: toolValue,
-                    disabled: controlsDisabled || cutout.running,
-                    onChange: chooseTool,
-                  }
+              // S1 の canvas（段 2 を使えない）の写真・狭い幅には出さない（`presetsAvailable`）。作業コピーを待っている間・閲覧のみ・
+              // 操作の途中は押せない。補正の面の 1 行（row）とプリセットの面（panel）のどちらか一方だけを描く
+              presetsAvailable
+                ? (view) => (
+                    <BrowserPhotoEditingPresets
+                      spotId={props.spotId}
+                      canEdit={props.canEdit}
+                      builtinPresets={builtinPresets}
+                      presets={presets}
+                      // 別の端末の補正を読み直している間は当てない（読み直した補正が入る）
+                      staleReloading={staleReloading || draftRecoveryPending}
+                      mountedRef={mountedRef}
+                      engineRef={develop.engineRef}
+                      photoKey={wasmPhotoKey}
+                      settings={settings}
+                      dragging={open.dragging}
+                      support={presetSupport}
+                      variant={view.variant}
+                      onOpenPanel={view.onOpenPanel}
+                    />
+                  )
                 : undefined
             }
+            tool={toolValue}
+            panel={shownAdjustPanel}
+            onOpenPresets={() => setAdjustPanel("presets")}
             cropTools={
               cropping && crop.source ? (
                 <PhotoEditingCropTools
@@ -1968,6 +2026,8 @@ export function BrowserPhotoEditingWorkbench(props: {
             onSettingsChange={open.changeSettings}
           />
         ) : null}
+        {/* 右パネルの右の道具の帯（grid の 4 列目。押した道具で右パネルを丸ごと入れ替える） */}
+        {showAdjustments && !mobileEditorItem ? <BrowserPhotoEditingToolRail items={toolRailItems} /> : null}
 
         <BrowserPhotoEditingFooter
           viewMode={viewMode}

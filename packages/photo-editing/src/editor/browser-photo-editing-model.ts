@@ -181,6 +181,15 @@ export type BrowserViewMode = "grid" | "loupe";
 /** 右パネルの道具（補正 / 切り抜き。F3b 移行元設計。背景除去は NIHO camera だけ。C4 移行元設計）。 */
 export type BrowserPhotoTool = "adjust" | "crop" | "cutout";
 
+/**
+ * 道具が「補正」の間に右パネルに出す面（niho-photo#51）。`adjust` は自動 / 白黒・プリセットの行・補正の群、`presets` はプリセットの
+ * 一覧だけ。右端の道具の帯の「プリセット」「補正」で切り替え、写真を替えても保つ（Lightroom と同じ）。
+ */
+export type BrowserPhotoAdjustPanel = "adjust" | "presets";
+
+/** 補正の面に置くプリセットの部品の形（`row` は補正の群の上の 1 行、`panel` はプリセットの面いっぱいの一覧）。 */
+export type BrowserPhotoPresetsVariant = "row" | "panel";
+
 /** 非同期の処理が終わったときに確かめる、最新の権限と拠点。 */
 export type BrowserPhotoAccess = { canEdit: boolean; cloudOriginalsAllowed: boolean; spotId: string };
 
