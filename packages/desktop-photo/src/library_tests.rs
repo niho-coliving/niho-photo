@@ -126,11 +126,13 @@ fn folder_and_individual_additions_validate_real_imageio_rasters() {
   let jpeg = fixture.root().join("actual.JpEg");
   let tiff = fixture.root().join("actual.TiFf");
   let heic = fixture.root().join("actual.HeIc");
+  let heif = fixture.root().join("actual.HeIf");
   convert_with_sips(&png, "jpeg", &jpeg);
   convert_with_sips(&png, "tiff", &tiff);
   convert_with_sips(&png, "heic", &heic);
+  fs::copy(&heic, &heif).unwrap();
 
-  let actual = [&png, &jpeg, &tiff, &heic];
+  let actual = [&png, &jpeg, &tiff, &heic, &heif];
   let library = fixture.library();
   let folder = library.add_folder(&fixture.root()).unwrap();
   let individually_added = library.add_photos(&actual.iter().map(|path| (*path).clone()).collect::<Vec<_>>());
@@ -379,7 +381,7 @@ fn page_values_have_the_agreed_shape_and_never_contain_a_path() {
   entry_keys.sort();
   assert_eq!(entry_keys, ["entryId", "fileName", "kind", "modifiedAt", "sizeBytes"]);
   assert_eq!(raw["kind"], "raw");
-  assert_eq!(raw["sizeBytes"], "photo 2026/09/24/P1524180.RW2".len());
+  assert_eq!(raw["sizeBytes"], fs::metadata(&photo).unwrap().len());
   assert_eq!(raw["modifiedAt"], "2026-09-24T07:39:13.250Z");
   assert_no_path(&folder);
 }
@@ -919,7 +921,7 @@ fn add_photos_returns_folder_list_entries_without_paths_and_remembers_them() {
   assert!(raw_entry["entryId"].as_str().unwrap().starts_with("entry-"));
   assert_eq!(raw_entry["kind"], "raw");
   assert_eq!(photos[0]["kind"], "raster");
-  assert_eq!(raw_entry["sizeBytes"], "photo 2026/09/24/P1524180.RW2".len());
+  assert_eq!(raw_entry["sizeBytes"], fs::metadata(&raw).unwrap().len());
   assert_eq!(raw_entry["modifiedAt"], "2026-09-24T07:39:13.250Z");
   assert_no_path(&Value::Array(photos.clone()));
   assert!(fixture.has_log("photo_editing.photos_added"));

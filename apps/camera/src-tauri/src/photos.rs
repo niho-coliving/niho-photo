@@ -125,8 +125,11 @@ impl CameraPhotos {
   /// 写真を開く（中身の SHA-256 を読む）。ふつうのファイルでない・読めないときは Err。
   pub fn open(&self, entry_id: &str, path: &Path) -> Result<(String, OpenedPhoto), CameraError> {
     let unreadable = || CameraError::new(code::NOT_FOUND, PHOTO_UNREADABLE_MESSAGE);
-    validate_photo(path, CapabilityStage::Decoder).map_err(CameraError::from)?;
     let metadata = std::fs::metadata(path).map_err(|_| unreadable())?;
+    if !metadata.is_file() {
+      return Err(unreadable());
+    }
+    validate_photo(path, CapabilityStage::Decoder).map_err(CameraError::from)?;
     let digest = content_digest(path).map_err(|_| unreadable())?;
     let photo = OpenedPhoto {
       entry_id: entry_id.to_string(),

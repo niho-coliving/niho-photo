@@ -3448,10 +3448,11 @@
         "path": "apps/camera/src-tauri/src/photos.rs",
         "sha256": "c4a821c9654687fc6f2ab7304d9d7e1b3d8baeb3b5245b12816408bb405b7090"
       },
-      "outputSha256": "cab3fca33f128818c585a50d9c9ccade2c946d7bd2714609cdc401b57788346b",
+      "outputSha256": "5fa3e601d45944346312d1a61117f90c4e8c5ccc7e8f424318426b260408da75",
       "modifications": [
         "Issue #5の共有入力能力レジストリ、段階別検証、公開回帰契約に合わせて更新。",
-        "Issue #5親レビューに従い形式検査・エラー保持・実decoder公開CI回帰を補強。"
+        "Issue #5親レビューに従い形式検査・エラー保持・実decoder公開CI回帰を補強。",
+        "存在しない写真は形式判定より先にnotFoundを返し、従来のエラー契約を保つ。"
       ]
     },
     {
@@ -3964,7 +3965,7 @@
         "path": "packages/desktop-photo/src/library_tests.rs",
         "sha256": "7eea84c71f88468f287f2eea5f906dcd878c05294a5bd5d8c4b2442d5eb4861d"
       },
-      "outputSha256": "966b9ef13d58be31dec73dc1b086c02a755528a7694f30b49f73cbaff7956861",
+      "outputSha256": "5a47828d7bbab03633701c10a0b476153f213fb5255fe3fbe1102fe909aad283",
       "modifications": [
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
         "private絶対path guardに合わせ、合成テスト用のpathを予約済み/test-data配下へ正規化。実装の挙動は変更しない。",
@@ -3973,7 +3974,8 @@
         "Issue #5の共有入力能力レジストリ、段階別検証、公開回帰契約に合わせて更新。",
         "Issue #5親レビューに従い形式検査・エラー保持・実decoder公開CI回帰を補強。",
         "合成PNGを32x24へ拡大してHEIC encoder回帰を安定化。",
-        "実ImageIO UTIを能力レジストリの許可値と照合する回帰へ調整。"
+        "実ImageIO UTIを能力レジストリの許可値と照合する回帰へ調整。",
+        "実ファイル長で一覧metadataを検証し、HEIF別名も実ImageIO回帰へ含める。"
       ]
     },
     {
