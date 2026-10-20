@@ -8,6 +8,17 @@
 @import "tailwindcss";
 @import "niho-ui/styles/tokens.css";
 
+/*
+ * NIHO photo の地（owner 決定 2026-10-21・niho-photo#50）: Claude アプリと同じ、限りなく白に近い暖かい白。web の token は
+ * 変えず、写真アプリの :root でだけ surface と card（titlebar）を差し替える。編集面の大きな面（packages/photo-editing）は
+ * `--photo-editing-surface` を読む（web では白のまま）。中央の写真の面もパネルと同じ色。
+ */
+:root {
+  --niho-surface: #FCFBF9;
+  --niho-card: #FCFBF9;
+  --photo-editing-surface: var(--niho-surface);
+}
+
 .photo-titlebar {
   display: flex;
   flex: none;

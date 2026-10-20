@@ -1,7 +1,7 @@
 import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { App, PHOTO_BENCH_NOTICE_DISMISSED_KEY, PHOTO_BENCH_NOTICE_TEXT } from "./App";
+import { App, PHOTO_BENCH_NOTICE_DISMISSED_KEY, PHOTO_BENCH_NOTICE_TEXT, PHOTO_TREE_HIDDEN_KEY } from "./App";
 import { createCameraCommands, type Invoke } from "./local-library/commands";
 
 // React 18 の act を jsdom で使う
@@ -140,7 +140,13 @@ describe("App", () => {
     ).toBe(true);
     // 窓の上の帯に表示中の場所
     expect(container.querySelector('nav[aria-label="表示中の場所"]')?.textContent).toBe("この Mac");
-    expect(container.querySelector(":scope > div > footer")?.textContent).toBe("版 0.1.4");
+    // 版は左の木の底（下段の帯は無い）
+    expect(container.querySelector(":scope > div > footer")).toBeNull();
+    expect(container.querySelector('aside[aria-label="写真の場所"]')?.textContent).toContain("版 0.1.4");
+    // 編集面は窓いっぱい（web の角丸の枠と固定の高さを使わない）
+    const surface = container.querySelector('section[aria-label="ブラウザ写真編集"]');
+    expect(surface?.className).toContain("flex-1");
+    expect(surface?.className).not.toContain("rounded-2xl");
     expect(notice()).toBeNull();
     expect(calls).toContain("camera_library_remembered");
     expect(calls).toContain("camera_develop_status");
@@ -149,7 +155,24 @@ describe("App", () => {
   it("leaves out the version line when the app info is unavailable", async () => {
     const { commands } = fakeCommands({ photoBenchEdits: false });
     await render(commands, null);
-    expect(container.querySelector(":scope > div > footer")?.textContent).toBe("");
+    expect(container.querySelector('aside[aria-label="写真の場所"]')?.textContent).not.toContain("版");
+  });
+
+  it("hides and shows the left panel from the header and remembers it on this Mac", async () => {
+    const { commands } = fakeCommands({ photoBenchEdits: false });
+    await render(commands);
+    const toggle = () => container.querySelector<HTMLButtonElement>('button[aria-label="左のパネル"]');
+    expect(toggle()?.getAttribute("aria-pressed")).toBe("true");
+    expect(container.querySelector('aside[aria-label="写真の場所"]')).not.toBeNull();
+
+    await act(async () => toggle()?.click());
+    expect(toggle()?.getAttribute("aria-pressed")).toBe("false");
+    expect(container.querySelector('aside[aria-label="写真の場所"]')).toBeNull();
+    expect(window.localStorage.getItem(PHOTO_TREE_HIDDEN_KEY)).toBe("1");
+
+    await act(async () => toggle()?.click());
+    expect(container.querySelector('aside[aria-label="写真の場所"]')).not.toBeNull();
+    expect(window.localStorage.getItem(PHOTO_TREE_HIDDEN_KEY)).toBeNull();
   });
 
   it("shows the Photo Bench notice once and never again after it is closed on this Mac", async () => {
