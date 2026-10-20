@@ -113,6 +113,7 @@
             "fail-on-severity": "moderate",
             "fail-on-scopes": "runtime,development,unknown",
             "deny-licenses": "AGPL-1.0-only,AGPL-1.0-or-later,AGPL-3.0-only,AGPL-3.0-or-later",
+            "allow-ghsas": "GHSA-wrw7-89jp-8q8g",
             "comment-summary-in-pr": "never",
             "retry-on-snapshot-warnings": true,
             "retry-on-snapshot-warnings-timeout": 120

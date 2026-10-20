@@ -1,0 +1,176 @@
+/*
+ * 公開移植前の内部構成については docs/migration/mac-client.md を参照。
+ *
+ * 公開移植前の内部構成については docs/migration/mac-client.md を参照。
+ * Tailwind のテーマ（packages/ui/tailwind-theme.cjs）が読む CSS 変数と、それらが読む変数（var(--…) の連鎖）、.dark の上書き、
+ * App Sans の「NIHO Sans」の @font-face と --font-family-sans だけを写す。web の画面だけの変数（--pl-*・--wiki-*・host の面など）は
+ * 公開移植前の内部構成については docs/migration/mac-client.md を参照。
+ * web のアプリ以外（NIHO camera など）がこのファイルを読み込み、同じテーマで描く。
+ */
+
+/*
+ * App Sans の実体「NIHO Sans」（#16764。globals.css と同じ）。細字は ヒラギノ丸ゴ ProN W4、600 以上は ヒラギノ角ゴシック の
+ * 実ウェイトへ local() で束ね、合成太字を作らない。日本語 web font は配信しない。
+ */
+@font-face {
+  font-family: "NIHO Sans";
+  font-weight: 100 500;
+  src: local("Hiragino Maru Gothic ProN W4"), local("HiraMaruProN-W4");
+}
+@font-face {
+  font-family: "NIHO Sans";
+  font-weight: 600 700;
+  src: local("Hiragino Sans W6"), local("HiraginoSans-W6");
+}
+@font-face {
+  font-family: "NIHO Sans";
+  font-weight: 800;
+  src: local("Hiragino Sans W7"), local("HiraginoSans-W7");
+}
+@font-face {
+  font-family: "NIHO Sans";
+  font-weight: 900;
+  src: local("Hiragino Sans W8"), local("HiraginoSans-W8");
+}
+/* web の NIHO Latin と同じ定義。Mac アプリでは同梱 asset をローカルで読む。 */
+@font-face {
+  font-family: "NIHO Latin";
+  font-style: normal;
+  font-weight: 200 900;
+  font-display: optional;
+  src: url("../fonts/nunito-latin-variable.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+:root {
+  --font-family-sans: "NIHO Latin", "NIHO Sans", "Hiragino Maru Gothic ProN", "Hiragino Sans",
+    "Hiragino Kaku Gothic ProN", "Yu Gothic", "Meiryo", -apple-system,
+    BlinkMacSystemFont, system-ui, ui-rounded, "Segoe UI", Roboto, Arial, sans-serif;
+
+  /* ── ブランドグリーン ── */
+  --niho:               #B2D67C;
+  --niho-soft:          #BCD499;
+  --niho-deep:          #63A109;
+  --niho-dark:          #4B9E5E;
+  --niho-dark-hover:    #3F8A50;
+  --niho-accent:        var(--niho-dark);
+  --niho-accent-hover:  var(--niho-dark-hover);
+  --niho-pale:          var(--niho-accent-soft);
+
+  /* ── CTA グラデーション ── */
+  --niho-gradient-from: #7DBA3A;
+  --niho-gradient-to:   #63A109;
+
+  /* ── 主ボタン（.niho-primary-surface。面と文字を必ずセットで当てる） ── */
+  --niho-primary-bg:       linear-gradient(140deg, #7DBA3A 0%, #63A109 100%);
+  --niho-primary-bg-hover: linear-gradient(140deg, #74B033 0%, #5C9508 100%);
+  --niho-primary-ink:      #FFFFFF;
+
+  /* 白地に載せる操作色（文字・アイコン・選択状態の面） */
+  --niho-accent-ink:  #46811F;
+  --niho-accent-soft: #EEF6E1;
+
+  /* ── サーフェス ── */
+  --niho-surface:       #FFFCF5;
+  --niho-surface-warm:  #F0EDE6;
+  --niho-surface-cream: #FFFCF5;
+  --niho-surface-subtle: #F5F6F1;
+  --niho-docs-surface: #FCFCFB;
+
+  /* ── テキスト ── */
+  --niho-text:          #1C1C1A;
+  --niho-text-sub:      #4A4A44;
+  --niho-text-muted:    #8A8A82;
+
+  /* ── ボーダー・区切り ── */
+  --niho-border:        #F0F0EB;
+
+  /* ── セマンティック ── */
+  --niho-orange:        #C8713A;
+  --niho-orange-pale:   #FAF0E6;
+  --niho-notify:        #E87A5E;
+  --niho-danger:        #B42318;
+  --niho-mention:       #3C76C8;
+  --niho-mention-hover: #3268B4;
+  --niho-mention-soft:  #EAF2FF;
+  --niho-info:          #1E4EA8;
+  --niho-info-soft:     #EAF2FF;
+  --niho-info-border:   #C9D9FF;
+
+  /* ── 部品の色（HSL の成分。テーマは hsl(var(--…)) で読む。web は @layer base の :root に置く） ── */
+  --background: 0 0% 100%;
+  --foreground: 60 3.7% 10.6%;
+  --card: 0 0% 100%;
+  --card-foreground: 60 3.7% 10.6%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 60 3.7% 10.6%;
+  --primary: 0 0% 9%;
+  --primary-foreground: 0 0% 98%;
+  --secondary: 0 0% 96.1%;
+  --secondary-foreground: 60 3.7% 10.6%;
+  --muted: 0 0% 96.1%;
+  --muted-foreground: 0 0% 45.1%;
+  --accent: 0 0% 96.1%;
+  --accent-foreground: 60 3.7% 10.6%;
+  --destructive: 0 84.2% 60.2%;
+  --destructive-foreground: 0 0% 98%;
+  --border: 0 0% 89.8%;
+  --input: 0 0% 89.8%;
+  --ring: 60 3.7% 10.6%;
+  --chart-1: 12 76% 61%;
+  --chart-2: 173 58% 39%;
+  --chart-3: 197 37% 24%;
+  --chart-4: 43 74% 66%;
+  --chart-5: 27 87% 67%;
+  --radius: 0.5rem;
+}
+
+/* 暗い面（class="dark" の内側。web と同じ上書き） */
+.dark {
+  --background: 0 0% 3.9%;
+  --foreground: 0 0% 98%;
+  --card: 0 0% 3.9%;
+  --card-foreground: 0 0% 98%;
+  --popover: 0 0% 3.9%;
+  --popover-foreground: 0 0% 98%;
+  --primary: 0 0% 98%;
+  --primary-foreground: 0 0% 9%;
+  --secondary: 0 0% 14.9%;
+  --secondary-foreground: 0 0% 98%;
+  --muted: 0 0% 14.9%;
+  --muted-foreground: 0 0% 63.9%;
+  --accent: 0 0% 14.9%;
+  --accent-foreground: 0 0% 98%;
+  --destructive: 0 62.8% 30.6%;
+  --destructive-foreground: 0 0% 98%;
+  --border: 0 0% 14.9%;
+  --input: 0 0% 14.9%;
+  --ring: 0 0% 83.1%;
+  --chart-1: 220 70% 50%;
+  --chart-2: 160 60% 45%;
+  --chart-3: 30 80% 55%;
+  --chart-4: 280 65% 60%;
+  --chart-5: 340 75% 55%;
+}
+
+/*
+ * 共有の部品（packages/photo-editing・packages/ui）が使う、Tailwind のユーティリティでない面の class。web の globals.css の
+ * 公開移植前の内部構成については docs/migration/mac-client.md を参照。
+ */
+@layer utilities {
+  /* 主ボタン。面と文字を必ずセットで当てる。 */
+  .niho-primary-surface {
+    background: var(--niho-primary-bg);
+    color: var(--niho-primary-ink);
+  }
+  /* hover は操作できる要素だけに出す（静的な面には反応させない）。 */
+  .niho-primary-surface:is(button, a, [role="button"]):hover:not(:disabled):not([aria-disabled="true"]) {
+    background: var(--niho-primary-bg-hover);
+  }
+
+  /* 選択中タブ・選択済みチップなど「塗って選択を示す面」。 */
+  .niho-accent-surface {
+    background-color: var(--niho-accent-ink);
+    color: #ffffff;
+  }
+}

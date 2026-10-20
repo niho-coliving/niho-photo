@@ -19,6 +19,8 @@ for (const [name, mutate] of [
   ["shell injection", (w) => { w.jobs.plan.steps.push({ run: "echo '${{ github.event.pull_request.title }}'" }); }],
   ["aggregate bypass", (w) => { w.jobs.aggregate.needs = ["plan"]; }],
   ["concurrency disabled", (w) => { w.concurrency["cancel-in-progress"] = false; }],
+  ["unreviewed advisory exception", (w) => { w.jobs.dependencies.steps[1].with["allow-ghsas"] += ",GHSA-0000-0000-0000"; }],
+  ["weaker vulnerability threshold", (w) => { w.jobs.dependencies.steps[1].with["fail-on-severity"] = "high"; }],
 ]) test(`workflowの危険な変更を拒否: ${name}`, () => {
   const changed = structuredClone(workflow);
   mutate(changed);

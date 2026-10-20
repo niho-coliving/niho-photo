@@ -19,7 +19,9 @@
     "./drag-transfer": "./src/drag-transfer.ts",
     "./inert-attribute": "./src/inert-attribute.ts",
     "./local-storage-safe": "./src/local-storage-safe.ts",
-    "./package.json": "./package.json"
+    "./package.json": "./package.json",
+    "./styles/tokens.css": "./src/styles/tokens.css",
+    "./tailwind-theme.cjs": "./tailwind-theme.cjs"
   },
   "scripts": {
     "typecheck": "tsc --noEmit -p tsconfig.json",

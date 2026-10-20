@@ -19,7 +19,7 @@ rulesetへ登録する名称は **`Public CI required`** です。常に出る�
 
 `.github/`・`scripts/`・root package/lock・`docs/security/`・`docs/legal/`・`docs/ci/` の変更では、導入済みの全scopeを実行します。PRはeventのbase SHAとcheckoutしたmerge commitを比較します。pushはbefore SHAを使い、初回pushは全scopeです。削除も差分に含め、branch名・PRタイトルをshellへ展開しません。
 
-現在の公開treeはphoto-editingとUIのみです。camera・desktop-photo・desktop-account・develop-engineのテストが成功したという意味ではありません。scopeのディレクトリが追加されると検査が自動で有効になり、メタデータ不足は失敗になります。desktop-accountも#3で単独導入された時点から検証します。新しい公開packageが増えたらscopeの依存関係もレビューしてください。
+現在の公開treeはphoto-editing・UI・camera・desktop-photoです。cameraとdesktop-photoのnative scopeは有効です。desktop-accountとdevelop-engineは未導入です。scopeのディレクトリが追加されると検査が自動で有効になり、メタデータ不足は失敗になります。desktop-accountも#3で単独導入された時点から検証します。新しい公開packageが増えたらscopeの依存関係もレビューしてください。
 
 ## nativeを移植するとき
 
@@ -39,6 +39,8 @@ cameraなら `cargoManifests` は例えば `src-tauri/Cargo.toml`、Swift sideca
 
 ## 公開ガードとmanifestの更新
 
+Dependency reviewの脆弱性例外は [限定例外の記録](../security/dependency-exceptions.md) に根拠と見直し条件を記載します。
+
 `publication-manifest.json` のschemaVersion 1と出典baselineを維持します。apps/packagesの全ファイルは、出典hashとoutput hashを持つimported、または独立した生成元を持つgeneratedとして明示します。登録の削除・追加、出典の変更は自動化せずPRでレビューします。既存ファイルの公開後の編集は次で1ファイルずつ更新できます。
 
 ```bash
@@ -48,9 +50,9 @@ npm run verify:publication
 
 更新コマンドは元の出典hashを保持し、output hashと具体的な変更理由だけを更新します。権利・secret検査の代わりにはなりません。新規ファイルのmanifestは手動で登録し、出典・変更理由、または独立した生成方法をレビューしてください。
 
-ガードは禁止path/basename/拡張子、2 MiB上限、symlink/submodule、非公開URL/package参照、非npm registry依存、manifest重複・欠落・hash不一致を拒否します。既存禁止項目と上限はpolicy JSONを消しても緩まりません。全公開候補が対象で、packages外の文書・画像も検査します。検出内容の値をログへ出しません。
+ガードは禁止path/basename/拡張子、10 MiB上限、symlink/submodule、非公開URL/package参照、非npm registry依存、manifest重複・欠落・hash不一致を拒否します。既存禁止項目と上限はpolicy JSONを消しても緩まりません。全公開候補が対象で、packages外の文書・画像も検査します。検出内容の値をログへ出しません。
 
-画像・font・binary・校正・fixture等はmanifestに加え、資産台帳の「公開可能」とpath・SHA-256・サイズが一致する必要があります。NIHO所有資産は個別の許可申請ではなく由来の宣言と不要metadataの確認を台帳へ記録します。監査済みPNG/ICNSを追加する場合もexact bytesを照合します。要置換・非公開維持の元hashはrenameしても拒否します。独立した合成fixtureのJSON/CSV/TXTはgeneratedに生成方法を記録できます。所有者撮影のRAW・音声fixtureもメタデータ確認後に登録できますが、現在のGit treeでは2 MiB上限を超えるファイルを拒否します。大きなfixtureの経路は[#2](https://github.com/niho-coliving/niho-photo/issues/2)で定義します。既存DCPは全件禁止です。独立計測の新DCPを許可する場合は、別PRで資産台帳・manifest・禁止拡張子の契約を明示的にレビューする必要があります。
+画像・font・binary・校正・fixture等はmanifestに加え、資産台帳の「公開可能」とpath・SHA-256・サイズが一致する必要があります。NIHO所有資産は個別の許可申請ではなく由来の宣言と不要metadataの確認を台帳へ記録します。監査済みPNG/ICNSを追加する場合もexact bytesを照合します。要置換・非公開維持の元hashはrenameしても拒否します。独立した合成fixtureのJSON/CSV/TXTはgeneratedに生成方法を記録できます。所有者撮影のRAW・音声fixtureもメタデータ確認後に登録できますが、現在のGit treeでは10 MiB上限を超えるファイルを拒否します。大きなfixtureの経路は[#2](https://github.com/niho-coliving/niho-photo/issues/2)で定義します。既存DCPは全件禁止です。独立計測の新DCPを許可する場合は、別PRで資産台帳・manifest・禁止拡張子の契約を明示的にレビューする必要があります。
 
 private URL検査は既知のprivate repo/host・LAN・内部ドメイン・認証付きURL、package検査はregistry外参照を扱います。任意の新しいprivateサービスの権利や機密性までは自動判定できません。出所、第三者ライセンス、個人情報、ICC/EXIF、入力の実データ混入はCODEOWNERSを含むレビューで確認してください。CI成功で公開許可が新たに与えられることはありません。
 

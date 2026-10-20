@@ -5,7 +5,8 @@
   "description": "NIHO photoの公開クライアント共通基盤",
   "workspaces": [
     "packages/ui",
-    "packages/photo-editing"
+    "packages/photo-editing",
+    "apps/camera"
   ],
   "scripts": {
     "typecheck": "npm run typecheck --workspaces",

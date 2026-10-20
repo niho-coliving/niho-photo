@@ -1,0 +1,61 @@
+/*
+ * NIHO photo の画面の土台（Tailwind v4）。テーマは web と共有する packages/ui/tailwind-theme.cjs（tailwind.config.cjs が読む）、
+ * テーマが読む semantic token と App Sans（NIHO Sans）は packages/ui/src/styles/tokens.css（web の globals.css の写し）。色値を
+ * ここで増やさない（design-guide §3・§4）。編集面（packages/photo-editing）は web の写真編集タブと同じ class で描くので、
+ * 地の色・文字色・書体・文字の大きさの基準（root 106.25%）も web と同じにする。
+ */
+@config "../tailwind.config.cjs";
+@import "tailwindcss";
+@import "niho-ui/styles/tokens.css";
+
+.photo-titlebar {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 7px;
+  height: 35px;
+  padding-left: 89px;
+  border-bottom: 1px solid var(--niho-border);
+  background: var(--niho-card);
+  color: var(--niho-text-sub);
+  font-size: 12px;
+  font-weight: 700;
+  user-select: none;
+}
+.photo-titlebar img {
+  width: 17px;
+  height: 17px;
+  pointer-events: none;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  html {
+    /* web と同じく root を 106.25%（17px 相当）にし、rem の文字の大きさを web の写真編集タブと同じに見せる */
+    font-size: 106.25%;
+  }
+
+  html,
+  body,
+  #root {
+    height: 100%;
+    margin: 0;
+  }
+
+  body {
+    @apply bg-niho-surface text-foreground font-sans antialiased;
+    /* 窓の中で画面全体を揺らさない（各面が自分でスクロールする） */
+    overflow: hidden;
+    overscroll-behavior: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation: none !important;
+    transition: none !important;
+  }
+}

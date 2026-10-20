@@ -1,0 +1,24 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "camera-local",
+  "description": "Allows NIHO photo's bundled UI (the app's own frontendDist, never a remote page) to call the camera commands and to listen for the app's own events (the update-staged notice). No other core plugin command is allowed.",
+  "windows": [
+    "main"
+  ],
+  "platforms": [
+    "macOS"
+  ],
+  "permissions": [
+    "allow-camera-app-info",
+    "allow-camera-library",
+    "allow-camera-photos",
+    "allow-camera-develop",
+    "allow-camera-cutout",
+    "allow-camera-presets",
+    "allow-camera-save",
+    "allow-camera-photo-bench-notice",
+    "allow-camera-updates",
+    "core:event:allow-listen",
+    "core:event:allow-unlisten"
+  ]
+}

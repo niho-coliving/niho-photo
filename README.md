@@ -1,6 +1,6 @@
 # NIHO photo
 
-NIHO photo の**原則公開（default-public）**なクライアント開発SSOTです。現在は写真編集のTypeScript/React共通パッケージと必要な共有UIを含みます。Macアプリ、RAW現像、OAuth/PKCEログイン、クラウド共有の公開クライアント、updaterと検証用のbuild/release手順を順に移行します。公開ソース・API contract・アプリバイナリは誰でも解析・改変できる前提です。
+NIHO photo の**原則公開（default-public）**なクライアント開発SSOTです。現在はMacアプリ、写真編集のTypeScript/React共通パッケージと共有UIを含みます。RAW現像、OAuth/PKCEログイン、クラウド共有、公式build/release手順は後続Issueで移行します。公開ソース・API contract・アプリバイナリは誰でも解析・改変できる前提です。
 
 認証・認可の最終判定、API・DB・object storage、実ユーザーデータ、署名秘密鍵・公証資格情報・本番配布権限は非公開の `niho-app` と実行環境が管理します。公開クライアントの自己申告や画面上の制限をサーバーの認可に使いません。ここにあるコードやCIの成功だけで本番配布やクラウドへのアクセス権は得られません。
 
@@ -21,7 +21,14 @@ npm run verify
 
 個別に実行する場合は `npm run typecheck`、`npm test`、`npm run lint`、`npm run format:check`、`npm run verify:publication` を使います。各workspaceは `npm -C packages/photo-editing test` などでも検証できます。`npm run lint` でHooksと文字サイズの規約を、`npm run format:check` で移植ファイルの改行と行末空白を、`git diff --check` で変更箇所の空白を確認します。
 
-`niho-photo-editing` は編集ロジックとReact部品、`niho-ui` は必要最小限のUIを提供します。ホストがCSS・写真の読み書き・保存・実行環境を提供する構成です。単独で起動するアプリは含まれません。組み込み条件、fixtureの置換、後続Issueへの移行範囲は [allowlist-base.md](docs/migration/allowlist-base.md) を参照してください。
+`niho-photo-editing` は編集ロジックとReact部品、`niho-ui` は必要最小限のUIを提供します。ホストがCSS・写真の読み書き・保存・実行環境を提供する構成です。Macアプリは `apps/camera` にあります。Macの前提環境と実行方法は [camera README](apps/camera/README.md)、命名・端末データ互換は [Mac移植計画](docs/migration/mac-client.md) を参照してください。
+
+```sh
+npm run dev --workspace apps/camera
+npm run build:unsigned --workspace apps/camera
+```
+
+組み込み条件、fixtureの置換、後続Issueへの移行範囲は [allowlist-base.md](docs/migration/allowlist-base.md) を参照してください。
 
 公開CIは全PRとmain pushで動きます。安定した必須チェック名は `Public CI required` です。変更範囲、未移行のnative scope、資産・ライセンス検査、manifest更新手順は [公開CIの実行契約](docs/ci/public-ci.md) を参照してください。
 

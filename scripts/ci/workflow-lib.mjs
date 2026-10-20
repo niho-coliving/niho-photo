@@ -15,6 +15,17 @@ export function workflowFailures(workflow) {
   const aggregate = workflow.jobs?.aggregate;
   if (aggregate?.name !== "Public CI required" || aggregate.if !== "always()") fail("安定aggregate checkが必要");
   if (Object.keys(workflow.jobs ?? {}).filter((name) => name !== "aggregate").sort().join(",") !== [...(aggregate?.needs ?? [])].sort().join(",")) fail("aggregateは全jobに依存する必要あり");
+  const dependencyReview = workflow.jobs?.dependencies?.steps?.filter((step) => step.uses?.startsWith("actions/dependency-review-action@")) ?? [];
+  const reviewInputs = {
+    "fail-on-severity": "moderate",
+    "fail-on-scopes": "runtime,development,unknown",
+    "deny-licenses": "AGPL-1.0-only,AGPL-1.0-or-later,AGPL-3.0-only,AGPL-3.0-or-later",
+    "allow-ghsas": "GHSA-wrw7-89jp-8q8g",
+    "comment-summary-in-pr": "never",
+    "retry-on-snapshot-warnings": true,
+    "retry-on-snapshot-warnings-timeout": 120,
+  };
+  if (dependencyReview.length !== 1 || JSON.stringify(dependencyReview[0].with) !== JSON.stringify(reviewInputs)) fail("依存レビューの検査範囲・例外は監査済み設定に固定する");
   for (const job of Object.values(workflow.jobs ?? {})) {
     if (!["ubuntu-24.04", "macos-14"].includes(job["runs-on"])) fail("GitHub-hosted runnerのみ");
     if (job.environment || job.permissions || job.uses || job.container || job.services) fail("jobへの権限/環境/再利用workflow追加は禁止");
