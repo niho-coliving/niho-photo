@@ -25,7 +25,7 @@ cargo +1.98.1 run --release --locked \
 
 learned residual は optional で、module 自身には training/tuning を実装しない。受理する frozen manifest は係数3個ずつ、`maxResidualEV <= 0.5`、canonical coefficient SHA-256 一致を必須とする。manifest を省略すると residual は厳密に0で、残差は未凍結として記録される。残差だけの凍結を候補全体の凍結と同一視せず、candidateFrozenはfalseのまま、実行ファイルSHAを併記する。独立評価の前にexact source commit・実行ファイル・係数・評価manifestを固定する。独立 holdout を見てから係数・式・閾値を変えてはならない。
 
-probe は A=`niho-2`、B=analytic H/S 後に残りの同じ `niho-2` stages を描き、PNG 2枚と input/settings/output hash、解析値、timing、gate contract を `manifest.json` に書く。
+probe は A=`niho-6`、B=analytic H/S 後に残りの同じ `niho-6` stages を描き、PNG 2枚と input/settings/output hash、解析値、timing、gate contract を `manifest.json` に書く。
 
 ```sh
 cargo +1.98.1 run --release --locked \

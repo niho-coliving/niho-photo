@@ -47,7 +47,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .map_err(std::io::Error::other)?;
     let candidate_bytes = encode::encode_png(&candidate.rgba, candidate.width, candidate.height)
         .map_err(std::io::Error::other)?;
-    std::fs::write(output_dir.join("candidate-a-niho2.png"), &baseline_bytes)?;
+    std::fs::write(output_dir.join("candidate-a-niho6.png"), &baseline_bytes)?;
     std::fs::write(
         output_dir.join("candidate-b-analytic-hs.png"),
         &candidate_bytes,
@@ -65,7 +65,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         "settingsSha256": digest(&settings_bytes),
         "outputs": {
             "candidateA": {
-                "file": "candidate-a-niho2.png",
+                "file": "candidate-a-niho6.png",
                 "sha256": digest(&baseline_bytes)
             },
             "candidateB": {

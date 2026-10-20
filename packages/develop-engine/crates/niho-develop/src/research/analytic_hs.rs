@@ -10,7 +10,7 @@ use crate::color::{mat_vec_f32, PP_LUMA_F32, SRGB_TO_PROPHOTO_F32};
 use crate::decode::{LinearImage, Raster};
 use crate::niho6::SourceSpace;
 use crate::pipeline::{self, RenderOptions, Rendered};
-use crate::settings::{DevelopSettings, ENGINE_NIHO_2};
+use crate::settings::{DevelopSettings, ENGINE_NIHO_6};
 use crate::Error;
 
 pub const ANALYSIS_LONG_EDGE: usize = 750;
@@ -239,8 +239,8 @@ pub fn prepare(
 }
 
 /// A/B render entry point for private-reference owners. A is the unchanged
-/// `niho-2` renderer. B replaces only negative Highlights / positive
-/// Shadows with this candidate, then runs the same remaining `niho-2`
+/// `niho-6` renderer. B replaces only negative Highlights / positive
+/// Shadows with this candidate, then runs the same remaining `niho-6`
 /// stages. Geometry is intentionally excluded from this reproducible probe.
 pub fn render_pair(
     input: &[u8],
@@ -258,7 +258,7 @@ pub fn render_pair(
         ));
     }
     let mut baseline_settings = settings.clone();
-    baseline_settings.engine = ENGINE_NIHO_2.into();
+    baseline_settings.engine = ENGINE_NIHO_6.into();
     let raster = crate::decode::decode_raster(input, options.max_dimension, options.filter)?;
     let baseline =
         pipeline::render_raster(&raster, &baseline_settings, options.quality, None, None).0;
