@@ -4957,9 +4957,10 @@
         "path": "packages/develop-engine/crates/niho-develop-render/tests/cli.rs",
         "sha256": "8ddf42804ccd8202fb8834bc499d2d03a331eb0ff96e020421a776f2286ef9bd"
       },
-      "outputSha256": "bd9bb8cf291640282505b7e571c914d3acfe636aad32be30222844b93848084e",
+      "outputSha256": "b83ca2f3a076317e59cfc81c58931dcb17b5e4c00414c7b42b744edb37ba3eb4",
       "modifications": [
-        "公開Issue #26/#27/#29: 旧版を保つfloat cube候補、研究用WB/H-Sプローブ、合成検証と計測契約を追加。"
+        "公開Issue #26/#27/#29: 旧版を保つfloat cube候補、研究用WB/H-Sプローブ、合成検証と計測契約を追加。",
+        "新engine受入と未知版拒否の境界を更新し、既存wasm CIで候補のFinal/Interactive固定画素を検証する。"
       ]
     },
     {
@@ -6077,8 +6078,10 @@
         "path": "packages/develop-engine/crates/niho-develop/tests/niho6_cross_target.rs",
         "sha256": "eba5bf799e46cf4c475d9d60d4a7092993dfbe766722b890f2f78e165a3f3da5"
       },
-      "outputSha256": "eba5bf799e46cf4c475d9d60d4a7092993dfbe766722b890f2f78e165a3f3da5",
-      "modifications": []
+      "outputSha256": "7e05c0579ed4c2d65ceaa8fdb2c00944458dcf9002b12267a532ade7adb71628",
+      "modifications": [
+        "新engine受入と未知版拒否の境界を更新し、既存wasm CIで候補のFinal/Interactive固定画素を検証する。"
+      ]
     },
     {
       "path": "packages/develop-engine/crates/niho-develop/tests/niho6_working_copy.rs",
@@ -8618,8 +8621,8 @@
     },
     {
       "path": "packages/develop-engine/crates/niho-develop/tests/niho8.rs",
-      "sha256": "9fbf4752ce8dfcd2aa61e720a6b1067a92ce199203541fbcc1f116a9b7cc428e",
-      "origin": "公開Issue #26/#27/#29 のため公開済み数式・既存primitiveから独立実装した研究用コード・合成テスト・日本語手順。非公開の写真・参照画素・パス・履歴・第三者ソースを含まない。\n変更理由: 既存PresetResultのsettingsを介してengineとXMP保持を検証する。"
+      "sha256": "9783610b158502303471a645233537d33041c50b45e152aae929d60bdc470220",
+      "origin": "公開Issue #26/#27/#29 のため公開済み数式・既存primitiveから独立実装した研究用コード・合成テスト・日本語手順。非公開の写真・参照画素・パス・履歴・第三者ソースを含まない。\n変更理由: 既存PresetResultのsettingsを介してengineとXMP保持を検証する。\n変更理由: 候補の一発描画・crop・drag release・旧版へ戻す精度cacheの一致を回帰検証。"
     }
   ],
   "excludedSources": [

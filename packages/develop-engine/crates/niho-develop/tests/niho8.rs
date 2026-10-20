@@ -165,3 +165,54 @@ fn presets_and_xmp_keep_the_explicit_candidate() {
         .iter()
         .all(|item| item != "relativeTemperature"));
 }
+
+#[test]
+fn candidate_sessions_crops_released_drags_and_precision_cache_are_consistent() {
+    let source = image();
+    let rgba: Vec<u8> = source
+        .data
+        .chunks_exact(3)
+        .flat_map(|pixel| {
+            [
+                (pixel[0] * 255.0).round() as u8,
+                (pixel[1] * 255.0).round() as u8,
+                (pixel[2] * 255.0).round() as u8,
+                255,
+            ]
+        })
+        .collect();
+    let png = niho_develop::encode::encode_png(&rgba, source.width, source.height).unwrap();
+    let mut session = Session::open_raster(&png, 0, Filter::Lanczos3).unwrap();
+    let legacy = settings(ENGINE_NIHO_6);
+    let original = session.render(&legacy, 0, Quality::Final).unwrap().rgba;
+    let candidate = settings(ENGINE_NIHO_8);
+    for crop in [false, true] {
+        let mut value = candidate.to_value();
+        if crop {
+            value["v"] = 2.into();
+            value["geometry"] = serde_json::json!({"rotate":90,"angle":3.0,"crop":{"left":0.1,"top":0.15,"right":0.85,"bottom":0.9}});
+        }
+        let settings = DevelopSettings::from_json(&value.to_string()).unwrap();
+        let expected = niho_develop::render(
+            &png,
+            &settings.to_json(),
+            &niho_develop::RenderOptions {
+                max_dimension: 0,
+                ..Default::default()
+            },
+        )
+        .unwrap();
+        session.render(&settings, 0, Quality::Interactive).unwrap();
+        let released = session.render(&settings, 0, Quality::Final).unwrap();
+        assert_eq!(
+            (released.width, released.height),
+            (expected.width, expected.height)
+        );
+        assert_eq!(released.rgba, expected.rgba);
+    }
+    assert_eq!(
+        session.render(&legacy, 0, Quality::Final).unwrap().rgba,
+        original,
+        "candidate float cache must never alter a previously rendered legacy frame"
+    );
+}

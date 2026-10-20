@@ -777,6 +777,7 @@ fn settings_loader_accepts_all_formula_versions_and_rejects_unknown() {
         ("niho-5", "niho-standard-4"),
         ("niho-6", "niho-standard-1"),
         ("niho-7", "niho-standard-5"),
+        ("niho-8", "niho-standard-1"),
     ] {
         let settings = niho_develop_render::load_settings(&format!(
             r#"{{"v":1,"engine":"{engine}","look":"{look}"}}"#
@@ -784,9 +785,10 @@ fn settings_loader_accepts_all_formula_versions_and_rejects_unknown() {
         .unwrap();
         assert_eq!(settings.engine, engine);
     }
-    let error =
-        niho_develop_render::load_settings(r#"{"v":1,"engine":"niho-8","look":"niho-standard-5"}"#)
-            .unwrap_err();
+    let error = niho_develop_render::load_settings(
+        r#"{"v":1,"engine":"niho-999","look":"niho-standard-5"}"#,
+    )
+    .unwrap_err();
     assert_eq!(
         error.code,
         niho_develop_render::ErrorCode::UnsupportedSettings

@@ -56,3 +56,37 @@ fn native_and_wasm_render_the_same_niho_6_bytes() {
     assert_eq!((frame.width, frame.height), (160, 120));
     assert_eq!(fnv1a64(&frame.rgba), 10_959_845_526_522_411_298);
 }
+
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
+fn native_and_wasm_render_the_same_niho_8_bytes() {
+    let input = photo();
+    let settings = niho_develop::parse_settings(r#"{"v":1,"engine":"niho-8","look":"niho-standard-1","exposure":0.2,"highlights":-75,"shadows":55,"blacks":40,"vibrance":10,"hsl":{"orange":{"hue":0,"saturation":-10,"luminance":20}}}"#).unwrap();
+    let final_frame = render(
+        &input,
+        &settings.to_json(),
+        &RenderOptions {
+            max_dimension: 0,
+            ..Default::default()
+        },
+    )
+    .unwrap();
+    let mut session =
+        niho_develop::Session::open_raster(&input, 0, niho_develop::Filter::Lanczos3).unwrap();
+    let drag = session
+        .render(&settings, 0, niho_develop::Quality::Interactive)
+        .unwrap();
+    println!(
+        "NIHO8_FNV_FINAL={} NIHO8_FNV_INTERACTIVE={}",
+        fnv1a64(&final_frame.rgba),
+        fnv1a64(&drag.rgba)
+    );
+    assert_eq!((final_frame.width, final_frame.height), (160, 120));
+    assert_eq!(
+        session
+            .render(&settings, 0, niho_develop::Quality::Final)
+            .unwrap()
+            .rgba,
+        final_frame.rgba
+    );
+}
