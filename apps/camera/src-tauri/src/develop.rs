@@ -223,7 +223,7 @@ pub fn export_into_folder(
     if std::fs::symlink_metadata(&destination).is_ok() {
       continue;
     }
-    refuse_original(photos, photo_id, &destination)?;
+    refuse_original(photos, &destination)?;
     match develop.export_with_saved_state(
       photos,
       photo_id,

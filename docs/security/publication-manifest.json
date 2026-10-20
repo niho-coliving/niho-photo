@@ -3288,10 +3288,11 @@
         "path": "apps/camera/src-tauri/src/develop.rs",
         "sha256": "e8031f4461b78fd3a74d9011ace89081814e737868a33ee4e39f7b98e39bacb8"
       },
-      "outputSha256": "bb7432fab6454c66314c3d405d46adaea97f32eb043bcb8f7a5ebce84e581035",
+      "outputSha256": "1a9edd3139729d5d20b6e2065bb4275d915346faa210c98f905bca82e6c694dd",
       "modifications": [
         "書き出しcommand境界の引数設計を明記し、Clippyの引数数lintを局所的に許容する。",
-        "全open photoの原本をexport destinationから保護"
+        "全open photoの原本をexport destinationから保護",
+        "全書き出し経路が全open photo原本を保護"
       ]
     },
     {
@@ -3302,9 +3303,10 @@
         "path": "apps/camera/src-tauri/src/develop_tests.rs",
         "sha256": "0c9ccc1e8f0b08d82be8fe379737b89ca17a4fe751b802bc4716b06d17ebed62"
       },
-      "outputSha256": "b16d506eb8dc55a2ccc66593a3fcdf87ecdf87966460508a2cb7cee8f159cea8",
+      "outputSha256": "5e23a8e81c8db30418bab466649cc9b40ea0161c9fa960f2d36fb16d98e545c6",
       "modifications": [
-        "別のopen photoへのexport上書き拒否テストを追加"
+        "別のopen photoへのexport上書き拒否テストを追加",
+        "全open photoの保護判定に合わせて回帰テスト更新"
       ]
     },
     {

@@ -150,11 +150,8 @@ fn the_original_is_never_an_export_destination() {
   let photos = camera_photos(&harness);
   let jpeg = photo_file(&harness, "DSC00001.jpg", b"jpeg");
   let (photo_id, _) = photos.open("entry-1", &jpeg).unwrap();
-  assert_eq!(
-    refuse_original(&photos, &photo_id, &jpeg).unwrap_err().code,
-    code::EXPORT_FAILED
-  );
-  assert!(refuse_original(&photos, &photo_id, &harness.dir.join("other.jpg")).is_ok());
+  assert_eq!(refuse_original(&photos, &jpeg).unwrap_err().code, code::EXPORT_FAILED);
+  assert!(refuse_original(&photos, &harness.dir.join("other.jpg")).is_ok());
   // フォルダへの書き出しが元の写真と同じ名前になっても、元の写真は書き換えない（番号を付ける）
   let develop = camera_develop(&harness);
   let folder = jpeg.parent().unwrap().to_path_buf();
