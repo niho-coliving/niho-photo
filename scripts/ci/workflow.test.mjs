@@ -4,6 +4,15 @@ import { readFile } from "node:fs/promises";
 import { workflowFailures } from "./workflow-lib.mjs";
 const workflow = JSON.parse(await readFile(new URL("../../.github/workflows/public-ci.yml", import.meta.url), "utf8"));
 test("公開workflowの権限、runner、pin、aggregate契約", () => assert.deepEqual(workflowFailures(workflow), []));
+const swiftPackage = await readFile(new URL("../../packages/develop-engine/tools/apple-raw-linear/Package.swift", import.meta.url), "utf8");
+const swiftToolsVersion = swiftPackage.match(/^\/\/ swift-tools-version: (\d+\.\d+)/m)?.[1];
+test("現像Swift packageは新しいCore Image SDKのGitHub-hosted runnerで検証する", () => {
+  const job = workflow.jobs.swift;
+  assert.equal(job?.if, "needs.plan.outputs.has-swift == 'true'");
+  assert.equal(job?.["runs-on"], "macos-26");
+  assert.equal(swiftToolsVersion, "6.0");
+  assert.ok(job.steps.some((step) => step.run === "swift test --package-path packages/develop-engine/tools/apple-raw-linear"));
+});
 for (const [name, mutate] of [
   ["tag Action", (w) => { w.jobs.plan.steps[0].uses = "actions/checkout@v4"; }],
   ["unverified Action commit", (w) => { w.jobs.plan.steps[0].uses = `actions/checkout@${"a".repeat(40)}`; }],

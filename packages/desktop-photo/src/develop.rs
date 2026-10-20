@@ -30,6 +30,7 @@
 //! - ページへはパスを渡さない（`photoId` と不透明な `token` だけ）。作業コピーのバイト列は `token`（1 回限り・10 分）で
 //!   別のコマンドから受け取る（JSON に入れない）。
 
+use crate::capabilities::{validate_photo_static, CapabilityStage};
 use crate::common::{code, is_executable_file, lock, random_hex, scrub_paths, LogFn, PageError};
 use crate::image_info::{read_raster_info, RasterInfo};
 use crate::library::photo_kind;
@@ -1990,6 +1991,16 @@ fn not_applicable(detail: &str) -> DevelopError {
   DevelopError::new(develop_code::NOT_APPLICABLE, NOT_APPLICABLE_MESSAGE, detail)
 }
 
+fn validate_develop_input(path: &Path, stage: CapabilityStage) -> Result<(), DevelopError> {
+  validate_photo_static(path, stage).map(|_| ()).map_err(|error| {
+    DevelopError::new(
+      error.code,
+      error.message,
+      format!("{} validation: {}", stage.as_str(), error.code),
+    )
+  })
+}
+
 /// 作業コピー・書き出し・クラウド用のラスタの作業コピーのどれの失敗か（同じ sidecar の失敗でもページへの code と文が違う）。
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum Operation {
@@ -2568,6 +2579,7 @@ impl PhotoDevelop {
   /// `apple-raw-linear info --json` を使う。どちらも実際にデコーダで読めることを確かめ、向きを適用した寸法だけを返す。
   pub fn inspect_photo(&self, path: &Path, file_name: &str) -> Result<Value, DevelopError> {
     let _activity = self.begin()?;
+    validate_develop_input(path, CapabilityStage::Metadata)?;
     let kind = photo_kind(file_name)
       .ok_or_else(|| DevelopError::new(code::DECODE_FAILED, DECODE_FAILED_MESSAGE, "not a photo extension"))?;
     if kind == "raw" {
@@ -2634,6 +2646,7 @@ impl PhotoDevelop {
     let sidecars = self.sidecars()?;
     let cache = self.cache()?;
     let photo = photos.open_photo(photo_id).ok_or_else(not_open)?;
+    validate_develop_input(&photo.path, CapabilityStage::Thumbnail)?;
     self.verify_original(&photo)?;
     let _turn = self.queue.enter();
     let work = cache
@@ -2848,6 +2861,7 @@ impl PhotoDevelop {
     // 作り始める前の `cache_purge` の世代（作っている間に消されたら、作った作業コピーは置かない）
     let generation = cache.generation();
     let photo = photos.open_photo(photo_id).ok_or_else(not_open)?;
+    validate_develop_input(&photo.path, CapabilityStage::Decoder)?;
     let mut input =
       develop_input_for(&photo.file_name, photo.digest.size_bytes, self.config.local_raster).ok_or_else(|| {
         DevelopError::new(
@@ -3636,6 +3650,7 @@ impl PhotoDevelop {
     let sidecars = self.sidecars()?;
     let cache = self.cache()?;
     let photo = photos.open_photo(photo_id).ok_or_else(not_open)?;
+    validate_develop_input(&photo.path, CapabilityStage::FullRender)?;
     let input = self.export_input_of(&sidecars, &photo)?;
     let folder = destination
       .parent()

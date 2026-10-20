@@ -13,7 +13,7 @@ rulesetへ登録する名称は **`Public CI required`** です。常に出る�
 | Dependency review | 全PR。GitHub依存グラフの差分からmoderate以上の脆弱性とAGPLの追加を拒否。runtime/development/unknownを含む。PRコメント権限なし |
 | Photo editing | `packages/photo-editing`・`packages/niho-cloud-contract`・`packages/ui` 変更。`npm ci --ignore-scripts` 後、Photo editing / UIのtypecheck / test / lint とDocs固定SHAとのcontract同期確認 |
 | Camera | `apps/camera` 導入後。camera、account、写真関連パッケージ変更時。npmのtypecheck / test / lint / `build:unsigned` と宣言されたnative検査 |
-| Desktop photo | `packages/desktop-photo` 導入後。desktop-photo、account、photo-editing、ui、develop-engine変更時。Cargoのfmt / clippy / test |
+| Desktop photo | `packages/desktop-photo` 導入後。desktop-photo、account、photo-editing、ui、develop-engine変更時。Cargoのfmt / clippy / test。能力レジストリの合成signatureと公開サニタイズRW2の境界検査を含む |
 | Desktop account | `packages/desktop-account` 導入後。同パス・UI変更時。`ts`をroot workspaceへ登録し、npmのtypecheck / test / lint とRustのfmt / clippy / test |
 | Develop engine | `packages/develop-engine` 導入後。同パス変更時。Cargoのfmt / clippy / test と宣言されたSwift test |
 
@@ -84,4 +84,4 @@ PRの公開CI実行、dependency graph更新、外部forkでの初回承認か�
 
 ## 現像workspaceの検査
 
-`develop-engine` scopeは実RW2の監査を宣言したpublic-ci.jsonを持つ。固定Rust 1.98.1でnative fmt/clippy/testを実行し、実RW2のdecoder情報・元画素golden・独立DCP描画を常時検査する。Python標準ライブラリでfit→spec/reportを再生成し、Rustでspec→DCP bytesを再生成する。wasm32 buildとwasm-bindgen 0.2.129のtest runnerでNIHO6/7・camera-linear codecの共通テストも実行する。生のowner原本や私有絶対path、署名は不要。Swift toolの実機動作はこのscopeで実証済みと扱わない。
+`develop-engine` scopeは実RW2の監査を宣言したpublic-ci.jsonを持つ。macOS 14で固定Rust 1.98.1のnative fmt/clippy/testを実行し、実RW2のdecoder情報・元画素golden・独立DCP描画を常時検査する。desktop-photo scopeは同じ公開RW2がcapability registryのRW2 signatureを通ることを検査するが、それだけを実decode成功とは数えない。Python標準ライブラリでfit→spec/reportを再生成し、Rustでspec→DCP bytesを再生成する。wasm32 buildとwasm-bindgen 0.2.129のtest runnerでNIHO6/7・camera-linear codecの共通テストも実行する。`tools/apple-raw-linear` のSwift packageは独立したmacOS 26 jobで実行し、macOS 26 SDKのCore Image APIを使って、合成PNG/JPEG/TIFF/HEICをImageIOで実decodeし `RasterCommand.run` のmetadata・画素・出力sanitizeを検査する。HEIC encoderが無いrunnerはskipで対応済みとせず、unsupported capabilityとして失敗を明示する。生のowner原本や私有絶対path、署名は不要。合成ラスタの検査はApple RAWの全機種対応やprovider別の実機動作まで実証済みとは扱わない。

@@ -15,8 +15,11 @@ import {
   PHOTO_EDITING_AUTO_TITLE,
   PHOTO_EDITING_COPY_SETTINGS_LABEL,
   PHOTO_EDITING_COPY_SETTINGS_SHORTCUT,
+  PHOTO_EDITING_GRAYSCALE_LABEL,
   PHOTO_EDITING_PASTE_SETTINGS_LABEL,
   PHOTO_EDITING_PASTE_SETTINGS_SHORTCUT,
+  PHOTO_EDITING_PRESETS_TITLE,
+  PHOTO_EDITING_QUICK_ACTIONS_LABEL,
   PHOTO_EDITING_REDO_LABEL,
   PHOTO_EDITING_REDO_TITLE,
   PHOTO_EDITING_RESET_DONE_TEXT,
@@ -27,13 +30,17 @@ import {
   PHOTO_EDITING_TOOL_ADJUST_LABEL,
   PHOTO_EDITING_TOOL_CROP_LABEL,
   PHOTO_EDITING_TOOL_CUTOUT_LABEL,
-  PHOTO_EDITING_TOOL_GROUP_LABEL,
   PHOTO_EDITING_UNDO_LABEL,
   PHOTO_EDITING_UNDO_TITLE,
 } from "../photo-editing-copy";
-import { cn } from "niho-ui/cn";
+import { readGrayscale, writeGrayscale } from "../photo-editing-effects";
 
-import { BROWSER_WHITE_BALANCE_SOURCE, type BrowserPhotoTool } from "./browser-photo-editing-model";
+import {
+  BROWSER_WHITE_BALANCE_SOURCE,
+  type BrowserPhotoAdjustPanel,
+  type BrowserPhotoPresetsVariant,
+  type BrowserPhotoTool,
+} from "./browser-photo-editing-model";
 import {
   PhotoEditingAdjustmentGroups,
   type PhotoEditingSettingsUpdate,
@@ -45,13 +52,22 @@ import { PhotoEditingMenu } from "./photo-editing-menu";
 const HISTORY_BUTTON_CLASS_NAME =
   "flex h-11 w-11 items-center justify-center rounded-full text-niho-text-sub transition hover:bg-niho-pale/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-niho-accent-ink disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent";
 const TEXT_ACTION_BUTTON_CLASS_NAME = "min-h-11 px-2 text-xs font-bold text-niho-accent-ink disabled:opacity-40";
-const AUTO_BUTTON_CLASS_NAME =
-  "flex min-h-11 items-center gap-1 rounded-full px-2.5 text-xs font-bold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-niho-accent-ink disabled:cursor-not-allowed disabled:opacity-40";
+/** 補正の面の一番上のチップ（自動 / 白黒）。押された表示は `aria-pressed` で地の色を変える */
+const QUICK_CHIP_CLASS_NAME =
+  "inline-flex h-7 items-center gap-1 rounded-lg border border-niho-border px-3 text-xs font-bold text-niho-text-sub transition enabled:hover:bg-niho-pale/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-niho-accent-ink aria-pressed:border-transparent aria-pressed:bg-niho-accent-soft aria-pressed:text-niho-accent-ink disabled:cursor-not-allowed disabled:opacity-40";
+/** 見出し行の名前（道具の名前。「補正」の間はプリセットの面なら「プリセット」） */
 const TOOL_LABELS: Readonly<Record<BrowserPhotoTool, string>> = {
   adjust: PHOTO_EDITING_TOOL_ADJUST_LABEL,
   crop: PHOTO_EDITING_TOOL_CROP_LABEL,
   cutout: PHOTO_EDITING_TOOL_CUTOUT_LABEL,
 };
+
+/*
+ * 右端の道具の帯（niho-photo#51）で変わった点（下の説明より優先する）: 道具の切り替え（補正 / 切り抜き / 背景除去のピル）は右パネルに
+ * 置かず、右端の帯（`BrowserPhotoEditingToolRail`。並べるのは呼ぶ側）で右パネルを丸ごと入れ替える。一番上は見出し行（左に今の面の
+ * 名前、右に ↶ ↷ ⋯ と「初期化」）。「補正」の面は 見出し行 → 自動 / 白黒のチップ → プリセットの行 → ライト / カラー / 効果、
+ * 「プリセット」の面は 見出し行 → プリセットの一覧。白黒は群の中に描かず、チップで切り替える。
+ */
 
 /**
  * ブラウザ版の右パネル（NIHO Photo 段 1 F1 移行元設計）。スライダーは NIHO Desktop と共通の群の部品（ライト／カラー／効果）で描き、
@@ -86,18 +102,17 @@ export function BrowserPhotoEditingAdjustments(props: {
   settings: PhotoEditingSettings;
   /** 見せる項目（省略時は基本の 13 項目。S1 の canvas は 5 項目、効果を描ける wasm の写真は効果の項目も入れて渡す） */
   visibleKeys?: ReadonlyArray<PhotoEditingControlKey>;
-  /** プリセットの節（群の上に置く。S1 の canvas の写真には渡さない） */
-  presets?: ReactNode;
   /**
-   * 道具の切り替え（補正 / 切り抜き / 背景除去）。`tools` はこの写真で使える道具を並べる順に（「補正」が先頭）。補正のほかに
-   * 使える道具の無い写真には渡さない
+   * プリセットの部品（S1 の canvas の写真には渡さない）。補正の面では群の上の 1 行（`row`。押すと `onOpenPresets`）、プリセットの面
+   * では一覧（`panel`）として、どちらか一方だけを描く
    */
-  tool?: {
-    tools: readonly BrowserPhotoTool[];
-    value: BrowserPhotoTool;
-    disabled: boolean;
-    onChange: (tool: BrowserPhotoTool) => void;
-  };
+  presets?: (view: { variant: BrowserPhotoPresetsVariant; onOpenPanel?: () => void }) => ReactNode;
+  /** 今の道具（右端の帯で選ぶ。省略時は補正） */
+  tool?: BrowserPhotoTool;
+  /** 道具が「補正」の間に出す面（省略時は補正の面。プリセットの部品が無い写真は補正の面だけ） */
+  panel?: BrowserPhotoAdjustPanel;
+  /** プリセットの行から、プリセットの面を開く */
+  onOpenPresets?: () => void;
   /** 切り抜きの道具（「切り抜き」の間、プリセットの節と群の代わりに出す） */
   cropTools?: ReactNode;
   /** 背景除去の道具（「背景除去」の間、プリセットの節と群の代わりに出す。NIHO camera だけ） */
@@ -114,60 +129,62 @@ export function BrowserPhotoEditingAdjustments(props: {
 }) {
   const work = props.work;
   const workText = work ? workWaitText(work, props.raw) : null;
-  const tool = props.tool;
-  const cropping = tool?.value === "crop" && props.cropTools !== undefined;
-  const cutting = tool?.value === "cutout" && props.cutoutTools !== undefined;
+  const tool = props.tool ?? "adjust";
+  const cropping = tool === "crop" && props.cropTools !== undefined;
+  const cutting = tool === "cutout" && props.cutoutTools !== undefined;
+  const presets = props.presets;
+  // プリセットの部品が無い写真（S1 の canvas）は、補正の面だけ
+  const showPresetsPanel = !cropping && !cutting && presets !== undefined && props.panel === "presets";
+  const heading = cropping
+    ? TOOL_LABELS.crop
+    : cutting
+      ? TOOL_LABELS.cutout
+      : showPresetsPanel
+        ? PHOTO_EDITING_PRESETS_TITLE
+        : TOOL_LABELS.adjust;
   const auto = props.auto;
-  const autoButton = auto ? (
-    <button
-      type="button"
-      aria-pressed={auto.pressed}
-      title={PHOTO_EDITING_AUTO_TITLE}
-      disabled={auto.disabled}
-      onClick={auto.onToggle}
-      // 押す前に結果の計算を始める（押して 300ms 以内に画を変える）
-      onPointerEnter={auto.onWarm}
-      onPointerDown={auto.onWarm}
-      onFocus={auto.onWarm}
-      className={cn(
-        AUTO_BUTTON_CLASS_NAME,
-        auto.pressed ? "bg-niho-accent-soft text-niho-accent-ink" : "text-niho-text-sub enabled:hover:bg-niho-pale/60",
-      )}
-    >
-      <WandSparkles className="h-3.5 w-3.5" aria-hidden />
-      {PHOTO_EDITING_AUTO_LABEL}
-    </button>
-  ) : undefined;
+  // 白黒のチップは、効果を描ける wasm の写真（`visibleKeys` に白黒が入っている）だけ
+  const grayscaleChip = props.visibleKeys?.includes("grayscale") === true;
+  const grayscalePressed = readGrayscale(props.settings);
+  const quickRow =
+    auto || grayscaleChip ? (
+      <div role="group" aria-label={PHOTO_EDITING_QUICK_ACTIONS_LABEL} className="mb-1 flex gap-1.5">
+        {auto ? (
+          <button
+            type="button"
+            aria-pressed={auto.pressed}
+            title={PHOTO_EDITING_AUTO_TITLE}
+            disabled={auto.disabled}
+            onClick={auto.onToggle}
+            // 押す前に結果の計算を始める（押して 300ms 以内に画を変える）
+            onPointerEnter={auto.onWarm}
+            onPointerDown={auto.onWarm}
+            onFocus={auto.onWarm}
+            className={QUICK_CHIP_CLASS_NAME}
+          >
+            <WandSparkles className="h-3.5 w-3.5" aria-hidden />
+            {PHOTO_EDITING_AUTO_LABEL}
+          </button>
+        ) : null}
+        {grayscaleChip ? (
+          <button
+            type="button"
+            aria-pressed={grayscalePressed}
+            disabled={props.controlsDisabled}
+            onClick={() => props.onSettingsChange((current) => writeGrayscale(current, !grayscalePressed), "commit")}
+            className={QUICK_CHIP_CLASS_NAME}
+          >
+            {PHOTO_EDITING_GRAYSCALE_LABEL}
+          </button>
+        ) : null}
+      </div>
+    ) : null;
   return (
-    <aside aria-label="補正" className="hidden min-h-0 overflow-y-auto border-l border-niho-border bg-white px-4 py-2 lg:block">
-      {tool ? (
-        <div role="group" aria-label={PHOTO_EDITING_TOOL_GROUP_LABEL} className="mb-1 flex gap-1">
-          {tool.tools.map((item) => {
-            const pressed = tool.value === item;
-            return (
-              <button
-                key={item}
-                type="button"
-                aria-pressed={pressed}
-                disabled={tool.disabled}
-                onClick={() => {
-                  if (!pressed) tool.onChange(item);
-                }}
-                className={cn(
-                  "min-h-11 flex-1 rounded-full px-3 text-sub font-bold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-niho-accent-ink disabled:cursor-not-allowed disabled:opacity-50",
-                  pressed
-                    ? "bg-niho-accent-soft text-niho-accent-ink"
-                    : "text-niho-text-muted enabled:hover:bg-niho-pale/60 enabled:hover:text-niho-text-sub",
-                )}
-              >
-                {TOOL_LABELS[item]}
-              </button>
-            );
-          })}
-        </div>
-      ) : null}
-      <div className="flex min-h-11 items-center justify-between gap-2">
-        <div className="-ml-2 flex items-center">
+    <aside aria-label="補正" className="hidden min-h-0 overflow-y-auto border-l border-niho-border bg-[var(--photo-editing-surface,white)] px-3 py-2 lg:block">
+      {/* 見出し行: 左に今の面の名前、右に ↶ ↷ ⋯ と「初期化」 */}
+      <div className="flex min-h-11 items-center gap-1">
+        <h2 className="min-w-0 flex-1 truncate text-sm font-bold text-niho-text">{heading}</h2>
+        <div className="flex shrink-0 items-center">
           <button
             type="button"
             aria-label={PHOTO_EDITING_UNDO_LABEL}
@@ -266,15 +283,19 @@ export function BrowserPhotoEditingAdjustments(props: {
         props.cropTools
       ) : cutting ? (
         props.cutoutTools
+      ) : showPresetsPanel ? (
+        presets?.({ variant: "panel" })
       ) : (
         <>
-          {props.presets}
+          {quickRow}
+          {presets?.({ variant: "row", onOpenPanel: props.onOpenPresets })}
           <PhotoEditingAdjustmentGroups
             settings={props.settings}
             photo={BROWSER_WHITE_BALANCE_SOURCE}
             disabled={props.controlsDisabled}
             visibleKeys={props.visibleKeys}
-            lightAccessory={autoButton}
+            // 白黒は一番上のチップで切り替える（群の中には描かない。白黒の間に彩度を押せなくするのは群のまま）
+            grayscaleToggle="hidden"
             onSettingsChange={props.onSettingsChange}
           />
         </>

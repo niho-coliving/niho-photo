@@ -298,7 +298,7 @@ describe("PhotoEditingGrid", () => {
     // 上の余白の分も白で覆い、ボタン（32px）の高さで固定する（写真を選んでボタンが出ても一覧を動かさない）
     expect(row?.className).toContain("sticky");
     expect(row?.className).toContain("-top-2.5");
-    expect(row?.className).toContain("bg-white");
+    expect(row?.className).toContain("bg-[var(--photo-editing-surface,white)]");
     expect(row?.className).toContain("h-8");
     expect(section?.className).toContain("scroll-pt-12");
 

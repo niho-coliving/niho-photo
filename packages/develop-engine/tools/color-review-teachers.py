@@ -22,20 +22,31 @@ def run_job(job):
     destination.parent.mkdir(parents=True, exist_ok=True)
     settings = work/'settings'/f'{variant}-{"niho-6" if engine == "analytic-hs" else engine}.json'
     binary = repo/'packages/develop-engine/target/release/niho-develop-render'
-    if not destination.exists() and engine == 'analytic-hs':
+    executable = binary
+    # A work directory is intentionally reusable, but rendered pixels are not:
+    # always compute them from the current executable, settings, and inputs.
+    destination.unlink(missing_ok=True)
+    if engine == 'analytic-hs':
         probe_dir = destination.with_suffix('.probe')
+        probe_output = probe_dir/'candidate-b-analytic-hs.png'
+        probe_output.unlink(missing_ok=True)
+        (probe_dir/'manifest.json').unlink(missing_ok=True)
+        probe_dir.mkdir(parents=True, exist_ok=True)
         probe = repo/'packages/develop-engine/target/release/examples/analytic_hs_probe'
+        executable = probe
         r = subprocess.run([str(probe),str(source),str(settings),str(probe_dir)],capture_output=True,text=True)
         if r.returncode: raise RuntimeError(f'analytic probe failed status={r.returncode}')
-        destination.write_bytes((probe_dir/'candidate-b-analytic-hs.png').read_bytes())
-    if not destination.exists():
+        if not probe_output.is_file(): raise RuntimeError('analytic probe produced no candidate output')
+        destination.write_bytes(probe_output.read_bytes())
+    else:
         r = subprocess.run([str(binary), 'render', '--settings', str(settings), '--out', str(destination), '--raster', str(source), '--max-dimension', '2048'], capture_output=True, text=True)
         if r.returncode: raise RuntimeError(f'render failed engine={engine}, status={r.returncode}')
+    if not destination.is_file(): raise RuntimeError(f'render produced no output engine={engine}')
     sys.path.insert(0, str(repo/'packages/develop-engine/tools/colorcheck'))
     from colorcheck.compare import run_compare
     result = run_compare(str(reference), str(destination), size=1500, blur=2, do_align=True)
     d = result['metrics']['deltaE00']
-    return {'cohort':cohort, 'scene':scene, 'variant':variant, 'engine':engine, 'mean':d['mean'], 'p99':d['p99'], 'max':d['max'], 'flatFraction':result['metrics']['flatFraction'], 'inputSha256':digest(source), 'referenceSha256':digest(reference), 'candidateSha256':digest(destination)}
+    return {'cohort':cohort, 'scene':scene, 'variant':variant, 'engine':engine, 'mean':d['mean'], 'p99':d['p99'], 'max':d['max'], 'flatFraction':result['metrics']['flatFraction'], 'executableSha256':digest(executable), 'settingsSha256':digest(settings), 'inputSha256':digest(source), 'referenceSha256':digest(reference), 'candidateSha256':digest(destination)}
 
 def main():
     ap=argparse.ArgumentParser();ap.add_argument('--repo',required=True,type=Path);ap.add_argument('--work',required=True,type=Path);ap.add_argument('--engines',default='niho-6,niho-8,analytic-hs');ap.add_argument('--workers',default=4,type=int)
@@ -49,9 +60,10 @@ def main():
     public_input=args.repo/'packages/develop-engine/fixtures/golden/input/saturated-blue.png'
     for variant in variants:
         base=settings_root/f'{variant}-base.json'
-        if not base.exists():
-            spec='neutral' if variant=='neutral' else 'niho-'+variant.removeprefix('preset_')
-            subprocess.run([str(example),str(public_input),spec,'32',str(settings_root/'scratch.rgba'),str(base)],check=True,capture_output=True)
+        scratch=settings_root/'scratch.rgba'
+        base.unlink(missing_ok=True);scratch.unlink(missing_ok=True)
+        spec='neutral' if variant=='neutral' else 'niho-'+variant.removeprefix('preset_')
+        subprocess.run([str(example),str(public_input),spec,'32',str(scratch),str(base)],check=True,capture_output=True)
         value=json.loads(base.read_text());value['look']='niho-standard-1'
         for engine in [e for e in engines if e != 'analytic-hs']:
             value['engine']=engine
