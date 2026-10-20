@@ -6,7 +6,7 @@ NIHO photo の公開クライアント開発リポジトリです。Mac アプ�
 
 ## 公開範囲と権利
 
-このリポジトリは **source-visible / all rights reserved** です。オープンソースライセンスは付与していません。閲覧できることは、複製、改変、再配布、商用利用を許諾する意味ではありません。第三者の依存物には、それぞれの権利条件が適用されます。OSS ライセンスの採用は別途判断します。
+このリポジトリは **source-visible / all rights reserved** です。オープンソースライセンスは付与していません。[GitHub の利用規約上認められる閲覧・fork](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/licensing-a-repository)を除き、独立した再配布、改変、商用利用を許諾しません。第三者の依存物には、それぞれの権利条件が適用されます。OSS ライセンスの採用は別途判断します。
 
 公開前の判定基準は [publication-gates.md](docs/security/publication-gates.md)、候補資産の状態は [third-party-assets.md](docs/legal/third-party-assets.md) に記録します。監査未了の資産は公開しません。
 
