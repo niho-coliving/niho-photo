@@ -417,7 +417,7 @@ describe("useBrowserPhotoOpen progressive RAW integration", () => {
     await run(() => work.resolve(readyWork()));
     await run(async () => { await opening; });
     expect(current.settings).toMatchObject({ base: BASE_VERSION, exposure: 0.9, contrast: 23 });
-    await run(() => current.returnToGrid());
+    await run(async () => { expect(await current.returnToGrid()).toBe(true); });
     expect(fixture.saveDevelopSettings).toHaveBeenCalledWith(target.photo.id,
       expect.objectContaining({ base: BASE_VERSION, exposure: 0.9, contrast: 23 }), expect.anything());
   });
