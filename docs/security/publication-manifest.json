@@ -4933,8 +4933,10 @@
         "path": "packages/develop-engine/crates/niho-develop-render/src/lib.rs",
         "sha256": "a9ac3a784a2eb9250747dc2eaabc10c958c1a10d71c7ca16ffdd0d96b40456bc"
       },
-      "outputSha256": "a9ac3a784a2eb9250747dc2eaabc10c958c1a10d71c7ca16ffdd0d96b40456bc",
-      "modifications": []
+      "outputSha256": "aa468ef96507b57f3c8dbdae2c484d7aa56afaae6e3b6a3e7ef4bc0c88e7b463",
+      "modifications": [
+        "公開Issue #26/#27/#29: 旧版を保つfloat cube候補、研究用WB/H-Sプローブ、合成検証と計測契約を追加。"
+      ]
     },
     {
       "path": "packages/develop-engine/crates/niho-develop-render/src/main.rs",
@@ -4955,8 +4957,10 @@
         "path": "packages/develop-engine/crates/niho-develop-render/tests/cli.rs",
         "sha256": "8ddf42804ccd8202fb8834bc499d2d03a331eb0ff96e020421a776f2286ef9bd"
       },
-      "outputSha256": "8ddf42804ccd8202fb8834bc499d2d03a331eb0ff96e020421a776f2286ef9bd",
-      "modifications": []
+      "outputSha256": "bd9bb8cf291640282505b7e571c914d3acfe636aad32be30222844b93848084e",
+      "modifications": [
+        "公開Issue #26/#27/#29: 旧版を保つfloat cube候補、研究用WB/H-Sプローブ、合成検証と計測契約を追加。"
+      ]
     },
     {
       "path": "packages/develop-engine/crates/niho-develop-wasm/Cargo.toml",
@@ -5278,8 +5282,10 @@
         "path": "packages/develop-engine/crates/niho-develop/src/color_ops.rs",
         "sha256": "cd0c61a609a12094f4f95b019c1671187e1d320b95c36b34da5c87dc7c3835d1"
       },
-      "outputSha256": "cd0c61a609a12094f4f95b019c1671187e1d320b95c36b34da5c87dc7c3835d1",
-      "modifications": []
+      "outputSha256": "989173ee1e35e2f8f83d59d7c0377e0ac0ab6b90ce7730c41910c86cba975227",
+      "modifications": [
+        "公開Issue #26/#27/#29: 旧版を保つfloat cube候補、研究用WB/H-Sプローブ、合成検証と計測契約を追加。"
+      ]
     },
     {
       "path": "packages/develop-engine/crates/niho-develop/src/convert.rs",
@@ -5399,8 +5405,10 @@
         "path": "packages/develop-engine/crates/niho-develop/src/lib.rs",
         "sha256": "1591d49effaa779c8e23ad6877508ccf336565eec8336d5b4e6faa3b5d3846b0"
       },
-      "outputSha256": "1591d49effaa779c8e23ad6877508ccf336565eec8336d5b4e6faa3b5d3846b0",
-      "modifications": []
+      "outputSha256": "c22b1276b79d365adaf15a98de7942329368eb085cb0f9fb05e1489b9f24a984",
+      "modifications": [
+        "公開Issue #26/#27/#29: 旧版を保つfloat cube候補、研究用WB/H-Sプローブ、合成検証と計測契約を追加。"
+      ]
     },
     {
       "path": "packages/develop-engine/crates/niho-develop/src/look.rs",
@@ -5421,8 +5429,10 @@
         "path": "packages/develop-engine/crates/niho-develop/src/lut.rs",
         "sha256": "d0b9d65a032d449a1f234d6e65ecc328dd44f6fe51ede51d602c5c58aae7e96e"
       },
-      "outputSha256": "d0b9d65a032d449a1f234d6e65ecc328dd44f6fe51ede51d602c5c58aae7e96e",
-      "modifications": []
+      "outputSha256": "171c263e2978ce26e7049232f80ee992330c307e613daa61a236f9e39f2e408a",
+      "modifications": [
+        "公開Issue #26/#27/#29: 旧版を保つfloat cube候補、研究用WB/H-Sプローブ、合成検証と計測契約を追加。"
+      ]
     },
     {
       "path": "packages/develop-engine/crates/niho-develop/src/niho3.rs",
@@ -5465,8 +5475,10 @@
         "path": "packages/develop-engine/crates/niho-develop/src/niho6.rs",
         "sha256": "6383017c670ab330829ebd61fde9e374e58f468440969b75cb64f1f4e8d376fd"
       },
-      "outputSha256": "6383017c670ab330829ebd61fde9e374e58f468440969b75cb64f1f4e8d376fd",
-      "modifications": []
+      "outputSha256": "a5fd4fc8eae33e304795649646dec98b95f61efa4526fa86cdf7158e38bf3dc0",
+      "modifications": [
+        "公開Issue #26/#27/#29: 旧版を保つfloat cube候補、研究用WB/H-Sプローブ、合成検証と計測契約を追加。"
+      ]
     },
     {
       "path": "packages/develop-engine/crates/niho-develop/src/niho6_response.rs",
@@ -5520,8 +5532,10 @@
         "path": "packages/develop-engine/crates/niho-develop/src/pipeline.rs",
         "sha256": "d982d76cf1b5d34526f700e5edfcef00ae8647d22b845c0f7234ed340ba9d641"
       },
-      "outputSha256": "d982d76cf1b5d34526f700e5edfcef00ae8647d22b845c0f7234ed340ba9d641",
-      "modifications": []
+      "outputSha256": "f96100f58f2e04ec047bd0c38e1430d9b76b17313b47d802a34bb12efcf4d3d8",
+      "modifications": [
+        "公開Issue #26/#27/#29: 旧版を保つfloat cube候補、研究用WB/H-Sプローブ、合成検証と計測契約を追加。"
+      ]
     },
     {
       "path": "packages/develop-engine/crates/niho-develop/src/raw_chroma.rs",
@@ -5630,8 +5644,10 @@
         "path": "packages/develop-engine/crates/niho-develop/src/settings.rs",
         "sha256": "756a24a09d738b2341974d92d89b82f55b42eb6060b6e0c99ee4a532947a1b47"
       },
-      "outputSha256": "756a24a09d738b2341974d92d89b82f55b42eb6060b6e0c99ee4a532947a1b47",
-      "modifications": []
+      "outputSha256": "7459cdc1956c1e68412a9da7ae6360f60dce79c55af7208bc7c4139238bf11af",
+      "modifications": [
+        "公開Issue #26/#27/#29: 旧版を保つfloat cube候補、研究用WB/H-Sプローブ、合成検証と計測契約を追加。"
+      ]
     },
     {
       "path": "packages/develop-engine/crates/niho-develop/src/spatial.rs",
@@ -5652,8 +5668,10 @@
         "path": "packages/develop-engine/crates/niho-develop/src/tone_ops.rs",
         "sha256": "394b07235a9b58a8f3756a1391bcc1b286eeda30f348f3334ebc4db4c42a2ef8"
       },
-      "outputSha256": "394b07235a9b58a8f3756a1391bcc1b286eeda30f348f3334ebc4db4c42a2ef8",
-      "modifications": []
+      "outputSha256": "e9583a92e5b6315365baee8789654816c6734f2278e7be9e7e1f5cd99a29fb29",
+      "modifications": [
+        "公開Issue #26/#27/#29: 旧版を保つfloat cube候補、研究用WB/H-Sプローブ、合成検証と計測契約を追加。"
+      ]
     },
     {
       "path": "packages/develop-engine/crates/niho-develop/src/wb_table.rs",
@@ -5674,8 +5692,10 @@
         "path": "packages/develop-engine/crates/niho-develop/src/xmp.rs",
         "sha256": "be5ddce69eceafb334c173ee92af3614c044039b103903ad1dfef24758f1ec45"
       },
-      "outputSha256": "be5ddce69eceafb334c173ee92af3614c044039b103903ad1dfef24758f1ec45",
-      "modifications": []
+      "outputSha256": "90564d45b4b74011d48de33eb5717afa575d64e18cee8914d136d65c4094043e",
+      "modifications": [
+        "公開Issue #26/#27/#29: 旧版を保つfloat cube候補、研究用WB/H-Sプローブ、合成検証と計測契約を追加。"
+      ]
     },
     {
       "path": "packages/develop-engine/crates/niho-develop/src/xmp/amount.rs",
@@ -5696,8 +5716,10 @@
         "path": "packages/develop-engine/crates/niho-develop/src/xmp/write.rs",
         "sha256": "f583b51766c756fe31b623949a8174abd304ff660a7793e332b3153faf2aa749"
       },
-      "outputSha256": "f583b51766c756fe31b623949a8174abd304ff660a7793e332b3153faf2aa749",
-      "modifications": []
+      "outputSha256": "ac370a40e924f0b59674b062c04b51501dc7b06521099b9ae865ff2481533a96",
+      "modifications": [
+        "公開Issue #26/#27/#29: 旧版を保つfloat cube候補、研究用WB/H-Sプローブ、合成検証と計測契約を追加。"
+      ]
     },
     {
       "path": "packages/develop-engine/crates/niho-develop/tests/auto.rs",
@@ -8466,8 +8488,8 @@
     },
     {
       "path": "packages/develop-engine/README.md",
-      "sha256": "9b50996a622b88566bc59c929efe3276843e812a29461ec6b4dd97faf2b6d400",
-      "origin": "#9で独立作成。所有測定対・metadataを除いた所有RAW/参照画像、検証tool、公開build/test契約または第三者license全文。詳細はdocs/migration/raw-engine.mdと資産台帳に記録。"
+      "sha256": "413cd3fe309dcdbeedda925df35542c545bef04758d38033df4ffbb3ae6a0a73",
+      "origin": "#9で独立作成。所有測定対・metadataを除いた所有RAW/参照画像、検証tool、公開build/test契約または第三者license全文。詳細はdocs/migration/raw-engine.mdと資産台帳に記録。\n変更理由: 公開Issue #26/#27/#29: 旧版を保つfloat cube候補、研究用WB/H-Sプローブ、合成検証と計測契約を追加。"
     },
     {
       "path": "packages/develop-engine/crates/niho-base-raw/README.md",
@@ -8553,6 +8575,51 @@
       "path": "packages/develop-engine/tools/independent-profile/requirements-extract.txt",
       "sha256": "172e9ac1e2fee27cbad9a1ac0d62b903960e8c86e287f1c8f9851def49c70afd",
       "origin": "#9で独立作成。所有測定対・metadataを除いた所有RAW/参照画像、検証tool、公開build/test契約または第三者license全文。詳細はdocs/migration/raw-engine.mdと資産台帳に記録。\n変更理由: Dependency reviewで検出されたPillow 12.0.0の脆弱性を修正するため13.0.0へ更新。"
+    },
+    {
+      "path": "packages/develop-engine/NIHO8.md",
+      "sha256": "a57ea5b72df2d703262ad62b6df7d758dd454fe3e1a38111065324bb1774892c",
+      "origin": "公開Issue #26/#27/#29 のため公開済み数式・既存primitiveから独立実装した研究用コード・合成テスト・日本語手順。非公開の写真・参照画素・パス・履歴・第三者ソースを含まない。"
+    },
+    {
+      "path": "packages/develop-engine/RESEARCH26-27.md",
+      "sha256": "89dc3ff1bfeb80f13caa2a9c905ed724f6c2ed9ef146733e554de30abfde428e",
+      "origin": "公開Issue #26/#27/#29 のため公開済み数式・既存primitiveから独立実装した研究用コード・合成テスト・日本語手順。非公開の写真・参照画素・パス・履歴・第三者ソースを含まない。"
+    },
+    {
+      "path": "packages/develop-engine/crates/niho-develop/examples/analytic_hs_probe.rs",
+      "sha256": "b79f015e86129886b6a624c6391fca9f47c5ae5869b03dedbef41a6780ad6432",
+      "origin": "公開Issue #26/#27/#29 のため公開済み数式・既存primitiveから独立実装した研究用コード・合成テスト・日本語手順。非公開の写真・参照画素・パス・履歴・第三者ソースを含まない。"
+    },
+    {
+      "path": "packages/develop-engine/crates/niho-develop/examples/linear_jpeg_wb_fit.rs",
+      "sha256": "d5f569147dbe43acf7b16c4451c43682e0f32146d2ecaf8ce4601bdad1da9c87",
+      "origin": "公開Issue #26/#27/#29 のため公開済み数式・既存primitiveから独立実装した研究用コード・合成テスト・日本語手順。非公開の写真・参照画素・パス・履歴・第三者ソースを含まない。"
+    },
+    {
+      "path": "packages/develop-engine/crates/niho-develop/examples/niho8_measure.rs",
+      "sha256": "6a2c452bf1df3df6f93e61212deca8294b2eaf82b8f54a8470158ba19aaf0892",
+      "origin": "公開Issue #26/#27/#29 のため公開済み数式・既存primitiveから独立実装した研究用コード・合成テスト・日本語手順。非公開の写真・参照画素・パス・履歴・第三者ソースを含まない。"
+    },
+    {
+      "path": "packages/develop-engine/crates/niho-develop/src/research/analytic_hs.rs",
+      "sha256": "ea9b67afe3c716853e4506b97b2855c20562e32e3a6d46686e96b208a957741d",
+      "origin": "公開Issue #26/#27/#29 のため公開済み数式・既存primitiveから独立実装した研究用コード・合成テスト・日本語手順。非公開の写真・参照画素・パス・履歴・第三者ソースを含まない。"
+    },
+    {
+      "path": "packages/develop-engine/crates/niho-develop/src/research/linear_jpeg_wb.rs",
+      "sha256": "5d42b3341600865cba0d35987eecd181b36a5f56de7e2c4c99c135e55fe8d0bf",
+      "origin": "公開Issue #26/#27/#29 のため公開済み数式・既存primitiveから独立実装した研究用コード・合成テスト・日本語手順。非公開の写真・参照画素・パス・履歴・第三者ソースを含まない。"
+    },
+    {
+      "path": "packages/develop-engine/crates/niho-develop/src/research/mod.rs",
+      "sha256": "35ea6f84d1d46b781371658dbbdf68f4a742ee1660a881476a6f985e893c05fd",
+      "origin": "公開Issue #26/#27/#29 のため公開済み数式・既存primitiveから独立実装した研究用コード・合成テスト・日本語手順。非公開の写真・参照画素・パス・履歴・第三者ソースを含まない。"
+    },
+    {
+      "path": "packages/develop-engine/crates/niho-develop/tests/niho8.rs",
+      "sha256": "45564ac8d273e4dd21ef2f9f90c77b2b71bd7b32a4176e2907e1973d10aa42f8",
+      "origin": "公開Issue #26/#27/#29 のため公開済み数式・既存primitiveから独立実装した研究用コード・合成テスト・日本語手順。非公開の写真・参照画素・パス・履歴・第三者ソースを含まない。"
     }
   ],
   "excludedSources": [

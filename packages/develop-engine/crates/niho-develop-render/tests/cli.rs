@@ -761,7 +761,7 @@ fn version_and_help() {
         "niho-develop-render {}",
         niho_develop::CRATE_VERSION
     )));
-    assert!(version.stdout.contains("engine niho-7"));
+    assert!(version.stdout.contains("engine niho-8"));
     let help = run(&["--help"]);
     assert_eq!(help.code, 0);
     assert!(help.stdout.contains("Exit codes"));
@@ -791,5 +791,5 @@ fn settings_loader_accepts_all_formula_versions_and_rejects_unknown() {
         error.code,
         niho_develop_render::ErrorCode::UnsupportedSettings
     );
-    assert!(error.message.contains("niho-1 through niho-7"));
+    assert!(error.message.contains("niho-1 through niho-8"));
 }
