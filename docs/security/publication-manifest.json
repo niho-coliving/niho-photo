@@ -8931,8 +8931,8 @@
     },
     {
       "path": "apps/camera/scripts/e2e/progressive-open.js",
-      "sha256": "753723bdccfc4588720845442ed6670926e715c616fb0b70be5e09d8ebd81550",
-      "origin": "Issue #13のため独立作成した実UI検証probe。専用e2e bundleだけを操作し、実画像・元の名前・path・画像hashを公開出力しない。\n変更理由: 画像情報を含まないE2E待機段階traceを追加。\n変更理由: 画面未描画の失敗をpreset変化なしへ誤分類しない。\n変更理由: 通常の正規入力fallbackも実paintで完了と判定し、遅い測定値を除外しない。\n変更理由: warmを同一アプリ内の正規表示から一覧へ戻る再表示として計測しnativeの区間開始を渡す"
+      "sha256": "f60717241b4f1134e81a54663e2e956944e63d1f28d1292fea5f073a6bca4fe5",
+      "origin": "Issue #13のため独立作成した実UI検証probe。専用e2e bundleだけを操作し、実画像・元の名前・path・画像hashを公開出力しない。\n変更理由: 画像情報を含まないE2E待機段階traceを追加。\n変更理由: 画面未描画の失敗をpreset変化なしへ誤分類しない。\n変更理由: 通常の正規入力fallbackも実paintで完了と判定し、遅い測定値を除外しない。\n変更理由: warmを同一アプリ内の正規表示から一覧へ戻る再表示として計測しnativeの区間開始を渡す\n変更理由: 正規入力の遅い初回プリセット描画も3秒で除外せず30秒まで実測時間として保持する"
     },
     {
       "path": "apps/camera/scripts/measure-progressive-open.mjs",

@@ -104,7 +104,7 @@
     await waitFor(() => exposure()?.value !== valueBefore, 3000);
     const acceptedMs = performance.now() - inputAt;
     stage = "exposure-paint";
-    await waitFor(() => signature() !== null && signature() !== initial, 5000);
+    await waitFor(() => signature() !== null && signature() !== initial, 30000);
     await afterPaint();
     const exposurePaintMs = performance.now() - inputAt;
     const exposureAt = performance.now();
@@ -117,7 +117,7 @@
       button.click();
       await waitFor(() => button.getAttribute("aria-current") === "true", 3000);
       try {
-        await waitFor(() => signature() !== null && signature() !== before, 3000);
+        await waitFor(() => signature() !== null && signature() !== before, 30000);
         await afterPaint();
         presetAt = performance.now();
         presetPaintMs = presetAt - presetInputAt;
