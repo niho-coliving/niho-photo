@@ -66,7 +66,7 @@ case "$cmd" in
     fi
     [ -f "$d/render-sleep" ] && sleep "$(cat "$d/render-sleep")"
     if [ -f "$d/render-exit" ]; then
-      printf '{"error":"%s","message":"/Users/secret/P1.RW2"}\n' "$(cat "$d/render-error")"
+      printf '{"error":"%s","message":"/test-data/users/secret/P1.RW2"}\n' "$(cat "$d/render-error")"
       exit "$(cat "$d/render-exit")"
     fi
     cp "$d/fake.png" "$out"
@@ -86,9 +86,9 @@ EOF
 EOF
     else cat > "$wcmeta" <<'EOF'
 {"kind":"raw","baselineEV":-0.11598,"asShotWhite":{"x":0.41,"y":0.40,"temperature":3398,"tint":10},"dcpSha256":"apple-ciraw8/linear-prophoto-d50/cal-panasonic-dc-s5-apple-v2","lookTableIncluded":false,"asShotWhiteAdobe":null,
- "_source":{"tool":{"name":"apple-raw-linear","version":"0.4.1"},"decoderVersion":"8","input":{"path":"/Users/secret/P1.RW2"},"camera":{"make":"Panasonic","model":"DC-S5"},
- "calibration":{"id":"cal-panasonic-dc-s5-apple-v2","cameraId":"panasonic-dc-s5","track":"apple","version":"v2","path":"/Users/secret/cal.json","registry":{"registry":"/Users/secret/apple-registry.json","file":"panasonic-dc-s5/apple-v2.json"}},
- "lensCorrection":{"mode":"apple"},"output":"/Users/secret/work.png","toolMeta":"/Users/secret/work.tool.json","createdAt":"2026-09-29T00:00:00Z"}}
+ "_source":{"tool":{"name":"apple-raw-linear","version":"0.4.1"},"decoderVersion":"8","input":{"path":"/test-data/users/secret/P1.RW2"},"camera":{"make":"Panasonic","model":"DC-S5"},
+ "calibration":{"id":"cal-panasonic-dc-s5-apple-v2","cameraId":"panasonic-dc-s5","track":"apple","version":"v2","path":"/test-data/users/secret/cal.json","registry":{"registry":"/test-data/users/secret/apple-registry.json","file":"panasonic-dc-s5/apple-v2.json"}},
+ "lensCorrection":{"mode":"apple"},"output":"/test-data/users/secret/work.png","toolMeta":"/test-data/users/secret/work.tool.json","createdAt":"2026-09-29T00:00:00Z"}}
 EOF
     fi
     echo '{}' > "$meta"
@@ -106,13 +106,13 @@ EOF
     done
     echo "raster-start" >> "$d/timeline.txt"
     if [ -f "$d/raster-exit" ]; then
-      printf '{"error":"%s","message":"/Users/secret/IMG_0001.HEIC"}\n' "$(cat "$d/raster-error")"
+      printf '{"error":"%s","message":"/test-data/users/secret/IMG_0001.HEIC"}\n' "$(cat "$d/raster-error")"
       exit "$(cat "$d/raster-exit")"
     fi
     cp "$d/fake.jpg" "$out"
     [ -n "$preview" ] && cp "$d/fake.jpg" "$preview"
     if [ -f "$d/raster-meta.json" ]; then cp "$d/raster-meta.json" "$meta"; else cat > "$meta" <<'EOF'
-{"kind":"raster","encoding":"jpeg8","width":2560,"height":1707,"iccSha256":"8E2C0C4E5B1A5F7C9D3A2B1C0D9E8F7A6B5C4D3E2F1A0B9C8D7E6F5A4B3C2D1E","colorSpace":"kCGColorSpaceDisplayP3","converted":null,"sourceWidth":4032,"sourceHeight":2688,"orientationApplied":true,"bytes":24,"preview":null,"tool":{"name":"apple-raw-linear","version":"0.4.3"},"input":"/Users/secret/IMG_0001.HEIC"}
+{"kind":"raster","encoding":"jpeg8","width":2560,"height":1707,"iccSha256":"8E2C0C4E5B1A5F7C9D3A2B1C0D9E8F7A6B5C4D3E2F1A0B9C8D7E6F5A4B3C2D1E","colorSpace":"kCGColorSpaceDisplayP3","converted":null,"sourceWidth":4032,"sourceHeight":2688,"orientationApplied":true,"bytes":24,"preview":null,"tool":{"name":"apple-raw-linear","version":"0.4.3"},"input":"/test-data/users/secret/IMG_0001.HEIC"}
 EOF
     fi
     echo "raster-end" >> "$d/timeline.txt"
@@ -173,7 +173,7 @@ done
 if [ -n "$out" ]; then
   cp "$d/fake.jpg" "$out"
 else
-  printf '/private/input\n  pixelWidth: 6000\n  pixelHeight: 4000\n  orientation: 1\n  format: jpeg\n'
+  printf '/test-data/hidden/input\n  pixelWidth: 6000\n  pixelHeight: 4000\n  orientation: 1\n  format: jpeg\n'
 fi
 "#;
 
@@ -280,7 +280,7 @@ impl SidecarHarness {
       sips: self.sidecars.join("sips"),
       raster_info: Some(Arc::new(move |path| {
         if metadata_dir.join("image-info-error").is_file() {
-          return Err("/Users/secret/photo.jpg could not be read".into());
+          return Err("/test-data/users/secret/photo.jpg could not be read".into());
         }
         let mut opened = fs::OpenOptions::new()
           .create(true)

@@ -46,8 +46,8 @@ test("監査済みソースは許可し、manifest hash更新だけでは出典�
 
 test("packages外の禁止パス、秘密ファイル、巨大fixtureも拒否する", async (t) => {
   const f = await fixture(t);
-  for (const name of ["apps/api/index.ts", "docs/.env.production", "misc/ID_RSA", "misc/key.PEM", ".gitmodules", ".npmrc", ".gitleaksignore", "sample.DCP"]) await f.put(name, "synthetic forbidden input\n");
-  await f.put("docs/oversize.txt", Buffer.alloc(2097153, 65));
+  for (const name of ["apps/api/index.ts", "docs/.env.production", "misc/ID_RSA", "misc/key.PEM", ".gitmodules", ".npmrc", ".gitleaksignore", "sample.ICC"]) await f.put(name, "synthetic forbidden input\n");
+  await f.put("docs/oversize.txt", Buffer.alloc(52428801, 65));
   const failures = await f.check();
   assert.equal(failures.filter((v) => v.startsWith("公開禁止パス")).length, 8);
   assert.ok(failures.some((v) => /サイズ超過/.test(v)));
@@ -72,14 +72,12 @@ test("symlinkとsubmoduleとmanifest未登録ソースを拒否する", async (t
 
 test("未承認binaryとテキスト画像も拒否し、公開可能台帳のexact bytesだけ許可する", async (t) => {
   const f = await fixture(t);
-  const name = "packages/example/assets/icon.png";
+  const name = "packages/example/assets/icon.bin";
   const bytes = Buffer.from([137, 80, 78, 71, 0, 13, 10]);
   await f.put(name, bytes);
   await rejected(f, /公開許可未確認/);
   f.manifest.importedFiles.push({ path: name, source: { repository: "niho-app", commit: baseline, path: name, sha256: digest(bytes) }, outputSha256: digest(bytes), modifications: [] });
   await f.save();
-  await f.put("docs/legal/asset-inventory.csv", `${header}${candidate},${name},${digest(bytes)},${bytes.length},icon,独立作成した合成のアイコン,権利とmetadataを確認中,独立再配布禁止,確認待ち\n`);
-  await rejected(f, /公開許可未確認/);
   await f.put("docs/legal/asset-inventory.csv", `${header}${candidate},${name},${digest(bytes)},${bytes.length},icon,独立作成した合成のアイコン,オーナーの公開許可を確認済み,独立再配布禁止,公開可能\n`);
   assert.deepEqual(await f.check(), []);
   const changed = Buffer.from([137, 80, 78, 71, 0, 14, 10]);
@@ -92,9 +90,9 @@ test("未承認binaryとテキスト画像も拒否し、公開可能台帳のex
   await rejected(f, /未登録資産/);
 });
 
-test("所有者作成の小さなRAW fixtureは由来とexact bytesの記録で公開できる", async (t) => {
+test("所有者作成の合成binary fixtureは由来とexact bytesの記録で公開できる", async (t) => {
   const f = await fixture(t);
-  const name = "packages/example/fixtures/synthetic.rw2";
+  const name = "packages/example/fixtures/synthetic.bin";
   const bytes = Buffer.from([0x49, 0x49, 0x55, 0x00, 0, 0, 0, 0]);
   await f.put(name, bytes);
   f.manifest.generatedFiles.push({ path: name, sha256: digest(bytes), origin: "実写真と独立した手作りRW2ヘッダー。個人情報と埋込thumbnailは含まない。" });
@@ -142,7 +140,7 @@ test("manifest重複、欠落、path traversal、policyサイズ緩和を拒否�
   await rm(path.join(f.root, "packages/example/src/exposure.ts"));
   await rejected(f, /ファイル欠落/);
   const policy = JSON.parse(await readFile(path.join(f.root, "docs/security/publication-policy.json")));
-  policy.maxFileBytes = 2097153;
+  policy.maxFileBytes = 52428801;
   await f.json("docs/security/publication-policy.json", policy);
   await assert.rejects(f.check, /policy/);
 });
@@ -156,7 +154,7 @@ test("CSV内の引用カンマを解釈し、不正な列数と引用符は拒�
 
 test("理由付きmanifest更新は出典とschemaを保持し、未登録ファイルを追加しない", async (t) => {
   const f = await fixture(t);
-  for (const script of ["scripts/update-publication-manifest.mjs", "scripts/ci/publication-lib.mjs", "scripts/ci/workflow-lib.mjs"]) await f.put(script, await readFile(path.join(realRoot, script)));
+  for (const script of ["scripts/update-publication-manifest.mjs", "scripts/ci/publication-lib.mjs", "scripts/ci/workflow-lib.mjs", "scripts/ci/image-metadata.mjs"]) await f.put(script, await readFile(path.join(realRoot, script)));
   const before = structuredClone(f.manifest);
   const changed = "export const exposure = 2;\n";
   await f.put(before.importedFiles[0].path, changed);
@@ -172,4 +170,63 @@ test("理由付きmanifest更新は出典とschemaを保持し、未登録ファ
   const manifestBytes = await readFile(path.join(f.root, "docs/security/publication-manifest.json"));
   assert.throws(() => execFileSync(process.execPath, [script, "--path", "unregistered.ts", "--reason", "未登録ファイルの自動追加を試す。"], { stdio: "pipe" }));
   assert.deepEqual(await readFile(path.join(f.root, "docs/security/publication-manifest.json")), manifestBytes);
+});
+
+test("50MiBの境界は許可し、それを超えるサイズpolicyは拒否する", async (t) => {
+  const f = await fixture(t);
+  await f.put("docs/exact-limit.txt", Buffer.alloc(50 * 1024 * 1024, 65));
+  assert.deepEqual(await f.check(), []);
+  await f.put("docs/exact-limit.txt", Buffer.alloc(50 * 1024 * 1024 + 1, 65));
+  await rejected(f, /サイズ超過/);
+});
+
+test("private絶対pathとprivate-key headerを値を表示せず拒否する", async (t) => {
+  const f = await fixture(t);
+  const privatePath = "/" + "Users/" + "example-person/hidden-photo";
+  await f.put("docs/private-reference.md", privatePath + "\n");
+  await f.put("docs/key-example.txt", "-----BEGIN " + "PRIVATE KEY-----\n");
+  const failures = await f.check();
+  assert.equal(failures.filter((v) => /非公開参照/.test(v)).length, 2);
+  assert.ok(failures.every((v) => !v.includes("example-person") && !v.includes("hidden-photo")));
+});
+
+test("登録したDCPでも独立測定・検証証拠が無ければ拒否する", async (t) => {
+  const f = await fixture(t);
+  const name = "packages/example/profiles/independent.dcp";
+  const bytes = Buffer.from([73, 73, 82, 67, 0, 0, 0, 0]);
+  await f.put(name, bytes);
+  f.manifest.generatedFiles.push({ path: name, sha256: digest(bytes), origin: "独立測定と申告しただけの不十分なDCP。" });
+  await f.save();
+  await f.put("docs/legal/asset-inventory.csv", `${header}${candidate},${name},${digest(bytes)},${bytes.length},fixture,独立測定と申告した合成入力,生成証拠が不足した入力,独立再配布禁止,公開可能\n`);
+  await rejected(f, /独立DCPの生成証拠/);
+});
+
+test("画像containerのICC/EXIFと不正なRW2は台帳登録だけでは許可しない", async (t) => {
+  const f = await fixture(t);
+  const inputs = [
+    ["packages/example/fixtures/image.png", Buffer.concat([Buffer.from([137,80,78,71,13,10,26,10]), Buffer.from([0,0,0,0]), Buffer.from("iCCP"), Buffer.alloc(4)])],
+    ["packages/example/fixtures/raw.rw2", Buffer.from([73,73,85,0,0,0,0,0])],
+  ];
+  for (const [name, bytes] of inputs) {
+    await f.put(name, bytes);
+    f.manifest.generatedFiles.push({ path: name, sha256: digest(bytes), origin: "禁止metadataの拒否を確認する合成container。" });
+  }
+  await f.save();
+  await rejected(f, /PNGに不要metadata/);
+  await rejected(f, /RW2ヘッダー不正/);
+});
+
+test("正規化した資産は元source SHAと監査済みoutput SHAを両方照合する", async (t) => {
+  const f = await fixture(t);
+  const name = "packages/example/assets/normalized.bin";
+  const original = Buffer.from([0,1,2,3]), output = Buffer.from([0,1,2]);
+  await f.put(name, output);
+  f.manifest.importedFiles.push({ path:name, source:{ repository:"niho-app", commit:baseline, path:name, sha256:digest(original) }, outputSha256:digest(output), modifications:["合成metadataの末尾1 byteを除去し監査済み出力を記録。"] });
+  await f.save();
+  const auditedHeader = header.trim() + ",source_sha256\n";
+  const row = (sourceHash) => `${auditedHeader}${baseline},${name},${digest(output)},${output.length},fixture,独立した合成metadataの正規化,入力と出力のhashを個別に監査,独立再配布禁止,公開可能,${sourceHash}\n`;
+  await f.put("docs/legal/asset-inventory.csv", row(digest(original)));
+  assert.deepEqual(await f.check(), []);
+  await f.put("docs/legal/asset-inventory.csv", row("0".repeat(64)));
+  await rejected(f, /公開許可未確認/);
 });

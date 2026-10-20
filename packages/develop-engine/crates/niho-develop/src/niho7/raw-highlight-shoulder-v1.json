@@ -1,0 +1,57 @@
+{
+  "schema": "niho-raw-highlight-shoulder/v1",
+  "features": [
+    "signedLogY",
+    "sceneMeanLogY",
+    "signedLogY-localLog16",
+    "frozenH100Gain"
+  ],
+  "mean": [
+    1.2280945661228115,
+    -3.8602234125136583,
+    2.0680823381164886,
+    -2.6144484252068785
+  ],
+  "scale": [
+    0.2126170019919289,
+    0.27667560050883827,
+    0.9967680110587014,
+    1.3936844453906772
+  ],
+  "coefficientsA": [
+    0.4883954225830254,
+    -0.1930938335092749,
+    -1.1320757681791116,
+    -0.28604296198279877,
+    0.1703710956174385
+  ],
+  "coefficientsB": [
+    -3.2236331857286853,
+    1.8854873820916294,
+    -1.0744548514538912,
+    1.1624810968391996,
+    -1.235146961424848
+  ],
+  "response": "Ypre/(1+(h*softplus(A)+h^2*softplus(B))*Ypre), floor Ypre/256; convex blend with original H by immutable full-source luminance-headroom weight smoothstep(.8,1,Y)",
+  "applicationMask": "immutable baseline-exposed luminance smoothstep(.8,1,Y), negative channels excluded, no encoding ceiling/chroma/flatness dependence",
+  "scope": "apple-ciraw8 Sony ILME-FX30 known calibration; no source/date identity",
+  "provenance": {
+    "privateModelSha256": "00f1bd5804a8447e6f71f707a21171afc9393395b114f6852daa452e8a063033",
+    "sourceModelJsonSha256": "98373b7581ad03b1712449d1a3c8aae7bde56ebe2c20dee46fb62f697429565b",
+    "fitDataProtocolSha256": "10852e544e2c531fec5b748c0eeeb9c9f136bd2570168e544117c15a60794fa4",
+    "domainArtifactSha256": "40d7453ede9d9eb00cb52eaebab94085ee808a623fc665141d048aa9738591eb"
+  },
+  "domainLow": [
+    0.6307174809495434,
+    -4.153563976287842,
+    0.03917349808613026,
+    -5.567575366236316
+  ],
+  "domainHigh": [
+    1.5588974639512903,
+    -3.427155017852783,
+    5.408931828728374,
+    -0.7754452328637627
+  ],
+  "featureDomain": "component-wise clip to observed original R42 training min/max before fixed affine; no refit; physical Y unchanged"
+}

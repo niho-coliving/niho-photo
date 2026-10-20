@@ -1,0 +1,7 @@
+# wasm SIMD (simd128): auto-vectorized pyramid loops and the explicit f32x4
+# cube interpolation. Only plain f32 add/mul are used (no fused or relaxed
+# operations), so the frame stays bit-identical to the native build
+# (checked by scripts/smoke.mjs). Part of the published wasm's build
+# recipe: changing it changes the bytes (README "wasm の公開").
+[target.wasm32-unknown-unknown]
+rustflags = ["-C", "target-feature=+simd128"]

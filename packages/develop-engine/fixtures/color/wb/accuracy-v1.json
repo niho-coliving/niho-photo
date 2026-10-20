@@ -1,0 +1,1722 @@
+[
+ {
+  "scene": "DSC01835",
+  "model": "ZV-E10M2",
+  "kelvin": null,
+  "v2": {
+   "mean": 1.9719,
+   "p99": 6.4025,
+   "evDiff": 0.0106,
+   "warmChromaRatio": 1.0725
+  },
+  "v3": {
+   "mean": 1.2103,
+   "p99": 4.319,
+   "evDiff": 0.0097,
+   "warmChromaRatio": 1.0714
+  }
+ },
+ {
+  "scene": "DSC01835",
+  "model": "ZV-E10M2",
+  "kelvin": 4000,
+  "current": {
+   "mean": 2.4443,
+   "p99": 7.3918,
+   "evDiff": -0.1178,
+   "warmChromaRatio": 1.0639
+  },
+  "table": {
+   "mean": 1.0947,
+   "p99": 3.5896,
+   "evDiff": -0.0153,
+   "warmChromaRatio": 1.0139
+  },
+  "direct": {
+   "mean": 1.0438,
+   "p99": 3.5723,
+   "evDiff": -0.0148,
+   "warmChromaRatio": 1.0116
+  }
+ },
+ {
+  "scene": "DSC01835",
+  "model": "ZV-E10M2",
+  "kelvin": 5500,
+  "current": {
+   "mean": 5.0054,
+   "p99": 15.5288,
+   "evDiff": -0.3013,
+   "warmChromaRatio": 1.0662
+  },
+  "table": {
+   "mean": 0.9398,
+   "p99": 3.161,
+   "evDiff": -0.0542,
+   "warmChromaRatio": 0.9993
+  },
+  "direct": {
+   "mean": 0.8995,
+   "p99": 2.3187,
+   "evDiff": -0.0546,
+   "warmChromaRatio": 0.999
+  }
+ },
+ {
+  "scene": "DSC01835",
+  "model": "ZV-E10M2",
+  "kelvin": 7500,
+  "current": {
+   "mean": 6.4346,
+   "p99": 18.7135,
+   "evDiff": -0.4184,
+   "warmChromaRatio": 1.1464
+  },
+  "table": {
+   "mean": 1.0269,
+   "p99": 2.5028,
+   "evDiff": -0.0774,
+   "warmChromaRatio": 0.9018
+  },
+  "direct": {
+   "mean": 0.9278,
+   "p99": 1.9868,
+   "evDiff": -0.0766,
+   "warmChromaRatio": 0.9017
+  }
+ },
+ {
+  "scene": "DSC01837",
+  "model": "ZV-E10M2",
+  "kelvin": null,
+  "v2": {
+   "mean": 0.7325,
+   "p99": 5.4292,
+   "evDiff": -0.003,
+   "warmChromaRatio": 1.0202
+  },
+  "v3": {
+   "mean": 0.6893,
+   "p99": 2.9353,
+   "evDiff": -0.0013,
+   "warmChromaRatio": 1.0196
+  }
+ },
+ {
+  "scene": "DSC01837",
+  "model": "ZV-E10M2",
+  "kelvin": 4000,
+  "current": {
+   "mean": 1.6016,
+   "p99": 12.5906,
+   "evDiff": -0.1633,
+   "warmChromaRatio": 1.0862
+  },
+  "table": {
+   "mean": 0.7613,
+   "p99": 3.1746,
+   "evDiff": -0.0195,
+   "warmChromaRatio": 1.0006
+  },
+  "direct": {
+   "mean": 0.7256,
+   "p99": 2.237,
+   "evDiff": -0.0192,
+   "warmChromaRatio": 0.9974
+  }
+ },
+ {
+  "scene": "DSC01837",
+  "model": "ZV-E10M2",
+  "kelvin": 5500,
+  "current": {
+   "mean": 2.3783,
+   "p99": 19.5293,
+   "evDiff": -0.3531,
+   "warmChromaRatio": 1.0769
+  },
+  "table": {
+   "mean": 0.8306,
+   "p99": 4.5038,
+   "evDiff": -0.0634,
+   "warmChromaRatio": 0.989
+  },
+  "direct": {
+   "mean": 0.787,
+   "p99": 2.2182,
+   "evDiff": -0.0634,
+   "warmChromaRatio": 0.9882
+  }
+ },
+ {
+  "scene": "DSC01837",
+  "model": "ZV-E10M2",
+  "kelvin": 7500,
+  "current": {
+   "mean": 3.1584,
+   "p99": 20.7639,
+   "evDiff": -0.467,
+   "warmChromaRatio": 1.099
+  },
+  "table": {
+   "mean": 0.9457,
+   "p99": 4.0577,
+   "evDiff": -0.09,
+   "warmChromaRatio": 0.9836
+  },
+  "direct": {
+   "mean": 0.8999,
+   "p99": 2.489,
+   "evDiff": -0.0897,
+   "warmChromaRatio": 0.9833
+  }
+ },
+ {
+  "scene": "DSC09188",
+  "model": "ZV-E10M2",
+  "kelvin": null,
+  "v2": {
+   "mean": 0.8733,
+   "p99": 2.1267,
+   "evDiff": 0.0181,
+   "warmChromaRatio": 1.0041
+  },
+  "v3": {
+   "mean": 0.8403,
+   "p99": 2.0131,
+   "evDiff": 0.0185,
+   "warmChromaRatio": 1.0035
+  }
+ },
+ {
+  "scene": "DSC09188",
+  "model": "ZV-E10M2",
+  "kelvin": 4000,
+  "current": {
+   "mean": 1.1549,
+   "p99": 2.4376,
+   "evDiff": 0.0317,
+   "warmChromaRatio": 0.9832
+  },
+  "table": {
+   "mean": 0.8417,
+   "p99": 2.0147,
+   "evDiff": 0.0182,
+   "warmChromaRatio": 0.9998
+  },
+  "direct": {
+   "mean": 0.8474,
+   "p99": 2.0207,
+   "evDiff": 0.0179,
+   "warmChromaRatio": 0.9975
+  }
+ },
+ {
+  "scene": "DSC09188",
+  "model": "ZV-E10M2",
+  "kelvin": 5500,
+  "current": {
+   "mean": 2.4674,
+   "p99": 4.4418,
+   "evDiff": -0.1245,
+   "warmChromaRatio": 1.0815
+  },
+  "table": {
+   "mean": 0.9459,
+   "p99": 2.124,
+   "evDiff": 0.0071,
+   "warmChromaRatio": 0.9966
+  },
+  "direct": {
+   "mean": 0.9359,
+   "p99": 2.1193,
+   "evDiff": 0.0073,
+   "warmChromaRatio": 0.9976
+  }
+ },
+ {
+  "scene": "DSC09188",
+  "model": "ZV-E10M2",
+  "kelvin": 7500,
+  "current": {
+   "mean": 3.9272,
+   "p99": 7.5165,
+   "evDiff": -0.2315,
+   "warmChromaRatio": 1.0838
+  },
+  "table": {
+   "mean": 1.0441,
+   "p99": 2.5845,
+   "evDiff": -0.0035,
+   "warmChromaRatio": 0.9744
+  },
+  "direct": {
+   "mean": 1.0421,
+   "p99": 2.583,
+   "evDiff": -0.0031,
+   "warmChromaRatio": 0.9756
+  }
+ },
+ {
+  "scene": "DSC09206",
+  "model": "ZV-E10M2",
+  "kelvin": null,
+  "v2": {
+   "mean": 0.7894,
+   "p99": 2.3065,
+   "evDiff": 0.0051,
+   "warmChromaRatio": 0.9172
+  },
+  "v3": {
+   "mean": 0.7831,
+   "p99": 2.2662,
+   "evDiff": 0.0047,
+   "warmChromaRatio": 0.9164
+  }
+ },
+ {
+  "scene": "DSC09206",
+  "model": "ZV-E10M2",
+  "kelvin": 4000,
+  "current": {
+   "mean": 1.2303,
+   "p99": 3.7275,
+   "evDiff": -0.0826,
+   "warmChromaRatio": 0.9797
+  },
+  "table": {
+   "mean": 0.8104,
+   "p99": 2.9818,
+   "evDiff": -0.0074,
+   "warmChromaRatio": 0.9202
+  },
+  "direct": {
+   "mean": 0.7887,
+   "p99": 2.7751,
+   "evDiff": -0.0076,
+   "warmChromaRatio": 0.9175
+  }
+ },
+ {
+  "scene": "DSC09206",
+  "model": "ZV-E10M2",
+  "kelvin": 5500,
+  "current": {
+   "mean": 2.7525,
+   "p99": 11.198,
+   "evDiff": -0.2465,
+   "warmChromaRatio": 1.1278
+  },
+  "table": {
+   "mean": 1.1747,
+   "p99": 7.8779,
+   "evDiff": -0.0169,
+   "warmChromaRatio": 0.9672
+  },
+  "direct": {
+   "mean": 1.0812,
+   "p99": 6.1697,
+   "evDiff": -0.0173,
+   "warmChromaRatio": 0.9664
+  }
+ },
+ {
+  "scene": "DSC09206",
+  "model": "ZV-E10M2",
+  "kelvin": 7500,
+  "current": {
+   "mean": 4.0892,
+   "p99": 15.0932,
+   "evDiff": -0.3592,
+   "warmChromaRatio": 1.1299
+  },
+  "table": {
+   "mean": 1.509,
+   "p99": 10.8622,
+   "evDiff": -0.0428,
+   "warmChromaRatio": 0.965
+  },
+  "direct": {
+   "mean": 1.3275,
+   "p99": 8.6754,
+   "evDiff": -0.0427,
+   "warmChromaRatio": 0.9647
+  }
+ },
+ {
+  "scene": "DSC09207",
+  "model": "ZV-E10M2",
+  "kelvin": null,
+  "v2": {
+   "mean": 0.6926,
+   "p99": 1.4763,
+   "evDiff": -0.0402,
+   "warmChromaRatio": 0.9832
+  },
+  "v3": {
+   "mean": 0.699,
+   "p99": 1.4797,
+   "evDiff": -0.0408,
+   "warmChromaRatio": 0.9825
+  }
+ },
+ {
+  "scene": "DSC09207",
+  "model": "ZV-E10M2",
+  "kelvin": 4000,
+  "current": {
+   "mean": 1.8457,
+   "p99": 2.9117,
+   "evDiff": 0.0771,
+   "warmChromaRatio": 0.8378
+  },
+  "table": {
+   "mean": 0.8443,
+   "p99": 2.1693,
+   "evDiff": -0.0306,
+   "warmChromaRatio": 1.0012
+  },
+  "direct": {
+   "mean": 0.8575,
+   "p99": 2.241,
+   "evDiff": -0.0309,
+   "warmChromaRatio": 0.9949
+  }
+ },
+ {
+  "scene": "DSC09207",
+  "model": "ZV-E10M2",
+  "kelvin": 5500,
+  "current": {
+   "mean": 1.6317,
+   "p99": 2.793,
+   "evDiff": -0.088,
+   "warmChromaRatio": 1.0335
+  },
+  "table": {
+   "mean": 0.8967,
+   "p99": 1.9156,
+   "evDiff": -0.0448,
+   "warmChromaRatio": 0.985
+  },
+  "direct": {
+   "mean": 0.8963,
+   "p99": 1.9163,
+   "evDiff": -0.0449,
+   "warmChromaRatio": 0.985
+  }
+ },
+ {
+  "scene": "DSC09207",
+  "model": "ZV-E10M2",
+  "kelvin": 7500,
+  "current": {
+   "mean": 3.2518,
+   "p99": 4.7131,
+   "evDiff": -0.2017,
+   "warmChromaRatio": 1.0979
+  },
+  "table": {
+   "mean": 1.0942,
+   "p99": 2.2358,
+   "evDiff": -0.0649,
+   "warmChromaRatio": 0.9747
+  },
+  "direct": {
+   "mean": 1.0984,
+   "p99": 2.238,
+   "evDiff": -0.0646,
+   "warmChromaRatio": 0.9751
+  }
+ },
+ {
+  "scene": "DSC09208",
+  "model": "ZV-E10M2",
+  "kelvin": null,
+  "v2": {
+   "mean": 0.8902,
+   "p99": 1.8868,
+   "evDiff": -0.0701,
+   "warmChromaRatio": 0.9531
+  },
+  "v3": {
+   "mean": 0.8915,
+   "p99": 1.8879,
+   "evDiff": -0.0705,
+   "warmChromaRatio": 0.9524
+  }
+ },
+ {
+  "scene": "DSC09208",
+  "model": "ZV-E10M2",
+  "kelvin": 4000,
+  "current": {
+   "mean": 0.8448,
+   "p99": 1.9133,
+   "evDiff": -0.0618,
+   "warmChromaRatio": 0.9548
+  },
+  "table": {
+   "mean": 0.8619,
+   "p99": 1.8619,
+   "evDiff": -0.0669,
+   "warmChromaRatio": 0.9595
+  },
+  "direct": {
+   "mean": 0.8629,
+   "p99": 1.874,
+   "evDiff": -0.067,
+   "warmChromaRatio": 0.9585
+  }
+ },
+ {
+  "scene": "DSC09208",
+  "model": "ZV-E10M2",
+  "kelvin": 5500,
+  "current": {
+   "mean": 2.6347,
+   "p99": 4.289,
+   "evDiff": -0.2315,
+   "warmChromaRatio": 1.08
+  },
+  "table": {
+   "mean": 1.1446,
+   "p99": 2.8076,
+   "evDiff": -0.0915,
+   "warmChromaRatio": 0.9466
+  },
+  "direct": {
+   "mean": 1.1324,
+   "p99": 2.7671,
+   "evDiff": -0.0912,
+   "warmChromaRatio": 0.9486
+  }
+ },
+ {
+  "scene": "DSC09208",
+  "model": "ZV-E10M2",
+  "kelvin": 7500,
+  "current": {
+   "mean": 3.9341,
+   "p99": 6.171,
+   "evDiff": -0.3317,
+   "warmChromaRatio": 1.1308
+  },
+  "table": {
+   "mean": 1.4766,
+   "p99": 3.8834,
+   "evDiff": -0.1081,
+   "warmChromaRatio": 0.9334
+  },
+  "direct": {
+   "mean": 1.4646,
+   "p99": 3.8571,
+   "evDiff": -0.1077,
+   "warmChromaRatio": 0.9355
+  }
+ },
+ {
+  "scene": "P1012822",
+  "model": "DC-S5",
+  "kelvin": null,
+  "v2": {
+   "mean": 0.9476,
+   "p99": 2.6383,
+   "evDiff": -0.0566,
+   "warmChromaRatio": 0.9712
+  },
+  "v3": {
+   "mean": 0.9515,
+   "p99": 2.4674,
+   "evDiff": -0.0589,
+   "warmChromaRatio": 0.9718
+  }
+ },
+ {
+  "scene": "P1012822",
+  "model": "DC-S5",
+  "kelvin": 4000,
+  "current": {
+   "mean": 1.9474,
+   "p99": 5.0811,
+   "evDiff": -0.124,
+   "warmChromaRatio": 1.1058
+  },
+  "table": {
+   "mean": 1.4344,
+   "p99": 2.9015,
+   "evDiff": -0.0311,
+   "warmChromaRatio": 1.0012
+  },
+  "direct": {
+   "mean": 1.4673,
+   "p99": 2.9698,
+   "evDiff": -0.0309,
+   "warmChromaRatio": 0.9978
+  }
+ },
+ {
+  "scene": "P1012822",
+  "model": "DC-S5",
+  "kelvin": 5500,
+  "current": {
+   "mean": 3.3157,
+   "p99": 11.0396,
+   "evDiff": -0.2677,
+   "warmChromaRatio": 1.1836
+  },
+  "table": {
+   "mean": 1.9134,
+   "p99": 5.8954,
+   "evDiff": -0.0379,
+   "warmChromaRatio": 0.9445
+  },
+  "direct": {
+   "mean": 1.9072,
+   "p99": 5.8609,
+   "evDiff": -0.0381,
+   "warmChromaRatio": 0.9439
+  }
+ },
+ {
+  "scene": "P1012822",
+  "model": "DC-S5",
+  "kelvin": 7500,
+  "current": {
+   "mean": 4.5373,
+   "p99": 14.06,
+   "evDiff": -0.3615,
+   "warmChromaRatio": 1.2356
+  },
+  "table": {
+   "mean": 2.2957,
+   "p99": 9.3272,
+   "evDiff": -0.0469,
+   "warmChromaRatio": 0.9196
+  },
+  "direct": {
+   "mean": 2.294,
+   "p99": 9.3038,
+   "evDiff": -0.0468,
+   "warmChromaRatio": 0.9193
+  }
+ },
+ {
+  "scene": "P1013207",
+  "model": "DC-S5",
+  "kelvin": null,
+  "v2": {
+   "mean": 1.2356,
+   "p99": 2.6437,
+   "evDiff": -0.0293,
+   "warmChromaRatio": 0.9684
+  },
+  "v3": {
+   "mean": 1.229,
+   "p99": 2.6654,
+   "evDiff": -0.0346,
+   "warmChromaRatio": 0.9694
+  }
+ },
+ {
+  "scene": "P1013207",
+  "model": "DC-S5",
+  "kelvin": 4000,
+  "current": {
+   "mean": 3.1068,
+   "p99": 4.8619,
+   "evDiff": 0.077,
+   "warmChromaRatio": 0.8416
+  },
+  "table": {
+   "mean": 1.7657,
+   "p99": 3.3232,
+   "evDiff": -0.0367,
+   "warmChromaRatio": 0.9997
+  },
+  "direct": {
+   "mean": 1.8024,
+   "p99": 3.3874,
+   "evDiff": -0.0362,
+   "warmChromaRatio": 0.9959
+  }
+ },
+ {
+  "scene": "P1013207",
+  "model": "DC-S5",
+  "kelvin": 5500,
+  "current": {
+   "mean": 1.443,
+   "p99": 2.8876,
+   "evDiff": -0.0545,
+   "warmChromaRatio": 0.9751
+  },
+  "table": {
+   "mean": 2.0689,
+   "p99": 3.5013,
+   "evDiff": -0.0346,
+   "warmChromaRatio": 0.9363
+  },
+  "direct": {
+   "mean": 2.0698,
+   "p99": 3.5011,
+   "evDiff": -0.0349,
+   "warmChromaRatio": 0.9361
+  }
+ },
+ {
+  "scene": "P1013207",
+  "model": "DC-S5",
+  "kelvin": 7500,
+  "current": {
+   "mean": 1.8976,
+   "p99": 4.2285,
+   "evDiff": -0.1511,
+   "warmChromaRatio": 1.0397
+  },
+  "table": {
+   "mean": 2.0158,
+   "p99": 3.9138,
+   "evDiff": -0.0449,
+   "warmChromaRatio": 0.8973
+  },
+  "direct": {
+   "mean": 2.0278,
+   "p99": 3.9305,
+   "evDiff": -0.0449,
+   "warmChromaRatio": 0.8973
+  }
+ },
+ {
+  "scene": "P1013558",
+  "model": "DC-S5",
+  "kelvin": null,
+  "v2": {
+   "mean": 0.7412,
+   "p99": 1.5819,
+   "evDiff": -0.0425,
+   "warmChromaRatio": 0.9938
+  },
+  "v3": {
+   "mean": 0.7562,
+   "p99": 1.5987,
+   "evDiff": -0.0467,
+   "warmChromaRatio": 0.9948
+  }
+ },
+ {
+  "scene": "P1013558",
+  "model": "DC-S5",
+  "kelvin": 4000,
+  "current": {
+   "mean": 2.707,
+   "p99": 4.7164,
+   "evDiff": 0.0429,
+   "warmChromaRatio": 0.8564
+  },
+  "table": {
+   "mean": 1.5324,
+   "p99": 3.1877,
+   "evDiff": -0.0541,
+   "warmChromaRatio": 1.0332
+  },
+  "direct": {
+   "mean": 1.5723,
+   "p99": 3.2385,
+   "evDiff": -0.0537,
+   "warmChromaRatio": 1.0284
+  }
+ },
+ {
+  "scene": "P1013558",
+  "model": "DC-S5",
+  "kelvin": 5500,
+  "current": {
+   "mean": 1.1037,
+   "p99": 2.5109,
+   "evDiff": -0.0809,
+   "warmChromaRatio": 1.0323
+  },
+  "table": {
+   "mean": 1.4313,
+   "p99": 3.4703,
+   "evDiff": -0.0425,
+   "warmChromaRatio": 0.9683
+  },
+  "direct": {
+   "mean": 1.431,
+   "p99": 3.4697,
+   "evDiff": -0.0424,
+   "warmChromaRatio": 0.968
+  }
+ },
+ {
+  "scene": "P1013558",
+  "model": "DC-S5",
+  "kelvin": 7500,
+  "current": {
+   "mean": 2.1923,
+   "p99": 6.5458,
+   "evDiff": -0.1867,
+   "warmChromaRatio": 1.0755
+  },
+  "table": {
+   "mean": 1.2925,
+   "p99": 3.0429,
+   "evDiff": -0.0536,
+   "warmChromaRatio": 0.9228
+  },
+  "direct": {
+   "mean": 1.3016,
+   "p99": 3.056,
+   "evDiff": -0.0534,
+   "warmChromaRatio": 0.923
+  }
+ },
+ {
+  "scene": "P1570133",
+  "model": "DC-S5",
+  "kelvin": null,
+  "v2": {
+   "mean": 0.9169,
+   "p99": 2.4394,
+   "evDiff": -0.0456,
+   "warmChromaRatio": 0.9465
+  },
+  "v3": {
+   "mean": 0.964,
+   "p99": 2.4433,
+   "evDiff": -0.0485,
+   "warmChromaRatio": 0.9481
+  }
+ },
+ {
+  "scene": "P1570133",
+  "model": "DC-S5",
+  "kelvin": 4000,
+  "current": {
+   "mean": 3.4135,
+   "p99": 5.591,
+   "evDiff": 0.0531,
+   "warmChromaRatio": 0.7823
+  },
+  "table": {
+   "mean": 1.7518,
+   "p99": 3.7753,
+   "evDiff": -0.0567,
+   "warmChromaRatio": 0.9862
+  },
+  "direct": {
+   "mean": 1.7975,
+   "p99": 3.8353,
+   "evDiff": -0.0567,
+   "warmChromaRatio": 0.984
+  }
+ },
+ {
+  "scene": "P1570133",
+  "model": "DC-S5",
+  "kelvin": 5500,
+  "current": {
+   "mean": 1.3476,
+   "p99": 3.1114,
+   "evDiff": -0.0427,
+   "warmChromaRatio": 0.9071
+  },
+  "table": {
+   "mean": 1.7206,
+   "p99": 3.3192,
+   "evDiff": -0.0536,
+   "warmChromaRatio": 0.9174
+  },
+  "direct": {
+   "mean": 1.718,
+   "p99": 3.3104,
+   "evDiff": -0.0536,
+   "warmChromaRatio": 0.9177
+  }
+ },
+ {
+  "scene": "P1570133",
+  "model": "DC-S5",
+  "kelvin": 7500,
+  "current": {
+   "mean": 2.1281,
+   "p99": 5.1255,
+   "evDiff": -0.1277,
+   "warmChromaRatio": 0.9921
+  },
+  "table": {
+   "mean": 1.6683,
+   "p99": 3.5094,
+   "evDiff": -0.0646,
+   "warmChromaRatio": 0.8853
+  },
+  "direct": {
+   "mean": 1.6762,
+   "p99": 3.5082,
+   "evDiff": -0.0645,
+   "warmChromaRatio": 0.886
+  }
+ },
+ {
+  "scene": "P1570135",
+  "model": "DC-S5",
+  "kelvin": null,
+  "v2": {
+   "mean": 1.7793,
+   "p99": 4.2746,
+   "evDiff": -0.1049,
+   "warmChromaRatio": 0.8948
+  },
+  "v3": {
+   "mean": 1.833,
+   "p99": 4.2745,
+   "evDiff": -0.1107,
+   "warmChromaRatio": 0.8957
+  }
+ },
+ {
+  "scene": "P1570135",
+  "model": "DC-S5",
+  "kelvin": 4000,
+  "current": {
+   "mean": 3.2512,
+   "p99": 5.4481,
+   "evDiff": 0.0195,
+   "warmChromaRatio": 0.6792
+  },
+  "table": {
+   "mean": 1.7966,
+   "p99": 3.2572,
+   "evDiff": -0.0977,
+   "warmChromaRatio": 0.8885
+  },
+  "direct": {
+   "mean": 1.8361,
+   "p99": 3.3231,
+   "evDiff": -0.0976,
+   "warmChromaRatio": 0.8837
+  }
+ },
+ {
+  "scene": "P1570135",
+  "model": "DC-S5",
+  "kelvin": 5500,
+  "current": {
+   "mean": 2.2064,
+   "p99": 5.3954,
+   "evDiff": -0.1088,
+   "warmChromaRatio": 0.9003
+  },
+  "table": {
+   "mean": 2.4805,
+   "p99": 4.7055,
+   "evDiff": -0.1175,
+   "warmChromaRatio": 0.8918
+  },
+  "direct": {
+   "mean": 2.483,
+   "p99": 4.7135,
+   "evDiff": -0.1176,
+   "warmChromaRatio": 0.8914
+  }
+ },
+ {
+  "scene": "P1570135",
+  "model": "DC-S5",
+  "kelvin": 7500,
+  "current": {
+   "mean": 3.0698,
+   "p99": 5.1544,
+   "evDiff": -0.1838,
+   "warmChromaRatio": 0.9896
+  },
+  "table": {
+   "mean": 2.7515,
+   "p99": 5.1078,
+   "evDiff": -0.125,
+   "warmChromaRatio": 0.875
+  },
+  "direct": {
+   "mean": 2.7598,
+   "p99": 5.1082,
+   "evDiff": -0.1248,
+   "warmChromaRatio": 0.8749
+  }
+ },
+ {
+  "scene": "P1570258",
+  "model": "DC-S5",
+  "kelvin": null,
+  "v2": {
+   "mean": 1.1293,
+   "p99": 2.07,
+   "evDiff": -0.0509,
+   "warmChromaRatio": 0.9766
+  },
+  "v3": {
+   "mean": 1.1564,
+   "p99": 2.1288,
+   "evDiff": -0.0574,
+   "warmChromaRatio": 0.9773
+  }
+ },
+ {
+  "scene": "P1570258",
+  "model": "DC-S5",
+  "kelvin": 4000,
+  "current": {
+   "mean": 3.1262,
+   "p99": 5.2621,
+   "evDiff": 0.0732,
+   "warmChromaRatio": 0.8075
+  },
+  "table": {
+   "mean": 1.5962,
+   "p99": 3.401,
+   "evDiff": -0.0593,
+   "warmChromaRatio": 0.9668
+  },
+  "direct": {
+   "mean": 1.654,
+   "p99": 3.4731,
+   "evDiff": -0.0594,
+   "warmChromaRatio": 0.964
+  }
+ },
+ {
+  "scene": "P1570258",
+  "model": "DC-S5",
+  "kelvin": 5500,
+  "current": {
+   "mean": 1.4067,
+   "p99": 2.3987,
+   "evDiff": -0.0436,
+   "warmChromaRatio": 0.9498
+  },
+  "table": {
+   "mean": 1.7854,
+   "p99": 2.8794,
+   "evDiff": -0.0549,
+   "warmChromaRatio": 0.9507
+  },
+  "direct": {
+   "mean": 1.7911,
+   "p99": 2.8793,
+   "evDiff": -0.0549,
+   "warmChromaRatio": 0.9508
+  }
+ },
+ {
+  "scene": "P1570258",
+  "model": "DC-S5",
+  "kelvin": 7500,
+  "current": {
+   "mean": 1.7737,
+   "p99": 3.4706,
+   "evDiff": -0.1296,
+   "warmChromaRatio": 1.0141
+  },
+  "table": {
+   "mean": 1.7529,
+   "p99": 2.9755,
+   "evDiff": -0.0504,
+   "warmChromaRatio": 0.9224
+  },
+  "direct": {
+   "mean": 1.7713,
+   "p99": 2.9936,
+   "evDiff": -0.0503,
+   "warmChromaRatio": 0.9228
+  }
+ },
+ {
+  "scene": "P1570266",
+  "model": "DC-S5",
+  "kelvin": null,
+  "v2": {
+   "mean": 0.8634,
+   "p99": 2.1605,
+   "evDiff": -0.0375,
+   "warmChromaRatio": 0.984
+  },
+  "v3": {
+   "mean": 0.908,
+   "p99": 2.1852,
+   "evDiff": -0.0409,
+   "warmChromaRatio": 0.9849
+  }
+ },
+ {
+  "scene": "P1570266",
+  "model": "DC-S5",
+  "kelvin": 4000,
+  "current": {
+   "mean": 3.5449,
+   "p99": 5.2326,
+   "evDiff": 0.0492,
+   "warmChromaRatio": null
+  },
+  "table": {
+   "mean": 1.9128,
+   "p99": 3.3823,
+   "evDiff": -0.044,
+   "warmChromaRatio": null
+  },
+  "direct": {
+   "mean": 2.0003,
+   "p99": 3.5887,
+   "evDiff": -0.0437,
+   "warmChromaRatio": null
+  }
+ },
+ {
+  "scene": "P1570266",
+  "model": "DC-S5",
+  "kelvin": 5500,
+  "current": {
+   "mean": 1.3454,
+   "p99": 2.465,
+   "evDiff": -0.0378,
+   "warmChromaRatio": 0.9478
+  },
+  "table": {
+   "mean": 1.8806,
+   "p99": 3.0629,
+   "evDiff": -0.0468,
+   "warmChromaRatio": 0.963
+  },
+  "direct": {
+   "mean": 1.8762,
+   "p99": 3.0489,
+   "evDiff": -0.0468,
+   "warmChromaRatio": 0.9633
+  }
+ },
+ {
+  "scene": "P1570266",
+  "model": "DC-S5",
+  "kelvin": 7500,
+  "current": {
+   "mean": 1.7433,
+   "p99": 3.4936,
+   "evDiff": -0.0956,
+   "warmChromaRatio": 1.0118
+  },
+  "table": {
+   "mean": 1.7471,
+   "p99": 3.0316,
+   "evDiff": -0.0465,
+   "warmChromaRatio": 0.9043
+  },
+  "direct": {
+   "mean": 1.7495,
+   "p99": 3.0519,
+   "evDiff": -0.0464,
+   "warmChromaRatio": 0.9052
+  }
+ },
+ {
+  "scene": "P1570280",
+  "model": "DC-S5",
+  "kelvin": null,
+  "v2": {
+   "mean": 1.0605,
+   "p99": 2.0888,
+   "evDiff": -0.0625,
+   "warmChromaRatio": 0.982
+  },
+  "v3": {
+   "mean": 1.2347,
+   "p99": 2.3821,
+   "evDiff": -0.0683,
+   "warmChromaRatio": 0.9833
+  }
+ },
+ {
+  "scene": "P1570280",
+  "model": "DC-S5",
+  "kelvin": 4000,
+  "current": {
+   "mean": 2.4872,
+   "p99": 4.9107,
+   "evDiff": 0.0627,
+   "warmChromaRatio": null
+  },
+  "table": {
+   "mean": 1.6112,
+   "p99": 3.2266,
+   "evDiff": -0.0616,
+   "warmChromaRatio": null
+  },
+  "direct": {
+   "mean": 1.7389,
+   "p99": 3.7128,
+   "evDiff": -0.0612,
+   "warmChromaRatio": null
+  }
+ },
+ {
+  "scene": "P1570280",
+  "model": "DC-S5",
+  "kelvin": 5500,
+  "current": {
+   "mean": 1.2752,
+   "p99": 2.5412,
+   "evDiff": -0.0594,
+   "warmChromaRatio": 0.9775
+  },
+  "table": {
+   "mean": 1.5845,
+   "p99": 3.2764,
+   "evDiff": -0.0624,
+   "warmChromaRatio": 0.9827
+  },
+  "direct": {
+   "mean": 1.5425,
+   "p99": 2.8678,
+   "evDiff": -0.0624,
+   "warmChromaRatio": 0.9824
+  }
+ },
+ {
+  "scene": "P1570280",
+  "model": "DC-S5",
+  "kelvin": 7500,
+  "current": {
+   "mean": 2.1468,
+   "p99": 4.6663,
+   "evDiff": -0.1407,
+   "warmChromaRatio": 1.0171
+  },
+  "table": {
+   "mean": 1.5728,
+   "p99": 2.7527,
+   "evDiff": -0.0461,
+   "warmChromaRatio": 0.9397
+  },
+  "direct": {
+   "mean": 1.5554,
+   "p99": 2.7645,
+   "evDiff": -0.0457,
+   "warmChromaRatio": 0.9399
+  }
+ },
+ {
+  "scene": "P1570302",
+  "model": "DC-S5",
+  "kelvin": null,
+  "v2": {
+   "mean": 0.8792,
+   "p99": 2.0688,
+   "evDiff": -0.0027,
+   "warmChromaRatio": 0.9788
+  },
+  "v3": {
+   "mean": 0.8761,
+   "p99": 2.1667,
+   "evDiff": -0.0094,
+   "warmChromaRatio": 0.9796
+  }
+ },
+ {
+  "scene": "P1570302",
+  "model": "DC-S5",
+  "kelvin": 4000,
+  "current": {
+   "mean": 1.7993,
+   "p99": 3.5911,
+   "evDiff": 0.0951,
+   "warmChromaRatio": 0.8015
+  },
+  "table": {
+   "mean": 0.9816,
+   "p99": 2.7506,
+   "evDiff": -0.0135,
+   "warmChromaRatio": 0.9654
+  },
+  "direct": {
+   "mean": 1.0002,
+   "p99": 2.7428,
+   "evDiff": -0.0137,
+   "warmChromaRatio": 0.9623
+  }
+ },
+ {
+  "scene": "P1570302",
+  "model": "DC-S5",
+  "kelvin": 5500,
+  "current": {
+   "mean": 1.0362,
+   "p99": 3.6587,
+   "evDiff": -0.041,
+   "warmChromaRatio": 0.97
+  },
+  "table": {
+   "mean": 1.341,
+   "p99": 3.0786,
+   "evDiff": -0.0117,
+   "warmChromaRatio": 0.9096
+  },
+  "direct": {
+   "mean": 1.3398,
+   "p99": 3.0781,
+   "evDiff": -0.012,
+   "warmChromaRatio": 0.9094
+  }
+ },
+ {
+  "scene": "P1570302",
+  "model": "DC-S5",
+  "kelvin": 7500,
+  "current": {
+   "mean": 1.5361,
+   "p99": 7.2554,
+   "evDiff": -0.1305,
+   "warmChromaRatio": 1.0428
+  },
+  "table": {
+   "mean": 1.4093,
+   "p99": 4.6177,
+   "evDiff": -0.0047,
+   "warmChromaRatio": 0.9002
+  },
+  "direct": {
+   "mean": 1.4128,
+   "p99": 4.6348,
+   "evDiff": -0.0043,
+   "warmChromaRatio": 0.9002
+  }
+ },
+ {
+  "scene": "P1570396",
+  "model": "DC-S5",
+  "kelvin": null,
+  "v2": {
+   "mean": 0.9537,
+   "p99": 2.7707,
+   "evDiff": -0.073,
+   "warmChromaRatio": 0.9381
+  },
+  "v3": {
+   "mean": 0.9752,
+   "p99": 2.7255,
+   "evDiff": -0.079,
+   "warmChromaRatio": 0.939
+  }
+ },
+ {
+  "scene": "P1570396",
+  "model": "DC-S5",
+  "kelvin": 4000,
+  "current": {
+   "mean": 2.5189,
+   "p99": 4.1692,
+   "evDiff": 0.068,
+   "warmChromaRatio": null
+  },
+  "table": {
+   "mean": 1.2902,
+   "p99": 3.0073,
+   "evDiff": -0.0664,
+   "warmChromaRatio": null
+  },
+  "direct": {
+   "mean": 1.3288,
+   "p99": 3.0996,
+   "evDiff": -0.0665,
+   "warmChromaRatio": null
+  }
+ },
+ {
+  "scene": "P1570396",
+  "model": "DC-S5",
+  "kelvin": 5500,
+  "current": {
+   "mean": 1.18,
+   "p99": 3.9414,
+   "evDiff": -0.0873,
+   "warmChromaRatio": null
+  },
+  "table": {
+   "mean": 1.684,
+   "p99": 3.2237,
+   "evDiff": -0.0923,
+   "warmChromaRatio": null
+  },
+  "direct": {
+   "mean": 1.6858,
+   "p99": 3.2349,
+   "evDiff": -0.0923,
+   "warmChromaRatio": null
+  }
+ },
+ {
+  "scene": "P1570396",
+  "model": "DC-S5",
+  "kelvin": 7500,
+  "current": {
+   "mean": 1.8912,
+   "p99": 5.7581,
+   "evDiff": -0.1783,
+   "warmChromaRatio": 1.0219
+  },
+  "table": {
+   "mean": 1.6274,
+   "p99": 3.4979,
+   "evDiff": -0.0977,
+   "warmChromaRatio": 0.8975
+  },
+  "direct": {
+   "mean": 1.6345,
+   "p99": 3.504,
+   "evDiff": -0.0977,
+   "warmChromaRatio": 0.8971
+  }
+ },
+ {
+  "scene": "P1570586",
+  "model": "DC-S5",
+  "kelvin": null,
+  "v2": {
+   "mean": 0.7808,
+   "p99": 2.625,
+   "evDiff": -0.0309,
+   "warmChromaRatio": 1.0192
+  },
+  "v3": {
+   "mean": 0.7737,
+   "p99": 2.4939,
+   "evDiff": -0.0355,
+   "warmChromaRatio": 1.0201
+  }
+ },
+ {
+  "scene": "P1570586",
+  "model": "DC-S5",
+  "kelvin": 4000,
+  "current": {
+   "mean": 2.1864,
+   "p99": 4.5187,
+   "evDiff": 0.0525,
+   "warmChromaRatio": 0.8724
+  },
+  "table": {
+   "mean": 1.1142,
+   "p99": 4.052,
+   "evDiff": -0.052,
+   "warmChromaRatio": 1.0815
+  },
+  "direct": {
+   "mean": 1.1599,
+   "p99": 4.1049,
+   "evDiff": -0.0522,
+   "warmChromaRatio": 1.0779
+  }
+ },
+ {
+  "scene": "P1570586",
+  "model": "DC-S5",
+  "kelvin": 5500,
+  "current": {
+   "mean": 1.9141,
+   "p99": 4.5645,
+   "evDiff": -0.0884,
+   "warmChromaRatio": 1.0479
+  },
+  "table": {
+   "mean": 1.5759,
+   "p99": 3.5011,
+   "evDiff": -0.0662,
+   "warmChromaRatio": 0.9915
+  },
+  "direct": {
+   "mean": 1.5759,
+   "p99": 3.4995,
+   "evDiff": -0.0662,
+   "warmChromaRatio": 0.9915
+  }
+ },
+ {
+  "scene": "P1570586",
+  "model": "DC-S5",
+  "kelvin": 7500,
+  "current": {
+   "mean": 2.9612,
+   "p99": 7.4378,
+   "evDiff": -0.1835,
+   "warmChromaRatio": 1.0566
+  },
+  "table": {
+   "mean": 1.4414,
+   "p99": 3.6153,
+   "evDiff": -0.0671,
+   "warmChromaRatio": 0.9556
+  },
+  "direct": {
+   "mean": 1.4528,
+   "p99": 3.6111,
+   "evDiff": -0.0667,
+   "warmChromaRatio": 0.9559
+  }
+ },
+ {
+  "scene": "P1570755",
+  "model": "DC-S5",
+  "kelvin": null,
+  "v2": {
+   "mean": 0.9056,
+   "p99": 4.7457,
+   "evDiff": -0.0402,
+   "warmChromaRatio": 0.9746
+  },
+  "v3": {
+   "mean": 0.8813,
+   "p99": 2.7225,
+   "evDiff": -0.0336,
+   "warmChromaRatio": 0.9753
+  }
+ },
+ {
+  "scene": "P1570755",
+  "model": "DC-S5",
+  "kelvin": 4000,
+  "current": {
+   "mean": 2.0693,
+   "p99": 5.5347,
+   "evDiff": 0.0797,
+   "warmChromaRatio": 0.916
+  },
+  "table": {
+   "mean": 1.6717,
+   "p99": 4.599,
+   "evDiff": -0.0139,
+   "warmChromaRatio": 1.0355
+  },
+  "direct": {
+   "mean": 1.713,
+   "p99": 4.6432,
+   "evDiff": -0.0137,
+   "warmChromaRatio": 1.0307
+  }
+ },
+ {
+  "scene": "P1570755",
+  "model": "DC-S5",
+  "kelvin": 5500,
+  "current": {
+   "mean": 1.3002,
+   "p99": 4.974,
+   "evDiff": -0.0846,
+   "warmChromaRatio": 1.0101
+  },
+  "table": {
+   "mean": 1.7012,
+   "p99": 3.4029,
+   "evDiff": -0.0262,
+   "warmChromaRatio": 0.9509
+  },
+  "direct": {
+   "mean": 1.7041,
+   "p99": 3.4035,
+   "evDiff": -0.0266,
+   "warmChromaRatio": 0.9503
+  }
+ },
+ {
+  "scene": "P1570755",
+  "model": "DC-S5",
+  "kelvin": 7500,
+  "current": {
+   "mean": 2.8195,
+   "p99": 7.4438,
+   "evDiff": -0.1936,
+   "warmChromaRatio": 1.0509
+  },
+  "table": {
+   "mean": 1.6667,
+   "p99": 3.956,
+   "evDiff": -0.0257,
+   "warmChromaRatio": 0.9012
+  },
+  "direct": {
+   "mean": 1.6735,
+   "p99": 3.9743,
+   "evDiff": -0.0255,
+   "warmChromaRatio": 0.901
+  }
+ },
+ {
+  "scene": "P1570923",
+  "model": "DC-S5",
+  "kelvin": null,
+  "v2": {
+   "mean": 0.9405,
+   "p99": 2.543,
+   "evDiff": -0.0429,
+   "warmChromaRatio": 0.9863
+  },
+  "v3": {
+   "mean": 0.9373,
+   "p99": 2.388,
+   "evDiff": -0.0393,
+   "warmChromaRatio": 0.9868
+  }
+ },
+ {
+  "scene": "P1570923",
+  "model": "DC-S5",
+  "kelvin": 4000,
+  "current": {
+   "mean": 0.9865,
+   "p99": 2.7146,
+   "evDiff": -0.0316,
+   "warmChromaRatio": 0.9779
+  },
+  "table": {
+   "mean": 1.5824,
+   "p99": 3.3123,
+   "evDiff": -0.0397,
+   "warmChromaRatio": 0.9932
+  },
+  "direct": {
+   "mean": 1.6084,
+   "p99": 3.3478,
+   "evDiff": -0.0396,
+   "warmChromaRatio": 0.9915
+  }
+ },
+ {
+  "scene": "P1570923",
+  "model": "DC-S5",
+  "kelvin": 5500,
+  "current": {
+   "mean": 2.2213,
+   "p99": 6.758,
+   "evDiff": -0.1478,
+   "warmChromaRatio": 1.0678
+  },
+  "table": {
+   "mean": 2.1469,
+   "p99": 6.1954,
+   "evDiff": -0.056,
+   "warmChromaRatio": 0.9242
+  },
+  "direct": {
+   "mean": 2.127,
+   "p99": 6.1668,
+   "evDiff": -0.0561,
+   "warmChromaRatio": 0.9249
+  }
+ },
+ {
+  "scene": "P1570923",
+  "model": "DC-S5",
+  "kelvin": 7500,
+  "current": {
+   "mean": 3.3917,
+   "p99": 10.4132,
+   "evDiff": -0.2121,
+   "warmChromaRatio": 1.152
+  },
+  "table": {
+   "mean": 2.4725,
+   "p99": 9.4456,
+   "evDiff": -0.0603,
+   "warmChromaRatio": 0.9009
+  },
+  "direct": {
+   "mean": 2.4663,
+   "p99": 9.4492,
+   "evDiff": -0.0602,
+   "warmChromaRatio": 0.9019
+  }
+ },
+ {
+  "scene": "P1581387",
+  "model": "DC-S5",
+  "kelvin": null,
+  "v2": {
+   "mean": 2.0527,
+   "p99": 4.5261,
+   "evDiff": -0.0716,
+   "warmChromaRatio": null
+  },
+  "v3": {
+   "mean": 2.1179,
+   "p99": 4.917,
+   "evDiff": -0.0215,
+   "warmChromaRatio": null
+  }
+ },
+ {
+  "scene": "P1581387",
+  "model": "DC-S5",
+  "kelvin": 4000,
+  "current": {
+   "mean": 3.3783,
+   "p99": 6.7427,
+   "evDiff": -0.11,
+   "warmChromaRatio": 1.1521
+  },
+  "table": {
+   "mean": 2.1066,
+   "p99": 5.3755,
+   "evDiff": -0.0221,
+   "warmChromaRatio": 1.0497
+  },
+  "direct": {
+   "mean": 1.9825,
+   "p99": 3.7752,
+   "evDiff": -0.0223,
+   "warmChromaRatio": 1.0478
+  }
+ },
+ {
+  "scene": "P1581387",
+  "model": "DC-S5",
+  "kelvin": 5500,
+  "current": {
+   "mean": 7.1056,
+   "p99": 13.5216,
+   "evDiff": -0.1875,
+   "warmChromaRatio": 1.179
+  },
+  "table": {
+   "mean": 1.7304,
+   "p99": 4.0573,
+   "evDiff": -0.0298,
+   "warmChromaRatio": 0.9163
+  },
+  "direct": {
+   "mean": 1.6303,
+   "p99": 3.348,
+   "evDiff": -0.0296,
+   "warmChromaRatio": 0.9168
+  }
+ },
+ {
+  "scene": "P1581387",
+  "model": "DC-S5",
+  "kelvin": 7500,
+  "current": {
+   "mean": 8.5156,
+   "p99": 15.9511,
+   "evDiff": -0.2356,
+   "warmChromaRatio": 1.2252
+  },
+  "table": {
+   "mean": 1.8463,
+   "p99": 4.399,
+   "evDiff": -0.0375,
+   "warmChromaRatio": 0.8732
+  },
+  "direct": {
+   "mean": 1.7183,
+   "p99": 4.3886,
+   "evDiff": -0.0374,
+   "warmChromaRatio": 0.8738
+  }
+ }
+]

@@ -1,0 +1,16 @@
+{
+  "description": "Golden cases: Photo Bench EditSettings JSON (the engine's own settings) per case. 'preset' cases take the engine's presetSettings of the bundled XMP (base = neutral); the crate converts the same EditSettings with convert.rs.",
+  "inputs": ["dsc02072.jpg", "dsc02078.jpg", "dsc02150.jpg", "saturated-blue.png"],
+  "cases": [
+    { "name": "neutral", "settings": {} },
+    { "name": "preset-bluesky2", "preset": "niho-bluesky2" },
+    { "name": "preset-pastel", "preset": "niho-pastel" },
+    { "name": "preset-colorful", "preset": "niho-colorful" },
+    { "name": "basic", "settings": { "exposure": 0.45, "contrast": 18, "highlights": -45, "shadows": 35, "whites": -12, "blacks": 14, "texture": 15, "clarity": 12, "dehaze": 6, "vibrance": 18, "saturation": -6 } },
+    { "name": "tone-pointwise", "settings": { "exposure": -0.6, "contrast": -25, "whites": 30, "blacks": -20, "parametricShadows": 20, "parametricHighlights": -15, "toneCurves": [ { "channel": "rgb", "points": [ { "x": 0, "y": 0.05 }, { "x": 0.5, "y": 0.55 }, { "x": 1, "y": 1 } ] } ] } },
+    { "name": "spatial-hs", "settings": { "highlights": -70, "shadows": 60 } },
+    { "name": "spatial-texture-clarity", "settings": { "texture": 40, "clarity": -30 } },
+    { "name": "color", "settings": { "vibrance": 25, "saturation": 10, "hsl": ["orange", { "hue": 10, "saturation": -20, "luminance": 8 }, "blue", { "hue": -15, "saturation": 25, "luminance": -10 }], "colorGrading": { "shadow": { "hue": 220, "saturation": 18, "luminance": 0 }, "midtone": { "hue": 0, "saturation": 0, "luminance": 0 }, "highlight": { "hue": 45, "saturation": 12, "luminance": 0 }, "global": { "hue": 0, "saturation": 0, "luminance": 0 }, "blending": 60, "balance": 10 }, "calibration": { "shadowTint": 0, "redHue": 10, "redSaturation": 5, "greenHue": -8, "greenSaturation": 0, "blueHue": 0, "blueSaturation": 12 } } },
+    { "name": "relative-wb", "settings": { "relativeTemperature": 40, "relativeTint": -20 } }
+  ]
+}

@@ -1,0 +1,29 @@
+{
+  "description": "RAW working-copy golden (make_raw_references.py). 'xmp' cases take photobench-engine's presetSettings of the round5 sidecar p5_<scene>_<xmp>.xmp (Lightroom's own settings of that variant); 'settings' cases are Photo Bench EditSettings JSON. Both Photo Bench (raw_reference.swift) and the crate (convert.rs) get the same EditSettings. 'wc' renders the macOS working copy (renderWorkingCopy) and is gated; 'dcp' renders Photo Bench's LibRaw + DCP working copy (Stage H output), where the absolute white balance has an exact reference; it is reported, not gated.",
+  "scenes": ["P1012822", "P1013207", "P1013558", "P1524180", "P1581215"],
+  "raw": "p5_{scene}_full_bluesky2.RW2",
+  "wc": [
+    { "name": "neutral", "settings": {} },
+    { "name": "full_bluesky2", "xmp": "full_bluesky2" },
+    { "name": "full_pastel", "xmp": "full_pastel" },
+    { "name": "full_colorful", "xmp": "full_colorful" },
+    { "name": "exposure-plus", "settings": { "exposure": 0.8 } },
+    { "name": "exposure-minus", "settings": { "exposure": -1.2 } },
+    { "name": "highlights-shadows", "settings": { "highlights": -70, "shadows": 60 } },
+    { "name": "highlights-shadows-max", "settings": { "highlights": -100, "shadows": 100 } },
+    { "name": "whites-blacks", "xmp": "W-83_B+89" },
+    { "name": "contrast", "xmp": "Contrast2012_-43" },
+    { "name": "texture-clarity", "settings": { "texture": 40, "clarity": -30 } },
+    { "name": "color", "settings": { "vibrance": 25, "saturation": 10, "hsl": ["orange", { "hue": 10, "saturation": -20, "luminance": 8 }, "blue", { "hue": -15, "saturation": 25, "luminance": -10 }], "colorGrading": { "shadow": { "hue": 220, "saturation": 18, "luminance": 0 }, "midtone": { "hue": 0, "saturation": 0, "luminance": 0 }, "highlight": { "hue": 45, "saturation": 12, "luminance": 0 }, "global": { "hue": 0, "saturation": 0, "luminance": 0 }, "blending": 60, "balance": 10 }, "calibration": { "shadowTint": 0, "redHue": 10, "redSaturation": 5, "greenHue": -8, "greenSaturation": 0, "blueHue": 0, "blueSaturation": 12 } } }
+  ],
+  "dcp": [
+    { "name": "neutral", "settings": {} },
+    { "name": "full_bluesky2", "xmp": "full_bluesky2" },
+    { "name": "exposure-plus", "settings": { "exposure": 0.8 } },
+    { "name": "highlights-shadows", "settings": { "highlights": -70, "shadows": 60 } },
+    { "name": "wb-3800-plus10", "settings": { "whiteBalance": { "mode": "custom", "temperature": 3800, "tint": 10 } } },
+    { "name": "wb-7500-minus15", "settings": { "whiteBalance": { "mode": "custom", "temperature": 7500, "tint": -15 } } },
+    { "name": "wb-5001-plus10", "settings": { "whiteBalance": { "mode": "custom", "temperature": 5001, "tint": 10 } } },
+    { "name": "wb-3800-bluesky2", "xmp": "full_bluesky2", "settings": { "whiteBalance": { "mode": "custom", "temperature": 3800, "tint": 10 } } }
+  ]
+}

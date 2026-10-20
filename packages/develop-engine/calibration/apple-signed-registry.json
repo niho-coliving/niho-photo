@@ -1,0 +1,10 @@
+{
+  "schema": "niho-develop-calibration-registry/v1",
+  "track": "apple",
+  "$comment": "p3/e4 signed RAW working-copy registry. Separate from apple-registry.json so the legacy p2/e1 producer remains unchanged. All entries keep lens correction on; FX30 v2 preserves the v1 matrix/baseline and adds the owned R192 WB table with explicit provenance.",
+  "cameras": [
+    { "make": "Panasonic", "model": "DC-S5", "file": "panasonic-dc-s5/apple-v4.json" },
+    { "make": "SONY", "model": "ZV-E10M2", "file": "sony-zv-e10m2/apple-v3.json" },
+    { "make": "SONY", "model": "ILME-FX30", "file": "sony-ilme-fx30/apple-v2.json" }
+  ]
+}

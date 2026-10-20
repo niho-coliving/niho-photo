@@ -186,7 +186,7 @@ mod tests {
 
   #[test]
   fn unknown_request_fields_are_rejected() {
-    let parsed: Result<FolderRequest, _> = parse_request(Some(json!({ "folderId": "f", "path": "/Users/x" })));
+    let parsed: Result<FolderRequest, _> = parse_request(Some(json!({ "folderId": "f", "path": "/test-data/users/x" })));
     assert_eq!(parsed.unwrap_err().code, code::INVALID_REQUEST);
   }
 }

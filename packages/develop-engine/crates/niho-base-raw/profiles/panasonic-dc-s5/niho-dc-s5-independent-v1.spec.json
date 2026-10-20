@@ -1,0 +1,39 @@
+{
+  "schema": "niho-base-raw.dcp-spec/1",
+  "profileName": "NIHO DC-S5 independent camera-JPEG v1",
+  "uniqueCameraModel": "Panasonic DC-S5",
+  "copyright": "Copyright 2026 NIHO. Independently fitted from owner RAW and camera JPEG measurements; no external profile coefficients.",
+  "embedPolicy": 2,
+  "calibrationSignature": "com.niho.develop-engine",
+  "illuminant1": 21,
+  "colorMatrix1": [
+    2.1514,
+    -0.8723,
+    -0.1585,
+    0.0352,
+    0.8523,
+    0.1049,
+    0.1402,
+    0.1548,
+    0.6539
+  ],
+  "illuminant2": null,
+  "colorMatrix2": null,
+  "forwardMatrix1": [
+    0.4813,
+    0.5275,
+    -0.0446,
+    0.0082,
+    1.2101,
+    -0.2182,
+    -0.0764,
+    -0.2741,
+    1.1757
+  ],
+  "forwardMatrix2": null,
+  "hueSatMap": null,
+  "baselineExposureOffset": 0.0,
+  "defaultBlackRender": 0,
+  "toneCurve": null,
+  "lookTable": null
+}

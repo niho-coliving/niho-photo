@@ -1,0 +1,12 @@
+[package]
+name = "niho-camera-color"
+description = "Pure camera profile color math shared by native and wasm develop engines"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+anyhow = "1"
+libm.workspace = true

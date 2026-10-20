@@ -1,0 +1,17 @@
+[package]
+name = "niho-quality-probe"
+description = "Local RAW quality probe for comparing experimental demosaic and chroma-denoise settings"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish.workspace = true
+# rawler 0.8.0 requires 1.89 (the workspace default is 1.85).
+rust-version = "1.89"
+
+[dependencies]
+anyhow = "1"
+clap = { version = "4", features = ["derive"] }
+niho-base-raw = { path = "../niho-base-raw" }
+rawler.workspace = true
+serde = { version = "1", features = ["derive"] }
+serde_json.workspace = true

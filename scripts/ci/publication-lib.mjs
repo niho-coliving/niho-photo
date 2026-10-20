@@ -3,15 +3,32 @@ import { execFileSync } from "node:child_process";
 import { lstat, readFile } from "node:fs/promises";
 import path from "node:path";
 import { workflowFailures } from "./workflow-lib.mjs";
+import { imageMetadataFailures } from "./image-metadata.mjs";
 
 export const digest = (bytes) => createHash("sha256").update(bytes).digest("hex");
+
+const excludedDcpHashes = new Set(["ff4f884171f3792846744c8da8d725448a062dfeafb128a8b009fbeb2caa283f", "12ac8236ed7a937f13ba774127ee7af246b976a7722af433d085ee66aee81392", "855c325d2cfc279a660a04b72b98d808247109240a07eba382513f9292944c8c", "34ddf4b685008ecc0f74bcdbdf7d338ca47d79f2ac877e69bd5e9a4b3ee88d4b", "0514ff2a75217ea9e9905f95021eac929632497033f1e5276dc219f127cd0772", "62e665762a5455ed277447a9b6b9797109ee3275d2dc8f4aabe520f4d5d2da17", "66ce1f81f3f2224806763f7227e0fd8b91c3413bfd7667e47f5c3d4d53075325", "26c1e264102de36a03654ddb11c549344a2afc1b144202fe209baac2e2e87f2c"]);
+const excludedMatrixHashes = new Set(["93a514bf2fd9e05874b30daba0a9a9865e3b7cd7d3c2d8fe170a0549adf58b31", "b523bab42634a8962d0c269220bb87f5a8d3e8b783e9943a1b2064c9d26f7d5d", "2141ee710124fd18706d50e45adb0a382827baf384a65f3956954b55eb640ab1", "8906a50e539c1bae17c9984634eb0c5d22444b65aeeb32ac7e2c8700f625babe", "866ae6e35eca40571698251c235f724f0a5e18a4cfec8b71937af8b0df1b95e3", "1752ae691161e00587621130f3157847b900af2fcf28d409b5c226a69335dcbb", "302ac9b1cf15f03e40a54b1a0defaafe1e84273fd61356a9f805a96d57cb3c92"]);
+export function containsExcludedMatrix(text) {
+  const values = [...text.matchAll(/(?<![A-Za-z_])[-+]?(?:\d+\.\d*|\.\d+|\d+)(?:[eE][-+]?\d+)?/g)].map((m) => Number(m[0]));
+  for (let index = 0; index + 9 <= values.length; index++) {
+    const row = values.slice(index, index + 9);
+    for (const scale of [1, 10000]) {
+      const scaled = row.map((v) => Math.round(v * scale));
+      if (scaled.some((v, i) => !Number.isSafeInteger(v) || Math.abs(v - row[i] * scale) > 1e-7)) continue;
+      if (excludedMatrixHashes.has(digest(scaled.join(',')))) return true;
+    }
+  }
+  return false;
+}
+
 const sha256 = /^[a-f0-9]{64}$/;
 const commit = /^[a-f0-9]{40}$/;
 const forbiddenPrefixes = ["apps/api/", "apps/web/", "ops/", "infra/", "archive/", "private/", "secrets/", "release/", "target/", "node_modules/"];
 const forbiddenNames = [".env", "id_rsa", "id_ed25519", "credentials.json", "service-account.json", ".gitmodules", ".npmrc", ".gitleaks.toml", ".gitleaksignore", ".git-credentials", ".netrc", "id_ecdsa", "id_dsa"];
-const forbiddenExtensions = [".p12", ".p8", ".pem", ".key", ".mobileprovision", ".cer", ".crt", ".db", ".sqlite", ".onnx", ".mlmodel", ".mlmodelc", ".dcp", ".pfx", ".jks", ".keystore", ".sqlite3", ".dmg", ".pkg", ".exe", ".msi", ".ipa", ".aab", ".apk"];
-const assetExtensions = new Set([".png", ".jpg", ".jpeg", ".gif", ".webp", ".avif", ".heic", ".tif", ".tiff", ".svg", ".ico", ".icns", ".woff", ".woff2", ".ttf", ".otf", ".bin", ".wasm", ".f32", ".hex", ".icc", ".icm", ".pdf", ".zip", ".gz", ".mp4", ".mov", ".raw", ".rw2", ".dng", ".nef", ".cr2", ".arw", ".wav", ".mp3", ".aiff", ".flac"]);
-export const isAsset = (name) => assetExtensions.has(path.posix.extname(name).toLowerCase()) || /(?:^|\/)(?:fixtures?|calibration|models?|profiles?|data|assets)(?:\/|$)/i.test(name);
+const forbiddenExtensions = [".p12", ".p8", ".pem", ".key", ".mobileprovision", ".cer", ".crt", ".db", ".sqlite", ".onnx", ".mlmodel", ".mlmodelc", ".icc", ".icm", ".pfx", ".jks", ".keystore", ".sqlite3", ".dmg", ".pkg", ".exe", ".msi", ".ipa", ".aab", ".apk"];
+const assetExtensions = new Set([".png", ".jpg", ".jpeg", ".gif", ".webp", ".avif", ".heic", ".tif", ".tiff", ".svg", ".ico", ".icns", ".woff", ".woff2", ".ttf", ".otf", ".bin", ".wasm", ".f32", ".hex", ".xmp", ".dcp", ".icc", ".icm", ".pdf", ".zip", ".gz", ".mp4", ".mov", ".raw", ".rw2", ".dng", ".nef", ".cr2", ".arw", ".wav", ".mp3", ".aiff", ".flac"]);
+export const isAsset = (name) => assetExtensions.has(path.posix.extname(name).toLowerCase()) || /(?:^|\/)(?:fixtures?|calibration|models?|profiles?|data|assets|looks|presets)(?:\/|$)/i.test(name);
 export const isSource = (name) => /^(?:packages|apps)\//.test(name);
 export const validPath = (name) => typeof name === "string" && name.length > 0 && !/[\x00-\x1f\x7f\\]/.test(name) && !name.startsWith("/") && !name.startsWith("../") && name !== "." && name === path.posix.normalize(name);
 const meaningful = (value) => typeof value === "string" && value.trim().length >= 8;
@@ -60,6 +77,8 @@ function pathForbidden(name, policy) {
 
 export function containsPrivateReference(text) {
   // 値はエラーに含めない。公開ドキュメント内の移行元の名前だけはURLではないため許容。
+  if (/(?:^|[\s\x22\x27\x60(=])(?:\/(?:Users|Volumes|home|private)\/|[A-Z]:\\Users\\)/m.test(text)) return true;
+  if (/-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----/.test(text)) return true;
   const urls = text.match(/(?:https?|ssh|git\+https|git\+ssh):\/\/[^\s<>"'`]+|git@[A-Za-z0-9.-]+:[^\s<>"'`]+/gi) ?? [];
   return urls.some((url) => {
     const normalized = url.toLowerCase();
@@ -78,11 +97,11 @@ export async function verifyPublication(root) {
   const readJson = async (name) => JSON.parse(await readFile(path.join(root, name), "utf8"));
   const policy = await readJson("docs/security/publication-policy.json");
   const manifest = await readJson("docs/security/publication-manifest.json");
-  if (policy.schemaVersion !== 1 || !Number.isSafeInteger(policy.maxFileBytes) || policy.maxFileBytes <= 0 || policy.maxFileBytes > 2097152 || policy.assetManifestRequired !== true || policy.assetManifestPath !== "docs/security/publication-manifest.json" || !["forbiddenPathPrefixes", "forbiddenBasenames", "forbiddenExtensions"].every((key) => Array.isArray(policy[key]) && policy[key].every((v) => typeof v === "string"))) throw new Error("公開policyの契約が不正です");
+  if (policy.schemaVersion !== 1 || !Number.isSafeInteger(policy.maxFileBytes) || policy.maxFileBytes <= 0 || policy.maxFileBytes > 52428800 || policy.assetManifestRequired !== true || policy.assetManifestPath !== "docs/security/publication-manifest.json" || !["forbiddenPathPrefixes", "forbiddenBasenames", "forbiddenExtensions"].every((key) => Array.isArray(policy[key]) && policy[key].every((v) => typeof v === "string"))) throw new Error("公開policyの契約が不正です");
   if (manifest.schemaVersion !== 1 || !commit.test(manifest.sourceBaseline?.commit ?? "") || !manifest.sourceBaseline?.repository || !commit.test(manifest.auditedCandidate?.commit ?? "") || !Array.isArray(manifest.importedFiles) || !Array.isArray(manifest.generatedFiles) || !Array.isArray(manifest.excludedSources) || !Array.isArray(manifest.deferredScopes)) throw new Error("公開manifestのschemaが不正です");
   const inventory = parseInventory(await readFile(path.join(root, "docs/legal/asset-inventory.csv"), "utf8"));
   for (const row of inventory) {
-    if (!commit.test(row.source_commit) || !validPath(row.source_path) || !sha256.test(row.sha256) || !Number.isSafeInteger(Number(row.size_bytes)) || Number(row.size_bytes) < 0 || !["公開可能", "確認待ち", "要置換", "非公開維持"].includes(row.decision)) fail("資産台帳の記録不正");
+    if (!commit.test(row.source_commit) || !validPath(row.source_path) || !sha256.test(row.sha256) || !Number.isSafeInteger(Number(row.size_bytes)) || Number(row.size_bytes) < 0 || !["公開可能", "要置換", "非公開維持"].includes(row.decision)) fail("資産台帳の記録不正");
   }
   const approved = new Map();
   for (const [kind, entries] of [["imported", manifest.importedFiles], ["generated", manifest.generatedFiles]]) {
@@ -126,6 +145,21 @@ export async function verifyPublication(root) {
     const bytes = await readFile(path.join(root, name));
     const hash = digest(bytes);
     const entry = approved.get(name);
+    if (excludedDcpHashes.has(hash)) fail("除外済み旧DCPのバイト列", name);
+    for (const violation of imageMetadataFailures(name, bytes)) fail(violation, name);
+    if (name.toLowerCase().endsWith('.dcp')) {
+      const proof = (manifest.independentProfiles ?? []).find((item) => item.path === name);
+      if (entry?.kind !== 'generated' || !proof || proof.initialMatrix !== 'none' || !Array.isArray(proof.inputs) || proof.inputs.length < 3 || !proof.inputs.every((v) => sha256.test(v)) || !sha256.test(proof.measurementsSha256 ?? '') || !sha256.test(proof.validationSha256 ?? '') || proof.outputSha256 !== hash || !sha256.test(proof.specSha256 ?? '')) fail("独立DCPの生成証拠未確認", name);
+      else {
+        try {
+          if (!validPath(proof.measurementsPath) || !validPath(proof.validationPath) || !validPath(proof.specPath)) throw new Error();
+          const measurements = await readFile(path.join(root, proof.measurementsPath));
+          const validation = await readFile(path.join(root, proof.validationPath));
+          const spec = await readFile(path.join(root, proof.specPath));
+          if (!validPath(proof.measurementsPath) || !validPath(proof.validationPath) || digest(measurements) !== proof.measurementsSha256 || digest(validation) !== proof.validationSha256 || digest(spec) !== proof.specSha256 || JSON.parse(validation).passed !== true) fail("独立DCPの測定/検証hash不一致", name);
+        } catch { fail("独立DCPの測定/検証欠落", name); }
+      }
+    }
     if (isSource(name) && !entry) fail("manifest未登録ソース", name);
     if (entry && hash !== (entry.outputSha256 ?? entry.sha256)) fail("manifestハッシュ不一致", name);
     let text;
@@ -135,11 +169,12 @@ export async function verifyPublication(root) {
       if (!entry) fail("manifest未登録資産", name);
       const sourcePath = entry?.source?.path ?? name;
       const sourceHash = entry?.source?.sha256 ?? hash;
-      const publicAsset = inventory.some((row) => row.source_path === sourcePath && row.sha256 === sourceHash && row.sha256 === hash && Number(row.size_bytes) === bytes.length && row.decision === "公開可能" && meaningful(row.origin) && meaningful(row.license_evidence) && row.redistribution && (!entry?.source || row.source_commit === manifest.auditedCandidate.commit || row.source_commit === entry.source.commit));
+      const publicAsset = inventory.some((row) => row.source_path === sourcePath && (row.source_sha256 ?? row.sha256) === sourceHash && row.sha256 === hash && Number(row.size_bytes) === bytes.length && row.decision === "公開可能" && meaningful(row.origin) && meaningful(row.license_evidence) && row.redistribution && (!entry?.source || row.source_commit === manifest.auditedCandidate.commit || row.source_commit === entry.source.commit));
       const independentSynthetic = !binary && /(?:^|\/)fixtures?\//i.test(name) && /\.(?:json|csv|txt)$/.test(name) && entry?.kind === "generated" && meaningful(entry.origin) && !inventory.some((row) => row.sha256 === hash && Number(row.size_bytes) === bytes.length && row.decision !== "公開可能");
       if (!publicAsset && !independentSynthetic) fail("資産の公開許可未確認", name);
       if (inventory.some((row) => row.sha256 === hash && Number(row.size_bytes) === bytes.length && row.decision !== "公開可能")) fail("非公開/要置換の元資産", name);
     }
+    if (text !== undefined && /^packages\/develop-engine\//.test(name) && /\.(?:rs|py|json|mjs)$/.test(name) && containsExcludedMatrix(text)) fail("除外済み行列の転記", name);
     if (text !== undefined && containsPrivateReference(text)) fail("非公開参照検出（値は非表示）", name);
     if (/^\.github\/workflows\/[^/]+\.ya?ml$/.test(name)) {
       try { for (const violation of workflowFailures(JSON.parse(text))) fail(violation, name); }

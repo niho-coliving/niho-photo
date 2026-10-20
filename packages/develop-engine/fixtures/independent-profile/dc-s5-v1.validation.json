@@ -1,0 +1,80 @@
+{
+  "schema": "niho.independent-profile-validation/1",
+  "metric": "CIE76 with per-sample XYZ Y matched; color only, no tone/chart claim",
+  "gatesFrozenBeforeFit": {
+    "validationMeanDeltaE76": 8.0,
+    "validationP95DeltaE76": 18.0,
+    "minimumPairsPerScene": 100
+  },
+  "scenes": [
+    {
+      "id": "scene-01",
+      "split": "train",
+      "pairs": 503,
+      "meanDeltaE76": 2.71544,
+      "p95DeltaE76": 4.86824
+    },
+    {
+      "id": "scene-02",
+      "split": "train",
+      "pairs": 634,
+      "meanDeltaE76": 4.0135,
+      "p95DeltaE76": 12.63726
+    },
+    {
+      "id": "scene-03",
+      "split": "train",
+      "pairs": 631,
+      "meanDeltaE76": 2.74144,
+      "p95DeltaE76": 8.91841
+    },
+    {
+      "id": "scene-04",
+      "split": "train",
+      "pairs": 620,
+      "meanDeltaE76": 4.20457,
+      "p95DeltaE76": 13.88739
+    },
+    {
+      "id": "scene-05",
+      "split": "train",
+      "pairs": 427,
+      "meanDeltaE76": 2.57756,
+      "p95DeltaE76": 6.15941
+    },
+    {
+      "id": "scene-06",
+      "split": "validation",
+      "pairs": 595,
+      "meanDeltaE76": 4.13669,
+      "p95DeltaE76": 13.33875
+    },
+    {
+      "id": "scene-07",
+      "split": "validation",
+      "pairs": 597,
+      "meanDeltaE76": 4.19327,
+      "p95DeltaE76": 13.61184
+    }
+  ],
+  "passed": true,
+  "initialCameraMatrix": "none; analytic solve from owned measurement pairs",
+  "measurementsCameraToSrgb": [
+    [
+      1.532660253,
+      -0.168875954,
+      -0.3637843
+    ],
+    [
+      -0.458020392,
+      1.79317065,
+      -0.335150257
+    ],
+    [
+      -0.074639861,
+      -0.624294696,
+      1.698934557
+    ]
+  ],
+  "measurementsSha256": "03038a59042ed975edd51f863acbabf8230e7c10d2850cb9b060821594ad6379"
+}

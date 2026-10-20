@@ -1,0 +1,1517 @@
+{
+  "schema": "colorcheck/fixture/v2",
+  "createdAt": "2026-09-29T10:41:09+09:00",
+  "tool": {
+    "name": "colorcheck",
+    "version": "1.0.0"
+  },
+  "camera": {
+    "make": "SONY",
+    "model": "ZV-E10M2"
+  },
+  "decoderVersion": "8",
+  "baseVersion": "apple-ciraw8/linear-prophoto-d50/cal-sony-zv-e10m2-apple-v1+niho-develop@5b3c97101c",
+  "counts": {
+    "compare": 16,
+    "preset": 12,
+    "preset-summary": 3
+  },
+  "entries": [
+    {
+      "label": "base/DSC09188",
+      "kind": "compare",
+      "comparison": "reference",
+      "scene": "DSC09188",
+      "preset": null,
+      "deltaE00": {
+        "mean": 0.8472,
+        "p99": 2.2562
+      },
+      "deltaE00Unblurred": {
+        "mean": 1.1928,
+        "p99": 3.2907
+      },
+      "evDiff": 0.0137,
+      "saturationRatio": 1.0107,
+      "deltaE00All": {
+        "mean": 0.868,
+        "p99": 2.3436
+      },
+      "flatFraction": 0.9486,
+      "white": {
+        "reference": {
+          "a": -0.03,
+          "b": 1.959
+        },
+        "candidate": {
+          "a": -0.024,
+          "b": 1.7
+        }
+      },
+      "normalized": {
+        "method": "pre-tone-ev",
+        "deltaE00": {
+          "mean": 0.8177,
+          "p99": 2.3249
+        },
+        "evOffset": -0.0111,
+        "gain": null
+      },
+      "alignment": {
+        "scale": 1.000009,
+        "corr": 0.9941
+      },
+      "analysisSize": [
+        1500,
+        1000
+      ],
+      "baseVersion": "apple-ciraw8/linear-prophoto-d50/cal-sony-zv-e10m2-apple-v1"
+    },
+    {
+      "label": "base/DSC09206",
+      "kind": "compare",
+      "comparison": "reference",
+      "scene": "DSC09206",
+      "preset": null,
+      "deltaE00": {
+        "mean": 0.6929,
+        "p99": 2.1901
+      },
+      "deltaE00Unblurred": {
+        "mean": 1.4385,
+        "p99": 7.4729
+      },
+      "evDiff": 0.0081,
+      "saturationRatio": 0.9963,
+      "deltaE00All": {
+        "mean": 0.8429,
+        "p99": 3.1664
+      },
+      "flatFraction": 0.5651,
+      "white": {
+        "reference": {
+          "a": 1.346,
+          "b": -0.445
+        },
+        "candidate": {
+          "a": 1.308,
+          "b": -0.695
+        }
+      },
+      "normalized": {
+        "method": "pre-tone-ev",
+        "deltaE00": {
+          "mean": 0.692,
+          "p99": 2.2207
+        },
+        "evOffset": -0.0062,
+        "gain": null
+      },
+      "alignment": {
+        "scale": 1.000018,
+        "corr": 0.9836
+      },
+      "analysisSize": [
+        1500,
+        1000
+      ],
+      "baseVersion": "apple-ciraw8/linear-prophoto-d50/cal-sony-zv-e10m2-apple-v1"
+    },
+    {
+      "label": "base/DSC09207",
+      "kind": "compare",
+      "comparison": "reference",
+      "scene": "DSC09207",
+      "preset": null,
+      "deltaE00": {
+        "mean": 0.6773,
+        "p99": 1.2351
+      },
+      "deltaE00Unblurred": {
+        "mean": 1.0912,
+        "p99": 4.964
+      },
+      "evDiff": -0.0456,
+      "saturationRatio": 0.9896,
+      "deltaE00All": {
+        "mean": 0.7548,
+        "p99": 2.2512
+      },
+      "flatFraction": 0.7131,
+      "white": {
+        "reference": {
+          "a": -0.161,
+          "b": 0.869
+        },
+        "candidate": {
+          "a": -0.101,
+          "b": 0.968
+        }
+      },
+      "normalized": {
+        "method": "pre-tone-ev",
+        "deltaE00": {
+          "mean": 0.5497,
+          "p99": 1.2924
+        },
+        "evOffset": 0.0375,
+        "gain": null
+      },
+      "alignment": {
+        "scale": 1.000014,
+        "corr": 0.9982
+      },
+      "analysisSize": [
+        1500,
+        1000
+      ],
+      "baseVersion": "apple-ciraw8/linear-prophoto-d50/cal-sony-zv-e10m2-apple-v1"
+    },
+    {
+      "label": "base/DSC09208",
+      "kind": "compare",
+      "comparison": "reference",
+      "scene": "DSC09208",
+      "preset": null,
+      "deltaE00": {
+        "mean": 0.8543,
+        "p99": 1.798
+      },
+      "deltaE00Unblurred": {
+        "mean": 1.3877,
+        "p99": 6.428
+      },
+      "evDiff": -0.0711,
+      "saturationRatio": 0.9766,
+      "deltaE00All": {
+        "mean": 0.9813,
+        "p99": 2.8676
+      },
+      "flatFraction": 0.5393,
+      "white": {
+        "reference": {
+          "a": -0.681,
+          "b": -0.214
+        },
+        "candidate": {
+          "a": -0.796,
+          "b": -0.591
+        }
+      },
+      "normalized": {
+        "method": "pre-tone-ev",
+        "deltaE00": {
+          "mean": 0.6956,
+          "p99": 1.6441
+        },
+        "evOffset": 0.0541,
+        "gain": null
+      },
+      "alignment": {
+        "scale": 0.999997,
+        "corr": 0.9962
+      },
+      "analysisSize": [
+        1500,
+        1000
+      ],
+      "baseVersion": "apple-ciraw8/linear-prophoto-d50/cal-sony-zv-e10m2-apple-v1"
+    },
+    {
+      "label": "camjpeg/DSC09188",
+      "kind": "compare",
+      "comparison": "camera-jpeg",
+      "scene": "DSC09188",
+      "preset": null,
+      "deltaE00": {
+        "mean": 5.1662,
+        "p99": 12.4839
+      },
+      "deltaE00Unblurred": {
+        "mean": 5.2548,
+        "p99": 12.5568
+      },
+      "evDiff": -0.2425,
+      "saturationRatio": 0.7507,
+      "deltaE00All": {
+        "mean": 5.1522,
+        "p99": 12.4568
+      },
+      "flatFraction": 0.9367,
+      "white": {
+        "reference": {
+          "a": -0.812,
+          "b": 1.046
+        },
+        "candidate": {
+          "a": 0.087,
+          "b": 1.844
+        }
+      },
+      "normalized": {
+        "method": "pre-tone-ev",
+        "deltaE00": {
+          "mean": 4.0573,
+          "p99": 12.7134
+        },
+        "evOffset": 0.1805,
+        "gain": null
+      },
+      "alignment": {
+        "scale": 0.996891,
+        "corr": 0.9867,
+        "radialK": [
+          -0.00564,
+          0.048694
+        ]
+      },
+      "analysisSize": [
+        1500,
+        1000
+      ],
+      "baseVersion": "apple-ciraw8/linear-prophoto-d50/cal-sony-zv-e10m2-apple-v1"
+    },
+    {
+      "label": "camjpeg/DSC09206",
+      "kind": "compare",
+      "comparison": "camera-jpeg",
+      "scene": "DSC09206",
+      "preset": null,
+      "deltaE00": {
+        "mean": 5.4653,
+        "p99": 8.4186
+      },
+      "deltaE00Unblurred": {
+        "mean": 6.0268,
+        "p99": 15.2605
+      },
+      "evDiff": -0.0438,
+      "saturationRatio": 0.6592,
+      "deltaE00All": {
+        "mean": 5.1993,
+        "p99": 9.0391
+      },
+      "flatFraction": 0.5209,
+      "white": {
+        "reference": {
+          "a": 1.808,
+          "b": -0.794
+        },
+        "candidate": {
+          "a": 1.291,
+          "b": -0.633
+        }
+      },
+      "normalized": {
+        "method": "pre-tone-ev",
+        "deltaE00": {
+          "mean": 5.3989,
+          "p99": 8.4214
+        },
+        "evOffset": 0.0307,
+        "gain": null
+      },
+      "alignment": {
+        "scale": 0.996766,
+        "corr": 0.9494,
+        "radialK": [
+          -0.013387,
+          0.066727
+        ]
+      },
+      "analysisSize": [
+        1500,
+        1000
+      ],
+      "baseVersion": "apple-ciraw8/linear-prophoto-d50/cal-sony-zv-e10m2-apple-v1"
+    },
+    {
+      "label": "camjpeg/DSC09207",
+      "kind": "compare",
+      "comparison": "camera-jpeg",
+      "scene": "DSC09207",
+      "preset": null,
+      "deltaE00": {
+        "mean": 5.4848,
+        "p99": 8.6253
+      },
+      "deltaE00Unblurred": {
+        "mean": 5.6852,
+        "p99": 11.8961
+      },
+      "evDiff": -0.2845,
+      "saturationRatio": 0.5979,
+      "deltaE00All": {
+        "mean": 5.3368,
+        "p99": 8.6694
+      },
+      "flatFraction": 0.6796,
+      "white": {
+        "reference": {
+          "a": -0.682,
+          "b": 1.29
+        },
+        "candidate": {
+          "a": -0.048,
+          "b": 1.026
+        }
+      },
+      "normalized": {
+        "method": "pre-tone-ev",
+        "deltaE00": {
+          "mean": 3.9245,
+          "p99": 8.6004
+        },
+        "evOffset": 0.2144,
+        "gain": null
+      },
+      "alignment": {
+        "scale": 0.997428,
+        "corr": 0.9815,
+        "radialK": [
+          -0.01627,
+          0.073279
+        ]
+      },
+      "analysisSize": [
+        1500,
+        1000
+      ],
+      "baseVersion": "apple-ciraw8/linear-prophoto-d50/cal-sony-zv-e10m2-apple-v1"
+    },
+    {
+      "label": "camjpeg/DSC09208",
+      "kind": "compare",
+      "comparison": "camera-jpeg",
+      "scene": "DSC09208",
+      "preset": null,
+      "deltaE00": {
+        "mean": 5.1622,
+        "p99": 8.504
+      },
+      "deltaE00Unblurred": {
+        "mean": 5.7779,
+        "p99": 14.2688
+      },
+      "evDiff": -0.3254,
+      "saturationRatio": 0.6546,
+      "deltaE00All": {
+        "mean": 5.2214,
+        "p99": 8.8453
+      },
+      "flatFraction": 0.5036,
+      "white": {
+        "reference": {
+          "a": -1.311,
+          "b": 0.067
+        },
+        "candidate": {
+          "a": -0.67,
+          "b": -0.461
+        }
+      },
+      "normalized": {
+        "method": "pre-tone-ev",
+        "deltaE00": {
+          "mean": 3.9011,
+          "p99": 8.6368
+        },
+        "evOffset": 0.2551,
+        "gain": null
+      },
+      "alignment": {
+        "scale": 0.996262,
+        "corr": 0.978,
+        "radialK": [
+          -0.012167,
+          0.069031
+        ]
+      },
+      "analysisSize": [
+        1500,
+        1000
+      ],
+      "baseVersion": "apple-ciraw8/linear-prophoto-d50/cal-sony-zv-e10m2-apple-v1"
+    },
+    {
+      "label": "decoder-7vs8/DSC09188",
+      "kind": "compare",
+      "comparison": "version",
+      "scene": "DSC09188",
+      "preset": null,
+      "deltaE00": {
+        "mean": 0.1367,
+        "p99": 0.5418
+      },
+      "deltaE00Unblurred": {
+        "mean": 0.4082,
+        "p99": 1.9244
+      },
+      "evDiff": 0.0019,
+      "saturationRatio": 1.0008,
+      "deltaE00All": {
+        "mean": 0.1392,
+        "p99": 0.5519
+      },
+      "flatFraction": 0.9583,
+      "white": {
+        "reference": {
+          "a": 0.047,
+          "b": 1.798
+        },
+        "candidate": {
+          "a": 0.026,
+          "b": 1.795
+        }
+      },
+      "alignment": {
+        "scale": 1.0,
+        "corr": 0.9999
+      },
+      "analysisSize": [
+        1500,
+        1000
+      ],
+      "decoderVersion": "7vs8",
+      "baseVersion": "apple-ciraw8/linear-prophoto-d50/cal-sony-zv-e10m2-apple-v1"
+    },
+    {
+      "label": "decoder-7vs8/DSC09206",
+      "kind": "compare",
+      "comparison": "version",
+      "scene": "DSC09206",
+      "preset": null,
+      "deltaE00": {
+        "mean": 0.1092,
+        "p99": 0.9409
+      },
+      "deltaE00Unblurred": {
+        "mean": 0.4886,
+        "p99": 3.5562
+      },
+      "evDiff": 0.0013,
+      "saturationRatio": 1.0001,
+      "deltaE00All": {
+        "mean": 0.1798,
+        "p99": 1.3656
+      },
+      "flatFraction": 0.592,
+      "white": {
+        "reference": {
+          "a": 1.26,
+          "b": -0.671
+        },
+        "candidate": {
+          "a": 1.278,
+          "b": -0.74
+        }
+      },
+      "alignment": {
+        "scale": 0.999998,
+        "corr": 0.9999
+      },
+      "analysisSize": [
+        1500,
+        1000
+      ],
+      "decoderVersion": "7vs8",
+      "baseVersion": "apple-ciraw8/linear-prophoto-d50/cal-sony-zv-e10m2-apple-v1"
+    },
+    {
+      "label": "decoder-7vs8/DSC09207",
+      "kind": "compare",
+      "comparison": "version",
+      "scene": "DSC09207",
+      "preset": null,
+      "deltaE00": {
+        "mean": 0.083,
+        "p99": 0.3403
+      },
+      "deltaE00Unblurred": {
+        "mean": 0.3325,
+        "p99": 1.6838
+      },
+      "evDiff": 0.0006,
+      "saturationRatio": 1.0003,
+      "deltaE00All": {
+        "mean": 0.1032,
+        "p99": 0.6094
+      },
+      "flatFraction": 0.7282,
+      "white": {
+        "reference": {
+          "a": -0.042,
+          "b": 1.0
+        },
+        "candidate": {
+          "a": -0.043,
+          "b": 1.0
+        }
+      },
+      "alignment": {
+        "scale": 1.0,
+        "corr": 1.0
+      },
+      "analysisSize": [
+        1500,
+        1000
+      ],
+      "decoderVersion": "7vs8",
+      "baseVersion": "apple-ciraw8/linear-prophoto-d50/cal-sony-zv-e10m2-apple-v1"
+    },
+    {
+      "label": "decoder-7vs8/DSC09208",
+      "kind": "compare",
+      "comparison": "version",
+      "scene": "DSC09208",
+      "preset": null,
+      "deltaE00": {
+        "mean": 0.084,
+        "p99": 0.4668
+      },
+      "deltaE00Unblurred": {
+        "mean": 0.3831,
+        "p99": 2.6503
+      },
+      "evDiff": 0.0017,
+      "saturationRatio": 1.0011,
+      "deltaE00All": {
+        "mean": 0.1411,
+        "p99": 1.0412
+      },
+      "flatFraction": 0.552,
+      "white": {
+        "reference": {
+          "a": -0.67,
+          "b": -0.477
+        },
+        "candidate": {
+          "a": -0.664,
+          "b": -0.471
+        }
+      },
+      "alignment": {
+        "scale": 1.000001,
+        "corr": 1.0
+      },
+      "analysisSize": [
+        1500,
+        1000
+      ],
+      "decoderVersion": "7vs8",
+      "baseVersion": "apple-ciraw8/linear-prophoto-d50/cal-sony-zv-e10m2-apple-v1"
+    },
+    {
+      "label": "crate-base/DSC09188",
+      "kind": "compare",
+      "comparison": "reference",
+      "scene": "DSC09188",
+      "preset": null,
+      "deltaE00": {
+        "mean": 0.8733,
+        "p99": 2.1267
+      },
+      "deltaE00Unblurred": {
+        "mean": 1.213,
+        "p99": 3.2338
+      },
+      "evDiff": 0.0181,
+      "saturationRatio": 0.9856,
+      "deltaE00All": {
+        "mean": 0.8934,
+        "p99": 2.2512
+      },
+      "flatFraction": 0.9486,
+      "white": {
+        "reference": {
+          "a": -0.03,
+          "b": 1.959
+        },
+        "candidate": {
+          "a": -0.035,
+          "b": 1.8
+        }
+      },
+      "normalized": {
+        "method": "display-linear-gain",
+        "deltaE00": {
+          "mean": 0.8601,
+          "p99": 2.2781
+        },
+        "evOffset": null,
+        "gain": 0.98672
+      },
+      "alignment": {
+        "scale": 1.000007,
+        "corr": 0.9973
+      },
+      "analysisSize": [
+        1500,
+        1000
+      ]
+    },
+    {
+      "label": "crate-base/DSC09206",
+      "kind": "compare",
+      "comparison": "reference",
+      "scene": "DSC09206",
+      "preset": null,
+      "deltaE00": {
+        "mean": 0.7894,
+        "p99": 2.3065
+      },
+      "deltaE00Unblurred": {
+        "mean": 1.5256,
+        "p99": 7.5613
+      },
+      "evDiff": 0.0051,
+      "saturationRatio": 0.9948,
+      "deltaE00All": {
+        "mean": 0.9142,
+        "p99": 3.2295
+      },
+      "flatFraction": 0.5654,
+      "white": {
+        "reference": {
+          "a": 1.351,
+          "b": -0.446
+        },
+        "candidate": {
+          "a": 1.293,
+          "b": -0.676
+        }
+      },
+      "normalized": {
+        "method": "display-linear-gain",
+        "deltaE00": {
+          "mean": 0.7887,
+          "p99": 2.2601
+        },
+        "evOffset": null,
+        "gain": 1.00594
+      },
+      "alignment": {
+        "scale": 1.000013,
+        "corr": 0.9983
+      },
+      "analysisSize": [
+        1500,
+        1000
+      ]
+    },
+    {
+      "label": "crate-base/DSC09207",
+      "kind": "compare",
+      "comparison": "reference",
+      "scene": "DSC09207",
+      "preset": null,
+      "deltaE00": {
+        "mean": 0.6926,
+        "p99": 1.4763
+      },
+      "deltaE00Unblurred": {
+        "mean": 1.1053,
+        "p99": 5.0385
+      },
+      "evDiff": -0.0402,
+      "saturationRatio": 0.9902,
+      "deltaE00All": {
+        "mean": 0.7667,
+        "p99": 2.2222
+      },
+      "flatFraction": 0.7133,
+      "white": {
+        "reference": {
+          "a": -0.161,
+          "b": 0.868
+        },
+        "candidate": {
+          "a": -0.12,
+          "b": 0.993
+        }
+      },
+      "normalized": {
+        "method": "display-linear-gain",
+        "deltaE00": {
+          "mean": 0.5338,
+          "p99": 1.425
+        },
+        "evOffset": null,
+        "gain": 1.02603
+      },
+      "alignment": {
+        "scale": 1.000014,
+        "corr": 0.9985
+      },
+      "analysisSize": [
+        1500,
+        1000
+      ]
+    },
+    {
+      "label": "crate-base/DSC09208",
+      "kind": "compare",
+      "comparison": "reference",
+      "scene": "DSC09208",
+      "preset": null,
+      "deltaE00": {
+        "mean": 0.8902,
+        "p99": 1.8868
+      },
+      "deltaE00Unblurred": {
+        "mean": 1.4326,
+        "p99": 6.5081
+      },
+      "evDiff": -0.0701,
+      "saturationRatio": 0.9757,
+      "deltaE00All": {
+        "mean": 1.0096,
+        "p99": 2.8409
+      },
+      "flatFraction": 0.5394,
+      "white": {
+        "reference": {
+          "a": -0.682,
+          "b": -0.214
+        },
+        "candidate": {
+          "a": -0.874,
+          "b": -0.675
+        }
+      },
+      "normalized": {
+        "method": "display-linear-gain",
+        "deltaE00": {
+          "mean": 0.695,
+          "p99": 1.6275
+        },
+        "evOffset": null,
+        "gain": 1.04639
+      },
+      "alignment": {
+        "scale": 0.999972,
+        "corr": 0.9988
+      },
+      "analysisSize": [
+        1500,
+        1000
+      ]
+    },
+    {
+      "label": "bluesky2/DSC09188",
+      "kind": "preset",
+      "comparison": "preset",
+      "scene": "DSC09188",
+      "preset": "bluesky2",
+      "deltaE00": {
+        "mean": 3.2597,
+        "p99": 6.2197
+      },
+      "deltaE00Unblurred": {
+        "mean": 5.2235,
+        "p99": 15.1192
+      },
+      "evDiff": 0.0663,
+      "saturationRatio": 1.036,
+      "deltaE00All": {
+        "mean": 3.2715,
+        "p99": 6.3403
+      },
+      "flatFraction": 0.9426,
+      "white": {
+        "reference": {
+          "a": 0.922,
+          "b": -0.401
+        },
+        "candidate": {
+          "a": 0.274,
+          "b": 0.098
+        }
+      },
+      "alignment": {
+        "scale": 1.000205,
+        "corr": 0.9964
+      },
+      "analysisSize": [
+        1500,
+        1000
+      ]
+    },
+    {
+      "label": "bluesky2/DSC09206",
+      "kind": "preset",
+      "comparison": "preset",
+      "scene": "DSC09206",
+      "preset": "bluesky2",
+      "deltaE00": {
+        "mean": 3.589,
+        "p99": 7.3387
+      },
+      "deltaE00Unblurred": {
+        "mean": 4.1287,
+        "p99": 11.3603
+      },
+      "evDiff": -0.0561,
+      "saturationRatio": 0.9743,
+      "deltaE00All": {
+        "mean": 3.6433,
+        "p99": 7.4633
+      },
+      "flatFraction": 0.4915,
+      "white": {
+        "reference": {
+          "a": 0.929,
+          "b": 2.067
+        },
+        "candidate": {
+          "a": 0.231,
+          "b": 3.533
+        }
+      },
+      "alignment": {
+        "scale": 1.000059,
+        "corr": 0.9961,
+        "radialK": [
+          0.000248,
+          -0.000658
+        ]
+      },
+      "analysisSize": [
+        1500,
+        1000
+      ]
+    },
+    {
+      "label": "bluesky2/DSC09207",
+      "kind": "preset",
+      "comparison": "preset",
+      "scene": "DSC09207",
+      "preset": "bluesky2",
+      "deltaE00": {
+        "mean": 2.1142,
+        "p99": 4.3276
+      },
+      "deltaE00Unblurred": {
+        "mean": 2.6727,
+        "p99": 8.8712
+      },
+      "evDiff": 0.0654,
+      "saturationRatio": 0.9901,
+      "deltaE00All": {
+        "mean": 2.2077,
+        "p99": 4.9346
+      },
+      "flatFraction": 0.6894,
+      "white": {
+        "reference": {
+          "a": -0.228,
+          "b": 2.087
+        },
+        "candidate": {
+          "a": -0.586,
+          "b": 2.3
+        }
+      },
+      "alignment": {
+        "scale": 1.000026,
+        "corr": 0.998
+      },
+      "analysisSize": [
+        1500,
+        1000
+      ]
+    },
+    {
+      "label": "bluesky2/DSC09208",
+      "kind": "preset",
+      "comparison": "preset",
+      "scene": "DSC09208",
+      "preset": "bluesky2",
+      "deltaE00": {
+        "mean": 2.9018,
+        "p99": 5.1406
+      },
+      "deltaE00Unblurred": {
+        "mean": 3.4134,
+        "p99": 9.7591
+      },
+      "evDiff": 0.0593,
+      "saturationRatio": 1.0045,
+      "deltaE00All": {
+        "mean": 3.0275,
+        "p99": 5.7836
+      },
+      "flatFraction": 0.5221,
+      "white": {
+        "reference": {
+          "a": 1.115,
+          "b": 3.649
+        },
+        "candidate": {
+          "a": -0.005,
+          "b": 4.224
+        }
+      },
+      "alignment": {
+        "scale": 1.000013,
+        "corr": 0.997
+      },
+      "analysisSize": [
+        1500,
+        1000
+      ]
+    },
+    {
+      "label": "pastel/DSC09188",
+      "kind": "preset",
+      "comparison": "preset",
+      "scene": "DSC09188",
+      "preset": "pastel",
+      "deltaE00": {
+        "mean": 3.3932,
+        "p99": 6.1485
+      },
+      "deltaE00Unblurred": {
+        "mean": 6.0687,
+        "p99": 16.8548
+      },
+      "evDiff": 0.1614,
+      "saturationRatio": 1.0198,
+      "deltaE00All": {
+        "mean": 3.4432,
+        "p99": 6.2829
+      },
+      "flatFraction": 0.9328,
+      "white": {
+        "reference": {
+          "a": -1.16,
+          "b": 1.064
+        },
+        "candidate": {
+          "a": -0.718,
+          "b": 0.876
+        }
+      },
+      "alignment": {
+        "scale": 1.000187,
+        "corr": 0.9923
+      },
+      "analysisSize": [
+        1500,
+        1000
+      ]
+    },
+    {
+      "label": "pastel/DSC09206",
+      "kind": "preset",
+      "comparison": "preset",
+      "scene": "DSC09206",
+      "preset": "pastel",
+      "deltaE00": {
+        "mean": 2.2893,
+        "p99": 6.981
+      },
+      "deltaE00Unblurred": {
+        "mean": 3.592,
+        "p99": 13.2493
+      },
+      "evDiff": -0.0103,
+      "saturationRatio": 1.0973,
+      "deltaE00All": {
+        "mean": 2.4253,
+        "p99": 6.8169
+      },
+      "flatFraction": 0.4431,
+      "white": {
+        "reference": {
+          "a": 1.466,
+          "b": -0.263
+        },
+        "candidate": {
+          "a": 1.745,
+          "b": -0.47
+        }
+      },
+      "alignment": {
+        "scale": 1.00005,
+        "corr": 0.9944,
+        "radialK": [
+          0.000227,
+          -0.000594
+        ]
+      },
+      "analysisSize": [
+        1500,
+        1000
+      ]
+    },
+    {
+      "label": "pastel/DSC09207",
+      "kind": "preset",
+      "comparison": "preset",
+      "scene": "DSC09207",
+      "preset": "pastel",
+      "deltaE00": {
+        "mean": 1.9298,
+        "p99": 4.8704
+      },
+      "deltaE00Unblurred": {
+        "mean": 2.8585,
+        "p99": 10.1799
+      },
+      "evDiff": 0.0781,
+      "saturationRatio": 1.0758,
+      "deltaE00All": {
+        "mean": 2.193,
+        "p99": 5.4988
+      },
+      "flatFraction": 0.6708,
+      "white": {
+        "reference": {
+          "a": -0.386,
+          "b": 0.923
+        },
+        "candidate": {
+          "a": -0.052,
+          "b": 0.691
+        }
+      },
+      "alignment": {
+        "scale": 1.000027,
+        "corr": 0.9939
+      },
+      "analysisSize": [
+        1500,
+        1000
+      ]
+    },
+    {
+      "label": "pastel/DSC09208",
+      "kind": "preset",
+      "comparison": "preset",
+      "scene": "DSC09208",
+      "preset": "pastel",
+      "deltaE00": {
+        "mean": 1.8656,
+        "p99": 3.749
+      },
+      "deltaE00Unblurred": {
+        "mean": 2.9569,
+        "p99": 11.6492
+      },
+      "evDiff": 0.0858,
+      "saturationRatio": 1.0082,
+      "deltaE00All": {
+        "mean": 2.1011,
+        "p99": 5.1579
+      },
+      "flatFraction": 0.5144,
+      "white": {
+        "reference": {
+          "a": -0.98,
+          "b": 0.377
+        },
+        "candidate": {
+          "a": -0.881,
+          "b": 0.024
+        }
+      },
+      "alignment": {
+        "scale": 1.000007,
+        "corr": 0.9959
+      },
+      "analysisSize": [
+        1500,
+        1000
+      ]
+    },
+    {
+      "label": "colorful/DSC09188",
+      "kind": "preset",
+      "comparison": "preset",
+      "scene": "DSC09188",
+      "preset": "colorful",
+      "deltaE00": {
+        "mean": 2.4759,
+        "p99": 5.3411
+      },
+      "deltaE00Unblurred": {
+        "mean": 2.7069,
+        "p99": 6.3796
+      },
+      "evDiff": 0.0599,
+      "saturationRatio": 1.0292,
+      "deltaE00All": {
+        "mean": 2.4934,
+        "p99": 5.4156
+      },
+      "flatFraction": 0.9344,
+      "white": {
+        "reference": {
+          "a": 0.012,
+          "b": 1.695
+        },
+        "candidate": {
+          "a": -0.044,
+          "b": 1.645
+        }
+      },
+      "alignment": {
+        "scale": 0.997943,
+        "corr": 0.9924,
+        "radialK": [
+          -0.009233,
+          0.039477
+        ]
+      },
+      "analysisSize": [
+        1500,
+        1000
+      ]
+    },
+    {
+      "label": "colorful/DSC09206",
+      "kind": "preset",
+      "comparison": "preset",
+      "scene": "DSC09206",
+      "preset": "colorful",
+      "deltaE00": {
+        "mean": 2.9057,
+        "p99": 9.5296
+      },
+      "deltaE00Unblurred": {
+        "mean": 4.2232,
+        "p99": 17.6087
+      },
+      "evDiff": 0.1876,
+      "saturationRatio": 1.0239,
+      "deltaE00All": {
+        "mean": 3.4842,
+        "p99": 11.002
+      },
+      "flatFraction": 0.5007,
+      "white": {
+        "reference": {
+          "a": 0.936,
+          "b": -0.551
+        },
+        "candidate": {
+          "a": 1.115,
+          "b": -0.852
+        }
+      },
+      "alignment": {
+        "scale": 0.996996,
+        "corr": 0.9828,
+        "radialK": [
+          -0.015903,
+          0.063681
+        ]
+      },
+      "analysisSize": [
+        1500,
+        1000
+      ]
+    },
+    {
+      "label": "colorful/DSC09207",
+      "kind": "preset",
+      "comparison": "preset",
+      "scene": "DSC09207",
+      "preset": "colorful",
+      "deltaE00": {
+        "mean": 2.9584,
+        "p99": 7.3263
+      },
+      "deltaE00Unblurred": {
+        "mean": 3.3938,
+        "p99": 11.1089
+      },
+      "evDiff": -0.1431,
+      "saturationRatio": 1.031,
+      "deltaE00All": {
+        "mean": 2.9722,
+        "p99": 7.5471
+      },
+      "flatFraction": 0.6781,
+      "white": {
+        "reference": {
+          "a": -0.897,
+          "b": -1.973
+        },
+        "candidate": {
+          "a": -1.586,
+          "b": -2.037
+        }
+      },
+      "alignment": {
+        "scale": 0.997433,
+        "corr": 0.9852,
+        "radialK": [
+          -0.014897,
+          0.060354
+        ]
+      },
+      "analysisSize": [
+        1500,
+        1000
+      ]
+    },
+    {
+      "label": "colorful/DSC09208",
+      "kind": "preset",
+      "comparison": "preset",
+      "scene": "DSC09208",
+      "preset": "colorful",
+      "deltaE00": {
+        "mean": 2.5372,
+        "p99": 7.5286
+      },
+      "deltaE00Unblurred": {
+        "mean": 3.3005,
+        "p99": 13.0269
+      },
+      "evDiff": -0.066,
+      "saturationRatio": 1.0057,
+      "deltaE00All": {
+        "mean": 2.667,
+        "p99": 7.7306
+      },
+      "flatFraction": 0.5018,
+      "white": {
+        "reference": {
+          "a": -0.428,
+          "b": -1.143
+        },
+        "candidate": {
+          "a": -1.182,
+          "b": -1.356
+        }
+      },
+      "alignment": {
+        "scale": 0.996105,
+        "corr": 0.9885,
+        "radialK": [
+          -0.01006,
+          0.054084
+        ]
+      },
+      "analysisSize": [
+        1500,
+        1000
+      ]
+    },
+    {
+      "label": "preset:bluesky2",
+      "kind": "preset-summary",
+      "preset": "bluesky2",
+      "scenes": [
+        "DSC09188",
+        "DSC09206",
+        "DSC09207",
+        "DSC09208"
+      ],
+      "deltaE00": {
+        "mean": 2.9662,
+        "p99": 7.3387
+      },
+      "worstScene": "DSC09206",
+      "evDiff": 0.0337,
+      "saturationRatio": 1.0012
+    },
+    {
+      "label": "preset:pastel",
+      "kind": "preset-summary",
+      "preset": "pastel",
+      "scenes": [
+        "DSC09188",
+        "DSC09206",
+        "DSC09207",
+        "DSC09208"
+      ],
+      "deltaE00": {
+        "mean": 2.3695,
+        "p99": 6.981
+      },
+      "worstScene": "DSC09206",
+      "evDiff": 0.0788,
+      "saturationRatio": 1.0503
+    },
+    {
+      "label": "preset:colorful",
+      "kind": "preset-summary",
+      "preset": "colorful",
+      "scenes": [
+        "DSC09188",
+        "DSC09206",
+        "DSC09207",
+        "DSC09208"
+      ],
+      "deltaE00": {
+        "mean": 2.7193,
+        "p99": 9.5296
+      },
+      "worstScene": "DSC09206",
+      "evDiff": 0.0096,
+      "saturationRatio": 1.0224
+    }
+  ],
+  "gates": {
+    "overall": "fail",
+    "gates": [
+      {
+        "id": "stage1.preset",
+        "stage": 1,
+        "label": "プリセットの近さ（bluesky2・pastel・colorful の 3 本とも）",
+        "blocking": true,
+        "thresholds": {
+          "mean": 3.0,
+          "p99": 8.0
+        },
+        "status": "fail",
+        "details": [
+          {
+            "preset": "bluesky2",
+            "mean": 2.9662,
+            "p99": 7.3387,
+            "required": true,
+            "status": "pass"
+          },
+          {
+            "preset": "pastel",
+            "mean": 2.3695,
+            "p99": 6.981,
+            "required": true,
+            "status": "pass"
+          },
+          {
+            "preset": "colorful",
+            "mean": 2.7193,
+            "p99": 9.5296,
+            "required": true,
+            "status": "fail"
+          }
+        ],
+        "summary": "bluesky2 2.9662/7.3387 pass; pastel 2.3695/6.981 pass; colorful 2.7193/9.5296 fail"
+      },
+      {
+        "id": "stage1.cameraJpeg",
+        "stage": 1,
+        "label": "カメラ JPEG との差（目安）",
+        "blocking": false,
+        "thresholds": {
+          "mean": 4.0
+        },
+        "status": "warn",
+        "details": [
+          {
+            "label": "camjpeg/DSC09188",
+            "mean": 5.1662,
+            "status": "warn"
+          },
+          {
+            "label": "camjpeg/DSC09206",
+            "mean": 5.4653,
+            "status": "warn"
+          },
+          {
+            "label": "camjpeg/DSC09207",
+            "mean": 5.4848,
+            "status": "warn"
+          },
+          {
+            "label": "camjpeg/DSC09208",
+            "mean": 5.1622,
+            "status": "warn"
+          }
+        ],
+        "summary": "4 件・最大 mean 5.4848（基準 ≤ 4.0）"
+      },
+      {
+        "id": "stage1.versionDrift",
+        "stage": 1,
+        "label": "decoderVersion・baseVersion またぎの差",
+        "blocking": true,
+        "thresholds": {
+          "mean": 0.5
+        },
+        "status": "pass",
+        "details": [
+          {
+            "label": "decoder-7vs8/DSC09188",
+            "mean": 0.1367,
+            "status": "pass"
+          },
+          {
+            "label": "decoder-7vs8/DSC09206",
+            "mean": 0.1092,
+            "status": "pass"
+          },
+          {
+            "label": "decoder-7vs8/DSC09207",
+            "mean": 0.083,
+            "status": "pass"
+          },
+          {
+            "label": "decoder-7vs8/DSC09208",
+            "mean": 0.084,
+            "status": "pass"
+          }
+        ],
+        "summary": "4 件・最大 mean 0.1367（基準 ≤ 0.5）"
+      },
+      {
+        "id": "stage2.referenceNeutral",
+        "stage": 2,
+        "label": "カメラごとの Lightroom Adobe Standard 中立との差（チャートが来るまでの段階 2）",
+        "blocking": true,
+        "thresholds": {
+          "mean": 2.0
+        },
+        "status": "pass",
+        "details": [
+          {
+            "label": "SONY ZV-E10M2 / base",
+            "scenes": 4,
+            "mean": 0.7679,
+            "max": 0.8543,
+            "status": "pass"
+          },
+          {
+            "label": "SONY ZV-E10M2 / crate-base",
+            "scenes": 4,
+            "mean": 0.8114,
+            "max": 0.8902,
+            "status": "pass"
+          }
+        ],
+        "summary": "SONY ZV-E10M2 / base 4 場面 mean 0.7679 pass; SONY ZV-E10M2 / crate-base 4 場面 mean 0.8114 pass"
+      },
+      {
+        "id": "stage2.chart",
+        "stage": 2,
+        "label": "チャート ΔE00（光源 2 つとも）",
+        "blocking": true,
+        "thresholds": {
+          "mean": 2.0,
+          "max": 5.0
+        },
+        "status": "not-evaluated",
+        "details": [],
+        "summary": "chart 結果が無い"
+      },
+      {
+        "id": "stage2.crossCamera",
+        "stage": 2,
+        "label": "カメラ間の差",
+        "blocking": true,
+        "thresholds": {
+          "mean": 2.0
+        },
+        "status": "not-evaluated",
+        "details": [],
+        "summary": "--kind cross-camera の compare 結果が無い"
+      }
+    ]
+  }
+}

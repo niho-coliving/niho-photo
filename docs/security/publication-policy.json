@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "maxFileBytes": 2097152,
+  "maxFileBytes": 52428800,
   "forbiddenPathPrefixes": [
     "apps/api/",
     "apps/web/",
@@ -33,7 +33,8 @@
     ".onnx",
     ".mlmodel",
     ".mlmodelc",
-    ".dcp"
+    ".icc",
+    ".icm"
   ],
   "assetManifestRequired": true,
   "assetManifestPath": "docs/security/publication-manifest.json"

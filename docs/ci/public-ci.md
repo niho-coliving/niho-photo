@@ -50,9 +50,9 @@ npm run verify:publication
 
 更新コマンドは元の出典hashを保持し、output hashと具体的な変更理由だけを更新します。権利・secret検査の代わりにはなりません。新規ファイルのmanifestは手動で登録し、出典・変更理由、または独立した生成方法をレビューしてください。
 
-ガードは禁止path/basename/拡張子、10 MiB上限、symlink/submodule、非公開URL/package参照、非npm registry依存、manifest重複・欠落・hash不一致を拒否します。既存禁止項目と上限はpolicy JSONを消しても緩まりません。全公開候補が対象で、packages外の文書・画像も検査します。検出内容の値をログへ出しません。
+ガードは禁止path/basename/拡張子、50 MiB上限、symlink/submodule、非公開URL/package参照、非npm registry依存、manifest重複・欠落・hash不一致を拒否します。既存禁止項目と上限はpolicy JSONを消しても緩まりません。全公開候補が対象で、packages外の文書・画像も検査します。検出内容の値をログへ出しません。
 
-画像・font・binary・校正・fixture等はmanifestに加え、資産台帳の「公開可能」とpath・SHA-256・サイズが一致する必要があります。NIHO所有資産は個別の許可申請ではなく由来の宣言と不要metadataの確認を台帳へ記録します。監査済みPNG/ICNSを追加する場合もexact bytesを照合します。要置換・非公開維持の元hashはrenameしても拒否します。独立した合成fixtureのJSON/CSV/TXTはgeneratedに生成方法を記録できます。所有者撮影のRAW・音声fixtureもメタデータ確認後に登録できますが、現在のGit treeでは10 MiB上限を超えるファイルを拒否します。大きなfixtureの経路は[#2](https://github.com/niho-coliving/niho-photo/issues/2)で定義します。既存DCPは全件禁止です。独立計測の新DCPを許可する場合は、別PRで資産台帳・manifest・禁止拡張子の契約を明示的にレビューする必要があります。
+画像・font・binary・校正・fixture等はmanifestに加え、資産台帳の「公開可能」とpath・SHA-256・サイズが一致する必要があります。NIHO所有資産は個別の許可申請ではなく由来の宣言と不要metadataの確認を台帳へ記録します。監査済みPNG/ICNSを追加する場合もexact bytesを照合します。要置換・非公開維持の元hashはrenameしても拒否します。独立した合成fixtureのJSON/CSV/TXTはgeneratedに生成方法を記録できます。所有者撮影のRAW・音声fixtureもメタデータ確認後に登録できますが、現在のGit treeでは50 MiB上限を超えるファイルを拒否します。大きなfixtureの経路は[#2](https://github.com/niho-coliving/niho-photo/issues/2)で定義します。旧DCP8件はhashと元の行列で拒否します。独立DCPは所有測定の入力hash、再現可能なfit/spec/検証report、生成DCP bytesの一致を要求します。
 
 private URL検査は既知のprivate repo/host・LAN・内部ドメイン・認証付きURL、package検査はregistry外参照を扱います。任意の新しいprivateサービスの権利や機密性までは自動判定できません。出所、第三者ライセンス、個人情報、ICC/EXIF、入力の実データ混入はCODEOWNERSを含むレビューで確認してください。CI成功で公開許可が新たに与えられることはありません。
 
@@ -81,3 +81,7 @@ gitleaks dir --redact=100 --ignore-gitleaks-allow --no-banner .
 ```
 
 PRの公開CI実行、dependency graph更新、外部forkでの初回承認から集約checkまでをGitHubで確認してから、[repository-settings.md](../security/repository-settings.md) の順序でrulesetへ登録します。workflowの追加だけではGitHub側のrequired checks設定は変更されません。コードやworkflowを変更できるPR自身の検査だけでは、その検査の悪意ある改変を完全には防げないため、CI定義・公開境界にはCODEOWNERSレビューが必要です。
+
+## 現像workspaceの検査
+
+`develop-engine` scopeは実RW2の監査を宣言したpublic-ci.jsonを持つ。固定Rust 1.98.1でnative fmt/clippy/testを実行し、実RW2のdecoder情報・元画素golden・独立DCP描画を常時検査する。Python標準ライブラリでfit→spec/reportを再生成し、Rustでspec→DCP bytesを再生成する。wasm32 buildとwasm-bindgen 0.2.129のtest runnerでNIHO6/7・camera-linear codecの共通テストも実行する。生のowner原本や私有絶対path、署名は不要。Swift toolの実機動作はこのscopeで実証済みと扱わない。

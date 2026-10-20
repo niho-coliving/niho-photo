@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "syntheticFixtures": true,
+  "ownedFixturesAudited": true,
+  "unsigned": true,
+  "cargoManifests": [
+    "Cargo.toml"
+  ],
+  "swiftPackages": [],
+  "rustToolchain": "1.98.1",
+  "wasm": true
+}

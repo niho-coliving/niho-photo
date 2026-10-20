@@ -25,7 +25,7 @@
 
 機械検査の初期設定は [publication-policy.json](publication-policy.json) に置く。禁止パス・機密拡張子・サイズ上限と、初回移植の出典manifestを求める契約を定義した。所有資産の公開許可はオーナーの包括的な宣言を根拠とし、候補ごとの由来とmetadata検査結果を台帳に残す。大きなRAW等は、公開リポジトリのサイズ上限に収まる最小fixtureか、[#2](https://github.com/niho-coliving/niho-photo/issues/2)で定義する公開成果物経路へ分ける。
 
-既存DCP 8件は、7件にLibRaw由来行列、1件にrawtoaces-data由来部分があるため、オーナーの個別判断で公開対象から除外し、独立計測による新しいDCPへ置換する。DCP拡張子はその置換の由来を監査するまでガードで拒否する。
+既存DCP 8件は、7件にLibRaw由来行列、1件にrawtoaces-data由来部分があるため、オーナーの個別判断で公開対象から除外し、所有RAWとカメラJPEGから独立推定した新しいDCPへ置換する。新DCPは色の対応対・source hash・未使用写真での検証結果と生成bytesの再現を要求し、旧8件はhashと転記行列で継続して拒否する。チャート測色の精度は保証しない。
 
 ## PR を通す条件
 
