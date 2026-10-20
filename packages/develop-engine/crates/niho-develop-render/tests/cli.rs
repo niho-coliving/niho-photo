@@ -483,7 +483,11 @@ fn failures_are_one_json_line_with_a_fixed_exit_code() {
     let with = |name: &str, body: &str| dir.write(name, body);
     let no_v = with("no-v.json", r#"{"engine":"niho-1"}"#);
     let no_engine = with("no-engine.json", r#"{"v":1}"#);
-    let v4 = with("v4.json", r#"{"v":4,"engine":"niho-1"}"#);
+    let future_settings = format!(
+        r#"{{"v":{},"engine":"niho-1"}}"#,
+        niho_develop::settings::MAX_SETTINGS_VERSION + 1
+    );
+    let future_version = with("future-version.json", &future_settings);
     // A turned crop whose corners do not make a rectangle on this photo.
     let crop = with(
         "crop.json",
@@ -623,7 +627,12 @@ fn failures_are_one_json_line_with_a_fixed_exit_code() {
             "unsupported_settings",
             2,
         ),
-        ("v 4", raster(&v4, &jpeg, &out), "unsupported_settings", 2),
+        (
+            "future version",
+            raster(&future_version, &jpeg, &out),
+            "unsupported_settings",
+            2,
+        ),
         (
             "turned crop that is not a rectangle",
             raster(&crop, &jpeg, &out),
@@ -740,7 +749,7 @@ fn failures_are_one_json_line_with_a_fixed_exit_code() {
     kept.extend([
         no_v.as_path(),
         no_engine.as_path(),
-        v4.as_path(),
+        future_version.as_path(),
         crop.as_path(),
         crop_v1.as_path(),
         look.as_path(),
@@ -790,9 +799,18 @@ fn settings_loader_accepts_all_formula_versions_and_rejects_unknown() {
         r#"{"v":1,"engine":"niho-10","look":"niho-standard-5"}"#,
     )
     .unwrap_err();
+    assert_eq!(error.code, niho_develop_render::ErrorCode::InvalidSettings);
+    let unsupported_engine =
+        niho_develop_render::load_settings(r#"{"v":1,"engine":"niho-8"}"#).unwrap_err();
     assert_eq!(
-        error.code,
+        unsupported_engine.code,
         niho_develop_render::ErrorCode::UnsupportedSettings
     );
-    assert!(error.message.contains("niho-1 through niho-11"));
+    assert!(unsupported_engine
+        .message
+        .contains("niho-1 through niho-7, niho-10, or niho-11"));
+    let missing_engine = niho_develop_render::load_settings(r#"{"v":1}"#).unwrap_err();
+    assert!(missing_engine
+        .message
+        .contains("niho-1 through niho-7, niho-10, or niho-11"));
 }
