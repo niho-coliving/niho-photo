@@ -493,7 +493,7 @@ export function BrowserPhotoEditingWorkbench(props: {
     supported: mobileEditing && presetSupport.thumbnails,
     photoKey: mobileEditing ? wasmPhotoKey : null,
     base: presets.selectedBase ?? settings,
-    paused: open.dragging || presets.amountActive,
+    paused: opened?.input?.kind === "provisional" || open.dragging || presets.amountActive || presets.applyingPresetKey !== null,
     resolvePreset: presets.resolvePreset,
   });
   const add = useBrowserPhotoAdd({
@@ -1894,6 +1894,7 @@ export function BrowserPhotoEditingWorkbench(props: {
                   photoKey={wasmPhotoKey}
                   settings={settings}
                   dragging={open.dragging}
+                  provisional={opened?.input?.kind === "provisional"}
                   support={presetSupport}
                 />
               )
