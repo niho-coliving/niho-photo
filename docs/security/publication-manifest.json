@@ -8467,6 +8467,83 @@
       },
       "outputSha256": "d44fd3d56c2017936b51fc3a25358ea5655e41869d87588baf691496a8946f4c",
       "modifications": []
+    },
+    {
+      "path": "packages/niho-cloud-contract/README.md",
+      "source": {
+        "repository": "niho-coliving/niho-docs",
+        "commit": "0e25ca445f855139f8d05846e575d080f065a699",
+        "path": "packages/niho-cloud-contract/README.md",
+        "sha256": "02f5ff833b6fe9cbefdf5244d728fdd0126f9e346e9adffd9b7ce2723373054f"
+      },
+      "outputSha256": "02f5ff833b6fe9cbefdf5244d728fdd0126f9e346e9adffd9b7ce2723373054f",
+      "modifications": []
+    },
+    {
+      "path": "packages/niho-cloud-contract/package.json",
+      "source": {
+        "repository": "niho-coliving/niho-docs",
+        "commit": "0e25ca445f855139f8d05846e575d080f065a699",
+        "path": "packages/niho-cloud-contract/package.json",
+        "sha256": "cd310f81e8fcc3b8b518c3f92a600940914433c0cc7df0aa1c09a94352166858"
+      },
+      "outputSha256": "cd310f81e8fcc3b8b518c3f92a600940914433c0cc7df0aa1c09a94352166858",
+      "modifications": []
+    },
+    {
+      "path": "packages/niho-cloud-contract/src/mock.ts",
+      "source": {
+        "repository": "niho-coliving/niho-docs",
+        "commit": "0e25ca445f855139f8d05846e575d080f065a699",
+        "path": "packages/niho-cloud-contract/src/mock.ts",
+        "sha256": "f7aaf48d2925444ddb831f3708d3998d178993a7152340d6160bf962b01234ce"
+      },
+      "outputSha256": "f7aaf48d2925444ddb831f3708d3998d178993a7152340d6160bf962b01234ce",
+      "modifications": []
+    },
+    {
+      "path": "packages/niho-cloud-contract/src/v1.ts",
+      "source": {
+        "repository": "niho-coliving/niho-docs",
+        "commit": "0e25ca445f855139f8d05846e575d080f065a699",
+        "path": "packages/niho-cloud-contract/src/v1.ts",
+        "sha256": "01b02c28892e5c4439714658b4b085d5d65982b4f9252f4b1fbb146590f0da71"
+      },
+      "outputSha256": "01b02c28892e5c4439714658b4b085d5d65982b4f9252f4b1fbb146590f0da71",
+      "modifications": []
+    },
+    {
+      "path": "packages/niho-cloud-contract/test-support/reference-model.ts",
+      "source": {
+        "repository": "niho-coliving/niho-docs",
+        "commit": "0e25ca445f855139f8d05846e575d080f065a699",
+        "path": "packages/niho-cloud-contract/test-support/reference-model.ts",
+        "sha256": "3d0b9bd2d9630f8dacdc42c0609a35d9c5ec967a51504c9c998dd73e98d32205"
+      },
+      "outputSha256": "3d0b9bd2d9630f8dacdc42c0609a35d9c5ec967a51504c9c998dd73e98d32205",
+      "modifications": []
+    },
+    {
+      "path": "packages/niho-cloud-contract/v1/security-cases.json",
+      "source": {
+        "repository": "niho-coliving/niho-docs",
+        "commit": "0e25ca445f855139f8d05846e575d080f065a699",
+        "path": "packages/niho-cloud-contract/v1/security-cases.json",
+        "sha256": "755892a82d57c6ea6b0def5cdc597ba21198c8b23d3e29436c098128f01f1bda"
+      },
+      "outputSha256": "755892a82d57c6ea6b0def5cdc597ba21198c8b23d3e29436c098128f01f1bda",
+      "modifications": []
+    },
+    {
+      "path": "docs/security/cloud-contract-v1.md",
+      "source": {
+        "repository": "niho-coliving/niho-docs",
+        "commit": "0e25ca445f855139f8d05846e575d080f065a699",
+        "path": "docs/security/cloud-contract-v1.md",
+        "sha256": "ead1cf35df90a99906375a4724765848182866b565665877a77162cef9a68f81"
+      },
+      "outputSha256": "ead1cf35df90a99906375a4724765848182866b565665877a77162cef9a68f81",
+      "modifications": []
     }
   ],
   "generatedFiles": [
@@ -8719,6 +8796,16 @@
       "path": "packages/desktop-account/src/connect.rs",
       "sha256": "7867f0ab0a8955be7c4ec142855f8cc051ae4cf725e57af1f3b0e5f81860dc98",
       "origin": "NIHO app-connectの公開wire contractと採用済み仕様に基づき独立新規作成。private server実装・実token・実個人情報を含まない。"
+    },
+    {
+      "path": "packages/photo-editing/src/cloud-sharing-contract.ts",
+      "sha256": "a8a579d089e0f8bf1ed44ed1ee69a8e465ba6d17d510a2d744211ed602c0f89f",
+      "origin": "共有Docs contractの型・HTTP query配置・決定的mockをPhoto編集workspaceへ公開するre-export。"
+    },
+    {
+      "path": "packages/photo-editing/src/cloud-sharing-contract.test.ts",
+      "sha256": "bf2b8750f99efb6364e2ed3475ab3a53f92d532ca217cc7033c65c6ec9121452",
+      "origin": "Docs共通の負例vector・reference model・mock検証にPhoto packageのre-export確認を加えた独立合成テスト。\n変更理由: Docs固定SHAの全operation HTTP method・path・request配置をPhotoでも検証する。"
     }
   ],
   "excludedSources": [
@@ -10244,6 +10331,12 @@
       "specSha256": "30dc8eb8306489e39be5c495c53adb8b49ac473fbf9cbe8c411a38ed13e91b43",
       "outputSha256": "177c2f0454fdd9d7e7496f7c9123fd0f04b3b8fae8b5417287cc871f06758229",
       "regeneration": "Python check.py regenerates spec/report; Rust real_dcp reserializes spec to exact public DCP bytes."
+    }
+  ],
+  "externalSources": [
+    {
+      "repository": "niho-coliving/niho-docs",
+      "commit": "0e25ca445f855139f8d05846e575d080f065a699"
     }
   ]
 }

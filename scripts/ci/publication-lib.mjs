@@ -106,7 +106,17 @@ export async function verifyPublication(root) {
   const policy = await readJson("docs/security/publication-policy.json");
   const manifest = await readJson("docs/security/publication-manifest.json");
   if (policy.schemaVersion !== 1 || !Number.isSafeInteger(policy.maxFileBytes) || policy.maxFileBytes <= 0 || policy.maxFileBytes > 52428800 || policy.assetManifestRequired !== true || policy.assetManifestPath !== "docs/security/publication-manifest.json" || !["forbiddenPathPrefixes", "forbiddenBasenames", "forbiddenExtensions"].every((key) => Array.isArray(policy[key]) && policy[key].every((v) => typeof v === "string"))) throw new Error("公開policyの契約が不正です");
-  if (manifest.schemaVersion !== 1 || !commit.test(manifest.sourceBaseline?.commit ?? "") || !manifest.sourceBaseline?.repository || !commit.test(manifest.auditedCandidate?.commit ?? "") || !Array.isArray(manifest.importedFiles) || !Array.isArray(manifest.generatedFiles) || !Array.isArray(manifest.excludedSources) || !Array.isArray(manifest.deferredScopes)) throw new Error("公開manifestのschemaが不正です");
+  const externalSources = manifest.externalSources ?? [];
+  if (manifest.schemaVersion !== 1 || !commit.test(manifest.sourceBaseline?.commit ?? "") || !manifest.sourceBaseline?.repository || !commit.test(manifest.auditedCandidate?.commit ?? "") || !Array.isArray(externalSources) || externalSources.some((item) => !item?.repository || !commit.test(item.commit ?? "")) || !Array.isArray(manifest.importedFiles) || !Array.isArray(manifest.generatedFiles) || !Array.isArray(manifest.excludedSources) || !Array.isArray(manifest.deferredScopes)) throw new Error("公開manifestのschemaが不正です");
+  if (externalSources.length > 0) {
+    try {
+      const { validatePublicationSources, validateSyncManifest } = await import("./cloud-contract-sync.mjs");
+      const syncManifest = validateSyncManifest(await readJson("docs/security/cloud-contract-source.json"));
+      validatePublicationSources(syncManifest, manifest);
+    } catch {
+      fail("外部出典契約不正");
+    }
+  }
   const inventory = parseInventory(await readFile(path.join(root, "docs/legal/asset-inventory.csv"), "utf8"));
   for (const row of inventory) {
     if (!commit.test(row.source_commit) || !validPath(row.source_path) || !sha256.test(row.sha256) || !Number.isSafeInteger(Number(row.size_bytes)) || Number(row.size_bytes) < 0 || !["公開可能", "要置換", "非公開維持"].includes(row.decision)) fail("資産台帳の記録不正");
@@ -119,7 +129,9 @@ export async function verifyPublication(root) {
       approved.set(entry.path, { ...entry, kind });
       if (!sha256.test((kind === "imported" ? entry.outputSha256 : entry.sha256) ?? "")) fail("manifestハッシュ不正", entry.path);
       if (kind === "imported") {
-        if (!entry.source || !validPath(entry.source.path) || entry.source.repository !== manifest.sourceBaseline.repository || entry.source.commit !== manifest.sourceBaseline.commit || !sha256.test(entry.source.sha256 ?? "")) fail("manifest出典不正", entry.path);
+        const baselineSource = entry.source?.repository === manifest.sourceBaseline.repository && entry.source?.commit === manifest.sourceBaseline.commit;
+        const externalSource = externalSources.some((item) => item.repository === entry.source?.repository && item.commit === entry.source?.commit);
+        if (!entry.source || !validPath(entry.source.path) || !(baselineSource || externalSource) || !sha256.test(entry.source.sha256 ?? "")) fail("manifest出典不正", entry.path);
         if (entry.source && validPath(entry.source.path) && pathForbidden(entry.source.path, policy)) fail("manifest出典禁止パス", entry.path);
         if (!Array.isArray(entry.modifications) || entry.modifications.some((v) => !meaningful(v)) || (entry.source?.sha256 !== entry.outputSha256 && !entry.modifications?.length)) fail("manifest変更理由不正", entry.path);
       } else if (!meaningful(entry.origin)) fail("manifest生成元未記録", entry.path);

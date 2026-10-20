@@ -13,6 +13,7 @@ const selected = (files, present = all) => selectScopes(files, present).filter((
 test("文書変更でもpublicationはworkflow側で常時実行、package実行だけ省略", () => {
   assert.deepEqual(selected(["README.md"]), []);
   assert.deepEqual(selected(["packages/ui/src/cn.ts"]), ["photo-editing", "camera", "desktop-photo", "desktop-account"]);
+  assert.deepEqual(selected(["packages/niho-cloud-contract/src/v1.ts"]), ["photo-editing"]);
   assert.deepEqual(selected(["packages/develop-engine/core.rs"]), ["camera", "desktop-photo", "develop-engine"]);
   assert.deepEqual(selected(["apps/camera/src-tauri/main.rs"]), ["camera"]);
   assert.deepEqual(selected(["packages/desktop-account/login.ts"]), ["camera", "desktop-photo", "desktop-account"]);
