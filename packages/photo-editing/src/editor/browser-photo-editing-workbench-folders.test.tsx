@@ -565,6 +565,104 @@ describe("この Mac のフォルダの面", () => {
   });
 });
 
+describe("1 枚の下のフィルムストリップ（L5 #54）", () => {
+  const STRIP_PHOTOS = [photo("p1", "ONE.JPG"), photo("p2", "TWO.JPG"), photo("p3", "THREE.JPG")];
+
+  function filmstrip(): HTMLElement | null {
+    return container.querySelector<HTMLElement>('nav[aria-label="この一覧の写真"]');
+  }
+
+  function stripTile(fileName: string): HTMLButtonElement | undefined {
+    return filmstrip()?.querySelector<HTMLButtonElement>(`button[aria-label="${fileName}"]`) ?? undefined;
+  }
+
+  /** 帯で開いている写真（印の付いた升の写真名） */
+  function openedInStrip(): string | null {
+    return filmstrip()?.querySelector('button[aria-current="true"]')?.getAttribute("aria-label") ?? null;
+  }
+
+  function gridOrder(): string[] {
+    return Array.from(container.querySelectorAll<HTMLButtonElement>('section[aria-label="写真の一覧"] li > button')).map(
+      (button) => button.title,
+    );
+  }
+
+  async function openFromGrid(fileName: string) {
+    const target = tile(fileName);
+    if (!target) throw new Error(`tile not found: ${fileName}`);
+    await act(async () => {
+      target.dispatchEvent(new MouseEvent("dblclick", { bubbles: true, cancelable: true }));
+    });
+    await settle();
+  }
+
+  async function keyDown(target: EventTarget, init: KeyboardEventInit) {
+    await act(async () => {
+      target.dispatchEvent(new KeyboardEvent("keydown", { bubbles: true, cancelable: true, ...init }));
+    });
+    await settle();
+  }
+
+  it("一覧では出さず、1 枚で開くと面の下に一覧と同じ並びで出る。升を押すとその写真に替わり、一覧に戻ると消える", async () => {
+    const fake = fakeLibrary({ tree: [FAMILY], photos: { f2: STRIP_PHOTOS } });
+    await render(fake.library);
+    const order = gridOrder();
+    expect(order).toHaveLength(3);
+    expect(filmstrip()).toBeNull();
+
+    await openFromGrid(order[0]);
+    expect(container.querySelector('section[aria-label="写真の一覧"]')).toBeNull();
+    expect(Array.from(filmstrip()?.querySelectorAll("button") ?? []).map((button) => button.getAttribute("aria-label"))).toEqual(order);
+    expect(openedInStrip()).toBe(order[0]);
+    // 面と帯は中央の列の縦の並び（面が伸び、帯はその下）
+    expect(filmstrip()?.previousElementSibling?.className).toContain("flex-1");
+
+    await click(stripTile(order[2]));
+    expect(openedInStrip()).toBe(order[2]);
+    expect(filmstrip()).not.toBeNull();
+
+    await keyDown(document.body, { key: "g" });
+    expect(filmstrip()).toBeNull();
+    expect(gridOrder()).toEqual(order);
+  });
+
+  it("← → で前後の写真へ移る（帯の升の上でも同じ）。文字を打つ欄・変換中は扱わない", async () => {
+    const fake = fakeLibrary({ tree: [FAMILY], photos: { f2: STRIP_PHOTOS } });
+    await render(fake.library);
+    const order = gridOrder();
+    await openFromGrid(order[0]);
+
+    await keyDown(document.body, { key: "ArrowRight" });
+    expect(openedInStrip()).toBe(order[1]);
+    await keyDown(document.body, { key: "ArrowLeft" });
+    expect(openedInStrip()).toBe(order[0]);
+
+    const current = stripTile(order[0]);
+    if (!current) throw new Error("strip tile not found");
+    await keyDown(current, { key: "ArrowRight" });
+    expect(openedInStrip()).toBe(order[1]);
+
+    await keyDown(document.body, { key: "ArrowRight", isComposing: true });
+    expect(openedInStrip()).toBe(order[1]);
+
+    const text = document.createElement("input");
+    text.type = "text";
+    container.querySelector('section[aria-label="ブラウザ写真編集"]')?.appendChild(text);
+    await keyDown(text, { key: "ArrowRight" });
+    expect(openedInStrip()).toBe(order[1]);
+    text.remove();
+  });
+
+  it("狭い幅では 1 枚で開いても出さない", async () => {
+    Object.defineProperty(window, "innerWidth", { configurable: true, value: 800 });
+    const fake = fakeLibrary({ tree: [FAMILY], photos: { f2: STRIP_PHOTOS } });
+    await render(fake.library);
+    await click(tile(gridOrder()[0]));
+    expect(container.querySelector('section[aria-label="写真の一覧"]')).toBeNull();
+    expect(filmstrip()).toBeNull();
+  });
+});
+
 describe("NIHO photo の窓いっぱいの見た目（appearance・treeHidden・treeFooter。niho-photo#50）", () => {
   it("既定（card）は web の角丸の枠と固定の高さのまま、左の木の底には何も出さない", async () => {
     const fake = fakeLibrary({ tree: [TRAVEL], photos: { f1: [photo("p1", "IMG_0001.JPG")] } });
