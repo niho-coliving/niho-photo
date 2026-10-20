@@ -1,0 +1,22 @@
+[package]
+name = "niho-develop"
+description = "NIHO develop engine stage 2: Lightroom-style adjustments and XMP presets on linear ProPhoto"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+flate2 = { version = "1", default-features = false, features = ["rust_backend"] }
+niho-camera-color = { path = "../niho-camera-color" }
+niho-camera-profile = { path = "../niho-camera-profile" }
+serde_json = { workspace = true, features = ["raw_value"] }
+libm.workspace = true
+image.workspace = true
+quick-xml.workspace = true
+moxcms.workspace = true
+jpeg-decoder.workspace = true
+
+[dev-dependencies]
+wasm-bindgen-test = "=0.3.79"

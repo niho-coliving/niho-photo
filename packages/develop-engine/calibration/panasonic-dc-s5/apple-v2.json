@@ -1,0 +1,218 @@
+{
+ "schema": "niho-develop-calibration/v1",
+ "track": "apple",
+ "camera": {
+  "make": "Panasonic",
+  "model": "DC-S5",
+  "id": "panasonic-dc-s5"
+ },
+ "decoder": {
+  "kind": "apple-cirawfilter",
+  "decoderVersion": "8",
+  "settings": {
+   "boostAmount": 0,
+   "boostShadowAmount": 1,
+   "exposure": 0,
+   "shadowBias": 0,
+   "extendedDynamicRangeAmount": 0,
+   "gamutMapping": true,
+   "lensCorrection": true,
+   "localToneMapAmount": 0,
+   "contrastAmount": 0
+  }
+ },
+ "inputSpace": "extended-linear-srgb-d65-as-shot",
+ "workingSpace": "linear-prophoto-d50",
+ "matrix": {
+  "space": "linear-prophoto-d50",
+  "rowMajor": [
+   [
+    0.780076,
+    0.144287,
+    0.075638
+   ],
+   [
+    0.041738,
+    0.800941,
+    0.157321
+   ],
+   [
+    0.038868,
+    0.021623,
+    0.939509
+   ]
+  ],
+  "whitePreserving": true
+ },
+ "baselineEV": -0.11598,
+ "illuminants": null,
+ "hueSat": null,
+ "version": "v2",
+ "createdAt": "2026-09-29T03:31:31+09:00",
+ "fit": {
+  "tool": "calibrate/fit_base.py",
+  "trainScenes": [
+   "P1012822",
+   "P1013558",
+   "P1524180",
+   "P1570133",
+   "P1570258",
+   "P1570280",
+   "P1570396",
+   "P1570755",
+   "P1581215",
+   "P1581243",
+   "P1581256",
+   "P1581335",
+   "P1581356"
+  ],
+  "valScenes": [
+   "P1013207",
+   "P1522877",
+   "P1524181",
+   "P1570135",
+   "P1570266",
+   "P1570302",
+   "P1570586",
+   "P1570923",
+   "P1581237",
+   "P1581255",
+   "P1581332",
+   "P1581346",
+   "P1581368"
+  ],
+  "metric": "deltaE00-mean-blur2-1500px",
+  "train": {
+   "mean": 1.0041,
+   "p99": 4.6787
+  },
+  "val": {
+   "mean": 1.0122,
+   "p99": 4.4444
+  },
+  "referenceSet": "lr-measure round2 neutral (Adobe Standard, PV 15.4, As Shot)",
+  "look": "acr3-default-tone-curve + RGBTone (temporary until S8)",
+  "before": {
+   "train": {
+    "mean": 2.9973,
+    "p99": 8.6684
+   },
+   "val": {
+    "mean": 2.9028,
+    "p99": 7.8392
+   }
+  },
+  "optimizer": [
+   {
+    "stage": "行列＋EV",
+    "iterations": 32,
+    "reason": "converged",
+    "objectiveStart": 3.38142,
+    "objectiveEnd": 1.04069,
+    "seconds": 1.21,
+    "criteria": "relative drop < 1e-06 twice / step < 1e-8 / max 100 iterations",
+    "method": "IRLS (L1 on ΔE00) + Levenberg-Marquardt, forward-difference Jacobian"
+   },
+   {
+    "stage": "HueSat 12",
+    "iterations": 12,
+    "reason": "converged",
+    "objectiveStart": 1.04069,
+    "objectiveEnd": 1.03358,
+    "seconds": 4.16,
+    "criteria": "relative drop < 1e-06 twice / step < 1e-8 / max 100 iterations",
+    "method": "IRLS (L1 on ΔE00) + Levenberg-Marquardt, forward-difference Jacobian"
+   }
+  ],
+  "cells": {
+   "grid": [
+    48,
+    32
+   ],
+   "maxCellStd": 8.0,
+   "clipMax": 0.01,
+   "used": {
+    "P1012822": 743,
+    "P1013207": 743,
+    "P1013558": 995,
+    "P1522877": 550,
+    "P1524180": 722,
+    "P1524181": 735,
+    "P1570133": 922,
+    "P1570135": 749,
+    "P1570258": 775,
+    "P1570266": 794,
+    "P1570280": 842,
+    "P1570302": 708,
+    "P1570396": 1089,
+    "P1570586": 1167,
+    "P1570755": 1034,
+    "P1570923": 1137,
+    "P1581215": 1231,
+    "P1581237": 995,
+    "P1581243": 991,
+    "P1581255": 772,
+    "P1581256": 753,
+    "P1581332": 978,
+    "P1581335": 928,
+    "P1581346": 961,
+    "P1581356": 1393,
+    "P1581368": 1356
+   }
+  },
+  "illuminantsNote": null,
+  "hueSatNote": "不採用（検証 画素 ΔE00 mean 1.012 → 1.000。改善 0.2 未満）。表: +0.6°/×0.995, +0.0°/×0.997, -0.1°/×1.007, +0.1°/×1.017, -0.1°/×1.011, -0.2°/×1.004, -0.3°/×0.997, -0.5°/×0.992, -0.1°/×0.992, +0.0°/×0.991, +0.2°/×0.992, +0.4°/×0.993",
+  "selection": {
+   "candidates": {
+    "1ill": {
+     "train": {
+      "mean": 1.0041,
+      "p99": 4.6787
+     },
+     "val": {
+      "mean": 1.0122,
+      "p99": 4.4444
+     }
+    },
+    "2ill": {
+     "train": {
+      "mean": 0.9646,
+      "p99": 5.003
+     },
+     "val": {
+      "mean": 0.9785,
+      "p99": 4.1683
+     }
+    }
+   },
+   "rule": "val mean が 0.1 以上良ければ 2 光源、そうでなければ 1 光源",
+   "chosen": "1ill"
+  }
+ },
+ "baseVersion": "apple-ciraw8/linear-prophoto-d50/cal-panasonic-dc-s5-apple-v2",
+ "whiteBalanceMap": {
+  "schema": "niho-develop-wb-map/v1",
+  "model": "uv-offset",
+  "description": "Adobe（Lightroom）が as-shot と見る白の予測: uv_adobe = uv_apple + [du, dv]（CIE 1960 uv、Apple の neutralChromaticity から）。段 2 が Lightroom の絶対 WB（K・tint）を再現するときの色順応の出発点に使う。DNG の温度モデル（Robertson・tint = uv × −3000）は Apple と Adobe で同じことを 16 場面で確認済み。",
+  "du": -0.006875,
+  "dv": 0.000721,
+  "fit": {
+   "scenes": 26,
+   "duSd": 0.000868,
+   "dvSd": 0.001172,
+   "residualKSd": 41.2,
+   "residualTintSd": 3.69,
+   "residualTintMax": 5.96,
+   "referenceSet": "Lightroom 中立の書き出し XMP（ColorTemperature / Tint。refs.neutral = round6 優先）× Apple の as-shot xy"
+  },
+  "lightroomCustomWithoutValues": {
+   "temperature": 5001,
+   "tint": 10,
+   "note": "XMP の WhiteBalance=Custom で Temperature/Tint が無いとき Lightroom が使った値（round5 の bluesky2 書き出し 5 場面の XMP で確認）"
+  }
+ },
+ "lens": {
+  "mode": "apple",
+  "note": "Core Image の補正（RW2 埋め込みの歪み補正。Lightroom と 0.2〜0.4px で一致）。周辺減光は直さない（Lightroom の補正ありは開放で最大 0.18 EV 持ち上げる。#17031）"
+ }
+}

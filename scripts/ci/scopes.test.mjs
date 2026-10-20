@@ -84,3 +84,12 @@ test("aggregateは想定外skip、失敗、取消を拒否する", () => {
   needs.plan.outputs["has-native"] = "false";
   assert.equal(run(), 0);
 });
+
+test("現像の公開CIは固定toolchain・実RAW・fit再生成・WASM parityまで含む", async () => {
+  const root = fileURLToPath(new URL("../../", import.meta.url));
+  const commands = await scopeCommands(root, "develop-engine");
+  assert.ok(commands.some(([command,args]) => command === "rustup" && args.includes("1.98.1")));
+  assert.ok(commands.some(([command,args]) => command === "python3" && args.includes("packages/develop-engine/tools/independent-profile/check.py")));
+  assert.ok(commands.some(([command,args]) => command === "cargo" && args.includes("build") && args.includes("wasm32-unknown-unknown")));
+  assert.ok(commands.some(([command,args]) => command === "cargo" && args.includes("test") && args.includes("niho7_cross_target")));
+});

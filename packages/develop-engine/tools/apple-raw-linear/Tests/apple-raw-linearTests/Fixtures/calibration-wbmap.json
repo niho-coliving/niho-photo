@@ -1,0 +1,8 @@
+{"schema":"niho-develop-calibration/v1","track":"apple","camera":{"make":"Panasonic","model":"DC-S5","id":"panasonic-dc-s5"},
+ "decoder":{"kind":"apple-cirawfilter","decoderVersion":"8","settings":{"boostAmount":0,"boostShadowAmount":1,"exposure":0,"shadowBias":0,"extendedDynamicRangeAmount":0,"gamutMapping":true,"lensCorrection":true,"localToneMapAmount":0,"contrastAmount":0}},
+ "inputSpace":"extended-linear-srgb-d65-as-shot","workingSpace":"linear-prophoto-d50",
+ "matrix":{"space":"linear-prophoto-d50","rowMajor":[[0.758845,0.186526,0.054629],[0.024105,0.822748,0.153146],[-0.020985,0.121187,0.899798]],"whitePreserving":true},
+ "baselineEV":-0.10998,"illuminants":null,"hueSat":null,"version":"v1","createdAt":"2026-09-28T20:47:21+09:00","fit":{"tool":"calibrate/fit_base.py"},
+ "baseVersion":"apple-ciraw8/linear-prophoto-d50/cal-panasonic-dc-s5-apple-v1",
+ "whiteBalanceMap":{"schema":"niho-develop-wb-map/v1","model":"uv-offset","description":"uv_adobe = uv_apple + [du, dv] (CIE 1960 uv)","du":-0.006818,"dv":5e-05,
+   "fit":{"scenes":16,"duSd":0.000907,"dvSd":0.000971},"lightroomCustomWithoutValues":{"temperature":5001,"tint":10}}}

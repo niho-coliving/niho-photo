@@ -29,7 +29,7 @@ case "$cmd" in
     masks=""
     while [ $# -gt 0 ]; do case "$1" in --masks-dir) masks="$2"; shift 2 ;; *) shift ;; esac; done
     [ -f "$d/hang" ] && sleep 30
-    [ -f "$d/detect-error" ] && { printf '{"error":"%s","message":"/Users/secret/P1.JPG"}\n' "$(cat "$d/detect-error")"; exit 2; }
+    [ -f "$d/detect-error" ] && { printf '{"error":"%s","message":"/test-data/users/secret/P1.JPG"}\n' "$(cat "$d/detect-error")"; exit 2; }
     [ -f "$d/skip-mask" ] || cp "$d/mask.png" "$masks/$(cat "$d/mask-sha").png"
     cat "$d/detect.json" ;;
   compose)

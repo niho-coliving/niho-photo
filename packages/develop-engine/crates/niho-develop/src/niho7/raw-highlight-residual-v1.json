@@ -1,0 +1,36 @@
+{
+  "schema": "niho-raw-highlight-residual/v1",
+  "features": [
+    "signedLogY",
+    "sceneMeanLogY",
+    "signedLogY-localLog16",
+    "frozenH100Gain"
+  ],
+  "normalizationMean": [
+    0.8493760650041935,
+    -4.019891584676525,
+    1.9926669391129825,
+    -1.7117490822848844
+  ],
+  "normalizationScale": [
+    0.6876781128744829,
+    0.9380706221915217,
+    1.2867015895690972,
+    1.2305024179682438
+  ],
+  "interceptAndCoefficients": [
+    0.5682530584698259,
+    0.1757088568886654,
+    0.7161455743898251,
+    -0.11768384186732139,
+    -0.3805965619550518
+  ],
+  "ramp": "(-highlights/100)^4",
+  "baseClampEV": [-1.0, 1.0],
+  "finalHighlightGainClampEV": [-8.0, 0.0],
+  "mask": "immutable signed source ceiling-relative bright*neutral*flat soft weight",
+  "provenance": {
+    "sourceModelSha256": "3f8e1bda6bb7199be84eaa07acf53fb5e6e02ce4cf494c1b16039c1aceaa56df",
+    "fitDataProtocolSha256": "6cd3645e9eb51221f7ba3e0851e905f7ea1e9ec42284b832321ebb4af1abef60"
+  }
+}

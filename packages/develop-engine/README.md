@@ -1,0 +1,21 @@
+# NIHO RAW現像エンジン
+
+NIHO所有コード・モデル・校正値の公開SSOT。ソースと資産にはルートのproprietary条件を適用し、第三者の許諾は [LICENSES.md](LICENSES.md) と [第三者告知](../../THIRD_PARTY_NOTICES.md) に従う。
+
+Rust workspaceはRAW decode、色計算、DCP入出力、現像、WASM境界と診断CLIの8 crateを含む。decoder `rawler = =0.8.0` はLGPL-2.1の段1専用で、段2とそのWASMはdecoderに依存しない。各crateは `publish = false` / `UNLICENSED`。
+
+```sh
+cargo +1.98.1 test --locked --manifest-path packages/develop-engine/Cargo.toml
+cargo +1.98.1 build --locked --config packages/develop-engine/.cargo/config.toml --manifest-path packages/develop-engine/Cargo.toml --target wasm32-unknown-unknown -p niho-develop-wasm
+python3 packages/develop-engine/tools/independent-profile/check.py
+```
+
+実RW2は `fixtures/public-raw/dc-s5-owner.rw2`。オーナー撮影の無人の教室・ストーブの写真を目視確認し、顔・人体の自動検出だけで採否を決めていない。RAWの圧縮画素、sensor寸法、crop、WB、black/whiteと原寸camera RGBを元の写真と照合した。GPS・serial・氏名・EXIF・MakerNotes・camera IFD・thumbnail・ICCを含めず、decodeに必要なタグと圧縮stripだけから再構築している。監査記録と512pxの元画素goldenを同梱し、Rustテストは環境変数なしで必ず走る。
+
+独立DCPは所有RAWと所有カメラJPEGの色の測定対から、外部カメラ行列を初期値に使わず解析的に推定した。写真単位で先に5学習/2検証へ分離し、検証2写真の輝度を揃えた色差は平均ΔE76 4.14/4.19、p95 13.34/13.61。これは色だけの参考評価で、トーン一致、絶対WB、チャート測色精度、他機種の品質を実証するものではない。公開RAW fixtureは学習側の写真であり、検証写真の画素画像は同梱しない。
+
+`fixtures/independent-profile/` の匿名化した色の測定対からPython標準ライブラリだけでspecと検証結果を再生成する。RustではspecからDCP bytesを再生成し、公開DCPと完全一致させる。既存DCP8件、LibRaw表とその生成初期値、旧spec、外部ICC、第三者ColorChecker値は含めない。
+
+校正の補助toolは `tools/calibrate/` と `tools/colorcheck/`、新DCP生成は `tools/independent-profile/`、RAW監査は `tools/asset-audit/`。元の写真やLightroom・Appleの参照出力を再計測する場合は、所有データの配置を引数・環境変数で指定する。非公開の配置や秘密情報は公開ソースに埋め込まない。第三者チャートの既定参照ファイルは同梱せず、測定者が監査した参照値を明示入力する。
+
+[decoder capability](../../docs/migration/decoder-capabilities.md)、[移植と検証の記録](../../docs/migration/raw-engine.md)、[モデル9件の由来](../../docs/legal/model-provenance.json)も参照する。Apple RAWと背景除去のSwift toolのソースは含むが、このRust workspaceの公開CIはSwiftやOS機能の動作を証明しない。署名・公証・アプリ配布は #2 の範囲。

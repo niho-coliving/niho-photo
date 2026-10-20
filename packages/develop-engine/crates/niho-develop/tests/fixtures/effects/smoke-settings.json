@@ -1,0 +1,18 @@
+{
+  "v": 3,
+  "engine": "niho-1",
+  "look": "niho-interim-1",
+  "base": null,
+  "exposure": 0.15,
+  "contrast": 15,
+  "highlights": -20,
+  "shadows": 20,
+  "grayscale": true,
+  "grayMixer": { "red": 20, "orange": 10, "yellow": 0, "green": -20, "aqua": -10, "blue": -35, "purple": 0, "magenta": 5 },
+  "colorGrading": {
+    "shadow": { "hue": 215, "saturation": 12, "luminance": 0 },
+    "highlight": { "hue": 40, "saturation": 10, "luminance": 0 }
+  },
+  "vignette": { "amount": -35, "midpoint": 45, "roundness": 10, "feather": 60, "highlights": 0, "style": "highlightPriority" },
+  "grain": { "amount": 30, "size": 35, "roughness": 55, "seed": 20260930 }
+}

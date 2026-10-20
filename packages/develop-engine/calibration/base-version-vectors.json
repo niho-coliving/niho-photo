@@ -1,0 +1,124 @@
+{
+  "schema": "niho-develop-base-version-vectors/v1",
+  "$comment": "RAW の作業コピーの baseVersion の共通の値（S7c-1 #16946）。workingCopyMeta は apple-raw-linear の --working-copy-meta（とワーカーが API に保存する meta）の _source に当たるもので、baseVersion は apps/api/src/workers/photo-cloud-work/apple-raw-linear.ts の describeAppleRawLinearWorkingCopy → buildAppleRawLinearBaseVersion が返す値、error はそれが投げる code。API の unit test（tests/unit/photo-cloud-work-worker-apple-raw-linear.test.ts）と NIHO Desktop の Rust（S7c-2）が同じこの表で確かめ、手元の Mac で作った作業コピーとワーカーの作業コピーの baseVersion をずらさない。",
+  "cases": [
+    {
+      "name": "dc-s5-rw2-calibrated",
+      "workingCopyMeta": {
+        "_source": {
+          "tool": { "name": "apple-raw-linear", "version": "0.4.1" },
+          "decoderVersion": "8",
+          "calibration": { "id": "cal-panasonic-dc-s5-apple-v2", "cameraId": "panasonic-dc-s5", "track": "apple", "version": "v2", "baseVersion": "apple-ciraw8/linear-prophoto-d50/cal-panasonic-dc-s5-apple-v2" },
+          "lensCorrection": { "mode": "apple" }
+        }
+      },
+      "baseVersion": "raw-apple.d8.p2.e1.cal-panasonic-dc-s5-apple-v2.lens-apple"
+    },
+    {
+      "name": "dc-s5-rw2-uncalibrated",
+      "workingCopyMeta": {
+        "_source": {
+          "tool": { "name": "apple-raw-linear", "version": "0.4.1" },
+          "decoderVersion": "8",
+          "calibration": null,
+          "lensCorrection": { "mode": "apple" }
+        }
+      },
+      "baseVersion": "raw-apple.d8.p2.e1.cal-none.lens-apple"
+    },
+    {
+      "name": "dng-8dng-uncalibrated",
+      "workingCopyMeta": {
+        "_source": {
+          "tool": { "name": "apple-raw-linear", "version": "0.4.1" },
+          "decoderVersion": "8.dng",
+          "calibration": null,
+          "lensCorrection": { "mode": "apple" }
+        }
+      },
+      "baseVersion": "raw-apple.d8dng.p2.e1.cal-none.lens-apple"
+    },
+    {
+      "name": "dc-s5-8dng-calibrated-naming-only",
+      "$comment": "名前の作り方だけの例。本番のワーカーは校正の decoderVersion（8）と実際の版（8.dng）が違えば描く前に invalid_calibration で止めるので、この組の作業コピーはできない。",
+      "workingCopyMeta": {
+        "_source": {
+          "decoderVersion": "8.dng",
+          "calibration": { "id": "cal-panasonic-dc-s5-apple-v2", "cameraId": "panasonic-dc-s5", "track": "apple", "version": "v2" },
+          "lensCorrection": { "mode": "apple" }
+        }
+      },
+      "baseVersion": "raw-apple.d8dng.p2.e1.cal-panasonic-dc-s5-apple-v2.lens-apple"
+    },
+    {
+      "name": "unregistered-raw-generic-fallback",
+      "workingCopyMeta": {
+        "_source": {
+          "tool": { "name": "apple-raw-linear", "version": "0.5.1" },
+          "decoderVersion": "8",
+          "calibration": { "id": "cal-generic-apple-v1", "cameraId": "generic", "track": "apple", "version": "v1", "baseVersion": "apple-ciraw8/linear-prophoto-d50/cal-generic-apple-v1", "registry": { "registry": "apple-registry.json", "file": "generic/apple-v1.json", "fallback": true } },
+          "lensCorrection": { "mode": "apple" }
+        }
+      },
+      "baseVersion": "raw-apple.d8.p2.e1.cal-generic-apple-v1.lens-apple"
+    },
+    {
+      "name": "zv-e10m2-arw-embedded",
+      "workingCopyMeta": {
+        "_source": {
+          "tool": { "name": "apple-raw-linear", "version": "0.4.1" },
+          "decoderVersion": "8",
+          "calibration": { "id": "cal-sony-zv-e10m2-apple-v2", "cameraId": "sony-zv-e10m2", "track": "apple", "version": "v2", "baseVersion": "apple-ciraw8/linear-prophoto-d50/cal-sony-zv-e10m2-apple-v2" },
+          "lensCorrection": { "mode": "embedded" }
+        }
+      },
+      "baseVersion": "raw-apple.d8.p2.e1.cal-sony-zv-e10m2-apple-v2.lens-embedded"
+    },
+    {
+      "name": "manual-lens-none",
+      "workingCopyMeta": {
+        "_source": {
+          "tool": { "name": "apple-raw-linear", "version": "0.4.1" },
+          "decoderVersion": "8",
+          "calibration": null,
+          "lensCorrection": { "mode": "none", "reason": "unsupported" }
+        }
+      },
+      "baseVersion": "raw-apple.d8.p2.e1.cal-none.lens-none"
+    },
+    {
+      "name": "invalid-lens-off",
+      "$comment": "レンズ補正 off は色の計測専用で、作業コピーには使わない（owner 2026-09-29）。",
+      "workingCopyMeta": {
+        "_source": { "decoderVersion": "8", "calibration": null, "lensCorrection": { "mode": "off" } }
+      },
+      "error": "invalidResponse"
+    },
+    {
+      "name": "invalid-calibration-key-missing",
+      "$comment": "校正なしは calibration: null と明示する。キーが無いのは壊れた meta。",
+      "workingCopyMeta": {
+        "_source": { "decoderVersion": "8", "lensCorrection": { "mode": "apple" } }
+      },
+      "error": "invalidResponse"
+    },
+    {
+      "name": "invalid-calibration-without-camera-id",
+      "workingCopyMeta": {
+        "_source": {
+          "decoderVersion": "8",
+          "calibration": { "id": "cal-x", "cameraId": null, "track": "apple", "version": "v2" },
+          "lensCorrection": { "mode": "apple" }
+        }
+      },
+      "error": "invalidResponse"
+    },
+    {
+      "name": "invalid-no-decoder-version",
+      "workingCopyMeta": {
+        "_source": { "decoderVersion": "", "calibration": null, "lensCorrection": { "mode": "apple" } }
+      },
+      "error": "invalidResponse"
+    }
+  ]
+}

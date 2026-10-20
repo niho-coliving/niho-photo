@@ -1,0 +1,189 @@
+{
+ "schema": "niho-develop-calibration/v1",
+ "track": "apple",
+ "camera": {
+  "make": "SONY",
+  "model": "ILME-FX30",
+  "id": "sony-ilme-fx30"
+ },
+ "decoder": {
+  "kind": "apple-cirawfilter",
+  "decoderVersion": "8",
+  "settings": {
+   "boostAmount": 0,
+   "boostShadowAmount": 1,
+   "exposure": 0,
+   "shadowBias": 0,
+   "extendedDynamicRangeAmount": 0,
+   "gamutMapping": true,
+   "lensCorrection": true,
+   "localToneMapAmount": 0,
+   "contrastAmount": 0
+  }
+ },
+ "inputSpace": "extended-linear-srgb-d65-as-shot",
+ "workingSpace": "linear-prophoto-d50",
+ "matrix": {
+  "space": "linear-prophoto-d50",
+  "rowMajor": [
+   [
+    0.77609,
+    0.141505,
+    0.082405
+   ],
+   [
+    0.019946,
+    0.833767,
+    0.146287
+   ],
+   [
+    0.051174,
+    0.024016,
+    0.92481
+   ]
+  ],
+  "whitePreserving": true
+ },
+ "baselineEV": -0.32477,
+ "illuminants": null,
+ "hueSat": null,
+ "version": "v1",
+ "createdAt": "2026-09-30T03:56:36+09:00",
+ "fit": {
+  "tool": "calibrate/fit_base.py",
+  "trainScenes": [
+   "DSC00176",
+   "DSC00210",
+   "DSC00310",
+   "DSC00350",
+   "DSC00367",
+   "DSC00566",
+   "DSC00625",
+   "DSC01843"
+  ],
+  "valScenes": [
+   "DSC00162",
+   "DSC00322",
+   "DSC00389",
+   "DSC00620",
+   "DSC00645"
+  ],
+  "metric": "deltaE00-mean-blur2-1500px",
+  "train": {
+   "mean": 0.9717,
+   "p99": 3.6794
+  },
+  "val": {
+   "mean": 0.7818,
+   "p99": 2.2968
+  },
+  "referenceSet": "lr-measure round6 neutral (Adobe Standard, As Shot)",
+  "look": "acr3-default-tone-curve + RGBTone (temporary until S8)",
+  "before": {
+   "train": {
+    "mean": 4.7604,
+    "p99": 9.7653
+   },
+   "val": {
+    "mean": 4.4606,
+    "p99": 9.9388
+   }
+  },
+  "optimizer": [
+   {
+    "stage": "行列＋EV",
+    "iterations": 59,
+    "reason": "converged",
+    "objectiveStart": 5.22147,
+    "objectiveEnd": 1.02134,
+    "seconds": 1.84,
+    "criteria": "relative drop < 1e-06 twice / step < 1e-8 / max 100 iterations",
+    "method": "IRLS (L1 on ΔE00) + Levenberg-Marquardt, forward-difference Jacobian"
+   },
+   {
+    "stage": "HueSat 12",
+    "iterations": 12,
+    "reason": "converged",
+    "objectiveStart": 1.02134,
+    "objectiveEnd": 1.00744,
+    "seconds": 1.19,
+    "criteria": "relative drop < 1e-06 twice / step < 1e-8 / max 100 iterations",
+    "method": "IRLS (L1 on ΔE00) + Levenberg-Marquardt, forward-difference Jacobian"
+   }
+  ],
+  "cells": {
+   "grid": [
+    48,
+    32
+   ],
+   "maxCellStd": 8.0,
+   "clipMax": 0.01,
+   "used": {
+    "DSC00162": 1291,
+    "DSC00176": 1146,
+    "DSC00210": 1171,
+    "DSC00310": 1274,
+    "DSC00322": 999,
+    "DSC00350": 870,
+    "DSC00367": 670,
+    "DSC00389": 822,
+    "DSC00566": 897,
+    "DSC00620": 1063,
+    "DSC00625": 982,
+    "DSC00645": 748,
+    "DSC01843": 919
+   }
+  },
+  "illuminantsNote": null,
+  "hueSatNote": "不採用（検証 画素 ΔE00 mean 0.782 → 0.780。改善 0.2 未満）。表: -0.1°/×0.997, -0.2°/×1.000, +0.7°/×1.000, +0.6°/×0.999, +0.2°/×0.996, -0.0°/×0.994, -0.3°/×0.992, -0.7°/×0.990, -1.1°/×0.990, -0.9°/×0.993, -0.6°/×0.994, -0.4°/×0.996",
+  "selection": {
+   "candidates": {
+    "1ill": {
+     "train": {
+      "mean": 0.9717,
+      "p99": 3.6794
+     },
+     "val": {
+      "mean": 0.7818,
+      "p99": 2.2968
+     }
+    },
+    "2ill": {
+     "train": {
+      "mean": 0.8595,
+      "p99": 3.0256
+     },
+     "val": {
+      "mean": 0.7515,
+      "p99": 2.5835
+     }
+    }
+   },
+   "rule": "val mean が 0.1 以上良ければ 2 光源、そうでなければ 1 光源",
+   "chosen": "1ill"
+  }
+ },
+ "baseVersion": "apple-ciraw8/linear-prophoto-d50/cal-sony-ilme-fx30-apple-v1",
+ "lens": {
+  "mode": "embedded",
+  "distortionRadiusScale": 1.01,
+  "vignettingRadiusScale": 1.146,
+  "vignetting": true,
+  "note": "E 16-55mm F2.8 G の 16mm（DSC01843）と 55mm（DSC01844）で Lightroom のレンズプロファイル補正と幾何 RMS 0.2px / 0.1px（tools/lens-check、S10b #17031）"
+ },
+ "whiteBalanceMap": {
+  "schema": "niho-develop-wb-map/v1",
+  "model": "uv-offset",
+  "du": -0.001925,
+  "dv": -0.00118,
+  "fit": {
+   "scenes": 13,
+   "duSd": 0.00139,
+   "dvSd": 0.000304,
+   "residualKSd": 48.2,
+   "residualTintSd": 3.0,
+   "residualTintMax": 5.36,
+   "referenceSet": "Lightroom 中立の書き出し XMP（ColorTemperature / Tint。refs.neutral = round6 優先）× Apple の as-shot xy"
+  }
+ }
+}

@@ -1,0 +1,4115 @@
+{
+  "schema": "colorcheck/fixture/v2",
+  "createdAt": "2026-09-28T22:37:31+09:00",
+  "tool": {
+    "name": "colorcheck",
+    "version": "1.0.0"
+  },
+  "camera": {
+    "make": "Panasonic",
+    "model": "DC-S5"
+  },
+  "decoderVersion": "8",
+  "baseVersion": "apple-ciraw8/linear-prophoto-d50/cal-panasonic-dc-s5-apple-v1",
+  "counts": {
+    "compare": 64,
+    "preset": 15,
+    "preset-summary": 3
+  },
+  "entries": [
+    {
+      "label": "base/P1012822",
+      "kind": "compare",
+      "comparison": "reference",
+      "scene": "P1012822",
+      "preset": null,
+      "deltaE00": {
+        "mean": 1.9855,
+        "p99": 4.3439
+      },
+      "deltaE00Unblurred": {
+        "mean": 2.6218,
+        "p99": 9.8606
+      },
+      "evDiff": -0.0561,
+      "saturationRatio": 0.9061,
+      "deltaE00All": {
+        "mean": 1.8711,
+        "p99": 4.3171
+      },
+      "flatFraction": 0.4482,
+      "white": {
+        "reference": {
+          "a": 2.162,
+          "b": -1.902
+        },
+        "candidate": {
+          "a": 2.349,
+          "b": -2.062
+        }
+      },
+      "normalized": {
+        "method": "pre-tone-ev",
+        "deltaE00": {
+          "mean": 2.0092,
+          "p99": 4.4827
+        },
+        "evOffset": 0.0463,
+        "gain": null
+      },
+      "alignment": {
+        "scale": 0.999578,
+        "corr": 0.9848
+      },
+      "analysisSize": [
+        1500,
+        1000
+      ]
+    },
+    {
+      "label": "base/P1013207",
+      "kind": "compare",
+      "comparison": "reference",
+      "scene": "P1013207",
+      "preset": null,
+      "deltaE00": {
+        "mean": 2.7025,
+        "p99": 5.9618
+      },
+      "deltaE00Unblurred": {
+        "mean": 2.952,
+        "p99": 7.6907
+      },
+      "evDiff": -0.0068,
+      "saturationRatio": 0.8117,
+      "deltaE00All": {
+        "mean": 2.3853,
+        "p99": 4.8189
+      },
+      "flatFraction": 0.2768,
+      "white": {
+        "reference": {
+          "a": 0.248,
+          "b": -0.752
+        },
+        "candidate": {
+          "a": 0.502,
+          "b": -0.208
+        }
+      },
+      "normalized": {
+        "method": "pre-tone-ev",
+        "deltaE00": {
+          "mean": 2.7152,
+          "p99": 5.9535
+        },
+        "evOffset": 0.008,
+        "gain": null
+      },
+      "alignment": {
+        "scale": 1.000008,
+        "corr": 0.9838
+      },
+      "analysisSize": [
+        1500,
+        1000
+      ]
+    },
+    {
+      "label": "base/P1013558",
+      "kind": "compare",
+      "comparison": "reference",
+      "scene": "P1013558",
+      "preset": null,
+      "deltaE00": {
+        "mean": 1.634,
+        "p99": 3.8181
+      },
+      "deltaE00Unblurred": {
+        "mean": 1.9458,
+        "p99": 6.3672
+      },
+      "evDiff": -0.0313,
+      "saturationRatio": 0.9373,
+      "deltaE00All": {
+        "mean": 1.5744,
+        "p99": 3.914
+      },
+      "flatFraction": 0.6219,
+      "white": {
+        "reference": {
+          "a": -0.166,
+          "b": -0.11
+        },
+        "candidate": {
+          "a": -0.158,
+          "b": -0.061
+        }
+      },
+      "normalized": {
+        "method": "pre-tone-ev",
+        "deltaE00": {
+          "mean": 1.613,
+          "p99": 3.9928
+        },
+        "evOffset": 0.0249,
+        "gain": null
+      },
+      "alignment": {
+        "scale": 0.999988,
+        "corr": 0.9671
+      },
+      "analysisSize": [
+        1500,
+        1000
+      ]
+    },
+    {
+      "label": "base/P1522877",
+      "kind": "compare",
+      "comparison": "reference",
+      "scene": "P1522877",
+      "preset": null,
+      "deltaE00": {
+        "mean": 0.7077,
+        "p99": 1.8212
+      },
+      "deltaE00Unblurred": {
+        "mean": 1.6344,
+        "p99": 12.07
+      },
+      "evDiff": -0.0348,
+      "saturationRatio": 0.9954,
+      "deltaE00All": {
+        "mean": 1.0114,
+        "p99": 4.637
+      },
+      "flatFraction": 0.5959,
+      "white": {
+        "reference": {
+          "a": -0.125,
+          "b": -0.019
+        },
+        "candidate": {
+          "a": -0.128,
+          "b": 0.034
+        }
+      },
+      "normalized": {
+        "method": "pre-tone-ev",
+        "deltaE00": {
+          "mean": 0.7392,
+          "p99": 1.8082
+        },
+        "evOffset": 0.0361,
+        "gain": null
+      },
+      "alignment": {
+        "scale": 0.975594,
+        "corr": 0.9275,
+        "radialK": [
+          -0.010134,
+          0.051587
+        ]
+      },
+      "analysisSize": [
+        1500,
+        1000
+      ]
+    },
+    {
+      "label": "base/P1524180",
+      "kind": "compare",
+      "comparison": "reference",
+      "scene": "P1524180",
+      "preset": null,
+      "deltaE00": {
+        "mean": 1.2994,
+        "p99": 4.8502
+      },
+      "deltaE00Unblurred": {
+        "mean": 3.0554,
+        "p99": 22.5453
+      },
+      "evDiff": -0.032,
+      "saturationRatio": 0.971,
+      "deltaE00All": {
+        "mean": 2.1592,
+        "p99": 13.7008
+      },
+      "flatFraction": 0.439,
+      "white": {
+        "reference": {
+          "a": 1.089,
+          "b": -1.717
+        },
+        "candidate": {
+          "a": 1.233,
+          "b": -1.525
+        }
+      },
+      "normalized": {
+        "method": "pre-tone-ev",
+        "deltaE00": {
+          "mean": 1.32,
+          "p99": 4.8852
+        },
+        "evOffset": 0.0251,
+        "gain": null
+      },
+      "alignment": {
+        "scale": 0.989342,
+        "corr": 0.9285,
+        "radialK": [
+          0.018869,
+          -0.101855
+        ]
+      },
+      "analysisSize": [
+        1500,
+        1000
+      ]
+    },
+    {
+      "label": "base/P1524181",
+      "kind": "compare",
+      "comparison": "reference",
+      "scene": "P1524181",
+      "preset": null,
+      "deltaE00": {
+        "mean": 1.334,
+        "p99": 5.3246
+      },
+      "deltaE00Unblurred": {
+        "mean": 3.0397,
+        "p99": 22.6652
+      },
+      "evDiff": -0.0301,
+      "saturationRatio": 0.97,
+      "deltaE00All": {
+        "mean": 2.17,
+        "p99": 15.0153
+      },
+      "flatFraction": 0.4381,
+      "white": {
+        "reference": {
+          "a": 1.139,
+          "b": -1.767
+        },
+        "candidate": {
+          "a": 1.301,
+          "b": -1.546
+        }
+      },
+      "normalized": {
+        "method": "pre-tone-ev",
+        "deltaE00": {
+          "mean": 1.3546,
+          "p99": 5.3316
+        },
+        "evOffset": 0.0241,
+        "gain": null
+      },
+      "alignment": {
+        "scale": 0.990599,
+        "corr": 0.9284,
+        "radialK": [
+          0.007646,
+          -0.081245
+        ]
+      },
+      "analysisSize": [
+        1500,
+        1000
+      ]
+    },
+    {
+      "label": "base/P1581215",
+      "kind": "compare",
+      "comparison": "reference",
+      "scene": "P1581215",
+      "preset": null,
+      "deltaE00": {
+        "mean": 1.5143,
+        "p99": 3.1899
+      },
+      "deltaE00Unblurred": {
+        "mean": 1.9167,
+        "p99": 9.8674
+      },
+      "evDiff": -0.0386,
+      "saturationRatio": 0.9631,
+      "deltaE00All": {
+        "mean": 1.6076,
+        "p99": 4.7723
+      },
+      "flatFraction": 0.8109,
+      "white": {
+        "reference": {
+          "a": -3.48,
+          "b": -5.388
+        },
+        "candidate": {
+          "a": -2.93,
+          "b": -5.648
+        }
+      },
+      "normalized": {
+        "method": "pre-tone-ev",
+        "deltaE00": {
+          "mean": 1.5387,
+          "p99": 3.1058
+        },
+        "evOffset": 0.0284,
+        "gain": null
+      },
+      "alignment": {
+        "scale": 0.991343,
+        "corr": 0.9557,
+        "radialK": [
+          -0.009485,
+          0.035427
+        ]
+      },
+      "analysisSize": [
+        1500,
+        1000
+      ]
+    },
+    {
+      "label": "base/P1581237",
+      "kind": "compare",
+      "comparison": "reference",
+      "scene": "P1581237",
+      "preset": null,
+      "deltaE00": {
+        "mean": 0.9791,
+        "p99": 3.8971
+      },
+      "deltaE00Unblurred": {
+        "mean": 1.2858,
+        "p99": 5.3682
+      },
+      "evDiff": 0.0029,
+      "saturationRatio": 1.0134,
+      "deltaE00All": {
+        "mean": 1.0227,
+        "p99": 3.9178
+      },
+      "flatFraction": 0.8242,
+      "white": {
+        "reference": {
+          "a": null,
+          "b": null
+        },
+        "candidate": {
+          "a": null,
+          "b": null
+        }
+      },
+      "normalized": {
+        "method": "pre-tone-ev",
+        "deltaE00": {
+          "mean": 0.9744,
+          "p99": 3.9061
+        },
+        "evOffset": -0.0023,
+        "gain": null
+      },
+      "alignment": {
+        "scale": 0.972819,
+        "corr": 0.9868,
+        "radialK": [
+          -0.003528,
+          0.048549
+        ]
+      },
+      "analysisSize": [
+        1500,
+        1000
+      ]
+    },
+    {
+      "label": "base/P1581243",
+      "kind": "compare",
+      "comparison": "reference",
+      "scene": "P1581243",
+      "preset": null,
+      "deltaE00": {
+        "mean": 0.834,
+        "p99": 2.77
+      },
+      "deltaE00Unblurred": {
+        "mean": 2.0182,
+        "p99": 15.5453
+      },
+      "evDiff": -0.014,
+      "saturationRatio": 1.0643,
+      "deltaE00All": {
+        "mean": 1.3257,
+        "p99": 7.8292
+      },
+      "flatFraction": 0.6081,
+      "white": {
+        "reference": {
+          "a": 0.116,
+          "b": 0.052
+        },
+        "candidate": {
+          "a": 0.2,
+          "b": 0.14
+        }
+      },
+      "normalized": {
+        "method": "pre-tone-ev",
+        "deltaE00": {
+          "mean": 0.8499,
+          "p99": 2.7435
+        },
+        "evOffset": 0.0104,
+        "gain": null
+      },
+      "alignment": {
+        "scale": 0.988281,
+        "corr": 0.9615,
+        "radialK": [
+          0.034694,
+          -0.150527
+        ]
+      },
+      "analysisSize": [
+        1500,
+        1000
+      ]
+    },
+    {
+      "label": "base/P1581255",
+      "kind": "compare",
+      "comparison": "reference",
+      "scene": "P1581255",
+      "preset": null,
+      "deltaE00": {
+        "mean": 0.9625,
+        "p99": 3.6992
+      },
+      "deltaE00Unblurred": {
+        "mean": 2.6703,
+        "p99": 21.6361
+      },
+      "evDiff": -0.0369,
+      "saturationRatio": 0.9976,
+      "deltaE00All": {
+        "mean": 1.6977,
+        "p99": 10.8294
+      },
+      "flatFraction": 0.462,
+      "white": {
+        "reference": {
+          "a": 1.375,
+          "b": 0.485
+        },
+        "candidate": {
+          "a": 1.107,
+          "b": 0.276
+        }
+      },
+      "normalized": {
+        "method": "pre-tone-ev",
+        "deltaE00": {
+          "mean": 0.9746,
+          "p99": 3.6581
+        },
+        "evOffset": 0.0284,
+        "gain": null
+      },
+      "alignment": {
+        "scale": 0.989803,
+        "corr": 0.9611,
+        "radialK": [
+          0.019633,
+          -0.12341
+        ]
+      },
+      "analysisSize": [
+        1500,
+        1000
+      ]
+    },
+    {
+      "label": "base/P1581256",
+      "kind": "compare",
+      "comparison": "reference",
+      "scene": "P1581256",
+      "preset": null,
+      "deltaE00": {
+        "mean": 0.852,
+        "p99": 3.4597
+      },
+      "deltaE00Unblurred": {
+        "mean": 2.3263,
+        "p99": 18.2021
+      },
+      "evDiff": -0.0228,
+      "saturationRatio": 0.9959,
+      "deltaE00All": {
+        "mean": 1.4837,
+        "p99": 8.4174
+      },
+      "flatFraction": 0.4933,
+      "white": {
+        "reference": {
+          "a": 0.309,
+          "b": 1.287
+        },
+        "candidate": {
+          "a": 0.144,
+          "b": 1.44
+        }
+      },
+      "normalized": {
+        "method": "pre-tone-ev",
+        "deltaE00": {
+          "mean": 0.8545,
+          "p99": 3.3486
+        },
+        "evOffset": 0.0169,
+        "gain": null
+      },
+      "alignment": {
+        "scale": 0.988044,
+        "corr": 0.9679,
+        "radialK": [
+          0.036117,
+          -0.157841
+        ]
+      },
+      "analysisSize": [
+        1500,
+        1000
+      ]
+    },
+    {
+      "label": "base/P1581332",
+      "kind": "compare",
+      "comparison": "reference",
+      "scene": "P1581332",
+      "preset": null,
+      "deltaE00": {
+        "mean": 1.0266,
+        "p99": 2.5862
+      },
+      "deltaE00Unblurred": {
+        "mean": 1.372,
+        "p99": 6.5441
+      },
+      "evDiff": -0.0556,
+      "saturationRatio": 0.9814,
+      "deltaE00All": {
+        "mean": 1.153,
+        "p99": 4.1261
+      },
+      "flatFraction": 0.6647,
+      "white": {
+        "reference": {
+          "a": 1.185,
+          "b": -0.661
+        },
+        "candidate": {
+          "a": 1.079,
+          "b": -0.707
+        }
+      },
+      "normalized": {
+        "method": "pre-tone-ev",
+        "deltaE00": {
+          "mean": 1.0276,
+          "p99": 2.5323
+        },
+        "evOffset": 0.0453,
+        "gain": null
+      },
+      "alignment": {
+        "scale": 0.972005,
+        "corr": 0.9856,
+        "radialK": [
+          -0.009079,
+          0.064544
+        ]
+      },
+      "analysisSize": [
+        1500,
+        1000
+      ]
+    },
+    {
+      "label": "base/P1581335",
+      "kind": "compare",
+      "comparison": "reference",
+      "scene": "P1581335",
+      "preset": null,
+      "deltaE00": {
+        "mean": 1.389,
+        "p99": 3.8616
+      },
+      "deltaE00Unblurred": {
+        "mean": 2.7094,
+        "p99": 22.2514
+      },
+      "evDiff": -0.0608,
+      "saturationRatio": 0.981,
+      "deltaE00All": {
+        "mean": 1.5354,
+        "p99": 5.4427
+      },
+      "flatFraction": 0.5535,
+      "white": {
+        "reference": {
+          "a": 4.39,
+          "b": 3.701
+        },
+        "candidate": {
+          "a": 3.804,
+          "b": 2.966
+        }
+      },
+      "normalized": {
+        "method": "pre-tone-ev",
+        "deltaE00": {
+          "mean": 1.3537,
+          "p99": 3.8661
+        },
+        "evOffset": 0.0611,
+        "gain": null
+      },
+      "alignment": {
+        "scale": 0.971964,
+        "corr": 0.976,
+        "radialK": [
+          -0.010591,
+          0.067076
+        ]
+      },
+      "analysisSize": [
+        1500,
+        1000
+      ]
+    },
+    {
+      "label": "base/P1581346",
+      "kind": "compare",
+      "comparison": "reference",
+      "scene": "P1581346",
+      "preset": null,
+      "deltaE00": {
+        "mean": 1.2393,
+        "p99": 4.1821
+      },
+      "deltaE00Unblurred": {
+        "mean": 1.7023,
+        "p99": 8.7204
+      },
+      "evDiff": -0.0641,
+      "saturationRatio": 0.9776,
+      "deltaE00All": {
+        "mean": 1.3813,
+        "p99": 5.1519
+      },
+      "flatFraction": 0.622,
+      "white": {
+        "reference": {
+          "a": 1.093,
+          "b": 1.839
+        },
+        "candidate": {
+          "a": 0.705,
+          "b": 1.147
+        }
+      },
+      "normalized": {
+        "method": "pre-tone-ev",
+        "deltaE00": {
+          "mean": 1.3546,
+          "p99": 4.0481
+        },
+        "evOffset": 0.06,
+        "gain": null
+      },
+      "alignment": {
+        "scale": 0.972367,
+        "corr": 0.9715,
+        "radialK": [
+          -0.010647,
+          0.070973
+        ]
+      },
+      "analysisSize": [
+        1500,
+        1000
+      ]
+    },
+    {
+      "label": "base/P1581356",
+      "kind": "compare",
+      "comparison": "reference",
+      "scene": "P1581356",
+      "preset": null,
+      "deltaE00": {
+        "mean": 0.9303,
+        "p99": 2.3846
+      },
+      "deltaE00Unblurred": {
+        "mean": 1.2376,
+        "p99": 4.7959
+      },
+      "evDiff": -0.0326,
+      "saturationRatio": 0.9726,
+      "deltaE00All": {
+        "mean": 1.0277,
+        "p99": 4.4211
+      },
+      "flatFraction": 0.8675,
+      "white": {
+        "reference": {
+          "a": 4.401,
+          "b": 5.824
+        },
+        "candidate": {
+          "a": 4.332,
+          "b": 5.646
+        }
+      },
+      "normalized": {
+        "method": "pre-tone-ev",
+        "deltaE00": {
+          "mean": 0.8902,
+          "p99": 2.4639
+        },
+        "evOffset": 0.0248,
+        "gain": null
+      },
+      "alignment": {
+        "scale": 0.963221,
+        "corr": 0.9804,
+        "radialK": [
+          -0.014536,
+          0.094791
+        ]
+      },
+      "analysisSize": [
+        1000,
+        1500
+      ]
+    },
+    {
+      "label": "base/P1581368",
+      "kind": "compare",
+      "comparison": "reference",
+      "scene": "P1581368",
+      "preset": null,
+      "deltaE00": {
+        "mean": 0.8297,
+        "p99": 1.7532
+      },
+      "deltaE00Unblurred": {
+        "mean": 1.2553,
+        "p99": 6.7188
+      },
+      "evDiff": -0.0537,
+      "saturationRatio": 0.9844,
+      "deltaE00All": {
+        "mean": 0.9686,
+        "p99": 5.5383
+      },
+      "flatFraction": 0.8595,
+      "white": {
+        "reference": {
+          "a": 5.006,
+          "b": 5.638
+        },
+        "candidate": {
+          "a": 4.544,
+          "b": 5.904
+        }
+      },
+      "normalized": {
+        "method": "pre-tone-ev",
+        "deltaE00": {
+          "mean": 0.8014,
+          "p99": 1.67
+        },
+        "evOffset": 0.0432,
+        "gain": null
+      },
+      "alignment": {
+        "scale": 0.962913,
+        "corr": 0.9714,
+        "radialK": [
+          -0.01065,
+          0.094838
+        ]
+      },
+      "analysisSize": [
+        1000,
+        1500
+      ]
+    },
+    {
+      "label": "camjpeg/P1012822",
+      "kind": "compare",
+      "comparison": "camera-jpeg",
+      "scene": "P1012822",
+      "preset": null,
+      "deltaE00": {
+        "mean": 2.4211,
+        "p99": 5.2739
+      },
+      "deltaE00Unblurred": {
+        "mean": 3.2648,
+        "p99": 10.6203
+      },
+      "evDiff": -0.2087,
+      "saturationRatio": 0.8439,
+      "deltaE00All": {
+        "mean": 2.7565,
+        "p99": 5.9364
+      },
+      "flatFraction": 0.4543,
+      "white": {
+        "reference": {
+          "a": 1.971,
+          "b": -0.542
+        },
+        "candidate": {
+          "a": 2.384,
+          "b": -2.072
+        }
+      },
+      "normalized": {
+        "method": "pre-tone-ev",
+        "deltaE00": {
+          "mean": 2.3874,
+          "p99": 5.9454
+        },
+        "evOffset": 0.1701,
+        "gain": null
+      },
+      "alignment": {
+        "scale": 1.000981,
+        "corr": 0.983,
+        "radialK": [
+          -0.000356,
+          0.001599
+        ]
+      },
+      "analysisSize": [
+        1500,
+        1000
+      ]
+    },
+    {
+      "label": "camjpeg/P1013207",
+      "kind": "compare",
+      "comparison": "camera-jpeg",
+      "scene": "P1013207",
+      "preset": null,
+      "deltaE00": {
+        "mean": 2.4788,
+        "p99": 6.0284
+      },
+      "deltaE00Unblurred": {
+        "mean": 3.4631,
+        "p99": 8.5154
+      },
+      "evDiff": -0.3226,
+      "saturationRatio": 0.7947,
+      "deltaE00All": {
+        "mean": 3.0248,
+        "p99": 6.1787
+      },
+      "flatFraction": 0.2964,
+      "white": {
+        "reference": {
+          "a": 0.63,
+          "b": -0.553
+        },
+        "candidate": {
+          "a": 0.503,
+          "b": -0.174
+        }
+      },
+      "normalized": {
+        "method": "pre-tone-ev",
+        "deltaE00": {
+          "mean": 2.4335,
+          "p99": 6.4583
+        },
+        "evOffset": 0.2412,
+        "gain": null
+      },
+      "alignment": {
+        "scale": 0.99986,
+        "corr": 0.9824
+      },
+      "analysisSize": [
+        1500,
+        1000
+      ]
+    },
+    {
+      "label": "camjpeg/P1013558",
+      "kind": "compare",
+      "comparison": "camera-jpeg",
+      "scene": "P1013558",
+      "preset": null,
+      "deltaE00": {
+        "mean": 2.3583,
+        "p99": 5.0574
+      },
+      "deltaE00Unblurred": {
+        "mean": 2.8835,
+        "p99": 8.4107
+      },
+      "evDiff": -0.2266,
+      "saturationRatio": 0.8427,
+      "deltaE00All": {
+        "mean": 2.6139,
+        "p99": 5.2817
+      },
+      "flatFraction": 0.6236,
+      "white": {
+        "reference": {
+          "a": -0.257,
+          "b": -0.552
+        },
+        "candidate": {
+          "a": -0.143,
+          "b": -0.041
+        }
+      },
+      "normalized": {
+        "method": "pre-tone-ev",
+        "deltaE00": {
+          "mean": 2.2445,
+          "p99": 4.9526
+        },
+        "evOffset": 0.1865,
+        "gain": null
+      },
+      "alignment": {
+        "scale": 0.999841,
+        "corr": 0.9632
+      },
+      "analysisSize": [
+        1500,
+        1000
+      ]
+    },
+    {
+      "label": "camjpeg/P1522877",
+      "kind": "compare",
+      "comparison": "camera-jpeg",
+      "scene": "P1522877",
+      "preset": null,
+      "deltaE00": {
+        "mean": 1.2725,
+        "p99": 6.305
+      },
+      "deltaE00Unblurred": {
+        "mean": 2.0271,
+        "p99": 9.9015
+      },
+      "evDiff": -0.0139,
+      "saturationRatio": 0.8848,
+      "deltaE00All": {
+        "mean": 1.6492,
+        "p99": 7.2844
+      },
+      "flatFraction": 0.5915,
+      "white": {
+        "reference": {
+          "a": -0.183,
+          "b": -0.072
+        },
+        "candidate": {
+          "a": -0.125,
+          "b": 0.034
+        }
+      },
+      "normalized": {
+        "method": "pre-tone-ev",
+        "deltaE00": {
+          "mean": 1.2517,
+          "p99": 6.0456
+        },
+        "evOffset": 0.014,
+        "gain": null
+      },
+      "alignment": {
+        "scale": 0.999918,
+        "corr": 0.9431
+      },
+      "analysisSize": [
+        1500,
+        1000
+      ]
+    },
+    {
+      "label": "camjpeg/P1524180",
+      "kind": "compare",
+      "comparison": "camera-jpeg",
+      "scene": "P1524180",
+      "preset": null,
+      "deltaE00": {
+        "mean": 3.8524,
+        "p99": 10.742
+      },
+      "deltaE00Unblurred": {
+        "mean": 4.6412,
+        "p99": 12.3389
+      },
+      "evDiff": -0.4159,
+      "saturationRatio": 0.9632,
+      "deltaE00All": {
+        "mean": 4.5209,
+        "p99": 11.1139
+      },
+      "flatFraction": 0.4664,
+      "white": {
+        "reference": {
+          "a": 1.313,
+          "b": -1.646
+        },
+        "candidate": {
+          "a": 1.322,
+          "b": -1.677
+        }
+      },
+      "normalized": {
+        "method": "pre-tone-ev",
+        "deltaE00": {
+          "mean": 2.2071,
+          "p99": 5.7768
+        },
+        "evOffset": 0.3138,
+        "gain": null
+      },
+      "alignment": {
+        "scale": 1.000931,
+        "corr": 0.9781,
+        "radialK": [
+          -0.000311,
+          0.001338
+        ]
+      },
+      "analysisSize": [
+        1500,
+        1000
+      ]
+    },
+    {
+      "label": "camjpeg/P1524181",
+      "kind": "compare",
+      "comparison": "camera-jpeg",
+      "scene": "P1524181",
+      "preset": null,
+      "deltaE00": {
+        "mean": 3.8223,
+        "p99": 10.7252
+      },
+      "deltaE00Unblurred": {
+        "mean": 4.5828,
+        "p99": 12.2754
+      },
+      "evDiff": -0.4169,
+      "saturationRatio": 0.9634,
+      "deltaE00All": {
+        "mean": 4.4589,
+        "p99": 11.0664
+      },
+      "flatFraction": 0.4662,
+      "white": {
+        "reference": {
+          "a": 1.395,
+          "b": -1.714
+        },
+        "candidate": {
+          "a": 1.401,
+          "b": -1.704
+        }
+      },
+      "normalized": {
+        "method": "pre-tone-ev",
+        "deltaE00": {
+          "mean": 2.1977,
+          "p99": 5.8139
+        },
+        "evOffset": 0.3122,
+        "gain": null
+      },
+      "alignment": {
+        "scale": 1.000942,
+        "corr": 0.9782,
+        "radialK": [
+          -0.000556,
+          0.001994
+        ]
+      },
+      "analysisSize": [
+        1500,
+        1000
+      ]
+    },
+    {
+      "label": "camjpeg/P1581215",
+      "kind": "compare",
+      "comparison": "camera-jpeg",
+      "scene": "P1581215",
+      "preset": null,
+      "deltaE00": {
+        "mean": 7.3352,
+        "p99": 16.7713
+      },
+      "deltaE00Unblurred": {
+        "mean": 7.5362,
+        "p99": 16.9927
+      },
+      "evDiff": -0.7719,
+      "saturationRatio": 0.8684,
+      "deltaE00All": {
+        "mean": 7.4066,
+        "p99": 16.7238
+      },
+      "flatFraction": 0.7962,
+      "white": {
+        "reference": {
+          "a": -5.022,
+          "b": -3.496
+        },
+        "candidate": {
+          "a": -2.928,
+          "b": -5.631
+        }
+      },
+      "normalized": {
+        "method": "pre-tone-ev",
+        "deltaE00": {
+          "mean": 5.7758,
+          "p99": 10.17
+        },
+        "evOffset": 0.5705,
+        "gain": null
+      },
+      "alignment": {
+        "scale": 0.99999,
+        "corr": 0.969
+      },
+      "analysisSize": [
+        1500,
+        1000
+      ]
+    },
+    {
+      "label": "camjpeg/P1581237",
+      "kind": "compare",
+      "comparison": "camera-jpeg",
+      "scene": "P1581237",
+      "preset": null,
+      "deltaE00": {
+        "mean": 4.9957,
+        "p99": 17.6225
+      },
+      "deltaE00Unblurred": {
+        "mean": 5.7913,
+        "p99": 18.0478
+      },
+      "evDiff": -1.4213,
+      "saturationRatio": 0.7395,
+      "deltaE00All": {
+        "mean": 5.7851,
+        "p99": 17.6023
+      },
+      "flatFraction": 0.7435,
+      "white": {
+        "reference": {
+          "a": 0.72,
+          "b": 2.392
+        },
+        "candidate": {
+          "a": null,
+          "b": null
+        }
+      },
+      "normalized": {
+        "method": "pre-tone-ev",
+        "deltaE00": {
+          "mean": 3.5379,
+          "p99": 11.3415
+        },
+        "evOffset": 1.0355,
+        "gain": null
+      },
+      "alignment": {
+        "scale": 0.999856,
+        "corr": 0.9907
+      },
+      "analysisSize": [
+        1500,
+        1000
+      ]
+    },
+    {
+      "label": "camjpeg/P1581243",
+      "kind": "compare",
+      "comparison": "camera-jpeg",
+      "scene": "P1581243",
+      "preset": null,
+      "deltaE00": {
+        "mean": 6.5714,
+        "p99": 17.1593
+      },
+      "deltaE00Unblurred": {
+        "mean": 7.542,
+        "p99": 19.0279
+      },
+      "evDiff": -1.1913,
+      "saturationRatio": 0.7713,
+      "deltaE00All": {
+        "mean": 7.5423,
+        "p99": 17.1995
+      },
+      "flatFraction": 0.5443,
+      "white": {
+        "reference": {
+          "a": 0.406,
+          "b": 0.782
+        },
+        "candidate": {
+          "a": 0.302,
+          "b": 0.18
+        }
+      },
+      "normalized": {
+        "method": "pre-tone-ev",
+        "deltaE00": {
+          "mean": 3.2434,
+          "p99": 11.1476
+        },
+        "evOffset": 0.876,
+        "gain": null
+      },
+      "alignment": {
+        "scale": 1.001012,
+        "corr": 0.9847,
+        "radialK": [
+          -0.000452,
+          0.00166
+        ]
+      },
+      "analysisSize": [
+        1500,
+        1000
+      ]
+    },
+    {
+      "label": "camjpeg/P1581255",
+      "kind": "compare",
+      "comparison": "camera-jpeg",
+      "scene": "P1581255",
+      "preset": null,
+      "deltaE00": {
+        "mean": 3.2868,
+        "p99": 8.8715
+      },
+      "deltaE00Unblurred": {
+        "mean": 3.9354,
+        "p99": 11.2092
+      },
+      "evDiff": -0.2967,
+      "saturationRatio": 0.91,
+      "deltaE00All": {
+        "mean": 3.629,
+        "p99": 9.2411
+      },
+      "flatFraction": 0.4725,
+      "white": {
+        "reference": {
+          "a": 0.484,
+          "b": 0.001
+        },
+        "candidate": {
+          "a": 1.244,
+          "b": 0.273
+        }
+      },
+      "normalized": {
+        "method": "pre-tone-ev",
+        "deltaE00": {
+          "mean": 2.6739,
+          "p99": 7.1623
+        },
+        "evOffset": 0.2172,
+        "gain": null
+      },
+      "alignment": {
+        "scale": 1.001029,
+        "corr": 0.9838,
+        "radialK": [
+          -0.000949,
+          0.002749
+        ]
+      },
+      "analysisSize": [
+        1500,
+        1000
+      ]
+    },
+    {
+      "label": "camjpeg/P1581256",
+      "kind": "compare",
+      "comparison": "camera-jpeg",
+      "scene": "P1581256",
+      "preset": null,
+      "deltaE00": {
+        "mean": 4.9488,
+        "p99": 15.172
+      },
+      "deltaE00Unblurred": {
+        "mean": 5.9441,
+        "p99": 16.6314
+      },
+      "evDiff": -0.6527,
+      "saturationRatio": 0.8945,
+      "deltaE00All": {
+        "mean": 5.8425,
+        "p99": 15.3128
+      },
+      "flatFraction": 0.465,
+      "white": {
+        "reference": {
+          "a": 0.004,
+          "b": 0.73
+        },
+        "candidate": {
+          "a": 0.137,
+          "b": 1.327
+        }
+      },
+      "normalized": {
+        "method": "pre-tone-ev",
+        "deltaE00": {
+          "mean": 3.0732,
+          "p99": 9.2301
+        },
+        "evOffset": 0.4765,
+        "gain": null
+      },
+      "alignment": {
+        "scale": 1.001031,
+        "corr": 0.9806,
+        "radialK": [
+          -0.000637,
+          0.001921
+        ]
+      },
+      "analysisSize": [
+        1500,
+        1000
+      ]
+    },
+    {
+      "label": "camjpeg/P1581332",
+      "kind": "compare",
+      "comparison": "camera-jpeg",
+      "scene": "P1581332",
+      "preset": null,
+      "deltaE00": {
+        "mean": 2.2282,
+        "p99": 5.6931
+      },
+      "deltaE00Unblurred": {
+        "mean": 2.5184,
+        "p99": 6.2448
+      },
+      "evDiff": -0.0962,
+      "saturationRatio": 0.9002,
+      "deltaE00All": {
+        "mean": 2.3486,
+        "p99": 5.7004
+      },
+      "flatFraction": 0.6728,
+      "white": {
+        "reference": {
+          "a": 1.015,
+          "b": -0.766
+        },
+        "candidate": {
+          "a": 1.032,
+          "b": -0.69
+        }
+      },
+      "normalized": {
+        "method": "pre-tone-ev",
+        "deltaE00": {
+          "mean": 2.1621,
+          "p99": 5.7289
+        },
+        "evOffset": 0.0783,
+        "gain": null
+      },
+      "alignment": {
+        "scale": 0.999846,
+        "corr": 0.9868
+      },
+      "analysisSize": [
+        1500,
+        1000
+      ]
+    },
+    {
+      "label": "camjpeg/P1581335",
+      "kind": "compare",
+      "comparison": "camera-jpeg",
+      "scene": "P1581335",
+      "preset": null,
+      "deltaE00": {
+        "mean": 2.8518,
+        "p99": 6.7812
+      },
+      "deltaE00Unblurred": {
+        "mean": 3.2335,
+        "p99": 8.4791
+      },
+      "evDiff": -0.0433,
+      "saturationRatio": 0.9181,
+      "deltaE00All": {
+        "mean": 2.8604,
+        "p99": 6.6794
+      },
+      "flatFraction": 0.5722,
+      "white": {
+        "reference": {
+          "a": 6.327,
+          "b": 2.8
+        },
+        "candidate": {
+          "a": 4.063,
+          "b": 2.943
+        }
+      },
+      "normalized": {
+        "method": "pre-tone-ev",
+        "deltaE00": {
+          "mean": 2.8189,
+          "p99": 6.7905
+        },
+        "evOffset": 0.0475,
+        "gain": null
+      },
+      "alignment": {
+        "scale": 0.999754,
+        "corr": 0.986
+      },
+      "analysisSize": [
+        1500,
+        1000
+      ]
+    },
+    {
+      "label": "camjpeg/P1581346",
+      "kind": "compare",
+      "comparison": "camera-jpeg",
+      "scene": "P1581346",
+      "preset": null,
+      "deltaE00": {
+        "mean": 2.295,
+        "p99": 6.2147
+      },
+      "deltaE00Unblurred": {
+        "mean": 2.6179,
+        "p99": 6.5268
+      },
+      "evDiff": -0.0573,
+      "saturationRatio": 0.9002,
+      "deltaE00All": {
+        "mean": 2.3919,
+        "p99": 6.0643
+      },
+      "flatFraction": 0.63,
+      "white": {
+        "reference": {
+          "a": 0.325,
+          "b": 0.853
+        },
+        "candidate": {
+          "a": 0.731,
+          "b": 1.282
+        }
+      },
+      "normalized": {
+        "method": "pre-tone-ev",
+        "deltaE00": {
+          "mean": 2.2965,
+          "p99": 6.2333
+        },
+        "evOffset": 0.055,
+        "gain": null
+      },
+      "alignment": {
+        "scale": 0.999739,
+        "corr": 0.977
+      },
+      "analysisSize": [
+        1500,
+        1000
+      ]
+    },
+    {
+      "label": "camjpeg/P1581356",
+      "kind": "compare",
+      "comparison": "camera-jpeg",
+      "scene": "P1581356",
+      "preset": null,
+      "deltaE00": {
+        "mean": 3.9448,
+        "p99": 8.6032
+      },
+      "deltaE00Unblurred": {
+        "mean": 4.0918,
+        "p99": 9.0187
+      },
+      "evDiff": -0.3168,
+      "saturationRatio": 0.8956,
+      "deltaE00All": {
+        "mean": 4.0374,
+        "p99": 8.8459
+      },
+      "flatFraction": 0.8614,
+      "white": {
+        "reference": {
+          "a": 4.208,
+          "b": 5.703
+        },
+        "candidate": {
+          "a": 4.331,
+          "b": 5.641
+        }
+      },
+      "normalized": {
+        "method": "pre-tone-ev",
+        "deltaE00": {
+          "mean": 2.275,
+          "p99": 5.602
+        },
+        "evOffset": 0.24,
+        "gain": null
+      },
+      "alignment": {
+        "scale": 0.999733,
+        "corr": 0.9924
+      },
+      "analysisSize": [
+        1000,
+        1500
+      ]
+    },
+    {
+      "label": "camjpeg/P1581368",
+      "kind": "compare",
+      "comparison": "camera-jpeg",
+      "scene": "P1581368",
+      "preset": null,
+      "deltaE00": {
+        "mean": 5.5363,
+        "p99": 15.0064
+      },
+      "deltaE00Unblurred": {
+        "mean": 5.7477,
+        "p99": 15.8311
+      },
+      "evDiff": -0.5535,
+      "saturationRatio": 0.8981,
+      "deltaE00All": {
+        "mean": 5.7061,
+        "p99": 15.166
+      },
+      "flatFraction": 0.8447,
+      "white": {
+        "reference": {
+          "a": 4.149,
+          "b": 6.226
+        },
+        "candidate": {
+          "a": 4.528,
+          "b": 5.897
+        }
+      },
+      "normalized": {
+        "method": "pre-tone-ev",
+        "deltaE00": {
+          "mean": 4.3017,
+          "p99": 8.4151
+        },
+        "evOffset": 0.4213,
+        "gain": null
+      },
+      "alignment": {
+        "scale": 0.999806,
+        "corr": 0.9899
+      },
+      "analysisSize": [
+        1000,
+        1500
+      ]
+    },
+    {
+      "label": "decoder-7vs8/P1012822",
+      "kind": "compare",
+      "comparison": "version",
+      "scene": "P1012822",
+      "preset": null,
+      "deltaE00": {
+        "mean": 0.2284,
+        "p99": 0.8548
+      },
+      "deltaE00Unblurred": {
+        "mean": 0.5314,
+        "p99": 1.9539
+      },
+      "evDiff": 0.001,
+      "saturationRatio": 1.0017,
+      "deltaE00All": {
+        "mean": 0.2326,
+        "p99": 0.8483
+      },
+      "flatFraction": 0.4705,
+      "white": {
+        "reference": {
+          "a": 2.385,
+          "b": -2.058
+        },
+        "candidate": {
+          "a": 2.394,
+          "b": -2.073
+        }
+      },
+      "alignment": {
+        "scale": 1.000002,
+        "corr": 0.9999
+      },
+      "analysisSize": [
+        1500,
+        1000
+      ],
+      "decoderVersion": "7vs8"
+    },
+    {
+      "label": "decoder-7vs8/P1013207",
+      "kind": "compare",
+      "comparison": "version",
+      "scene": "P1013207",
+      "preset": null,
+      "deltaE00": {
+        "mean": 0.1923,
+        "p99": 0.7791
+      },
+      "deltaE00Unblurred": {
+        "mean": 0.5521,
+        "p99": 3.0657
+      },
+      "evDiff": 0.0008,
+      "saturationRatio": 0.9999,
+      "deltaE00All": {
+        "mean": 0.2001,
+        "p99": 1.0841
+      },
+      "flatFraction": 0.3232,
+      "white": {
+        "reference": {
+          "a": 0.498,
+          "b": -0.164
+        },
+        "candidate": {
+          "a": 0.498,
+          "b": -0.157
+        }
+      },
+      "alignment": {
+        "scale": 0.999999,
+        "corr": 1.0
+      },
+      "analysisSize": [
+        1500,
+        1000
+      ],
+      "decoderVersion": "7vs8"
+    },
+    {
+      "label": "decoder-7vs8/P1013558",
+      "kind": "compare",
+      "comparison": "version",
+      "scene": "P1013558",
+      "preset": null,
+      "deltaE00": {
+        "mean": 0.0759,
+        "p99": 0.3258
+      },
+      "deltaE00Unblurred": {
+        "mean": 0.2689,
+        "p99": 1.8213
+      },
+      "evDiff": 0.0005,
+      "saturationRatio": 1.0005,
+      "deltaE00All": {
+        "mean": 0.1026,
+        "p99": 0.6866
+      },
+      "flatFraction": 0.6418,
+      "white": {
+        "reference": {
+          "a": -0.144,
+          "b": -0.05
+        },
+        "candidate": {
+          "a": -0.148,
+          "b": -0.054
+        }
+      },
+      "alignment": {
+        "scale": 1.000003,
+        "corr": 1.0
+      },
+      "analysisSize": [
+        1500,
+        1000
+      ],
+      "decoderVersion": "7vs8"
+    },
+    {
+      "label": "decoder-7vs8/P1522877",
+      "kind": "compare",
+      "comparison": "version",
+      "scene": "P1522877",
+      "preset": null,
+      "deltaE00": {
+        "mean": 0.0886,
+        "p99": 0.7334
+      },
+      "deltaE00Unblurred": {
+        "mean": 0.3053,
+        "p99": 2.2174
+      },
+      "evDiff": 0.0016,
+      "saturationRatio": 0.9995,
+      "deltaE00All": {
+        "mean": 0.127,
+        "p99": 0.8853
+      },
+      "flatFraction": 0.6126,
+      "white": {
+        "reference": {
+          "a": -0.121,
+          "b": 0.024
+        },
+        "candidate": {
+          "a": -0.137,
+          "b": 0.031
+        }
+      },
+      "alignment": {
+        "scale": 1.000001,
+        "corr": 1.0
+      },
+      "analysisSize": [
+        1500,
+        1000
+      ],
+      "decoderVersion": "7vs8"
+    },
+    {
+      "label": "decoder-7vs8/P1524180",
+      "kind": "compare",
+      "comparison": "version",
+      "scene": "P1524180",
+      "preset": null,
+      "deltaE00": {
+        "mean": 0.3214,
+        "p99": 1.1504
+      },
+      "deltaE00Unblurred": {
+        "mean": 0.6137,
+        "p99": 1.977
+      },
+      "evDiff": 0.0014,
+      "saturationRatio": 1.0029,
+      "deltaE00All": {
+        "mean": 0.294,
+        "p99": 1.0554
+      },
+      "flatFraction": 0.4889,
+      "white": {
+        "reference": {
+          "a": 1.324,
+          "b": -1.661
+        },
+        "candidate": {
+          "a": 1.302,
+          "b": -1.648
+        }
+      },
+      "alignment": {
+        "scale": 0.999997,
+        "corr": 1.0
+      },
+      "analysisSize": [
+        1500,
+        1000
+      ],
+      "decoderVersion": "7vs8"
+    },
+    {
+      "label": "decoder-7vs8/P1524181",
+      "kind": "compare",
+      "comparison": "version",
+      "scene": "P1524181",
+      "preset": null,
+      "deltaE00": {
+        "mean": 0.3225,
+        "p99": 1.151
+      },
+      "deltaE00Unblurred": {
+        "mean": 0.6121,
+        "p99": 1.9701
+      },
+      "evDiff": 0.0013,
+      "saturationRatio": 1.0029,
+      "deltaE00All": {
+        "mean": 0.2945,
+        "p99": 1.0571
+      },
+      "flatFraction": 0.4881,
+      "white": {
+        "reference": {
+          "a": 1.397,
+          "b": -1.692
+        },
+        "candidate": {
+          "a": 1.377,
+          "b": -1.686
+        }
+      },
+      "alignment": {
+        "scale": 0.999998,
+        "corr": 1.0
+      },
+      "analysisSize": [
+        1500,
+        1000
+      ],
+      "decoderVersion": "7vs8"
+    },
+    {
+      "label": "decoder-7vs8/P1581215",
+      "kind": "compare",
+      "comparison": "version",
+      "scene": "P1581215",
+      "preset": null,
+      "deltaE00": {
+        "mean": 0.2057,
+        "p99": 1.0056
+      },
+      "deltaE00Unblurred": {
+        "mean": 0.4002,
+        "p99": 1.636
+      },
+      "evDiff": 0.0014,
+      "saturationRatio": 1.0005,
+      "deltaE00All": {
+        "mean": 0.2038,
+        "p99": 0.9775
+      },
+      "flatFraction": 0.8234,
+      "white": {
+        "reference": {
+          "a": -2.929,
+          "b": -5.645
+        },
+        "candidate": {
+          "a": -2.929,
+          "b": -5.656
+        }
+      },
+      "alignment": {
+        "scale": 1.000002,
+        "corr": 1.0
+      },
+      "analysisSize": [
+        1500,
+        1000
+      ],
+      "decoderVersion": "7vs8"
+    },
+    {
+      "label": "decoder-7vs8/P1581237",
+      "kind": "compare",
+      "comparison": "version",
+      "scene": "P1581237",
+      "preset": null,
+      "deltaE00": {
+        "mean": 0.0816,
+        "p99": 0.3716
+      },
+      "deltaE00Unblurred": {
+        "mean": 0.1925,
+        "p99": 1.0857
+      },
+      "evDiff": 0.0007,
+      "saturationRatio": 1.0004,
+      "deltaE00All": {
+        "mean": 0.0909,
+        "p99": 0.4552
+      },
+      "flatFraction": 0.833,
+      "white": {
+        "reference": {
+          "a": null,
+          "b": null
+        },
+        "candidate": {
+          "a": null,
+          "b": null
+        }
+      },
+      "alignment": {
+        "scale": 0.999999,
+        "corr": 1.0
+      },
+      "analysisSize": [
+        1500,
+        1000
+      ],
+      "decoderVersion": "7vs8"
+    },
+    {
+      "label": "decoder-7vs8/P1581243",
+      "kind": "compare",
+      "comparison": "version",
+      "scene": "P1581243",
+      "preset": null,
+      "deltaE00": {
+        "mean": 0.1301,
+        "p99": 0.592
+      },
+      "deltaE00Unblurred": {
+        "mean": 0.3355,
+        "p99": 1.9729
+      },
+      "evDiff": 0.0022,
+      "saturationRatio": 1.0007,
+      "deltaE00All": {
+        "mean": 0.1516,
+        "p99": 0.7955
+      },
+      "flatFraction": 0.6338,
+      "white": {
+        "reference": {
+          "a": 0.316,
+          "b": 0.211
+        },
+        "candidate": {
+          "a": 0.307,
+          "b": 0.181
+        }
+      },
+      "alignment": {
+        "scale": 1.000001,
+        "corr": 1.0
+      },
+      "analysisSize": [
+        1500,
+        1000
+      ],
+      "decoderVersion": "7vs8"
+    },
+    {
+      "label": "decoder-7vs8/P1581255",
+      "kind": "compare",
+      "comparison": "version",
+      "scene": "P1581255",
+      "preset": null,
+      "deltaE00": {
+        "mean": 0.155,
+        "p99": 0.5876
+      },
+      "deltaE00Unblurred": {
+        "mean": 0.404,
+        "p99": 2.0054
+      },
+      "evDiff": 0.0011,
+      "saturationRatio": 1.001,
+      "deltaE00All": {
+        "mean": 0.1667,
+        "p99": 0.742
+      },
+      "flatFraction": 0.5062,
+      "white": {
+        "reference": {
+          "a": 1.29,
+          "b": 0.241
+        },
+        "candidate": {
+          "a": 1.439,
+          "b": 0.329
+        }
+      },
+      "alignment": {
+        "scale": 1.000001,
+        "corr": 1.0
+      },
+      "analysisSize": [
+        1500,
+        1000
+      ],
+      "decoderVersion": "7vs8"
+    },
+    {
+      "label": "decoder-7vs8/P1581256",
+      "kind": "compare",
+      "comparison": "version",
+      "scene": "P1581256",
+      "preset": null,
+      "deltaE00": {
+        "mean": 0.1317,
+        "p99": 0.5346
+      },
+      "deltaE00Unblurred": {
+        "mean": 0.3678,
+        "p99": 1.9351
+      },
+      "evDiff": 0.0019,
+      "saturationRatio": 1.0011,
+      "deltaE00All": {
+        "mean": 0.151,
+        "p99": 0.7599
+      },
+      "flatFraction": 0.53,
+      "white": {
+        "reference": {
+          "a": 0.146,
+          "b": 1.351
+        },
+        "candidate": {
+          "a": 0.149,
+          "b": 1.351
+        }
+      },
+      "alignment": {
+        "scale": 1.000001,
+        "corr": 1.0
+      },
+      "analysisSize": [
+        1500,
+        1000
+      ],
+      "decoderVersion": "7vs8"
+    },
+    {
+      "label": "decoder-7vs8/P1581332",
+      "kind": "compare",
+      "comparison": "version",
+      "scene": "P1581332",
+      "preset": null,
+      "deltaE00": {
+        "mean": 0.2098,
+        "p99": 0.7122
+      },
+      "deltaE00Unblurred": {
+        "mean": 0.4043,
+        "p99": 1.3552
+      },
+      "evDiff": 0.0012,
+      "saturationRatio": 1.0005,
+      "deltaE00All": {
+        "mean": 0.1909,
+        "p99": 0.696
+      },
+      "flatFraction": 0.6803,
+      "white": {
+        "reference": {
+          "a": 1.032,
+          "b": -0.679
+        },
+        "candidate": {
+          "a": 1.088,
+          "b": -0.628
+        }
+      },
+      "alignment": {
+        "scale": 1.000006,
+        "corr": 1.0
+      },
+      "analysisSize": [
+        1500,
+        1000
+      ],
+      "decoderVersion": "7vs8"
+    },
+    {
+      "label": "decoder-7vs8/P1581335",
+      "kind": "compare",
+      "comparison": "version",
+      "scene": "P1581335",
+      "preset": null,
+      "deltaE00": {
+        "mean": 0.2399,
+        "p99": 0.7658
+      },
+      "deltaE00Unblurred": {
+        "mean": 0.5279,
+        "p99": 2.0561
+      },
+      "evDiff": 0.0011,
+      "saturationRatio": 0.9993,
+      "deltaE00All": {
+        "mean": 0.2289,
+        "p99": 0.7546
+      },
+      "flatFraction": 0.5785,
+      "white": {
+        "reference": {
+          "a": 3.91,
+          "b": 2.963
+        },
+        "candidate": {
+          "a": 3.767,
+          "b": 2.861
+        }
+      },
+      "alignment": {
+        "scale": 1.000001,
+        "corr": 0.9999
+      },
+      "analysisSize": [
+        1500,
+        1000
+      ],
+      "decoderVersion": "7vs8"
+    },
+    {
+      "label": "decoder-7vs8/P1581346",
+      "kind": "compare",
+      "comparison": "version",
+      "scene": "P1581346",
+      "preset": null,
+      "deltaE00": {
+        "mean": 0.2356,
+        "p99": 0.8148
+      },
+      "deltaE00Unblurred": {
+        "mean": 0.4754,
+        "p99": 1.632
+      },
+      "evDiff": 0.0008,
+      "saturationRatio": 1.0005,
+      "deltaE00All": {
+        "mean": 0.2174,
+        "p99": 0.7948
+      },
+      "flatFraction": 0.6386,
+      "white": {
+        "reference": {
+          "a": 0.758,
+          "b": 1.305
+        },
+        "candidate": {
+          "a": 0.838,
+          "b": 1.39
+        }
+      },
+      "alignment": {
+        "scale": 1.000001,
+        "corr": 0.9998
+      },
+      "analysisSize": [
+        1500,
+        1000
+      ],
+      "decoderVersion": "7vs8"
+    },
+    {
+      "label": "decoder-7vs8/P1581356",
+      "kind": "compare",
+      "comparison": "version",
+      "scene": "P1581356",
+      "preset": null,
+      "deltaE00": {
+        "mean": 0.2939,
+        "p99": 1.3528
+      },
+      "deltaE00Unblurred": {
+        "mean": 0.5136,
+        "p99": 1.7794
+      },
+      "evDiff": 0.001,
+      "saturationRatio": 1.0016,
+      "deltaE00All": {
+        "mean": 0.2823,
+        "p99": 1.3211
+      },
+      "flatFraction": 0.8812,
+      "white": {
+        "reference": {
+          "a": 4.331,
+          "b": 5.64
+        },
+        "candidate": {
+          "a": 4.327,
+          "b": 5.583
+        }
+      },
+      "alignment": {
+        "scale": 1.0,
+        "corr": 1.0
+      },
+      "analysisSize": [
+        1000,
+        1500
+      ],
+      "decoderVersion": "7vs8"
+    },
+    {
+      "label": "decoder-7vs8/P1581368",
+      "kind": "compare",
+      "comparison": "version",
+      "scene": "P1581368",
+      "preset": null,
+      "deltaE00": {
+        "mean": 0.1696,
+        "p99": 0.6008
+      },
+      "deltaE00Unblurred": {
+        "mean": 0.3524,
+        "p99": 1.2575
+      },
+      "evDiff": 0.0009,
+      "saturationRatio": 1.0004,
+      "deltaE00All": {
+        "mean": 0.1679,
+        "p99": 0.6108
+      },
+      "flatFraction": 0.8686,
+      "white": {
+        "reference": {
+          "a": 4.534,
+          "b": 5.896
+        },
+        "candidate": {
+          "a": 4.548,
+          "b": 5.848
+        }
+      },
+      "alignment": {
+        "scale": 1.0,
+        "corr": 1.0
+      },
+      "analysisSize": [
+        1000,
+        1500
+      ],
+      "decoderVersion": "7vs8"
+    },
+    {
+      "label": "crate-base/P1012822",
+      "kind": "compare",
+      "comparison": "reference",
+      "scene": "P1012822",
+      "preset": null,
+      "deltaE00": {
+        "mean": 1.9682,
+        "p99": 4.3058
+      },
+      "deltaE00Unblurred": {
+        "mean": 2.6576,
+        "p99": 10.1026
+      },
+      "evDiff": -0.0594,
+      "saturationRatio": 0.9021,
+      "deltaE00All": {
+        "mean": 1.8742,
+        "p99": 4.3056
+      },
+      "flatFraction": 0.4479,
+      "white": {
+        "reference": {
+          "a": 2.165,
+          "b": -1.909
+        },
+        "candidate": {
+          "a": 2.411,
+          "b": -2.148
+        }
+      },
+      "normalized": {
+        "method": "display-linear-gain",
+        "deltaE00": {
+          "mean": 1.9079,
+          "p99": 4.3814
+        },
+        "evOffset": null,
+        "gain": 1.031
+      },
+      "alignment": {
+        "scale": 0.999581,
+        "corr": 0.9967
+      },
+      "analysisSize": [
+        1500,
+        1000
+      ],
+      "baseVersion": "apple-ciraw8/linear-prophoto-d50/cal-panasonic-dc-s5-apple-v1+niho-develop@26ce1d252f"
+    },
+    {
+      "label": "crate-base/P1013207",
+      "kind": "compare",
+      "comparison": "reference",
+      "scene": "P1013207",
+      "preset": null,
+      "deltaE00": {
+        "mean": 2.7349,
+        "p99": 6.0131
+      },
+      "deltaE00Unblurred": {
+        "mean": 3.0122,
+        "p99": 7.8059
+      },
+      "evDiff": -0.006,
+      "saturationRatio": 0.8072,
+      "deltaE00All": {
+        "mean": 2.4338,
+        "p99": 4.9245
+      },
+      "flatFraction": 0.2765,
+      "white": {
+        "reference": {
+          "a": 0.249,
+          "b": -0.752
+        },
+        "candidate": {
+          "a": 0.522,
+          "b": -0.095
+        }
+      },
+      "normalized": {
+        "method": "display-linear-gain",
+        "deltaE00": {
+          "mean": 2.7242,
+          "p99": 5.8864
+        },
+        "evOffset": null,
+        "gain": 1.01237
+      },
+      "alignment": {
+        "scale": 1.000009,
+        "corr": 0.9965
+      },
+      "analysisSize": [
+        1500,
+        1000
+      ],
+      "baseVersion": "apple-ciraw8/linear-prophoto-d50/cal-panasonic-dc-s5-apple-v1+niho-develop@26ce1d252f"
+    },
+    {
+      "label": "crate-base/P1013558",
+      "kind": "compare",
+      "comparison": "reference",
+      "scene": "P1013558",
+      "preset": null,
+      "deltaE00": {
+        "mean": 1.6606,
+        "p99": 3.7867
+      },
+      "deltaE00Unblurred": {
+        "mean": 1.9982,
+        "p99": 6.5448
+      },
+      "evDiff": -0.0339,
+      "saturationRatio": 0.9323,
+      "deltaE00All": {
+        "mean": 1.6064,
+        "p99": 3.9015
+      },
+      "flatFraction": 0.622,
+      "white": {
+        "reference": {
+          "a": -0.168,
+          "b": -0.113
+        },
+        "candidate": {
+          "a": -0.192,
+          "b": -0.011
+        }
+      },
+      "normalized": {
+        "method": "display-linear-gain",
+        "deltaE00": {
+          "mean": 1.6099,
+          "p99": 3.8357
+        },
+        "evOffset": null,
+        "gain": 1.01245
+      },
+      "alignment": {
+        "scale": 0.999996,
+        "corr": 0.9971
+      },
+      "analysisSize": [
+        1500,
+        1000
+      ],
+      "baseVersion": "apple-ciraw8/linear-prophoto-d50/cal-panasonic-dc-s5-apple-v1+niho-develop@26ce1d252f"
+    },
+    {
+      "label": "crate-base/P1522877",
+      "kind": "compare",
+      "comparison": "reference",
+      "scene": "P1522877",
+      "preset": null,
+      "deltaE00": {
+        "mean": 0.7222,
+        "p99": 1.9012
+      },
+      "deltaE00Unblurred": {
+        "mean": 1.6119,
+        "p99": 11.4183
+      },
+      "evDiff": -0.0324,
+      "saturationRatio": 0.9931,
+      "deltaE00All": {
+        "mean": 0.9879,
+        "p99": 4.1936
+      },
+      "flatFraction": 0.5959,
+      "white": {
+        "reference": {
+          "a": -0.125,
+          "b": -0.016
+        },
+        "candidate": {
+          "a": -0.175,
+          "b": 0.065
+        }
+      },
+      "normalized": {
+        "method": "display-linear-gain",
+        "deltaE00": {
+          "mean": 0.8524,
+          "p99": 2.0164
+        },
+        "evOffset": null,
+        "gain": 1.01924
+      },
+      "alignment": {
+        "scale": 0.975535,
+        "corr": 0.9916,
+        "radialK": [
+          -0.010681,
+          0.055398
+        ]
+      },
+      "analysisSize": [
+        1500,
+        1000
+      ],
+      "baseVersion": "apple-ciraw8/linear-prophoto-d50/cal-panasonic-dc-s5-apple-v1+niho-develop@26ce1d252f"
+    },
+    {
+      "label": "crate-base/P1524180",
+      "kind": "compare",
+      "comparison": "reference",
+      "scene": "P1524180",
+      "preset": null,
+      "deltaE00": {
+        "mean": 1.289,
+        "p99": 4.5166
+      },
+      "deltaE00Unblurred": {
+        "mean": 2.9532,
+        "p99": 21.2125
+      },
+      "evDiff": -0.0318,
+      "saturationRatio": 0.9666,
+      "deltaE00All": {
+        "mean": 2.0784,
+        "p99": 12.4364
+      },
+      "flatFraction": 0.4411,
+      "white": {
+        "reference": {
+          "a": 1.09,
+          "b": -1.713
+        },
+        "candidate": {
+          "a": 1.207,
+          "b": -1.524
+        }
+      },
+      "normalized": {
+        "method": "display-linear-gain",
+        "deltaE00": {
+          "mean": 1.3137,
+          "p99": 4.5801
+        },
+        "evOffset": null,
+        "gain": 1.02274
+      },
+      "alignment": {
+        "scale": 0.987961,
+        "corr": 0.9517,
+        "radialK": [
+          0.0285,
+          -0.118403
+        ]
+      },
+      "analysisSize": [
+        1500,
+        1000
+      ],
+      "baseVersion": "apple-ciraw8/linear-prophoto-d50/cal-panasonic-dc-s5-apple-v1+niho-develop@26ce1d252f"
+    },
+    {
+      "label": "crate-base/P1524181",
+      "kind": "compare",
+      "comparison": "reference",
+      "scene": "P1524181",
+      "preset": null,
+      "deltaE00": {
+        "mean": 1.3134,
+        "p99": 4.5127
+      },
+      "deltaE00Unblurred": {
+        "mean": 3.0252,
+        "p99": 21.7254
+      },
+      "evDiff": -0.0306,
+      "saturationRatio": 0.9657,
+      "deltaE00All": {
+        "mean": 2.1345,
+        "p99": 12.7091
+      },
+      "flatFraction": 0.4397,
+      "white": {
+        "reference": {
+          "a": 1.15,
+          "b": -1.763
+        },
+        "candidate": {
+          "a": 1.278,
+          "b": -1.567
+        }
+      },
+      "normalized": {
+        "method": "display-linear-gain",
+        "deltaE00": {
+          "mean": 1.336,
+          "p99": 4.5726
+        },
+        "evOffset": null,
+        "gain": 1.02222
+      },
+      "alignment": {
+        "scale": 0.987812,
+        "corr": 0.9499,
+        "radialK": [
+          0.029026,
+          -0.118212
+        ]
+      },
+      "analysisSize": [
+        1500,
+        1000
+      ],
+      "baseVersion": "apple-ciraw8/linear-prophoto-d50/cal-panasonic-dc-s5-apple-v1+niho-develop@26ce1d252f"
+    },
+    {
+      "label": "crate-base/P1581215",
+      "kind": "compare",
+      "comparison": "reference",
+      "scene": "P1581215",
+      "preset": null,
+      "deltaE00": {
+        "mean": 2.5404,
+        "p99": 8.4953
+      },
+      "deltaE00Unblurred": {
+        "mean": 2.8725,
+        "p99": 10.6532
+      },
+      "evDiff": -0.1105,
+      "saturationRatio": 0.8239,
+      "deltaE00All": {
+        "mean": 2.5493,
+        "p99": 8.5041
+      },
+      "flatFraction": 0.8101,
+      "white": {
+        "reference": {
+          "a": -3.479,
+          "b": -5.388
+        },
+        "candidate": {
+          "a": -2.983,
+          "b": -5.786
+        }
+      },
+      "normalized": {
+        "method": "display-linear-gain",
+        "deltaE00": {
+          "mean": 2.7818,
+          "p99": 8.4044
+        },
+        "evOffset": null,
+        "gain": 1.05898
+      },
+      "alignment": {
+        "scale": 0.991282,
+        "corr": 0.9832,
+        "radialK": [
+          -0.009662,
+          0.037373
+        ]
+      },
+      "analysisSize": [
+        1500,
+        1000
+      ],
+      "baseVersion": "apple-ciraw8/linear-prophoto-d50/cal-panasonic-dc-s5-apple-v1+niho-develop@26ce1d252f"
+    },
+    {
+      "label": "crate-base/P1581237",
+      "kind": "compare",
+      "comparison": "reference",
+      "scene": "P1581237",
+      "preset": null,
+      "deltaE00": {
+        "mean": 1.0225,
+        "p99": 4.0627
+      },
+      "deltaE00Unblurred": {
+        "mean": 1.315,
+        "p99": 5.5742
+      },
+      "evDiff": 0.0001,
+      "saturationRatio": 1.009,
+      "deltaE00All": {
+        "mean": 1.0665,
+        "p99": 4.0741
+      },
+      "flatFraction": 0.8242,
+      "white": {
+        "reference": {
+          "a": null,
+          "b": null
+        },
+        "candidate": {
+          "a": null,
+          "b": null
+        }
+      },
+      "normalized": {
+        "method": "display-linear-gain",
+        "deltaE00": {
+          "mean": 1.022,
+          "p99": 4.0723
+        },
+        "evOffset": null,
+        "gain": 0.9993
+      },
+      "alignment": {
+        "scale": 0.972672,
+        "corr": 0.9904,
+        "radialK": [
+          -0.004237,
+          0.050642
+        ]
+      },
+      "analysisSize": [
+        1500,
+        1000
+      ],
+      "baseVersion": "apple-ciraw8/linear-prophoto-d50/cal-panasonic-dc-s5-apple-v1+niho-develop@26ce1d252f"
+    },
+    {
+      "label": "crate-base/P1581243",
+      "kind": "compare",
+      "comparison": "reference",
+      "scene": "P1581243",
+      "preset": null,
+      "deltaE00": {
+        "mean": 0.9314,
+        "p99": 2.8603
+      },
+      "deltaE00Unblurred": {
+        "mean": 2.2354,
+        "p99": 17.3607
+      },
+      "evDiff": -0.0202,
+      "saturationRatio": 1.0628,
+      "deltaE00All": {
+        "mean": 1.5031,
+        "p99": 9.3989
+      },
+      "flatFraction": 0.6039,
+      "white": {
+        "reference": {
+          "a": 0.11,
+          "b": 0.073
+        },
+        "candidate": {
+          "a": 0.181,
+          "b": 0.187
+        }
+      },
+      "normalized": {
+        "method": "display-linear-gain",
+        "deltaE00": {
+          "mean": 0.981,
+          "p99": 2.873
+        },
+        "evOffset": null,
+        "gain": 1.02541
+      },
+      "alignment": {
+        "scale": 0.988035,
+        "corr": 0.955,
+        "radialK": [
+          0.032165,
+          -0.135459
+        ]
+      },
+      "analysisSize": [
+        1500,
+        1000
+      ],
+      "baseVersion": "apple-ciraw8/linear-prophoto-d50/cal-panasonic-dc-s5-apple-v1+niho-develop@26ce1d252f"
+    },
+    {
+      "label": "crate-base/P1581255",
+      "kind": "compare",
+      "comparison": "reference",
+      "scene": "P1581255",
+      "preset": null,
+      "deltaE00": {
+        "mean": 0.9646,
+        "p99": 3.4153
+      },
+      "deltaE00Unblurred": {
+        "mean": 2.4422,
+        "p99": 18.7051
+      },
+      "evDiff": -0.0369,
+      "saturationRatio": 0.9903,
+      "deltaE00All": {
+        "mean": 1.5538,
+        "p99": 9.2687
+      },
+      "flatFraction": 0.4655,
+      "white": {
+        "reference": {
+          "a": 1.421,
+          "b": 0.517
+        },
+        "candidate": {
+          "a": 1.234,
+          "b": 0.354
+        }
+      },
+      "normalized": {
+        "method": "display-linear-gain",
+        "deltaE00": {
+          "mean": 0.9448,
+          "p99": 3.261
+        },
+        "evOffset": null,
+        "gain": 1.02995
+      },
+      "alignment": {
+        "scale": 0.99034,
+        "corr": 0.9759,
+        "radialK": [
+          0.014646,
+          -0.119313
+        ]
+      },
+      "analysisSize": [
+        1500,
+        1000
+      ],
+      "baseVersion": "apple-ciraw8/linear-prophoto-d50/cal-panasonic-dc-s5-apple-v1+niho-develop@26ce1d252f"
+    },
+    {
+      "label": "crate-base/P1581256",
+      "kind": "compare",
+      "comparison": "reference",
+      "scene": "P1581256",
+      "preset": null,
+      "deltaE00": {
+        "mean": 0.9249,
+        "p99": 4.2442
+      },
+      "deltaE00Unblurred": {
+        "mean": 2.4492,
+        "p99": 18.9306
+      },
+      "evDiff": -0.0176,
+      "saturationRatio": 0.9901,
+      "deltaE00All": {
+        "mean": 1.5939,
+        "p99": 8.7874
+      },
+      "flatFraction": 0.4908,
+      "white": {
+        "reference": {
+          "a": 0.304,
+          "b": 1.27
+        },
+        "candidate": {
+          "a": 0.064,
+          "b": 1.454
+        }
+      },
+      "normalized": {
+        "method": "display-linear-gain",
+        "deltaE00": {
+          "mean": 0.9249,
+          "p99": 4.1019
+        },
+        "evOffset": null,
+        "gain": 1.02347
+      },
+      "alignment": {
+        "scale": 0.988162,
+        "corr": 0.972,
+        "radialK": [
+          0.035254,
+          -0.151414
+        ]
+      },
+      "analysisSize": [
+        1500,
+        1000
+      ],
+      "baseVersion": "apple-ciraw8/linear-prophoto-d50/cal-panasonic-dc-s5-apple-v1+niho-develop@26ce1d252f"
+    },
+    {
+      "label": "crate-base/P1581332",
+      "kind": "compare",
+      "comparison": "reference",
+      "scene": "P1581332",
+      "preset": null,
+      "deltaE00": {
+        "mean": 1.0205,
+        "p99": 2.6201
+      },
+      "deltaE00Unblurred": {
+        "mean": 1.3644,
+        "p99": 6.6474
+      },
+      "evDiff": -0.0544,
+      "saturationRatio": 0.9783,
+      "deltaE00All": {
+        "mean": 1.155,
+        "p99": 4.1137
+      },
+      "flatFraction": 0.6647,
+      "white": {
+        "reference": {
+          "a": 1.196,
+          "b": -0.662
+        },
+        "candidate": {
+          "a": 1.006,
+          "b": -0.764
+        }
+      },
+      "normalized": {
+        "method": "display-linear-gain",
+        "deltaE00": {
+          "mean": 0.978,
+          "p99": 2.3742
+        },
+        "evOffset": null,
+        "gain": 1.03948
+      },
+      "alignment": {
+        "scale": 0.972141,
+        "corr": 0.9941,
+        "radialK": [
+          -0.008845,
+          0.062422
+        ]
+      },
+      "analysisSize": [
+        1500,
+        1000
+      ],
+      "baseVersion": "apple-ciraw8/linear-prophoto-d50/cal-panasonic-dc-s5-apple-v1+niho-develop@26ce1d252f"
+    },
+    {
+      "label": "crate-base/P1581335",
+      "kind": "compare",
+      "comparison": "reference",
+      "scene": "P1581335",
+      "preset": null,
+      "deltaE00": {
+        "mean": 1.3763,
+        "p99": 3.9956
+      },
+      "deltaE00Unblurred": {
+        "mean": 2.8975,
+        "p99": 24.2627
+      },
+      "evDiff": -0.0668,
+      "saturationRatio": 0.9716,
+      "deltaE00All": {
+        "mean": 1.6248,
+        "p99": 7.1012
+      },
+      "flatFraction": 0.5517,
+      "white": {
+        "reference": {
+          "a": 4.285,
+          "b": 3.842
+        },
+        "candidate": {
+          "a": 3.442,
+          "b": 3.129
+        }
+      },
+      "normalized": {
+        "method": "display-linear-gain",
+        "deltaE00": {
+          "mean": 1.2067,
+          "p99": 3.6829
+        },
+        "evOffset": null,
+        "gain": 1.04709
+      },
+      "alignment": {
+        "scale": 0.972645,
+        "corr": 0.9746,
+        "radialK": [
+          -0.016567,
+          0.07955
+        ]
+      },
+      "analysisSize": [
+        1500,
+        1000
+      ],
+      "baseVersion": "apple-ciraw8/linear-prophoto-d50/cal-panasonic-dc-s5-apple-v1+niho-develop@26ce1d252f"
+    },
+    {
+      "label": "crate-base/P1581346",
+      "kind": "compare",
+      "comparison": "reference",
+      "scene": "P1581346",
+      "preset": null,
+      "deltaE00": {
+        "mean": 1.2999,
+        "p99": 5.4102
+      },
+      "deltaE00Unblurred": {
+        "mean": 1.8045,
+        "p99": 9.6388
+      },
+      "evDiff": -0.066,
+      "saturationRatio": 0.9738,
+      "deltaE00All": {
+        "mean": 1.4729,
+        "p99": 6.0512
+      },
+      "flatFraction": 0.6204,
+      "white": {
+        "reference": {
+          "a": 1.108,
+          "b": 1.859
+        },
+        "candidate": {
+          "a": 0.566,
+          "b": 0.885
+        }
+      },
+      "normalized": {
+        "method": "display-linear-gain",
+        "deltaE00": {
+          "mean": 1.3764,
+          "p99": 5.1872
+        },
+        "evOffset": null,
+        "gain": 1.04539
+      },
+      "alignment": {
+        "scale": 0.972899,
+        "corr": 0.9847,
+        "radialK": [
+          -0.018101,
+          0.083076
+        ]
+      },
+      "analysisSize": [
+        1500,
+        1000
+      ],
+      "baseVersion": "apple-ciraw8/linear-prophoto-d50/cal-panasonic-dc-s5-apple-v1+niho-develop@26ce1d252f"
+    },
+    {
+      "label": "crate-base/P1581356",
+      "kind": "compare",
+      "comparison": "reference",
+      "scene": "P1581356",
+      "preset": null,
+      "deltaE00": {
+        "mean": 0.9884,
+        "p99": 2.7885
+      },
+      "deltaE00Unblurred": {
+        "mean": 1.297,
+        "p99": 5.4672
+      },
+      "evDiff": -0.0341,
+      "saturationRatio": 0.9688,
+      "deltaE00All": {
+        "mean": 1.1019,
+        "p99": 5.1463
+      },
+      "flatFraction": 0.8672,
+      "white": {
+        "reference": {
+          "a": 4.401,
+          "b": 5.824
+        },
+        "candidate": {
+          "a": 4.223,
+          "b": 5.882
+        }
+      },
+      "normalized": {
+        "method": "display-linear-gain",
+        "deltaE00": {
+          "mean": 0.9276,
+          "p99": 2.8261
+        },
+        "evOffset": null,
+        "gain": 1.0206
+      },
+      "alignment": {
+        "scale": 0.963192,
+        "corr": 0.9736,
+        "radialK": [
+          -0.013853,
+          0.096447
+        ]
+      },
+      "analysisSize": [
+        1000,
+        1500
+      ],
+      "baseVersion": "apple-ciraw8/linear-prophoto-d50/cal-panasonic-dc-s5-apple-v1+niho-develop@26ce1d252f"
+    },
+    {
+      "label": "crate-base/P1581368",
+      "kind": "compare",
+      "comparison": "reference",
+      "scene": "P1581368",
+      "preset": null,
+      "deltaE00": {
+        "mean": 0.8817,
+        "p99": 1.9019
+      },
+      "deltaE00Unblurred": {
+        "mean": 1.28,
+        "p99": 6.4776
+      },
+      "evDiff": -0.0534,
+      "saturationRatio": 0.9821,
+      "deltaE00All": {
+        "mean": 1.006,
+        "p99": 5.1199
+      },
+      "flatFraction": 0.8596,
+      "white": {
+        "reference": {
+          "a": 5.007,
+          "b": 5.639
+        },
+        "candidate": {
+          "a": 4.398,
+          "b": 6.082
+        }
+      },
+      "normalized": {
+        "method": "display-linear-gain",
+        "deltaE00": {
+          "mean": 0.8255,
+          "p99": 1.8252
+        },
+        "evOffset": null,
+        "gain": 1.03819
+      },
+      "alignment": {
+        "scale": 0.96299,
+        "corr": 0.9746,
+        "radialK": [
+          -0.011162,
+          0.094602
+        ]
+      },
+      "analysisSize": [
+        1000,
+        1500
+      ],
+      "baseVersion": "apple-ciraw8/linear-prophoto-d50/cal-panasonic-dc-s5-apple-v1+niho-develop@26ce1d252f"
+    },
+    {
+      "label": "bluesky2/P1012822",
+      "kind": "preset",
+      "comparison": "preset",
+      "scene": "P1012822",
+      "preset": "bluesky2",
+      "deltaE00": {
+        "mean": 13.17,
+        "p99": 23.6411
+      },
+      "deltaE00Unblurred": {
+        "mean": 14.2707,
+        "p99": 26.7169
+      },
+      "evDiff": -0.0464,
+      "saturationRatio": 0.4617,
+      "deltaE00All": {
+        "mean": 14.0122,
+        "p99": 24.5655
+      },
+      "flatFraction": 0.4325,
+      "white": {
+        "reference": {
+          "a": 0.15,
+          "b": 2.499
+        },
+        "candidate": {
+          "a": 1.795,
+          "b": -2.157
+        }
+      },
+      "alignment": {
+        "scale": 0.999599,
+        "corr": 0.9919
+      },
+      "analysisSize": [
+        1500,
+        1000
+      ],
+      "baseVersion": "apple-ciraw8/linear-prophoto-d50/cal-panasonic-dc-s5-apple-v1+niho-develop@26ce1d252f"
+    },
+    {
+      "label": "bluesky2/P1013207",
+      "kind": "preset",
+      "comparison": "preset",
+      "scene": "P1013207",
+      "preset": "bluesky2",
+      "deltaE00": {
+        "mean": 2.7201,
+        "p99": 7.8607
+      },
+      "deltaE00Unblurred": {
+        "mean": 4.1696,
+        "p99": 11.8612
+      },
+      "evDiff": 0.0264,
+      "saturationRatio": 0.7913,
+      "deltaE00All": {
+        "mean": 2.9041,
+        "p99": 7.1029
+      },
+      "flatFraction": 0.2555,
+      "white": {
+        "reference": {
+          "a": -1.097,
+          "b": 0.549
+        },
+        "candidate": {
+          "a": -0.329,
+          "b": 1.381
+        }
+      },
+      "alignment": {
+        "scale": 1.000013,
+        "corr": 0.9959
+      },
+      "analysisSize": [
+        1500,
+        1000
+      ],
+      "baseVersion": "apple-ciraw8/linear-prophoto-d50/cal-panasonic-dc-s5-apple-v1+niho-develop@26ce1d252f"
+    },
+    {
+      "label": "bluesky2/P1013558",
+      "kind": "preset",
+      "comparison": "preset",
+      "scene": "P1013558",
+      "preset": "bluesky2",
+      "deltaE00": {
+        "mean": 2.3484,
+        "p99": 5.6885
+      },
+      "deltaE00Unblurred": {
+        "mean": 3.0168,
+        "p99": 9.9942
+      },
+      "evDiff": 0.0074,
+      "saturationRatio": 0.866,
+      "deltaE00All": {
+        "mean": 2.4889,
+        "p99": 6.0849
+      },
+      "flatFraction": 0.6074,
+      "white": {
+        "reference": {
+          "a": -0.823,
+          "b": 0.363
+        },
+        "candidate": {
+          "a": -0.885,
+          "b": 0.735
+        }
+      },
+      "alignment": {
+        "scale": 0.999999,
+        "corr": 0.9949
+      },
+      "analysisSize": [
+        1500,
+        1000
+      ],
+      "baseVersion": "apple-ciraw8/linear-prophoto-d50/cal-panasonic-dc-s5-apple-v1+niho-develop@26ce1d252f"
+    },
+    {
+      "label": "bluesky2/P1524180",
+      "kind": "preset",
+      "comparison": "preset",
+      "scene": "P1524180",
+      "preset": "bluesky2",
+      "deltaE00": {
+        "mean": 13.2022,
+        "p99": 24.998
+      },
+      "deltaE00Unblurred": {
+        "mean": 14.7287,
+        "p99": 29.4076
+      },
+      "evDiff": -0.055,
+      "saturationRatio": 0.4613,
+      "deltaE00All": {
+        "mean": 14.2596,
+        "p99": 25.246
+      },
+      "flatFraction": 0.4937,
+      "white": {
+        "reference": {
+          "a": 0.003,
+          "b": -0.371
+        },
+        "candidate": {
+          "a": 0.608,
+          "b": -0.699
+        }
+      },
+      "alignment": {
+        "scale": 0.989007,
+        "corr": 0.9511,
+        "radialK": [
+          0.023477,
+          -0.11108
+        ]
+      },
+      "analysisSize": [
+        1500,
+        1000
+      ],
+      "baseVersion": "apple-ciraw8/linear-prophoto-d50/cal-panasonic-dc-s5-apple-v1+niho-develop@26ce1d252f"
+    },
+    {
+      "label": "bluesky2/P1581215",
+      "kind": "preset",
+      "comparison": "preset",
+      "scene": "P1581215",
+      "preset": "bluesky2",
+      "deltaE00": {
+        "mean": 7.6455,
+        "p99": 20.5067
+      },
+      "deltaE00Unblurred": {
+        "mean": 8.4833,
+        "p99": 23.8751
+      },
+      "evDiff": -0.0998,
+      "saturationRatio": 0.6313,
+      "deltaE00All": {
+        "mean": 8.1929,
+        "p99": 22.0094
+      },
+      "flatFraction": 0.7744,
+      "white": {
+        "reference": {
+          "a": -4.156,
+          "b": -1.165
+        },
+        "candidate": {
+          "a": -5.154,
+          "b": -2.623
+        }
+      },
+      "alignment": {
+        "scale": 0.99131,
+        "corr": 0.9862,
+        "radialK": [
+          -0.009782,
+          0.035806
+        ]
+      },
+      "analysisSize": [
+        1500,
+        1000
+      ],
+      "baseVersion": "apple-ciraw8/linear-prophoto-d50/cal-panasonic-dc-s5-apple-v1+niho-develop@26ce1d252f"
+    },
+    {
+      "label": "pastel/P1012822",
+      "kind": "preset",
+      "comparison": "preset",
+      "scene": "P1012822",
+      "preset": "pastel",
+      "deltaE00": {
+        "mean": 2.7721,
+        "p99": 7.8635
+      },
+      "deltaE00Unblurred": {
+        "mean": 4.7052,
+        "p99": 16.601
+      },
+      "evDiff": 0.1035,
+      "saturationRatio": 0.9316,
+      "deltaE00All": {
+        "mean": 2.8141,
+        "p99": 7.2652
+      },
+      "flatFraction": 0.4086,
+      "white": {
+        "reference": {
+          "a": 1.944,
+          "b": -1.241
+        },
+        "candidate": {
+          "a": 2.269,
+          "b": -1.703
+        }
+      },
+      "alignment": {
+        "scale": 0.999599,
+        "corr": 0.9939
+      },
+      "analysisSize": [
+        1500,
+        1000
+      ],
+      "baseVersion": "apple-ciraw8/linear-prophoto-d50/cal-panasonic-dc-s5-apple-v1+niho-develop@26ce1d252f"
+    },
+    {
+      "label": "pastel/P1013207",
+      "kind": "preset",
+      "comparison": "preset",
+      "scene": "P1013207",
+      "preset": "pastel",
+      "deltaE00": {
+        "mean": 2.6972,
+        "p99": 8.2099
+      },
+      "deltaE00Unblurred": {
+        "mean": 4.3719,
+        "p99": 12.3744
+      },
+      "evDiff": 0.0051,
+      "saturationRatio": 0.7896,
+      "deltaE00All": {
+        "mean": 2.8238,
+        "p99": 6.8772
+      },
+      "flatFraction": 0.2385,
+      "white": {
+        "reference": {
+          "a": 0.248,
+          "b": 0.553
+        },
+        "candidate": {
+          "a": 0.129,
+          "b": 0.896
+        }
+      },
+      "alignment": {
+        "scale": 1.000007,
+        "corr": 0.9917
+      },
+      "analysisSize": [
+        1500,
+        1000
+      ],
+      "baseVersion": "apple-ciraw8/linear-prophoto-d50/cal-panasonic-dc-s5-apple-v1+niho-develop@26ce1d252f"
+    },
+    {
+      "label": "pastel/P1013558",
+      "kind": "preset",
+      "comparison": "preset",
+      "scene": "P1013558",
+      "preset": "pastel",
+      "deltaE00": {
+        "mean": 2.2708,
+        "p99": 5.7583
+      },
+      "deltaE00Unblurred": {
+        "mean": 3.1351,
+        "p99": 11.0092
+      },
+      "evDiff": 0.0013,
+      "saturationRatio": 0.9329,
+      "deltaE00All": {
+        "mean": 2.3882,
+        "p99": 5.9447
+      },
+      "flatFraction": 0.5902,
+      "white": {
+        "reference": {
+          "a": -0.953,
+          "b": 0.058
+        },
+        "candidate": {
+          "a": -0.818,
+          "b": -0.264
+        }
+      },
+      "alignment": {
+        "scale": 0.999994,
+        "corr": 0.9907
+      },
+      "analysisSize": [
+        1500,
+        1000
+      ],
+      "baseVersion": "apple-ciraw8/linear-prophoto-d50/cal-panasonic-dc-s5-apple-v1+niho-develop@26ce1d252f"
+    },
+    {
+      "label": "pastel/P1524180",
+      "kind": "preset",
+      "comparison": "preset",
+      "scene": "P1524180",
+      "preset": "pastel",
+      "deltaE00": {
+        "mean": 2.2233,
+        "p99": 7.4446
+      },
+      "deltaE00Unblurred": {
+        "mean": 4.928,
+        "p99": 25.4204
+      },
+      "evDiff": 0.0346,
+      "saturationRatio": 1.0116,
+      "deltaE00All": {
+        "mean": 3.0168,
+        "p99": 15.0867
+      },
+      "flatFraction": 0.4602,
+      "white": {
+        "reference": {
+          "a": 1.25,
+          "b": -1.164
+        },
+        "candidate": {
+          "a": 1.42,
+          "b": -0.832
+        }
+      },
+      "alignment": {
+        "scale": 0.990098,
+        "corr": 0.9422,
+        "radialK": [
+          0.012672,
+          -0.08898
+        ]
+      },
+      "analysisSize": [
+        1500,
+        1000
+      ],
+      "baseVersion": "apple-ciraw8/linear-prophoto-d50/cal-panasonic-dc-s5-apple-v1+niho-develop@26ce1d252f"
+    },
+    {
+      "label": "pastel/P1581215",
+      "kind": "preset",
+      "comparison": "preset",
+      "scene": "P1581215",
+      "preset": "pastel",
+      "deltaE00": {
+        "mean": 4.7482,
+        "p99": 16.3367
+      },
+      "deltaE00Unblurred": {
+        "mean": 5.7411,
+        "p99": 17.311
+      },
+      "evDiff": -0.1198,
+      "saturationRatio": 0.864,
+      "deltaE00All": {
+        "mean": 4.574,
+        "p99": 16.2427
+      },
+      "flatFraction": 0.7486,
+      "white": {
+        "reference": {
+          "a": -5.258,
+          "b": -5.357
+        },
+        "candidate": {
+          "a": -4.776,
+          "b": -4.328
+        }
+      },
+      "alignment": {
+        "scale": 0.991314,
+        "corr": 0.9784,
+        "radialK": [
+          -0.010072,
+          0.036503
+        ]
+      },
+      "analysisSize": [
+        1500,
+        1000
+      ],
+      "baseVersion": "apple-ciraw8/linear-prophoto-d50/cal-panasonic-dc-s5-apple-v1+niho-develop@26ce1d252f"
+    },
+    {
+      "label": "colorful/P1012822",
+      "kind": "preset",
+      "comparison": "preset",
+      "scene": "P1012822",
+      "preset": "colorful",
+      "deltaE00": {
+        "mean": 3.553,
+        "p99": 7.6763
+      },
+      "deltaE00Unblurred": {
+        "mean": 4.0942,
+        "p99": 13.6868
+      },
+      "evDiff": -0.0045,
+      "saturationRatio": 0.8495,
+      "deltaE00All": {
+        "mean": 3.2852,
+        "p99": 7.4907
+      },
+      "flatFraction": 0.4272,
+      "white": {
+        "reference": {
+          "a": 1.643,
+          "b": -1.51
+        },
+        "candidate": {
+          "a": 1.084,
+          "b": -3.35
+        }
+      },
+      "alignment": {
+        "scale": 0.999624,
+        "corr": 0.995
+      },
+      "analysisSize": [
+        1500,
+        1000
+      ],
+      "baseVersion": "apple-ciraw8/linear-prophoto-d50/cal-panasonic-dc-s5-apple-v1+niho-develop@26ce1d252f"
+    },
+    {
+      "label": "colorful/P1013207",
+      "kind": "preset",
+      "comparison": "preset",
+      "scene": "P1013207",
+      "preset": "colorful",
+      "deltaE00": {
+        "mean": 3.1661,
+        "p99": 7.4574
+      },
+      "deltaE00Unblurred": {
+        "mean": 3.801,
+        "p99": 10.5813
+      },
+      "evDiff": -0.0169,
+      "saturationRatio": 0.8258,
+      "deltaE00All": {
+        "mean": 3.2189,
+        "p99": 7.9076
+      },
+      "flatFraction": 0.2642,
+      "white": {
+        "reference": {
+          "a": -0.04,
+          "b": -0.737
+        },
+        "candidate": {
+          "a": -0.333,
+          "b": 0.002
+        }
+      },
+      "alignment": {
+        "scale": 1.000022,
+        "corr": 0.9932
+      },
+      "analysisSize": [
+        1500,
+        1000
+      ],
+      "baseVersion": "apple-ciraw8/linear-prophoto-d50/cal-panasonic-dc-s5-apple-v1+niho-develop@26ce1d252f"
+    },
+    {
+      "label": "colorful/P1013558",
+      "kind": "preset",
+      "comparison": "preset",
+      "scene": "P1013558",
+      "preset": "colorful",
+      "deltaE00": {
+        "mean": 2.6837,
+        "p99": 5.826
+      },
+      "deltaE00Unblurred": {
+        "mean": 3.1131,
+        "p99": 9.6701
+      },
+      "evDiff": -0.0695,
+      "saturationRatio": 0.8881,
+      "deltaE00All": {
+        "mean": 2.6837,
+        "p99": 6.5648
+      },
+      "flatFraction": 0.5996,
+      "white": {
+        "reference": {
+          "a": -0.918,
+          "b": -1.528
+        },
+        "candidate": {
+          "a": -0.897,
+          "b": -1.342
+        }
+      },
+      "alignment": {
+        "scale": 1.000012,
+        "corr": 0.9907
+      },
+      "analysisSize": [
+        1500,
+        1000
+      ],
+      "baseVersion": "apple-ciraw8/linear-prophoto-d50/cal-panasonic-dc-s5-apple-v1+niho-develop@26ce1d252f"
+    },
+    {
+      "label": "colorful/P1524180",
+      "kind": "preset",
+      "comparison": "preset",
+      "scene": "P1524180",
+      "preset": "colorful",
+      "deltaE00": {
+        "mean": 2.3641,
+        "p99": 6.6548
+      },
+      "deltaE00Unblurred": {
+        "mean": 2.7446,
+        "p99": 9.8737
+      },
+      "evDiff": 0.0048,
+      "saturationRatio": 0.9957,
+      "deltaE00All": {
+        "mean": 2.3355,
+        "p99": 6.8809
+      },
+      "flatFraction": 0.4812,
+      "white": {
+        "reference": {
+          "a": 1.549,
+          "b": -1.686
+        },
+        "candidate": {
+          "a": 0.68,
+          "b": -2.338
+        }
+      },
+      "alignment": {
+        "scale": 0.999638,
+        "corr": 0.9964
+      },
+      "analysisSize": [
+        1500,
+        1000
+      ],
+      "baseVersion": "apple-ciraw8/linear-prophoto-d50/cal-panasonic-dc-s5-apple-v1+niho-develop@26ce1d252f"
+    },
+    {
+      "label": "colorful/P1581215",
+      "kind": "preset",
+      "comparison": "preset",
+      "scene": "P1581215",
+      "preset": "colorful",
+      "deltaE00": {
+        "mean": 5.3463,
+        "p99": 16.0645
+      },
+      "deltaE00Unblurred": {
+        "mean": 5.2502,
+        "p99": 16.222
+      },
+      "evDiff": -0.0417,
+      "saturationRatio": 0.7748,
+      "deltaE00All": {
+        "mean": 5.0683,
+        "p99": 16.0022
+      },
+      "flatFraction": 0.7904,
+      "white": {
+        "reference": {
+          "a": -4.809,
+          "b": -4.768
+        },
+        "candidate": {
+          "a": -4.099,
+          "b": -4.606
+        }
+      },
+      "alignment": {
+        "scale": 1.000156,
+        "corr": 0.99
+      },
+      "analysisSize": [
+        1500,
+        1000
+      ],
+      "baseVersion": "apple-ciraw8/linear-prophoto-d50/cal-panasonic-dc-s5-apple-v1+niho-develop@26ce1d252f"
+    },
+    {
+      "label": "preset:bluesky2",
+      "kind": "preset-summary",
+      "preset": "bluesky2",
+      "scenes": [
+        "P1012822",
+        "P1013207",
+        "P1013558",
+        "P1524180",
+        "P1581215"
+      ],
+      "deltaE00": {
+        "mean": 7.8172,
+        "p99": 24.998
+      },
+      "worstScene": "P1524180",
+      "evDiff": -0.0335,
+      "saturationRatio": 0.6423,
+      "baseVersion": "apple-ciraw8/linear-prophoto-d50/cal-panasonic-dc-s5-apple-v1+niho-develop@26ce1d252f"
+    },
+    {
+      "label": "preset:pastel",
+      "kind": "preset-summary",
+      "preset": "pastel",
+      "scenes": [
+        "P1012822",
+        "P1013207",
+        "P1013558",
+        "P1524180",
+        "P1581215"
+      ],
+      "deltaE00": {
+        "mean": 2.9423,
+        "p99": 16.3367
+      },
+      "worstScene": "P1581215",
+      "evDiff": 0.0049,
+      "saturationRatio": 0.9059,
+      "baseVersion": "apple-ciraw8/linear-prophoto-d50/cal-panasonic-dc-s5-apple-v1+niho-develop@26ce1d252f"
+    },
+    {
+      "label": "preset:colorful",
+      "kind": "preset-summary",
+      "preset": "colorful",
+      "scenes": [
+        "P1012822",
+        "P1013207",
+        "P1013558",
+        "P1524180",
+        "P1581215"
+      ],
+      "deltaE00": {
+        "mean": 3.4226,
+        "p99": 16.0645
+      },
+      "worstScene": "P1581215",
+      "evDiff": -0.0256,
+      "saturationRatio": 0.8668,
+      "baseVersion": "apple-ciraw8/linear-prophoto-d50/cal-panasonic-dc-s5-apple-v1+niho-develop@26ce1d252f"
+    }
+  ],
+  "gates": {
+    "overall": "fail",
+    "gates": [
+      {
+        "id": "stage1.preset",
+        "stage": 1,
+        "label": "プリセットの近さ（bluesky2・pastel・colorful の 3 本とも）",
+        "blocking": true,
+        "thresholds": {
+          "mean": 3.0,
+          "p99": 8.0
+        },
+        "status": "fail",
+        "details": [
+          {
+            "preset": "bluesky2",
+            "mean": 7.8172,
+            "p99": 24.998,
+            "required": true,
+            "status": "fail"
+          },
+          {
+            "preset": "pastel",
+            "mean": 2.9423,
+            "p99": 16.3367,
+            "required": true,
+            "status": "fail"
+          },
+          {
+            "preset": "colorful",
+            "mean": 3.4226,
+            "p99": 16.0645,
+            "required": true,
+            "status": "fail"
+          }
+        ],
+        "summary": "bluesky2 7.8172/24.998 fail; pastel 2.9423/16.3367 fail; colorful 3.4226/16.0645 fail"
+      },
+      {
+        "id": "stage1.cameraJpeg",
+        "stage": 1,
+        "label": "カメラ JPEG との差（目安）",
+        "blocking": false,
+        "thresholds": {
+          "mean": 4.0
+        },
+        "status": "warn",
+        "details": [
+          {
+            "label": "camjpeg/P1012822",
+            "mean": 2.4211,
+            "status": "pass"
+          },
+          {
+            "label": "camjpeg/P1013207",
+            "mean": 2.4788,
+            "status": "pass"
+          },
+          {
+            "label": "camjpeg/P1013558",
+            "mean": 2.3583,
+            "status": "pass"
+          },
+          {
+            "label": "camjpeg/P1522877",
+            "mean": 1.2725,
+            "status": "pass"
+          },
+          {
+            "label": "camjpeg/P1524180",
+            "mean": 3.8524,
+            "status": "pass"
+          },
+          {
+            "label": "camjpeg/P1524181",
+            "mean": 3.8223,
+            "status": "pass"
+          },
+          {
+            "label": "camjpeg/P1581215",
+            "mean": 7.3352,
+            "status": "warn"
+          },
+          {
+            "label": "camjpeg/P1581237",
+            "mean": 4.9957,
+            "status": "warn"
+          },
+          {
+            "label": "camjpeg/P1581243",
+            "mean": 6.5714,
+            "status": "warn"
+          },
+          {
+            "label": "camjpeg/P1581255",
+            "mean": 3.2868,
+            "status": "pass"
+          },
+          {
+            "label": "camjpeg/P1581256",
+            "mean": 4.9488,
+            "status": "warn"
+          },
+          {
+            "label": "camjpeg/P1581332",
+            "mean": 2.2282,
+            "status": "pass"
+          },
+          {
+            "label": "camjpeg/P1581335",
+            "mean": 2.8518,
+            "status": "pass"
+          },
+          {
+            "label": "camjpeg/P1581346",
+            "mean": 2.295,
+            "status": "pass"
+          },
+          {
+            "label": "camjpeg/P1581356",
+            "mean": 3.9448,
+            "status": "pass"
+          },
+          {
+            "label": "camjpeg/P1581368",
+            "mean": 5.5363,
+            "status": "warn"
+          }
+        ],
+        "summary": "16 件・最大 mean 7.3352（基準 ≤ 4.0）"
+      },
+      {
+        "id": "stage1.versionDrift",
+        "stage": 1,
+        "label": "decoderVersion・baseVersion またぎの差",
+        "blocking": true,
+        "thresholds": {
+          "mean": 0.5
+        },
+        "status": "pass",
+        "details": [
+          {
+            "label": "decoder-7vs8/P1012822",
+            "mean": 0.2284,
+            "status": "pass"
+          },
+          {
+            "label": "decoder-7vs8/P1013207",
+            "mean": 0.1923,
+            "status": "pass"
+          },
+          {
+            "label": "decoder-7vs8/P1013558",
+            "mean": 0.0759,
+            "status": "pass"
+          },
+          {
+            "label": "decoder-7vs8/P1522877",
+            "mean": 0.0886,
+            "status": "pass"
+          },
+          {
+            "label": "decoder-7vs8/P1524180",
+            "mean": 0.3214,
+            "status": "pass"
+          },
+          {
+            "label": "decoder-7vs8/P1524181",
+            "mean": 0.3225,
+            "status": "pass"
+          },
+          {
+            "label": "decoder-7vs8/P1581215",
+            "mean": 0.2057,
+            "status": "pass"
+          },
+          {
+            "label": "decoder-7vs8/P1581237",
+            "mean": 0.0816,
+            "status": "pass"
+          },
+          {
+            "label": "decoder-7vs8/P1581243",
+            "mean": 0.1301,
+            "status": "pass"
+          },
+          {
+            "label": "decoder-7vs8/P1581255",
+            "mean": 0.155,
+            "status": "pass"
+          },
+          {
+            "label": "decoder-7vs8/P1581256",
+            "mean": 0.1317,
+            "status": "pass"
+          },
+          {
+            "label": "decoder-7vs8/P1581332",
+            "mean": 0.2098,
+            "status": "pass"
+          },
+          {
+            "label": "decoder-7vs8/P1581335",
+            "mean": 0.2399,
+            "status": "pass"
+          },
+          {
+            "label": "decoder-7vs8/P1581346",
+            "mean": 0.2356,
+            "status": "pass"
+          },
+          {
+            "label": "decoder-7vs8/P1581356",
+            "mean": 0.2939,
+            "status": "pass"
+          },
+          {
+            "label": "decoder-7vs8/P1581368",
+            "mean": 0.1696,
+            "status": "pass"
+          }
+        ],
+        "summary": "16 件・最大 mean 0.3225（基準 ≤ 0.5）"
+      },
+      {
+        "id": "stage2.chart",
+        "stage": 2,
+        "label": "チャート ΔE00（光源 2 つとも）",
+        "blocking": true,
+        "thresholds": {
+          "mean": 2.0,
+          "max": 5.0
+        },
+        "status": "not-evaluated",
+        "details": [],
+        "summary": "chart 結果が無い"
+      },
+      {
+        "id": "stage2.crossCamera",
+        "stage": 2,
+        "label": "カメラ間の差",
+        "blocking": true,
+        "thresholds": {
+          "mean": 2.0
+        },
+        "status": "not-evaluated",
+        "details": [],
+        "summary": "--kind cross-camera の compare 結果が無い"
+      }
+    ]
+  }
+}

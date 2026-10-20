@@ -1,0 +1,11 @@
+{
+  "schema": "niho-develop-calibration-registry/v1",
+  "track": "apple",
+  "$comment": "本番のワーカー（S4b #17034）が作業コピーに当てる土台 A の機種別補正。機種ごとに 1 件だけ。file はこのフォルダからの相対パス。lens.mode は apple か embedded（off は書かない。owner 2026-09-29「レンズ補正は常にオン」）。fallback は登録の無い機種に当てる汎用の補正（#18398。calibrate/fit_generic.py の leave-one-out の gate を通したもの。decoderVersion 8 の RAW だけ・lens.mode は apple）。版を差し替えたら作業コピーの baseVersion が変わり、ready な作業コピーは ops:requeue-superseded-photo-cloud-work で作り直す（ops/runbooks/photo-cloud-work-worker.md）。",
+  "cameras": [
+    { "make": "Panasonic", "model": "DC-S5", "file": "panasonic-dc-s5/apple-v4.json" },
+    { "make": "SONY", "model": "ZV-E10M2", "file": "sony-zv-e10m2/apple-v3.json" },
+    { "make": "SONY", "model": "ILME-FX30", "file": "sony-ilme-fx30/apple-v1.json" }
+  ],
+  "fallback": { "file": "generic/apple-v1.json" }
+}

@@ -212,7 +212,7 @@ fn artifact_meta_matches_the_worker_allowlist() {
       "_source": {
         "recipe": "signed",
         "requestedLongEdge": "full",
-        "calibrationProvenance": { "sha256": "a", "matrix": "owned", "recipe": "signed", "path": "/private/x" }
+        "calibrationProvenance": { "sha256": "a", "matrix": "owned", "recipe": "signed", "path": "/test-data/hidden/x" }
       }
     }),
     "arw",

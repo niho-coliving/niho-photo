@@ -1,0 +1,842 @@
+{
+ "source": "photobench-engine 0.1.0+f2f5c87a94de presetSettings (base omitted = EditSettings.neutral)",
+ "presets": [
+  {
+   "id": "niho-bluesky2",
+   "name": "niho-preset bluesky2",
+   "settings": {
+    "contrast": -6,
+    "exposure": 0.42,
+    "relativeTint": 0,
+    "parametricShadows": -21,
+    "parametricHighlightSplit": 75,
+    "parametricDarks": 21,
+    "toneCurves": [
+     {
+      "points": [
+       {
+        "x": 0,
+        "y": 0
+       },
+       {
+        "x": 0.24705882352941178,
+        "y": 0.2196078431372549
+       },
+       {
+        "x": 1,
+        "y": 1
+       }
+      ],
+      "channel": "blue"
+     },
+     {
+      "points": [
+       {
+        "x": 0,
+        "y": 0
+       },
+       {
+        "x": 1,
+        "y": 1
+       }
+      ],
+      "channel": "green"
+     },
+     {
+      "points": [
+       {
+        "x": 0,
+        "y": 0
+       },
+       {
+        "x": 1,
+        "y": 1
+       }
+      ],
+      "channel": "red"
+     },
+     {
+      "points": [
+       {
+        "x": 0,
+        "y": 0.0784313725490196
+       },
+       {
+        "x": 0.16470588235294117,
+        "y": 0.11764705882352941
+       },
+       {
+        "x": 0.27450980392156865,
+        "y": 0.2627450980392157
+       },
+       {
+        "x": 0.47058823529411764,
+        "y": 0.5137254901960784
+       },
+       {
+        "x": 0.7764705882352941,
+        "y": 0.8196078431372549
+       },
+       {
+        "x": 1,
+        "y": 1
+       }
+      ],
+      "channel": "rgb"
+     }
+    ],
+    "relativeTemperature": 0,
+    "dehaze": 0,
+    "whites": 6,
+    "clarity": 0,
+    "parametricMidtoneSplit": 50,
+    "parametricShadowSplit": 25,
+    "texture": 12,
+    "vibrance": 21,
+    "calibration": {
+     "redHue": 0,
+     "greenHue": 8,
+     "blueSaturation": 23,
+     "greenSaturation": -18,
+     "redSaturation": 0,
+     "shadowTint": 0,
+     "blueHue": -6
+    },
+    "parametricHighlights": 0,
+    "whiteBalance": {
+     "incrementalTemperature": 0,
+     "mode": "custom",
+     "incrementalTint": 0
+    },
+    "shadows": 20,
+    "blacks": 90,
+    "curveRefineSaturation": 100,
+    "colorGrading": {
+     "highlight": {
+      "hue": 0,
+      "saturation": 0,
+      "luminance": 0
+     },
+     "blending": 100,
+     "shadow": {
+      "hue": 250,
+      "saturation": 13,
+      "luminance": 0
+     },
+     "balance": 0,
+     "global": {
+      "hue": 0,
+      "saturation": 0,
+      "luminance": 0
+     },
+     "midtone": {
+      "hue": 0,
+      "saturation": 0,
+      "luminance": 0
+     }
+    },
+    "saturation": 10,
+    "hsl": [
+     "green",
+     {
+      "hue": 12,
+      "saturation": -23,
+      "luminance": 0
+     },
+     "blue",
+     {
+      "hue": -14,
+      "saturation": 14,
+      "luminance": 17
+     },
+     "aqua",
+     {
+      "hue": 0,
+      "saturation": 14,
+      "luminance": 0
+     },
+     "orange",
+     {
+      "hue": 0,
+      "saturation": 10,
+      "luminance": 0
+     },
+     "yellow",
+     {
+      "hue": 34,
+      "saturation": -21,
+      "luminance": 0
+     }
+    ],
+    "highlights": -59,
+    "parametricLights": 0
+   },
+   "unsupported": [
+    "AutoLateralCA",
+    "CameraProfile",
+    "ColorGradeGlobalLum",
+    "ColorGradeMidtoneLum",
+    "ColorNoiseReduction",
+    "ConvertToGrayscale",
+    "CropConstrainToWarp",
+    "DefringeGreenAmount",
+    "DefringeGreenHueHi",
+    "DefringeGreenHueLo",
+    "DefringePurpleAmount",
+    "DefringePurpleHueHi",
+    "DefringePurpleHueLo",
+    "GrainAmount",
+    "IncrementalTemperature",
+    "IncrementalTint",
+    "LensManualDistortionAmount",
+    "LuminanceSmoothing",
+    "OverrideLookVignette",
+    "PostCropVignetteAmount",
+    "Sharpness",
+    "VignetteAmount"
+   ]
+  },
+  {
+   "id": "niho-colorful",
+   "name": "niho-priset_colorful",
+   "settings": {
+    "contrast": -37,
+    "exposure": 0.56,
+    "relativeTint": 0,
+    "parametricShadows": 0,
+    "parametricHighlightSplit": 75,
+    "toneCurves": [
+     {
+      "points": [
+       {
+        "x": 0,
+        "y": 0
+       },
+       {
+        "x": 0.25882352941176473,
+        "y": 0.2
+       },
+       {
+        "x": 0.7647058823529411,
+        "y": 0.8274509803921568
+       },
+       {
+        "x": 1,
+        "y": 1
+       }
+      ],
+      "channel": "blue"
+     },
+     {
+      "points": [
+       {
+        "x": 0,
+        "y": 0
+       },
+       {
+        "x": 0.2627450980392157,
+        "y": 0.21568627450980393
+       },
+       {
+        "x": 0.7764705882352941,
+        "y": 0.8117647058823529
+       },
+       {
+        "x": 1,
+        "y": 1
+       }
+      ],
+      "channel": "green"
+     },
+     {
+      "points": [
+       {
+        "x": 0,
+        "y": 0
+       },
+       {
+        "x": 0.25882352941176473,
+        "y": 0.20392156862745098
+       },
+       {
+        "x": 0.7372549019607844,
+        "y": 0.7647058823529411
+       },
+       {
+        "x": 1,
+        "y": 1
+       }
+      ],
+      "channel": "red"
+     },
+     {
+      "points": [
+       {
+        "x": 0,
+        "y": 0.047058823529411764
+       },
+       {
+        "x": 0.17254901960784313,
+        "y": 0.1607843137254902
+       },
+       {
+        "x": 0.36470588235294116,
+        "y": 0.35294117647058826
+       },
+       {
+        "x": 0.615686274509804,
+        "y": 0.6941176470588235
+       },
+       {
+        "x": 0.8392156862745098,
+        "y": 0.9098039215686274
+       },
+       {
+        "x": 1,
+        "y": 1
+       }
+      ],
+      "channel": "rgb"
+     }
+    ],
+    "parametricDarks": 0,
+    "relativeTemperature": 0,
+    "dehaze": 0,
+    "whites": -53,
+    "clarity": 0,
+    "parametricMidtoneSplit": 50,
+    "parametricShadowSplit": 25,
+    "texture": 0,
+    "calibration": {
+     "redHue": 0,
+     "greenSaturation": 0,
+     "shadowTint": 0,
+     "greenHue": 0,
+     "redSaturation": 0,
+     "blueHue": 0,
+     "blueSaturation": 0
+    },
+    "vibrance": 15,
+    "parametricHighlights": 0,
+    "whiteBalance": {
+     "mode": "asShot"
+    },
+    "curveRefineSaturation": 100,
+    "blacks": 95,
+    "shadows": 37,
+    "colorGrading": {
+     "highlight": {
+      "hue": 0,
+      "saturation": 0,
+      "luminance": 0
+     },
+     "blending": 50,
+     "shadow": {
+      "hue": 0,
+      "saturation": 0,
+      "luminance": 0
+     },
+     "balance": 0,
+     "global": {
+      "hue": 0,
+      "saturation": 0,
+      "luminance": 0
+     },
+     "midtone": {
+      "hue": 0,
+      "saturation": 0,
+      "luminance": 0
+     }
+    },
+    "saturation": 0,
+    "hsl": [
+     "green",
+     {
+      "hue": 18,
+      "saturation": -33,
+      "luminance": 21
+     },
+     "yellow",
+     {
+      "hue": 15,
+      "saturation": -18,
+      "luminance": 25
+     },
+     "orange",
+     {
+      "hue": 0,
+      "saturation": -13,
+      "luminance": 16
+     },
+     "blue",
+     {
+      "hue": -15,
+      "saturation": 8,
+      "luminance": 0
+     }
+    ],
+    "highlights": -88,
+    "parametricLights": 0
+   },
+   "unsupported": [
+    "AutoLateralCA",
+    "ColorGradeGlobalLum",
+    "ColorGradeMidtoneLum",
+    "ColorNoiseReduction",
+    "ColorNoiseReductionDetail",
+    "ColorNoiseReductionSmoothness",
+    "DefringeGreenAmount",
+    "DefringeGreenHueHi",
+    "DefringeGreenHueLo",
+    "DefringePurpleAmount",
+    "DefringePurpleHueHi",
+    "DefringePurpleHueLo",
+    "GrainAmount",
+    "LensProfileEnable",
+    "LensProfileSetup",
+    "LuminanceSmoothing",
+    "OverrideLookVignette",
+    "PostCropVignetteAmount",
+    "SharpenDetail",
+    "SharpenEdgeMasking",
+    "SharpenRadius",
+    "Sharpness",
+    "Look.Amount",
+    "Look.Copyright",
+    "Look.Name",
+    "Look.Stubbed",
+    "Look.SupportsAmount",
+    "Look.SupportsMonochrome",
+    "Look.SupportsOutputReferred",
+    "Look.UUID"
+   ]
+  },
+  {
+   "id": "niho-night",
+   "name": "niho-preset night",
+   "settings": {
+    "contrast": -43,
+    "exposure": 0.83,
+    "relativeTint": 0,
+    "parametricShadows": 0,
+    "parametricHighlightSplit": 75,
+    "toneCurves": [
+     {
+      "points": [
+       {
+        "y": 0,
+        "x": 0
+       },
+       {
+        "y": 0.2,
+        "x": 0.27058823529411763
+       },
+       {
+        "y": 0.4823529411764706,
+        "x": 0.5019607843137255
+       },
+       {
+        "y": 0.6980392156862745,
+        "x": 0.6274509803921569
+       },
+       {
+        "y": 0.9058823529411765,
+        "x": 0.8156862745098039
+       },
+       {
+        "y": 1,
+        "x": 1
+       }
+      ],
+      "channel": "blue"
+     },
+     {
+      "points": [
+       {
+        "y": 0,
+        "x": 0
+       },
+       {
+        "y": 0.20784313725490197,
+        "x": 0.2784313725490196
+       },
+       {
+        "y": 0.5058823529411764,
+        "x": 0.5058823529411764
+       },
+       {
+        "y": 0.8627450980392157,
+        "x": 0.7803921568627451
+       },
+       {
+        "y": 1,
+        "x": 1
+       }
+      ],
+      "channel": "green"
+     },
+     {
+      "points": [
+       {
+        "y": 0,
+        "x": 0
+       },
+       {
+        "y": 0.19607843137254902,
+        "x": 0.2784313725490196
+       },
+       {
+        "y": 0.5019607843137255,
+        "x": 0.5019607843137255
+       },
+       {
+        "y": 0.8313725490196079,
+        "x": 0.7411764705882353
+       },
+       {
+        "y": 1,
+        "x": 1
+       }
+      ],
+      "channel": "red"
+     },
+     {
+      "points": [
+       {
+        "y": 0.06274509803921569,
+        "x": 0
+       },
+       {
+        "y": 0.12549019607843137,
+        "x": 0.1568627450980392
+       },
+       {
+        "y": 0.36470588235294116,
+        "x": 0.37254901960784315
+       },
+       {
+        "y": 0.6274509803921569,
+        "x": 0.592156862745098
+       },
+       {
+        "y": 0.8627450980392157,
+        "x": 0.8235294117647058
+       },
+       {
+        "y": 1,
+        "x": 1
+       }
+      ],
+      "channel": "rgb"
+     }
+    ],
+    "parametricDarks": 0,
+    "relativeTemperature": 0,
+    "dehaze": 7,
+    "whites": -83,
+    "clarity": 0,
+    "parametricMidtoneSplit": 50,
+    "parametricShadowSplit": 25,
+    "texture": 9,
+    "calibration": {
+     "redSaturation": 0,
+     "greenSaturation": -26,
+     "blueSaturation": 19,
+     "redHue": 0,
+     "blueHue": -11,
+     "greenHue": 19,
+     "shadowTint": 0
+    },
+    "vibrance": 0,
+    "parametricHighlights": 0,
+    "whiteBalance": {
+     "tint": 13,
+     "mode": "custom",
+     "temperature": 6214
+    },
+    "curveRefineSaturation": 100,
+    "blacks": 89,
+    "shadows": 44,
+    "colorGrading": {
+     "blending": 50,
+     "balance": 0,
+     "highlight": {
+      "hue": 186,
+      "saturation": 10,
+      "luminance": 0
+     },
+     "midtone": {
+      "hue": 0,
+      "saturation": 0,
+      "luminance": 0
+     },
+     "shadow": {
+      "hue": 66,
+      "saturation": 13,
+      "luminance": 0
+     },
+     "global": {
+      "hue": 0,
+      "saturation": 0,
+      "luminance": 0
+     }
+    },
+    "saturation": 0,
+    "hsl": [
+     "red",
+     {
+      "hue": 0,
+      "saturation": -25,
+      "luminance": 0
+     },
+     "orange",
+     {
+      "hue": 0,
+      "saturation": -25,
+      "luminance": 4
+     },
+     "aqua",
+     {
+      "hue": 0,
+      "saturation": -37,
+      "luminance": 0
+     },
+     "purple",
+     {
+      "hue": 0,
+      "saturation": -30,
+      "luminance": 0
+     },
+     "magenta",
+     {
+      "hue": 0,
+      "saturation": -25,
+      "luminance": 0
+     },
+     "green",
+     {
+      "hue": 0,
+      "saturation": -23,
+      "luminance": 0
+     },
+     "blue",
+     {
+      "hue": 0,
+      "saturation": -16,
+      "luminance": 0
+     },
+     "yellow",
+     {
+      "hue": 0,
+      "saturation": -20,
+      "luminance": 0
+     }
+    ],
+    "highlights": -87,
+    "parametricLights": 0
+   },
+   "unsupported": [
+    "AutoLateralCA",
+    "CameraProfile",
+    "ColorGradeGlobalLum",
+    "ColorGradeMidtoneLum",
+    "ColorNoiseReduction",
+    "ColorNoiseReductionDetail",
+    "ColorNoiseReductionSmoothness",
+    "ConvertToGrayscale",
+    "DefringeGreenAmount",
+    "DefringeGreenHueHi",
+    "DefringeGreenHueLo",
+    "DefringePurpleAmount",
+    "DefringePurpleHueHi",
+    "DefringePurpleHueLo",
+    "GrainAmount",
+    "LensManualDistortionAmount",
+    "LuminanceNoiseReductionContrast",
+    "LuminanceNoiseReductionDetail",
+    "LuminanceSmoothing",
+    "OverrideLookVignette",
+    "PostCropVignetteAmount",
+    "SharpenDetail",
+    "SharpenEdgeMasking",
+    "SharpenRadius",
+    "Sharpness",
+    "VignetteAmount"
+   ]
+  },
+  {
+   "id": "niho-pastel",
+   "name": "niho-preset pastel",
+   "settings": {
+    "contrast": -11,
+    "exposure": 0.37,
+    "relativeTint": 0,
+    "parametricShadows": -43,
+    "parametricHighlightSplit": 75,
+    "toneCurves": [
+     {
+      "points": [
+       {
+        "x": 0,
+        "y": 0
+       },
+       {
+        "x": 1,
+        "y": 1
+       }
+      ],
+      "channel": "blue"
+     },
+     {
+      "points": [
+       {
+        "x": 0,
+        "y": 0
+       },
+       {
+        "x": 1,
+        "y": 1
+       }
+      ],
+      "channel": "green"
+     },
+     {
+      "points": [
+       {
+        "x": 0,
+        "y": 0
+       },
+       {
+        "x": 1,
+        "y": 1
+       }
+      ],
+      "channel": "red"
+     },
+     {
+      "points": [
+       {
+        "x": 0.00784313725490196,
+        "y": 0.10980392156862745
+       },
+       {
+        "x": 0.13725490196078433,
+        "y": 0.10980392156862745
+       },
+       {
+        "x": 0.3058823529411765,
+        "y": 0.2901960784313726
+       },
+       {
+        "x": 0.4666666666666667,
+        "y": 0.49019607843137253
+       },
+       {
+        "x": 0.7647058823529411,
+        "y": 0.792156862745098
+       },
+       {
+        "x": 1,
+        "y": 1
+       }
+      ],
+      "channel": "rgb"
+     }
+    ],
+    "parametricDarks": 38,
+    "relativeTemperature": 0,
+    "dehaze": 7,
+    "whites": -30,
+    "clarity": 0,
+    "parametricMidtoneSplit": 50,
+    "parametricShadowSplit": 25,
+    "texture": 26,
+    "calibration": {
+     "redHue": 0,
+     "redSaturation": 0,
+     "greenHue": 0,
+     "blueHue": 0,
+     "greenSaturation": 0,
+     "shadowTint": 0,
+     "blueSaturation": 0
+    },
+    "vibrance": 24,
+    "parametricHighlights": -25,
+    "whiteBalance": {
+     "mode": "asShot"
+    },
+    "curveRefineSaturation": 100,
+    "blacks": 53,
+    "shadows": 41,
+    "colorGrading": {
+     "highlight": {
+      "hue": 0,
+      "saturation": 0,
+      "luminance": 0
+     },
+     "blending": 50,
+     "shadow": {
+      "hue": 0,
+      "saturation": 0,
+      "luminance": 0
+     },
+     "balance": 0,
+     "global": {
+      "hue": 0,
+      "saturation": 0,
+      "luminance": 0
+     },
+     "midtone": {
+      "hue": 0,
+      "saturation": 0,
+      "luminance": 0
+     }
+    },
+    "saturation": 7,
+    "hsl": [
+     "yellow",
+     {
+      "hue": 38,
+      "saturation": -23,
+      "luminance": 0
+     },
+     "blue",
+     {
+      "hue": -13,
+      "saturation": 33,
+      "luminance": 0
+     },
+     "green",
+     {
+      "hue": 6,
+      "saturation": -23,
+      "luminance": 0
+     }
+    ],
+    "highlights": -44,
+    "parametricLights": 0
+   },
+   "unsupported": [
+    "AutoLateralCA",
+    "CameraProfile",
+    "ColorGradeGlobalLum",
+    "ColorGradeMidtoneLum",
+    "ColorNoiseReduction",
+    "ConvertToGrayscale",
+    "DefringeGreenAmount",
+    "DefringeGreenHueHi",
+    "DefringeGreenHueLo",
+    "DefringePurpleAmount",
+    "DefringePurpleHueHi",
+    "DefringePurpleHueLo",
+    "GrainAmount",
+    "LensManualDistortionAmount",
+    "LuminanceSmoothing",
+    "OverrideLookVignette",
+    "PostCropVignetteAmount",
+    "Sharpness",
+    "VignetteAmount"
+   ]
+  }
+ ]
+}

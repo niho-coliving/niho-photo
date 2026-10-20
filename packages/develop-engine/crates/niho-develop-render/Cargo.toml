@@ -1,0 +1,24 @@
+[package]
+name = "niho-develop-render"
+description = "Native render CLI of niho-develop (stage 2): NIHO Desktop's full-size export as a child process"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish.workspace = true
+rust-version.workspace = true
+
+[lib]
+name = "niho_develop_render"
+path = "src/lib.rs"
+
+[[bin]]
+name = "niho-develop-render"
+path = "src/main.rs"
+
+# Workspace crates only (no new external crate): the published wasm's source
+# digest covers niho-develop-wasm's dependency closure, which this crate is
+# not part of (scripts/wasm-manifest.mjs).
+[dependencies]
+niho-develop = { path = "../niho-develop" }
+serde_json.workspace = true
+image.workspace = true

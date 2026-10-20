@@ -1,0 +1,50 @@
+[package]
+name = "niho-base-raw"
+description = "NIHO develop engine stage 1 (base, track B): RAW decode (rawler) + NIHO DCP color -> linear ProPhoto working copy"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish.workspace = true
+# rawler 0.8.0 requires 1.89 (the workspace default is 1.85).
+rust-version = "1.89"
+
+[lib]
+name = "niho_base_raw"
+path = "src/lib.rs"
+
+[[bin]]
+name = "niho-base-raw"
+path = "src/main.rs"
+
+[features]
+default = ["parallel"]
+# Row-parallel demosaic / color / resize. Output is bit-identical with or without it.
+parallel = ["dep:rayon"]
+
+[dependencies]
+niho-camera-color = { path = "../niho-camera-color" }
+niho-camera-profile = { path = "../niho-camera-profile" }
+# LGPL-2.1: stage 1 only. Current production use is server-side; R4's
+# dedicated wasm/native helper needs source, notice, and relink materials before distribution.
+# Pinned: the sidecar reports the decoder version ("decoder": {"name": "rawler", "version": "0.8.0"}).
+rawler = "=0.8.0"
+# Same png as image's (workspace); used directly for the 16-bit working copy.
+png = "0.18"
+serde = { version = "1", features = ["derive"] }
+serde_json.workspace = true
+clap = { version = "4", features = ["derive"] }
+anyhow = "1"
+rayon = { version = "1", optional = true }
+
+# rawler enables uuid/v4. Browser wasm needs the JS RNG bridge even though
+# niho-base-raw does not generate UUIDs itself.
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+uuid = { version = "1", features = ["js"] }
+
+[target.'cfg(windows)'.dependencies]
+windows-sys = { version = "0.61", features = ["Win32_Foundation", "Win32_Storage_FileSystem"] }
+
+[dev-dependencies]
+# Stage 2 (S3) for examples/develop_preset.rs only (the preset-closeness measurement of S9). A path
+# dependency inside the workspace: no new external crate, and niho-develop never links rawler.
+niho-develop = { path = "../niho-develop" }

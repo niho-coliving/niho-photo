@@ -8,7 +8,7 @@ NIHO photo の**原則公開（default-public）**なクライアント開発SSO
 
 このリポジトリは **source-visible / all rights reserved、not open source** です。NIHO所有コード・資産には [LICENSE.md](LICENSE.md) と [ASSET_LICENSE.md](ASSET_LICENSE.md)、名称・ロゴには [TRADEMARKS.md](TRADEMARKS.md) を適用します。[GitHubの利用規約上認められる閲覧・fork](https://docs.github.com/en/site-policy/github-terms/github-terms-of-service)を除き、独立した再配布・改変・商用利用を許諾しません。第三者の依存物には、それぞれの権利条件が優先します。
 
-Photoクライアントの所有コード・校正値・写真・RAW fixture等は公開既定です。初回移植は出典とhashを固定し、第三者資産、秘密情報、個人情報、不要な画像metadataを監査します。既存DCP 8件は第三者由来部分があるため除外し、独立計測で置換します。判定基準は [publication-gates.md](docs/security/publication-gates.md)、候補資産の状態は [third-party-assets.md](docs/legal/third-party-assets.md) に記録します。
+Photoクライアントの所有コード・校正値・写真・RAW fixture等は公開既定です。初回移植は出典とhashを固定し、第三者資産、秘密情報、個人情報、不要な画像metadataを監査します。既存DCP 8件は第三者由来部分があるため除外し、所有RAWから独立推定したDCPで置換します。判定基準は [publication-gates.md](docs/security/publication-gates.md)、候補資産の状態は [third-party-assets.md](docs/legal/third-party-assets.md) に記録します。
 
 ## 開発と報告
 
@@ -43,3 +43,5 @@ gitleaks dir --redact --no-banner .
 秘密情報、実利用データ、内部 URL、未修正の脆弱性を公開 Issue・PR・CI ログへ載せないでください。脆弱性は [SECURITY.md](SECURITY.md) の非公開窓口（[GitHubの非公開報告窓口](https://github.com/niho-coliving/niho-photo/security/advisories)）から報告してください。非公開移行元と公開Issueの対応は [source-map.md](docs/migration/source-map.md) に記録します。
 
 Docs/Photo共通の認証・クラウド安全契約は [Photo #8](https://github.com/niho-coliving/niho-photo/issues/8) と [Docs #15](https://github.com/niho-coliving/niho-docs/issues/15) に追跡します。両クライアントは同じ版の公開contract・mock・security testを使い、片方だけの境界変更を避けます。
+
+RAW現像workspaceは [packages/develop-engine](packages/develop-engine/README.md) として移植した。所有モデル・独立DCP・metadataを除いた実RW2を含み、由来と限定した精度は [RAW移植の記録](docs/migration/raw-engine.md) に記載する。

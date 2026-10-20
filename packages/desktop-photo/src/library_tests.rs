@@ -612,7 +612,7 @@ fn at_most_two_thumbnails_are_made_at_once() {
 
 #[test]
 fn quicklook_and_sips_are_called_with_the_expected_arguments() {
-  let source = Path::new("/Users/staff/Pictures/IMG 0001.CR3");
+  let source = Path::new("/test-data/users/staff/Pictures/IMG 0001.CR3");
   let work_dir = Path::new("/cache/photo-thumbnails/work-1");
   let quicklook: Vec<OsString> = [
     "-t",
@@ -620,7 +620,7 @@ fn quicklook_and_sips_are_called_with_the_expected_arguments() {
     "128",
     "-o",
     "/cache/photo-thumbnails/work-1",
-    "/Users/staff/Pictures/IMG 0001.CR3",
+    "/test-data/users/staff/Pictures/IMG 0001.CR3",
   ]
   .iter()
   .map(OsString::from)
@@ -632,7 +632,7 @@ fn quicklook_and_sips_are_called_with_the_expected_arguments() {
     "-s",
     "format",
     "jpeg",
-    "/Users/staff/Pictures/IMG 0001.CR3",
+    "/test-data/users/staff/Pictures/IMG 0001.CR3",
     "--out",
     "/cache/photo-thumbnails/work-1/thumbnail.jpg",
   ]

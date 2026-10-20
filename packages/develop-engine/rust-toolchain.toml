@@ -1,0 +1,9 @@
+# Pinned toolchain: the published wasm (apps/web/public/develop-engine/) is
+# rebuilt and checked in CI, so every build uses this exact compiler.
+# Changing it changes the wasm bytes: bump the crate version and publish a
+# new directory (scripts/publish-wasm.sh, README "wasm の公開").
+[toolchain]
+channel = "1.98.1"
+components = ["rustfmt", "clippy"]
+targets = ["wasm32-unknown-unknown"]
+profile = "minimal"

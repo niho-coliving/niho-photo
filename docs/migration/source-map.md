@@ -18,7 +18,7 @@
 - [ ] [#8](https://github.com/niho-coliving/niho-photo/issues/8) と [Docs #15](https://github.com/niho-coliving/niho-docs/issues/15) の共通auth/cloud契約のSSOT・版・相互参照が決まっている
 - [ ] [#2](https://github.com/niho-coliving/niho-photo/issues/2) の公開成果物・SBOM・固定SHA取り込み契約が定義されている
 - [ ] 公開CIとSecurity Advisories、CODEOWNERS、branch rulesetが有効である
-- [ ] 既存DCPを除外し独立計測で置換する記録と、実データ・署名鍵等の非公開の所有先を確認した
+- [ ] 既存DCPを除外し所有RAWから独立推定したDCPで置換する記録と、実データ・署名鍵等の非公開の所有先を確認した
 - [ ] `niho-app` 側が公開成果物の固定SHAを取り込み、同じproduction sourceを二重編集していない
 - [ ] オーナーが最終統合とarchive時期を確認した
 

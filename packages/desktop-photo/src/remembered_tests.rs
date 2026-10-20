@@ -73,7 +73,7 @@ fn mode(path: &Path) -> u32 {
   fs::metadata(path).unwrap().permissions().mode() & 0o777
 }
 
-const SD: &str = "/Volumes/NIKON Z6/DCIM/100NCZ_6";
+const SD: &str = "/test-data/volumes/NIKON Z6/DCIM/100NCZ_6";
 
 #[test]
 fn remembers_folders_and_photos_newest_first_with_one_entry_per_path() {
@@ -84,7 +84,7 @@ fn remembers_folders_and_photos_newest_first_with_one_entry_per_path() {
 
   store.remember_folder(Path::new(SD), at(1_000)).unwrap();
   store
-    .remember_folder(Path::new("/Users/staff/Pictures/2026"), at(2_000))
+    .remember_folder(Path::new("/test-data/users/staff/Pictures/2026"), at(2_000))
     .unwrap();
   // 一度に選んだ写真はダイアログの順に先頭へ。同じ写真を 2 度選んでも 1 つ
   let first = format!("{SD}/DSC_0001.NEF");
@@ -93,17 +93,17 @@ fn remembers_folders_and_photos_newest_first_with_one_entry_per_path() {
     .remember_photos(&[path(&first), path(&second), path(&first)], at(3_000))
     .unwrap();
   store
-    .remember_photos(&[path("/Users/staff/Desktop/P1524180.RW2")], at(4_000))
+    .remember_photos(&[path("/test-data/users/staff/Desktop/P1524180.RW2")], at(4_000))
     .unwrap();
   let remembered = store.load();
   assert_eq!(
     remembered.folders,
-    [entry("/Users/staff/Pictures/2026", 2_000), entry(SD, 1_000)]
+    [entry("/test-data/users/staff/Pictures/2026", 2_000), entry(SD, 1_000)]
   );
   assert_eq!(
     remembered.photos,
     [
-      entry("/Users/staff/Desktop/P1524180.RW2", 4_000),
+      entry("/test-data/users/staff/Desktop/P1524180.RW2", 4_000),
       entry(&first, 3_000),
       entry(&second, 3_000)
     ]
@@ -115,11 +115,15 @@ fn remembers_folders_and_photos_newest_first_with_one_entry_per_path() {
   let remembered = store.load();
   assert_eq!(
     remembered.folders,
-    [entry(SD, 5_000), entry("/Users/staff/Pictures/2026", 2_000)]
+    [entry(SD, 5_000), entry("/test-data/users/staff/Pictures/2026", 2_000)]
   );
   assert_eq!(
     texts(&remembered.photos),
-    [second.as_str(), "/Users/staff/Desktop/P1524180.RW2", first.as_str()]
+    [
+      second.as_str(),
+      "/test-data/users/staff/Desktop/P1524180.RW2",
+      first.as_str()
+    ]
   );
   assert_eq!(remembered.photos[0].added_at_ms, 6_000);
 
@@ -130,11 +134,11 @@ fn remembers_folders_and_photos_newest_first_with_one_entry_per_path() {
       "version": 1,
       "folders": [
         { "path": SD, "addedAtMs": 5_000 },
-        { "path": "/Users/staff/Pictures/2026", "addedAtMs": 2_000 },
+        { "path": "/test-data/users/staff/Pictures/2026", "addedAtMs": 2_000 },
       ],
       "photos": [
         { "path": second, "addedAtMs": 6_000 },
-        { "path": "/Users/staff/Desktop/P1524180.RW2", "addedAtMs": 4_000 },
+        { "path": "/test-data/users/staff/Desktop/P1524180.RW2", "addedAtMs": 4_000 },
         { "path": first, "addedAtMs": 3_000 },
       ],
     })
@@ -184,18 +188,21 @@ fn the_default_limits_are_fifty_folders_and_two_thousand_photos() {
   let store = temp.store(RememberedLimits::default());
   for number in 0..(MAX_REMEMBERED_FOLDERS + 3) {
     store
-      .remember_folder(&path(&format!("/Volumes/SD/DCIM/{number:03}")), at(number as u64))
+      .remember_folder(
+        &path(&format!("/test-data/volumes/SD/DCIM/{number:03}")),
+        at(number as u64),
+      )
       .unwrap();
   }
   let batch: Vec<PathBuf> = (0..(MAX_REMEMBERED_PHOTOS + 5))
-    .map(|number| path(&format!("/Volumes/SD/DCIM/100MSDCF/DSC{number:05}.ARW")))
+    .map(|number| path(&format!("/test-data/volumes/SD/DCIM/100MSDCF/DSC{number:05}.ARW")))
     .collect();
   store.remember_photos(&batch, at(100)).unwrap();
   let remembered = store.load();
   assert_eq!((MAX_REMEMBERED_FOLDERS, MAX_REMEMBERED_PHOTOS), (50, 2_000));
   assert_eq!(remembered.folders.len(), 50);
-  assert_eq!(remembered.folders[0].path, path("/Volumes/SD/DCIM/052"));
-  assert_eq!(remembered.folders[49].path, path("/Volumes/SD/DCIM/003"));
+  assert_eq!(remembered.folders[0].path, path("/test-data/volumes/SD/DCIM/052"));
+  assert_eq!(remembered.folders[49].path, path("/test-data/volumes/SD/DCIM/003"));
   assert_eq!(remembered.photos.len(), 2_000);
   assert_eq!(remembered.photos[1_999].path, batch[1_999]);
   assert!(fs::metadata(temp.file()).unwrap().len() < MAX_REMEMBERED_FILE_BYTES);
@@ -212,7 +219,9 @@ fn the_file_is_private_and_replaced_atomically() {
   // 前からあった緩いファイル・フォルダも 0600 / 0700 になる
   fs::set_permissions(&file, fs::Permissions::from_mode(0o644)).unwrap();
   fs::set_permissions(file.parent().unwrap(), fs::Permissions::from_mode(0o755)).unwrap();
-  store.remember_photos(&[path("/Users/staff/a.jpg")], at(2)).unwrap();
+  store
+    .remember_photos(&[path("/test-data/users/staff/a.jpg")], at(2))
+    .unwrap();
   assert_eq!(mode(&file), 0o600);
   assert_eq!(mode(file.parent().unwrap()), 0o700);
   // 一時ファイルは残らない
@@ -232,9 +241,11 @@ fn a_failed_write_keeps_the_previous_file() {
   let blocker = temp.file().with_extension("json.tmp");
   fs::create_dir_all(&blocker).unwrap();
   assert!(store
-    .remember_folder(Path::new("/Users/staff/Pictures"), at(2))
+    .remember_folder(Path::new("/test-data/users/staff/Pictures"), at(2))
     .is_err());
-  assert!(store.remember_photos(&[path("/Users/staff/a.jpg")], at(3)).is_err());
+  assert!(store
+    .remember_photos(&[path("/test-data/users/staff/a.jpg")], at(3))
+    .is_err());
   assert_eq!(
     store.load(),
     Remembered {
@@ -273,10 +284,12 @@ fn broken_unknown_or_too_large_files_are_read_as_empty_and_overwritten() {
     );
   }
   // 次に覚えるときに上書きする
-  store.remember_photos(&[path("/Users/staff/a.jpg")], at(7)).unwrap();
+  store
+    .remember_photos(&[path("/test-data/users/staff/a.jpg")], at(7))
+    .unwrap();
   assert_eq!(
     temp.record(),
-    json!({ "version": 1, "folders": [], "photos": [{ "path": "/Users/staff/a.jpg", "addedAtMs": 7 }] })
+    json!({ "version": 1, "folders": [], "photos": [{ "path": "/test-data/users/staff/a.jpg", "addedAtMs": 7 }] })
   );
 
   // フォルダが同じ名前で置かれていても読まない
@@ -291,14 +304,14 @@ fn broken_unknown_or_too_large_files_are_read_as_empty_and_overwritten() {
   symlink(&elsewhere, temp.file()).unwrap();
   assert_eq!(store.load(), Remembered::default());
   store
-    .remember_folder(Path::new("/Users/staff/Pictures"), at(8))
+    .remember_folder(Path::new("/test-data/users/staff/Pictures"), at(8))
     .unwrap();
   assert!(fs::symlink_metadata(temp.file()).unwrap().is_file());
   assert_eq!(
     serde_json::from_slice::<Value>(&fs::read(&elsewhere).unwrap()).unwrap(),
     valid
   );
-  assert_eq!(texts(&store.load().folders), ["/Users/staff/Pictures"]);
+  assert_eq!(texts(&store.load().folders), ["/test-data/users/staff/Pictures"]);
 }
 
 #[test]
@@ -346,7 +359,7 @@ fn entries_of_the_wrong_shape_are_skipped() {
 fn paths_that_cannot_be_remembered_are_skipped() {
   let temp = TempDir::new("unrememberable");
   let store = temp.store(RememberedLimits::default());
-  let not_utf8 = PathBuf::from(OsStr::from_bytes(b"/Volumes/SD/\xff.jpg"));
+  let not_utf8 = PathBuf::from(OsStr::from_bytes(b"/test-data/volumes/SD/\xff.jpg"));
   let too_long = path(&format!("/{}", "x".repeat(MAX_PATH_JSON_BYTES)));
   // JSON で `"` はエスケープされて長くなる
   let quoted = path(&format!("/{}", "\"".repeat(MAX_PATH_JSON_BYTES / 2)));
@@ -367,7 +380,11 @@ fn paths_that_cannot_be_remembered_are_skipped() {
   let fits = path(&format!("/{}", "x".repeat(MAX_PATH_JSON_BYTES - 3)));
   store
     .remember_photos(
-      &[path("relative.jpg"), fits.clone(), path("/Users/staff/\"quoted\".jpg")],
+      &[
+        path("relative.jpg"),
+        fits.clone(),
+        path("/test-data/users/staff/\"quoted\".jpg"),
+      ],
       at(3),
     )
     .unwrap();
@@ -378,7 +395,7 @@ fn paths_that_cannot_be_remembered_are_skipped() {
         path: fits,
         added_at_ms: 3
       },
-      entry("/Users/staff/\"quoted\".jpg", 3),
+      entry("/test-data/users/staff/\"quoted\".jpg", 3),
     ]
   );
 }
@@ -390,7 +407,9 @@ fn purging_removes_the_file_the_temp_file_and_a_symlink_but_never_its_target() {
   // 何も無いときは何もしない
   store.purge().unwrap();
   store.remember_folder(Path::new(SD), at(1)).unwrap();
-  store.remember_photos(&[path("/Users/staff/a.jpg")], at(2)).unwrap();
+  store
+    .remember_photos(&[path("/test-data/users/staff/a.jpg")], at(2))
+    .unwrap();
   let file = temp.file();
   // 書き込み途中の一時ファイルが残っていても一緒に消す
   let leftover = file.with_extension("json.tmp");

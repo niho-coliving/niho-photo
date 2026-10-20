@@ -6,3 +6,9 @@ coverage/
 .env*
 !.env.example
 *.tsbuildinfo
+
+# Rust and local measurement outputs
+**/target/
+**/__pycache__/
+**/.build/
+packages/develop-engine/fixtures/golden/out/

@@ -1,0 +1,121 @@
+{
+  "schema": "niho.rw2-sanitization/1",
+  "sourceSha256": "5a60c61081ee33465dc19be926116e5f0fd2b2515247fa7a2ef1331376597d62",
+  "outputSha256": "78e36a38a9c8a7cdacfd4e9a94ead537098c2ce1acdc9b6447e419b8c7f2c297",
+  "rawStripSha256": "f2aad1268cb00afcf578b556953e2e68a2c8ca236ee331c75f8c0d9892efb5c4",
+  "rawStripBytes": 35469312,
+  "sourceBytes": 36150272,
+  "outputBytes": 35469824,
+  "retainedTags": [
+    "0001",
+    "0002",
+    "0003",
+    "0004",
+    "0005",
+    "0006",
+    "0007",
+    "0008",
+    "0009",
+    "000a",
+    "000b",
+    "000d",
+    "000e",
+    "000f",
+    "0010",
+    "0017",
+    "0018",
+    "0019",
+    "001a",
+    "001c",
+    "001d",
+    "001e",
+    "0024",
+    "0025",
+    "0026",
+    "002d",
+    "002f",
+    "0030",
+    "0031",
+    "0032",
+    "010f",
+    "0110",
+    "0111",
+    "0112",
+    "0116",
+    "0117",
+    "0118",
+    "0121"
+  ],
+  "removed": [
+    "GPS",
+    "serial",
+    "names",
+    "EXIF",
+    "MakerNotes",
+    "camera IFD",
+    "embedded JPEG/thumbnail",
+    "ICC",
+    "unknown header bytes"
+  ],
+  "fullCameraPngSha256": "a495d8924ecf5777bd0ddeb1b173748b186e7c336f2952b6ec1a6b472e9555d5",
+  "cameraPng512Sha256": "1f04842eafd0fa5ef3889ea1b7a7a9a50e22087c941639457a7090a73015cc18",
+  "cameraInfo": {
+    "make": "Panasonic",
+    "model": "DC-S5",
+    "cleanMake": "Panasonic",
+    "cleanModel": "DC-S5",
+    "fullWidth": 6072,
+    "fullHeight": 4016,
+    "crop": {
+      "x": 12,
+      "y": 8,
+      "width": 6000,
+      "height": 4000
+    },
+    "cfa": "RGGB",
+    "bitsPerSample": 14,
+    "blackLevel": [
+      514,
+      513,
+      513,
+      515
+    ],
+    "whiteLevel": [
+      16380
+    ],
+    "wbCoeffs": [
+      1.8046875,
+      1.0,
+      2.30859375
+    ],
+    "asShotMultipliers": [
+      1.8046875,
+      1.0,
+      2.30859375
+    ],
+    "asShotNeutral": [
+      0.5541125541125541,
+      1.0,
+      0.43316412859560066
+    ],
+    "orientation": "Normal",
+    "orientationExif": 1
+  },
+  "decoderComparison": {
+    "rawStripBytesIdentical": true,
+    "fullCameraPixelsIdentical": true,
+    "sensorGeometryIdentical": true,
+    "whiteBalanceIdentical": true,
+    "blackAndWhiteLevelsIdentical": true,
+    "decoder": "rawler 0.8.0",
+    "baselineHelperSha256": "8425cd783897766cbf4f70e91352d88ee3adf77437d699211a4c687e26ab7ebd"
+  },
+  "ownership": "2026-10-20 owner confirms this is an owner-shot photo, authorized for public release and not real-user-provided data.",
+  "fixtureRole": "scene-03 training photograph; not a held-out validation photo.",
+  "privacyReview": {
+    "localVisionFaceCount": 0,
+    "localVisionHumanCount": 0,
+    "manualReview": "Empty classroom/stove still-life. No person or silhouette visible in full camera JPEG.",
+    "unnecessaryComparisonPhotosExcluded": true
+  }
+}

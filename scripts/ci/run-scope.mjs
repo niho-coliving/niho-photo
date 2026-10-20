@@ -26,14 +26,26 @@ export async function scopeCommands(root, scope) {
     const metadata = await readJson(`${config.root}/public-ci.json`);
     if (metadata.schemaVersion !== 1 || metadata.syntheticFixtures !== true || metadata.unsigned !== true || !Array.isArray(metadata.cargoManifests) || !Array.isArray(metadata.swiftPackages) || !metadata.cargoManifests.length) throw new Error(`${scope}: public-ci.jsonにunsigned / synthetic fixture / native対象の宣言が必要です`);
     await access(path.join(root, config.root, "LICENSES.md"));
+    if (metadata.rustToolchain !== undefined && metadata.rustToolchain !== "1.98.1") throw new Error(`${scope}: Rust toolchainは監査済み固定版のみ`);
+    if (metadata.rustToolchain) commands.push(["rustup", ["toolchain", "install", metadata.rustToolchain, "--profile", "minimal", "--component", "rustfmt", "--component", "clippy", "--target", "wasm32-unknown-unknown"]]);
+    const cargoPrefix = metadata.rustToolchain ? [`+${metadata.rustToolchain}`] : [];
+
     for (const manifest of metadata.cargoManifests) {
       if (typeof manifest !== "string" || !/^(?:[A-Za-z0-9_-]+\/)*Cargo\.toml$/.test(manifest)) throw new Error(`${scope}: Cargoパスが不正です`);
       const fullPath = `${config.root}/${manifest}`;
       await access(path.join(root, fullPath));
       await access(path.join(root, path.dirname(fullPath), "Cargo.lock"));
-      commands.push(["cargo", ["fmt", "--manifest-path", fullPath, "--all", "--", "--check"]]);
-      commands.push(["cargo", ["clippy", "--locked", "--manifest-path", fullPath, "--all-targets", "--", "-D", "warnings"]]);
-      commands.push(["cargo", ["test", "--locked", "--manifest-path", fullPath]]);
+      commands.push(["cargo", [...cargoPrefix, "fmt", "--manifest-path", fullPath, "--all", "--", "--check"]]);
+      commands.push(["cargo", [...cargoPrefix, "clippy", "--locked", "--manifest-path", fullPath, "--all-targets", "--", "-D", "warnings"]]);
+      commands.push(["cargo", [...cargoPrefix, "test", "--locked", "--manifest-path", fullPath]]);
+    }
+    if (metadata.wasm === true) {
+      if (scope !== "develop-engine" || metadata.rustToolchain !== "1.98.1" || metadata.ownedFixturesAudited !== true) throw new Error("現像WASMの固定toolchain・実RAW監査契約が必要です");
+      commands.push(["python3", ["packages/develop-engine/tools/independent-profile/check.py"]]);
+      commands.push(["python3", ["-m", "unittest", "discover", "-s", "packages/develop-engine/tools/asset-audit", "-p", "test_*.py"]]);
+      commands.push(["cargo", [...cargoPrefix, "build", "--locked", "--config", "packages/develop-engine/.cargo/config.toml", "--manifest-path", "packages/develop-engine/Cargo.toml", "--target", "wasm32-unknown-unknown", "-p", "niho-develop-wasm"]]);
+      commands.push(["cargo", [...cargoPrefix, "install", "wasm-bindgen-cli", "--version", "0.2.129", "--locked"]]);
+      commands.push(["cargo", [...cargoPrefix, "test", "--locked", "--config", "packages/develop-engine/.cargo/config.toml", "--manifest-path", "packages/develop-engine/Cargo.toml", "--target", "wasm32-unknown-unknown", "-p", "niho-develop", "--test", "camera_linear_codec_cross_target", "--test", "niho6_cross_target", "--test", "niho7_cross_target"]]);
     }
     for (const directory of metadata.swiftPackages) {
       if (typeof directory !== "string" || !/^(?:[A-Za-z0-9_-]+\/?)+$/.test(directory)) throw new Error(`${scope}: Swiftパスが不正です`);
@@ -52,7 +64,7 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
     const commands = await scopeCommands(root, scope);
     for (const [command, args] of commands) {
       console.log(`公開CI: ${scope} / ${command} ${args.join(" ")}`);
-      const result = spawnSync(command, args, { cwd: root, stdio: "inherit", env: { ...process.env, CI: "true", CSC_IDENTITY_AUTO_DISCOVERY: "false" } });
+      const result = spawnSync(command, args, { cwd: root, stdio: "inherit", env: { ...process.env, CI: "true", CSC_IDENTITY_AUTO_DISCOVERY: "false", CARGO_TARGET_WASM32_UNKNOWN_UNKNOWN_RUNNER: "wasm-bindgen-test-runner" } });
       if (result.error || result.status !== 0) { process.exitCode = 1; break; }
     }
   } catch {

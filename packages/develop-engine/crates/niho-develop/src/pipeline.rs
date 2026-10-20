@@ -1,0 +1,2056 @@
+//! Stage 2 rendering (spec "段 2", Photo Bench production paths).
+//!
+//! RAW working copy (`AdobeBaseRenderer.Handle.image(settings:)`, spatial
+//! order `.preTone`):
+//!   [absolute WB: the working copy's white-balance table, else
+//!   approximate] -> exposure `2^(baselineEV + exposure)` ->
+//!   [S] Highlights / Shadows / Texture / Clarity -> [DCP LookTable: PR2] ->
+//!   look HSV (`niho-interim-1` identity / `niho-standard-1`) -> ACR3
+//!   default curve (one cube with the look) ->
+//!   cube P (Contrast, Dehaze, Whites, Blacks, Parametric, Point, look tone) ->
+//!   Calibration (matrix, clamp) -> cube Q (Vibrance, Saturation, HSL,
+//!   Color Grading) -> linear sRGB -> relative temperature / tint ->
+//!   [reduce] -> highlight shoulder + gamut compression -> sRGB 8-bit.
+//!
+//! JPEG / PNG original (`RenderEngine.apply`, spatial order `.sP1P2`): no
+//! look, no default curve, the non-RAW exposure formula inside cube P:
+//!   [`niho-1`: relative temperature / tint on the input] ->
+//!   ProPhoto -> [S] -> cube P (exposureNonRaw + P) -> linear sRGB ->
+//!   ProPhoto -> Calibration -> cube Q -> linear sRGB -> [reduce] ->
+//!   output transform (when Photo Bench applies it) -> sRGB 8-bit ->
+//!   [`niho-2`: calibrated incremental-WB RGB delta LUT].
+//!
+//! Effects (NIHO extension, `effects.rs`): on RAW, the black & white mix is
+//! immediately after ACR3 and its grading is in cube Q; on raster input the
+//! mix remains in cube Q. The
+//! vignette's highlight / color priority (gain, or a blend toward white when
+//! brightening) after the local pass, before the first cube; the paint
+//! overlay and grain on the encoded output, before the 8-bit quantization. Drag and released frames apply them at the
+//! same places with the same planes.
+//!
+//! Processing happens at the output resolution: the original is reduced to
+//! `max_dimension` while decoding, so the "reduce" step is a no-op here
+//! (spec: local processing radius follows the long edge; different output
+//! sizes differ, compared at 1500px). With a geometry the image is a window
+//! around the output ([`Framing`], [`crate::frame`]): the radii follow the
+//! whole frame's long edge at this scale, the adaptive statistics the whole
+//! photo, and only the output rectangle is written.
+
+use crate::color::{
+    mat_vec_f32, raw_white_balance_prophoto, srgb_oetf_f32, to_f32, xy_from_temperature, Xy,
+    PP_LUMA_F32, PROPHOTO_TO_SRGB_F32, REC709_LUMA_F32, SRGB_TO_PROPHOTO_F32,
+};
+use crate::color_ops::{
+    self, calibration_matrix, needs_calibration, needs_color_ops, PreparedColorOps,
+};
+use crate::decode::{AsShotWhite, LinearImage, Raster, WorkingCopyMeta};
+use crate::effects::{self, EffectsCache, LinearVignette, OutputEffects};
+use crate::fastmath::{srgb8, UnitTable};
+use crate::frame::Rect;
+use crate::jpeg_wb::PreparedJpegWhiteBalance;
+use crate::lut::{decode, encode, Cube, CUBE_DIMENSION};
+use crate::output::{output_transform, output_transform_clip};
+use crate::relative_wb::relative_matrix;
+use crate::resize::{bilinear_downscale, bilinear_downscale_with, Filter};
+use crate::settings::{
+    DevelopSettings, VignetteStyle, WhiteBalanceMode, ENGINE_NIHO_2, ENGINE_NIHO_3, ENGINE_NIHO_4,
+    ENGINE_NIHO_5, ENGINE_NIHO_6, ENGINE_NIHO_7,
+};
+use crate::spatial::{
+    self, adaptive_parameters, AdaptivePath, AdaptiveStats, Plane, Quality, SpatialParams,
+};
+use crate::tone_ops::{exposure_non_raw, needs_post_ops, rgb_tone, PreparedPostOps};
+use crate::wb_table::WhiteBalanceTable;
+use std::sync::{Arc, OnceLock};
+
+/// `AdobeBaseRenderer.dragCubeDimension` (interactive tone cube).
+pub const INTERACTIVE_TONE_CUBE_DIMENSION: usize = 33;
+
+#[derive(Debug, Clone, Copy)]
+pub struct RenderOptions {
+    /// Long-edge cap of the output (0 = original size).
+    pub max_dimension: usize,
+    pub quality: Quality,
+    /// Reduction filter (Lanczos-3 default; area average is faster).
+    pub filter: Filter,
+    /// With a geometry, the one-shot render decodes the original large
+    /// enough for the crop to reach `max_dimension`, at most this long
+    /// edge (0 = no cap; `crate::frame::decode_long_edge`). Without a
+    /// geometry it decodes at `max_dimension`.
+    pub decode_cap: usize,
+}
+
+impl Default for RenderOptions {
+    fn default() -> Self {
+        Self {
+            max_dimension: 2048,
+            quality: Quality::Final,
+            filter: Filter::Lanczos3,
+            decode_cap: crate::frame::DEFAULT_DECODE_CAP,
+        }
+    }
+}
+
+/// A rendered frame: sRGB 8-bit RGBA (alpha 255).
+#[derive(Debug, Clone)]
+pub struct Rendered {
+    pub width: usize,
+    pub height: usize,
+    pub rgba: Vec<u8>,
+    /// Stages that approximate Photo Bench / Lightroom for these settings.
+    pub approximations: Vec<&'static str>,
+}
+
+/// Photo Bench `EditSettings.hasActiveColorEdits` (drives the output
+/// transform for bounded sRGB rasters). Texture / Clarity / Dehaze and the
+/// absolute white balance are not part of it in Photo Bench either. NIHO's
+/// positive highlight-priority vignette also enables it because the linear
+/// gain can push bounded sRGB highlights above 1.0.
+pub fn has_active_color_edits(s: &DevelopSettings) -> bool {
+    let tol = 1e-9;
+    let relative_active = s.white_balance.mode == WhiteBalanceMode::Relative;
+    let scalars = [
+        s.exposure,
+        s.contrast,
+        s.highlights,
+        s.shadows,
+        s.whites,
+        s.blacks,
+        s.vibrance,
+        s.saturation,
+        if relative_active {
+            s.relative_temperature
+        } else {
+            0.0
+        },
+        if relative_active {
+            s.relative_tint
+        } else {
+            0.0
+        },
+        s.parametric_shadows,
+        s.parametric_darks,
+        s.parametric_lights,
+        s.parametric_highlights,
+    ];
+    let c = &s.calibration;
+    let calibration = [
+        c.red_hue,
+        c.red_saturation,
+        c.green_hue,
+        c.green_saturation,
+        c.blue_hue,
+        c.blue_saturation,
+    ];
+    let g = &s.color_grading;
+    let grading = [
+        g.shadow.hue,
+        g.shadow.saturation,
+        g.shadow.luminance,
+        g.midtone.hue,
+        g.midtone.saturation,
+        g.highlight.hue,
+        g.highlight.saturation,
+        g.highlight.luminance,
+        g.global.hue,
+        g.global.saturation,
+    ];
+    // Black & white is a color edit (NIHO; the mix only acts with it).
+    s.grayscale
+        // Positive highlight-priority vignette is a linear gain and can
+        // push bounded sRGB highlights above 1.0 before output encoding.
+        || (s.vignette.style == VignetteStyle::HighlightPriority && s.vignette.amount > 0.0)
+        || scalars.iter().any(|v| v.abs() > tol)
+        || calibration.iter().any(|v| v.abs() > tol)
+        || grading.iter().any(|v| v.abs() > tol)
+        || !crate::tone_ops::curves_are_identity(&s.tone_curves, tol)
+        || s.hsl
+            .entries()
+            .iter()
+            .any(|(_, a)| a.hue.abs() > tol || a.saturation.abs() > tol || a.luminance.abs() > tol)
+}
+
+fn needs_spatial(s: &DevelopSettings) -> bool {
+    s.highlights != 0.0 || s.shadows != 0.0 || s.texture != 0.0 || s.clarity != 0.0
+}
+
+/// Cube P for these settings (`postOpsCube`), optionally preceded by the
+/// non-RAW exposure.
+pub fn bake_post_ops_cube(s: &DevelopSettings, exposure_non_raw_ev: f64, dimension: usize) -> Cube {
+    bake_post_ops_cube_with_look(s, exposure_non_raw_ev, dimension, None)
+}
+
+/// Cube P with the look's `point-curve` tone (RAW: [`raw_look_tone`]).
+pub fn bake_post_ops_cube_with_look(
+    s: &DevelopSettings,
+    exposure_non_raw_ev: f64,
+    dimension: usize,
+    look: Option<&'static crate::look::LookParams>,
+) -> Cube {
+    let prepared = PreparedPostOps::with_exposure(s, exposure_non_raw_ev).with_look(look);
+    Cube::bake_with_dimension(dimension, &move |v| prepared.apply(v))
+}
+
+fn bake_raw_post_ops_cube_niho3(
+    s: &DevelopSettings,
+    exposure_non_raw_ev: f64,
+    look: Option<&'static crate::look::LookParams>,
+) -> Cube {
+    let prepared = PreparedPostOps::with_exposure(s, exposure_non_raw_ev).with_look(look);
+    Cube::bake_float(&move |v| prepared.apply(v))
+}
+
+/// The look whose tone goes into cube P on the RAW path (`None` when the
+/// look has no `point-curve` tone). JPEG / PNG never get a look.
+pub fn raw_look_tone(s: &DevelopSettings) -> Option<&'static crate::look::LookParams> {
+    crate::look::params(&s.look).filter(|p| p.tone_stage() == crate::look::ToneStage::PointCurve)
+}
+
+/// Cube Q (`postColorCube`). Photo Bench keeps it at 64^3 even while
+/// dragging; single-threaded wasm cannot bake 262,144 points per frame, so
+/// interactive frames use the drag grid here too (the release frame is
+/// exact).
+pub fn bake_color_cube(s: &DevelopSettings, dimension: usize) -> Cube {
+    bake_color_cube_for(s, dimension, false)
+}
+
+/// Cube Q of a RAW working copy (`raw`: its input is past the ACR3 default
+/// curve, which the black & white mix takes back) or of a JPEG / PNG.
+pub fn bake_color_cube_for(s: &DevelopSettings, dimension: usize, raw: bool) -> Cube {
+    let prepared = color_ops_for(s, raw);
+    let transform = move |v| {
+        if raw {
+            prepared.apply_raw_after_pre_post(v)
+        } else {
+            prepared.apply(v)
+        }
+    };
+    if raw
+        && matches!(
+            s.engine.as_str(),
+            ENGINE_NIHO_3 | ENGINE_NIHO_4 | ENGINE_NIHO_5 | ENGINE_NIHO_7
+        )
+    {
+        Cube::bake_float(&transform)
+    } else {
+        Cube::bake_with_dimension(dimension, &transform)
+    }
+}
+
+fn color_ops_for(s: &DevelopSettings, raw: bool) -> PreparedColorOps {
+    if raw {
+        PreparedColorOps::after_default_curve(s)
+    } else {
+        PreparedColorOps::new(s)
+    }
+}
+
+/// The ACR3 default tone curve cube (`RGBTone.apply(ACR3)` on linear
+/// ProPhoto); the Adobe Color look curve is not used (NIHO look instead).
+pub fn acr3_cube() -> &'static Cube {
+    static C: OnceLock<Cube> = OnceLock::new();
+    C.get_or_init(|| Cube::bake(&|v| rgb_tone(v, &crate::acr3::evaluate)))
+}
+
+fn niho3_acr3_cube() -> &'static Cube {
+    static C: OnceLock<Cube> = OnceLock::new();
+    C.get_or_init(|| Cube::bake_float(&|v| rgb_tone(v, &crate::acr3::evaluate)))
+}
+
+/// The look followed by the ACR3 default curve, as one cube (the cube input
+/// is clamped to `[0, 1]`, which is the look's domain). `niho-interim-1` is
+/// the plain ACR3 cube.
+pub fn look_cube(look: &str) -> &'static Cube {
+    if look == crate::look::LOOK_NIHO_STANDARD_1 {
+        static C: OnceLock<Cube> = OnceLock::new();
+        let p = crate::look::standard_1();
+        return C.get_or_init(|| Cube::bake(&|v| rgb_tone(p.pre_acr3(v), &crate::acr3::evaluate)));
+    }
+    if matches!(
+        look,
+        crate::look::LOOK_NIHO_STANDARD_2
+            | crate::look::LOOK_NIHO_STANDARD_3
+            | crate::look::LOOK_NIHO_STANDARD_4
+            | crate::look::LOOK_NIHO_STANDARD_5
+    ) {
+        return niho3_acr3_cube();
+    }
+    acr3_cube()
+}
+
+/// Cubes that depend on the settings; reusable across frames whose
+/// relevant settings did not change (the session keeps them).
+#[derive(Clone)]
+pub struct SettingsCubes {
+    pub post_key: String,
+    pub post: Option<Arc<Cube>>,
+    pub color_key: String,
+    pub color: Option<Arc<Cube>>,
+    /// Drag frames: the per-pixel tail ([`DragTail`]).
+    pub drag: Option<Arc<DragTail>>,
+}
+
+fn post_key(s: &DevelopSettings, exposure_non_raw_ev: f64, dimension: usize) -> String {
+    let v = s.to_value();
+    format!(
+        "{}|{exposure_non_raw_ev}|{dimension}|{}|{}|{}|{}|{}|{}|{}|{}|{}|{}|{}|{}",
+        s.engine,
+        s.contrast,
+        s.dehaze,
+        s.whites,
+        s.blacks,
+        s.parametric_shadows,
+        s.parametric_darks,
+        s.parametric_lights,
+        s.parametric_highlights,
+        s.parametric_shadow_split,
+        s.parametric_midtone_split,
+        s.parametric_highlight_split,
+        v["toneCurves"]
+    )
+}
+
+fn color_key(s: &DevelopSettings, dimension: usize, raw: bool) -> String {
+    let v = s.to_value();
+    format!(
+        "{}|{dimension}|{raw}|{}|{}|{}|{}|{}|{:?}",
+        s.engine,
+        s.vibrance,
+        s.saturation,
+        v["hsl"],
+        v["colorGrading"],
+        s.grayscale,
+        s.gray_mixer.bands
+    )
+}
+
+/// Returns cube P and cube Q for `s`, reusing `cache` entries whose keys
+/// match. `bake: false` only computes the keys (drag frames whose tail
+/// evaluates the stages directly, [`DragTail`]).
+pub fn settings_cubes(
+    s: &DevelopSettings,
+    exposure_non_raw_ev: f64,
+    quality: Quality,
+    cache: Option<&SettingsCubes>,
+    bake: bool,
+    look: Option<&'static crate::look::LookParams>,
+    raw: bool,
+) -> SettingsCubes {
+    let raster_legacy = (!raw && s.engine == ENGINE_NIHO_3).then(|| {
+        let mut legacy = s.clone();
+        legacy.engine = ENGINE_NIHO_2.to_string();
+        legacy.look = crate::look::LOOK_NIHO_INTERIM_1.to_string();
+        legacy
+    });
+    let formula_settings = raster_legacy.as_ref().unwrap_or(s);
+    let dimension = if raw
+        && matches!(
+            s.engine.as_str(),
+            ENGINE_NIHO_3 | ENGINE_NIHO_4 | ENGINE_NIHO_5 | ENGINE_NIHO_7
+        ) {
+        CUBE_DIMENSION
+    } else {
+        match quality {
+            Quality::Interactive => INTERACTIVE_TONE_CUBE_DIMENSION,
+            Quality::Final => CUBE_DIMENSION,
+        }
+    };
+    let want_post =
+        exposure_non_raw_ev != 0.0 || needs_post_ops(formula_settings) || look.is_some();
+    let pk = format!(
+        "{}|{}",
+        post_key(formula_settings, exposure_non_raw_ev, dimension),
+        if look.is_some() { s.look.as_str() } else { "" }
+    );
+    let post = if !want_post
+        || (!bake
+            && !(raw
+                && matches!(
+                    s.engine.as_str(),
+                    ENGINE_NIHO_3 | ENGINE_NIHO_4 | ENGINE_NIHO_5 | ENGINE_NIHO_7
+                )))
+    {
+        None
+    } else {
+        match cache {
+            Some(c) if c.post_key == pk && c.post.is_some() => c.post.clone(),
+            // A drag frame can keep a matching final cube without
+            // baking one; releasing H/S or WB then reuses it.
+            _ if !bake => None,
+            _ if raw
+                && matches!(
+                    s.engine.as_str(),
+                    ENGINE_NIHO_3 | ENGINE_NIHO_4 | ENGINE_NIHO_5 | ENGINE_NIHO_7
+                ) =>
+            {
+                Some(Arc::new(bake_raw_post_ops_cube_niho3(
+                    formula_settings,
+                    exposure_non_raw_ev,
+                    look,
+                )))
+            }
+            _ => Some(Arc::new(bake_post_ops_cube_with_look(
+                formula_settings,
+                exposure_non_raw_ev,
+                dimension,
+                look,
+            ))),
+        }
+    };
+    let ck = color_key(formula_settings, dimension, raw);
+    let color = if !needs_color_ops(formula_settings)
+        || (!bake
+            && !(raw
+                && matches!(
+                    s.engine.as_str(),
+                    ENGINE_NIHO_3 | ENGINE_NIHO_4 | ENGINE_NIHO_5 | ENGINE_NIHO_7
+                ))) {
+        None
+    } else {
+        match cache {
+            Some(c) if c.color_key == ck && c.color.is_some() => c.color.clone(),
+            _ if !bake => None,
+            _ => Some(Arc::new(bake_color_cube_for(
+                formula_settings,
+                dimension,
+                raw,
+            ))),
+        }
+    };
+    SettingsCubes {
+        post_key: pk,
+        post,
+        color_key: ck,
+        color,
+        drag: cache.and_then(|c| c.drag.clone()),
+    }
+}
+
+/// Grid of the drag-frame tail (odd: the middle gray is a node).
+pub const DRAG_TAIL_DIMENSION: usize = 33;
+/// Samples of the drag tail's shaper.
+const SHAPER_SAMPLES: usize = 1024;
+/// Share of the identity in the shaper: keeps it strictly increasing where
+/// the tone response is flat, and some grid everywhere.
+const SHAPER_IDENTITY: f32 = 0.3;
+
+/// Stage A of a [`DragTail`] and its shaper, kept while their settings do
+/// not change.
+struct DragStageA {
+    key: String,
+    /// The linear input to the shaped coordinate (the gamma-1.8 encode, the
+    /// cube's input clamp and the shaper in one table).
+    input: UnitTable,
+    /// Stage A at every node (red fastest).
+    grid: Vec<[f32; 3]>,
+}
+
+/// Drag frames: the whole per-pixel tail, from the encoded (clamped) input
+/// of the first cube to the sRGB-encoded output, as one
+/// `DRAG_TAIL_DIMENSION^3` cube, so a pixel costs one lookup instead of the
+/// chain of cubes, matrices and the output transform.
+///
+/// - The entries are the stages themselves evaluated at the nodes (cube P
+///   and Q as their functions, not baked on a coarser grid), so the only
+///   difference to the released frame is the interpolation between nodes.
+/// - Each channel goes through a shaper first (the encoded input mapped to
+///   the lightness of stage A's neutral response, 30% mixed with the
+///   identity), so the nodes follow the tone curve (dense where it is
+///   steep, e.g. lifted blacks), and the lookup is tetrahedral.
+/// - Stage A (cube P; on the RAW path the ACR3 cube and cube P) and the
+///   shaper stay while their settings do not change: dragging a color
+///   slider only re-evaluates stage B (calibration, cube Q, the output) at
+///   the nodes.
+///
+/// Measured against the released frame on bluesky2 (`tests/interactive.rs`):
+/// p99.9 ΔE00 4.0 -> 2.6 on the JPEG path (README "性能").
+pub struct DragTail {
+    stage_a: Arc<DragStageA>,
+    key: String,
+    cube: Cube,
+}
+
+impl DragTail {
+    /// The tail of a linear input (the first cube's, before its encode and
+    /// clamp): sRGB-encoded `[0,1]`.
+    #[inline]
+    fn lookup(&self, v: [f32; 3]) -> [f32; 3] {
+        let t = &self.stage_a.input;
+        self.cube
+            .lookup_tetrahedral([t.eval(v[0]), t.eval(v[1]), t.eval(v[2])])
+    }
+}
+
+#[inline]
+fn shape(shaper: &[f32], e: f32) -> f32 {
+    let t = e * (SHAPER_SAMPLES - 1) as f32;
+    let i = (t as usize).min(SHAPER_SAMPLES - 2);
+    let w = t - i as f32;
+    shaper[i] + (shaper[i + 1] - shaper[i]) * w
+}
+
+/// The shaper of stage A and the encoded inputs of the nodes.
+fn shaper_and_nodes(a: &dyn Fn([f32; 3]) -> [f32; 3]) -> (Vec<f32>, Vec<f32>) {
+    let k = SHAPER_SAMPLES;
+    let last = (k - 1) as f32;
+    // The lightness (sRGB-encoded luminance) of the neutral response.
+    let y: Vec<f32> = (0..k)
+        .map(|i| {
+            let e = i as f32 / last;
+            let v = a([e, e, e]);
+            let lum = v[0] * PP_LUMA_F32[0] + v[1] * PP_LUMA_F32[1] + v[2] * PP_LUMA_F32[2];
+            srgb_oetf_f32(lum.clamp(0.0, 1.0))
+        })
+        .collect();
+    let (lo, hi) = (y[0], y[k - 1]);
+    let mut shaper = Vec::with_capacity(k);
+    let mut running = 0.0f32;
+    for (i, v) in y.iter().enumerate() {
+        let e = i as f32 / last;
+        let normalized = if hi - lo > 1e-4 {
+            ((v - lo) / (hi - lo)).clamp(0.0, 1.0)
+        } else {
+            e
+        };
+        running = running.max(normalized);
+        shaper.push((1.0 - SHAPER_IDENTITY) * running + SHAPER_IDENTITY * e);
+    }
+    shaper[k - 1] = 1.0;
+    // Inverse at the nodes (the shaper is strictly increasing).
+    let n = DRAG_TAIL_DIMENSION;
+    let mut nodes = Vec::with_capacity(n);
+    let mut j = 0;
+    for i in 0..n {
+        let t = i as f32 / (n - 1) as f32;
+        while j + 2 < k && shaper[j + 1] < t {
+            j += 1;
+        }
+        let (u0, u1) = (shaper[j], shaper[j + 1]);
+        let w = ((t - u0) / (u1 - u0)).clamp(0.0, 1.0);
+        nodes.push(((j as f32 + w) / last).clamp(0.0, 1.0));
+    }
+    nodes[0] = 0.0;
+    nodes[n - 1] = 1.0;
+    (shaper, nodes)
+}
+
+/// The drag tail for `key` (everything it depends on), reusing `cache`'s
+/// when the key matches and its stage A when `key_a` does. `a` maps the
+/// encoded input to stage A's linear output, `b` stage A's output to the
+/// sRGB-encoded result.
+fn drag_tail(
+    cache: Option<&Arc<DragTail>>,
+    key_a: String,
+    key: String,
+    a: &dyn Fn([f32; 3]) -> [f32; 3],
+    b: &dyn Fn([f32; 3]) -> [f32; 3],
+) -> Arc<DragTail> {
+    if let Some(t) = cache {
+        if t.key == key {
+            return t.clone();
+        }
+    }
+    let stage_a = match cache {
+        Some(t) if t.stage_a.key == key_a => t.stage_a.clone(),
+        _ => {
+            let (shaper, nodes) = shaper_and_nodes(a);
+            let n = DRAG_TAIL_DIMENSION;
+            let mut grid = Vec::with_capacity(n * n * n);
+            for bi in 0..n {
+                for gi in 0..n {
+                    for ri in 0..n {
+                        grid.push(a([nodes[ri], nodes[gi], nodes[bi]]));
+                    }
+                }
+            }
+            let input = UnitTable::new(|x| shape(&shaper, encode([x, 0.0, 0.0])[0]));
+            Arc::new(DragStageA {
+                key: key_a,
+                input,
+                grid,
+            })
+        }
+    };
+    let cube = Cube::from_entries(DRAG_TAIL_DIMENSION, stage_a.grid.iter().map(|v| b(*v)));
+    Arc::new(DragTail { stage_a, key, cube })
+}
+
+#[inline]
+fn clamp01(v: [f32; 3]) -> [f32; 3] {
+    [
+        v[0].clamp(0.0, 1.0),
+        v[1].clamp(0.0, 1.0),
+        v[2].clamp(0.0, 1.0),
+    ]
+}
+
+/// A cube stage as its function (what the cube samples): input clamped
+/// like `CIColorCube`'s, output clipped like the baked entries.
+#[inline]
+fn exact(f: &dyn Fn([f64; 3]) -> [f64; 3], v: [f32; 3]) -> [f32; 3] {
+    let v = clamp01(v);
+    let o = f([v[0] as f64, v[1] as f64, v[2] as f64]);
+    clamp01([o[0] as f32, o[1] as f32, o[2] as f32])
+}
+
+/// The sRGB-encoded result of a linear `[0, 1]` output.
+#[inline]
+fn oetf3(v: [f32; 3]) -> [f32; 3] {
+    [
+        srgb_oetf_f32(v[0]),
+        srgb_oetf_f32(v[1]),
+        srgb_oetf_f32(v[2]),
+    ]
+}
+
+/// An sRGB-encoded `[0, 1]` value from a preview tail to 8 bits.
+#[inline]
+fn write_encoded_rgba(out: &mut [u8], c: [f32; 3]) {
+    out[0] = (c[0] * 255.0 + 0.5) as u8;
+    out[1] = (c[1] * 255.0 + 0.5) as u8;
+    out[2] = (c[2] * 255.0 + 0.5) as u8;
+    out[3] = 255;
+}
+
+/// Non-RAW adaptive statistics: the plain input (linear sRGB, before the
+/// relative white balance), reduced like Core Image's affine sampling.
+pub fn raster_stats(image: &LinearImage, quality: Quality) -> AdaptiveStats {
+    let (small, w, h) = bilinear_downscale(
+        &image.data,
+        image.width,
+        image.height,
+        quality.stats_long_edge(),
+    );
+    spatial::compute_stats(&small, w, h, REC709_LUMA_F32)
+}
+
+/// The per-pixel stages after the spatial pass of the raster path, fused
+/// into one loop that writes RGBA: cube P -> linear sRGB -> (ProPhoto ->
+/// Calibration -> cube Q -> linear sRGB) -> output transform -> 8-bit.
+struct RasterTail {
+    post: Option<Arc<Cube>>,
+    stage_p: bool,
+    calibration: Option<[[f32; 3]; 3]>,
+    color: Option<Arc<Cube>>,
+    output_transform: bool,
+}
+
+impl RasterTail {
+    #[inline]
+    fn pixel(&self, mut v: [f32; 3]) -> [f32; 3] {
+        if self.stage_p {
+            if let Some(cube) = &self.post {
+                v = cube.apply(v);
+            }
+            v = mat_vec_f32(&PROPHOTO_TO_SRGB_F32, v);
+        }
+        self.color_stage(v)
+    }
+
+    #[inline]
+    fn color_stage(&self, mut v: [f32; 3]) -> [f32; 3] {
+        if self.calibration.is_some() || self.color.is_some() {
+            v = mat_vec_f32(&SRGB_TO_PROPHOTO_F32, v);
+            if let Some(m) = &self.calibration {
+                let c = mat_vec_f32(m, v);
+                v = [
+                    c[0].clamp(0.0, 1.0),
+                    c[1].clamp(0.0, 1.0),
+                    c[2].clamp(0.0, 1.0),
+                ];
+            }
+            if let Some(cube) = &self.color {
+                v = cube.apply(v);
+            }
+            v = mat_vec_f32(&PROPHOTO_TO_SRGB_F32, v);
+        }
+        v
+    }
+
+    /// The output stage of [`write_rgba`] before the 8-bit encode.
+    #[inline]
+    fn output(&self, v: [f32; 3]) -> [f32; 3] {
+        if self.output_transform {
+            output_transform(v)
+        } else {
+            [
+                v[0].clamp(0.0, 1.0),
+                v[1].clamp(0.0, 1.0),
+                v[2].clamp(0.0, 1.0),
+            ]
+        }
+    }
+}
+
+#[inline]
+fn write_rgba(out: &mut [u8], v: [f32; 3], transform: bool) {
+    let enc = srgb8();
+    let v = if transform {
+        output_transform(v)
+    } else {
+        [
+            v[0].clamp(0.0, 1.0),
+            v[1].clamp(0.0, 1.0),
+            v[2].clamp(0.0, 1.0),
+        ]
+    };
+    out[0] = enc.encode(v[0]);
+    out[1] = enc.encode(v[1]);
+    out[2] = enc.encode(v[2]);
+    out[3] = 255;
+}
+
+/// An sRGB-encoded value from a preview tail with the frame's output
+/// effects to 8 bits.
+#[inline]
+fn write_encoded_fx(out: &mut [u8], e: [f32; 3], fx: Option<&OutputEffects>, i: usize) {
+    match fx {
+        None => write_encoded_rgba(out, e),
+        Some(fx) => write_encoded_rgba(out, fx.apply(e, i)),
+    }
+}
+
+/// [`write_rgba`] with the frame's output effects: encoded first (they act
+/// on the encoded value), then 8 bits.
+#[inline]
+fn write_rgba_fx(
+    out: &mut [u8],
+    v: [f32; 3],
+    transform: bool,
+    fx: Option<&OutputEffects>,
+    i: usize,
+) {
+    match fx {
+        None => write_rgba(out, v, transform),
+        Some(fx) => {
+            let o = if transform {
+                output_transform(v)
+            } else {
+                clamp01(v)
+            };
+            write_encoded_rgba(out, fx.apply(effects::encode_srgb3(o), i));
+        }
+    }
+}
+
+#[inline]
+fn write_niho3_output_rgba(
+    out: &mut [u8],
+    linear_srgb: [f32; 3],
+    encoder: &crate::fastmath::Niho3Srgb8Encoder,
+) {
+    let linear = output_transform_clip(linear_srgb);
+    out[0] = encoder.encode(linear[0]);
+    out[1] = encoder.encode(linear[1]);
+    out[2] = encoder.encode(linear[2]);
+    out[3] = 255;
+}
+
+#[inline]
+fn write_niho3_output_rgba_fx(
+    out: &mut [u8],
+    linear_srgb: [f32; 3],
+    fx: &OutputEffects,
+    index: usize,
+) {
+    let encoded = oetf3(output_transform_clip(linear_srgb));
+    write_encoded_rgba(out, fx.apply(encoded, index));
+}
+
+/// A geometry frame (F3 #17122, [`crate::frame`]): the image rendered is a
+/// window around the output, not the whole photo.
+#[derive(Clone, Copy)]
+pub struct Framing<'a> {
+    /// The whole photo before the geometry: the adaptive statistics read it
+    /// (with the same function as a whole render), so the crop does not
+    /// change them.
+    pub stats_source: &'a LinearImage,
+    /// Long edge of the whole frame at this scale: the local radii follow
+    /// it (`frame::Plan::scale_long_edge`).
+    pub long_edge: usize,
+    /// The output inside the window.
+    pub output: Rect,
+    /// The window's identity (geometry, size, rectangle): a kept local pass
+    /// of another window is not reused.
+    pub key: &'a str,
+}
+
+/// What a frame reads besides its image: the statistics' source, the long
+/// edge of the local radii, the output rectangle and the window's key
+/// (the whole image without a geometry).
+fn frame_of<'a>(img: &'a LinearImage, framing: Option<&Framing<'a>>) -> Framing<'a> {
+    match framing {
+        Some(f) => *f,
+        None => Framing {
+            stats_source: img,
+            long_edge: img.width.max(img.height),
+            output: Rect::whole(img.width, img.height),
+            key: "",
+        },
+    }
+}
+
+/// Where a drag-frame tail cube takes over the per-pixel chain.
+enum PreviewEntry {
+    /// At cube P's input (encoded ProPhoto).
+    Post,
+    /// At cube Q's input (no cube P, no calibration): encoded ProPhoto of
+    /// the linear sRGB value.
+    Color,
+}
+
+#[derive(Clone, Copy)]
+struct OutputPixels<'a, 'v> {
+    src: &'a [f32],
+    src_width: usize,
+    output: Rect,
+    local: Option<&'a Plane>,
+    vignette: Option<&'a LinearVignette<'v>>,
+}
+
+/// Writes every output pixel: `head` (the stages before the local pass),
+/// the local pass's ratio `exp2(Ln - Ln0)` when there is one, the vignette's
+/// linear stage (highlight / color priority) when there is one, then `emit`.
+/// `src` (and the ratio/effects planes) spans the geometry window; `rgba` is
+/// the output rectangle of that window, row by row. Spatial ratios use source
+/// indices; effects use output-frame indices.
+#[inline(always)]
+fn fill_rgba(
+    rgba: &mut [u8],
+    pixels: OutputPixels<'_, '_>,
+    head: impl Fn([f32; 3]) -> [f32; 3],
+    emit: impl Fn(&mut [u8], [f32; 3], usize),
+) {
+    let OutputPixels {
+        src,
+        src_width,
+        output,
+        local,
+        vignette,
+    } = pixels;
+    for (y, out_row) in rgba.chunks_exact_mut(output.width * 4).enumerate() {
+        let start = (output.y + y) * src_width + output.x;
+        let end = start + output.width;
+        let output_start = y * output.width;
+        let output_end = output_start + output.width;
+        let pixels = src[start * 3..end * 3]
+            .chunks_exact(3)
+            .zip(out_row.chunks_exact_mut(4))
+            .enumerate()
+            .map(|(x, pair)| (start + x, output_start + x, pair));
+        match (local, vignette) {
+            (Some(ratio), Some(vignette)) => {
+                for ((_, output_i, (px, out)), (ratio, rho)) in pixels.zip(
+                    ratio.data[start..end]
+                        .iter()
+                        .zip(vignette.radius()[output_start..output_end].iter()),
+                ) {
+                    let v = head([px[0], px[1], px[2]]);
+                    let v = [v[0] * ratio, v[1] * ratio, v[2] * ratio];
+                    emit(out, vignette.apply(v, *rho), output_i);
+                }
+            }
+            (Some(ratio), None) => {
+                for ((_, output_i, (px, out)), ratio) in pixels.zip(ratio.data[start..end].iter()) {
+                    let v = head([px[0], px[1], px[2]]);
+                    emit(out, [v[0] * ratio, v[1] * ratio, v[2] * ratio], output_i);
+                }
+            }
+            (None, Some(vignette)) => {
+                for ((_, output_i, (px, out)), rho) in
+                    pixels.zip(vignette.radius()[output_start..output_end].iter())
+                {
+                    let v = head([px[0], px[1], px[2]]);
+                    emit(out, vignette.apply(v, *rho), output_i);
+                }
+            }
+            (None, None) => {
+                for (_, output_i, (px, out)) in pixels {
+                    emit(out, head([px[0], px[1], px[2]]), output_i);
+                }
+            }
+        }
+    }
+}
+
+/// The local pass as frames run it: the reference for released frames,
+/// the half-resolution Highlights / Shadows for drag frames
+/// ([`spatial::preview_luminance`]).
+fn local_luminance(ln0: &Plane, params: &SpatialParams) -> Option<Plane> {
+    match params.quality {
+        Quality::Interactive => spatial::preview_luminance(ln0, params),
+        Quality::Final => spatial::spatial_luminance(ln0, params),
+    }
+}
+
+/// The local pass of a frame, kept by a [`crate::Session`] for its next
+/// frames: the ratio `exp2(Ln - Ln0)` per pixel.
+///
+/// A drag frame takes the kept pass whenever its input is the same (the
+/// image, the stages before the pass, Highlights / Shadows / Texture /
+/// Clarity): the released frame's full-resolution pass included, and
+/// without recomputing the adaptive statistics (Photo Bench also freezes
+/// them while dragging, `PreviewDragSession`). Dragging a slider outside
+/// the pass (a color, a curve, cube P on JPEG / PNG) then costs no local
+/// processing at all. A released frame takes it only when it is a released
+/// pass with the same adaptive parameters, i.e. the same pixels.
+pub struct LocalPass {
+    input_key: String,
+    params_key: String,
+    quality: Quality,
+    ratio: Plane,
+}
+
+/// Session-owned caches passed together through repeated-render entry points.
+pub(crate) struct RenderCaches<'a> {
+    cubes: Option<&'a SettingsCubes>,
+    local: &'a mut Option<LocalPass>,
+    effects: &'a mut EffectsCache,
+}
+
+impl<'a> RenderCaches<'a> {
+    pub(crate) fn new(
+        cubes: Option<&'a SettingsCubes>,
+        local: &'a mut Option<LocalPass>,
+        effects: &'a mut EffectsCache,
+    ) -> Self {
+        Self {
+            cubes,
+            local,
+            effects,
+        }
+    }
+}
+
+/// Keeps only a local pass that may be reused by the next frame. A frame
+/// without spatial adjustments must release the old pass so a later drag
+/// recomputes adaptive statistics from its current settings.
+fn prepare_local_cache(cache: &mut Option<LocalPass>, spatial_on: bool, input_key: &str) {
+    if !spatial_on || cache.as_ref().is_some_and(|c| c.input_key != input_key) {
+        *cache = None;
+    }
+}
+
+/// The local pass for this frame from `cache` or computed (the kept plane
+/// is dropped first: one pass in memory at a time), left in `cache`.
+/// `params` computes the adaptive parameters (statistics), `ln0` the log
+/// luminance of the stages before the pass.
+fn local_pass(
+    cache: &mut Option<LocalPass>,
+    input_key: String,
+    quality: Quality,
+    params: impl FnOnce() -> SpatialParams,
+    ln0: impl FnOnce() -> Plane,
+) -> Option<&Plane> {
+    let same_input = cache.as_ref().is_some_and(|c| c.input_key == input_key);
+    if same_input && quality == Quality::Interactive {
+        return cache.as_ref().map(|c| &c.ratio);
+    }
+    let p = params();
+    let params_key = format!("{:?}|{:?}|{}", p.gain_scale, p.shift, p.scale_px);
+    let same_pass = cache
+        .as_ref()
+        .is_some_and(|c| c.quality == Quality::Final && c.params_key == params_key);
+    if same_input && same_pass {
+        return cache.as_ref().map(|c| &c.ratio);
+    }
+    *cache = None;
+    let ln0 = ln0();
+    let mut ratio = local_luminance(&ln0, &p)?;
+    for (r, l0) in ratio.data.iter_mut().zip(&ln0.data) {
+        *r = libm::exp2f(*r - l0);
+    }
+    drop(ln0);
+    *cache = Some(LocalPass {
+        input_key,
+        params_key,
+        quality,
+        ratio,
+    });
+    cache.as_ref().map(|c| &c.ratio)
+}
+
+/// Renders a decoded JPEG / PNG original. `niho-6` settings that use its
+/// response are prepared here from this raster (a Session keeps the
+/// analysis instead, [`prepare_niho6`]).
+pub fn render_raster(
+    raster: &Raster,
+    s: &DevelopSettings,
+    quality: Quality,
+    stats_cache: Option<AdaptiveStats>,
+    cubes_cache: Option<&SettingsCubes>,
+) -> (Rendered, SettingsCubes, Option<AdaptiveStats>) {
+    let prepared = niho6_one_shot(raster, s);
+    let (raster, failed) = match &prepared {
+        Some(Ok(prepared)) => (prepared, false),
+        Some(Err(_)) => (raster, true),
+        None => (raster, false),
+    };
+    let (mut rendered, cubes, stats) = render_raster_in_session(
+        raster,
+        None,
+        s,
+        quality,
+        stats_cache,
+        RenderCaches::new(cubes_cache, &mut None, &mut EffectsCache::default()),
+    );
+    if failed {
+        rendered.approximations.push("niho6ResponseUnavailable");
+    }
+    (rendered, cubes, stats)
+}
+
+/// `raster` prepared for `niho-6` settings that use the response, from its
+/// own analysis (`None` when these settings do not need it).
+fn niho6_one_shot(
+    raster: &Raster,
+    s: &DevelopSettings,
+) -> Option<Result<Raster, crate::niho6::PrepareError>> {
+    if s.engine != ENGINE_NIHO_6 || !crate::niho6::uses_response(s) {
+        return None;
+    }
+    let space = crate::niho6::SourceSpace::LinearSrgb;
+    Some(
+        crate::niho6::analysis(&raster.image, space, crate::niho6::analysis_exposure(s))
+            .and_then(|analysis| crate::niho6::apply(&raster.image, space, &analysis, s))
+            .map(|image| Raster {
+                image,
+                info: raster.info.clone(),
+            }),
+    )
+}
+
+/// The `niho-6` image of a Session: `image` (the whole source or its
+/// reduction for a display-size frame) with the response of `analysis`
+/// (made from the whole source).
+pub(crate) fn prepare_niho6(
+    image: &LinearImage,
+    space: crate::niho6::SourceSpace,
+    analysis: &crate::niho6::Analysis,
+    settings: &DevelopSettings,
+) -> Result<LinearImage, crate::niho6::PrepareError> {
+    crate::niho6::apply(image, space, analysis, settings)
+}
+
+/// [`render_raster`] with a session's kept local pass ([`LocalPass`]) and
+/// effects' planes. With a geometry, `raster` is the window and `framing`
+/// says where the output is ([`Framing`]).
+pub(crate) fn render_raster_in_session(
+    raster: &Raster,
+    framing: Option<&Framing<'_>>,
+    s: &DevelopSettings,
+    quality: Quality,
+    stats_cache: Option<AdaptiveStats>,
+    caches: RenderCaches<'_>,
+) -> (Rendered, SettingsCubes, Option<AdaptiveStats>) {
+    let RenderCaches {
+        cubes,
+        local,
+        effects,
+    } = caches;
+    render_linear(
+        &raster.image,
+        framing,
+        raster.info.is_bounded_srgb(),
+        None,
+        s,
+        quality,
+        stats_cache,
+        cubes,
+        local,
+        effects,
+        false,
+    )
+}
+
+/// [`render_raster`] at final quality with alpha 0 on every pixel whose
+/// color leaves sRGB before the output stage: where NIHO clips first and
+/// Photo Bench compresses the unclipped color (output.rs). Diagnostics: the
+/// golden test leaves those pixels out of its 99.9th percentile.
+pub fn render_raster_marking_out_of_srgb(raster: &Raster, s: &DevelopSettings) -> Rendered {
+    let prepared = niho6_one_shot(raster, s).and_then(Result::ok);
+    let raster = prepared.as_ref().unwrap_or(raster);
+    render_linear(
+        &raster.image,
+        None,
+        raster.info.is_bounded_srgb(),
+        None,
+        s,
+        Quality::Final,
+        None,
+        None,
+        &mut None,
+        &mut EffectsCache::default(),
+        true,
+    )
+    .0
+}
+
+/// The non-RAW path on `img`, whose pixels `input` maps to extended linear
+/// sRGB (identity for decoded originals; ProPhoto -> sRGB for non-RAW
+/// working copies). Nothing full-size is kept but the log luminance planes
+/// of the local pass and the output: every per-pixel stage before it is
+/// recomputed from the source in the final loop (same values).
+/// `mark_out_of_srgb`: [`render_raster_marking_out_of_srgb`]. With a
+/// geometry, `img` is the window ([`Framing`]).
+#[allow(clippy::too_many_arguments)]
+fn render_linear(
+    img: &LinearImage,
+    framing: Option<&Framing<'_>>,
+    bounded_srgb: bool,
+    input: Option<[[f32; 3]; 3]>,
+    s: &DevelopSettings,
+    quality: Quality,
+    stats_cache: Option<AdaptiveStats>,
+    cubes_cache: Option<&SettingsCubes>,
+    local_cache: &mut Option<LocalPass>,
+    effects_cache: &mut EffectsCache,
+    mark_out_of_srgb: bool,
+) -> (Rendered, SettingsCubes, Option<AdaptiveStats>) {
+    // NIHO 3 changes only signed RAW rendering. Raster input inherits the
+    // complete NIHO 2 formula, including Interactive preview closures; do
+    // this once at the entrance so no RAW-only branch can leak into JPEG.
+    let ignored_cnr_detail = s.color_noise_reduction_detail != 50.0;
+    let ignored_cnr_smoothness = s.color_noise_reduction_smoothness != 50.0;
+    let raster_legacy = (s.engine == ENGINE_NIHO_3).then(|| {
+        let mut legacy = s.clone();
+        legacy.engine = ENGINE_NIHO_2.to_string();
+        legacy.look = crate::look::LOOK_NIHO_INTERIM_1.to_string();
+        legacy
+    });
+    let s = raster_legacy.as_ref().unwrap_or(s);
+    let mut approximations = Vec::new();
+    if ignored_cnr_detail {
+        approximations.push("colorNoiseReductionDetail");
+    }
+    if ignored_cnr_smoothness {
+        approximations.push("colorNoiseReductionSmoothness");
+    }
+    // niho-6: the prepared image (niho6.rs) holds the learned share of
+    // Highlights <= 0 and Shadows >= 0; the legacy local pass keeps the other
+    // directions and `LEGACY_SHARE` of those (R24).
+    let (spatial_highlights, spatial_shadows) = if s.engine == ENGINE_NIHO_6 {
+        let legacy = |v: f64, learned: bool| {
+            if learned {
+                v * crate::niho6::LEGACY_SHARE
+            } else {
+                v
+            }
+        };
+        (
+            legacy(s.highlights, s.highlights < 0.0),
+            legacy(s.shadows, s.shadows > 0.0),
+        )
+    } else {
+        (s.highlights, s.shadows)
+    };
+    let spatial_on =
+        spatial_highlights != 0.0 || spatial_shadows != 0.0 || s.texture != 0.0 || s.clarity != 0.0;
+    let input_matrix = input;
+    let input = |px: [f32; 3]| match &input_matrix {
+        Some(m) => mat_vec_f32(m, px),
+        None => px,
+    };
+    let mut stats = stats_cache;
+    let jpeg_white_balance = if matches!(
+        s.engine.as_str(),
+        ENGINE_NIHO_2 | ENGINE_NIHO_3 | ENGINE_NIHO_6
+    ) && s.white_balance.mode == WhiteBalanceMode::Relative
+    {
+        PreparedJpegWhiteBalance::new(s.relative_temperature, s.relative_tint)
+    } else {
+        None
+    };
+    let relative = if !matches!(
+        s.engine.as_str(),
+        ENGINE_NIHO_2 | ENGINE_NIHO_3 | ENGINE_NIHO_6
+    ) && s.white_balance.mode == WhiteBalanceMode::Relative
+    {
+        relative_matrix(s.relative_temperature, s.relative_tint)
+    } else {
+        None
+    };
+    if s.white_balance.mode == WhiteBalanceMode::Absolute {
+        // Photo Bench keeps an absolute white balance on non-RAW input
+        // without rendering it.
+        approximations.push("absoluteWhiteBalanceIgnoredForRaster");
+    }
+    let want_post = s.exposure != 0.0 || needs_post_ops(s);
+    let stage_p = want_post || spatial_on;
+    let (w, h) = (img.width, img.height);
+    let frame = frame_of(img, framing);
+    let out = frame.output;
+    let fx = effects::prepare(s, out.width, out.height, effects_cache);
+    approximations.extend(&fx.approximations);
+    let (vignette, out_fx) = (fx.linear.as_ref(), fx.output.as_ref());
+
+    let input_key = format!(
+        "raster|{w}x{h}|{input_matrix:?}|{relative:?}|{stage_p}|{}|{}|{}|{}|{}",
+        spatial_highlights, spatial_shadows, s.texture, s.clarity, frame.key
+    );
+    prepare_local_cache(local_cache, spatial_on, &input_key);
+    let calibration =
+        needs_calibration(&s.calibration).then(|| to_f32(&calibration_matrix(&s.calibration)));
+    let color_on = needs_color_ops(s);
+    // Drag frames whose chain starts with a cube (its input clamp makes the
+    // rest a function of the encoded value): one lookup per pixel. The tail
+    // evaluates cube P / Q itself, so they are not baked for it.
+    let entry = match quality {
+        Quality::Final => None,
+        Quality::Interactive if want_post => Some(PreviewEntry::Post),
+        Quality::Interactive if color_on && calibration.is_none() => Some(PreviewEntry::Color),
+        Quality::Interactive => None,
+    };
+    let mut cubes = settings_cubes(
+        s,
+        s.exposure,
+        quality,
+        cubes_cache,
+        entry.is_none(),
+        None,
+        false,
+    );
+    let tail = RasterTail {
+        post: cubes.post.clone(),
+        stage_p,
+        calibration,
+        color: cubes.color.clone(),
+        output_transform: !bounded_srgb || has_active_color_edits(s),
+    };
+    let preview = entry.map(|entry| {
+        let color = color_on.then(|| PreparedColorOps::new(s));
+        let q = |v: [f32; 3]| match &color {
+            Some(c) => exact(&|x| c.apply(x), v),
+            None => v,
+        };
+        let drag = match entry {
+            PreviewEntry::Post => {
+                let post = PreparedPostOps::with_exposure(s, s.exposure);
+                let key_a = format!("raster|post|{}", cubes.post_key);
+                let key = format!(
+                    "{key_a}|{}|{:?}|{}",
+                    cubes.color_key, calibration, tail.output_transform
+                );
+                drag_tail(
+                    cubes.drag.as_ref(),
+                    key_a,
+                    key,
+                    &|e| exact(&|x| post.apply(x), decode(e)),
+                    &|p| {
+                        // RasterTail::pixel after cube P, with cube Q as its function.
+                        let mut v = mat_vec_f32(&PROPHOTO_TO_SRGB_F32, p);
+                        if calibration.is_some() || color.is_some() {
+                            v = mat_vec_f32(&SRGB_TO_PROPHOTO_F32, v);
+                            if let Some(m) = &calibration {
+                                v = clamp01(mat_vec_f32(m, v));
+                            }
+                            v = mat_vec_f32(&PROPHOTO_TO_SRGB_F32, q(v));
+                        }
+                        oetf3(tail.output(v))
+                    },
+                )
+            }
+            PreviewEntry::Color => {
+                let key_a = "raster|color".to_string();
+                let key = format!("{key_a}|{}|{}", cubes.color_key, tail.output_transform);
+                drag_tail(cubes.drag.as_ref(), key_a, key, &decode, &|v| {
+                    oetf3(tail.output(mat_vec_f32(&PROPHOTO_TO_SRGB_F32, q(v))))
+                })
+            }
+        };
+        cubes.drag = Some(drag.clone());
+        (entry, drag)
+    });
+    // The per-pixel stages before the local pass (the input conversion is
+    // matched outside the pixel loops).
+    let rest = |mut v: [f32; 3]| -> [f32; 3] {
+        if let Some(m) = &relative {
+            v = mat_vec_f32(m, v);
+        }
+        if stage_p {
+            v = mat_vec_f32(&SRGB_TO_PROPHOTO_F32, v);
+        }
+        v
+    };
+    let head = |px: [f32; 3]| rest(input(px));
+    let local = if spatial_on {
+        local_pass(
+            local_cache,
+            input_key,
+            quality,
+            || {
+                // Non-RAW adaptive statistics: the plain input (linear sRGB,
+                // before the relative white balance), reduced like Core
+                // Image's sampling.
+                let stats = *stats.get_or_insert_with(|| {
+                    let whole = frame.stats_source;
+                    let (small, sw, sh) = bilinear_downscale_with(
+                        &whole.data,
+                        whole.width,
+                        whole.height,
+                        quality.stats_long_edge(),
+                        input,
+                    );
+                    spatial::compute_stats(&small, sw, sh, REC709_LUMA_F32)
+                });
+                let (gain_scale, shift) = adaptive_parameters(Some(&stats), AdaptivePath::NonRaw);
+                SpatialParams {
+                    highlights: spatial_highlights,
+                    shadows: spatial_shadows,
+                    texture: s.texture,
+                    clarity: s.clarity,
+                    scale_px: spatial::scale_px(frame.long_edge as f64),
+                    long_edge: frame.long_edge,
+                    gain_scale,
+                    shift,
+                    quality,
+                }
+            },
+            || {
+                let mut ln0 = Plane::new(w, h);
+                for (dst, px) in ln0.data.iter_mut().zip(img.data.chunks_exact(3)) {
+                    *dst = spatial::log_luminance(head([px[0], px[1], px[2]]));
+                }
+                ln0
+            },
+        )
+    } else {
+        None
+    };
+    let mut rgba = vec![0u8; out.width * out.height * 4];
+    let pixels = OutputPixels {
+        src: &img.data,
+        src_width: w,
+        output: out,
+        local,
+        vignette,
+    };
+    // One monomorphized loop per (input conversion, output) pair.
+    macro_rules! fill {
+        ($emit:expr) => {
+            match &input_matrix {
+                Some(m) => fill_rgba(&mut rgba, pixels, |px| rest(mat_vec_f32(m, px)), $emit),
+                None => fill_rgba(&mut rgba, pixels, rest, $emit),
+            }
+        };
+    }
+    match &preview {
+        Some((PreviewEntry::Post, drag)) => {
+            fill!(|out: &mut [u8], v: [f32; 3], i: usize| {
+                write_encoded_fx(out, drag.lookup(v), out_fx, i)
+            })
+        }
+        Some((PreviewEntry::Color, drag)) => fill!(|out: &mut [u8], v: [f32; 3], i: usize| {
+            let v = if stage_p {
+                mat_vec_f32(&PROPHOTO_TO_SRGB_F32, v)
+            } else {
+                v
+            };
+            write_encoded_fx(
+                out,
+                drag.lookup(mat_vec_f32(&SRGB_TO_PROPHOTO_F32, v)),
+                out_fx,
+                i,
+            )
+        }),
+        None if mark_out_of_srgb => fill!(|out: &mut [u8], v: [f32; 3], i: usize| {
+            let p = tail.pixel(v);
+            write_rgba_fx(out, p, tail.output_transform, out_fx, i);
+            // The shoulder keeps every channel below 1, so only a negative
+            // one takes the color out of sRGB at the output stage.
+            if tail.output_transform && (p[0] < 0.0 || p[1] < 0.0 || p[2] < 0.0) {
+                out[3] = 0;
+            }
+        }),
+        None => fill!(|out: &mut [u8], v: [f32; 3], i: usize| {
+            write_rgba_fx(out, tail.pixel(v), tail.output_transform, out_fx, i)
+        }),
+    }
+    if let Some(white_balance) = jpeg_white_balance {
+        white_balance.apply_rgba(&mut rgba);
+    }
+    (
+        Rendered {
+            width: out.width,
+            height: out.height,
+            rgba,
+            approximations,
+        },
+        cubes,
+        stats,
+    )
+}
+
+/// The per-pixel tail after exposure / [S] on the RAW path, in linear
+/// ProPhoto: look + ACR3 cube -> RAW black & white mix -> cube P ->
+/// Calibration -> cube Q.
+struct RawTail {
+    acr3: &'static Cube,
+    niho4_camera: Option<crate::niho4_response::Camera>,
+    post: Option<Arc<Cube>>,
+    calibration: Option<[[f32; 3]; 3]>,
+    color_ops: Option<PreparedColorOps>,
+    color: Option<Arc<Cube>>,
+}
+
+impl RawTail {
+    fn new(
+        s: &DevelopSettings,
+        cubes: &SettingsCubes,
+        niho4_camera: Option<crate::niho4_response::Camera>,
+    ) -> Self {
+        Self {
+            acr3: look_cube(&s.look),
+            niho4_camera,
+            post: cubes.post.clone(),
+            calibration: needs_calibration(&s.calibration)
+                .then(|| to_f32(&calibration_matrix(&s.calibration))),
+            color_ops: needs_color_ops(s).then(|| PreparedColorOps::after_default_curve(s)),
+            color: cubes.color.clone(),
+        }
+    }
+
+    #[inline]
+    fn pixel(&self, px: [f32; 3]) -> [f32; 3] {
+        self.pixel_encoded(encode(px))
+    }
+
+    /// The tail from the encoded (clamped) input of the first cube.
+    #[inline]
+    fn pixel_encoded(&self, e: [f32; 3]) -> [f32; 3] {
+        // Adjacent cubes pass values in the encoded domain.
+        let mut e = self.acr3.lookup_encoded(e);
+        if let Some(camera) = self.niho4_camera {
+            e = encode(crate::niho4::pre_profile(camera, decode(e)));
+        }
+        if let Some(color_ops) = &self.color_ops {
+            // The RAW black & white mix measures the color immediately after
+            // ACR3. It must not see cube P or calibration output.
+            let v = exact(&|x| color_ops.apply_raw_before_post(x), decode(e));
+            e = encode(v);
+        }
+        if let Some(p) = &self.post {
+            e = p.apply_encoded(e);
+        }
+        let mut v = decode(e);
+        if let Some(cal) = &self.calibration {
+            let c = mat_vec_f32(cal, v);
+            v = [
+                c[0].clamp(0.0, 1.0),
+                c[1].clamp(0.0, 1.0),
+                c[2].clamp(0.0, 1.0),
+            ];
+        }
+        if let Some(q) = &self.color {
+            v = q.apply(v);
+        }
+        v
+    }
+}
+
+/// RAW working copy with its metadata.
+pub struct WorkingCopy<'a> {
+    pub image: &'a LinearImage,
+    pub meta: &'a WorkingCopyMeta,
+}
+
+/// Renders a RAW (or non-RAW) working copy. `niho-6` settings that use its
+/// response are prepared here from a non-RAW working copy (linear ProPhoto),
+/// as [`render_raster`] does for rasters (a Session keeps the analysis
+/// instead), so this draws the same image as a Session.
+pub fn render_working_copy(
+    wc: &WorkingCopy<'_>,
+    s: &DevelopSettings,
+    quality: Quality,
+    cubes_cache: Option<&SettingsCubes>,
+) -> (Rendered, SettingsCubes) {
+    let prepared = niho6_working_copy_one_shot(wc, s);
+    let (image, failed) = match &prepared {
+        Some(Ok(prepared)) => (prepared, false),
+        Some(Err(_)) => (wc.image, true),
+        None => (wc.image, false),
+    };
+    let (mut rendered, cubes) = render_working_copy_in_session(
+        &WorkingCopy {
+            image,
+            meta: wc.meta,
+        },
+        None,
+        s,
+        quality,
+        cubes_cache,
+        &mut None,
+        &mut EffectsCache::default(),
+    );
+    if failed {
+        rendered.approximations.push("niho6ResponseUnavailable");
+    }
+    (rendered, cubes)
+}
+
+/// A non-RAW working copy prepared for `niho-6` settings that use the
+/// response, from its own analysis in linear ProPhoto (`None` for a RAW
+/// working copy or settings that do not need it).
+fn niho6_working_copy_one_shot(
+    wc: &WorkingCopy<'_>,
+    s: &DevelopSettings,
+) -> Option<Result<LinearImage, crate::niho6::PrepareError>> {
+    if !matches!(wc.meta, WorkingCopyMeta::Raster { .. })
+        || s.engine != ENGINE_NIHO_6
+        || !crate::niho6::uses_response(s)
+    {
+        return None;
+    }
+    let space = crate::niho6::SourceSpace::LinearProPhoto;
+    Some(
+        crate::niho6::analysis(wc.image, space, crate::niho6::analysis_exposure(s))
+            .and_then(|analysis| crate::niho6::apply(wc.image, space, &analysis, s)),
+    )
+}
+
+/// [`render_working_copy`] with a session's kept local pass ([`LocalPass`])
+/// and effects' planes. With a geometry, `wc.image` is the window and
+/// `framing` says where the output is ([`Framing`]).
+pub(crate) fn render_working_copy_in_session(
+    wc: &WorkingCopy<'_>,
+    framing: Option<&Framing<'_>>,
+    s: &DevelopSettings,
+    quality: Quality,
+    cubes_cache: Option<&SettingsCubes>,
+    local_cache: &mut Option<LocalPass>,
+    effects_cache: &mut EffectsCache,
+) -> (Rendered, SettingsCubes) {
+    render_working_copy_with(
+        wc,
+        framing,
+        s,
+        quality,
+        RenderCaches::new(cubes_cache, local_cache, effects_cache),
+        false,
+    )
+}
+
+/// [`render_working_copy`] at final quality with alpha 0 on every pixel
+/// whose color leaves sRGB before the output stage (as
+/// [`render_raster_marking_out_of_srgb`]; the RAW golden test).
+pub fn render_working_copy_marking_out_of_srgb(
+    wc: &WorkingCopy<'_>,
+    s: &DevelopSettings,
+) -> Rendered {
+    let prepared = niho6_working_copy_one_shot(wc, s);
+    let (image, failed) = match &prepared {
+        Some(Ok(prepared)) => (prepared, false),
+        Some(Err(_)) => (wc.image, true),
+        None => (wc.image, false),
+    };
+    let mut rendered = render_working_copy_with(
+        &WorkingCopy {
+            image,
+            meta: wc.meta,
+        },
+        None,
+        s,
+        Quality::Final,
+        RenderCaches::new(None, &mut None, &mut EffectsCache::default()),
+        true,
+    )
+    .0;
+    if failed {
+        rendered.approximations.push("niho6ResponseUnavailable");
+    }
+    rendered
+}
+
+fn render_working_copy_with(
+    wc: &WorkingCopy<'_>,
+    framing: Option<&Framing<'_>>,
+    s: &DevelopSettings,
+    quality: Quality,
+    caches: RenderCaches<'_>,
+    mark_out_of_srgb: bool,
+) -> (Rendered, SettingsCubes) {
+    let RenderCaches {
+        cubes,
+        local,
+        effects,
+    } = caches;
+    match wc.meta {
+        WorkingCopyMeta::Raster { .. } => {
+            // Non-RAW working copies (HEIC / TIFF / large JPEG) are linear
+            // ProPhoto; they take the non-RAW path from linear sRGB.
+            let (r, c, _) = render_linear(
+                wc.image,
+                framing,
+                false,
+                Some(PROPHOTO_TO_SRGB_F32),
+                s,
+                quality,
+                None,
+                cubes,
+                local,
+                effects,
+                mark_out_of_srgb,
+            );
+            (r, c)
+        }
+        WorkingCopyMeta::Raw {
+            baseline_ev,
+            as_shot_white,
+            as_shot_white_adobe,
+            white_balance_table,
+            dcp_sha256,
+            ..
+        } => {
+            let white_balance = raw_white_balance(
+                as_shot_white,
+                as_shot_white_adobe.as_ref(),
+                white_balance_table.as_deref(),
+                s,
+            );
+            render_raw(
+                wc.image,
+                framing,
+                *baseline_ev,
+                white_balance,
+                matches!(
+                    s.engine.as_str(),
+                    ENGINE_NIHO_4 | ENGINE_NIHO_5 | ENGINE_NIHO_7
+                )
+                .then(|| crate::niho4_response::Camera::from_calibration(dcp_sha256))
+                .flatten(),
+                s,
+                quality,
+                cubes,
+                local,
+                effects,
+                mark_out_of_srgb,
+            )
+        }
+    }
+}
+
+/// A RAW working copy's absolute white balance: the matrix applied to its
+/// linear ProPhoto before exposure.
+#[derive(Debug, Clone, Copy)]
+struct RawWhiteBalance {
+    matrix: [[f32; 3]; 3],
+    /// A chromatic adaptation standing in for the RAW decoder's white
+    /// (`absoluteWhiteBalance`).
+    approximate: bool,
+}
+
+/// The absolute white balance of `s` on a RAW working copy; `None` unless
+/// `s` sets an absolute white.
+///
+/// With the working copy's white-balance table (S11 #17108) and its as-shot
+/// white in Lightroom's scale, it is the matrix Apple's RAW decoder applies
+/// between the two whites ([`WhiteBalanceTable::working_copy_transfer`]).
+/// The as-shot white is the one stage 1's self-check used: Adobe's reading
+/// (`asShotWhiteAdobe`) when the working copy carries it, else stage 1's
+/// own (`asShotWhite`), and only with both its temperature and tint (the
+/// other one is on another scale). Otherwise a chromatic adaptation from
+/// the same as-shot white's chromaticity approximates it.
+fn raw_white_balance(
+    as_shot_white: &AsShotWhite,
+    as_shot_white_adobe: Option<&AsShotWhite>,
+    table: Option<&WhiteBalanceTable>,
+    s: &DevelopSettings,
+) -> Option<RawWhiteBalance> {
+    if s.white_balance.mode != WhiteBalanceMode::Absolute {
+        return None;
+    }
+    let target = (s.white_balance.temperature?, s.white_balance.tint?);
+    let as_shot = as_shot_white_adobe.unwrap_or(as_shot_white);
+    let exact = table.and_then(|table| {
+        table.working_copy_transfer((as_shot.temperature?, as_shot.tint?), target)
+    });
+    Some(match exact {
+        Some(m) => RawWhiteBalance {
+            matrix: to_f32(&m),
+            approximate: false,
+        },
+        None => RawWhiteBalance {
+            matrix: to_f32(&raw_white_balance_prophoto(
+                Xy {
+                    x: as_shot.x,
+                    y: as_shot.y,
+                },
+                xy_from_temperature(target.0, target.1),
+            )),
+            approximate: true,
+        },
+    })
+}
+
+pub(crate) fn prepare_niho3(
+    image: &LinearImage,
+    meta: &WorkingCopyMeta,
+    settings: &DevelopSettings,
+    target: Option<crate::niho3::PreparationTarget>,
+    cached_analysis: Option<crate::niho3::AnalysisCache>,
+) -> Result<crate::niho3::Prepared, crate::niho3::PrepareError> {
+    let white_balance = match meta {
+        WorkingCopyMeta::Raw {
+            as_shot_white,
+            as_shot_white_adobe,
+            white_balance_table,
+            ..
+        } => raw_white_balance(
+            as_shot_white,
+            as_shot_white_adobe.as_ref(),
+            white_balance_table.as_deref(),
+            settings,
+        ),
+        WorkingCopyMeta::Raster { .. } => None,
+    };
+    crate::niho3::prepare(
+        image,
+        meta,
+        settings,
+        white_balance.map(|value| value.matrix),
+        white_balance.is_some_and(|value| value.approximate),
+        target,
+        cached_analysis,
+    )
+}
+
+pub(crate) fn niho3_preparation_key(
+    meta: &WorkingCopyMeta,
+    settings: &DevelopSettings,
+    target: Option<crate::niho3::PreparationTarget>,
+) -> String {
+    let white_balance = match meta {
+        WorkingCopyMeta::Raw {
+            as_shot_white,
+            as_shot_white_adobe,
+            white_balance_table,
+            ..
+        } => raw_white_balance(
+            as_shot_white,
+            as_shot_white_adobe.as_ref(),
+            white_balance_table.as_deref(),
+            settings,
+        )
+        .map(|value| value.matrix),
+        WorkingCopyMeta::Raster { .. } => None,
+    };
+    crate::niho3::preparation_key(meta, settings, white_balance, target)
+}
+
+pub(crate) fn prepare_niho4(
+    image: &LinearImage,
+    meta: &WorkingCopyMeta,
+    settings: &DevelopSettings,
+    target: Option<crate::niho4::PreparationTarget>,
+    cached_analysis: Option<crate::niho4::AnalysisCache>,
+) -> Result<crate::niho4::Prepared, crate::niho4::PrepareError> {
+    let white_balance = match meta {
+        WorkingCopyMeta::Raw {
+            as_shot_white,
+            as_shot_white_adobe,
+            white_balance_table,
+            ..
+        } => raw_white_balance(
+            as_shot_white,
+            as_shot_white_adobe.as_ref(),
+            white_balance_table.as_deref(),
+            settings,
+        ),
+        WorkingCopyMeta::Raster { .. } => None,
+    };
+    crate::niho4::prepare(
+        image,
+        meta,
+        settings,
+        white_balance.map(|value| value.matrix),
+        white_balance.is_some_and(|value| value.approximate),
+        target,
+        cached_analysis,
+    )
+}
+
+pub(crate) fn niho4_preparation_key(
+    meta: &WorkingCopyMeta,
+    settings: &DevelopSettings,
+    target: Option<crate::niho4::PreparationTarget>,
+) -> Result<String, crate::niho4::PrepareError> {
+    let camera = crate::niho4::camera(meta).ok_or(crate::niho4::PrepareError::UnsupportedCamera)?;
+    let white_balance = match meta {
+        WorkingCopyMeta::Raw {
+            as_shot_white,
+            as_shot_white_adobe,
+            white_balance_table,
+            ..
+        } => raw_white_balance(
+            as_shot_white,
+            as_shot_white_adobe.as_ref(),
+            white_balance_table.as_deref(),
+            settings,
+        )
+        .map(|value| value.matrix),
+        WorkingCopyMeta::Raster { .. } => None,
+    };
+    Ok(crate::niho4::preparation_key(
+        camera,
+        meta,
+        settings,
+        white_balance,
+        target,
+    ))
+}
+
+#[allow(clippy::too_many_arguments)]
+fn render_raw(
+    img: &LinearImage,
+    framing: Option<&Framing<'_>>,
+    baseline_ev: f64,
+    white_balance: Option<RawWhiteBalance>,
+    niho4_camera: Option<crate::niho4_response::Camera>,
+    s: &DevelopSettings,
+    quality: Quality,
+    cubes_cache: Option<&SettingsCubes>,
+    local_cache: &mut Option<LocalPass>,
+    effects_cache: &mut EffectsCache,
+    mark_out_of_srgb: bool,
+) -> (Rendered, SettingsCubes) {
+    let mut approximations = vec!["dcpLookTableNotApplied"];
+    if white_balance.is_some_and(|wb| wb.approximate) {
+        approximations.push("absoluteWhiteBalance");
+    }
+    if s.color_noise_reduction_detail != 50.0 {
+        approximations.push("colorNoiseReductionDetail");
+    }
+    if s.color_noise_reduction_smoothness != 50.0 {
+        approximations.push("colorNoiseReductionSmoothness");
+    }
+    let white_balance = white_balance.map(|wb| wb.matrix);
+    let gain = libm::exp2(baseline_ev + s.exposure) as f32;
+    let expose = move |v: [f32; 3]| [v[0] * gain, v[1] * gain, v[2] * gain];
+    // [absolute WB] -> exposure, per pixel (recomputed where needed).
+    let head = |px: [f32; 3]| -> [f32; 3] {
+        match &white_balance {
+            Some(m) => expose(mat_vec_f32(m, px)),
+            None => expose(px),
+        }
+    };
+    let (w, h) = (img.width, img.height);
+    let frame = frame_of(img, framing);
+    let out = frame.output;
+    let fx = effects::prepare(s, out.width, out.height, effects_cache);
+    approximations.extend(&fx.approximations);
+    let (vignette, out_fx) = (fx.linear.as_ref(), fx.output.as_ref());
+
+    let spatial_on = needs_spatial(s);
+    let input_key = format!(
+        "raw|{w}x{h}|{white_balance:?}|{gain}|{}|{}|{}|{}|{}",
+        s.highlights, s.shadows, s.texture, s.clarity, frame.key
+    );
+    prepare_local_cache(local_cache, spatial_on, &input_key);
+    // Drag frames bake cube P / Q only for the adaptive statistics of a new
+    // local pass (their tail evaluates the stages itself).
+    let kept_pass = quality == Quality::Interactive
+        && local_cache
+            .as_ref()
+            .is_some_and(|c| c.input_key == input_key);
+    let look_tone = raw_look_tone(s);
+    let mut cubes = settings_cubes(
+        s,
+        0.0,
+        quality,
+        cubes_cache,
+        quality == Quality::Final || (spatial_on && !kept_pass),
+        look_tone,
+        true,
+    );
+    let tail = RawTail::new(s, &cubes, niho4_camera);
+    let local = if spatial_on {
+        local_pass(
+            local_cache,
+            input_key,
+            quality,
+            || {
+                // round2 set A: statistics of the "preHS" rendering (every
+                // setting but H/S/Texture/Clarity, through cube Q) at 750 /
+                // 375 px.
+                let whole = frame.stats_source;
+                let (mut small, sw, sh) = bilinear_downscale_with(
+                    &whole.data,
+                    whole.width,
+                    whole.height,
+                    quality.stats_long_edge(),
+                    head,
+                );
+                for px in small.chunks_exact_mut(3) {
+                    let v = tail.pixel([px[0], px[1], px[2]]);
+                    px.copy_from_slice(&v);
+                }
+                let stats = spatial::compute_stats(&small, sw, sh, PP_LUMA_F32);
+                let (gain_scale, shift) = adaptive_parameters(Some(&stats), AdaptivePath::Raw);
+                SpatialParams {
+                    highlights: s.highlights,
+                    shadows: s.shadows,
+                    texture: s.texture,
+                    clarity: s.clarity,
+                    scale_px: spatial::scale_px(frame.long_edge as f64),
+                    long_edge: frame.long_edge,
+                    gain_scale,
+                    shift,
+                    quality,
+                }
+            },
+            || {
+                let mut ln0 = Plane::new(w, h);
+                for (dst, px) in ln0.data.iter_mut().zip(img.data.chunks_exact(3)) {
+                    *dst = spatial::log_luminance(head([px[0], px[1], px[2]]));
+                }
+                ln0
+            },
+        )
+    } else {
+        None
+    };
+    let relative = if s.white_balance.mode == WhiteBalanceMode::Relative {
+        relative_matrix(s.relative_temperature, s.relative_tint)
+    } else {
+        None
+    };
+    let finish = |v: [f32; 3]| -> [f32; 3] {
+        let v = mat_vec_f32(&PROPHOTO_TO_SRGB_F32, v);
+        match &relative {
+            Some(m) => mat_vec_f32(m, v),
+            None => v,
+        }
+    };
+    // Drag frames: the ACR3 cube clamps its input, so the whole tail is one
+    // cube of the encoded value.
+    let preview = (quality == Quality::Interactive).then(|| {
+        let post = (needs_post_ops(s) || look_tone.is_some())
+            .then(|| PreparedPostOps::with_exposure(s, 0.0).with_look(look_tone));
+        let color = needs_color_ops(s).then(|| PreparedColorOps::after_default_curve(s));
+        // The RAW black & white mix is part of stage A, before cube P.
+        let key_a = format!(
+            "raw|{}|{:?}|{}|{}",
+            s.look, niho4_camera, cubes.post_key, cubes.color_key
+        );
+        let key = format!(
+            "{key_a}|{}|{:?}|{:?}",
+            cubes.color_key, tail.calibration, relative
+        );
+        let acr3 = look_cube(&s.look);
+        let drag = drag_tail(
+            cubes.drag.as_ref(),
+            key_a,
+            key,
+            &|e| {
+                let mut v = decode(acr3.lookup_encoded(e));
+                if let Some(camera) = niho4_camera {
+                    v = crate::niho4::pre_profile(camera, v);
+                }
+                if let Some(q) = &color {
+                    v = exact(&|x| q.apply_raw_before_post(x), v);
+                }
+                match &post {
+                    Some(p) => exact(&|x| p.apply(x), v),
+                    None => v,
+                }
+            },
+            &|v| {
+                // RawTail::pixel_encoded after cube P, with cube Q as its function.
+                let mut v = v;
+                if let Some(m) = &tail.calibration {
+                    v = clamp01(mat_vec_f32(m, v));
+                }
+                if let Some(q) = &color {
+                    v = exact(&|x| q.apply_raw_after_pre_post(x), v);
+                }
+                let linear = finish(v);
+                oetf3(
+                    if matches!(
+                        s.engine.as_str(),
+                        ENGINE_NIHO_3 | ENGINE_NIHO_4 | ENGINE_NIHO_5 | ENGINE_NIHO_7
+                    ) {
+                        output_transform_clip(linear)
+                    } else {
+                        output_transform(linear)
+                    },
+                )
+            },
+        );
+        cubes.drag = Some(drag.clone());
+        drag
+    });
+    let mut rgba = vec![0u8; out.width * out.height * 4];
+    let pixels = OutputPixels {
+        src: &img.data,
+        src_width: w,
+        output: out,
+        local,
+        vignette,
+    };
+    // One monomorphized loop per (white balance, output) pair.
+    macro_rules! fill {
+        ($emit:expr) => {
+            match &white_balance {
+                Some(m) => fill_rgba(&mut rgba, pixels, |px| expose(mat_vec_f32(m, px)), $emit),
+                None => fill_rgba(&mut rgba, pixels, expose, $emit),
+            }
+        };
+    }
+    match &preview {
+        Some(drag) => fill!(|out: &mut [u8], v: [f32; 3], i: usize| {
+            write_encoded_fx(out, drag.lookup(v), out_fx, i)
+        }),
+        None if matches!(
+            s.engine.as_str(),
+            ENGINE_NIHO_3 | ENGINE_NIHO_4 | ENGINE_NIHO_5 | ENGINE_NIHO_7
+        ) && out_fx.is_none() =>
+        {
+            let encoder = crate::fastmath::niho3_srgb8();
+            fill!(|out: &mut [u8], v: [f32; 3], _i: usize| {
+                write_niho3_output_rgba(out, finish(tail.pixel(v)), encoder)
+            })
+        }
+        None if matches!(
+            s.engine.as_str(),
+            ENGINE_NIHO_3 | ENGINE_NIHO_4 | ENGINE_NIHO_5 | ENGINE_NIHO_7
+        ) =>
+        {
+            let fx = out_fx.expect("NIHO 3 output effects");
+            fill!(|out: &mut [u8], v: [f32; 3], i: usize| {
+                write_niho3_output_rgba_fx(out, finish(tail.pixel(v)), fx, i)
+            })
+        }
+        None if mark_out_of_srgb => fill!(|out: &mut [u8], v: [f32; 3], i: usize| {
+            let p = finish(tail.pixel(v));
+            write_rgba_fx(out, p, true, out_fx, i);
+            if p[0] < 0.0 || p[1] < 0.0 || p[2] < 0.0 {
+                out[3] = 0;
+            }
+        }),
+        None => fill!(|out: &mut [u8], v: [f32; 3], i: usize| {
+            write_rgba_fx(out, finish(tail.pixel(v)), true, out_fx, i)
+        }),
+    }
+    (
+        Rendered {
+            width: out.width,
+            height: out.height,
+            rgba,
+            approximations,
+        },
+        cubes,
+    )
+}
+
+/// Pointwise-only evaluation of the non-RAW chain (tests / tools).
+pub fn raster_pointwise(v: [f64; 3], s: &DevelopSettings) -> [f64; 3] {
+    let mut v = v;
+    if s.exposure != 0.0 {
+        v = exposure_non_raw(v, s.exposure);
+    }
+    v = crate::tone_ops::apply_post_ops(v, s);
+    if needs_calibration(&s.calibration) {
+        v = color_ops::calibration(v, &s.calibration);
+    }
+    PreparedColorOps::new(s).apply(v)
+}

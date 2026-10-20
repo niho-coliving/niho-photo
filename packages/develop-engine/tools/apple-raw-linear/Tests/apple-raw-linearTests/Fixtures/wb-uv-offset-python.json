@@ -1,0 +1,82 @@
+{
+ "description": "uv-offset white-balance map (uv_adobe = uv_apple + [du, dv], CIE 1960) and DNG temperature_from_xy, computed by tools/calibrate (make_working_copies.py arithmetic, wbmodel.temperature_from_xy) with Python 3.14.6 / numpy 2.3.5",
+ "du": -0.006818,
+ "dv": 5e-05,
+ "cases": [
+  {
+   "label": "P1012822 as-shot (Apple, decoderVersion 8)",
+   "apple": {
+    "x": 0.4221533238887787,
+    "y": 0.395207017660141,
+    "temperature": 3176.754063713628,
+    "tint": -4.5214241047103
+   },
+   "adobe": {
+    "x": 0.4137336182110378,
+    "y": 0.39847966287214376,
+    "temperature": 3384.945072931617,
+    "tint": 4.893304306416134
+   }
+  },
+  {
+   "label": "xy_from_temperature(2850 K, tint 0)",
+   "apple": {
+    "x": 0.4479935003379701,
+    "y": 0.40754905680250564,
+    "temperature": 2850.0000901248522,
+    "tint": -2.8096084173209495e-07
+   },
+   "adobe": {
+    "x": 0.4396682829491244,
+    "y": 0.41096963255295005,
+    "temperature": 2995.694896567434,
+    "tint": 6.58896802993459
+   }
+  },
+  {
+   "label": "xy_from_temperature(5003 K, tint 0)",
+   "apple": {
+    "x": 0.34501903168899856,
+    "y": 0.3515503138211373,
+    "temperature": 5002.999677188028,
+    "tint": -6.45697748929474e-07
+   },
+   "adobe": {
+    "x": 0.33646038561640335,
+    "y": 0.3543103191807273,
+    "temperature": 5341.870181506578,
+    "tint": 15.096201589509745
+   }
+  },
+  {
+   "label": "xy_from_temperature(6504 K, tint 5)",
+   "apple": {
+    "x": 0.3130733876946506,
+    "y": 0.3262855653809698,
+    "temperature": 6504.008509406856,
+    "tint": 4.999992853309702
+   },
+   "adobe": {
+    "x": 0.3045940134967883,
+    "y": 0.3287564270668019,
+    "temperature": 6958.274893539441,
+    "tint": 21.92788202706687
+   }
+  },
+  {
+   "label": "xy_from_temperature(4200 K, tint -12)",
+   "apple": {
+    "x": 0.3696975648244336,
+    "y": 0.36137365723914616,
+    "temperature": 4200.003090444049,
+    "tint": -11.999999686119107
+   },
+   "adobe": {
+    "x": 0.36124029981470224,
+    "y": 0.36423924681482756,
+    "temperature": 4489.110820961785,
+    "tint": 0.629556276894835
+   }
+  }
+ ]
+}

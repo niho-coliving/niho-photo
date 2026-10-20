@@ -1,0 +1,8 @@
+{"schema":"niho-develop-calibration/v1","track":"apple","camera":{"make":"Panasonic","model":"DC-S5","id":"panasonic-dc-s5"},
+ "decoder":{"kind":"apple-cirawfilter","decoderVersion":"8","settings":{}},
+ "inputSpace":"extended-linear-srgb-d65-as-shot","workingSpace":"linear-prophoto-d50",
+ "matrix":{"space":"linear-prophoto-d50","rowMajor":[[1,0,0],[0,1,0],[0,0,1]],"whitePreserving":true},
+ "baselineEV":0.0,"illuminants":null,
+ "hueSat":{"hueDivisions":90,"satDivisions":30,"valueDivisions":1,"table":[]},
+ "version":"v1","createdAt":"2026-09-28T00:00:00Z","fit":{},
+ "baseVersion":"apple-ciraw8/linear-prophoto-d50/cal-panasonic-dc-s5-apple-v1"}

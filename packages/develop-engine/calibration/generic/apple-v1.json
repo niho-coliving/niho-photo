@@ -1,0 +1,352 @@
+{
+ "schema": "niho-develop-calibration/v1",
+ "track": "apple",
+ "camera": {
+  "make": null,
+  "model": null,
+  "id": "generic"
+ },
+ "decoder": {
+  "kind": "apple-cirawfilter",
+  "decoderVersion": "8",
+  "settings": {
+   "boostAmount": 0,
+   "boostShadowAmount": 1,
+   "exposure": 0,
+   "shadowBias": 0,
+   "extendedDynamicRangeAmount": 0,
+   "gamutMapping": true,
+   "lensCorrection": true,
+   "localToneMapAmount": 0,
+   "contrastAmount": 0
+  }
+ },
+ "inputSpace": "extended-linear-srgb-d65-as-shot",
+ "workingSpace": "linear-prophoto-d50",
+ "matrix": {
+  "space": "linear-prophoto-d50",
+  "rowMajor": [
+   [
+    0.808649,
+    0.121983,
+    0.069368
+   ],
+   [
+    0.043484,
+    0.809163,
+    0.147353
+   ],
+   [
+    0.053213,
+    0.012019,
+    0.934768
+   ]
+  ],
+  "whitePreserving": true
+ },
+ "baselineEV": -0.29005,
+ "illuminants": null,
+ "hueSat": null,
+ "version": "v1",
+ "createdAt": "2026-10-15T05:04:10+09:00",
+ "fit": {
+  "tool": "calibrate/fit_generic.py",
+  "method": "pooled fit_base.py matrix+EV over the calibrated cameras' scenes (train and val), every camera weighted equally; leave-one-out per camera",
+  "cameras": [
+   {
+    "id": "panasonic-dc-s5",
+    "make": "Panasonic",
+    "model": "DC-S5",
+    "scenes": 26
+   },
+   {
+    "id": "sony-zv-e10m2",
+    "make": "SONY",
+    "model": "ZV-E10M2",
+    "scenes": 4
+   },
+   {
+    "id": "sony-ilme-fx30",
+    "make": "SONY",
+    "model": "ILME-FX30",
+    "scenes": 13
+   }
+  ],
+  "metric": "deltaE00-mean-blur2-1500px",
+  "train": {
+   "mean": 1.2695,
+   "p99": 7.0899,
+   "scenes": 43
+  },
+  "before": {
+   "mean": 4.2805,
+   "p99": 9.9388,
+   "scenes": 43
+  },
+  "leaveOneOut": [
+   {
+    "heldOut": "panasonic-dc-s5",
+    "none": {
+     "all": {
+      "n": 26,
+      "mean": 2.95,
+      "p99": 8.6684
+     },
+     "val": {
+      "n": 13,
+      "mean": 2.9028,
+      "p99": 7.8392
+     }
+    },
+    "generic": {
+     "all": {
+      "n": 26,
+      "mean": 2.3627,
+      "p99": 8.1529
+     },
+     "val": {
+      "n": 13,
+      "mean": 2.3568,
+      "p99": 6.3943
+     }
+    },
+    "average": {
+     "all": {
+      "n": 26,
+      "mean": 2.4086,
+      "p99": 8.1855
+     },
+     "val": {
+      "n": 13,
+      "mean": 2.3987,
+      "p99": 6.4148
+     }
+    },
+    "own": {
+     "all": {
+      "n": 26,
+      "mean": 1.0081,
+      "p99": 4.6787
+     },
+     "val": {
+      "n": 13,
+      "mean": 1.0122,
+      "p99": 4.4444
+     }
+    },
+    "fittedWithout": {
+     "matrix": [
+      [
+       0.783578,
+       0.160848,
+       0.055574
+      ],
+      [
+       0.002045,
+       0.873186,
+       0.124769
+      ],
+      [
+       0.011319,
+       0.080412,
+       0.908268
+      ]
+     ],
+     "baselineEV": -0.31655
+    }
+   },
+   {
+    "heldOut": "sony-zv-e10m2",
+    "none": {
+     "all": {
+      "n": 4,
+      "mean": 5.2465,
+      "p99": 9.1638
+     },
+     "val": {
+      "n": 2,
+      "mean": 4.7013,
+      "p99": 7.9572
+     }
+    },
+    "generic": {
+     "all": {
+      "n": 4,
+      "mean": 1.0347,
+      "p99": 2.5729
+     },
+     "val": {
+      "n": 2,
+      "mean": 0.9097,
+      "p99": 2.1494
+     }
+    },
+    "average": {
+     "all": {
+      "n": 4,
+      "mean": 1.3125,
+      "p99": 2.8636
+     },
+     "val": {
+      "n": 2,
+      "mean": 1.1041,
+      "p99": 2.2374
+     }
+    },
+    "own": {
+     "all": {
+      "n": 4,
+      "mean": 0.7679,
+      "p99": 2.2562
+     },
+     "val": {
+      "n": 2,
+      "mean": 0.7736,
+      "p99": 2.1901
+     }
+    },
+    "fittedWithout": {
+     "matrix": [
+      [
+       0.793661,
+       0.118495,
+       0.087844
+      ],
+      [
+       0.051359,
+       0.784292,
+       0.16435
+      ],
+      [
+       0.060332,
+       -0.00444,
+       0.944107
+      ]
+     ],
+     "baselineEV": -0.24928
+    }
+   },
+   {
+    "heldOut": "sony-ilme-fx30",
+    "none": {
+     "all": {
+      "n": 13,
+      "mean": 4.6451,
+      "p99": 9.9388
+     },
+     "val": {
+      "n": 5,
+      "mean": 4.4606,
+      "p99": 9.9388
+     }
+    },
+    "generic": {
+     "all": {
+      "n": 13,
+      "mean": 1.0722,
+      "p99": 3.7071
+     },
+     "val": {
+      "n": 5,
+      "mean": 0.9412,
+      "p99": 2.6723
+     }
+    },
+    "average": {
+     "all": {
+      "n": 13,
+      "mean": 1.4325,
+      "p99": 3.7899
+     },
+     "val": {
+      "n": 5,
+      "mean": 1.3189,
+      "p99": 2.9594
+     }
+    },
+    "own": {
+     "all": {
+      "n": 13,
+      "mean": 0.8987,
+      "p99": 3.6794
+     },
+     "val": {
+      "n": 5,
+      "mean": 0.7818,
+      "p99": 2.2968
+     }
+    },
+    "fittedWithout": {
+     "matrix": [
+      [
+       0.826718,
+       0.115806,
+       0.057476
+      ],
+      [
+       0.058561,
+       0.797769,
+       0.14367
+      ],
+      [
+       0.061856,
+       -0.000673,
+       0.938818
+      ]
+     ],
+     "baselineEV": -0.27155
+    }
+   }
+  ],
+  "gate": {
+   "rule": "外した機種の全場面の ΔE00 mean で、汎用 < 補正なし - 0（校正済みより悪くてよい）",
+   "passed": true,
+   "checks": [
+    {
+     "camera": "panasonic-dc-s5",
+     "none": 2.95,
+     "generic": 2.3627,
+     "own": 1.0081,
+     "betterThanNone": true,
+     "worseThanOwn": true
+    },
+    {
+     "camera": "sony-zv-e10m2",
+     "none": 5.2465,
+     "generic": 1.0347,
+     "own": 0.7679,
+     "betterThanNone": true,
+     "worseThanOwn": true
+    },
+    {
+     "camera": "sony-ilme-fx30",
+     "none": 4.6451,
+     "generic": 1.0722,
+     "own": 0.8987,
+     "betterThanNone": true,
+     "worseThanOwn": true
+    }
+   ]
+  },
+  "referenceSet": "lr-measure round6 neutral (Adobe Standard, As Shot), the cameras' fit_base.py manifests",
+  "look": "acr3-default-tone-curve + RGBTone (temporary until S8)",
+  "optimizer": [
+   {
+    "stage": "行列＋EV（全機種）",
+    "iterations": 48,
+    "reason": "converged",
+    "objectiveStart": 4.65258,
+    "objectiveEnd": 1.30898,
+    "seconds": 4.57,
+    "criteria": "relative drop < 1e-06 twice / step < 1e-8 / max 100 iterations",
+    "method": "IRLS (L1 on ΔE00) + Levenberg-Marquardt, forward-difference Jacobian"
+   }
+  ],
+  "whiteBalanceMapNote": "持たない（機種ごとの as-shot の白の差は機種で向きが違い、汎用の値を決めない）"
+ },
+ "baseVersion": "apple-ciraw8/linear-prophoto-d50/cal-generic-apple-v1",
+ "lens": {
+  "mode": "apple",
+  "note": "登録の無い機種はレンズの測定が無いので、校正なしと同じ Core Image の補正（Core Image が直せないレンズは補正なし = lens-none）"
+ }
+}

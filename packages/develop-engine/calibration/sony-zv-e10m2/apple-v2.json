@@ -1,0 +1,173 @@
+{
+ "schema": "niho-develop-calibration/v1",
+ "track": "apple",
+ "camera": {
+  "make": "SONY",
+  "model": "ZV-E10M2",
+  "id": "sony-zv-e10m2"
+ },
+ "decoder": {
+  "kind": "apple-cirawfilter",
+  "decoderVersion": "8",
+  "settings": {
+   "boostAmount": 0,
+   "boostShadowAmount": 1,
+   "exposure": 0,
+   "shadowBias": 0,
+   "extendedDynamicRangeAmount": 0,
+   "gamutMapping": true,
+   "lensCorrection": true,
+   "localToneMapAmount": 0,
+   "contrastAmount": 0
+  }
+ },
+ "inputSpace": "extended-linear-srgb-d65-as-shot",
+ "workingSpace": "linear-prophoto-d50",
+ "matrix": {
+  "space": "linear-prophoto-d50",
+  "rowMajor": [
+   [
+    0.770607,
+    0.194464,
+    0.034929
+   ],
+   [
+    -0.017859,
+    0.910128,
+    0.107731
+   ],
+   [
+    -0.01936,
+    0.119896,
+    0.899465
+   ]
+  ],
+  "whitePreserving": true
+ },
+ "baselineEV": -0.31673,
+ "illuminants": null,
+ "hueSat": null,
+ "version": "v2",
+ "createdAt": "2026-09-29T15:30:00+09:00",
+ "fit": {
+  "tool": "calibrate/fit_base.py",
+  "trainScenes": [
+   "DSC09188",
+   "DSC09207"
+  ],
+  "valScenes": [
+   "DSC09206",
+   "DSC09208"
+  ],
+  "metric": "deltaE00-mean-blur2-1500px",
+  "train": {
+   "mean": 0.7622,
+   "p99": 2.2562
+  },
+  "val": {
+   "mean": 0.7736,
+   "p99": 2.1901
+  },
+  "referenceSet": "lr-measure round2 neutral (Adobe Standard, PV 15.4, As Shot)",
+  "look": "acr3-default-tone-curve + RGBTone (temporary until S8)",
+  "before": {
+   "train": {
+    "mean": 5.7917,
+    "p99": 9.1638
+   },
+   "val": {
+    "mean": 4.7013,
+    "p99": 7.9572
+   }
+  },
+  "optimizer": [
+   {
+    "stage": "行列＋EV",
+    "iterations": 23,
+    "reason": "converged",
+    "objectiveStart": 5.93678,
+    "objectiveEnd": 0.70391,
+    "seconds": 0.56,
+    "criteria": "relative drop < 1e-06 twice / step < 1e-8 / max 100 iterations",
+    "method": "IRLS (L1 on ΔE00) + Levenberg-Marquardt, forward-difference Jacobian"
+   },
+   {
+    "stage": "HueSat 12",
+    "iterations": 11,
+    "reason": "converged",
+    "objectiveStart": 0.70391,
+    "objectiveEnd": 0.69877,
+    "seconds": 0.37,
+    "criteria": "relative drop < 1e-06 twice / step < 1e-8 / max 100 iterations",
+    "method": "IRLS (L1 on ΔE00) + Levenberg-Marquardt, forward-difference Jacobian"
+   }
+  ],
+  "cells": {
+   "grid": [
+    48,
+    32
+   ],
+   "maxCellStd": 8.0,
+   "clipMax": 0.01,
+   "used": {
+    "DSC09188": 1451,
+    "DSC09206": 1100,
+    "DSC09207": 1183,
+    "DSC09208": 838
+   }
+  },
+  "illuminantsNote": null,
+  "hueSatNote": "不採用（検証 画素 ΔE00 mean 0.774 → 0.776。改善 0.2 未満）。表: -0.0°/×1.000, +0.0°/×1.001, +0.3°/×1.000, +0.3°/×1.006, +0.1°/×1.006, -0.1°/×1.002, -0.2°/×0.999, -0.4°/×0.996, -0.5°/×0.994, -0.5°/×0.999, -0.3°/×1.000, -0.2°/×1.000",
+  "selection": {
+   "candidates": {
+    "1ill": {
+     "train": {
+      "mean": 0.7622,
+      "p99": 2.2562
+     },
+     "val": {
+      "mean": 0.7736,
+      "p99": 2.1901
+     }
+    },
+    "2ill": {
+     "train": {
+      "mean": 0.7622,
+      "p99": 2.2562
+     },
+     "val": {
+      "mean": 0.7736,
+      "p99": 2.1901
+     }
+    }
+   },
+   "rule": "val mean が 0.1 以上良ければ 2 光源、そうでなければ 1 光源",
+   "chosen": "1ill"
+  }
+ },
+ "baseVersion": "apple-ciraw8/linear-prophoto-d50/cal-sony-zv-e10m2-apple-v2",
+ "whiteBalanceMap": {
+  "schema": "niho-develop-wb-map/v1",
+  "model": "uv-offset",
+  "description": "Adobe（Lightroom）が as-shot と見る白の予測: uv_adobe = uv_apple + [du, dv]（CIE 1960 uv、Apple の neutralChromaticity から）。係数はこの map の fit.scenes に記録した Sony の場面から推定。",
+  "du": -0.005673,
+  "dv": 0.000762,
+  "fit": {
+   "scenes": 4,
+   "duSd": 0.000434,
+   "dvSd": 0.000105,
+   "residualKSd": 15.6,
+   "residualTintSd": 1.02,
+   "residualTintMax": 1.58,
+   "referenceSet": "Lightroom 中立の書き出し XMP（ColorTemperature / Tint。refs.neutral = round6 優先）× Apple の as-shot xy"
+  }
+ },
+ "lens": {
+  "mode": "embedded",
+  "distortionRadiusScale": 1.01,
+  "vignettingRadiusScale": 1.146,
+  "vignetting": true,
+  "note": "Core Image の補正を切り、ARW SubIFD の DistortionCorrParams(0x7037) / VignettingCorrParams(0x7032) を apple-raw-linear が当てる。歪みの節点は枠の倍率を掛けた後の半径（|p| × frameScale）を 半対角 × 1.01 で割って引く（apple-raw-linear 0.4.0・S10b #17031）。E PZ 16-50mm の 16・17・49mm と E 16-55mm G（FX30）の 16・55mm で Lightroom のレンズプロファイル補正と幾何 RMS 0.1〜0.3px。周辺減光の半径の倍率 1.146 は v1 と同じ（16〜49・55mm で周辺 概ね ±0.1 EV）。色の係数は v1 と同じ"
+ },
+ "supersedes": "v1（色は同じ。v1 の lens.distortionRadiusScale 0.955 は 0.3.0 の正規化（|p| を半対角で割る）での値）"
+}
