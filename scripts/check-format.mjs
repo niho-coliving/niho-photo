@@ -1,22 +1,22 @@
-import { readFile } from "node:fs/promises";
-const root = new URL("../", import.meta.url);
-const manifest = JSON.parse(await readFile(new URL("../docs/security/publication-manifest.json", import.meta.url), "utf8"));
-const paths = [
-  ...manifest.importedFiles.map(({ path }) => path),
-  ...manifest.generatedFiles.map(({ path }) => path),
-];
+import { readFile, lstat } from "node:fs/promises";
+import { fileURLToPath } from "node:url";
+import path from "node:path";
+import { repositoryFiles } from "./ci/publication-lib.mjs";
+const root = fileURLToPath(new URL("../", import.meta.url));
 const failures = [];
-
-for (const path of paths) {
-  const text = await readFile(new URL(path, root), "utf8");
-  if (text.includes("\r")) failures.push(`${path}: CR改行`);
-  if (!text.endsWith("\n")) failures.push(`${path}: 最終改行なし`);
-  if (text.split("\n").some((line) => /[ \t]+$/.test(line))) failures.push(`${path}: 行末空白`);
+let checked = 0;
+for (const { name } of repositoryFiles(root)) {
+  if (!(await lstat(path.join(root, name))).isFile()) continue;
+  const bytes = await readFile(path.join(root, name));
+  if (bytes.includes(0)) continue;
+  let text;
+  try { text = new TextDecoder("utf-8", { fatal: true }).decode(bytes); } catch { continue; }
+  checked++;
+  if (text.includes("\r")) failures.push(`${JSON.stringify(name)}: CR改行`);
+  if (text.length && !text.endsWith("\n")) failures.push(`${JSON.stringify(name)}: 最終改行なし`);
+  if (text.split("\n").some((line) => /[ \t]+$/.test(line))) failures.push(`${JSON.stringify(name)}: 行末空白`);
 }
-
 if (failures.length) {
   console.error(failures.join("\n"));
   process.exitCode = 1;
-} else {
-  console.log(`書式確認: ${paths.length}ファイル、違反なし`);
-}
+} else console.log(`書式確認: ${checked}ファイル、違反なし`);

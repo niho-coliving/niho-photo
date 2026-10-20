@@ -13,7 +13,7 @@
 | main ruleset | `main pull requests`、ID `25466080`、有効。削除とforce pushを禁止し、PR・squash・レビュー会話の解決を要求 |
 | CODEOWNERS | `niho3`と`takuyatakahama3`を担当者として記録。必須レビューには使わない |
 | 必須レビュー | 0件。承認レビューとCODEOWNERSレビューをマージ条件にしない |
-| 必須CI | [#10](https://github.com/niho-coliving/niho-photo/issues/10)でfork-safeなチェック名と実行を確認後、rulesetに登録 |
+| 必須CI | 登録予定は `Public CI required`。[#10](https://github.com/niho-coliving/niho-photo/issues/10)のworkflow実在・外部fork実行を確認後、rulesetに登録。設定変更は未実施 |
 
 ## 設定変更の順序
 

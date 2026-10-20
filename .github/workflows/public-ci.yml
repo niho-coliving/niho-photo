@@ -1,0 +1,236 @@
+{
+  "name": "Public CI",
+  "on": {
+    "pull_request": {},
+    "push": {
+      "branches": [
+        "main"
+      ]
+    }
+  },
+  "permissions": {
+    "contents": "read"
+  },
+  "concurrency": {
+    "group": "public-ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}",
+    "cancel-in-progress": true
+  },
+  "jobs": {
+    "plan": {
+      "name": "Change scope",
+      "runs-on": "ubuntu-24.04",
+      "timeout-minutes": 5,
+      "outputs": {
+        "matrix": "${{ steps.scope.outputs.matrix }}",
+        "has-native": "${{ steps.scope.outputs.has-native }}",
+        "photo-editing": "${{ steps.scope.outputs.photo-editing }}"
+      },
+      "steps": [
+        {
+          "uses": "actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683",
+          "with": {
+            "persist-credentials": false,
+            "fetch-depth": 0
+          }
+        },
+        {
+          "uses": "actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020",
+          "with": {
+            "node-version": "24.15.0"
+          }
+        },
+        {
+          "id": "scope",
+          "run": "node scripts/ci/scopes.mjs"
+        }
+      ]
+    },
+    "publication": {
+      "name": "Publication guard",
+      "runs-on": "ubuntu-24.04",
+      "timeout-minutes": 5,
+      "steps": [
+        {
+          "uses": "actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683",
+          "with": {
+            "persist-credentials": false,
+            "fetch-depth": 0
+          }
+        },
+        {
+          "uses": "actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020",
+          "with": {
+            "node-version": "24.15.0"
+          }
+        },
+        {
+          "run": "node --test scripts/ci/*.test.mjs"
+        },
+        {
+          "run": "npm run verify:publication"
+        },
+        {
+          "run": "npm run format:check"
+        },
+        {
+          "run": "git diff --check"
+        }
+      ]
+    },
+    "secrets": {
+      "name": "Secret scan",
+      "runs-on": "ubuntu-24.04",
+      "timeout-minutes": 10,
+      "steps": [
+        {
+          "uses": "actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683",
+          "with": {
+            "persist-credentials": false,
+            "fetch-depth": 0
+          }
+        },
+        {
+          "run": "bash scripts/ci/scan-secrets.sh"
+        }
+      ]
+    },
+    "dependencies": {
+      "name": "Dependency review",
+      "if": "github.event_name == 'pull_request'",
+      "runs-on": "ubuntu-24.04",
+      "timeout-minutes": 10,
+      "steps": [
+        {
+          "uses": "actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683",
+          "with": {
+            "persist-credentials": false,
+            "fetch-depth": 0
+          }
+        },
+        {
+          "uses": "actions/dependency-review-action@3c4e3dcb1aa7874d2c16be7d79418e9b7efd6261",
+          "with": {
+            "fail-on-severity": "moderate",
+            "fail-on-scopes": "runtime,development,unknown",
+            "deny-licenses": "AGPL-1.0-only,AGPL-1.0-or-later,AGPL-3.0-only,AGPL-3.0-or-later",
+            "comment-summary-in-pr": "never",
+            "retry-on-snapshot-warnings": true,
+            "retry-on-snapshot-warnings-timeout": 120
+          }
+        }
+      ]
+    },
+    "photo-editing": {
+      "name": "Photo editing",
+      "needs": [
+        "plan",
+        "publication"
+      ],
+      "if": "needs.plan.outputs.photo-editing == 'true'",
+      "runs-on": "ubuntu-24.04",
+      "timeout-minutes": 15,
+      "env": {
+        "CI": "true"
+      },
+      "steps": [
+        {
+          "uses": "actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683",
+          "with": {
+            "persist-credentials": false,
+            "fetch-depth": 0
+          }
+        },
+        {
+          "uses": "actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020",
+          "with": {
+            "node-version": "24.15.0"
+          }
+        },
+        {
+          "run": "npm ci --ignore-scripts --no-audit --no-fund"
+        },
+        {
+          "run": "node scripts/ci/run-scope.mjs photo-editing"
+        }
+      ]
+    },
+    "native": {
+      "name": "Client / ${{ matrix.scope }}",
+      "needs": [
+        "plan",
+        "publication"
+      ],
+      "if": "needs.plan.outputs.has-native == 'true'",
+      "runs-on": "macos-14",
+      "timeout-minutes": 30,
+      "strategy": {
+        "fail-fast": false,
+        "matrix": "${{ fromJSON(needs.plan.outputs.matrix) }}"
+      },
+      "env": {
+        "CI": "true",
+        "CSC_IDENTITY_AUTO_DISCOVERY": "false"
+      },
+      "steps": [
+        {
+          "uses": "actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683",
+          "with": {
+            "persist-credentials": false,
+            "fetch-depth": 0
+          }
+        },
+        {
+          "uses": "actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020",
+          "with": {
+            "node-version": "24.15.0"
+          }
+        },
+        {
+          "run": "npm ci --ignore-scripts --no-audit --no-fund"
+        },
+        {
+          "name": "公開native検証",
+          "env": {
+            "CI_SCOPE": "${{ matrix.scope }}"
+          },
+          "run": "node scripts/ci/run-scope.mjs \"$CI_SCOPE\""
+        }
+      ]
+    },
+    "aggregate": {
+      "name": "Public CI required",
+      "if": "always()",
+      "needs": [
+        "plan",
+        "publication",
+        "secrets",
+        "dependencies",
+        "photo-editing",
+        "native"
+      ],
+      "runs-on": "ubuntu-24.04",
+      "timeout-minutes": 5,
+      "steps": [
+        {
+          "uses": "actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683",
+          "with": {
+            "persist-credentials": false,
+            "fetch-depth": 0
+          }
+        },
+        {
+          "uses": "actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020",
+          "with": {
+            "node-version": "24.15.0"
+          }
+        },
+        {
+          "env": {
+            "CI_NEEDS": "${{ toJSON(needs) }}"
+          },
+          "run": "node scripts/ci/aggregate.mjs"
+        }
+      ]
+    }
+  }
+}
