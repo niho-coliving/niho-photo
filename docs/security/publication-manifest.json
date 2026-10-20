@@ -3411,9 +3411,10 @@
         "path": "apps/camera/src-tauri/src/dialog.rs",
         "sha256": "a2d298fded021c366eb3098026fb452bc06b7d724ce2d6e2ba10e422aede4fd6"
       },
-      "outputSha256": "7c9a74888398de14f2980f26eb6e4b798712f9389f81068b7bb6a6b67e446cd7",
+      "outputSha256": "cb29e43675c47e63a1f5c666921ae11bfc4486acb97ae7280245fc72c4fe82d5",
       "modifications": [
-        "共有形式フィルターを使う複数写真pickerと参照削除コマンドを同梱UIの権限内に追加"
+        "共有形式フィルターを使う複数写真pickerと参照削除コマンドを同梱UIの権限内に追加",
+        "E2E専用写真選択のcfg分岐を末尾式にしてfeature付きclippyの警告を解消する"
       ]
     },
     {

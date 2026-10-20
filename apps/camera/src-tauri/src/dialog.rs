@@ -75,7 +75,7 @@ pub async fn pick_photos() -> Result<Vec<PathBuf>, CameraError> {
   let _slot = acquire()?;
   #[cfg(feature = "e2e")]
   {
-    return Ok(e2e_paths("NIHO_CAMERA_E2E_PICK_PHOTOS"));
+    Ok(e2e_paths("NIHO_CAMERA_E2E_PICK_PHOTOS"))
   }
   #[cfg(not(feature = "e2e"))]
   Ok(
