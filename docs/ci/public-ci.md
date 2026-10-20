@@ -11,7 +11,7 @@ rulesetへ登録する名称は **`Public CI required`** です。常に出る�
 | Publication guard | 全実行。全追跡ファイルと未追跡の公開候補に `npm run verify:publication`、`npm run format:check`、policyの否定テスト、空白検査 |
 | Secret scan | 全実行。checkoutした公開Git履歴の全refをgitleaksで走査。検出値は完全redact。PR側のignore/allow commentは採用しない |
 | Dependency review | 全PR。GitHub依存グラフの差分からmoderate以上の脆弱性とAGPLの追加を拒否。runtime/development/unknownを含む。PRコメント権限なし |
-| Photo editing | `packages/photo-editing`・`packages/ui` 変更。`npm ci --ignore-scripts` 後、双方のtypecheck / test / lint |
+| Photo editing | `packages/photo-editing`・`packages/niho-cloud-contract`・`packages/ui` 変更。`npm ci --ignore-scripts` 後、Photo editing / UIのtypecheck / test / lint とDocs固定SHAとのcontract同期確認 |
 | Camera | `apps/camera` 導入後。camera、account、写真関連パッケージ変更時。npmのtypecheck / test / lint / `build:unsigned` と宣言されたnative検査 |
 | Desktop photo | `packages/desktop-photo` 導入後。desktop-photo、account、photo-editing、ui、develop-engine変更時。Cargoのfmt / clippy / test |
 | Desktop account | `packages/desktop-account` 導入後。同パス・UI変更時。`ts`をroot workspaceへ登録し、npmのtypecheck / test / lint とRustのfmt / clippy / test |
@@ -19,7 +19,7 @@ rulesetへ登録する名称は **`Public CI required`** です。常に出る�
 
 `.github/`・`scripts/`・root package/lock・`docs/security/`・`docs/legal/`・`docs/ci/` の変更では、導入済みの全scopeを実行します。PRはeventのbase SHAとcheckoutしたmerge commitを比較します。pushはbefore SHAを使い、初回pushは全scopeです。削除も差分に含め、branch名・PRタイトルをshellへ展開しません。
 
-現在の公開treeはphoto-editing・UI・camera・desktop-photoです。cameraとdesktop-photoのnative scopeは有効です。desktop-accountは#3で導入し、TS・Rustの両方を検証します。develop-engineの検証契約は#9に従います。scopeのディレクトリが追加されると検査が自動で有効になり、メタデータ不足は失敗になります。アカウントのversioned正本・Rust/TS・Photoのdigest pinは `scripts/ci/account-contract.test.mjs` で検証します。Docs側の採用と双方CIの連動は#8の統合条件です。新しい公開packageが増えたらscopeの依存関係もレビューしてください。
+現在の公開treeはphoto-editing・UI・camera・desktop-photoです。cameraとdesktop-photoのnative scopeは有効です。desktop-accountは#3で導入し、TS・Rustの両方を検証します。develop-engineの検証契約は#9に従います。scopeのディレクトリが追加されると検査が自動で有効になり、メタデータ不足は失敗になります。アカウントのversioned正本・Rust/TS・Photoのdigest pinは `scripts/ci/account-contract.test.mjs` で検証します。Docs側の採用と双方CIの連動は#8の統合条件です。Docs / Photo共通contractは `packages/niho-cloud-contract` にDocsの完全SHAからコピーし、Publication guardで同一内容を検査します。新しい公開packageが増えたらscopeの依存関係もレビューしてください。
 
 ## nativeを移植するとき
 

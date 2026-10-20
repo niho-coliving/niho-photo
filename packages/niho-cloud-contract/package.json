@@ -1,0 +1,11 @@
+{
+  "name": "@niho/cloud-contract",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "NIHO Docs / Photo 共通クラウド共有 contract v1 の正本",
+  "exports": {
+    "./v1": "./src/v1.ts",
+    "./mock": "./src/mock.ts"
+  }
+}
