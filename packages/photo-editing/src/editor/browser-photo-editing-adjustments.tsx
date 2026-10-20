@@ -88,6 +88,8 @@ export function BrowserPhotoEditingAdjustments(props: {
   visibleKeys?: ReadonlyArray<PhotoEditingControlKey>;
   /** プリセットの節（群の上に置く。S1 の canvas の写真には渡さない） */
   presets?: ReactNode;
+  /** Oklch の独立した色ミキサー（対応する wasm の写真だけ）。 */
+  colorMixer?: ReactNode;
   /**
    * 道具の切り替え（補正 / 切り抜き / 背景除去）。`tools` はこの写真で使える道具を並べる順に（「補正」が先頭）。補正のほかに
    * 使える道具の無い写真には渡さない
@@ -277,6 +279,7 @@ export function BrowserPhotoEditingAdjustments(props: {
             lightAccessory={autoButton}
             onSettingsChange={props.onSettingsChange}
           />
+          {props.colorMixer}
         </>
       )}
       {!props.canEdit ? <p className="mt-3 text-xs text-niho-text-muted">{BROWSER_PHOTO_EDITING_READ_ONLY_TEXT}</p> : null}

@@ -1,9 +1,9 @@
 //! Comparison renderer for a signed-PNG NIHO 3 working copy.
 //!
-//! Usage: `niho3_compare <input.png> <metadata.json> <neutral|preset.xmp> <output.jpg|output.rgba> [--engine niho-3|niho-4|niho-5|niho-7|niho-9] [--cache-bench] [--max-dimension N] [--interactive] [--settings-json file.json]`
+//! Usage: `niho3_compare <input.png> <metadata.json> <neutral|preset.xmp> <output.jpg|output.rgba> [--engine niho-3|niho-4|niho-5|niho-7|niho-11] [--cache-bench] [--max-dimension N] [--interactive] [--settings-json file.json]`
 
 use niho_develop::settings::{
-    ENGINE_NIHO_3, ENGINE_NIHO_4, ENGINE_NIHO_5, ENGINE_NIHO_7, ENGINE_NIHO_9,
+    ENGINE_NIHO_11, ENGINE_NIHO_3, ENGINE_NIHO_4, ENGINE_NIHO_5, ENGINE_NIHO_7,
     LOOK_NIHO_STANDARD_2, LOOK_NIHO_STANDARD_3, LOOK_NIHO_STANDARD_4, LOOK_NIHO_STANDARD_5,
 };
 use niho_develop::{encode, xmp, DevelopSettings, Filter, Quality, Session};
@@ -11,7 +11,7 @@ use niho_develop::{encode, xmp, DevelopSettings, Filter, Quality, Session};
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let arguments: Vec<String> = std::env::args().collect();
     if arguments.len() < 5 {
-        return Err("usage: niho3_compare <input.png> <metadata.json> <neutral|preset.xmp> <output.jpg|output.rgba> [--engine niho-3|niho-4|niho-5|niho-7|niho-9] [--cache-bench] [--max-dimension N] [--interactive] [--settings-json file.json]".into());
+        return Err("usage: niho3_compare <input.png> <metadata.json> <neutral|preset.xmp> <output.jpg|output.rgba> [--engine niho-3|niho-4|niho-5|niho-7|niho-11] [--cache-bench] [--max-dimension N] [--interactive] [--settings-json file.json]".into());
     }
     let mut max_dimension = 0;
     let mut quality = Quality::Final;
@@ -30,7 +30,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                     Some(ENGINE_NIHO_4) => ENGINE_NIHO_4,
                     Some(ENGINE_NIHO_5) => ENGINE_NIHO_5,
                     Some(ENGINE_NIHO_7) => ENGINE_NIHO_7,
-                    Some(ENGINE_NIHO_9) => ENGINE_NIHO_9,
+                    Some(ENGINE_NIHO_11) => ENGINE_NIHO_11,
                     Some(value) => return Err(format!("unsupported engine: {value}").into()),
                     None => return Err("missing engine".into()),
                 }
@@ -45,7 +45,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let metadata = std::fs::read_to_string(&arguments[2])?;
     let mut settings = DevelopSettings::neutral();
     settings.engine = engine.into();
-    settings.look = if matches!(engine, ENGINE_NIHO_7 | ENGINE_NIHO_9) {
+    settings.look = if matches!(engine, ENGINE_NIHO_7 | ENGINE_NIHO_11) {
         LOOK_NIHO_STANDARD_5.into()
     } else if engine == ENGINE_NIHO_5 {
         LOOK_NIHO_STANDARD_4.into()

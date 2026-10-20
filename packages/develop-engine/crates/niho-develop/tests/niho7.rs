@@ -1,6 +1,6 @@
 use niho_develop::decode::{encode_signed_working_copy, encode_working_copy};
 use niho_develop::settings::{
-    ENGINE_NIHO_5, ENGINE_NIHO_7, ENGINE_NIHO_9, LOOK_NIHO_STANDARD_4, LOOK_NIHO_STANDARD_5,
+    ENGINE_NIHO_11, ENGINE_NIHO_5, ENGINE_NIHO_7, LOOK_NIHO_STANDARD_4, LOOK_NIHO_STANDARD_5,
 };
 use niho_develop::{
     encode, parse_settings, render, render_camera_linear, xmp, AsShotWhite, CameraLinearWorkMeta,
@@ -91,7 +91,7 @@ fn h0_is_identical_to_published_niho5_for_all_known_cameras() {
 }
 
 #[test]
-fn niho9_keeps_niho7_neutral_tone_and_raw_response_pixels() {
+fn niho11_keeps_niho7_neutral_tone_and_raw_response_pixels() {
     let source = image(80, 60);
     let (png, encoding) = encode_signed_working_copy(&source).unwrap();
     for camera in [PANASONIC, SONY_ZV, SONY_FX30] {
@@ -108,12 +108,12 @@ fn niho9_keeps_niho7_neutral_tone_and_raw_response_pixels() {
                 ..Default::default()
             },
         );
-        let mut niho9 = niho7.clone();
-        niho9.engine = ENGINE_NIHO_9.into();
+        let mut niho11 = niho7.clone();
+        niho11.engine = ENGINE_NIHO_11.into();
         let mut session = Session::open_working_copy(&png, &meta, Filter::Lanczos3).unwrap();
         assert_eq!(
             session.render(&niho7, 0, Quality::Final).unwrap().rgba,
-            session.render(&niho9, 0, Quality::Final).unwrap().rgba,
+            session.render(&niho11, 0, Quality::Final).unwrap().rgba,
             "{camera}"
         );
     }

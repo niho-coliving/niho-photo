@@ -317,10 +317,15 @@ fn native_signed_export_defaults_follow_render_version_and_known_calibration() {
     serde_json::from_slice::<Value>(&fs::read(harness.sidecars.join("last-settings.json")).unwrap()).unwrap()
   };
 
-  let hue_stable = run("export-known-signed-niho9", "0.17.0", false);
+  let hue_stable = run("export-known-signed-niho11", "0.18.0", false);
   assert_eq!(
     (&hue_stable["engine"], &hue_stable["look"]),
-    (&json!("niho-9"), &json!("niho-standard-5"))
+    (&json!("niho-11"), &json!("niho-standard-5"))
+  );
+  let previous = run("export-known-signed-0-17", "0.17.0", false);
+  assert_eq!(
+    (&previous["engine"], &previous["look"]),
+    (&json!("niho-7"), &json!("niho-standard-5"))
   );
   let current = run("export-known-signed-niho7", "0.16.0", false);
   assert_eq!(

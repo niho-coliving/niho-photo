@@ -5,8 +5,8 @@ use niho_develop::color::{
 };
 use niho_develop::color_ops::{color_grading, hsl, saturation, PreparedColorOps};
 use niho_develop::settings::{
-    DevelopSettings, HslAdjustment, HslBand, ENGINE_NIHO_6, ENGINE_NIHO_7, ENGINE_NIHO_8,
-    ENGINE_NIHO_9, LOOK_NIHO_STANDARD_1, LOOK_NIHO_STANDARD_5,
+    DevelopSettings, HslAdjustment, HslBand, ENGINE_NIHO_10, ENGINE_NIHO_11, ENGINE_NIHO_6,
+    ENGINE_NIHO_7, LOOK_NIHO_STANDARD_1, LOOK_NIHO_STANDARD_5,
 };
 
 type Rgb = [f64; 3];
@@ -14,7 +14,7 @@ type Rgb = [f64; 3];
 fn settings(engine: &str) -> DevelopSettings {
     let mut value = DevelopSettings::neutral();
     value.engine = engine.into();
-    value.look = if matches!(engine, ENGINE_NIHO_7 | ENGINE_NIHO_9) {
+    value.look = if matches!(engine, ENGINE_NIHO_7 | ENGINE_NIHO_11) {
         LOOK_NIHO_STANDARD_5.into()
     } else {
         LOOK_NIHO_STANDARD_1.into()
@@ -23,7 +23,7 @@ fn settings(engine: &str) -> DevelopSettings {
 }
 
 fn prepared(value: &DevelopSettings) -> PreparedColorOps {
-    if matches!(value.engine.as_str(), ENGINE_NIHO_7 | ENGINE_NIHO_9) {
+    if matches!(value.engine.as_str(), ENGINE_NIHO_7 | ENGINE_NIHO_11) {
         PreparedColorOps::after_default_curve(value)
     } else {
         PreparedColorOps::new(value)
@@ -94,8 +94,8 @@ impl ProbeMetrics {
 
 fn probe_saturation_drift(hue_step: usize) -> ProbeMetrics {
     let mut metrics = ProbeMetrics::default();
-    for engine in [ENGINE_NIHO_8, ENGINE_NIHO_9] {
-        let legacy_engine = if engine == ENGINE_NIHO_8 {
+    for engine in [ENGINE_NIHO_10, ENGINE_NIHO_11] {
+        let legacy_engine = if engine == ENGINE_NIHO_10 {
             ENGINE_NIHO_6
         } else {
             ENGINE_NIHO_7
@@ -168,8 +168,8 @@ fn hue_only_neutral_grading_and_legacy_paths_are_independent() {
     let input = oklch_to_prophoto(0.65, 0.10, 355.0).unwrap();
 
     for (old, new) in [
-        (ENGINE_NIHO_6, ENGINE_NIHO_8),
-        (ENGINE_NIHO_7, ENGINE_NIHO_9),
+        (ENGINE_NIHO_6, ENGINE_NIHO_10),
+        (ENGINE_NIHO_7, ENGINE_NIHO_11),
     ] {
         assert_eq!(
             prepared(&settings(old)).apply(input),
@@ -235,7 +235,7 @@ fn hue_only_neutral_grading_and_legacy_paths_are_independent() {
         hsl(saturation(input, 50.0), legacy.hsl.entries())
     );
 
-    let mut corrected = settings(ENGINE_NIHO_8);
+    let mut corrected = settings(ENGINE_NIHO_10);
     corrected.saturation = 50.0;
     let before_grading = prepared(&corrected).apply(input);
     corrected.color_grading.global.hue = 32.0;
@@ -246,7 +246,7 @@ fn hue_only_neutral_grading_and_legacy_paths_are_independent() {
     );
 
     for input in [[0.3, 0.3, 0.3], [0.3, 0.300_000_1, 0.3], [-0.1, 0.4, 1.2]] {
-        for engine in [ENGINE_NIHO_8, ENGINE_NIHO_9] {
+        for engine in [ENGINE_NIHO_10, ENGINE_NIHO_11] {
             let mut extreme = settings(engine);
             extreme.saturation = 100.0;
             for band in HslBand::ALL {

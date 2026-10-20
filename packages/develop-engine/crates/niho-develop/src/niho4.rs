@@ -211,7 +211,7 @@ pub fn preparation_key(
             "niho5"
         } else if matches!(
             settings.engine.as_str(),
-            crate::settings::ENGINE_NIHO_7 | crate::settings::ENGINE_NIHO_9
+            crate::settings::ENGINE_NIHO_7 | crate::settings::ENGINE_NIHO_11
         ) {
             "niho7"
         } else {
@@ -301,7 +301,7 @@ pub fn prepare(
 
     let uses_niho7_highlights = matches!(
         settings.engine.as_str(),
-        crate::settings::ENGINE_NIHO_7 | crate::settings::ENGINE_NIHO_9
+        crate::settings::ENGINE_NIHO_7 | crate::settings::ENGINE_NIHO_11
     ) && settings.highlights < 0.0;
     if uses_niho7_highlights && analysis.niho7_highlights.get().is_none() {
         let coefficients = analysis.coefficients.get().expect("response coefficients");
@@ -411,7 +411,7 @@ pub fn prepare(
         settings.engine.as_str(),
         crate::settings::ENGINE_NIHO_5
             | crate::settings::ENGINE_NIHO_7
-            | crate::settings::ENGINE_NIHO_9
+            | crate::settings::ENGINE_NIHO_11
     ) && settings.highlights < 0.0
     {
         if let WorkingCopyMeta::Raw {

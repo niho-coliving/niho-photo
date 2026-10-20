@@ -32,7 +32,7 @@ import {
   resolveBrowserPhotoBatchExportLimit,
   type BrowserPhotoBatchExportTarget,
 } from "../browser-photo-batch-export";
-import { hasDevelopGeometry, isNeutralDevelopColors } from "../develop-engine/develop-settings";
+import { hasDevelopGeometry, isNeutralDevelopColors, type DevelopSettings } from "../develop-engine/develop-settings";
 import { isDevelopWorkTarget } from "../develop-engine/develop-work-target";
 import {
   isWorkPending,
@@ -94,6 +94,11 @@ import {
   type BrowserPhotoEditingGridItem,
 } from "./browser-photo-editing-grid";
 import { BrowserPhotoEditingLoupe } from "./browser-photo-editing-loupe";
+import {
+  appendDevelopColorPoint,
+  commitColorPickIfCurrent,
+  PhotoEditingColorMixer,
+} from "./photo-editing-color-mixer";
 import { BrowserPhotoEditingMobileEditor } from "./browser-photo-editing-mobile-editor";
 import { BrowserPhotoMobileExportSheet } from "./browser-photo-editing-mobile-export-sheet";
 import {
@@ -146,7 +151,7 @@ import { useBrowserPhotoBulk } from "./use-browser-photo-bulk";
 import { useBrowserPhotoCutout } from "./use-browser-photo-cutout";
 import { useBrowserPhotoDevelop } from "./use-browser-photo-develop";
 import { useBrowserPhotoEditingKeys } from "./use-browser-photo-editing-keys";
-import { useBrowserPhotoEffectsSupport } from "./use-browser-photo-effects";
+import { useBrowserPhotoColorPointsSupport, useBrowserPhotoEffectsSupport } from "./use-browser-photo-effects";
 import { useBrowserPhotoExportAndDelete } from "./use-browser-photo-export-delete";
 import { useBrowserPhotoFolders } from "./use-browser-photo-folders";
 import { useBrowserPhotoItems, useBrowserPhotoListView } from "./use-browser-photo-items";
@@ -454,6 +459,11 @@ export function BrowserPhotoEditingWorkbench(props: {
     engineRef: develop.engineRef,
     photoKey: wasmPhotoKey,
   });
+  const colorPointsSupported = useBrowserPhotoColorPointsSupport({
+    mountedRef,
+    engineRef: develop.engineRef,
+    photoKey: wasmPhotoKey,
+  });
   // プリセットの適用量・今の補正の保存・見本を出せる wasm か（同じく 1 回確かめて覚える。右パネルを閉じても行の形を変えない）
   const presetSupport = useBrowserPhotoPresetSupport({ mountedRef, engineRef: develop.engineRef, photoKey: wasmPhotoKey });
   const mobilePresetThumbnails = useBrowserPresetThumbnails({
@@ -750,8 +760,100 @@ export function BrowserPhotoEditingWorkbench(props: {
     : effectsSupported
       ? BROWSER_EFFECTS_ADJUSTMENT_KEYS
       : undefined;
-  // 同梱のプリセットは段 2 の wasm（crate）の 3 本（右パネルに出すときには、写真を開く流れが wasm を起こしている）
   const { readyDevelopEngine } = develop;
+  // 色ミキサーは v4 を描ける wasm の共通 workbench だけ。旧 canvas 面には
+  // 動かない操作を出さない。写真・compare・crop・pending が変わると pick を破棄する。
+  const [colorPicking, setColorPicking] = useState(false);
+  const [colorPickError, setColorPickError] = useState<string | null>(null);
+  const [colorPickPosition, setColorPickPosition] = useState({ x: 0.5, y: 0.5 });
+  const colorPickGenerationRef = useRef(0);
+  useEffect(() => {
+    colorPickGenerationRef.current += 1;
+    setColorPicking(false);
+    setColorPickError(null);
+  }, [wasmPhotoKey]);
+  useEffect(() => {
+    if (compareOriginal || cropping || cutoutActive || opened?.previewPending || presets.previewName !== null) {
+      colorPickGenerationRef.current += 1;
+      setColorPicking(false);
+    }
+  }, [compareOriginal, cropping, cutoutActive, opened?.previewPending, presets.previewName]);
+  const colorMixerAvailable = wasmPhotoKey !== null && !canvasOnly && colorPointsSupported;
+  const colorMixerDisabled = controlsDisabled || cropping || cutoutActive || compareOriginal || opened?.previewPending === true || presets.previewName !== null;
+  const latestColorPickContextRef = useRef({
+    photoKey: "",
+    settingsJson: "",
+    blocked: true,
+  });
+  latestColorPickContextRef.current = {
+    photoKey: opened?.mode === "wasm" ? opened.key : "",
+    settingsJson: JSON.stringify(open.settingsRef.current),
+    blocked: colorMixerDisabled,
+  };
+  const pickColor = async (position: { x: number; y: number }) => {
+    const canvas = canvasRef.current;
+    if (!colorPicking || colorMixerDisabled || !canvas || wasmPhotoKey === null || opened?.key !== wasmPhotoKey || opened?.mode !== "wasm") {
+      setColorPicking(false);
+      setColorPickError("今の写真の表示が整ってから、もう一度お試しください。");
+      return;
+    }
+    const generation = ++colorPickGenerationRef.current;
+    const photoKey = wasmPhotoKey;
+    const settingsAtPick = open.settingsRef.current as DevelopSettings;
+    const settingsJson = JSON.stringify(settingsAtPick);
+    try {
+      const engine = await readyDevelopEngine();
+      if (!engine) throw new Error("色ミキサーを準備できませんでした。");
+      const committed = await commitColorPickIfCurrent({
+        sample: engine.sampleColor(settingsAtPick, {
+          maxDimension: Math.max(canvas.width, canvas.height),
+          x: position.x,
+          y: position.y,
+        }),
+        snapshot: { generation, photoKey, settingsJson },
+        current: () => ({
+          generation: colorPickGenerationRef.current,
+          ...latestColorPickContextRef.current,
+        }),
+        commit: (target) => open.changeSettings(
+          (current) => appendDevelopColorPoint(current as DevelopSettings, target),
+          "commit",
+        ),
+      });
+      if (!committed) return;
+      setColorPickError(null);
+    } catch (error) {
+      if (generation !== colorPickGenerationRef.current) return;
+      const message = error instanceof Error ? error.message : "";
+      setColorPickError(
+        message.includes("outside the color point target contract")
+          ? "この位置の色は色ミキサーで扱えません。別の色の部分を選んでください。"
+          : "写真の色を取得できませんでした。表示が整ってから、もう一度お試しください。",
+      );
+    } finally {
+      if (generation === colorPickGenerationRef.current) setColorPicking(false);
+    }
+  };
+  const colorMixer = colorMixerAvailable ? (
+    <PhotoEditingColorMixer
+      settings={settings as DevelopSettings}
+      disabled={colorMixerDisabled}
+      picking={colorPicking}
+      pickError={colorPickError}
+      onPickStart={() => {
+        open.setCompareOriginal(false);
+        setColorPickError(null);
+        setColorPickPosition({ x: 0.5, y: 0.5 });
+        setColorPicking(true);
+      }}
+      onPickCancel={() => {
+        colorPickGenerationRef.current += 1;
+        setColorPicking(false);
+      }}
+      onSettingsChange={open.changeSettings}
+    />
+  ) : undefined;
+  // 同梱のプリセットは段 2 の wasm（crate）の 3 本（右パネルに出すときには、写真を開く流れが wasm を起こしている）
   const builtinPresets = useMemo(
     () => ({
       queryKey: photoEditingQueryKeys.developBuiltinPresets(),
@@ -1682,6 +1784,16 @@ export function BrowserPhotoEditingWorkbench(props: {
                   : null
               }
               canvasRef={canvasRef}
+              colorPicker={colorMixerAvailable ? {
+                active: colorPicking,
+                position: colorPickPosition,
+                onMove: setColorPickPosition,
+                onPick: pickColor,
+                onCancel: () => {
+                  colorPickGenerationRef.current += 1;
+                  setColorPicking(false);
+                },
+              } : undefined}
               lockedReason={loupeLockedReason}
               sourceError={sourceError}
               onReload={selectedItem ? () => void openItem(selectedItem, { reload: true }) : null}
@@ -1720,6 +1832,16 @@ export function BrowserPhotoEditingWorkbench(props: {
                     : null
                 }
                 canvasRef={canvasRef}
+                colorPicker={colorMixerAvailable ? {
+                  active: colorPicking,
+                  position: colorPickPosition,
+                  onMove: setColorPickPosition,
+                  onPick: pickColor,
+                  onCancel: () => {
+                    colorPickGenerationRef.current += 1;
+                    setColorPicking(false);
+                  },
+                } : undefined}
                 lockedReason={loupeLockedReason}
                 sourceError={sourceError}
                 onReload={selectedItem ? () => void openItem(selectedItem, { reload: true }) : null}
@@ -1744,6 +1866,8 @@ export function BrowserPhotoEditingWorkbench(props: {
               />
             }
             settings={settings}
+            colorMixer={colorMixer ? <div className="px-3 pb-2">{colorMixer}</div> : undefined}
+            colorPicking={colorPicking}
             visibleKeys={canvasOnly ? BROWSER_CANVAS_ADJUSTMENT_KEYS : undefined}
             presets={
               // PC の右パネルと同じ: S1 の canvas（段 2 を使えない）の写真には出さない。閲覧のみ・操作の途中は押せない
@@ -1836,6 +1960,7 @@ export function BrowserPhotoEditingWorkbench(props: {
             work={loupeWork}
             raw={loupeItem !== null && isBrowserCloudRawPhoto(loupeItem.photo)}
             settings={settings}
+            colorMixer={colorMixer}
             visibleKeys={visibleAdjustmentKeys}
             // 口のある wasm と分かってから出す（確かめている間・無い wasm・S1 の canvas の写真には出さない）
             auto={

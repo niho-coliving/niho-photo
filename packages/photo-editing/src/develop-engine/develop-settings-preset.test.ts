@@ -14,7 +14,7 @@ describe("presetDevelopSettings", () => {
     const base: DevelopSettings = { ...neutralDevelopSettings("apple-ciraw8/e2/cal-1"), look: "niho-interim-1", exposure: 0.3 };
     const result: DevelopSettings = {
       ...neutralDevelopSettings(),
-      engine: "niho-9",
+      engine: "niho-11",
       look: "niho-standard-1",
       base: null,
       exposure: 0.3,
@@ -83,6 +83,18 @@ describe("presetDevelopSettings", () => {
     expect(next.contrast).toBe(12);
   });
 
+  it("XMPプリセットの結果が点を持たなくても NIHO の色ポイントを保持する", () => {
+    const colorPoints = [{
+      id: "skin",
+      target: { lightness: 0.72, chroma: 0.08, hue: 50 },
+      range: { hue: 30, chroma: 0.08, lightness: 0.15 },
+      delta: { hue: 10, chromaScale: 1.1, lightness: 0 },
+    }];
+    const base: DevelopSettings = { ...neutralDevelopSettings(), v: 4, colorPoints };
+    const next = presetDevelopSettings(base, { ...neutralDevelopSettings(), contrast: 12 });
+    expect(next).toMatchObject({ v: 4, contrast: 12, colorPoints });
+  });
+
   it("旧式の写真に非 0 の増分 WB を当てた Rust 結果は niho-2 を保つ。通常のプリセットは旧式のまま", () => {
     const base: DevelopSettings = { ...neutralDevelopSettings(), engine: "niho-1" };
     const upgraded: DevelopSettings = {
@@ -101,12 +113,12 @@ describe("presetDevelopSettings", () => {
     expect(presetDevelopSettings(base, { ...base, contrast: 12 }).engine).toBe("niho-1");
   });
 
-  it("niho-8・signed の写真は Rust と同じく niho-2 へ昇格させず、写真の数式のまま", () => {
+  it("niho-10・signed の写真は Rust と同じく niho-2 へ昇格させず、写真の数式のまま", () => {
     const relative = { relativeTemperature: 20, relativeTint: -10, whiteBalance: { mode: "relative" } };
     const raster: DevelopSettings = neutralDevelopSettings();
-    expect(raster.engine).toBe("niho-8");
-    expect(presetDevelopSettings(raster, { ...raster, ...relative, engine: "niho-2" })).toMatchObject({ engine: "niho-8", ...relative });
-    expect(presetDevelopSettings(raster, { ...raster, contrast: 12 }).engine).toBe("niho-8");
+    expect(raster.engine).toBe("niho-10");
+    expect(presetDevelopSettings(raster, { ...raster, ...relative, engine: "niho-2" })).toMatchObject({ engine: "niho-10", ...relative });
+    expect(presetDevelopSettings(raster, { ...raster, contrast: 12 }).engine).toBe("niho-10");
     const signed: DevelopSettings = { ...neutralDevelopSettings("raw-apple.d8.p3.e4.cal-signed"), engine: "niho-3", look: "niho-standard-2" };
     expect(presetDevelopSettings(signed, { ...signed, ...relative, engine: "niho-2" }).engine).toBe("niho-3");
     const signed7: DevelopSettings = { ...signed, engine: "niho-7", look: "niho-standard-5" };
@@ -115,8 +127,8 @@ describe("presetDevelopSettings", () => {
       look: "niho-standard-5",
       ...relative,
     });
-    const signed9: DevelopSettings = { ...signed7, engine: "niho-9" };
-    expect(presetDevelopSettings(signed9, { ...signed9, ...relative, engine: "niho-2" }).engine).toBe("niho-9");
+    const signed9: DevelopSettings = { ...signed7, engine: "niho-11" };
+    expect(presetDevelopSettings(signed9, { ...signed9, ...relative, engine: "niho-2" }).engine).toBe("niho-11");
     // RAW の作業コピーの新規（niho-2）はそのまま
     const raw: DevelopSettings = neutralDevelopSettings("raw-apple.d8.p1.e1.cal-none");
     expect(presetDevelopSettings(raw, { ...raw, ...relative }).engine).toBe("niho-2");
@@ -142,7 +154,7 @@ describe("autoDevelopSettings", () => {
     };
     const result: DevelopSettings = {
       ...neutralDevelopSettings(),
-      engine: "niho-9",
+      engine: "niho-11",
       look: "niho-standard-1",
       v: 1,
       contrast: 20,

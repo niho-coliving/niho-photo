@@ -53,8 +53,8 @@ use crate::output::{output_transform, output_transform_clip};
 use crate::relative_wb::relative_matrix;
 use crate::resize::{bilinear_downscale, bilinear_downscale_with, Filter};
 use crate::settings::{
-    DevelopSettings, VignetteStyle, WhiteBalanceMode, ENGINE_NIHO_2, ENGINE_NIHO_3, ENGINE_NIHO_4,
-    ENGINE_NIHO_5, ENGINE_NIHO_6, ENGINE_NIHO_7, ENGINE_NIHO_8, ENGINE_NIHO_9,
+    DevelopSettings, VignetteStyle, WhiteBalanceMode, ENGINE_NIHO_10, ENGINE_NIHO_11,
+    ENGINE_NIHO_2, ENGINE_NIHO_3, ENGINE_NIHO_4, ENGINE_NIHO_5, ENGINE_NIHO_6, ENGINE_NIHO_7,
 };
 use crate::spatial::{
     self, adaptive_parameters, AdaptivePath, AdaptiveStats, Plane, Quality, SpatialParams,
@@ -163,6 +163,7 @@ pub fn has_active_color_edits(s: &DevelopSettings) -> bool {
         || scalars.iter().any(|v| v.abs() > tol)
         || calibration.iter().any(|v| v.abs() > tol)
         || grading.iter().any(|v| v.abs() > tol)
+        || s.has_active_color_points()
         || !crate::tone_ops::curves_are_identity(&s.tone_curves, tol)
         || s.hsl
             .entries()
@@ -225,16 +226,32 @@ pub fn bake_color_cube_for(s: &DevelopSettings, dimension: usize, raw: bool) -> 
             prepared.apply(v)
         }
     };
-    if raw
+    if s.has_active_color_points() {
+        Cube::bake_float_with_dimension(dimension, &transform)
+    } else if raw
         && matches!(
             s.engine.as_str(),
-            ENGINE_NIHO_3 | ENGINE_NIHO_4 | ENGINE_NIHO_5 | ENGINE_NIHO_7 | ENGINE_NIHO_9
+            ENGINE_NIHO_3 | ENGINE_NIHO_4 | ENGINE_NIHO_5 | ENGINE_NIHO_7 | ENGINE_NIHO_11
         )
     {
         Cube::bake_float(&transform)
     } else {
         Cube::bake_with_dimension(dimension, &transform)
     }
+}
+
+/// Cube Q through the input of independent color points. The points and
+/// Color Grading are evaluated exactly per pixel after this cube.
+fn bake_pre_color_cube_for(s: &DevelopSettings, dimension: usize, raw: bool) -> Cube {
+    let prepared = color_ops_for(s, raw);
+    let transform = move |v| {
+        if raw {
+            prepared.apply_raw_before_color_points_after_pre_post(v)
+        } else {
+            prepared.apply_before_color_points(v)
+        }
+    };
+    Cube::bake_float_with_dimension(dimension, &transform)
 }
 
 fn color_ops_for(s: &DevelopSettings, raw: bool) -> PreparedColorOps {
@@ -313,14 +330,15 @@ fn post_key(s: &DevelopSettings, exposure_non_raw_ev: f64, dimension: usize) -> 
 fn color_key(s: &DevelopSettings, dimension: usize, raw: bool) -> String {
     let v = s.to_value();
     format!(
-        "{}|{dimension}|{raw}|{}|{}|{}|{}|{}|{:?}",
+        "{}|{dimension}|{raw}|{}|{}|{}|{}|{}|{:?}|{}",
         s.engine,
         s.vibrance,
         s.saturation,
         v["hsl"],
         v["colorGrading"],
         s.grayscale,
-        s.gray_mixer.bands
+        s.gray_mixer.bands,
+        v["colorPoints"]
     )
 }
 
@@ -346,7 +364,7 @@ pub fn settings_cubes(
     let dimension = if raw
         && matches!(
             s.engine.as_str(),
-            ENGINE_NIHO_3 | ENGINE_NIHO_4 | ENGINE_NIHO_5 | ENGINE_NIHO_7 | ENGINE_NIHO_9
+            ENGINE_NIHO_3 | ENGINE_NIHO_4 | ENGINE_NIHO_5 | ENGINE_NIHO_7 | ENGINE_NIHO_11
         ) {
         CUBE_DIMENSION
     } else {
@@ -367,7 +385,7 @@ pub fn settings_cubes(
             && !(raw
                 && matches!(
                     s.engine.as_str(),
-                    ENGINE_NIHO_3 | ENGINE_NIHO_4 | ENGINE_NIHO_5 | ENGINE_NIHO_7 | ENGINE_NIHO_9
+                    ENGINE_NIHO_3 | ENGINE_NIHO_4 | ENGINE_NIHO_5 | ENGINE_NIHO_7 | ENGINE_NIHO_11
                 )))
     {
         None
@@ -380,7 +398,7 @@ pub fn settings_cubes(
             _ if raw
                 && matches!(
                     s.engine.as_str(),
-                    ENGINE_NIHO_3 | ENGINE_NIHO_4 | ENGINE_NIHO_5 | ENGINE_NIHO_7 | ENGINE_NIHO_9
+                    ENGINE_NIHO_3 | ENGINE_NIHO_4 | ENGINE_NIHO_5 | ENGINE_NIHO_7 | ENGINE_NIHO_11
                 ) =>
             {
                 Some(Arc::new(bake_raw_post_ops_cube_niho3(
@@ -403,18 +421,18 @@ pub fn settings_cubes(
             && !(raw
                 && matches!(
                     s.engine.as_str(),
-                    ENGINE_NIHO_3 | ENGINE_NIHO_4 | ENGINE_NIHO_5 | ENGINE_NIHO_7 | ENGINE_NIHO_9
+                    ENGINE_NIHO_3 | ENGINE_NIHO_4 | ENGINE_NIHO_5 | ENGINE_NIHO_7 | ENGINE_NIHO_11
                 ))) {
         None
     } else {
         match cache {
             Some(c) if c.color_key == ck && c.color.is_some() => c.color.clone(),
             _ if !bake => None,
-            _ => Some(Arc::new(bake_color_cube_for(
-                formula_settings,
-                dimension,
-                raw,
-            ))),
+            _ => Some(Arc::new(if formula_settings.has_active_color_points() {
+                bake_pre_color_cube_for(formula_settings, dimension, raw)
+            } else {
+                bake_color_cube_for(formula_settings, dimension, raw)
+            })),
         }
     };
     SettingsCubes {
@@ -632,12 +650,21 @@ struct RasterTail {
     stage_p: bool,
     calibration: Option<[[f32; 3]; 3]>,
     color: Option<Arc<Cube>>,
+    /// Exact end of Stage Q when independent points are active.
+    point_tail: Option<PreparedColorOps>,
     output_transform: bool,
 }
 
 impl RasterTail {
     #[inline]
     fn pixel(&self, mut v: [f32; 3]) -> [f32; 3] {
+        if let Some(point_tail) = &self.point_tail {
+            let v = self.before_color_points(v);
+            let v = exact(&|value| point_tail.apply_color_points_and_grading(value), v);
+            return mat_vec_f32(&PROPHOTO_TO_SRGB_F32, v);
+        }
+        // Preserve the legacy path exactly when no independent point is
+        // active; even an empty / zero-delta v4 array takes this branch.
         if self.stage_p {
             if let Some(cube) = &self.post {
                 v = cube.apply(v);
@@ -645,6 +672,26 @@ impl RasterTail {
             v = mat_vec_f32(&PROPHOTO_TO_SRGB_F32, v);
         }
         self.color_stage(v)
+    }
+
+    /// Shared normal-render / picker chain through the input of independent
+    /// color points, returned in linear ProPhoto.
+    #[inline]
+    fn before_color_points(&self, mut v: [f32; 3]) -> [f32; 3] {
+        if self.stage_p {
+            if let Some(cube) = &self.post {
+                v = cube.apply(v);
+            }
+            v = mat_vec_f32(&PROPHOTO_TO_SRGB_F32, v);
+        }
+        v = mat_vec_f32(&SRGB_TO_PROPHOTO_F32, v);
+        if let Some(m) = &self.calibration {
+            v = clamp01(mat_vec_f32(m, v));
+        }
+        if let Some(cube) = &self.color {
+            v = cube.apply(v);
+        }
+        v
     }
 
     #[inline]
@@ -808,6 +855,48 @@ struct OutputPixels<'a, 'v> {
     vignette: Option<&'a LinearVignette<'v>>,
 }
 
+#[inline]
+fn raster_head_pixel(
+    mut v: [f32; 3],
+    input: Option<&[[f32; 3]; 3]>,
+    relative: Option<&[[f32; 3]; 3]>,
+    stage_p: bool,
+) -> [f32; 3] {
+    if let Some(matrix) = input {
+        v = mat_vec_f32(matrix, v);
+    }
+    if let Some(matrix) = relative {
+        v = mat_vec_f32(matrix, v);
+    }
+    if stage_p {
+        v = mat_vec_f32(&SRGB_TO_PROPHOTO_F32, v);
+    }
+    v
+}
+
+#[inline]
+fn raw_head_pixel(mut v: [f32; 3], white_balance: Option<&[[f32; 3]; 3]>, gain: f32) -> [f32; 3] {
+    if let Some(matrix) = white_balance {
+        v = mat_vec_f32(matrix, v);
+    }
+    [v[0] * gain, v[1] * gain, v[2] * gain]
+}
+
+#[inline]
+fn linear_spatial_pixel(
+    mut v: [f32; 3],
+    ratio: Option<f32>,
+    vignette: Option<(&LinearVignette<'_>, f32)>,
+) -> [f32; 3] {
+    if let Some(ratio) = ratio {
+        v = [v[0] * ratio, v[1] * ratio, v[2] * ratio];
+    }
+    if let Some((vignette, rho)) = vignette {
+        v = vignette.apply(v, rho);
+    }
+    v
+}
+
 /// Writes every output pixel: `head` (the stages before the local pass),
 /// the local pass's ratio `exp2(Ln - Ln0)` when there is one, the vignette's
 /// linear stage (highlight / color priority) when there is one, then `emit`.
@@ -846,14 +935,17 @@ fn fill_rgba(
                         .zip(vignette.radius()[output_start..output_end].iter()),
                 ) {
                     let v = head([px[0], px[1], px[2]]);
-                    let v = [v[0] * ratio, v[1] * ratio, v[2] * ratio];
-                    emit(out, vignette.apply(v, *rho), output_i);
+                    emit(
+                        out,
+                        linear_spatial_pixel(v, Some(*ratio), Some((vignette, *rho))),
+                        output_i,
+                    );
                 }
             }
             (Some(ratio), None) => {
                 for ((_, output_i, (px, out)), ratio) in pixels.zip(ratio.data[start..end].iter()) {
                     let v = head([px[0], px[1], px[2]]);
-                    emit(out, [v[0] * ratio, v[1] * ratio, v[2] * ratio], output_i);
+                    emit(out, linear_spatial_pixel(v, Some(*ratio), None), output_i);
                 }
             }
             (None, Some(vignette)) => {
@@ -861,7 +953,11 @@ fn fill_rgba(
                     pixels.zip(vignette.radius()[output_start..output_end].iter())
                 {
                     let v = head([px[0], px[1], px[2]]);
-                    emit(out, vignette.apply(v, *rho), output_i);
+                    emit(
+                        out,
+                        linear_spatial_pixel(v, None, Some((vignette, *rho))),
+                        output_i,
+                    );
                 }
             }
             (None, None) => {
@@ -1006,7 +1102,7 @@ fn niho6_one_shot(
     raster: &Raster,
     s: &DevelopSettings,
 ) -> Option<Result<Raster, crate::niho6::PrepareError>> {
-    if !matches!(s.engine.as_str(), ENGINE_NIHO_6 | ENGINE_NIHO_8)
+    if !matches!(s.engine.as_str(), ENGINE_NIHO_6 | ENGINE_NIHO_10)
         || !crate::niho6::uses_response(s)
     {
         return None;
@@ -1132,7 +1228,7 @@ fn render_linear(
     // Highlights <= 0 and Shadows >= 0; the legacy local pass keeps the other
     // directions and `LEGACY_SHARE` of those (R24).
     let (spatial_highlights, spatial_shadows) =
-        if matches!(s.engine.as_str(), ENGINE_NIHO_6 | ENGINE_NIHO_8) {
+        if matches!(s.engine.as_str(), ENGINE_NIHO_6 | ENGINE_NIHO_10) {
             let legacy = |v: f64, learned: bool| {
                 if learned {
                     v * crate::niho6::LEGACY_SHARE
@@ -1157,7 +1253,7 @@ fn render_linear(
     let mut stats = stats_cache;
     let jpeg_white_balance = if matches!(
         s.engine.as_str(),
-        ENGINE_NIHO_2 | ENGINE_NIHO_3 | ENGINE_NIHO_6 | ENGINE_NIHO_8
+        ENGINE_NIHO_2 | ENGINE_NIHO_3 | ENGINE_NIHO_6 | ENGINE_NIHO_10
     ) && s.white_balance.mode == WhiteBalanceMode::Relative
     {
         PreparedJpegWhiteBalance::new(s.relative_temperature, s.relative_tint)
@@ -1166,7 +1262,7 @@ fn render_linear(
     };
     let relative = if !matches!(
         s.engine.as_str(),
-        ENGINE_NIHO_2 | ENGINE_NIHO_3 | ENGINE_NIHO_6 | ENGINE_NIHO_8
+        ENGINE_NIHO_2 | ENGINE_NIHO_3 | ENGINE_NIHO_6 | ENGINE_NIHO_10
     ) && s.white_balance.mode == WhiteBalanceMode::Relative
     {
         relative_matrix(s.relative_temperature, s.relative_tint)
@@ -1198,11 +1294,15 @@ fn render_linear(
     // Drag frames whose chain starts with a cube (its input clamp makes the
     // rest a function of the encoded value): one lookup per pixel. The tail
     // evaluates cube P / Q itself, so they are not baked for it.
-    let entry = match quality {
-        Quality::Final => None,
-        Quality::Interactive if want_post => Some(PreviewEntry::Post),
-        Quality::Interactive if color_on && calibration.is_none() => Some(PreviewEntry::Color),
-        Quality::Interactive => None,
+    let entry = if s.has_active_color_points() {
+        None
+    } else {
+        match quality {
+            Quality::Final => None,
+            Quality::Interactive if want_post => Some(PreviewEntry::Post),
+            Quality::Interactive if color_on && calibration.is_none() => Some(PreviewEntry::Color),
+            Quality::Interactive => None,
+        }
     };
     let mut cubes = settings_cubes(
         s,
@@ -1218,6 +1318,9 @@ fn render_linear(
         stage_p,
         calibration,
         color: cubes.color.clone(),
+        point_tail: s
+            .has_active_color_points()
+            .then(|| PreparedColorOps::new(s)),
         output_transform: !bounded_srgb || has_active_color_edits(s),
     };
     let preview = entry.map(|entry| {
@@ -1266,15 +1369,7 @@ fn render_linear(
     });
     // The per-pixel stages before the local pass (the input conversion is
     // matched outside the pixel loops).
-    let rest = |mut v: [f32; 3]| -> [f32; 3] {
-        if let Some(m) = &relative {
-            v = mat_vec_f32(m, v);
-        }
-        if stage_p {
-            v = mat_vec_f32(&SRGB_TO_PROPHOTO_F32, v);
-        }
-        v
-    };
+    let rest = |v: [f32; 3]| raster_head_pixel(v, None, relative.as_ref(), stage_p);
     let head = |px: [f32; 3]| rest(input(px));
     let local = if spatial_on {
         local_pass(
@@ -1394,6 +1489,8 @@ struct RawTail {
     calibration: Option<[[f32; 3]; 3]>,
     color_ops: Option<PreparedColorOps>,
     color: Option<Arc<Cube>>,
+    /// Exact end of Stage Q when independent points are active.
+    point_tail: Option<PreparedColorOps>,
 }
 
 impl RawTail {
@@ -1410,6 +1507,9 @@ impl RawTail {
                 .then(|| to_f32(&calibration_matrix(&s.calibration))),
             color_ops: needs_color_ops(s).then(|| PreparedColorOps::after_default_curve(s)),
             color: cubes.color.clone(),
+            point_tail: s
+                .has_active_color_points()
+                .then(|| PreparedColorOps::after_default_curve(s)),
         }
     }
 
@@ -1421,6 +1521,22 @@ impl RawTail {
     /// The tail from the encoded (clamped) input of the first cube.
     #[inline]
     fn pixel_encoded(&self, e: [f32; 3]) -> [f32; 3] {
+        let v = self.before_color_points_encoded(e);
+        match &self.point_tail {
+            Some(point_tail) => exact(&|value| point_tail.apply_color_points_and_grading(value), v),
+            None => v,
+        }
+    }
+
+    /// Shared normal-render / picker chain through the input of independent
+    /// color points.
+    #[inline]
+    fn before_color_points(&self, px: [f32; 3]) -> [f32; 3] {
+        self.before_color_points_encoded(encode(px))
+    }
+
+    #[inline]
+    fn before_color_points_encoded(&self, e: [f32; 3]) -> [f32; 3] {
         // Adjacent cubes pass values in the encoded domain.
         let mut e = self.acr3.lookup_encoded(e);
         if let Some(camera) = self.niho4_camera {
@@ -1499,7 +1615,7 @@ fn niho6_working_copy_one_shot(
     s: &DevelopSettings,
 ) -> Option<Result<LinearImage, crate::niho6::PrepareError>> {
     if !matches!(wc.meta, WorkingCopyMeta::Raster { .. })
-        || !matches!(s.engine.as_str(), ENGINE_NIHO_6 | ENGINE_NIHO_8)
+        || !matches!(s.engine.as_str(), ENGINE_NIHO_6 | ENGINE_NIHO_10)
         || !crate::niho6::uses_response(s)
     {
         return None;
@@ -1617,7 +1733,7 @@ fn render_working_copy_with(
                 white_balance,
                 matches!(
                     s.engine.as_str(),
-                    ENGINE_NIHO_4 | ENGINE_NIHO_5 | ENGINE_NIHO_7 | ENGINE_NIHO_9
+                    ENGINE_NIHO_4 | ENGINE_NIHO_5 | ENGINE_NIHO_7 | ENGINE_NIHO_11
                 )
                 .then(|| crate::niho4_response::Camera::from_calibration(dcp_sha256))
                 .flatten(),
@@ -1828,14 +1944,9 @@ fn render_raw(
     }
     let white_balance = white_balance.map(|wb| wb.matrix);
     let gain = libm::exp2(baseline_ev + s.exposure) as f32;
-    let expose = move |v: [f32; 3]| [v[0] * gain, v[1] * gain, v[2] * gain];
+    let expose = move |v: [f32; 3]| raw_head_pixel(v, None, gain);
     // [absolute WB] -> exposure, per pixel (recomputed where needed).
-    let head = |px: [f32; 3]| -> [f32; 3] {
-        match &white_balance {
-            Some(m) => expose(mat_vec_f32(m, px)),
-            None => expose(px),
-        }
-    };
+    let head = |px: [f32; 3]| -> [f32; 3] { raw_head_pixel(px, white_balance.as_ref(), gain) };
     let (w, h) = (img.width, img.height);
     let frame = frame_of(img, framing);
     let out = frame.output;
@@ -1861,7 +1972,7 @@ fn render_raw(
         0.0,
         quality,
         cubes_cache,
-        quality == Quality::Final || (spatial_on && !kept_pass),
+        quality == Quality::Final || (spatial_on && !kept_pass) || s.has_active_color_points(),
         look_tone,
         true,
     );
@@ -1926,7 +2037,7 @@ fn render_raw(
     };
     // Drag frames: the ACR3 cube clamps its input, so the whole tail is one
     // cube of the encoded value.
-    let preview = (quality == Quality::Interactive).then(|| {
+    let preview = (quality == Quality::Interactive && !s.has_active_color_points()).then(|| {
         let post = (needs_post_ops(s) || look_tone.is_some())
             .then(|| PreparedPostOps::with_exposure(s, 0.0).with_look(look_tone));
         let color = needs_color_ops(s).then(|| PreparedColorOps::after_default_curve(s));
@@ -1974,7 +2085,7 @@ fn render_raw(
                             | ENGINE_NIHO_4
                             | ENGINE_NIHO_5
                             | ENGINE_NIHO_7
-                            | ENGINE_NIHO_9
+                            | ENGINE_NIHO_11
                     ) {
                         output_transform_clip(linear)
                     } else {
@@ -2009,7 +2120,7 @@ fn render_raw(
         }),
         None if matches!(
             s.engine.as_str(),
-            ENGINE_NIHO_3 | ENGINE_NIHO_4 | ENGINE_NIHO_5 | ENGINE_NIHO_7 | ENGINE_NIHO_9
+            ENGINE_NIHO_3 | ENGINE_NIHO_4 | ENGINE_NIHO_5 | ENGINE_NIHO_7 | ENGINE_NIHO_11
         ) && out_fx.is_none() =>
         {
             let encoder = crate::fastmath::niho3_srgb8();
@@ -2019,7 +2130,7 @@ fn render_raw(
         }
         None if matches!(
             s.engine.as_str(),
-            ENGINE_NIHO_3 | ENGINE_NIHO_4 | ENGINE_NIHO_5 | ENGINE_NIHO_7 | ENGINE_NIHO_9
+            ENGINE_NIHO_3 | ENGINE_NIHO_4 | ENGINE_NIHO_5 | ENGINE_NIHO_7 | ENGINE_NIHO_11
         ) =>
         {
             let fx = out_fx.expect("NIHO 3 output effects");
@@ -2060,4 +2171,143 @@ pub fn raster_pointwise(v: [f64; 3], s: &DevelopSettings) -> [f64; 3] {
         v = color_ops::calibration(v, &s.calibration);
     }
     PreparedColorOps::new(s).apply(v)
+}
+
+/// Samples the normal raster path at Stage Q immediately before independent
+/// color points and Color Grading. `index` addresses the same working image
+/// and local-pass plane used by the preceding Session render.
+pub(crate) fn sample_raster_before_color_points(
+    px: [f32; 3],
+    index: usize,
+    input_is_prophoto: bool,
+    s: &DevelopSettings,
+    cubes: Option<&SettingsCubes>,
+    local: Option<&LocalPass>,
+    effects_cache: &mut EffectsCache,
+    output_size: (usize, usize),
+    output_index: usize,
+) -> [f64; 3] {
+    let input = if input_is_prophoto {
+        Some(&PROPHOTO_TO_SRGB_F32)
+    } else {
+        None
+    };
+    let relative = if !matches!(
+        s.engine.as_str(),
+        ENGINE_NIHO_2 | ENGINE_NIHO_3 | ENGINE_NIHO_6 | ENGINE_NIHO_10
+    ) && s.white_balance.mode == WhiteBalanceMode::Relative
+    {
+        relative_matrix(s.relative_temperature, s.relative_tint)
+    } else {
+        None
+    };
+    let stage_p = s.exposure != 0.0 || needs_post_ops(s) || needs_spatial(s);
+    let mut v = raster_head_pixel(px, input, relative.as_ref(), stage_p);
+    let effects = effects::prepare(s, output_size.0, output_size.1, effects_cache);
+    v = linear_spatial_pixel(
+        v,
+        local.and_then(|pass| pass.ratio.data.get(index)).copied(),
+        effects.linear.as_ref().and_then(|vignette| {
+            vignette
+                .radius()
+                .get(output_index)
+                .map(|rho| (vignette, *rho))
+        }),
+    );
+    let color = needs_color_ops(s).then(|| {
+        cubes
+            .and_then(|value| {
+                if s.has_active_color_points() {
+                    value.color.clone()
+                } else {
+                    None
+                }
+            })
+            .unwrap_or_else(|| Arc::new(bake_pre_color_cube_for(s, CUBE_DIMENSION, false)))
+    });
+    let tail = RasterTail {
+        post: cubes.and_then(|value| value.post.clone()),
+        stage_p,
+        calibration: needs_calibration(&s.calibration)
+            .then(|| to_f32(&calibration_matrix(&s.calibration))),
+        color,
+        point_tail: None,
+        output_transform: false,
+    };
+    let before = tail.before_color_points(v).map(f64::from);
+    color_ops::prophoto_to_oklch(before)
+}
+
+pub(crate) fn sample_raw_before_color_points(
+    px: [f32; 3],
+    index: usize,
+    meta: &WorkingCopyMeta,
+    s: &DevelopSettings,
+    cubes: Option<&SettingsCubes>,
+    local: Option<&LocalPass>,
+    effects_cache: &mut EffectsCache,
+    output_size: (usize, usize),
+    output_index: usize,
+) -> [f64; 3] {
+    let WorkingCopyMeta::Raw {
+        baseline_ev,
+        as_shot_white,
+        as_shot_white_adobe,
+        white_balance_table,
+        dcp_sha256,
+        ..
+    } = meta
+    else {
+        return [f64::NAN; 3];
+    };
+    let white_balance = raw_white_balance(
+        as_shot_white,
+        as_shot_white_adobe.as_ref(),
+        white_balance_table.as_deref(),
+        s,
+    );
+    let gain = libm::exp2(*baseline_ev + s.exposure) as f32;
+    let mut v = raw_head_pixel(px, white_balance.as_ref().map(|value| &value.matrix), gain);
+    let effects = effects::prepare(s, output_size.0, output_size.1, effects_cache);
+    v = linear_spatial_pixel(
+        v,
+        local.and_then(|pass| pass.ratio.data.get(index)).copied(),
+        effects.linear.as_ref().and_then(|vignette| {
+            vignette
+                .radius()
+                .get(output_index)
+                .map(|rho| (vignette, *rho))
+        }),
+    );
+    let niho4_camera = if matches!(
+        s.engine.as_str(),
+        ENGINE_NIHO_4 | ENGINE_NIHO_5 | ENGINE_NIHO_7 | ENGINE_NIHO_11
+    ) {
+        crate::niho4_response::Camera::from_calibration(dcp_sha256)
+    } else {
+        None
+    };
+    let color = needs_color_ops(s).then(|| {
+        cubes
+            .and_then(|value| {
+                if s.has_active_color_points() {
+                    value.color.clone()
+                } else {
+                    None
+                }
+            })
+            .unwrap_or_else(|| Arc::new(bake_pre_color_cube_for(s, CUBE_DIMENSION, true)))
+    });
+    let tail = RawTail {
+        acr3: look_cube(&s.look),
+        niho4_camera,
+        post: cubes.and_then(|value| value.post.clone()),
+        calibration: needs_calibration(&s.calibration)
+            .then(|| to_f32(&calibration_matrix(&s.calibration))),
+        color_ops: needs_color_ops(s).then(|| PreparedColorOps::after_default_curve(s)),
+        color,
+        point_tail: None,
+    };
+    let before = tail.before_color_points(v).map(f64::from);
+    color_ops::prophoto_to_oklch(before)
 }

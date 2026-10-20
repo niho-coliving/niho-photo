@@ -23,7 +23,7 @@ mod common;
 #[test]
 #[ignore = "requires owner's round10 Lightroom exports through NIHO_LR_MEASURE_DIR"]
 fn hue_stable_raster_against_lightroom() {
-    use niho_develop::settings::{ENGINE_NIHO_6, ENGINE_NIHO_8};
+    use niho_develop::settings::{ENGINE_NIHO_10, ENGINE_NIHO_6};
     let root = std::path::PathBuf::from(
         std::env::var_os("NIHO_LR_MEASURE_DIR").expect("NIHO_LR_MEASURE_DIR is required"),
     )
@@ -71,7 +71,7 @@ fn hue_stable_raster_against_lightroom() {
             .map(|value| niho_develop::output::encode_srgb8(*value))
             .collect();
         let mut means = [0.0; 2];
-        for (index, engine) in [ENGINE_NIHO_6, ENGINE_NIHO_8].into_iter().enumerate() {
+        for (index, engine) in [ENGINE_NIHO_6, ENGINE_NIHO_10].into_iter().enumerate() {
             settings.engine = engine.into();
             let (frame, _, _) = render_raster(&raster, &settings, Quality::Final, None, None);
             means[index] = common::compare(&frame.rgba, &reference_rgb).mean;
@@ -86,9 +86,54 @@ fn hue_stable_raster_against_lightroom() {
         let old = values.iter().map(|value| value.0).sum::<f64>() / count;
         let new = values.iter().map(|value| value.1).sum::<f64>() / count;
         println!(
-            "HSL {variant}: scenes={} mean DeltaE00 niho6={old:.6} niho8={new:.6} change={:+.6}",
+            "HSL {variant}: scenes={} mean DeltaE00 niho6={old:.6} niho10={new:.6} change={:+.6}",
             values.len(),
             new - old
+        );
+    }
+}
+
+/// The external PNGs preserve the original TIFF's 16-bit channel codes and
+/// embedded ICC profile. They are diagnostic data, never repository assets.
+#[test]
+#[ignore = "requires external ICC-preserved round1 saturation charts through NIHO_COLOR_REFERENCE_DIR"]
+fn hue_stable_global_saturation_against_lightroom() {
+    use niho_develop::settings::{DevelopSettings, ENGINE_NIHO_10, ENGINE_NIHO_6};
+    let root = PathBuf::from(
+        std::env::var_os("NIHO_COLOR_REFERENCE_DIR").expect("NIHO_COLOR_REFERENCE_DIR is required"),
+    );
+    for saturation in [50, 100] {
+        let name = format!("c1_hald-srgb_Saturation_+{saturation}.png");
+        let input = std::fs::read(root.join("source").join(&name)).expect("chart input");
+        let reference =
+            std::fs::read(root.join("lightroom").join(&name)).expect("Lightroom chart reference");
+        let raster = decode::decode_raster(&input, 0, Filter::Lanczos3).unwrap();
+        let reference = decode::decode_raster(&reference, 0, Filter::Lanczos3).unwrap();
+        assert_eq!(
+            (raster.image.width, raster.image.height),
+            (reference.image.width, reference.image.height)
+        );
+        let reference_rgb: Vec<_> = reference
+            .image
+            .data
+            .iter()
+            .map(|value| niho_develop::output::encode_srgb8(*value))
+            .collect();
+        let mut means = [0.0; 2];
+        for (index, engine) in [ENGINE_NIHO_6, ENGINE_NIHO_10].into_iter().enumerate() {
+            let mut settings = DevelopSettings::neutral();
+            settings.engine = engine.into();
+            settings.look = "niho-standard-1".into();
+            settings.saturation = f64::from(saturation);
+            let (frame, _, _) = render_raster(&raster, &settings, Quality::Final, None, None);
+            means[index] = common::compare(&frame.rgba, &reference_rgb).mean;
+            assert!(means[index].is_finite());
+        }
+        println!(
+            "Saturation +{saturation}: mean DeltaE00 niho6={:.6} niho10={:.6} change={:+.6}",
+            means[0],
+            means[1],
+            means[1] - means[0]
         );
     }
 }

@@ -149,6 +149,13 @@ impl Cube {
         Self::bake_with_precision(CUBE_DIMENSION, true, transform)
     }
 
+    /// A float-entry cube at an explicit dimension. Independent OKLCH points
+    /// use this because 8-bit node quantization can dominate small chroma
+    /// changes. Callers without points keep the historical byte cube.
+    pub fn bake_float_with_dimension(n: usize, transform: &dyn Fn([f64; 3]) -> [f64; 3]) -> Self {
+        Self::bake_with_precision(n, true, transform)
+    }
+
     fn bake_with_precision(
         n: usize,
         float_entries: bool,

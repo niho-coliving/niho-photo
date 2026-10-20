@@ -140,7 +140,7 @@ describe("canRestoreDevelopSettingsDraft", () => {
     expect(canRestoreDevelopSettingsDraft({ ...base, draftSettings: { ...current, v: 99 as 1 } })).toBe(false);
   });
 
-  it("保存したことの無い写真では、既定が niho-8 になる前の niho-2 / niho-6 draft も戻す（土台・ルックが同じときだけ）", () => {
+  it("保存したことの無い写真では、既定が niho-10 になる前の niho-2 / niho-6 draft も戻す（土台・ルックが同じときだけ）", () => {
     const unsaved = { currentSettings: current, inputBase: null, hasSavedSettings: false };
     expect(canRestoreDevelopSettingsDraft({ ...unsaved, draftSettings: legacyDraft })).toBe(true);
     expect(canRestoreDevelopSettingsDraft({ ...unsaved, draftSettings: { ...legacyDraft, engine: "niho-6" } })).toBe(true);
@@ -166,7 +166,7 @@ describe("canRestoreDevelopSettingsDraft", () => {
 
   it("未保存signed RAWは既定切替前のniho-7/4/3 draftを旧pairのまま戻し、保存済み・別base・不正pairは拒否する", () => {
     const base = "raw-apple.d8.p3.e4.cal-panasonic-dc-s5-apple-v4.lens-apple";
-    const currentSettings = { ...neutralDevelopSettings(base), engine: "niho-9", look: "niho-standard-5" };
+    const currentSettings = { ...neutralDevelopSettings(base), engine: "niho-11", look: "niho-standard-5" };
     const old7 = { ...currentSettings, engine: "niho-7", exposure: 1 };
     const old4 = { ...currentSettings, engine: "niho-4", look: "niho-standard-3", exposure: 0.8 };
     const old3 = { ...currentSettings, engine: "niho-3", look: "niho-standard-2", exposure: 0.6 };

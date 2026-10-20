@@ -52,6 +52,19 @@ fn size_object(width: usize, height: usize) -> Result<Object, JsError> {
     Ok(o)
 }
 
+fn sampled_color_object(color: [f64; 3]) -> Result<Object, JsError> {
+    let o = Object::new();
+    for (key, value) in [
+        ("lightness", color[0]),
+        ("chroma", color[1]),
+        ("hue", color[2]),
+    ] {
+        Reflect::set(&o, &JsValue::from_str(key), &JsValue::from_f64(value))
+            .map_err(|_| JsError::new("set"))?;
+    }
+    Ok(o)
+}
+
 /// One-shot options; `decode_cap` (omitted: 4096) caps the decode of an
 /// original whose crop needs more than `max_dimension`.
 fn options(max_dimension: u32, interactive: bool, decode_cap: Option<u32>) -> RenderOptions {
@@ -445,6 +458,24 @@ impl Developer {
             .render(&settings, max_dimension as usize, quality)
             .map_err(js_error)?;
         frame_object(&frame)
+    }
+
+    /// Samples Stage Q after hue stabilization and before color points /
+    /// Color Grading at normalized rendered-frame coordinates.
+    #[wasm_bindgen(js_name = sampleColor)]
+    pub fn sample_color(
+        &mut self,
+        settings_json: &str,
+        max_dimension: u32,
+        x: f64,
+        y: f64,
+    ) -> Result<Object, JsError> {
+        let settings = niho_develop::parse_settings(settings_json).map_err(js_error)?;
+        let color = self
+            .session
+            .sample_color(&settings, max_dimension as usize, x, y)
+            .map_err(js_error)?;
+        sampled_color_object(color)
     }
 
     /// "自動": these settings with the six Light sliders and Vibrance set

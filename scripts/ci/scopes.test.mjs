@@ -92,4 +92,5 @@ test("現像の公開CIは固定toolchain・実RAW・fit再生成・WASM parity�
   assert.ok(commands.some(([command,args]) => command === "python3" && args.includes("packages/develop-engine/tools/independent-profile/check.py")));
   assert.ok(commands.some(([command,args]) => command === "cargo" && args.includes("build") && args.includes("wasm32-unknown-unknown")));
   assert.ok(commands.some(([command,args]) => command === "cargo" && args.includes("test") && args.includes("niho7_cross_target")));
+  assert.ok(commands.some(([command,args]) => command === "cargo" && args.includes("test") && args.includes("color_points")));
 });

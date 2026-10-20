@@ -166,8 +166,10 @@
         "path": "packages/photo-editing/src/browser-photo-export-render.test.ts",
         "sha256": "37f9b00d27256499f945ff515f75837c197b608a7c0c2de01be7d8bcbe96241c"
       },
-      "outputSha256": "37f9b00d27256499f945ff515f75837c197b608a7c0c2de01be7d8bcbe96241c",
-      "modifications": []
+      "outputSha256": "d1ef5a4f3d83bea2082e21293fb8d85e84d75076f40b12c5693fbf811bb5fe82",
+      "modifications": [
+        "Issue #30 Oklch色ミキサーとengine 10/11対応を反映"
+      ]
     },
     {
       "path": "packages/photo-editing/src/browser-photo-export-render.ts",
@@ -257,10 +259,11 @@
         "path": "packages/photo-editing/src/develop-engine/develop-engine-client.test.ts",
         "sha256": "ab57eb9cc53aee5fc1ca937830d4eb7c979bf9da92b32c220bdeab772e8db065"
       },
-      "outputSha256": "4dd4876bbfc1fa733827c6604f68ad69e22af3c2dfc850acf7bd60797b6309e2",
+      "outputSha256": "8e7d85447abf162504d0d6ca41138eb59b74a2c67b1775004dac253e66d2a171",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
-        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。"
+        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
+        "Issue #30 Oklch色ミキサーとengine 10/11対応を反映"
       ]
     },
     {
@@ -271,10 +274,11 @@
         "path": "packages/photo-editing/src/develop-engine/develop-engine-client.ts",
         "sha256": "d734116dcc1e882d2e3debedb7d79fb892915571f6b59965886464cc933c022f"
       },
-      "outputSha256": "ed6275570ac57ea30daab509d3f7ec7cf11da6522d060cf6d09f39379a126c07",
+      "outputSha256": "3579709638b9ce6bcdbb164862b4a8088039217e0f08af9d0dfea73c100568d9",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
-        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。"
+        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
+        "Issue #30 Oklch色ミキサーとengine 10/11対応を反映"
       ]
     },
     {
@@ -285,12 +289,13 @@
         "path": "packages/photo-editing/src/develop-engine/develop-engine-manifest.ts",
         "sha256": "5df5cda8a061155a614d1e60a1c263e0764c83978708cfcc16959905387d5e4f"
       },
-      "outputSha256": "b4e6aa76ddbed2a98cd1089f7db8388abbe7575cb7da4da1f92d408d02730019",
+      "outputSha256": "9bb6d6fb02ed8d5dfe4e32845382f40fce3b344e122ce3fb09a87aeb19d849fc",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
         "Issue #28の色相安定engine追加と互換回帰を反映。",
-        "新しい色相保持エンジンと新旧バイナリの能力境界・数値回帰を整合。"
+        "新しい色相保持エンジンと新旧バイナリの能力境界・数値回帰を整合。",
+        "Issue #30 Oklch色ミキサーとengine 10/11対応を反映"
       ]
     },
     {
@@ -312,10 +317,11 @@
         "path": "packages/photo-editing/src/develop-engine/develop-engine-worker-core.test.ts",
         "sha256": "eb20b196dd11f240e0944d79d51244a1951536f264a1aa7c1fcb06180f86d26b"
       },
-      "outputSha256": "a122b14fdcd2f19fbd213cdd511b7b2283f232a0ee86ce161087ae2740b868a7",
+      "outputSha256": "95c7e9440faae7e9b9e50ae0c810d8fa1abfd68eaa9cf6f9b5c796333554f03a",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
-        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。"
+        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
+        "Issue #30 Oklch色ミキサーとengine 10/11対応を反映"
       ]
     },
     {
@@ -326,10 +332,11 @@
         "path": "packages/photo-editing/src/develop-engine/develop-engine-worker-core.ts",
         "sha256": "460e15bb7865292233cc8baf9864ede3d31d47158aff084415364fa1495cb776"
       },
-      "outputSha256": "c71b271292329b40b8f83ed091876082c8bf72c7624c1629d6e8bb651b8888df",
+      "outputSha256": "0302fc55f1f28f24cacd9d756003801d4ed1c542645dc39535916a28285d91d2",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
-        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。"
+        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
+        "Issue #30 Oklch色ミキサーとengine 10/11対応を反映"
       ]
     },
     {
@@ -393,12 +400,13 @@
         "path": "packages/photo-editing/src/develop-engine/develop-open-settings.test.ts",
         "sha256": "21fe5f90f50903caae881358a3c73b81f782dc6fcb9a348c1413eff5c128f1d8"
       },
-      "outputSha256": "c2cab2b48f70024488a4fe24cd975aac7b174fac2d288b2af7eee3f89588cec6",
+      "outputSha256": "35b162235b345c33283bc311dc3cb51602006c9f480889c15935aa22de71345e",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
         "Issue #28の色相安定engine追加と互換回帰を反映。",
-        "新しい色相保持エンジンと新旧バイナリの能力境界・数値回帰を整合。"
+        "新しい色相保持エンジンと新旧バイナリの能力境界・数値回帰を整合。",
+        "Issue #30 Oklch色ミキサーとengine 10/11対応を反映"
       ]
     },
     {
@@ -451,10 +459,11 @@
         "path": "packages/photo-editing/src/develop-engine/develop-settings-draft.test.ts",
         "sha256": "ae30ca9e7253910301e27285d26eb1b88e1dbadd8878264981cb844886509779"
       },
-      "outputSha256": "c4a325a3fa55b249307401c217a92575105e3939920fbc363d792b7eb37a621a",
+      "outputSha256": "c694650c0a41d518eb4d3d8f926fd694f9d96e857bf313cb3c0d239facfcad8a",
       "modifications": [
         "Issue #28の色相安定engine追加と互換回帰を反映。",
-        "新しい色相保持エンジンと新旧バイナリの能力境界・数値回帰を整合。"
+        "新しい色相保持エンジンと新旧バイナリの能力境界・数値回帰を整合。",
+        "Issue #30 Oklch色ミキサーとengine 10/11対応を反映"
       ]
     },
     {
@@ -465,13 +474,14 @@
         "path": "packages/photo-editing/src/develop-engine/develop-settings-draft.ts",
         "sha256": "32f698bb402dedb96f6011f0bc5edbd63e10db2249371ce7ed84911a7c683895"
       },
-      "outputSha256": "71207e1a791ece10350da98fcf87e6c34205e3705a0a4f84687eb4f392cd63a6",
+      "outputSha256": "9e51b7e34a47b29da8a27c19710c744f66a9d0242aef2709fc8bf460beeeabdc",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
         "Issue #28の色相安定engine追加と互換回帰を反映。",
         "Issue #28の未保存draft互換境界の説明を更新。",
-        "新しい色相保持エンジンと新旧バイナリの能力境界・数値回帰を整合。"
+        "新しい色相保持エンジンと新旧バイナリの能力境界・数値回帰を整合。",
+        "Issue #30 Oklch色ミキサーとengine 10/11対応を反映"
       ]
     },
     {
@@ -493,10 +503,11 @@
         "path": "packages/photo-editing/src/develop-engine/develop-settings-preset.test.ts",
         "sha256": "7b25438501c00dfd642d94dde70245f9825d039f4b9a4e3ec40f6805fe37b623"
       },
-      "outputSha256": "81a71e82428aeb7fe2b14d9eee740a298bfef46741f470600681cbbecea10030",
+      "outputSha256": "787fd6b186ae30cfabfc4c83df76b2bf70b5c947b5ffa8629799c57e8da2fdf0",
       "modifications": [
         "Issue #28の色相安定engine追加と互換回帰を反映。",
-        "新しい色相保持エンジンと新旧バイナリの能力境界・数値回帰を整合。"
+        "新しい色相保持エンジンと新旧バイナリの能力境界・数値回帰を整合。",
+        "Issue #30 Oklch色ミキサーとengine 10/11対応を反映"
       ]
     },
     {
@@ -507,12 +518,13 @@
         "path": "packages/photo-editing/src/develop-engine/develop-settings.test.ts",
         "sha256": "0ead17a941128da9f35266e10aec10dd9c1da7ea0afcd68b9e7cf5fcac3aab90"
       },
-      "outputSha256": "95a1737ac3de3f725082f81a2a42232354e088756e6663de3050b0b18e89d486",
+      "outputSha256": "078ea1e74377a405bfdbbb273e9fb6c80e8b6dfb0dda5f7b36640d16a714c385",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
         "Issue #28の色相安定engine追加と互換回帰を反映。",
-        "新しい色相保持エンジンと新旧バイナリの能力境界・数値回帰を整合。"
+        "新しい色相保持エンジンと新旧バイナリの能力境界・数値回帰を整合。",
+        "Issue #30 Oklch色ミキサーとengine 10/11対応を反映"
       ]
     },
     {
@@ -523,13 +535,15 @@
         "path": "packages/photo-editing/src/develop-engine/develop-settings.ts",
         "sha256": "b32fdf32b5eafb093a9691d609ae4719a576e662507776e6c409ab0e4c98722a"
       },
-      "outputSha256": "35ccca448c37cc13ca7f9c40fe2583c66e9a3953d86367899f4c5a2a3a9e6a76",
+      "outputSha256": "d32ac377851e9f7807fda1dd6c1f5280110f331f8879231d677fe652c311f5d3",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
         "Issue #28の色相安定engine追加と互換回帰を反映。",
         "Issue #28の新規engine既定と互換境界の説明を更新。",
-        "新しい色相保持エンジンと新旧バイナリの能力境界・数値回帰を整合。"
+        "新しい色相保持エンジンと新旧バイナリの能力境界・数値回帰を整合。",
+        "Issue #30 Oklch色ミキサーとengine 10/11対応を反映",
+        "対応engineの番号を正確に列挙"
       ]
     },
     {
@@ -568,10 +582,11 @@
         "path": "packages/photo-editing/src/develop-engine/develop-work-target.test.ts",
         "sha256": "fb84feedbdd530693b456f085cf2251d354d303e3430323e40e71e8bc3f78579"
       },
-      "outputSha256": "f79c0171edf938d60697ed35220a753321981c30bb01acb371716126a9f47d0a",
+      "outputSha256": "4ecef0a73f2586e58c5683eb75efcafd170e2524605ceac82218e284f89b0bfc",
       "modifications": [
         "Issue #28で既知になったengine番号を未知版fixtureから除外。",
-        "新しい色相保持エンジンと新旧バイナリの能力境界・数値回帰を整合。"
+        "新しい色相保持エンジンと新旧バイナリの能力境界・数値回帰を整合。",
+        "Issue #30 Oklch色ミキサーとengine 10/11対応を反映"
       ]
     },
     {
@@ -638,10 +653,11 @@
         "path": "packages/photo-editing/src/editor/browser-photo-editing-adjustments.tsx",
         "sha256": "2473ef7ca64f61e5ce7a72efb21f436f799f04a90a3a73b114cba15b7b5d23b1"
       },
-      "outputSha256": "48a2cae8eb279b7137657b30058e3de461956f8925f34a685ff8e977de06c224",
+      "outputSha256": "e8c83a589fd5059a8205557df4afe082f177889c4ae0be0bc1bca7fe825095c5",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
-        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。"
+        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
+        "Issue #30 Oklch色ミキサーとengine 10/11対応を反映"
       ]
     },
     {
@@ -812,10 +828,12 @@
         "path": "packages/photo-editing/src/editor/browser-photo-editing-loupe.tsx",
         "sha256": "51859688628c86e65c882ff94a59b6324ecb621ac9f759121c7c3d7ed4ccc35a"
       },
-      "outputSha256": "0aff9a80e17c46c51e8e2f9c90c3acc6b04e6d013cff5fd909157dab235bda5a",
+      "outputSha256": "8785dcd117f5630f508b626b340336a5f5c2cc3f46c1bdcc2d5ed26419987bf8",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
-        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。"
+        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
+        "Issue #30 Oklch色ミキサーとengine 10/11対応を反映",
+        "pickerのCSS座標変換を共通の正規化関数へ一本化"
       ]
     },
     {
@@ -826,10 +844,11 @@
         "path": "packages/photo-editing/src/editor/browser-photo-editing-mobile-editor.tsx",
         "sha256": "cf0ebc1e3a23b7a2e8ecea7538cc6f2d9880cbf4e181d79db61f26dc293c3d1a"
       },
-      "outputSha256": "de8331438c91b1d96e7aeb584b3c55e6fe15ba214b84cf0e5205a40952e9d219",
+      "outputSha256": "de888b8b67943347c22caaf903df435808e9f55189d463e40617ca4c9564e1d7",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
-        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。"
+        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
+        "Issue #30 Oklch色ミキサーとengine 10/11対応を反映"
       ]
     },
     {
@@ -982,11 +1001,17 @@
         "path": "packages/photo-editing/src/editor/browser-photo-editing-workbench.tsx",
         "sha256": "f655136ae0c985d793822ca8bef1668dba26ffd4bb8f13d2ba3d6c2ccb13ceb6"
       },
-      "outputSha256": "bc6e411e1cff57a51128b98dcf83bec995166353bc9acd8c2094f058f2fdee02",
+      "outputSha256": "157764e8aeb2cb30ddd549d35092208f15f6b27da84693977f764881f8af1ec8",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
-        "任意の個別写真ソース契約と選んだ写真のUI、復元、取消、再試行、失敗時参照保持を追加"
+        "任意の個別写真ソース契約と選んだ写真のUI、復元、取消、再試行、失敗時参照保持を追加",
+        "Issue #30 Oklch色ミキサーとengine 10/11対応を反映",
+        "非同期picker結果の写真・設定・操作世代照合を共通化",
+        "picker snapshotのphoto keyを非nullへ型安全に固定",
+        "preset preview中のpickerを取消して表示色の取り違えを防止",
+        "picker失敗を実装詳細なしの日本語復帰案内へ変換",
+        "picker完了時に最新context refを参照"
       ]
     },
     {
@@ -1503,10 +1528,11 @@
         "path": "packages/photo-editing/src/editor/use-browser-photo-effects.ts",
         "sha256": "b105c8d9e2469b4cb471ad0efcc89fecda00900c54bfa5a7e2ba57cb7dc1fb70"
       },
-      "outputSha256": "c22ae6dfce066454d4a161779930815748e2a81a0969e5d07a3b1a04e027142c",
+      "outputSha256": "7b51e15785f0bde1e950d984776d990fc5a6a264ddef093982d2564fa5c52358",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
-        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。"
+        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
+        "Issue #30 Oklch色ミキサーとengine 10/11対応を反映"
       ]
     },
     {
@@ -1859,10 +1885,11 @@
         "path": "packages/photo-editing/src/photo-editing-adjustments.ts",
         "sha256": "5b5f9dd72b1bda8f15c13e3c4299e8c1c35ac5b6b9fbd8143f25d0d6934b9ceb"
       },
-      "outputSha256": "b4e7c033ddb429f952ab9a9348626de3b785655376a6259cee3a6c6451a6f37a",
+      "outputSha256": "91cc989c434af489cb5aff5c904957e0bb4e19bc34812a03f332a9a20933032e",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
-        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。"
+        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
+        "Issue #30 Oklch色ミキサーとengine 10/11対応を反映"
       ]
     },
     {
@@ -1901,11 +1928,12 @@
         "path": "packages/photo-editing/src/photo-editing-copy.ts",
         "sha256": "1208d4124dca26c951d73f6f84c560879e69beddfb9a16426e1a9dcc9fd30c27"
       },
-      "outputSha256": "0e4b639dbfb7ba43ab9d3f4e8f6b7f167cdcc437f1b3d52b25f693143f12ec8f",
+      "outputSha256": "87be3d4b8eb3e90ad0953a56e05d8c2727e4f8b0b4dac86f7335ded99dea877d",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
-        "任意の個別写真ソース契約と選んだ写真のUI、復元、取消、再試行、失敗時参照保持を追加"
+        "任意の個別写真ソース契約と選んだ写真のUI、復元、取消、再試行、失敗時参照保持を追加",
+        "Issue #30 Oklch色ミキサーとengine 10/11対応を反映"
       ]
     },
     {
@@ -2404,8 +2432,10 @@
         "path": "packages/photo-editing/src/photo-preset-xmp-support.test.ts",
         "sha256": "9dc9314d099eee0f638329346395101c9bd22a540fb0163935a530ececa99a6d"
       },
-      "outputSha256": "9dc9314d099eee0f638329346395101c9bd22a540fb0163935a530ececa99a6d",
-      "modifications": []
+      "outputSha256": "a9ab324f463cbe16126d3ddd55d09a283f4b69d548e31e6b7840262746089a7a",
+      "modifications": [
+        "Issue #30 Oklch色ミキサーとengine 10/11対応を反映"
+      ]
     },
     {
       "path": "packages/photo-editing/src/photo-preset-xmp-support.ts",
@@ -2415,10 +2445,11 @@
         "path": "packages/photo-editing/src/photo-preset-xmp-support.ts",
         "sha256": "af143f7fb0e786764ed6959aa7e32a1567e88aff4f71f7f53e7d11bd066fda57"
       },
-      "outputSha256": "4958718770f8d04fb22905ecc8840e5b5a4008acba268fe8e8874fed9e347abd",
+      "outputSha256": "b0d3996ba2978a3e69c46c03640aca643b34149f28a851bd1fc3b9f45a4ef322",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
-        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。"
+        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
+        "Issue #30 Oklch色ミキサーとengine 10/11対応を反映"
       ]
     },
     {
@@ -3856,10 +3887,11 @@
         "path": "packages/desktop-photo/src/develop.rs",
         "sha256": "7f13c1e41e82bf4bc91bef5e4a8b61f092ab0b986a6a95c5559c2246bb74d864"
       },
-      "outputSha256": "3e5af114ba4c5c13bdbf607ddf199450ca6b64ea7f9c0d94ef6129f5528cc7be",
+      "outputSha256": "533943c5284bec4b9220bd99e2405d89fd60b8194104a97354574935ce4aeee0",
       "modifications": [
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
-        "新しい色相保持エンジンと新旧バイナリの能力境界・数値回帰を整合。"
+        "新しい色相保持エンジンと新旧バイナリの能力境界・数値回帰を整合。",
+        "Issue #30 Oklch色ミキサーとengine 10/11対応を反映"
       ]
     },
     {
@@ -3870,10 +3902,11 @@
         "path": "packages/desktop-photo/src/develop_local_raster_tests.rs",
         "sha256": "b45869e304ecb1bfa8cc4c3aea903fd7771f60c1b140f6f3c7be2f9f2b929bc2"
       },
-      "outputSha256": "cd7f128efe38223e0845604a118b6b85e9cf8a384c1d4bfc4fac8a242ed05851",
+      "outputSha256": "77ddf2586c2b5032cb5f35dcd3a4db67da81b3c46d44a4ab04055a8e6e1b605e",
       "modifications": [
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
-        "新しい色相保持エンジンと新旧バイナリの能力境界・数値回帰を整合。"
+        "新しい色相保持エンジンと新旧バイナリの能力境界・数値回帰を整合。",
+        "Issue #30 Oklch色ミキサーとengine 10/11対応を反映"
       ]
     },
     {
@@ -4241,10 +4274,11 @@
         "path": "packages/develop-engine/Cargo.lock",
         "sha256": "e7caae6825c3c4c50d7d593c35d7163de7d311357b81558d1ad1a009cbfafadc"
       },
-      "outputSha256": "d6e8d37288944f6afe9d4b31d57709a8d936b69838cf194184b18cbfb27c944a",
+      "outputSha256": "0c288a25c7ee3c5936aaa1f6a7d843289f810251b02b4e75db0856321ee26a32",
       "modifications": [
         "新しい色相保持エンジンと新旧バイナリの能力境界・数値回帰を整合。",
-        "現像workspaceだけを0.17.0へ更新し外部依存の固定版を維持。"
+        "現像workspaceだけを0.17.0へ更新し外部依存の固定版を維持。",
+        "Issue #30 Oklch色ミキサーとengine 10/11対応を反映"
       ]
     },
     {
@@ -4255,9 +4289,10 @@
         "path": "packages/develop-engine/Cargo.toml",
         "sha256": "274ef616c08b9ade52276b660ea12ce836bc08f97e67dedcf163f76114dd4ab0"
       },
-      "outputSha256": "3554586773ce2cf5b5ad0c2fe1a3a6d5bc52811d71aa2ae71ba4d2840c956249",
+      "outputSha256": "e90bc3821569982de08b01b8ec025ec1503f6697c660deb6a53aae1633bbad96",
       "modifications": [
-        "新しい色相保持エンジンと新旧バイナリの能力境界・数値回帰を整合。"
+        "新しい色相保持エンジンと新旧バイナリの能力境界・数値回帰を整合。",
+        "Issue #30 Oklch色ミキサーとengine 10/11対応を反映"
       ]
     },
     {
@@ -4963,10 +4998,11 @@
         "path": "packages/develop-engine/crates/niho-develop-render/src/lib.rs",
         "sha256": "a9ac3a784a2eb9250747dc2eaabc10c958c1a10d71c7ca16ffdd0d96b40456bc"
       },
-      "outputSha256": "1c671681d4c505ea8d19585937f3b2b658d36d664cceb8ee100bffa22e908e24",
+      "outputSha256": "fa18e49ff5c99f07ec1c3ba22d161b0d81e32cbb2e92321445ef568b2a9d825b",
       "modifications": [
         "Issue #28の色相安定engine追加と互換回帰を反映。",
-        "新しい色相保持エンジンと新旧バイナリの能力境界・数値回帰を整合。"
+        "新しい色相保持エンジンと新旧バイナリの能力境界・数値回帰を整合。",
+        "Issue #30 Oklch色ミキサーとengine 10/11対応を反映"
       ]
     },
     {
@@ -4988,10 +5024,11 @@
         "path": "packages/develop-engine/crates/niho-develop-render/tests/cli.rs",
         "sha256": "8ddf42804ccd8202fb8834bc499d2d03a331eb0ff96e020421a776f2286ef9bd"
       },
-      "outputSha256": "5b9bfa71438fcf8206ceb6433e99341da9ab9c68665f3e376e9a1d60bda76a36",
+      "outputSha256": "41f1876b2ebe7fb151dbb7785630943d5655821a5b908ebb2b0f0cf0ddec7012",
       "modifications": [
         "Issue #28の色相安定engine追加と互換回帰を反映。",
-        "新しい色相保持エンジンと新旧バイナリの能力境界・数値回帰を整合。"
+        "新しい色相保持エンジンと新旧バイナリの能力境界・数値回帰を整合。",
+        "Issue #30 Oklch色ミキサーとengine 10/11対応を反映"
       ]
     },
     {
@@ -5013,8 +5050,10 @@
         "path": "packages/develop-engine/crates/niho-develop-wasm/src/lib.rs",
         "sha256": "bb2c416ce23b4e3ca3208f32736f22254ed82276b24fd7f49f1a022e4eb85fbd"
       },
-      "outputSha256": "bb2c416ce23b4e3ca3208f32736f22254ed82276b24fd7f49f1a022e4eb85fbd",
-      "modifications": []
+      "outputSha256": "7d171a7bb764c3e188fe4b3e9b9cff7b275a6167593972db4dfca3a3569ab09f",
+      "modifications": [
+        "Issue #30 Oklch色ミキサーとengine 10/11対応を反映"
+      ]
     },
     {
       "path": "packages/develop-engine/crates/niho-develop/Cargo.toml",
@@ -5079,10 +5118,11 @@
         "path": "packages/develop-engine/crates/niho-develop/examples/niho3_compare.rs",
         "sha256": "14c41a5f335a060261e9049b2845c4d10e94226dc6129cda30e90e0e0d3f44fd"
       },
-      "outputSha256": "cad2214effb8105f0aa2045aec5961aa4bd36e9c8a6a05ea9680905f55feee98",
+      "outputSha256": "c74f2ad5dd31a89e2300957360a1080337017c45411e27a5a3b5e675f5a6a364",
       "modifications": [
         "Issue #28の色相安定engine追加と互換回帰を反映。",
-        "新しい色相保持エンジンと新旧バイナリの能力境界・数値回帰を整合。"
+        "新しい色相保持エンジンと新旧バイナリの能力境界・数値回帰を整合。",
+        "Issue #30 Oklch色ミキサーとengine 10/11対応を反映"
       ]
     },
     {
@@ -5317,10 +5357,12 @@
         "path": "packages/develop-engine/crates/niho-develop/src/color_ops.rs",
         "sha256": "cd0c61a609a12094f4f95b019c1671187e1d320b95c36b34da5c87dc7c3835d1"
       },
-      "outputSha256": "d25469c0128c3c4fc0237044aad2f6e46dc15afcc599e99a185df15cead3b910",
+      "outputSha256": "9160f6371dd2d92b4210e43d8370cbc52940495c16d9294ba4ad8cc73d5e5080",
       "modifications": [
         "Issue #28の色相安定engine追加と互換回帰を反映。",
-        "新しい色相保持エンジンと新旧バイナリの能力境界・数値回帰を整合。"
+        "新しい色相保持エンジンと新旧バイナリの能力境界・数値回帰を整合。",
+        "Issue #30 Oklch色ミキサーとengine 10/11対応を反映",
+        "色ポイントを画素単位で適用する後段処理を分離"
       ]
     },
     {
@@ -5441,10 +5483,14 @@
         "path": "packages/develop-engine/crates/niho-develop/src/lib.rs",
         "sha256": "1591d49effaa779c8e23ad6877508ccf336565eec8336d5b4e6faa3b5d3846b0"
       },
-      "outputSha256": "25ee41db33e5baeb8abe285678c305d3e6309508a26de258bfdc0f5eafbff5c9",
+      "outputSha256": "c5d5cf0c7f4bd0544cf53f8b43fac667964da491eed1ec9eec20e4b4a26738c4",
       "modifications": [
         "Issue #28の色相安定engine追加と互換回帰を反映。",
-        "新しい色相保持エンジンと新旧バイナリの能力境界・数値回帰を整合。"
+        "新しい色相保持エンジンと新旧バイナリの能力境界・数値回帰を整合。",
+        "Issue #30 Oklch色ミキサーとengine 10/11対応を反映",
+        "picker採取を可視sessionから分離しcacheと画素状態を保持",
+        "renderとpickerのsize key source選択を共有",
+        "size key source共有をfield分離可能なhelperへ整理"
       ]
     },
     {
@@ -5466,8 +5512,10 @@
         "path": "packages/develop-engine/crates/niho-develop/src/lut.rs",
         "sha256": "d0b9d65a032d449a1f234d6e65ecc328dd44f6fe51ede51d602c5c58aae7e96e"
       },
-      "outputSha256": "d0b9d65a032d449a1f234d6e65ecc328dd44f6fe51ede51d602c5c58aae7e96e",
-      "modifications": []
+      "outputSha256": "04aec592f7d41e1f648967a3d85db564fa83c7c3d93c134b75af678ab6d4df2e",
+      "modifications": [
+        "Issue #30 Oklch色ミキサーとengine 10/11対応を反映"
+      ]
     },
     {
       "path": "packages/develop-engine/crates/niho-develop/src/niho3.rs",
@@ -5488,10 +5536,11 @@
         "path": "packages/develop-engine/crates/niho-develop/src/niho4.rs",
         "sha256": "76c59b0f23b8b2a69d7c6b1602566fa222ee14d592ab7b42b6e37b5aba4ab319"
       },
-      "outputSha256": "8ad7e5f31d9c254a5e88e694c1c980994b10a972ebc2166ec9d344959e1a404f",
+      "outputSha256": "41cd18132a8927ec9c078bcad75c45274a21783e31eda52d11fd0d51ab46ac5d",
       "modifications": [
         "Issue #28の色相安定engine追加と互換回帰を反映。",
-        "新しい色相保持エンジンと新旧バイナリの能力境界・数値回帰を整合。"
+        "新しい色相保持エンジンと新旧バイナリの能力境界・数値回帰を整合。",
+        "Issue #30 Oklch色ミキサーとengine 10/11対応を反映"
       ]
     },
     {
@@ -5568,10 +5617,13 @@
         "path": "packages/develop-engine/crates/niho-develop/src/pipeline.rs",
         "sha256": "d982d76cf1b5d34526f700e5edfcef00ae8647d22b845c0f7234ed340ba9d641"
       },
-      "outputSha256": "877fbef58aceaa7daccf269b43ff8844b9145c50f7b9437c0ef3c6fa7c5f79af",
+      "outputSha256": "1a22438e9ab3666621679a29ecd57de71d56135b917695b3596d3fc514e7e50c",
       "modifications": [
         "Issue #28の色相安定engine追加と互換回帰を反映。",
-        "新しい色相保持エンジンと新旧バイナリの能力境界・数値回帰を整合。"
+        "新しい色相保持エンジンと新旧バイナリの能力境界・数値回帰を整合。",
+        "Issue #30 Oklch色ミキサーとengine 10/11対応を反映",
+        "狭い選択範囲向けのexact描画と共有sampling段を追加",
+        "sample cube選択を明示分岐へ整理"
       ]
     },
     {
@@ -5681,10 +5733,11 @@
         "path": "packages/develop-engine/crates/niho-develop/src/settings.rs",
         "sha256": "756a24a09d738b2341974d92d89b82f55b42eb6060b6e0c99ee4a532947a1b47"
       },
-      "outputSha256": "e2d8c5f5949692829f0369f4938de6e9b9ccc8bcd3341396abf779b9fa75c728",
+      "outputSha256": "5b34ec5baa4406b411692af405629db6c82a630a4535bebdfae6c153891edd0d",
       "modifications": [
         "Issue #28の色相安定engine追加と互換回帰を反映。",
-        "新しい色相保持エンジンと新旧バイナリの能力境界・数値回帰を整合。"
+        "新しい色相保持エンジンと新旧バイナリの能力境界・数値回帰を整合。",
+        "Issue #30 Oklch色ミキサーとengine 10/11対応を反映"
       ]
     },
     {
@@ -5706,10 +5759,11 @@
         "path": "packages/develop-engine/crates/niho-develop/src/tone_ops.rs",
         "sha256": "394b07235a9b58a8f3756a1391bcc1b286eeda30f348f3334ebc4db4c42a2ef8"
       },
-      "outputSha256": "74e0aa5b88bc4fb2e4460fe5beec7c367296891c65587b2f2ce25694721ad428",
+      "outputSha256": "c6b352975e7121315f30063d6546ac003dc923a9b78d42cca2799347cd708da9",
       "modifications": [
         "Issue #28の色相安定engine追加と互換回帰を反映。",
-        "新しい色相保持エンジンと新旧バイナリの能力境界・数値回帰を整合。"
+        "新しい色相保持エンジンと新旧バイナリの能力境界・数値回帰を整合。",
+        "Issue #30 Oklch色ミキサーとengine 10/11対応を反映"
       ]
     },
     {
@@ -5731,10 +5785,11 @@
         "path": "packages/develop-engine/crates/niho-develop/src/xmp.rs",
         "sha256": "be5ddce69eceafb334c173ee92af3614c044039b103903ad1dfef24758f1ec45"
       },
-      "outputSha256": "9f502479df2f5d1617fd3331c6347b7b5f1a2a6a4b84f820ec61b34ed25a68ab",
+      "outputSha256": "a446296989bd08bdc4b756712717d45eaede83680371948394936d489fd6f206",
       "modifications": [
         "Issue #28の色相安定engine追加と互換回帰を反映。",
-        "新しい色相保持エンジンと新旧バイナリの能力境界・数値回帰を整合。"
+        "新しい色相保持エンジンと新旧バイナリの能力境界・数値回帰を整合。",
+        "Issue #30 Oklch色ミキサーとengine 10/11対応を反映"
       ]
     },
     {
@@ -5745,8 +5800,10 @@
         "path": "packages/develop-engine/crates/niho-develop/src/xmp/amount.rs",
         "sha256": "fc1efdb7f9d5476b9c58324b4e763298f0737d480b304b44529170d3bd31aa05"
       },
-      "outputSha256": "fc1efdb7f9d5476b9c58324b4e763298f0737d480b304b44529170d3bd31aa05",
-      "modifications": []
+      "outputSha256": "e771f58907bebaf0d77ed31a74ac6d30682abb407de13c21f6ea3b3281fd9eb2",
+      "modifications": [
+        "Issue #30 Oklch色ミキサーとengine 10/11対応を反映"
+      ]
     },
     {
       "path": "packages/develop-engine/crates/niho-develop/src/xmp/write.rs",
@@ -5756,10 +5813,11 @@
         "path": "packages/develop-engine/crates/niho-develop/src/xmp/write.rs",
         "sha256": "f583b51766c756fe31b623949a8174abd304ff660a7793e332b3153faf2aa749"
       },
-      "outputSha256": "06de821513fccbb763b4bc77ec18dcde14183779c7a59f187dc6358cc6e30fb4",
+      "outputSha256": "14460bc107ed13d2699e1fd7f92cdbf5cb3ddf0504bf09cf6a2870e9c6c66161",
       "modifications": [
         "Issue #28の色相安定engine追加と互換回帰を反映。",
-        "新しい色相保持エンジンと新旧バイナリの能力境界・数値回帰を整合。"
+        "新しい色相保持エンジンと新旧バイナリの能力境界・数値回帰を整合。",
+        "Issue #30 Oklch色ミキサーとengine 10/11対応を反映"
       ]
     },
     {
@@ -6050,10 +6108,12 @@
         "path": "packages/develop-engine/crates/niho-develop/tests/lightroom.rs",
         "sha256": "66b5426dbde5f397d54cf2eb32ebbacee352464546c1726cf64bbd3db8ae1985"
       },
-      "outputSha256": "193f2d5a486a02047ae7535070c5378f7f909e00ed7da1f70be554ff35bad9eb",
+      "outputSha256": "ea439d0e2ba0984922ec353b92ceb3edf450047f2d099e75d90b8970c91a1056",
       "modifications": [
         "公開SSOT向けに内部絶対path・private repository URL・行末を正規化。",
-        "新しい色相保持エンジンと新旧バイナリの能力境界・数値回帰を整合。"
+        "新しい色相保持エンジンと新旧バイナリの能力境界・数値回帰を整合。",
+        "Issue #30 Oklch色ミキサーとengine 10/11対応を反映",
+        "全体彩度の外部Lightroomチャート比較を再現する診断を追加"
       ]
     },
     {
@@ -6111,10 +6171,11 @@
         "path": "packages/develop-engine/crates/niho-develop/tests/niho6.rs",
         "sha256": "a357ebc5df6ad8a744de6ee2f990b7f9884e31e3b8caa07721b62cbc7992685e"
       },
-      "outputSha256": "97fed50b69d994abba4feeac90fec6cb71e56198f0d159027c5fc5bbca40ab27",
+      "outputSha256": "5c793a88742de69ca0b4317a054b2bd2e0f1c9e589fe014b3426338c268f4a2c",
       "modifications": [
         "Issue #28の色相安定engine追加と互換回帰を反映。",
-        "新しい色相保持エンジンと新旧バイナリの能力境界・数値回帰を整合。"
+        "新しい色相保持エンジンと新旧バイナリの能力境界・数値回帰を整合。",
+        "Issue #30 Oklch色ミキサーとengine 10/11対応を反映"
       ]
     },
     {
@@ -6147,10 +6208,11 @@
         "path": "packages/develop-engine/crates/niho-develop/tests/niho7.rs",
         "sha256": "ea8abc7196badea4a3b206ae54073cc42d41a9ecdaab425719419165adbf45e2"
       },
-      "outputSha256": "f99a88d416e75807d681d3cd0d09fd06f337625c4da5564a9f240aa03b62cb75",
+      "outputSha256": "a9e4392adf9a1b07b71303b3ccc9764472acd73fe877fe5fbfbf2bad98b51adb",
       "modifications": [
         "Issue #28の色相安定engine追加と互換回帰を反映。",
-        "新しい色相保持エンジンと新旧バイナリの能力境界・数値回帰を整合。"
+        "新しい色相保持エンジンと新旧バイナリの能力境界・数値回帰を整合。",
+        "Issue #30 Oklch色ミキサーとengine 10/11対応を反映"
       ]
     },
     {
@@ -6183,11 +6245,12 @@
         "path": "packages/develop-engine/crates/niho-develop/tests/pipeline.rs",
         "sha256": "73d670edab0357b8cf1c07c0008e0790ae5a63da61192130e2a925c39d41da92"
       },
-      "outputSha256": "00c80167e5826ec01f28468bfbc416f4fc3367dfdb025ac088a6166c9aba6731",
+      "outputSha256": "f0d8a8c16583a671d3d3c22aa62a309fb23f760f81bfa7b0180e1ec916a47d79",
       "modifications": [
         "metadata除去済みorientation fixtureのAPP1位置にテストを合わせる。",
         "Issue #28の色相安定engine追加と互換回帰を反映。",
-        "新しい色相保持エンジンと新旧バイナリの能力境界・数値回帰を整合。"
+        "新しい色相保持エンジンと新旧バイナリの能力境界・数値回帰を整合。",
+        "未知engine fixtureを将来予約と衝突しないniho99へ変更"
       ]
     },
     {
@@ -8495,9 +8558,29 @@
   ],
   "generatedFiles": [
     {
+      "path": "docs/color-mixer.md",
+      "sha256": "90c4d92fed41dd294be941caa0c7fe83ba9d015c9395b330c496922f8d5bada3",
+      "origin": "Issue #30の公開仕様だけから新規作成したOklch色ミキサーの保存・描画・picker・preset契約。非公開形式や私有データを含まない。\n変更理由: exact描画方式と比較実測値を追記\n変更理由: オーナーの長期品質方針と比較の限界を記録"
+    },
+    {
+      "path": "packages/develop-engine/crates/niho-develop/tests/color_points.rs",
+      "sha256": "1588b24501f2222c1e7ada09b8c574c55611feb90d4bc1ea64e07c7c01173cf4",
+      "origin": "Issue #30の公開仕様だけから新規作成した合成Oklch値・schema・preset・性能のRust回帰。実写真・非公開fixture・私有参照出力を含まない。\n変更理由: 最小rangeの非grid描画回帰テストを追加\n変更理由: small-full-small picker source回帰を追加\n変更理由: crop正規化座標picker回帰を追加\n変更理由: picker回帰assertをcross-target向けに整理"
+    },
+    {
+      "path": "packages/photo-editing/src/editor/photo-editing-color-mixer.tsx",
+      "sha256": "6732771be6b4b2233b568ac31306fc4099c0e2857b5ce1f731141d64e4f6e97c",
+      "origin": "Issue #30の公開仕様だけから新規作成したMac/ブラウザ共通色ミキサーUI。公開semantic tokenと既存公開sliderだけを利用。\n変更理由: 彩度範囲sliderを保存契約の全域へ対応\n変更理由: 非同期pickerの最新context確認helperを追加"
+    },
+    {
+      "path": "packages/photo-editing/src/editor/photo-editing-color-mixer.test.tsx",
+      "sha256": "081a22bb3cde00188b19c2720cd7127ed8053b8577831ece9a8628a3d197159f",
+      "origin": "Issue #30の公開仕様だけから新規作成した色ミキサーschema・座標・320px UI・keyboard回帰。合成値だけを使用。\n変更理由: deferred pickerの写真切替回帰を追加"
+    },
+    {
       "path": "packages/develop-engine/crates/niho-develop/tests/color_probe.rs",
-      "sha256": "a020fca594a8d3f20cb38417a4cab4597c8af1cc8c23ee3929ac6b707c050aee",
-      "origin": "Issue #28のため公開仕様だけから独立作成した合成Oklch色見本のRust回帰。実写真・非公開fixture・私有参照出力を含まない。\n変更理由: 旧式との差分L/Cと色相改善量を合成sRGB sweepへ記録。\n変更理由: 新しい色相保持エンジンと新旧バイナリの能力境界・数値回帰を整合。"
+      "sha256": "5171276a692854f04e6e5593576052975bc75ebc84c913b06ee010967ad5024f",
+      "origin": "Issue #28のため公開仕様だけから独立作成した合成Oklch色見本のRust回帰。実写真・非公開fixture・私有参照出力を含まない。\n変更理由: 旧式との差分L/Cと色相改善量を合成sRGB sweepへ記録。\n変更理由: 新しい色相保持エンジンと新旧バイナリの能力境界・数値回帰を整合。\n変更理由: Issue #30 Oklch色ミキサーとengine 10/11対応を反映"
     },
     {
       "path": "packages/photo-editing/src/fixtures/cutout-brush-parity.json",

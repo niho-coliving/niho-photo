@@ -91,7 +91,7 @@ fn invalid_settings_are_rejected() {
     let options = RenderOptions::default();
     let err = niho_develop::render(&input, r#"{"contrast": 150}"#, &options).unwrap_err();
     assert!(err.to_string().contains("contrast"), "{err}");
-    let err = niho_develop::render(&input, r#"{"engine": "niho-10"}"#, &options).unwrap_err();
+    let err = niho_develop::render(&input, r#"{"engine": "niho99"}"#, &options).unwrap_err();
     assert!(err.to_string().contains("unsupportedEngine"), "{err}");
     let err = niho_develop::render(b"not an image", "{}", &options).unwrap_err();
     assert!(err.to_string().starts_with("decode_failed"), "{err}");

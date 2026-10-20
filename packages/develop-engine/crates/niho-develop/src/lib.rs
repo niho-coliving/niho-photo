@@ -61,7 +61,7 @@ use std::{fmt, sync::Arc};
 
 /// Latest formula version this bundle can render. Settings constructors keep
 /// their own compatibility defaults; this advertises reader capability.
-pub const ENGINE_VERSION: &str = settings::ENGINE_NIHO_9;
+pub const ENGINE_VERSION: &str = settings::ENGINE_NIHO_11;
 /// Crate version (build artifacts are published per version).
 pub const CRATE_VERSION: &str = env!("CARGO_PKG_VERSION");
 
@@ -78,6 +78,7 @@ pub enum Error {
     Niho3Prepare(String),
     Niho4Prepare(String),
     Niho6Prepare(String),
+    Sample(String),
 }
 
 impl fmt::Display for Error {
@@ -95,6 +96,7 @@ impl fmt::Display for Error {
             Error::Niho3Prepare(e) => write!(f, "niho3_prepare_failed: {e}"),
             Error::Niho4Prepare(e) => write!(f, "niho4_prepare_failed: {e}"),
             Error::Niho6Prepare(e) => write!(f, "niho6_prepare_failed: {e}"),
+            Error::Sample(e) => write!(f, "sample_failed: {e}"),
         }
     }
 }
@@ -198,7 +200,7 @@ pub fn render(
         settings::ENGINE_NIHO_4
             | settings::ENGINE_NIHO_5
             | settings::ENGINE_NIHO_7
-            | settings::ENGINE_NIHO_9
+            | settings::ENGINE_NIHO_11
     ) {
         return Err(Error::IncompatibleWorkingCopy(format!(
             "{} supports signed RAW working copies only",
@@ -209,7 +211,7 @@ pub fn render(
         let raster = decode::decode_raster(input, options.max_dimension, options.filter)?;
         if matches!(
             settings.engine.as_str(),
-            settings::ENGINE_NIHO_6 | settings::ENGINE_NIHO_8
+            settings::ENGINE_NIHO_6 | settings::ENGINE_NIHO_10
         ) && niho6::uses_response(&settings)
         {
             // The decoded size is the output size: the Session renders it as is.
@@ -276,7 +278,7 @@ pub fn render_camera_linear(
         settings::ENGINE_NIHO_4
             | settings::ENGINE_NIHO_5
             | settings::ENGINE_NIHO_7
-            | settings::ENGINE_NIHO_9
+            | settings::ENGINE_NIHO_11
     ) {
         return Err(Error::IncompatibleWorkingCopy(format!(
             "{} supports signed RAW working copies only",
@@ -285,7 +287,7 @@ pub fn render_camera_linear(
     }
     if matches!(
         settings.engine.as_str(),
-        settings::ENGINE_NIHO_6 | settings::ENGINE_NIHO_8
+        settings::ENGINE_NIHO_6 | settings::ENGINE_NIHO_10
     ) {
         return Err(Error::IncompatibleWorkingCopy(format!(
             "{} supports JPEG / PNG originals and raster working copies only",
@@ -591,6 +593,21 @@ struct ParkedNiho3 {
 /// (whatever the output size), as a frame at the working size does.
 const SOURCE_STATS_KEY: usize = 0;
 
+/// The source selected by a render-size key. A full-size key deliberately
+/// ignores an older reduced cache; render and the Stage-Q picker share this
+/// decision.
+fn source_at_size_key<'a>(
+    key: usize,
+    active: &'a SessionSource,
+    sized: Option<&'a (usize, SessionSource)>,
+) -> &'a SessionSource {
+    if key == 0 {
+        active
+    } else {
+        &sized.expect("sized source for key").1
+    }
+}
+
 /// A decoded photo kept for repeated renders (slider drags): decode once,
 /// keep the per-size reductions (or, with a geometry, the working image of
 /// the window), the adaptive statistics, the cubes of the previous frame
@@ -695,6 +712,139 @@ impl Session {
 
     pub fn source_size(&self) -> (usize, usize) {
         self.source.size()
+    }
+
+    /// Returns the actual Oklch value at Stage Q after hue stabilization and
+    /// before independent color points / Color Grading. Coordinates are
+    /// normalized in the rendered frame, so CSS scale and canvas backing
+    /// size do not affect the selected pixel.
+    pub fn sample_color(
+        &mut self,
+        settings: &DevelopSettings,
+        max_dimension: usize,
+        x: f64,
+        y: f64,
+    ) -> Result<[f64; 3], Error> {
+        // Sampling must not replace the visible session's drag/final cubes,
+        // local plane, effects planes, or prepared master. Share only the
+        // immutable decoded source and analysis seeds with an isolated
+        // one-shot session.
+        let mut isolated = Session::with_shared_source(Arc::clone(&self.source), self.filter);
+        isolated.preview_max_dimension = self.preview_max_dimension;
+        isolated.niho3_seed = self.niho3_analysis();
+        isolated.share_niho6_analysis(self);
+        isolated.sample_color_isolated(settings, max_dimension, x, y)
+    }
+
+    fn sample_color_isolated(
+        &mut self,
+        settings: &DevelopSettings,
+        max_dimension: usize,
+        x: f64,
+        y: f64,
+    ) -> Result<[f64; 3], Error> {
+        if !x.is_finite()
+            || !y.is_finite()
+            || !(0.0..=1.0).contains(&x)
+            || !(0.0..=1.0).contains(&y)
+        {
+            return Err(Error::Sample(
+                "coordinates must be finite and normalized".into(),
+            ));
+        }
+        // Prepare exactly the source, geometry, local plane, and cubes used
+        // by a final frame. The returned RGBA is intentionally discarded.
+        self.render(settings, max_dimension, Quality::Final)?;
+        let use_niho3 = self.niho3.is_some();
+        let size_key = if self.framed.is_none() {
+            let capped = self.capped_dimension(max_dimension);
+            Some(self.at_size(capped, use_niho3))
+        } else {
+            None
+        };
+        let render_settings = self
+            .niho3
+            .as_ref()
+            .map(|prepared| &prepared.settings)
+            .unwrap_or(settings);
+        let (source, output) = if let Some(framed) = self.framed.as_ref() {
+            let active = if use_niho3 {
+                &self.niho3.as_ref().expect("prepared niho3").source
+            } else {
+                self.source.as_ref()
+            };
+            (framed.image.as_ref().unwrap_or(active), framed.plan.output)
+        } else {
+            let active = if use_niho3 {
+                &self.niho3.as_ref().expect("prepared niho3").source
+            } else {
+                self.source.as_ref()
+            };
+            let source = source_at_size_key(
+                size_key.expect("unframed size key"),
+                active,
+                self.sized.as_ref(),
+            );
+            let (width, height) = source.size();
+            (source, crate::frame::Rect::whole(width, height))
+        };
+        let sx = output.x + ((x * output.width as f64).floor() as usize).min(output.width - 1);
+        let sy = output.y + ((y * output.height as f64).floor() as usize).min(output.height - 1);
+        let output_x = sx - output.x;
+        let output_y = sy - output.y;
+        let output_index = output_y * output.width + output_x;
+        let index = sy * source.image().width + sx;
+        let offset = index * 3;
+        let data = &source.image().data;
+        let px = [data[offset], data[offset + 1], data[offset + 2]];
+        let sampled = match source {
+            SessionSource::Raster(_) => pipeline::sample_raster_before_color_points(
+                px,
+                index,
+                false,
+                render_settings,
+                self.cubes.as_ref(),
+                self.local.as_ref(),
+                &mut self.effects,
+                (output.width, output.height),
+                output_index,
+            ),
+            SessionSource::WorkingCopy {
+                meta: WorkingCopyMeta::Raster { .. },
+                ..
+            } => pipeline::sample_raster_before_color_points(
+                px,
+                index,
+                true,
+                render_settings,
+                self.cubes.as_ref(),
+                self.local.as_ref(),
+                &mut self.effects,
+                (output.width, output.height),
+                output_index,
+            ),
+            SessionSource::WorkingCopy { meta, .. } => pipeline::sample_raw_before_color_points(
+                px,
+                index,
+                meta,
+                render_settings,
+                self.cubes.as_ref(),
+                self.local.as_ref(),
+                &mut self.effects,
+                (output.width, output.height),
+                output_index,
+            ),
+        };
+        if !sampled.iter().all(|value| value.is_finite())
+            || !(0.0..=1.0).contains(&sampled[0])
+            || !(0.0..=5.0).contains(&sampled[1])
+            || !(0.0..360.0).contains(&sampled[2])
+        {
+            return Err(Error::Sample(
+                "sample is outside the color point target contract".into(),
+            ));
+        }
+        Ok(sampled)
     }
 
     /// The working copy's metadata (`None` for a JPEG / PNG original).
@@ -843,7 +993,7 @@ impl Session {
         );
         if matches!(
             settings.engine.as_str(),
-            settings::ENGINE_NIHO_6 | settings::ENGINE_NIHO_8
+            settings::ENGINE_NIHO_6 | settings::ENGINE_NIHO_10
         ) {
             if raw {
                 return Err(Error::IncompatibleWorkingCopy(format!(
@@ -858,7 +1008,7 @@ impl Session {
             settings::ENGINE_NIHO_4 => Some(RawEngine::Niho4),
             settings::ENGINE_NIHO_5 => Some(RawEngine::Niho4),
             settings::ENGINE_NIHO_7 => Some(RawEngine::Niho4),
-            settings::ENGINE_NIHO_9 => Some(RawEngine::Niho4),
+            settings::ENGINE_NIHO_11 => Some(RawEngine::Niho4),
             _ => None,
         };
         if signed && engine.is_none() {
@@ -870,7 +1020,7 @@ impl Session {
             return Err(Error::IncompatibleWorkingCopy(
                 if matches!(
                     settings.engine.as_str(),
-                    settings::ENGINE_NIHO_5 | settings::ENGINE_NIHO_7 | settings::ENGINE_NIHO_9
+                    settings::ENGINE_NIHO_5 | settings::ENGINE_NIHO_7 | settings::ENGINE_NIHO_11
                 ) {
                     format!(
                         "{} RAW requires encoding signed-gamma18-v1",
@@ -886,7 +1036,7 @@ impl Session {
             settings::ENGINE_NIHO_4
                 | settings::ENGINE_NIHO_5
                 | settings::ENGINE_NIHO_7
-                | settings::ENGINE_NIHO_9
+                | settings::ENGINE_NIHO_11
         ) && !raw
         {
             return Err(Error::IncompatibleWorkingCopy(format!(
@@ -1213,15 +1363,12 @@ impl Session {
         }
         self.framed = None;
         let key = self.at_size(max_dimension, use_niho3);
-        let source = if key == 0 {
-            if use_niho3 {
-                &self.niho3.as_ref().expect("prepared niho3").source
-            } else {
-                self.source.as_ref()
-            }
+        let active_source = if use_niho3 {
+            &self.niho3.as_ref().expect("prepared niho3").source
         } else {
-            &self.sized.as_ref().expect("sized").1
+            self.source.as_ref()
         };
+        let source = source_at_size_key(key, active_source, self.sized.as_ref());
         let mut rendered = match source {
             SessionSource::Raster(raster) => {
                 let cached = self
@@ -1389,7 +1536,7 @@ impl Session {
         if use_niho3.is_some()
             || matches!(
                 settings.engine.as_str(),
-                settings::ENGINE_NIHO_6 | settings::ENGINE_NIHO_8
+                settings::ENGINE_NIHO_6 | settings::ENGINE_NIHO_10
             )
         {
             // Auto candidates use an isolated Session so their full-source

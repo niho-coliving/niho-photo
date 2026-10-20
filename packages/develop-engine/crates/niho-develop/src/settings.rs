@@ -1,11 +1,11 @@
-//! `developSettings` v1 / v2 / v3: the saved edit of one photo.
+//! `developSettings` v1 / v2 / v3 / v4: the saved edit of one photo.
 //!
 //! The JSON shape is Photo Bench `EditSettings` (`docs/ENGINE_PROTOCOL.md`,
 //! `EditSettings.swift`'s `CodingKeys`) plus `v`, `engine`, `look`, `base`
-//! and `geometry` (spec `niho-develop-engine.md` "段 2"). `v` is 3 when an
-//! effect is active, 2 when the geometry is not the identity (`geometry.rs`),
-//! else 1, so a reader that does not know the effect or geometry refuses it
-//! instead of rendering a photo with a dropped edit. Differences from
+//! and `geometry` (spec `niho-develop-engine.md` "段 2"). `v` is 4 when color
+//! points exist, 3 when an effect is active, 2 when geometry is not the
+//! identity (`geometry.rs`), else 1, so an older reader refuses an edit it
+//! cannot render instead of silently dropping it. Differences from
 //! `EditSettings`:
 //!
 //! - `whiteBalance.mode` is `asShot | absolute | relative`. `absolute` keeps
@@ -17,6 +17,8 @@
 //! - `grayscale` / `grayMixer` / `vignette` / `grain` are NIHO effects (not in
 //!   `EditSettings`, #17120 E1), written only when they differ from their
 //!   defaults.
+//! - `colorPoints` is NIHO's independent OKLCH mixer, written only when at
+//!   least one point exists.
 //!
 //! `hsl` keeps Photo Bench's JSON encoding (Swift encodes a dictionary with
 //! enum keys as an alternating `[band, adjustment, ...]` array); an object
@@ -32,8 +34,13 @@ use std::fmt;
 pub const SETTINGS_VERSION: u32 = 1;
 /// Shape version required when a NIHO effect changes pixels.
 pub const EFFECTS_SETTINGS_VERSION: u32 = 3;
+/// Shape version required when at least one independent OKLCH color point is
+/// present. Older readers must refuse the edit instead of dropping the mixer.
+pub const COLOR_POINTS_SETTINGS_VERSION: u32 = 4;
 /// Highest shape version this crate reads.
-pub const MAX_SETTINGS_VERSION: u32 = EFFECTS_SETTINGS_VERSION;
+pub const MAX_SETTINGS_VERSION: u32 = COLOR_POINTS_SETTINGS_VERSION;
+/// The UI and renderer intentionally share this small upper bound.
+pub const MAX_COLOR_POINTS: usize = 8;
 /// Formula version (`engine`). Bump only with a new formula set; old saved
 /// settings keep rendering with the engine they name.
 pub const ENGINE_NIHO_1: &str = "niho-1";
@@ -53,9 +60,9 @@ pub const ENGINE_NIHO_6: &str = "niho-6";
 /// NIHO 5 plus the fixed R23 non-FX residual / R42 FX30 shoulder.
 pub const ENGINE_NIHO_7: &str = "niho-7";
 /// `niho-6` raster renderer with hue-stable global / HSL saturation.
-pub const ENGINE_NIHO_8: &str = "niho-8";
+pub const ENGINE_NIHO_10: &str = "niho-10";
 /// `niho-7` signed-RAW renderer with hue-stable global / HSL saturation.
-pub const ENGINE_NIHO_9: &str = "niho-9";
+pub const ENGINE_NIHO_11: &str = "niho-11";
 
 pub fn is_known_engine(engine: &str) -> bool {
     matches!(
@@ -67,8 +74,8 @@ pub fn is_known_engine(engine: &str) -> bool {
             | ENGINE_NIHO_5
             | ENGINE_NIHO_6
             | ENGINE_NIHO_7
-            | ENGINE_NIHO_8
-            | ENGINE_NIHO_9
+            | ENGINE_NIHO_10
+            | ENGINE_NIHO_11
     )
 }
 /// Look versions (`look`): `niho-interim-1` is the identity and the default
@@ -193,6 +200,45 @@ pub struct HslAdjustment {
 impl HslAdjustment {
     pub fn is_zero(&self) -> bool {
         self.hue == 0.0 && self.saturation == 0.0 && self.luminance == 0.0
+    }
+}
+
+/// One independent OKLCH selection in Stage Q. `target` and `range` select
+/// colors in the unmodified Stage-Q input; all selected deltas are combined
+/// before any point is applied, so overlapping points are order independent.
+#[derive(Debug, Clone, PartialEq)]
+pub struct ColorPoint {
+    pub id: String,
+    pub target: OklchTarget,
+    pub range: OklchRange,
+    pub delta: OklchDelta,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct OklchTarget {
+    pub lightness: f64,
+    pub chroma: f64,
+    pub hue: f64,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct OklchRange {
+    pub hue: f64,
+    pub chroma: f64,
+    pub lightness: f64,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct OklchDelta {
+    pub hue: f64,
+    /// 1 is unchanged, 0 removes chroma, and 3 triples it.
+    pub chroma_scale: f64,
+    pub lightness: f64,
+}
+
+impl OklchDelta {
+    pub fn is_zero(self) -> bool {
+        self.hue == 0.0 && self.chroma_scale == 1.0 && self.lightness == 0.0
     }
 }
 
@@ -488,6 +534,7 @@ pub struct DevelopSettings {
     pub relative_tint: f64,
     pub tone_curves: Vec<ToneCurve>,
     pub hsl: HslAdjustments,
+    pub color_points: Vec<ColorPoint>,
     pub calibration: CalibrationSettings,
     pub color_grading: ColorGradingSettings,
     pub parametric_shadows: f64,
@@ -546,6 +593,7 @@ impl DevelopSettings {
             relative_tint: 0.0,
             tone_curves: Vec::new(),
             hsl: HslAdjustments::default(),
+            color_points: Vec::new(),
             calibration: CalibrationSettings::default(),
             color_grading: ColorGradingSettings::default(),
             parametric_shadows: 0.0,
@@ -574,10 +622,12 @@ impl DevelopSettings {
         settings
     }
 
-    /// The `v` these settings need: 3 for active effects, 2 for non-identity
-    /// geometry, and 1 otherwise.
+    /// The `v` these settings need: 4 for color points, 3 for active effects,
+    /// 2 for non-identity geometry, and 1 otherwise.
     pub fn required_version(&self) -> u32 {
-        if self.grayscale || self.vignette.is_active() || self.grain.is_active() {
+        if !self.color_points.is_empty() {
+            COLOR_POINTS_SETTINGS_VERSION
+        } else if self.grayscale || self.vignette.is_active() || self.grain.is_active() {
             EFFECTS_SETTINGS_VERSION
         } else {
             match &self.geometry {
@@ -585,6 +635,10 @@ impl DevelopSettings {
                 _ => SETTINGS_VERSION,
             }
         }
+    }
+
+    pub fn has_active_color_points(&self) -> bool {
+        self.color_points.iter().any(|point| !point.delta.is_zero())
     }
 
     /// Whether rendering these settings changes nothing (the Photo Bench
@@ -638,6 +692,7 @@ impl DevelopSettings {
             && calibration.iter().all(|v| *v == 0.0)
             && grading.iter().all(|v| *v == 0.0)
             && self.hsl.is_zero()
+            && !self.has_active_color_points()
             && crate::tone_ops::curves_are_identity(&self.tone_curves, 1e-9)
             && white_balance_neutral
             && !self.grayscale
@@ -676,11 +731,12 @@ impl DevelopSettings {
                         _ if n == 1.0 => 1,
                         _ if n == 2.0 => 2,
                         _ if n == 3.0 => 3,
+                        _ if n == 4.0 => 4,
                         _ => {
                             return Err(SettingsError::new(
                                 path,
                                 "unsupportedVersion",
-                                "only v = 1, v = 2, and v = 3 are supported",
+                                "only v = 1, v = 2, v = 3, and v = 4 are supported",
                             ))
                         }
                     };
@@ -735,6 +791,7 @@ impl DevelopSettings {
                 "whiteBalance" => s.white_balance = parse_white_balance(v)?,
                 "toneCurves" => s.tone_curves = parse_tone_curves(v)?,
                 "hsl" => s.hsl = parse_hsl(v)?,
+                "colorPoints" => s.color_points = parse_color_points(v)?,
                 "calibration" => s.calibration = parse_calibration(v)?,
                 "colorGrading" => s.color_grading = parse_color_grading(v)?,
                 "parametricShadows" => s.parametric_shadows = number(v, path)?,
@@ -783,7 +840,7 @@ impl DevelopSettings {
             ENGINE_NIHO_3 => s.look == LOOK_NIHO_STANDARD_2,
             ENGINE_NIHO_4 => s.look == LOOK_NIHO_STANDARD_3,
             ENGINE_NIHO_5 => s.look == LOOK_NIHO_STANDARD_4,
-            ENGINE_NIHO_7 | ENGINE_NIHO_9 => s.look == LOOK_NIHO_STANDARD_5,
+            ENGINE_NIHO_7 | ENGINE_NIHO_11 => s.look == LOOK_NIHO_STANDARD_5,
             _ => !matches!(
                 s.look.as_str(),
                 LOOK_NIHO_STANDARD_2
@@ -793,10 +850,10 @@ impl DevelopSettings {
             ),
         };
         if !matched {
-            let message = if matches!(s.engine.as_str(), ENGINE_NIHO_7 | ENGINE_NIHO_9)
+            let message = if matches!(s.engine.as_str(), ENGINE_NIHO_7 | ENGINE_NIHO_11)
                 || s.look == LOOK_NIHO_STANDARD_5
             {
-                "niho-7/niho-9 require niho-standard-5, and niho-standard-5 requires niho-7/niho-9"
+                "niho-7/niho-11 require niho-standard-5, and niho-standard-5 requires niho-7/niho-11"
             } else if s.engine == ENGINE_NIHO_5 || s.look == LOOK_NIHO_STANDARD_4 {
                 "niho-5 requires niho-standard-4, and niho-standard-4 requires niho-5"
             } else if s.engine == ENGINE_NIHO_4 || s.look == LOOK_NIHO_STANDARD_3 {
@@ -849,7 +906,7 @@ impl DevelopSettings {
         // caller explicitly supplied a non-default NIHO 3-only control.
         if matches!(
             self.engine.as_str(),
-            ENGINE_NIHO_3 | ENGINE_NIHO_4 | ENGINE_NIHO_5 | ENGINE_NIHO_7 | ENGINE_NIHO_9
+            ENGINE_NIHO_3 | ENGINE_NIHO_4 | ENGINE_NIHO_5 | ENGINE_NIHO_7 | ENGINE_NIHO_11
         ) || self.color_noise_reduction != 0.0
             || self.color_noise_reduction_detail != 50.0
             || self.color_noise_reduction_smoothness != 50.0
@@ -913,6 +970,12 @@ impl DevelopSettings {
             hsl.push(Value::Object(m));
         }
         o.insert("hsl".into(), Value::Array(hsl));
+        if !self.color_points.is_empty() {
+            o.insert(
+                "colorPoints".into(),
+                Value::Array(self.color_points.iter().map(color_point_value).collect()),
+            );
+        }
         let c = &self.calibration;
         let mut cal = Map::new();
         for (k, v) in [
@@ -1084,6 +1147,77 @@ impl DevelopSettings {
             check(&format!("hsl.{b}.saturation"), a.saturation, -100.0, 100.0);
             check(&format!("hsl.{b}.luminance"), a.luminance, -100.0, 100.0);
         }
+        let mut color_point_issues = Vec::new();
+        if self.color_points.len() > MAX_COLOR_POINTS {
+            color_point_issues.push(SettingsError::new(
+                "colorPoints",
+                "tooMany",
+                "at most 8 color points are allowed",
+            ));
+        }
+        let mut color_point_ids = std::collections::BTreeSet::new();
+        for (index, point) in self.color_points.iter().enumerate() {
+            let path = format!("colorPoints[{index}]");
+            if point.id.is_empty() || point.id.len() > 64 || !point.id.is_ascii() {
+                color_point_issues.push(SettingsError::new(
+                    &format!("{path}.id"),
+                    "invalidValue",
+                    "must be 1..64 ASCII bytes",
+                ));
+            } else if !color_point_ids.insert(point.id.as_str()) {
+                color_point_issues.push(SettingsError::new(
+                    &format!("{path}.id"),
+                    "duplicateId",
+                    "color point ids must be unique",
+                ));
+            }
+            check(
+                &format!("{path}.target.lightness"),
+                point.target.lightness,
+                0.0,
+                1.0,
+            );
+            check(
+                &format!("{path}.target.chroma"),
+                point.target.chroma,
+                0.0,
+                5.0,
+            );
+            check(&format!("{path}.target.hue"), point.target.hue, 0.0, 360.0);
+            if point.target.hue == 360.0 {
+                color_point_issues.push(SettingsError::new(
+                    &format!("{path}.target.hue"),
+                    "outOfRange",
+                    "must be >= 0 and < 360",
+                ));
+            }
+            check(&format!("{path}.range.hue"), point.range.hue, 1.0, 180.0);
+            check(
+                &format!("{path}.range.chroma"),
+                point.range.chroma,
+                0.001,
+                5.0,
+            );
+            check(
+                &format!("{path}.range.lightness"),
+                point.range.lightness,
+                0.001,
+                1.0,
+            );
+            check(&format!("{path}.delta.hue"), point.delta.hue, -180.0, 180.0);
+            check(
+                &format!("{path}.delta.chromaScale"),
+                point.delta.chroma_scale,
+                0.0,
+                3.0,
+            );
+            check(
+                &format!("{path}.delta.lightness"),
+                point.delta.lightness,
+                -1.0,
+                1.0,
+            );
+        }
         for band in HslBand::ALL {
             check(
                 &format!("grayMixer.{}", band.as_str()),
@@ -1137,6 +1271,7 @@ impl DevelopSettings {
             }
             WhiteBalanceMode::AsShot | WhiteBalanceMode::Relative => {}
         }
+        issues.extend(color_point_issues);
         if self.white_balance.mode != WhiteBalanceMode::Relative
             && (self.relative_temperature != 0.0 || self.relative_tint != 0.0)
         {
@@ -1162,14 +1297,14 @@ impl DevelopSettings {
             issues.push(SettingsError::new(
                 "v",
                 "versionTooLow",
-                "active effects need v = 3 and non-identity geometry needs v = 2",
+                "color points need v = 4, active effects need v = 3, and non-identity geometry needs v = 2",
             ));
         }
         let matched = match self.engine.as_str() {
             ENGINE_NIHO_3 => self.look == LOOK_NIHO_STANDARD_2,
             ENGINE_NIHO_4 => self.look == LOOK_NIHO_STANDARD_3,
             ENGINE_NIHO_5 => self.look == LOOK_NIHO_STANDARD_4,
-            ENGINE_NIHO_7 | ENGINE_NIHO_9 => self.look == LOOK_NIHO_STANDARD_5,
+            ENGINE_NIHO_7 | ENGINE_NIHO_11 => self.look == LOOK_NIHO_STANDARD_5,
             _ => !matches!(
                 self.look.as_str(),
                 LOOK_NIHO_STANDARD_2
@@ -1179,10 +1314,10 @@ impl DevelopSettings {
             ),
         };
         if !matched {
-            let message = if matches!(self.engine.as_str(), ENGINE_NIHO_7 | ENGINE_NIHO_9)
+            let message = if matches!(self.engine.as_str(), ENGINE_NIHO_7 | ENGINE_NIHO_11)
                 || self.look == LOOK_NIHO_STANDARD_5
             {
-                "niho-7/niho-9 require niho-standard-5, and niho-standard-5 requires niho-7/niho-9"
+                "niho-7/niho-11 require niho-standard-5, and niho-standard-5 requires niho-7/niho-11"
             } else if self.engine == ENGINE_NIHO_5 || self.look == LOOK_NIHO_STANDARD_4 {
                 "niho-5 requires niho-standard-4, and niho-standard-4 requires niho-5"
             } else if self.engine == ENGINE_NIHO_4 || self.look == LOOK_NIHO_STANDARD_3 {
@@ -1398,6 +1533,130 @@ pub(crate) fn parse_hsl(v: &Value) -> Result<HslAdjustments, SettingsError> {
     Ok(result)
 }
 
+fn exact_object<'a>(
+    value: &'a Value,
+    path: &str,
+    keys: &[&str],
+) -> Result<&'a Map<String, Value>, SettingsError> {
+    let object = object(value, path)?;
+    if let Some(key) = object.keys().find(|key| !keys.contains(&key.as_str())) {
+        return Err(SettingsError::new(
+            &format!("{path}.{key}"),
+            "unknownKey",
+            "unknown color point field",
+        ));
+    }
+    Ok(object)
+}
+
+fn required_number(
+    object: &Map<String, Value>,
+    path: &str,
+    key: &str,
+) -> Result<f64, SettingsError> {
+    number(
+        object.get(key).unwrap_or(&Value::Null),
+        &format!("{path}.{key}"),
+    )
+}
+
+pub(crate) fn parse_color_points(v: &Value) -> Result<Vec<ColorPoint>, SettingsError> {
+    let points = v
+        .as_array()
+        .ok_or_else(|| SettingsError::new("colorPoints", "invalidType", "must be an array"))?;
+    if points.len() > MAX_COLOR_POINTS {
+        return Err(SettingsError::new(
+            "colorPoints",
+            "tooMany",
+            "at most 8 color points are allowed",
+        ));
+    }
+    let mut result = Vec::with_capacity(points.len());
+    for (index, value) in points.iter().enumerate() {
+        let path = format!("colorPoints[{index}]");
+        let point = exact_object(value, &path, &["id", "target", "range", "delta"])?;
+        let id = string(
+            point.get("id").unwrap_or(&Value::Null),
+            &format!("{path}.id"),
+        )?;
+        let target_path = format!("{path}.target");
+        let target = exact_object(
+            point.get("target").unwrap_or(&Value::Null),
+            &target_path,
+            &["lightness", "chroma", "hue"],
+        )?;
+        let range_path = format!("{path}.range");
+        let range = exact_object(
+            point.get("range").unwrap_or(&Value::Null),
+            &range_path,
+            &["hue", "chroma", "lightness"],
+        )?;
+        let delta_path = format!("{path}.delta");
+        let delta = exact_object(
+            point.get("delta").unwrap_or(&Value::Null),
+            &delta_path,
+            &["hue", "chromaScale", "lightness"],
+        )?;
+        result.push(ColorPoint {
+            id,
+            target: OklchTarget {
+                lightness: required_number(target, &target_path, "lightness")?,
+                chroma: required_number(target, &target_path, "chroma")?,
+                hue: required_number(target, &target_path, "hue")?,
+            },
+            range: OklchRange {
+                hue: required_number(range, &range_path, "hue")?,
+                chroma: required_number(range, &range_path, "chroma")?,
+                lightness: required_number(range, &range_path, "lightness")?,
+            },
+            delta: OklchDelta {
+                hue: required_number(delta, &delta_path, "hue")?,
+                chroma_scale: required_number(delta, &delta_path, "chromaScale")?,
+                lightness: required_number(delta, &delta_path, "lightness")?,
+            },
+        });
+    }
+    Ok(result)
+}
+
+fn color_point_value(point: &ColorPoint) -> Value {
+    let object3 = |values: [(&str, f64); 3]| {
+        Value::Object(
+            values
+                .into_iter()
+                .map(|(key, value)| (key.to_string(), num(value)))
+                .collect(),
+        )
+    };
+    Value::Object(Map::from_iter([
+        ("id".into(), Value::from(point.id.clone())),
+        (
+            "target".into(),
+            object3([
+                ("lightness", point.target.lightness),
+                ("chroma", point.target.chroma),
+                ("hue", point.target.hue),
+            ]),
+        ),
+        (
+            "range".into(),
+            object3([
+                ("hue", point.range.hue),
+                ("chroma", point.range.chroma),
+                ("lightness", point.range.lightness),
+            ]),
+        ),
+        (
+            "delta".into(),
+            object3([
+                ("hue", point.delta.hue),
+                ("chromaScale", point.delta.chroma_scale),
+                ("lightness", point.delta.lightness),
+            ]),
+        ),
+    ]))
+}
+
 pub(crate) fn parse_calibration(v: &Value) -> Result<CalibrationSettings, SettingsError> {
     let o = object(v, "calibration")?;
     let get = |key: &str| -> Result<f64, SettingsError> {
@@ -1597,7 +1856,7 @@ mod tests {
             ENGINE_NIHO_2
         );
         assert_eq!(
-            DevelopSettings::from_json(r#"{"engine":"niho-10"}"#)
+            DevelopSettings::from_json(r#"{"engine":"niho99"}"#)
                 .unwrap_err()
                 .code,
             "unsupportedEngine"
@@ -1654,8 +1913,9 @@ mod tests {
             .to_value()
             .get("geometry")
             .is_none());
+        assert!(DevelopSettings::from_json(r#"{"v":4}"#).is_ok());
         assert_eq!(
-            DevelopSettings::from_json(r#"{"v":4}"#).unwrap_err().code,
+            DevelopSettings::from_json(r#"{"v":5}"#).unwrap_err().code,
             "unsupportedVersion"
         );
         assert_eq!(

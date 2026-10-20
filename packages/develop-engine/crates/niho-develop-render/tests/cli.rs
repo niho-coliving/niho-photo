@@ -493,7 +493,7 @@ fn failures_are_one_json_line_with_a_fixed_exit_code() {
         "crop-v1.json",
         r#"{"v":1,"engine":"niho-1","geometry":{"rotate":90}}"#,
     );
-    let look = with("look.json", r#"{"v":1,"engine":"niho-1","look":"niho-9"}"#);
+    let look = with("look.json", r#"{"v":1,"engine":"niho-1","look":"niho-11"}"#);
     let range = with("range.json", r#"{"v":1,"engine":"niho-1","exposure":99}"#);
     let types = with("types.json", r#"{"v":1,"engine":"niho-1","exposure":"1"}"#);
     let not_json = with("not-json.json", "{");
@@ -761,7 +761,7 @@ fn version_and_help() {
         "niho-develop-render {}",
         niho_develop::CRATE_VERSION
     )));
-    assert!(version.stdout.contains("engine niho-9"));
+    assert!(version.stdout.contains("engine niho-11"));
     let help = run(&["--help"]);
     assert_eq!(help.code, 0);
     assert!(help.stdout.contains("Exit codes"));
@@ -777,8 +777,8 @@ fn settings_loader_accepts_all_formula_versions_and_rejects_unknown() {
         ("niho-5", "niho-standard-4"),
         ("niho-6", "niho-standard-1"),
         ("niho-7", "niho-standard-5"),
-        ("niho-8", "niho-standard-1"),
-        ("niho-9", "niho-standard-5"),
+        ("niho-10", "niho-standard-1"),
+        ("niho-11", "niho-standard-5"),
     ] {
         let settings = niho_develop_render::load_settings(&format!(
             r#"{{"v":1,"engine":"{engine}","look":"{look}"}}"#
@@ -794,5 +794,5 @@ fn settings_loader_accepts_all_formula_versions_and_rejects_unknown() {
         error.code,
         niho_develop_render::ErrorCode::UnsupportedSettings
     );
-    assert!(error.message.contains("niho-1 through niho-9"));
+    assert!(error.message.contains("niho-1 through niho-11"));
 }

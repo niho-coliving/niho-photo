@@ -6,7 +6,7 @@ use crate::color::{
     mat_vec, srgb_decode, srgb_encode, Mat3, IDENTITY, PP_LUMA, PROPHOTO_TO_SRGB, SRGB_TO_PROPHOTO,
 };
 use crate::settings::{
-    CalibrationSettings, ColorGradingSettings, DevelopSettings, HslAdjustment, HslBand,
+    CalibrationSettings, ColorGradingSettings, ColorPoint, DevelopSettings, HslAdjustment, HslBand,
 };
 use crate::tone_ops::Rgb;
 
@@ -53,6 +53,33 @@ fn oklab_to_linear_srgb_f64(lab: Rgb) -> Rgb {
         -1.268_438_004_6 * l + 2.609_757_401_1 * m - 0.341_319_396_5 * s,
         -0.004_196_086_3 * l - 0.703_418_614_7 * m + 1.707_614_701 * s,
     ]
+}
+
+#[inline]
+fn oklab_to_oklch(lab: Rgb) -> Rgb {
+    let chroma = libm::hypot(lab[1], lab[2]);
+    let hue = if chroma <= 1e-12 {
+        0.0
+    } else {
+        pymod(
+            libm::atan2(lab[2], lab[1]) * 180.0 / core::f64::consts::PI,
+            360.0,
+        )
+    };
+    [lab[0], chroma, hue]
+}
+
+/// Converts an extended linear ProPhoto value to Oklch without clipping.
+/// Invalid/HDR samples outside the persisted target contract are rejected by
+/// [`crate::Session::sample_color`] instead of being silently clamped.
+pub fn prophoto_to_oklch(value: Rgb) -> Rgb {
+    oklab_to_oklch(linear_srgb_to_oklab_f64(mat_vec(&PROPHOTO_TO_SRGB, value)))
+}
+
+#[inline]
+fn oklch_to_oklab(lch: Rgb) -> Rgb {
+    let hue = lch[2] * core::f64::consts::PI / 180.0;
+    [lch[0], lch[1] * libm::cos(hue), lch[1] * libm::sin(hue)]
 }
 
 /// Keep the output lightness and chroma while restoring the OKLab hue of the
@@ -250,6 +277,72 @@ const HSL_CENTERS: [f64; 8] = [
 #[inline]
 fn wrap180(deg: f64) -> f64 {
     pymod(deg + 180.0, 360.0) - 180.0
+}
+
+#[inline]
+fn point_axis_weight(distance: f64, range: f64) -> f64 {
+    if !distance.is_finite() || !range.is_finite() || range <= 0.0 || distance >= range {
+        return 0.0;
+    }
+    smoothstep(1.0 - distance / range)
+}
+
+/// Applies all independent OKLCH selections from the same original Lab
+/// value. Overlaps are normalized only when their total weight exceeds one;
+/// no point observes another point's result, so authored order is irrelevant.
+/// Extended-gamut ProPhoto values are not clipped here; the existing output
+/// transform remains the sole gamut policy.
+pub fn color_points(value: Rgb, points: &[ColorPoint]) -> Rgb {
+    if points.iter().all(|point| point.delta.is_zero()) || !value.iter().all(|v| v.is_finite()) {
+        return value;
+    }
+    let lab = linear_srgb_to_oklab_f64(mat_vec(&PROPHOTO_TO_SRGB, value));
+    if !lab.iter().all(|v| v.is_finite()) {
+        return value;
+    }
+    let lch = oklab_to_oklch(lab);
+    let mut total = 0.0;
+    let mut hue_delta = 0.0;
+    let mut chroma_delta = 0.0;
+    let mut lightness_delta = 0.0;
+    for point in points {
+        let hue_weight = if lch[1] <= 1e-6 || point.target.chroma <= 1e-6 {
+            1.0
+        } else {
+            point_axis_weight(wrap180(lch[2] - point.target.hue).abs(), point.range.hue)
+        };
+        let weight = hue_weight
+            * point_axis_weight((lch[1] - point.target.chroma).abs(), point.range.chroma)
+            * point_axis_weight(
+                (lch[0] - point.target.lightness).abs(),
+                point.range.lightness,
+            );
+        if weight == 0.0 {
+            continue;
+        }
+        total += weight;
+        hue_delta += weight * point.delta.hue;
+        chroma_delta += weight * (point.delta.chroma_scale - 1.0);
+        lightness_delta += weight * point.delta.lightness;
+    }
+    if total == 0.0 {
+        return value;
+    }
+    let normalize = 1.0 / total.max(1.0);
+    let output_lch = [
+        lch[0] + normalize * lightness_delta,
+        (lch[1] * (1.0 + normalize * chroma_delta)).max(0.0),
+        pymod(lch[2] + normalize * hue_delta, 360.0),
+    ];
+    let output = mat_vec(
+        &SRGB_TO_PROPHOTO,
+        oklab_to_linear_srgb_f64(oklch_to_oklab(output_lch)),
+    );
+    if output.iter().all(|v| v.is_finite()) {
+        output
+    } else {
+        value
+    }
 }
 
 fn hsl_band_weight(hue_deg: f64, ordinal: usize) -> f64 {
@@ -866,6 +959,7 @@ pub struct PreparedColorOps {
     saturation: f64,
     hsl: Vec<(HslBand, HslAdjustment)>,
     hsl_without_saturation: Vec<(HslBand, HslAdjustment)>,
+    color_points: Vec<ColorPoint>,
     /// `Some` in black & white.
     gray_mix: Option<[f64; 8]>,
     /// The values are past the ACR3 default curve (a RAW working copy).
@@ -877,7 +971,7 @@ pub struct PreparedColorOps {
     /// `niho-6` on a JPEG / PNG (#18397): Vibrance is the frozen RAW response
     /// ([`crate::niho3::vibrance`]) without the RAW profile before it.
     raster_niho6: bool,
-    /// `niho-8` / `niho-9`: remove only saturation-induced OKLab hue drift.
+    /// `niho-10` / `niho-11`: remove only saturation-induced OKLab hue drift.
     hue_stable_saturation: bool,
 }
 
@@ -913,6 +1007,7 @@ impl PreparedColorOps {
                     )
                 })
                 .collect(),
+            color_points: settings.color_points.clone(),
             gray_mix: settings.grayscale.then_some(settings.gray_mixer.bands),
             grading: settings.color_grading.clone(),
             directions: GradeDirections::new(&settings.color_grading),
@@ -923,7 +1018,7 @@ impl PreparedColorOps {
                         | crate::settings::ENGINE_NIHO_4
                         | crate::settings::ENGINE_NIHO_5
                         | crate::settings::ENGINE_NIHO_7
-                        | crate::settings::ENGINE_NIHO_9
+                        | crate::settings::ENGINE_NIHO_11
                 ),
             // #18397: `niho-6` JPEG / PNG takes the NIHO 4 HSL luminance too
             // (Lightroom's HSL luminance on a JPEG matches the RAW one, not
@@ -935,31 +1030,30 @@ impl PreparedColorOps {
                     crate::settings::ENGINE_NIHO_4
                         | crate::settings::ENGINE_NIHO_5
                         | crate::settings::ENGINE_NIHO_7
-                        | crate::settings::ENGINE_NIHO_9
+                        | crate::settings::ENGINE_NIHO_11
                 ) | (
                     false,
-                    crate::settings::ENGINE_NIHO_6 | crate::settings::ENGINE_NIHO_8
+                    crate::settings::ENGINE_NIHO_6 | crate::settings::ENGINE_NIHO_10
                 )
             ),
             raster_niho6: !toned
                 && matches!(
                     settings.engine.as_str(),
-                    crate::settings::ENGINE_NIHO_6 | crate::settings::ENGINE_NIHO_8
+                    crate::settings::ENGINE_NIHO_6 | crate::settings::ENGINE_NIHO_10
                 ),
             hue_stable_saturation: matches!(
                 settings.engine.as_str(),
-                crate::settings::ENGINE_NIHO_8 | crate::settings::ENGINE_NIHO_9
+                crate::settings::ENGINE_NIHO_10 | crate::settings::ENGINE_NIHO_11
             ),
         }
     }
 
-    pub fn apply(&self, value: Rgb) -> Rgb {
+    /// Stage Q immediately before independent color points and Color
+    /// Grading. The picker uses this exact operation so existing points,
+    /// grading, and the output transform cannot move the selected target.
+    pub fn apply_before_color_points(&self, value: Rgb) -> Rgb {
         if let Some(mix) = &self.gray_mix {
-            return color_grading_with(
-                gray_mix(value, mix, self.toned),
-                &self.grading,
-                &self.directions,
-            );
+            return gray_mix(value, mix, self.toned);
         }
         let mut v = if self.frozen_profile {
             // R236: evaluate the existing R218 9^3 encoded-sRGB LUT on the
@@ -992,7 +1086,25 @@ impl PreparedColorOps {
         if let Some(reference) = reference {
             v = restore_saturation_hue(v, reference);
         }
-        color_grading_with(v, &self.grading, &self.directions)
+        v
+    }
+
+    pub fn apply(&self, value: Rgb) -> Rgb {
+        self.apply_color_points_and_grading(self.apply_before_color_points(value))
+    }
+
+    /// The exact, per-pixel end of Stage Q. Keeping this out of the cube is
+    /// required for the smallest color-point ranges: a 64^3 grid can have no
+    /// node inside a one-degree / 0.001-wide selection.
+    pub(crate) fn apply_color_points_and_grading(&self, value: Rgb) -> Rgb {
+        // The independent mixer is last in the color mixer, after
+        // niho-10/11's hue stabilization and before Color Grading.
+        let value = if self.gray_mix.is_some() {
+            value
+        } else {
+            color_points(value, &self.color_points)
+        };
+        color_grading_with(value, &self.grading, &self.directions)
     }
 
     /// RAW-only split of the black & white operation. The mix is measured
@@ -1014,6 +1126,15 @@ impl PreparedColorOps {
             self.apply(value)
         }
     }
+
+    /// RAW Stage Q through the point-selection input, after the B&W split.
+    pub(crate) fn apply_raw_before_color_points_after_pre_post(&self, value: Rgb) -> Rgb {
+        if self.gray_mix.is_some() {
+            value
+        } else {
+            self.apply_before_color_points(value)
+        }
+    }
 }
 
 pub fn needs_color_ops(settings: &DevelopSettings) -> bool {
@@ -1023,7 +1144,7 @@ pub fn needs_color_ops(settings: &DevelopSettings) -> bool {
             | crate::settings::ENGINE_NIHO_4
             | crate::settings::ENGINE_NIHO_5
             | crate::settings::ENGINE_NIHO_7
-            | crate::settings::ENGINE_NIHO_9
+            | crate::settings::ENGINE_NIHO_11
     ) && !settings.grayscale)
         || settings.grayscale
         || settings.vibrance != 0.0
@@ -1033,6 +1154,7 @@ pub fn needs_color_ops(settings: &DevelopSettings) -> bool {
             .entries()
             .iter()
             .any(|(_, a)| a.hue != 0.0 || a.saturation != 0.0 || a.luminance != 0.0)
+        || settings.has_active_color_points()
         || needs_color_grading(&settings.color_grading)
 }
 
