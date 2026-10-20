@@ -1,8 +1,9 @@
 import { execFileSync } from "node:child_process";
+import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 
-const harness = fileURLToPath(new URL("./measure-progressive-open.mjs", import.meta.url));
+const harness = path.join(path.dirname(fileURLToPath(import.meta.url)), "measure-progressive-open.mjs");
 
 describe("progressive measurement publication boundary", () => {
   it("probeの画像識別情報を捨て、許可した有限の時間だけをcold/warm集計する", () => {

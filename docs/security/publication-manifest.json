@@ -8562,8 +8562,8 @@
     },
     {
       "path": "apps/camera/scripts/measure-progressive-open.test.mjs",
-      "sha256": "a0395eeebbc239166857e746242eb02cb0c480c58221c959b1c50089d6f93c03",
-      "origin": "Issue #13の計測ハーネスの公開出力を合成probeで検査。画像名・hash・未許可項目を集計へ転送しないことを確認。実RAWの性能受入には使わない。"
+      "sha256": "cbaf66ac9159139c83d9b8daa03f7732dec6612e325ddc24ef0bcf3e38563d16",
+      "origin": "Issue #13の計測ハーネスの公開出力を合成probeで検査。画像名・hash・未許可項目を集計へ転送しないことを確認。実RAWの性能受入には使わない。\n変更理由: CLI probe testのscript参照をViteのURL書換えから独立化。"
     },
     {
       "path": "apps/camera/scripts/probe-progressive-open.py",
