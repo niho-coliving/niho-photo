@@ -283,6 +283,7 @@ export function photoEditingPresetNotWrittenError(fields: readonly string[]): st
     relativeTemperature: "相対の色温度",
     relativeTint: "相対の色かぶり補正",
     legacySettings: "未対応の補正",
+    colorPoints: "色ミキサー",
   };
   const names = Array.from(new Set(fields.map((field) => labels[field] ?? "未対応の補正")));
   return `プリセットに保存できない補正があります（${names.join("・")}）。対象の補正を外してから、もう一度保存してください。`;
@@ -332,6 +333,7 @@ export const PHOTO_EDITING_PRESET_UNSUPPORTED_LABELS = {
   grain: "粒子",
   colorGradeLuminance: "カラーグレーディングの輝度",
   curveSaturation: "トーンカーブの彩度",
+  pointColors: "Lightroom の色ミキサー",
   transform: "変形",
   profile: "プロファイル",
 } as const;

@@ -209,7 +209,10 @@ pub fn preparation_key(
         "{}|{camera:?}|{baseline}|{}|{}|{}|{}|{:?}|{}|{target}",
         if settings.engine == crate::settings::ENGINE_NIHO_5 {
             "niho5"
-        } else if settings.engine == crate::settings::ENGINE_NIHO_7 {
+        } else if matches!(
+            settings.engine.as_str(),
+            crate::settings::ENGINE_NIHO_7 | crate::settings::ENGINE_NIHO_11
+        ) {
             "niho7"
         } else {
             "niho4"
@@ -296,8 +299,10 @@ pub fn prepare(
         let _ = analysis.coefficients.set(coefficients);
     }
 
-    let uses_niho7_highlights =
-        settings.engine == crate::settings::ENGINE_NIHO_7 && settings.highlights < 0.0;
+    let uses_niho7_highlights = matches!(
+        settings.engine.as_str(),
+        crate::settings::ENGINE_NIHO_7 | crate::settings::ENGINE_NIHO_11
+    ) && settings.highlights < 0.0;
     if uses_niho7_highlights && analysis.niho7_highlights.get().is_none() {
         let coefficients = analysis.coefficients.get().expect("response coefficients");
         let source = analysis.cnr_source.data(&image.data);
@@ -404,7 +409,9 @@ pub fn prepare(
 
     if matches!(
         settings.engine.as_str(),
-        crate::settings::ENGINE_NIHO_5 | crate::settings::ENGINE_NIHO_7
+        crate::settings::ENGINE_NIHO_5
+            | crate::settings::ENGINE_NIHO_7
+            | crate::settings::ENGINE_NIHO_11
     ) && settings.highlights < 0.0
     {
         if let WorkingCopyMeta::Raw {
