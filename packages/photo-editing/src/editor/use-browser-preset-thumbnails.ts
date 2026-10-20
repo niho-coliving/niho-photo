@@ -19,8 +19,10 @@ import type {
 } from "./photo-editing-preset-thumbnail";
 import type { PhotoEditingPresetTarget } from "./photo-editing-presets-panel";
 
-/** 見本 1 枚の長辺（48px の行の 2 倍）。 */
+/** 見本 1 枚の長辺（48px の行の 2 倍。スマホの段も同じ）。 */
 export const BROWSER_PRESET_THUMBNAIL_MAX_DIMENSION = 96;
+/** 升の 2 列（ブラウザ版の右パネル。L4 #53）の見本 1 枚の長辺（升の幅 ≈ 100px の 2 倍）。 */
+export const BROWSER_PRESET_GRID_THUMBNAIL_MAX_DIMENSION = 192;
 /** 土台の設定が変わってから見本を作り直すまでの待ち（スライダーを続けて動かす間は作り直さない）。 */
 export const BROWSER_PRESET_THUMBNAIL_REBUILD_DELAY_MS = 400;
 /** 描画を捨てられた（写真を開き直した途中など）ときに描き直すまでの待ちと回数。 */
@@ -46,7 +48,7 @@ function byDocumentOrder(a: Element, b: Element): number {
  * ブラウザ版の右パネルのプリセットの見本（NIHO Photo 段 1 F2b 移行元設計。`supportsPresetThumbnails()` の wasm だけ）。
  *
  * - 見本 1 枚 ＝ 土台の設定にプリセットを 100% で当てた結果（`resolvePreset`。仮の表示と同じ覚え）を、wasm の見本用の別の session
- *   で丁寧に描いた絵（長辺 96px）。「なし」の行は土台そのもの
+ *   で丁寧に描いた絵（長辺 `maxDimension`。省くと 96px、升の 2 列は 192px）。「なし」の行は土台そのもの
  * - 見えている行（IntersectionObserver。節を閉じている間は行が無いので描かない）から上の順に 1 枚ずつ、描画の preview の枠で描く
  *   （編集の描画を待たせない）。スライダー・適用量を動かしている間（`paused`）は新しい見本を出さない
  * - 土台の key が変わったら 400ms 待ってから見えている行を作り直し、その間は前の見本を出したまま。写真が変わったら見本を捨てる
@@ -63,9 +65,12 @@ export function useBrowserPresetThumbnails(params: {
   base: DevelopSettings;
   /** スライダー・適用量を動かしている（新しい見本を出さない） */
   paused: boolean;
+  /** 見本 1 枚の長辺（省くと {@link BROWSER_PRESET_THUMBNAIL_MAX_DIMENSION}） */
+  maxDimension?: number;
   resolvePreset: (preset: PhotoEditingPresetTarget, base: DevelopSettings) => Promise<DevelopPresetResult>;
 }): PhotoEditingPresetThumbnails | undefined {
   const { mountedRef, engineRef, supported, photoKey, base, paused } = params;
+  const maxDimension = params.maxDimension ?? BROWSER_PRESET_THUMBNAIL_MAX_DIMENSION;
   const baseKey = useMemo(() => developSettingsKey(base), [base]);
   const rowsRef = useRef(new Map<string, Row>());
   const drawnRef = useRef(new Map<string, Drawn>());
@@ -75,8 +80,8 @@ export function useBrowserPresetThumbnails(params: {
   const retriesRef = useRef(0);
   const retryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [version, setVersion] = useState(0);
-  const latestRef = useRef({ supported, photoKey, paused, base, baseKey, resolvePreset: params.resolvePreset });
-  latestRef.current = { supported, photoKey, paused, base, baseKey, resolvePreset: params.resolvePreset };
+  const latestRef = useRef({ supported, photoKey, paused, base, baseKey, maxDimension, resolvePreset: params.resolvePreset });
+  latestRef.current = { supported, photoKey, paused, base, baseKey, maxDimension, resolvePreset: params.resolvePreset };
 
   /** 描き直す見本のうち、見えている一番上の行（無ければ null）。 */
   const nextRow = (target: Target): { key: string; xmp: string | null } | null => {
@@ -104,7 +109,7 @@ export function useBrowserPresetThumbnails(params: {
         if (!result.converted) return "failed";
         settings = presetDevelopSettings(target.base, result.settings);
       }
-      const frame = await engine.renderPresetThumbnail(settings, BROWSER_PRESET_THUMBNAIL_MAX_DIMENSION);
+      const frame = await engine.renderPresetThumbnail(settings, latestRef.current.maxDimension);
       return frame ?? "retry";
     } catch {
       return "failed";

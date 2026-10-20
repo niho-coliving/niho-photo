@@ -885,12 +885,13 @@
         "path": "packages/photo-editing/src/editor/browser-photo-editing-presets.tsx",
         "sha256": "801648f9ced4999b839a58837c622df0af14464c73bcddd789450ece458e4763"
       },
-      "outputSha256": "4707b8dfa33d9b60539421ffdf5c3fd50aa0a98d76303efe41b7559f19ac571d",
+      "outputSha256": "d96b4b120a6d3558c224c4a3962b00214401cc521f09e3e82c55238ea9ebc200",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
         "niho-photo#51 L2: 右端の道具の帯と補正パネルの並び（見出し行・自動 / 白黒のチップ・プリセットの行・面の切り替え）。",
-        "niho-photo#51の道具帯から呼び出すプリセット面を#35統合後の編集画面へ合わせる。"
+        "niho-photo#51の道具帯から呼び出すプリセット面を#35統合後の編集画面へ合わせる。",
+        "L4 #53: ブラウザ版のプリセット一覧をサムネイルの升の2列にし、升の見本を長辺192pxで描く。NIHO Desktop・スマホの行と見本の大きさは据え置き。"
       ]
     },
     {
@@ -1313,10 +1314,11 @@
         "path": "packages/photo-editing/src/editor/photo-editing-preset-thumbnail.tsx",
         "sha256": "69abea81653f3c0aed5972a2c886451d942087895286c9e3bf48cf2b3ee6355b"
       },
-      "outputSha256": "7f72caa96220016781251c43bee55e6b1647a2abd2907b9ac3a28f73dd01da79",
+      "outputSha256": "b03b88de5c82e883ea09e7b2a66723ef21389111fc3e23d0347980afafaa8080",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
-        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。"
+        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
+        "L4 #53: ブラウザ版のプリセット一覧をサムネイルの升の2列にし、升の見本を長辺192pxで描く。NIHO Desktop・スマホの行と見本の大きさは据え置き。"
       ]
     },
     {
@@ -1327,12 +1329,13 @@
         "path": "packages/photo-editing/src/editor/photo-editing-presets-panel.tsx",
         "sha256": "7f0524e5e1764f9274b39979d5887193faa96e37dcb6944fdd44d10a3e406541"
       },
-      "outputSha256": "e5dd4a37698691cca4cb7a0e2d3ab641210ba38da3314fd5ded7f91928336d01",
+      "outputSha256": "ac64f5f789b6e4f296b87eec901d89dcdbea8670bacc03922927d80d8919b74f",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
         "niho-photo#51 L2: 右端の道具の帯と補正パネルの並び（見出し行・自動 / 白黒のチップ・プリセットの行・面の切り替え）。",
-        "niho-photo#51のプリセット面切替を#35統合後のパネルへ反映する。"
+        "niho-photo#51のプリセット面切替を#35統合後のパネルへ反映する。",
+        "L4 #53: ブラウザ版のプリセット一覧をサムネイルの升の2列にし、升の見本を長辺192pxで描く。NIHO Desktop・スマホの行と見本の大きさは据え置き。"
       ]
     },
     {
@@ -1695,10 +1698,11 @@
         "path": "packages/photo-editing/src/editor/use-browser-preset-thumbnails.ts",
         "sha256": "509a581f578384cd68e938306a37c30f420998435c708bbd2a857cfd8e156d10"
       },
-      "outputSha256": "f6c9dfea6ee05d31f7d31b4094171425b78d0f60d0a7c6caafd600345f224b25",
+      "outputSha256": "daefd92861f4492db0ea9e9360bf31eadf385cce8b2f2d7b29737d0b2ca7da32",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
-        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。"
+        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
+        "L4 #53: ブラウザ版のプリセット一覧をサムネイルの升の2列にし、升の見本を長辺192pxで描く。NIHO Desktop・スマホの行と見本の大きさは据え置き。"
       ]
     },
     {
@@ -8884,7 +8888,7 @@
     {
       "path": "packages/photo-editing/src/cloud-sharing-contract.ts",
       "sha256": "b18550a154dac36fd9f1ed9f347e03a62dd850b8f2dab6f630f9250e78f6f35b",
-      "origin": "共有Docs contractの型・HTTP query配置・決定的mockをPhoto編集workspaceへ公開するre-export。\n共有Docs contractの型・HTTP query配置・決定的mockをPhoto編集workspaceへ公開するre-export。\n変更理由: Photo共有クライアントとmockの公開型を追加。"
+      "origin": "共有Docs contractの型・HTTP query配置・決定的mockをPhoto編集workspaceへ公開するre-export。\n変更理由: Photo共有クライアントとmockの公開型を追加。\n共有Docs contractの型・HTTP query配置・決定的mockをPhoto編集workspaceへ公開するre-export。\n共有Docs contractの型・HTTP query配置・決定的mockをPhoto編集workspaceへ公開するre-export。\n変更理由: Photo共有クライアントとmockの公開型を追加。"
     },
     {
       "path": "packages/photo-editing/src/cloud-sharing-contract.test.ts",
@@ -9020,6 +9024,11 @@
       "path": "packages/photo-editing/src/editor/use-browser-photo-crop.test.tsx",
       "sha256": "4d44380672bf1fc4cc1a558eb227dce0f03d7d19c28b388f1e14e8314e7f979d",
       "origin": "公開repoで新規作成（#52）。所有する実画像・外部fixtureを使わず、切り抜き完了・取消の状態遷移を合成データで検証。"
+    },
+    {
+      "path": "packages/photo-editing/src/editor/photo-editing-presets-panel.test.tsx",
+      "sha256": "f84cf4ab96b6712af8ece79e66ed40f909823892fb6c1da1323157882815d08f",
+      "origin": "L4 #53でNIHOが独立新規作成した合成テスト。実写真・個人情報・秘密を含まず、見本は描かない偽の口で置き換える。\n変更理由: プリセットの升の2列（見本・名前・当てている升の見分け・仮の表示・拠点の⋯）と、見本を描けない wasm や layout を省く面で行のままになること、見本の長辺（192px／96px）を検証する。"
     }
   ],
   "excludedSources": [
