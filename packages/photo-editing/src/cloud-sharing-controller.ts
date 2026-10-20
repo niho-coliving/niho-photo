@@ -366,7 +366,8 @@ export class PhotoCloudShareController {
   }
 
   refresh(): void {
-    if (this.#access !== "available" || !this.#target || this.#listInFlight || this.#inFlightMutation) return;
+    if (this.#access !== "available" || !this.#target || this.#listInFlight ||
+      (this.#inFlightMutation && !this.#state.reconciliationNeeded)) return;
     const context = this.#contextVersion;
     const response = ++this.#responseVersion;
     const operation = { context, response };

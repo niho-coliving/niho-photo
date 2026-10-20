@@ -8771,13 +8771,13 @@
     },
     {
       "path": "packages/photo-editing/src/cloud-sharing-controller.test.ts",
-      "sha256": "48f13821b85691ab6e006905401fc1baaf03fe9e7be70ce49121f88086f8cd42",
-      "origin": "Issue #8 の共有状態遷移、競合、同一キー再試行、権限エラーを合成入力で検証する独立新規テスト。"
+      "sha256": "55d7b56b66f3c7af0131c89178443a63ad2f0ddd7644a10d6535827070071038",
+      "origin": "Issue #8 の共有状態遷移、競合、同一キー再試行、権限エラーを合成入力で検証する独立新規テスト。\n変更理由: 応答保留中の取消と一覧照合の競合を合成テストへ追加。"
     },
     {
       "path": "packages/photo-editing/src/cloud-sharing-controller.ts",
-      "sha256": "6246115891f096992f9b50dc060663dd15087a4b9c77096cdd9cd489bc36d222",
-      "origin": "Issue #8 の公開契約に基づく共有状態機械を独立新規作成。実token・実写真・private API情報を含まない。"
+      "sha256": "ffdf74c2fff873c4f1d8a26d2cb00c4e4afae7b8a54f106972765143e5c8fdf2",
+      "origin": "Issue #8 の公開契約に基づく共有状態機械を独立新規作成。実token・実写真・private API情報を含まない。\n変更理由: 取消後の未確定mutationを保持したまま一覧照合を許可する。"
     },
     {
       "path": "packages/photo-editing/src/cloud-sharing-preview-mock.ts",
@@ -8791,8 +8791,8 @@
     },
     {
       "path": "packages/photo-editing/src/editor/browser-photo-cloud-share-sheet.tsx",
-      "sha256": "ad1abf31463309fc914ed4e9fc7bab13625fe6cf4d6c7d0561918ec7a77b9cef",
-      "origin": "Issue #8 の共有対象確認、リンク表示と失効、通信・権限・容量エラーUIを独立新規作成。\n変更理由: 共有URLは再表示できないため、作成成功時にコピー期限を明示。"
+      "sha256": "c3c3588cf9ad7bddcdecd24e1a52c45f63fbb4556626a0c306cf19c6dccc981e",
+      "origin": "Issue #8 の共有対象確認、リンク表示と失効、通信・権限・容量エラーUIを独立新規作成。\n変更理由: 共有URLは再表示できないため、作成成功時にコピー期限を明示。\n変更理由: 取消後の応答保留中も共有一覧の照合操作を提供する。"
     }
   ],
   "excludedSources": [

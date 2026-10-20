@@ -98,7 +98,7 @@ describe("PhotoCloudShareController", () => {
     expect(flow.getSnapshot().shareUrl).toBeNull();
   });
 
-  it("does not race a cancelled mutation with listing while its response is unresolved", async () => {
+  it("reconciles a cancelled mutation while its response is unresolved without losing its key", async () => {
     const pending = deferred<Awaited<ReturnType<ReturnType<typeof createCloudMockClient>["share.create"]>>>();
     const list = vi.fn(async () => ({ ok: true as const, value: { items: [], nextCursor: null } }));
     const flow = controller(createCloudMockClient({
@@ -109,18 +109,17 @@ describe("PhotoCloudShareController", () => {
     flow.create(EXPIRES_AT);
     flow.cancel();
     flow.refresh();
-    expect(list).not.toHaveBeenCalled();
-    expect(flow.getSnapshot()).toMatchObject({ phase: "cancelled", mutationInFlight: true });
+    expect(list).toHaveBeenCalledTimes(1);
+    await settle();
+    expect(flow.getSnapshot()).toMatchObject({ phase: "ready", mutationInFlight: true, reconciliationNeeded: true });
 
     pending.resolve({
       ok: false,
       error: { code: "temporarily_unavailable", requestId: "hidden", retryable: true },
     });
     await settle();
-    flow.refresh();
-    await settle();
-    expect(list).toHaveBeenCalledTimes(1);
-    expect(flow.getSnapshot()).toMatchObject({ phase: "ready", reconciliationNeeded: true });
+    expect(flow.getSnapshot()).toMatchObject({ phase: "ready", mutationInFlight: false, reconciliationNeeded: true });
+    expect(flow.getSnapshot().shareUrl).toBeNull();
   });
 
   it("keeps the original idempotency key after an uncertain create and a list refresh", async () => {

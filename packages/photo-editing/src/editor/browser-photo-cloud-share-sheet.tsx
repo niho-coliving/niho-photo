@@ -318,7 +318,7 @@ export function BrowserPhotoCloudShareSheet(props: {
 
           {state.phase === "cancelled" ? (
             <div className="flex flex-wrap gap-2">
-              <button type="button" disabled={state.mutationInFlight} onClick={() => controller.refresh()} className={cn(PHOTO_EDITING_PRIMARY_BUTTON_CLASS_NAME, "h-11")}>
+              <button type="button" onClick={() => controller.refresh()} className={cn(PHOTO_EDITING_PRIMARY_BUTTON_CLASS_NAME, "h-11")}>
                 共有一覧を更新
               </button>
               {state.resumableMutation ? (
