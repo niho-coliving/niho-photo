@@ -14,4 +14,4 @@ NIHO photo の公開クライアント開発リポジトリです。Mac アプ�
 
 移行後のローカル検証手順は、各 workspace の README と `CONTRIBUTING.md` に掲載します。現時点で実行できる確認は文書リンクと監査台帳の整合確認です。
 
-秘密情報、実利用データ、内部 URL、未修正の脆弱性を公開 Issue・PR・CI ログへ載せないでください。脆弱性の報告先は `SECURITY.md` 整備後に案内します。
+秘密情報、実利用データ、内部 URL、未修正の脆弱性を公開 Issue・PR・CI ログへ載せないでください。脆弱性は[GitHubの非公開報告窓口](https://github.com/niho-coliving/niho-photo/security/advisories)から報告してください。
