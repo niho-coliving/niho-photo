@@ -163,6 +163,8 @@ export function createCameraCommands(invoke: Invoke = tauriInvoke) {
     addPhotos: async () => (await call<{ photos: LibraryEntry[] }>("camera_library_add_photos")).photos,
     /** 覚えたフォルダ・写真のうち、いまあるもの。 */
     remembered: () => call<RememberedLibrary>("camera_library_remembered"),
+    /** 「選んだ写真」だけを読み直す（覚えたフォルダは再走査しない）。 */
+    selectedPhotos: async () => (await call<{ photos: LibraryEntry[] }>("camera_library_selected_photos")).photos,
     listFolder: async (folderId: string) =>
       (await call<{ folder: LibraryFolder }>("camera_library_list_folder", { folderId })).folder,
     /** 覚えたフォルダを一覧から外す（フォルダと写真は消さない）。 */

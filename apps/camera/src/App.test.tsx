@@ -39,6 +39,7 @@ function fakeCommands(options: { photoBenchEdits: boolean; rememberedFolder?: bo
     }
     const answers: Record<string, unknown> = {
       camera_library_remembered: { folders, photos: [] },
+      camera_library_selected_photos: { photos: [] },
       camera_library_list_folder: { folder },
       camera_develop_status: { available: true, raster: true },
       camera_cutout_status: { available: true },
@@ -129,10 +130,14 @@ describe("App", () => {
     expect(container.querySelector("header")?.textContent).not.toContain("NIHO photo");
     expect(container.querySelector("header")?.hasAttribute("data-tauri-drag-region")).toBe(true);
     expect(container.querySelector('button[aria-label="アカウント"]')).toBeNull();
-    // 編集面（フォルダの木は「この Mac」、フォルダが無ければ中央に「フォルダを追加」）
+    // 編集面（空の「この Mac」ではフォルダと写真を追加するメニューを出す）
     expect(container.querySelector('section[aria-label="ブラウザ写真編集"]')).not.toBeNull();
     expect(container.querySelector('aside[aria-label="写真の場所"] h3')?.textContent).toBe("この Mac");
-    expect(container.querySelector('section[aria-label="写真の一覧"] h3')?.textContent).toBe("フォルダを追加");
+    expect(
+      Array.from(container.querySelectorAll('button[aria-haspopup="menu"]')).some((button) =>
+        button.textContent?.includes("フォルダや写真を追加"),
+      ),
+    ).toBe(true);
     // 窓の上の帯に表示中の場所
     expect(container.querySelector('nav[aria-label="表示中の場所"]')?.textContent).toBe("この Mac");
     expect(container.querySelector(":scope > div > footer")?.textContent).toBe("版 0.1.4");

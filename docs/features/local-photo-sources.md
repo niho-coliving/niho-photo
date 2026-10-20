@@ -36,11 +36,12 @@ NIHO photo のローカルライブラリは、フォルダと個別に選んだ
 
 ## ネイティブコマンドとE2E
 
-Macアプリの権限 `allow-camera-library` は、次の6コマンドだけを許可します。
+Macアプリの権限 `allow-camera-library` は、次の7コマンドだけを許可します。
 
 - `camera_library_add_folder`
 - `camera_library_add_photos`
 - `camera_library_remembered`
+- `camera_library_selected_photos`（選択写真だけを読み、フォルダ木は再走査しない）
 - `camera_library_list_folder`
 - `camera_library_forget_folder`
 - `camera_library_forget_photos`

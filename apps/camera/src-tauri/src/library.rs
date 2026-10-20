@@ -151,6 +151,18 @@ pub async fn camera_library_remembered(app: tauri::AppHandle) -> Result<Value, C
   .await
 }
 
+/// 「選んだ写真」だけを読み直す。覚えたフォルダの再走査は行わない（`{ photos }`）。
+#[tauri::command]
+pub async fn camera_library_selected_photos(app: tauri::AppHandle) -> Result<Value, CameraError> {
+  let (library, photos) = (library(&app)?, photos(&app)?);
+  run_blocking(move || {
+    let mut selected = json!({ "photos": library.selected_photos() });
+    photos.annotate_has_edits(&mut selected);
+    Ok(selected)
+  })
+  .await
+}
+
 /// 追加したフォルダ（かそのサブフォルダ）を読み直す（`{ folder }`）。
 #[tauri::command]
 pub async fn camera_library_list_folder(app: tauri::AppHandle, request: Option<Value>) -> Result<Value, CameraError> {

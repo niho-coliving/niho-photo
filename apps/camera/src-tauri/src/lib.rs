@@ -92,6 +92,7 @@ pub fn run() {
       library::camera_library_add_folder,
       library::camera_library_add_photos,
       library::camera_library_remembered,
+      library::camera_library_selected_photos,
       library::camera_library_list_folder,
       library::camera_library_forget_folder,
       library::camera_library_forget_photos,

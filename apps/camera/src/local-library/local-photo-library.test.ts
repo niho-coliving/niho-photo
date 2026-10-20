@@ -108,6 +108,8 @@ function fakeNative(options: FakeOptions = {}) {
           return statuses.length > 1 ? statuses.shift() : statuses[0];
         case "camera_library_remembered":
           return { folders: [ROOT], photos: options.rememberedPhotos ?? [] };
+        case "camera_library_selected_photos":
+          return { photos: options.rememberedPhotos ?? [] };
         case "camera_library_add_folder":
           return { folder: ROOT.children[0] };
         case "camera_library_add_photos":
@@ -365,7 +367,7 @@ describe("folders and list", () => {
     await expect(selected.library.selectedPhotos.add()).resolves.toMatchObject([{ id: "picked", fileName: "picked.jpg" }]);
     await selected.library.selectedPhotos.forget();
     expect(commandsOf(selected.calls).slice(-3)).toEqual([
-      "camera_library_remembered",
+      "camera_library_selected_photos",
       "camera_library_add_photos",
       "camera_library_forget_photos",
     ]);

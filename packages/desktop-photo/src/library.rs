@@ -40,7 +40,7 @@
 use crate::common::{
   code, is_regular_file, lock, mark_used, new_opaque_id, random_hex, LogFn, PageError, MAX_ID_CHARS,
 };
-use crate::remembered::{RememberedStore, MAX_REMEMBERED_PHOTOS};
+use crate::remembered::{RememberedEntry, RememberedStore, MAX_REMEMBERED_PHOTOS};
 use crate::saved_settings::{ensure_private_dir, hex_lower, is_content_key, set_mode};
 use serde_json::{json, Value};
 use sha2::{Digest, Sha256};
@@ -946,6 +946,36 @@ impl PhotoLibrary {
     entries
   }
 
+  /// 「選んだ写真」だけを再読込する。フォルダ木の再走査を必要としない。
+  pub fn selected_photos(&self) -> Vec<Value> {
+    let remembered = self
+      .config
+      .remembered
+      .as_ref()
+      .map(RememberedStore::load)
+      .unwrap_or_default();
+    self.selected_photo_entries(&remembered.photos)
+  }
+
+  fn selected_photo_entries(&self, remembered: &[RememberedEntry]) -> Vec<Value> {
+    let session = lock(&self.selected_session).clone();
+    let mut seen = HashSet::new();
+    let max_photos = self
+      .config
+      .remembered
+      .as_ref()
+      .map(RememberedStore::max_photos)
+      .unwrap_or(MAX_REMEMBERED_PHOTOS);
+    let photos = session
+      .into_iter()
+      .chain(remembered.iter().map(|photo| photo.path.clone()))
+      .filter(|path| seen.insert(path.clone()))
+      .filter_map(existing_photo)
+      .take(max_photos)
+      .collect();
+    self.page_entries(photos)
+  }
+
   /// 覚えたフォルダ・写真のうち、いまあるものを返す（`{ folders, photos }`、#16578）。フォルダは
   /// `photo_editing_add_folder` と同じ木（同じ `folderId`）で覚えた順（新しい順）、写真はいまある写真の
   /// ファイルだけを一覧の写真で新しい順に返す。見つからない・読めないもの（SD カードを抜いた・消した・権限・
@@ -983,20 +1013,7 @@ impl PhotoLibrary {
         folders.push(value);
       }
     }
-    let session = lock(&self.selected_session).clone();
-    let mut seen = HashSet::new();
-    let max_photos = self
-      .config
-      .remembered
-      .as_ref()
-      .map(RememberedStore::max_photos)
-      .unwrap_or(MAX_REMEMBERED_PHOTOS);
-    let selected_paths = session
-      .into_iter()
-      .chain(remembered.photos.iter().map(|photo| photo.path.clone()))
-      .filter(|path| seen.insert(path.clone()))
-      .take(max_photos);
-    let photos = self.page_entries(selected_paths.filter_map(existing_photo).collect());
+    let photos = self.selected_photo_entries(&remembered.photos);
     self.log(
       "remembered_listed",
       json!({

@@ -441,7 +441,7 @@ export function createLocalPhotoLibrary(commands: CameraCommands, options: Local
 
   const describe = (error: unknown, fallback: string) => (error instanceof CameraCommandError ? error.message : fallback);
 
-  const selectedEntries = async (): Promise<LibraryEntry[]> => (await commands.remembered()).photos;
+  const selectedEntries = async (): Promise<LibraryEntry[]> => commands.selectedPhotos();
 
   const pageFromEntries = (
     entries: readonly LibraryEntry[],

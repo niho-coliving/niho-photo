@@ -943,6 +943,65 @@ fn selected_session_uses_the_remembered_photo_limit_and_keeps_picker_group_order
 }
 
 #[test]
+fn selected_photo_reads_do_not_rescan_remembered_folders() {
+  let fixture = Fixture::new("selected-photo-only-read");
+  let photo = fixture.file("selected.jpg");
+  let library = fixture.library();
+  library.add_folder(&fixture.root()).unwrap();
+  library.add_photos(std::slice::from_ref(&photo));
+  fixture.logs.lock().unwrap().clear();
+
+  let selected = library.selected_photos();
+
+  assert_eq!(selected.len(), 1);
+  let logs = fixture.logs.lock().unwrap();
+  assert!(
+    !logs.iter().any(|line| line.starts_with("photo_editing.folder_listed ")),
+    "{logs:?}"
+  );
+  assert!(
+    !logs
+      .iter()
+      .any(|line| line.starts_with("photo_editing.remembered_listed ")),
+    "{logs:?}"
+  );
+}
+
+#[test]
+fn unavailable_session_paths_do_not_consume_the_selected_photo_limit() {
+  let fixture = Fixture::new("selected-photo-limit-skips-missing");
+  let saved_a = fixture.file("saved-a.jpg");
+  let saved_b = fixture.file("saved-b.jpg");
+  let session_a = fixture.file("session-a.jpg");
+  let session_b = fixture.file("session-b.jpg");
+  let mut config = fixture.config(ScanLimits::default(), failing_maker(), THUMBNAIL_CACHE_MAX_BYTES, None);
+  config.remembered = Some(RememberedStore::new(
+    remembered_path(&fixture.app_data()),
+    RememberedLimits {
+      max_folders: 50,
+      max_photos: 2,
+    },
+  ));
+  let library = PhotoLibrary::new(config);
+
+  library.add_photos(&[saved_a, saved_b]);
+  fs::create_dir_all(remembered_path(&fixture.app_data()).with_extension("json.tmp")).unwrap();
+  library.add_photos(&[session_a.clone(), session_b.clone()]);
+  fs::remove_file(session_a).unwrap();
+  fs::remove_file(session_b).unwrap();
+
+  let selected = library.selected_photos();
+  assert_eq!(
+    selected
+      .iter()
+      .map(|photo| photo["fileName"].as_str().unwrap())
+      .collect::<Vec<_>>(),
+    ["saved-a.jpg", "saved-b.jpg"]
+  );
+  assert_eq!(photo_names(&library.remembered()), ["saved-a.jpg", "saved-b.jpg"]);
+}
+
+#[test]
 fn forgetting_selected_photos_clears_session_and_persisted_references_but_preserves_sources() {
   let fixture = Fixture::new("selected-forget-success");
   let photo = fixture.file("stays.jpg");
