@@ -19,7 +19,7 @@ rulesetへ登録する名称は **`Public CI required`** です。常に出る�
 
 `.github/`・`scripts/`・root package/lock・`docs/security/`・`docs/legal/`・`docs/ci/` の変更では、導入済みの全scopeを実行します。PRはeventのbase SHAとcheckoutしたmerge commitを比較します。pushはbefore SHAを使い、初回pushは全scopeです。削除も差分に含め、branch名・PRタイトルをshellへ展開しません。
 
-現在の公開treeはphoto-editing・UI・camera・desktop-photoです。cameraとdesktop-photoのnative scopeは有効です。desktop-accountとdevelop-engineは未導入です。scopeのディレクトリが追加されると検査が自動で有効になり、メタデータ不足は失敗になります。desktop-accountも#3で単独導入された時点から検証します。新しい公開packageが増えたらscopeの依存関係もレビューしてください。
+現在の公開treeはphoto-editing・UI・camera・desktop-photoです。cameraとdesktop-photoのnative scopeは有効です。desktop-accountは#3で導入し、TS・Rustの両方を検証します。develop-engineの検証契約は#9に従います。scopeのディレクトリが追加されると検査が自動で有効になり、メタデータ不足は失敗になります。アカウントのversioned正本・Rust/TS・Photoのdigest pinは `scripts/ci/account-contract.test.mjs` で検証します。Docs側の採用と双方CIの連動は#8の統合条件です。新しい公開packageが増えたらscopeの依存関係もレビューしてください。
 
 ## nativeを移植するとき
 

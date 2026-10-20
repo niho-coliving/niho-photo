@@ -30,6 +30,6 @@ cargo test --locked --manifest-path packages/desktop-photo/Cargo.toml
 | `camera_library_forget_folder` | フォルダ参照だけを外す |
 | `camera_library_forget_photos` | 個別写真の参照をすべて外す |
 
-アカウント/OAuthは #3、クラウド共有は #8。自動更新クライアントと公開鍵はコードに含みますが既定で無効です。公式release権限、署名、公証、SBOM、更新有効化は #2 の範囲です。
+アカウントは公式NIHO app-connect/PKCE共通パッケージを使います。公開Firebase Web API keyをbuild設定に与えた場合は外部ブラウザとniho-camera deep linkで接続し、未設定の公開CI・開発buildはローカル専用です。クラウド共有は有効表示しません。認証状態は編集の利用条件にしません。[安全契約](../../docs/contracts/native-account.md) を参照してください。クラウド共有は #8。自動更新クライアントと公開鍵はコードに含みますが既定で無効です。公式release権限、署名、公証、SBOM、更新有効化は #2 の範囲です。
 
 アプリ名と既存 `camera` パス・端末内データの互換方針は [移植計画](../../docs/migration/mac-client.md) を参照してください。

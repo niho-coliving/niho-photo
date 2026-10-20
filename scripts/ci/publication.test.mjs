@@ -243,3 +243,12 @@ test("正規化した資産は元source SHAと監査済みoutput SHAを両方照
   await f.put("docs/legal/asset-inventory.csv", row("0".repeat(64)));
   await rejected(f, /公開許可未確認/);
 });
+
+test("runtime tokenの置き場はGitignoreを無視してもfixtureを含む全公開候補で拒否する", async (t) => {
+  const f = await fixture(t);
+  for (const name of ["misc/refresh-token.json", "fixtures/access_token.json", "misc/id-token.txt", "misc/account-secrets/pending.json", "misc/oauth-tokens/export", "misc/Account-Session.JSON", "misc/tokens", "misc/runtime-tokens/copy.bin", "misc/pending", "fixtures/pending.json", "misc/public-account-v2/account-secrets/refresh-token"]) {
+    await f.put(name, "synthetic-runtime-copy\n");
+    await rejected(f, /公開禁止パス/);
+    await rm(path.join(f.root, name));
+  }
+});

@@ -34,8 +34,10 @@ rfd = "0.15"
 # 自動更新（C5 #18393。NIHO Desktop・NIHO docs と同じ plugin。https://niho.life/camera/updater/latest.json を見て、署名を確かめて
 # 差し替える。src/updater.rs）
 tauri-plugin-updater = "2"
+tauri-plugin-deep-link = "2"
 # Mac の写真の土台（sidecar・作業コピー・フォルダ・保存した補正）。NIHO Desktop と同じ関数（spec「構成」）
 niho_desktop_photo = { path = "../../../packages/desktop-photo" }
+niho_desktop_account = { path = "../../../packages/desktop-account" }
 sha2 = "0.10"
 libc = "0.2"
 

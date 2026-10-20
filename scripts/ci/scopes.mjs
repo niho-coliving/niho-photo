@@ -12,7 +12,7 @@ export const scopes = {
 };
 
 export function selectScopes(changed, present) {
-  const all = changed.some((name) => /^(?:\.github\/|scripts\/|docs\/(?:security|legal|ci)\/)/.test(name) || /^(?:package(?:-lock)?\.json|\.node-version|\.nvmrc)$/.test(name));
+  const all = changed.some((name) => /^(?:\.github\/|scripts\/|docs\/(?:security|legal|ci|contracts)\/)/.test(name) || /^(?:package(?:-lock)?\.json|\.node-version|\.nvmrc)$/.test(name));
   return Object.entries(scopes).map(([scope, config]) => ({ scope, runner: config.runner, present: present.includes(config.root), selected: all || changed.some((name) => config.paths.some((prefix) => name.startsWith(prefix))) }));
 }
 
