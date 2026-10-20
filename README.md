@@ -12,6 +12,12 @@ NIHO photo の公開クライアント開発リポジトリです。Mac アプ�
 
 ## 開発と報告
 
-移行後のローカル検証手順は、各 workspace の README と `CONTRIBUTING.md` に掲載します。現時点で実行できる確認は文書リンクと監査台帳の整合確認です。
+移行後のローカル検証手順は、各 workspace の README と [CONTRIBUTING.md](CONTRIBUTING.md) に掲載します。現時点の文書変更では、次のコマンドを実行できます。
 
-秘密情報、実利用データ、内部 URL、未修正の脆弱性を公開 Issue・PR・CI ログへ載せないでください。脆弱性の報告先は `SECURITY.md` 整備後に案内します。
+```bash
+python3 -m json.tool docs/security/publication-policy.json >/dev/null
+git diff --check
+gitleaks dir --redact --no-banner .
+```
+
+秘密情報、実利用データ、内部 URL、未修正の脆弱性を公開 Issue・PR・CI ログへ載せないでください。脆弱性は [SECURITY.md](SECURITY.md) の非公開窓口へ報告してください。非公開移行元と公開Issueの対応は [source-map.md](docs/migration/source-map.md) に記録します。
