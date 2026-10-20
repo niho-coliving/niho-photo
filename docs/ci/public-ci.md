@@ -11,7 +11,7 @@ rulesetへ登録する名称は **`Public CI required`** です。常に出る�
 | Publication guard | 全実行。全追跡ファイルと未追跡の公開候補に `npm run verify:publication`、`npm run format:check`、policyの否定テスト、空白検査 |
 | Secret scan | 全実行。checkoutした公開Git履歴の全refをgitleaksで走査。検出値は完全redact。PR側のignore/allow commentは採用しない |
 | Dependency review | 全PR。GitHub依存グラフの差分からmoderate以上の脆弱性とAGPLの追加を拒否。runtime/development/unknownを含む。PRコメント権限なし |
-| Photo editing | `packages/photo-editing`・`packages/ui` 変更。`npm ci --ignore-scripts` 後、双方のtypecheck / test / lint |
+| Photo editing | `packages/photo-editing`・`packages/niho-cloud-contract`・`packages/ui` 変更。`npm ci --ignore-scripts` 後、Photo editing / UIのtypecheck / test / lint とDocs固定SHAとのcontract同期確認 |
 | Camera | `apps/camera` 導入後。camera、account、写真関連パッケージ変更時。npmのtypecheck / test / lint / `build:unsigned` と宣言されたnative検査 |
 | Desktop photo | `packages/desktop-photo` 導入後。desktop-photo、account、photo-editing、ui、develop-engine変更時。Cargoのfmt / clippy / test。能力レジストリの合成signatureと公開サニタイズRW2の境界検査を含む |
 | Desktop account | `packages/desktop-account` 導入後。同パス・UI変更時。`ts`をroot workspaceへ登録し、npmのtypecheck / test / lint とRustのfmt / clippy / test |
@@ -19,7 +19,7 @@ rulesetへ登録する名称は **`Public CI required`** です。常に出る�
 
 `.github/`・`scripts/`・root package/lock・`docs/security/`・`docs/legal/`・`docs/ci/` の変更では、導入済みの全scopeを実行します。PRはeventのbase SHAとcheckoutしたmerge commitを比較します。pushはbefore SHAを使い、初回pushは全scopeです。削除も差分に含め、branch名・PRタイトルをshellへ展開しません。
 
-現在の公開treeはphoto-editing・UI・camera・desktop-photoです。cameraとdesktop-photoのnative scopeは有効です。desktop-accountは#3で導入し、TS・Rustの両方を検証します。develop-engineの検証契約は#9に従います。scopeのディレクトリが追加されると検査が自動で有効になり、メタデータ不足は失敗になります。アカウントのversioned正本・Rust/TS・Photoのdigest pinは `scripts/ci/account-contract.test.mjs` で検証します。Docs側の採用と双方CIの連動は#8の統合条件です。新しい公開packageが増えたらscopeの依存関係もレビューしてください。
+現在の公開treeはphoto-editing・UI・camera・desktop-photoです。cameraとdesktop-photoのnative scopeは有効です。desktop-accountは#3で導入し、TS・Rustの両方を検証します。develop-engineの検証契約は#9に従います。scopeのディレクトリが追加されると検査が自動で有効になり、メタデータ不足は失敗になります。アカウントのversioned正本・Rust/TS・Photoのdigest pinは `scripts/ci/account-contract.test.mjs` で検証します。Docs側の採用と双方CIの連動は#8の統合条件です。Docs / Photo共通contractは `packages/niho-cloud-contract` にDocsの完全SHAからコピーし、Publication guardで同一内容を検査します。新しい公開packageが増えたらscopeの依存関係もレビューしてください。
 
 ## nativeを移植するとき
 
@@ -80,8 +80,8 @@ gitleaks git --redact=100 --ignore-gitleaks-allow --no-banner --log-opts='--all'
 gitleaks dir --redact=100 --ignore-gitleaks-allow --no-banner .
 ```
 
-PRの公開CI実行、dependency graph更新、外部forkでの初回承認から集約checkまでをGitHubで確認してから、[repository-settings.md](../security/repository-settings.md) の順序でrulesetへ登録します。workflowの追加だけではGitHub側のrequired checks設定は変更されません。コードやworkflowを変更できるPR自身の検査だけでは、その検査の悪意ある改変を完全には防げないため、CI定義・公開境界にはCODEOWNERSレビューが必要です。
+PRの公開CI実行、dependency graph更新、外部forkでの初回承認から集約checkまでをGitHubで確認してから、[repository-settings.md](../security/repository-settings.md) の順序でrulesetへ登録します。workflowの追加だけではGitHub側のrequired checks設定は変更されません。コードやworkflowを変更できるPR自身の検査だけでは、その検査の悪意ある改変を完全には防げません。CI定義・公開境界の差分と実行結果はメンテナーが確認し、CODEOWNERSは担当者の案内に使います。CODEOWNERS承認はマージ条件ではありません。
 
 ## 現像workspaceの検査
 
-`develop-engine` scopeは実RW2の監査を宣言したpublic-ci.jsonを持つ。固定Rust 1.98.1でnative fmt/clippy/testを実行し、実RW2のdecoder情報・元画素golden・独立DCP描画を常時検査する。desktop-photo scopeは同じ公開RW2がcapability registryのRW2 signatureを通ることを検査するが、それだけを実decode成功とは数えない。Python標準ライブラリでfit→spec/reportを再生成し、Rustでspec→DCP bytesを再生成する。wasm32 buildとwasm-bindgen 0.2.129のtest runnerでNIHO6/7・camera-linear codecの共通テストも実行する。さらに `tools/apple-raw-linear` のSwift packageを実行し、メモリ生成したPNG/JPEG/TIFF/HEICをImageIOで実decodeして `RasterCommand.run` のmetadata・画素・出力sanitizeを検査する。HEIC encoderが無いrunnerはskipで対応済みとせず、unsupported capabilityとして失敗を明示する。生のowner原本や私有絶対path、署名は不要。合成ラスタの検査はApple RAWの全機種対応やprovider別の実機動作まで実証済みとは扱わない。
+`develop-engine` scopeは実RW2の監査を宣言したpublic-ci.jsonを持つ。macOS 14で固定Rust 1.98.1のnative fmt/clippy/testを実行し、実RW2のdecoder情報・元画素golden・独立DCP描画を常時検査する。desktop-photo scopeは同じ公開RW2がcapability registryのRW2 signatureを通ることを検査するが、それだけを実decode成功とは数えない。Python標準ライブラリでfit→spec/reportを再生成し、Rustでspec→DCP bytesを再生成する。wasm32 buildとwasm-bindgen 0.2.129のtest runnerでNIHO6/7・camera-linear codecの共通テストも実行する。`tools/apple-raw-linear` のSwift packageは独立したmacOS 26 jobで実行し、macOS 26 SDKのCore Image APIを使って、合成PNG/JPEG/TIFF/HEICをImageIOで実decodeし `RasterCommand.run` のmetadata・画素・出力sanitizeを検査する。HEIC encoderが無いrunnerはskipで対応済みとせず、unsupported capabilityとして失敗を明示する。生のowner原本や私有絶対path、署名は不要。合成ラスタの検査はApple RAWの全機種対応やprovider別の実機動作まで実証済みとは扱わない。
