@@ -107,10 +107,11 @@
         "path": "packages/photo-editing/src/browser-photo-cloud-source.test.ts",
         "sha256": "73f11fab7530c3dc6f23114d2e7518f48c7a39c998a5096a293a19cc8eb23d91"
       },
-      "outputSha256": "819b6a7bcf29681c7057b8e66515ac2086d2335bb4feb2d965dabfc7e2f57a3f",
+      "outputSha256": "8152b91dd1fbe3c1531841f1aab8675ea1947f1d4b73f4179570aa55f3c293cb",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
-        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。"
+        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
+        "任意の個別写真ソース契約と選んだ写真のUI、復元、取消、再試行、失敗時参照保持を追加"
       ]
     },
     {
@@ -121,11 +122,12 @@
         "path": "packages/photo-editing/src/browser-photo-cloud-source.ts",
         "sha256": "ebfa29ade40c103e39f3ef888ca5d0ac2871fc0f8e16bc85a65e16a30fb83832"
       },
-      "outputSha256": "74d82603aa13866654cdbbfc1cf4e04b18798d3a2a1e06cbb52fc09507ec68ae",
+      "outputSha256": "1ff5cbb1a15fe2797aa7c8698a6568e6fc5b24d06a7002e9ac2228e4266645cc",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "行末空白と余分な末尾空行を整理。",
-        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。"
+        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
+        "任意の個別写真ソース契約と選んだ写真のUI、復元、取消、再試行、失敗時参照保持を追加"
       ]
     },
     {
@@ -722,10 +724,11 @@
         "path": "packages/photo-editing/src/editor/browser-photo-editing-folder-tree.tsx",
         "sha256": "9b60d2ed952bd8af30a3199cb82df81ed1909f4aa3aa77a603a48798b5cd0a81"
       },
-      "outputSha256": "84b906f34087dee7610cdbc7995ae473a6f8e30c4f739fa510d496ccd89f3f68",
+      "outputSha256": "ae9c847a1f1d9756f0849f70c6cba2b5296b4dc31117e938b2758788a8be3e2d",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
-        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。"
+        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
+        "任意の個別写真ソース契約と選んだ写真のUI、復元、取消、再試行、失敗時参照保持を追加"
       ]
     },
     {
@@ -926,10 +929,11 @@
         "path": "packages/photo-editing/src/editor/browser-photo-editing-tree.tsx",
         "sha256": "2291c76ce46a907e917c9a33160c36f1b069c9a4a9f71ad64b2c21c6c9849a28"
       },
-      "outputSha256": "0ffc4a3a65ee26644fe50dd1d4f0ce4d17f9337918cd165c71a16adb11f181a9",
+      "outputSha256": "7c4719de9c3ec40a8089982a1d776c5a94c01881d365d69be0be05800e5b6ee8",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
-        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。"
+        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
+        "任意の個別写真ソース契約と選んだ写真のUI、復元、取消、再試行、失敗時参照保持を追加"
       ]
     },
     {
@@ -940,10 +944,11 @@
         "path": "packages/photo-editing/src/editor/browser-photo-editing-workbench-folders.test.tsx",
         "sha256": "2466702c26e46adadb579736eb8edef22cc420e4b0189283fd7d4b762a62869e"
       },
-      "outputSha256": "819cfbc57735cd887f7ce339536caf8b656fd580b1bedb40cc41fd5bcfbdbe20",
+      "outputSha256": "d4a377aa24b55fc0321ec1010328f0bf8322591b3bf5cc8b1e3dd383075cd025",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
-        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。"
+        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
+        "任意の個別写真ソース契約と選んだ写真のUI、復元、取消、再試行、失敗時参照保持を追加"
       ]
     },
     {
@@ -954,10 +959,11 @@
         "path": "packages/photo-editing/src/editor/browser-photo-editing-workbench.tsx",
         "sha256": "f655136ae0c985d793822ca8bef1668dba26ffd4bb8f13d2ba3d6c2ccb13ceb6"
       },
-      "outputSha256": "4ddc5c9959f49f40eba790fc5f29027ebe8e2ff8d5db7bce01cb3472fe2e405a",
+      "outputSha256": "bc6e411e1cff57a51128b98dcf83bec995166353bc9acd8c2094f058f2fdee02",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
-        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。"
+        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
+        "任意の個別写真ソース契約と選んだ写真のUI、復元、取消、再試行、失敗時参照保持を追加"
       ]
     },
     {
@@ -1502,11 +1508,12 @@
         "path": "packages/photo-editing/src/editor/use-browser-photo-folders.ts",
         "sha256": "69941494097660785d1ce690c32ce4518598ec6e90baf626a92099c43d4caa34"
       },
-      "outputSha256": "40ab75c7ab413b85d5de1536dc6f403141007003e2d252c9ca1985f564a98e79",
+      "outputSha256": "a63207c8c7e85a5cd2fd9cdc0331a3c3817612bc88af4fe8a6328251c1e3f4bf",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "行末空白と余分な末尾空行を整理。",
-        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。"
+        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
+        "任意の個別写真ソース契約と選んだ写真のUI、復元、取消、再試行、失敗時参照保持を追加"
       ]
     },
     {
@@ -1517,10 +1524,11 @@
         "path": "packages/photo-editing/src/editor/use-browser-photo-items.ts",
         "sha256": "23d0caf41f3bddbb7d3ab7d63c5a1a6f14faa86a8978fbefdb42fb34f9cb21fb"
       },
-      "outputSha256": "cac9fdd3eec8e9785fcd6b9f6e5057137896794165f46f4a7e94597b7d2bd937",
+      "outputSha256": "7dff03d10c7a19790e5b7d26f0b36ce1671bafb22091dc029d654762493b8067",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
-        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。"
+        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
+        "任意の個別写真ソース契約と選んだ写真のUI、復元、取消、再試行、失敗時参照保持を追加"
       ]
     },
     {
@@ -1718,10 +1726,11 @@
         "path": "packages/photo-editing/src/library/photo-library.ts",
         "sha256": "d11aab9b360ff3a54e1b82c7c013729cc5044a2051b421b695c1847446a2ccbc"
       },
-      "outputSha256": "2e5cf63b5e7ee44978c7a66ac7e6b7e2a20d49e88c7b8b58b240d6dca854fe33",
+      "outputSha256": "f4f4d4b0257ff0aafe394343e4463cbc49cfa03eca486f7716abbc2f740d8c2c",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
-        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。"
+        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
+        "任意の個別写真ソース契約と選んだ写真のUI、復元、取消、再試行、失敗時参照保持を追加"
       ]
     },
     {
@@ -1869,10 +1878,11 @@
         "path": "packages/photo-editing/src/photo-editing-copy.ts",
         "sha256": "1208d4124dca26c951d73f6f84c560879e69beddfb9a16426e1a9dcc9fd30c27"
       },
-      "outputSha256": "ad5c88f9379abc6be22a501f408a4adb06097b0bbb31e70a1ed0782aae91f713",
+      "outputSha256": "0e4b639dbfb7ba43ab9d3f4e8f6b7f167cdcc437f1b3d52b25f693143f12ec8f",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
-        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。"
+        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
+        "任意の個別写真ソース契約と選んだ写真のUI、復元、取消、再試行、失敗時参照保持を追加"
       ]
     },
     {
@@ -2022,10 +2032,11 @@
         "path": "packages/photo-editing/src/photo-editing-query-keys.ts",
         "sha256": "b0873ce957f9eca6dd2451b13e87d38e52e28d08ab5fbc5c31c6ebf6e94c0248"
       },
-      "outputSha256": "5b2a8dc423db33a91fa4202d44617ecebeae317b9cef3281c5972d01f07a6466",
+      "outputSha256": "c6838c5d0dfef6308f8baa02069d379783a53a6573003c95cea059bcd14bc06a",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
-        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。"
+        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
+        "任意の個別写真ソース契約と選んだ写真のUI、復元、取消、再試行、失敗時参照保持を追加"
       ]
     },
     {
@@ -2473,10 +2484,11 @@
         "path": "packages/photo-editing/src/use-photo-cloud-photos.ts",
         "sha256": "64637052f98098cf6bb7baf600a253f0291d7a912acbada410f12f6539843e97"
       },
-      "outputSha256": "d1d4049ac6f873855715891533819310c961136f63dcb95cea9e447509451665",
+      "outputSha256": "7cf5bd15a62f7b93a3dbae713a329aa487029cd1ee4b83ca2091f97951d1896e",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
-        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。"
+        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
+        "任意の個別写真ソース契約と選んだ写真のUI、復元、取消、再試行、失敗時参照保持を追加"
       ]
     },
     {
@@ -2981,9 +2993,10 @@
         "path": "apps/camera/README.md",
         "sha256": "d0e1f198e83893a73cd3d84122debf76ad9755e00a5fc5e1b69c242daec8d4eb"
       },
-      "outputSha256": "7b75d9a18bdbf012bf75b36b6a7ff5d4f76d656e97c740becb468cc72011624c",
+      "outputSha256": "d22a3609bd19cf1fbed9599995ff9e29e1cf8f365ba6719e3c53c03aad02bec7",
       "modifications": [
-        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。"
+        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
+        "フォルダと個別写真の利用方法、公開契約、および許可するネイティブコマンドを明記"
       ]
     },
     {
@@ -3194,8 +3207,10 @@
         "path": "apps/camera/src-tauri/permissions/camera.toml",
         "sha256": "3dabde32b43f01f12b93d48f2000a51a55abf48cc5866df2daa6dda9f31edae0"
       },
-      "outputSha256": "3dabde32b43f01f12b93d48f2000a51a55abf48cc5866df2daa6dda9f31edae0",
-      "modifications": []
+      "outputSha256": "d6305b63f45ceef2351e53719795a11b6c602458d2dee3b24908c7029da8afc2",
+      "modifications": [
+        "共有形式フィルターを使う複数写真pickerと参照削除コマンドを同梱UIの権限内に追加 / 選択写真専用commandのbundle permissionを追加。"
+      ]
     },
     {
       "path": "apps/camera/src-tauri/rustfmt.toml",
@@ -3330,8 +3345,10 @@
         "path": "apps/camera/src-tauri/src/dialog.rs",
         "sha256": "a2d298fded021c366eb3098026fb452bc06b7d724ce2d6e2ba10e422aede4fd6"
       },
-      "outputSha256": "a2d298fded021c366eb3098026fb452bc06b7d724ce2d6e2ba10e422aede4fd6",
-      "modifications": []
+      "outputSha256": "7c9a74888398de14f2980f26eb6e4b798712f9389f81068b7bb6a6b67e446cd7",
+      "modifications": [
+        "共有形式フィルターを使う複数写真pickerと参照削除コマンドを同梱UIの権限内に追加"
+      ]
     },
     {
       "path": "apps/camera/src-tauri/src/e2e.rs",
@@ -3363,9 +3380,10 @@
         "path": "apps/camera/src-tauri/src/lib.rs",
         "sha256": "e6415b3d0633bb4753761b89f8860fffcfa9b67f95832ab971bd9b13eebaaffc"
       },
-      "outputSha256": "240972e7a301d8808ab6d3815fc30c508f32c5b6d87d386909d299eab9962ff9",
+      "outputSha256": "3fc27b0b4c532c5139ed4d280445bf9d3c9418d735b2fa2aefb2808d9947e74f",
       "modifications": [
-        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。"
+        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
+        "共有形式フィルターを使う複数写真pickerと参照削除コマンドを同梱UIの権限内に追加 / 選択写真専用commandをinvoke handlerへ登録。"
       ]
     },
     {
@@ -3376,11 +3394,12 @@
         "path": "apps/camera/src-tauri/src/library.rs",
         "sha256": "9eb5d2b4b57fe4f281e7ce187561efb3d3d6c05c54f00d0043f05d8913d50d9d"
       },
-      "outputSha256": "8b94b9700e2f0f8d75d8c6dc5f214a08e4d089151ad9cc64449900ff3470434f",
+      "outputSha256": "f3983fe75c1b326780ad90b69ec2c3032a635dae84e984f263f7f33e8b3c885f",
       "modifications": [
         "private絶対path guardに合わせ、合成テスト用のpathを予約済み/test-data配下へ正規化。実装の挙動は変更しない。",
         "公開現像workspace向けにLibRaw由来値と参照を除去。独立測定DCP・合成テスト・metadata正規化・公開契約と書式へ調整。",
-        "公開CIのRust 1.98.1 rustfmt書式に合わせる。挙動は変更しない。"
+        "公開CIのRust 1.98.1 rustfmt書式に合わせる。挙動は変更しない。",
+        "共有形式フィルターを使う複数写真pickerと参照削除コマンドを同梱UIの権限内に追加 / 選択写真だけを再読込するnative commandを追加。"
       ]
     },
     {
@@ -3509,9 +3528,10 @@
         "path": "apps/camera/src/App.test.tsx",
         "sha256": "a6e473f6f16afb180c6be04a32b8a2560bfc69c30f8f077300156bcd291ddb98"
       },
-      "outputSha256": "4a83a40a62ec56d610f1115aa3e7d848e1c77515a7fa326ae2c7af5fb3eb12a1",
+      "outputSha256": "25dd65fb4f53850946b0d3f4147fa08d3abf8ba3bb9ca4f57df7d7a3ae26d7c4",
       "modifications": [
-        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。"
+        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
+        "複合空状態の写真追加アクションに期待値を更新。 / 選択写真専用commandをApp test fixtureにも追加。"
       ]
     },
     {
@@ -3592,8 +3612,10 @@
         "path": "apps/camera/src/local-library/commands.test.ts",
         "sha256": "4d35f3d9038ba356958dceed47cfe690ee9def1d3746964d2da42f40c43d681f"
       },
-      "outputSha256": "4d35f3d9038ba356958dceed47cfe690ee9def1d3746964d2da42f40c43d681f",
-      "modifications": []
+      "outputSha256": "57aff6b30d0d064d0bc9e065a8b4d5cd4638adb149b5560f5fd542368ae8dcfe",
+      "modifications": [
+        "個別写真の追加・件数・一覧・参照削除を不透明なentryIdの既存経路へ接続"
+      ]
     },
     {
       "path": "apps/camera/src/local-library/commands.ts",
@@ -3603,9 +3625,10 @@
         "path": "apps/camera/src/local-library/commands.ts",
         "sha256": "6aa0e7cc890a164709ed5274f020d5070d85b69e9b01f8562ae772a8ba2c57f1"
       },
-      "outputSha256": "45c06e38a1ec82d6be6f70f695cd6c39bee276ca616b9ecc8223e7a9b6c41588",
+      "outputSha256": "b2bb8f79e0fe35e2ca6ddcdd030029b17135d654f0af2e2b8292ac94bf349b9c",
       "modifications": [
-        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。"
+        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
+        "個別写真の追加・件数・一覧・参照削除を不透明なentryIdの既存経路へ接続 / 選択写真一覧を専用IPC commandへ分離。"
       ]
     },
     {
@@ -3649,8 +3672,10 @@
         "path": "apps/camera/src/local-library/local-photo-library.test.ts",
         "sha256": "e86937a17a1b2655448cdcf9d43313df2d5b53c37ec16172b6eaa81371d4e1aa"
       },
-      "outputSha256": "e86937a17a1b2655448cdcf9d43313df2d5b53c37ec16172b6eaa81371d4e1aa",
-      "modifications": []
+      "outputSha256": "a94cb3c1c256727194489e511252e3efa8b4886ee6a7966203ba6e40c3ead961",
+      "modifications": [
+        "個別写真の追加・件数・一覧・参照削除を不透明なentryIdの既存経路へ接続 / 選択写真取得の専用IPC経路をテスト。"
+      ]
     },
     {
       "path": "apps/camera/src/local-library/local-photo-library.ts",
@@ -3660,9 +3685,10 @@
         "path": "apps/camera/src/local-library/local-photo-library.ts",
         "sha256": "bda72efc4c68731a2695be4906aedba55368d065dafbad6d577906ffa8441ed8"
       },
-      "outputSha256": "7176661f1a3954b08ebf05398a84b3d2b98dccc1d54772ffc7c862f15a730c1a",
+      "outputSha256": "9724c868ac805f11d3faf191076d04517dbfa7fb66e2c46f73c5099765be0dd8",
       "modifications": [
-        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。"
+        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
+        "個別写真の追加・件数・一覧・参照削除を不透明なentryIdの既存経路へ接続 / 選択写真一覧でフォルダ再走査commandを呼ばない。"
       ]
     },
     {
@@ -3874,9 +3900,10 @@
         "path": "packages/desktop-photo/src/library.rs",
         "sha256": "df0c406952e647fd8df9c44345e0c7020f7c328c3c48501eaf3d9a79e819b488"
       },
-      "outputSha256": "6de23460e60dde28dbde35f5f09478d23b432fc3c5b1bd51c929b84f6bad2740",
+      "outputSha256": "bedb242f7c6bb914711390f9dbe63fcb00634f0775f6438a41fcc8539060d9c8",
       "modifications": [
-        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。"
+        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
+        "個別選択写真の上限付きセッション保持と安全な参照削除、および既存の全件応答契約の検証を追加 / 利用可能写真を確認してから選択上限を適用。"
       ]
     },
     {
@@ -3898,11 +3925,12 @@
         "path": "packages/desktop-photo/src/library_tests.rs",
         "sha256": "7eea84c71f88468f287f2eea5f906dcd878c05294a5bd5d8c4b2442d5eb4861d"
       },
-      "outputSha256": "e81f3e9db0fbfd0e2455a9e7044b0e18cc3643d34a02c0e4515b211948cf84f0",
+      "outputSha256": "8e945fc93968d5ca0787267bacb1cfa37532556e9ac05e2f59c63240ed41507d",
       "modifications": [
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
         "private絶対path guardに合わせ、合成テスト用のpathを予約済み/test-data配下へ正規化。実装の挙動は変更しない。",
-        "公開現像workspace向けにLibRaw由来値と参照を除去。独立測定DCP・合成テスト・metadata正規化・公開契約と書式へ調整。"
+        "公開現像workspace向けにLibRaw由来値と参照を除去。独立測定DCP・合成テスト・metadata正規化・公開契約と書式へ調整。",
+        "個別選択写真の上限付きセッション保持と安全な参照削除、および既存の全件応答契約の検証を追加 / 未接続写真が選択上限を消費しない回帰テスト。 / Rustfmtで新規回帰テストの整形を統一。"
       ]
     },
     {
@@ -3913,9 +3941,10 @@
         "path": "packages/desktop-photo/src/remembered.rs",
         "sha256": "8d1b423e1fa139d4016c6c0ad918bd9fc88619faf9474602f817e97988175725"
       },
-      "outputSha256": "4650ffaef470276c4f26a8dc5bcc5114cba79e3fcc20b07d65323e23fab640ed",
+      "outputSha256": "684fd3e82e17612befe8c039bcecb3152047bf3f90d7fa0aa7a2607ec5f04a7a",
       "modifications": [
-        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。"
+        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
+        "個別選択写真の上限付きセッション保持と安全な参照削除、および既存の全件応答契約の検証を追加"
       ]
     },
     {
@@ -3926,12 +3955,15 @@
         "path": "packages/desktop-photo/src/remembered_tests.rs",
         "sha256": "d518178440f9c9367d81671efd69fff6cf71c43fcfc7d0844b3d785ae49034b1"
       },
-      "outputSha256": "205e22559da8d73b81e5a8544e57045f1783f83a2fa2c58332fe82e10ae29d1e",
+      "outputSha256": "ec7300a4ba1c0f861f6901df6f45f4dc1e991f9b8ff77100875a19676b6722a7",
       "modifications": [
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
         "private絶対path guardに合わせ、合成テスト用のpathを予約済み/test-data配下へ正規化。実装の挙動は変更しない。",
         "公開現像workspace向けにLibRaw由来値と参照を除去。独立測定DCP・合成テスト・metadata正規化・公開契約と書式へ調整。",
-        "公開CIのRust 1.98.1 rustfmt書式に合わせる。挙動は変更しない。"
+        "公開CIのRust 1.98.1 rustfmt書式に合わせる。挙動は変更しない。",
+        "個別選択写真の上限付きセッション保持と安全な参照削除、および既存の全件応答契約の検証を追加",
+        "公開guardに合わせて合成テスト用のpathをtest-data配下へ統一する。",
+        "公開CIのRustfmtと一致するよう回帰テストを整形する。"
       ]
     },
     {

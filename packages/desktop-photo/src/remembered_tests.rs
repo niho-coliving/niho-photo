@@ -262,7 +262,13 @@ fn forgetting_photos_preserves_folders_and_fails_if_the_store_cannot_be_read() {
   assert!(!store.forget_photos().unwrap());
   store.remember_folder(Path::new(SD), at(1)).unwrap();
   store
-    .remember_photos(&[path("/Users/staff/a.jpg"), path("/Users/staff/b.nef")], at(2))
+    .remember_photos(
+      &[
+        path("/test-data/users/staff/a.jpg"),
+        path("/test-data/users/staff/b.nef"),
+      ],
+      at(2),
+    )
     .unwrap();
   assert!(store.forget_photos().unwrap());
   assert_eq!(store.load().folders, [entry(SD, 1)]);
@@ -279,11 +285,14 @@ fn forgetting_photos_preserves_folders_and_fails_if_the_store_cannot_be_read() {
   let blocked = TempDir::new("forget-photos-write-failure");
   let blocked_store = blocked.store(RememberedLimits::default());
   blocked_store
-    .remember_photos(&[path("/Users/staff/stays.jpg")], at(3))
+    .remember_photos(&[path("/test-data/users/staff/stays.jpg")], at(3))
     .unwrap();
   fs::create_dir_all(blocked.file().with_extension("json.tmp")).unwrap();
   assert!(blocked_store.forget_photos().is_err());
-  assert_eq!(blocked_store.load().photos, [entry("/Users/staff/stays.jpg", 3)]);
+  assert_eq!(
+    blocked_store.load().photos,
+    [entry("/test-data/users/staff/stays.jpg", 3)]
+  );
 }
 
 #[test]
