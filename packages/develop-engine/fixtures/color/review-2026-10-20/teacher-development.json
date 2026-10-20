@@ -1,0 +1,162 @@
+{
+  "kind": "development-teachers-not-independent",
+  "commit": "ffdc46ad31d1619c48a3e1499465a6c8a712b23c",
+  "rendererSha256": "4c6043e20c28709b9983c2f64aa2ba1812d058c3674625571cb15c6649bd62cc",
+  "manifestSha256": [
+    "04bbeacc93a62b36c8c8121925a38f40de5943bc4f803947b278c713a842576c",
+    "0ddcf87c766786bab8251978b762da726f8082b6df6dc2552deb6e98261a38a9"
+  ],
+  "cohortCounts": {
+    "teachers": 33,
+    "teachers2": 24
+  },
+  "analyticSubsetScenes": 6,
+  "analyticSubsetSelection": "metadata-only low/median/high ISO per teacher cohort",
+  "blankExcluded": 2,
+  "independentImagesRead": 0,
+  "protocol": {
+    "renderLongEdge": 2048,
+    "compareLongEdge": 1500,
+    "blur": 2,
+    "flatPixels": true,
+    "alignment": true
+  },
+  "summary": [
+    {
+      "engine": "niho-6",
+      "variant": "neutral",
+      "scenes": 57,
+      "mean": 0.2598456140350877,
+      "p99Mean": 0.920678947368421,
+      "p99Max": 2.2148,
+      "p99Over8": 0
+    },
+    {
+      "engine": "niho-6",
+      "variant": "preset_bluesky2",
+      "scenes": 57,
+      "mean": 2.1694964912280703,
+      "p99Mean": 4.97081403508772,
+      "p99Max": 9.8817,
+      "p99Over8": 4
+    },
+    {
+      "engine": "niho-6",
+      "variant": "preset_pastel",
+      "scenes": 57,
+      "mean": 2.776682456140351,
+      "p99Mean": 6.234340350877193,
+      "p99Max": 9.4509,
+      "p99Over8": 5
+    },
+    {
+      "engine": "niho-6",
+      "variant": "preset_colorful",
+      "scenes": 57,
+      "mean": 2.564056140350877,
+      "p99Mean": 6.430552631578947,
+      "p99Max": 13.6257,
+      "p99Over8": 15
+    },
+    {
+      "engine": "niho-8",
+      "variant": "neutral",
+      "scenes": 57,
+      "mean": 0.2598456140350877,
+      "p99Mean": 0.920678947368421,
+      "p99Max": 2.2148,
+      "p99Over8": 0
+    },
+    {
+      "engine": "niho-8",
+      "variant": "preset_bluesky2",
+      "scenes": 57,
+      "mean": 2.15469649122807,
+      "p99Mean": 4.940998245614035,
+      "p99Max": 10.029,
+      "p99Over8": 4
+    },
+    {
+      "engine": "niho-8",
+      "variant": "preset_pastel",
+      "scenes": 57,
+      "mean": 2.7842263157894735,
+      "p99Mean": 6.228147368421052,
+      "p99Max": 9.5818,
+      "p99Over8": 5
+    },
+    {
+      "engine": "niho-8",
+      "variant": "preset_colorful",
+      "scenes": 57,
+      "mean": 2.5364298245614036,
+      "p99Mean": 6.42160701754386,
+      "p99Max": 13.6261,
+      "p99Over8": 15
+    },
+    {
+      "engine": "analytic-hs",
+      "variant": "neutral",
+      "scenes": 6,
+      "mean": 0.33896666666666664,
+      "p99Mean": 1.2151500000000002,
+      "p99Max": 1.6171,
+      "p99Over8": 0
+    },
+    {
+      "engine": "analytic-hs",
+      "variant": "preset_bluesky2",
+      "scenes": 6,
+      "mean": 2.5425,
+      "p99Mean": 5.890816666666666,
+      "p99Max": 10.3584,
+      "p99Over8": 1
+    },
+    {
+      "engine": "analytic-hs",
+      "variant": "preset_pastel",
+      "scenes": 6,
+      "mean": 3.1935333333333333,
+      "p99Mean": 6.7852500000000004,
+      "p99Max": 8.6451,
+      "p99Over8": 2
+    },
+    {
+      "engine": "analytic-hs",
+      "variant": "preset_colorful",
+      "scenes": 6,
+      "mean": 3.29655,
+      "p99Mean": 7.594866666666667,
+      "p99Max": 12.5389,
+      "p99Over8": 3
+    }
+  ],
+  "comparisons": [
+    {
+      "engine": "niho-8",
+      "baseline": "niho-6",
+      "meanRegressions": 64,
+      "p99Regressions": 75,
+      "maxMeanIncrease": 0.319,
+      "maxP99Increase": 0.15249999999999986
+    },
+    {
+      "engine": "analytic-hs",
+      "baseline": "niho-6",
+      "meanRegressions": 8,
+      "p99Regressions": 13,
+      "maxMeanIncrease": 1.4368999999999996,
+      "maxP99Increase": 2.9563000000000006
+    }
+  ],
+  "seconds": 533.5962210410216,
+  "measurementHost": "Mac Studio",
+  "measurementDate": "2026-10-20",
+  "rustToolchain": "1.98.1",
+  "scopeNotes": [
+    "Development teachers already used by the existing model; not independent evaluation",
+    "Analytic candidate uses only the metadata-selected 6-scene subset; compare matched pairs, not its pooled average against all57 scenes",
+    "No images, scene names, private paths or full per-image rows are published",
+    "niho-8 changes precision only; per-scene differences remain and no producer defaults are promoted"
+  ]
+}
