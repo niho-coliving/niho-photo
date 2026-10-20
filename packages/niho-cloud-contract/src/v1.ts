@@ -157,10 +157,23 @@ export interface CloudOperationMap {
   readonly "share.list": { readonly request: ShareListRequest; readonly response: ShareListResponse };
 }
 
-/** share.list is GET /shares and its request fields are URL query parameters, never a GET body. */
+export type CloudRequestLocation = "json" | "path" | "path-and-json" | "query";
+
+export interface CloudOperationTransport {
+  readonly method: "DELETE" | "GET" | "POST";
+  readonly path: string;
+  readonly requestLocation: CloudRequestLocation;
+}
+
+/** HTTP binding for every operation; GET requests use query fields and never carry a body. */
 export const CLOUD_OPERATION_TRANSPORTS = {
+  "upload.start": { method: "POST", path: "/uploads", requestLocation: "json" },
+  "upload.complete": { method: "POST", path: "/uploads/{uploadId}/complete", requestLocation: "path-and-json" },
+  "download.start": { method: "POST", path: "/downloads", requestLocation: "json" },
+  "share.create": { method: "POST", path: "/shares", requestLocation: "json" },
+  "share.revoke": { method: "DELETE", path: "/shares/{shareId}", requestLocation: "path" },
   "share.list": { method: "GET", path: "/shares", requestLocation: "query" },
-} as const;
+} as const satisfies { readonly [K in keyof CloudOperationMap]: CloudOperationTransport };
 
 export type CloudResult<T> =
   | { readonly ok: true; readonly value: T }

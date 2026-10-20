@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "repository": "niho-coliving/niho-docs",
-  "commit": "6572d1bf7ebcc2a4556b3a12d444c5422c5dec2f",
+  "commit": "0e25ca445f855139f8d05846e575d080f065a699",
   "files": [
     {
       "source": "packages/niho-cloud-contract/README.md",
