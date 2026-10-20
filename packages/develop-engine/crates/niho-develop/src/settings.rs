@@ -52,6 +52,11 @@ pub const ENGINE_NIHO_5: &str = "niho-5";
 pub const ENGINE_NIHO_6: &str = "niho-6";
 /// NIHO 5 plus the fixed R23 non-FX residual / R42 FX30 shoulder.
 pub const ENGINE_NIHO_7: &str = "niho-7";
+/// Opt-in evaluation engine for #29. Raster sources use the `niho-6`
+/// formulas and legacy (unsigned) RAW working copies use the `niho-2`
+/// formulas, with unquantized f32 entries in every color cube. It is a
+/// reader capability, not a constructor or product default.
+pub const ENGINE_NIHO_8: &str = "niho-8";
 
 pub fn is_known_engine(engine: &str) -> bool {
     matches!(
@@ -63,6 +68,7 @@ pub fn is_known_engine(engine: &str) -> bool {
             | ENGINE_NIHO_5
             | ENGINE_NIHO_6
             | ENGINE_NIHO_7
+            | ENGINE_NIHO_8
     )
 }
 /// Look versions (`look`): `niho-interim-1` is the identity and the default
@@ -1585,6 +1591,12 @@ mod tests {
                 .unwrap()
                 .engine,
             ENGINE_NIHO_2
+        );
+        assert_eq!(
+            DevelopSettings::from_json(r#"{"engine":"niho-8"}"#)
+                .unwrap()
+                .engine,
+            ENGINE_NIHO_8
         );
         assert_eq!(
             DevelopSettings::from_json(r#"{"engine":"niho-9"}"#)

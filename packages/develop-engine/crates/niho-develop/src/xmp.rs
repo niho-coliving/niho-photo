@@ -32,7 +32,7 @@ use crate::convert::{
 use crate::settings::{
     num, CalibrationSettings, ColorGradingSettings, CurveChannel, CurvePoint, DevelopSettings,
     HslAdjustment, HslBand, ToneCurve, VignetteStyle, ENGINE_NIHO_2, ENGINE_NIHO_3, ENGINE_NIHO_4,
-    ENGINE_NIHO_5, ENGINE_NIHO_6, ENGINE_NIHO_7, GRAIN_SEED_MAX,
+    ENGINE_NIHO_5, ENGINE_NIHO_6, ENGINE_NIHO_7, ENGINE_NIHO_8, GRAIN_SEED_MAX,
 };
 use quick_xml::events::Event;
 use quick_xml::Reader;
@@ -1840,7 +1840,12 @@ pub fn preset_settings(
         if settings.engine != ENGINE_NIHO_2
             || matches!(
                 b.engine.as_str(),
-                ENGINE_NIHO_3 | ENGINE_NIHO_4 | ENGINE_NIHO_5 | ENGINE_NIHO_6 | ENGINE_NIHO_7
+                ENGINE_NIHO_3
+                    | ENGINE_NIHO_4
+                    | ENGINE_NIHO_5
+                    | ENGINE_NIHO_6
+                    | ENGINE_NIHO_7
+                    | ENGINE_NIHO_8
             )
         {
             settings.engine = b.engine.clone();
