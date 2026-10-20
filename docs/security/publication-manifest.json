@@ -3376,10 +3376,11 @@
         "path": "apps/camera/src-tauri/src/library.rs",
         "sha256": "9eb5d2b4b57fe4f281e7ce187561efb3d3d6c05c54f00d0043f05d8913d50d9d"
       },
-      "outputSha256": "52907eebaac3a87956bd27a3d810413009a9acbb52ff2d2afda5ce71a39f2415",
+      "outputSha256": "8b94b9700e2f0f8d75d8c6dc5f214a08e4d089151ad9cc64449900ff3470434f",
       "modifications": [
         "private絶対path guardに合わせ、合成テスト用のpathを予約済み/test-data配下へ正規化。実装の挙動は変更しない。",
-        "公開現像workspace向けにLibRaw由来値と参照を除去。独立測定DCP・合成テスト・metadata正規化・公開契約と書式へ調整。"
+        "公開現像workspace向けにLibRaw由来値と参照を除去。独立測定DCP・合成テスト・metadata正規化・公開契約と書式へ調整。",
+        "公開CIのRust 1.98.1 rustfmt書式に合わせる。挙動は変更しない。"
       ]
     },
     {
@@ -3925,11 +3926,12 @@
         "path": "packages/desktop-photo/src/remembered_tests.rs",
         "sha256": "d518178440f9c9367d81671efd69fff6cf71c43fcfc7d0844b3d785ae49034b1"
       },
-      "outputSha256": "c7846046962c5f99f330a70a5b0a3797ff01320dd38d926ef52a3fa2776a0521",
+      "outputSha256": "205e22559da8d73b81e5a8544e57045f1783f83a2fa2c58332fe82e10ae29d1e",
       "modifications": [
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
         "private絶対path guardに合わせ、合成テスト用のpathを予約済み/test-data配下へ正規化。実装の挙動は変更しない。",
-        "公開現像workspace向けにLibRaw由来値と参照を除去。独立測定DCP・合成テスト・metadata正規化・公開契約と書式へ調整。"
+        "公開現像workspace向けにLibRaw由来値と参照を除去。独立測定DCP・合成テスト・metadata正規化・公開契約と書式へ調整。",
+        "公開CIのRust 1.98.1 rustfmt書式に合わせる。挙動は変更しない。"
       ]
     },
     {
@@ -6076,8 +6078,10 @@
         "path": "packages/develop-engine/crates/niho-develop/tests/pipeline.rs",
         "sha256": "73d670edab0357b8cf1c07c0008e0790ae5a63da61192130e2a925c39d41da92"
       },
-      "outputSha256": "73d670edab0357b8cf1c07c0008e0790ae5a63da61192130e2a925c39d41da92",
-      "modifications": []
+      "outputSha256": "917e997d17cbd552e99fd2d749e1e75bcbdb9bf66c6f41980a1556f9513af8d6",
+      "modifications": [
+        "metadata除去済みorientation fixtureのAPP1位置にテストを合わせる。"
+      ]
     },
     {
       "path": "packages/develop-engine/crates/niho-develop/tests/preset_amount.rs",

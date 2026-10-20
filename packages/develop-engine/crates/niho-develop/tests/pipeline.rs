@@ -559,7 +559,8 @@ fn large_jpeg_is_decoded_at_a_reduced_scale() {
     // With EXIF orientation 6 (the APP1 segment of the orientation
     // fixture): turned like the full decode.
     let fixture_jpeg = fixture("golden/orientation-6.jpg");
-    let app1_at = 2 + 2 + u16::from_be_bytes([fixture_jpeg[4], fixture_jpeg[5]]) as usize;
+    // The sanitized fixture has its minimal orientation APP1 immediately after SOI.
+    let app1_at = 2;
     let app1_len =
         2 + u16::from_be_bytes([fixture_jpeg[app1_at + 2], fixture_jpeg[app1_at + 3]]) as usize;
     assert_eq!(fixture_jpeg[app1_at + 1], 0xE1);
