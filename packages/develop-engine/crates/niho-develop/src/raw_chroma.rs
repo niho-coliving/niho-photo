@@ -94,6 +94,35 @@ pub fn apply(
     Ok(output)
 }
 
+/// Explicit v5 detail control. The frozen 0..50 domain is unchanged; above
+/// 50, increase guided-filter regularization continuously up to 4x. This
+/// keeps the whole slider useful without applying legacy and v5 NR twice.
+/// The extended range is a NIHO approximation, not an LR calibration.
+pub fn apply_detail(
+    source: &[f32],
+    width: usize,
+    height: usize,
+    amount: f64,
+) -> Result<Vec<f32>, RawChromaError> {
+    if amount <= 50.0 {
+        return apply(source, width, height, amount);
+    }
+    validate_pixels(source, width, height, amount)?;
+    let epsilon = (0.4 * libm::pow(4.0, (amount - 50.0) / 50.0)) as f32;
+    let mut output = vec![0.0; source.len()];
+    for start in (0..height).step_by(STRIPE_ROWS) {
+        let end = start.saturating_add(STRIPE_ROWS).min(height);
+        let halo_start = start.saturating_sub(STRIPE_HALO);
+        let halo_end = end.saturating_add(STRIPE_HALO).min(height);
+        let halo = &source[halo_start * width * 3..halo_end * width * 3];
+        let filtered = guided(halo, width, halo_end - halo_start, halo.len() / 3, epsilon)
+            .map_err(|error| stripe_error(error, halo_start * width))?;
+        let center = (start - halo_start) * width * 3..(end - halo_start) * width * 3;
+        output[start * width * 3..end * width * 3].copy_from_slice(&filtered[center]);
+    }
+    Ok(output)
+}
+
 fn stripe_error(error: RawChromaError, pixel_offset: usize) -> RawChromaError {
     match error {
         RawChromaError::DerivedNonFinite(stage, index) => {

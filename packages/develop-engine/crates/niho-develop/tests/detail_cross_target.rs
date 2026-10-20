@@ -304,7 +304,7 @@ fn signed_raw_detail_overrides_are_distinct_and_warm_cache_matches_fresh() {
         let (count, total) = changed_bytes(&pair[0], &pair[1]);
         assert!(
             count > 256 && total > 512,
-            "CNR override did not materially act"
+            "CNR override did not materially act: changed={count}, total={total}"
         );
     }
     // Returning to an earlier amount must not retain the last prepared
