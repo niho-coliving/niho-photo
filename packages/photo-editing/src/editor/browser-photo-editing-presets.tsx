@@ -20,7 +20,10 @@ import {
   BROWSER_PRESET_AMOUNT_MAX,
   type BrowserPhotoPresets,
 } from "./use-browser-photo-presets";
-import { useBrowserPresetThumbnails } from "./use-browser-preset-thumbnails";
+import {
+  BROWSER_PRESET_GRID_THUMBNAIL_MAX_DIMENSION,
+  useBrowserPresetThumbnails,
+} from "./use-browser-preset-thumbnails";
 
 /** 今の補正を書き出す群（crate の既定に、選んだ露光量・ホワイトバランスを足す）。 */
 function presetXmpGroups(input: PhotoEditingPresetSaveInput): DevelopXmpGroup[] {
@@ -35,7 +38,8 @@ function presetXmpGroups(input: PhotoEditingPresetSaveInput): DevelopXmpGroup[] 
  * ブラウザ版の右パネルの「プリセット」（NIHO Photo 段 1 F2b 移行元設計）。プリセットパネルに、段 2 の wasm
  * にある口の分だけ足す（公開済みの wasm に無い口の機能は出さない）:
  *
- * - 見本（`supportsPresetThumbnails()`）: 各行の左に、開いている写真にそのプリセットを当てた小さな絵（`useBrowserPresetThumbnails`）
+ * - 見本（`supportsPresetThumbnails()`）: 一覧をサムネイルの升の 2 列にし、開いている写真にそのプリセットを当てた絵（長辺 192px。
+ *   `useBrowserPresetThumbnails`）を見せる。描けない wasm では見本の無い行のまま（L4 #53）
  * - 適用量（`supportsPresetAmount()`）: プリセットが選ばれている間だけ、一覧の下に 0〜150% のスライダー
  * - 今の補正をプリセットに保存（`supportsSettingsToXmp()`）: 見出しの右の「⋯」のメニューから
  */
@@ -69,6 +73,7 @@ export function BrowserPhotoEditingPresets(props: {
     // 選ばれているプリセットがあれば当てる前の補正、無ければ今の補正に当てた絵
     base: presets.selectedBase ?? settings,
     paused: props.dragging || presets.amountActive,
+    maxDimension: BROWSER_PRESET_GRID_THUMBNAIL_MAX_DIMENSION,
     resolvePreset: presets.resolvePreset,
   });
 
@@ -115,6 +120,7 @@ export function BrowserPhotoEditingPresets(props: {
       readPreset={presets.readPreset}
       onPreview={presets.requestPreview}
       thumbnails={thumbnails}
+      layout="grid"
       belowList={amountSlider}
       saveCurrent={support.settingsToXmp ? saveCurrent : undefined}
       onSpotPresetKeysChange={presets.reconcileSpotPresetKeys}

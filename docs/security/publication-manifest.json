@@ -873,10 +873,11 @@
         "path": "packages/photo-editing/src/editor/browser-photo-editing-presets.tsx",
         "sha256": "801648f9ced4999b839a58837c622df0af14464c73bcddd789450ece458e4763"
       },
-      "outputSha256": "52248dfb452e823ca8b6650628e82f8906cacb981742c7eb469300409319e29e",
+      "outputSha256": "b67fbe748c6d520bd2da963595a3d9fbc8d8422c70d719fa1762d17f7784c880",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
-        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。"
+        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
+        "L4 #53: ブラウザ版のプリセット一覧をサムネイルの升の2列にし、升の見本を長辺192pxで描く。NIHO Desktop・スマホの行と見本の大きさは据え置き。"
       ]
     },
     {
@@ -1273,10 +1274,11 @@
         "path": "packages/photo-editing/src/editor/photo-editing-preset-thumbnail.tsx",
         "sha256": "69abea81653f3c0aed5972a2c886451d942087895286c9e3bf48cf2b3ee6355b"
       },
-      "outputSha256": "7f72caa96220016781251c43bee55e6b1647a2abd2907b9ac3a28f73dd01da79",
+      "outputSha256": "b03b88de5c82e883ea09e7b2a66723ef21389111fc3e23d0347980afafaa8080",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
-        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。"
+        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
+        "L4 #53: ブラウザ版のプリセット一覧をサムネイルの升の2列にし、升の見本を長辺192pxで描く。NIHO Desktop・スマホの行と見本の大きさは据え置き。"
       ]
     },
     {
@@ -1287,10 +1289,11 @@
         "path": "packages/photo-editing/src/editor/photo-editing-presets-panel.tsx",
         "sha256": "7f0524e5e1764f9274b39979d5887193faa96e37dcb6944fdd44d10a3e406541"
       },
-      "outputSha256": "8629df836c426ed0be926e9ea8111223cc78f1350e258e2645334453f589dc9e",
+      "outputSha256": "52f17b0c00e33e8e0efd055c5648c4b1af0d6eb1d07c54c85b1cdd85943baf41",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
-        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。"
+        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
+        "L4 #53: ブラウザ版のプリセット一覧をサムネイルの升の2列にし、升の見本を長辺192pxで描く。NIHO Desktop・スマホの行と見本の大きさは据え置き。"
       ]
     },
     {
@@ -1648,10 +1651,11 @@
         "path": "packages/photo-editing/src/editor/use-browser-preset-thumbnails.ts",
         "sha256": "509a581f578384cd68e938306a37c30f420998435c708bbd2a857cfd8e156d10"
       },
-      "outputSha256": "f6c9dfea6ee05d31f7d31b4094171425b78d0f60d0a7c6caafd600345f224b25",
+      "outputSha256": "daefd92861f4492db0ea9e9360bf31eadf385cce8b2f2d7b29737d0b2ca7da32",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
-        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。"
+        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
+        "L4 #53: ブラウザ版のプリセット一覧をサムネイルの升の2列にし、升の見本を長辺192pxで描く。NIHO Desktop・スマホの行と見本の大きさは据え置き。"
       ]
     },
     {
@@ -8765,6 +8769,11 @@
       "path": "packages/photo-editing/src/cloud-sharing-contract.test.ts",
       "sha256": "bf2b8750f99efb6364e2ed3475ab3a53f92d532ca217cc7033c65c6ec9121452",
       "origin": "Docs共通の負例vector・reference model・mock検証にPhoto packageのre-export確認を加えた独立合成テスト。\n変更理由: Docs固定SHAの全operation HTTP method・path・request配置をPhotoでも検証する。"
+    },
+    {
+      "path": "packages/photo-editing/src/editor/photo-editing-presets-panel.test.tsx",
+      "sha256": "f84cf4ab96b6712af8ece79e66ed40f909823892fb6c1da1323157882815d08f",
+      "origin": "L4 #53でNIHOが独立新規作成した合成テスト。実写真・個人情報・秘密を含まず、見本は描かない偽の口で置き換える。\n変更理由: プリセットの升の2列（見本・名前・当てている升の見分け・仮の表示・拠点の⋯）と、見本を描けない wasm や layout を省く面で行のままになること、見本の長辺（192px／96px）を検証する。"
     }
   ],
   "excludedSources": [
