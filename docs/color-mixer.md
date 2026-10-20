@@ -30,15 +30,17 @@ Issue #30 の色ミキサーは、従来の HSL、彩度、自然な彩度の式
 
 色段 Q は従来の `Vibrance → Saturation → HSL → niho-10/11 の色相補正` の後、Color Grading の前に色ミキサーを適用する。入力の linear ProPhoto を linear sRGB 経由で OKLab/Oklch にし、各点の hue/chroma/lightness の距離を元の Lab だけから求める。軸ごとの範囲内を smoothstep でフェードし、3軸の積をその点の weight とする。無彩色付近は hue を選択条件にせず、未定義の角度で点が消えないようにする。
 
-土台の niho-10/11 は #28 の全量色相補正をそのまま使う。数値 probe の最大色相誤差は新式 0.000437°、旧式 10.491901°。Lightroom 比較は blue が 0.581062 から 0.559696 へ改善した一方、orange は 0.693452 から 0.850291 へ悪化した。全体彩度の平均 ΔE00 も S+50 は 1.518304 から 1.744041（+0.225737）、S+100 は 2.118434 から 2.478075（+0.359641）へ悪化している。全量色相補正という契約は維持するが、Lightroom 全体への改善とは扱わない。
+土台の niho-10/11 は #28 の全量色相補正をそのまま使う。数値 probe の最大色相誤差は新式 0.000437°、旧式 10.491901°。最終Qfloat後の Lightroom 比較は blue が 0.581062 から 0.428308 へ改善した一方、orange は 0.693452 から 0.805554 へ悪化した。全体彩度の平均 ΔE00 も S+50 は 1.518304 から 1.739289（+0.220985）、S+100 は 2.118434 から 2.474156（+0.355722）へ悪化している。全量色相補正という契約は維持するが、Lightroom 全体への改善とは扱わない。
 
 2026-10-20 のオーナー方針に従い、新式では Lightroom の副作用との一致よりも、意図した軸だけを動かす長期的な品質を優先する。保存済みの旧 engine は従来の描画を維持する。上記は HSL の実写8場面と全体彩度の計測チャートの比較であり、プリセット3本全体の再比較は未実施である。
 
-数式の後で色段 Q の格子値を8bitへ丸めると、64³の補間後でも最大2.251875°のずれが残った。niho-10 の Q は float 格子値を使い、同じ sweep で1.571977°に抑える。旧 engine の精度は変更しない。上の Lightroom 数値はこの精度修正前の測定であり、最終コミットで再計測する。
+数式の後で色段 Q の格子値を8bitへ丸めると、64³の補間後でも最大2.251875°のずれが残った。niho-10 の Q は float 格子値を使い、同じ sweep で1.571977°に抑える。旧 engine の精度は変更しない。上の Lightroom 数値はこのQfloat後の最終再計測値である。
 
 重なった点は、全点の weight と差分を先に集計する。weight 合計が 1 を超えるときだけ 1 へ正規化し、Δh、`C × (1 + Δscale)`、ΔL を一度に適用する。このため配列順で画が変わらず、重なりで補正が過剰に倍加しない。結果はこの段で gamut clamp せず、既存の出力変換へ渡す。非有限な中間値は入力色を返し、zero range は weight 0 とする防御を持つ（保存値としての zero range は拒否する）。空配列と全点の `delta={hue:0,chromaScale:1,lightness:0}` は画素を変えない。
 
-有効な差分を持つ `colorPoints` では、色段 Q を「従来式から point 選択入力までの float cube」と「point と Color Grading の画素単位 exact tail」に分ける。従来の 8-bit entry は小さい C 変化に対して 2% を超える量子化誤差になり得て、1° / 0.001 の範囲は64³の格子点を一つも含まない場合があるためである。drag 中も近似 tail を使わず同じ exact point tailを通す。点なしと全点ゼロ差分は既存の 8-bit/float 分岐を一切変えない。cube key は canonical `colorPoints` を含み、drag/final の双方で同じ点を適用する。
+有効な差分を持つ `colorPoints` では、色段 Q を「従来式から point 選択入力までの float cube」と「point と Color Grading の画素単位 exact tail」に分ける。従来の 8-bit entry は小さい C 変化に対して 2% を超える量子化誤差になり得て、1° / 0.001 の範囲は64³の格子点を一つも含まない場合があるためである。drag 中も近似 tail を使わず同じ exact point tailを通す。point / Color Grading だけの設定では恒等 cube を挟まず、picker と描画が同じ実値を選択入力にする。点なしと全点ゼロ差分は既存の 8-bit/float 分岐を一切変えない。
+
+最終frame/settingsの `colorKey` は canonical `colorPoints` と Color Grading を含む。一方、active-point用の pre-Q cube key はそれらを除き、Vibrance / Saturation / HSL / engine / quality / RAW別が同じ間は再利用する。Sessionはさらに、source・縮小size・quality・geometry・Stage Qより前のglobal tone / local / calibration / RAW base / linear vignette等をkeyにした出力サイズ1枚分だけのpre-point RGB + Oklch（各f32）planeを持つ。選択入力が同じpoint・Color Grading変更では再利用し、入力が変われば古いplaneを先に破棄する。RAWの局所階調統計は色の設定にも依存するため、実際に計算された局所passのパラメータもkeyへ含める。pickerは同じplaneのOklchを読み、別実装で再計算しない。f64の `color_points` は独立参照として残し、f32はcache表現と画素tailにだけ使う。選択planeは24byte/画素で、2048×1365なら約64MiBとなる。
 
 ## 色を拾う操作とプリセット
 

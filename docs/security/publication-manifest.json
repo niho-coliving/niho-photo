@@ -5358,12 +5358,14 @@
         "path": "packages/develop-engine/crates/niho-develop/src/color_ops.rs",
         "sha256": "cd0c61a609a12094f4f95b019c1671187e1d320b95c36b34da5c87dc7c3835d1"
       },
-      "outputSha256": "9160f6371dd2d92b4210e43d8370cbc52940495c16d9294ba4ad8cc73d5e5080",
+      "outputSha256": "3da6bb0ea7e4e05ca18c663d90093fbb6a52ce9cf0e01451d6b1111ae205884a",
       "modifications": [
         "Issue #28の色相安定engine追加と互換回帰を反映。",
         "新しい色相保持エンジンと新旧バイナリの能力境界・数値回帰を整合。",
         "Issue #30 Oklch色ミキサーとengine 10/11対応を反映",
-        "色ポイントを画素単位で適用する後段処理を分離"
+        "色ポイントを画素単位で適用する後段処理を分離",
+        "Issue #30のactive-point画素cache向けf32 OKLCH kernelとf64参照比較を追加。",
+        "点補正の選択plane cacheと精度・依存関係・headroom回帰を整備"
       ]
     },
     {
@@ -5484,7 +5486,7 @@
         "path": "packages/develop-engine/crates/niho-develop/src/lib.rs",
         "sha256": "1591d49effaa779c8e23ad6877508ccf336565eec8336d5b4e6faa3b5d3846b0"
       },
-      "outputSha256": "1fcf087fb613cd53484968860beca917166d75c6b19126e6e6ef9e2a56be3c80",
+      "outputSha256": "cb2934fba42c48cb435b19b87f6d6f5fe75ba450e5c1f83e6dcc198ce447b676",
       "modifications": [
         "Issue #28の色相安定engine追加と互換回帰を反映。",
         "新しい色相保持エンジンと新旧バイナリの能力境界・数値回帰を整合。",
@@ -5492,7 +5494,9 @@
         "picker採取を可視sessionから分離しcacheと画素状態を保持",
         "renderとpickerのsize key source選択を共有",
         "size key source共有をfield分離可能なhelperへ整理",
-        "描画精度・型・共有サンプル位置・キーボードの最終レビューを反映"
+        "描画精度・型・共有サンプル位置・キーボードの最終レビューを反映",
+        "Issue #30のSession単位pre-point plane cacheとwarm/cold invalidation検査を追加。",
+        "点補正の選択plane cacheと精度・依存関係・headroom回帰を整備"
       ]
     },
     {
@@ -5619,7 +5623,7 @@
         "path": "packages/develop-engine/crates/niho-develop/src/pipeline.rs",
         "sha256": "d982d76cf1b5d34526f700e5edfcef00ae8647d22b845c0f7234ed340ba9d641"
       },
-      "outputSha256": "c7bb833332c57aff3403efc60e48251c8f3ff9dc708437c2d3d542190ed9b885",
+      "outputSha256": "100a5133cb58fa0bbedc468ad803ef1c34c94e7ed0837198240690e15093ea6b",
       "modifications": [
         "Issue #28の色相安定engine追加と互換回帰を反映。",
         "新しい色相保持エンジンと新旧バイナリの能力境界・数値回帰を整合。",
@@ -5628,7 +5632,9 @@
         "sample cube選択を明示分岐へ整理",
         "新raster engineのQをfloatにして描画時の色相誤差を2度以内に保つ",
         "描画精度・型・共有サンプル位置・キーボードの最終レビューを反映",
-        "float Q分岐を一本化"
+        "float Q分岐を一本化",
+        "Issue #30のpoint非依存pre-Q cube key、pre-point plane再利用、picker共有経路を実装。",
+        "点補正の選択plane cacheと精度・依存関係・headroom回帰を整備"
       ]
     },
     {
@@ -8564,13 +8570,13 @@
   "generatedFiles": [
     {
       "path": "docs/color-mixer.md",
-      "sha256": "e3601989d5de21b641b2229f6a7a58a69e075bf18219f740b412bbf9f6757252",
-      "origin": "Issue #30の公開仕様だけから新規作成したOklch色ミキサーの保存・描画・picker・preset契約。非公開形式や私有データを含まない。\n変更理由: exact描画方式と比較実測値を追記\n変更理由: オーナーの長期品質方針と比較の限界を記録\n変更理由: 色テーブル量子化の実測と新engineの精度修正を記録\n変更理由: 描画精度・型・共有サンプル位置・キーボードの最終レビューを反映"
+      "sha256": "445c7a7a460bc387d2669e625c4659cad3ea4c97549db80522fd81e913300d7d",
+      "origin": "Issue #30の公開仕様だけから新規作成したOklch色ミキサーの保存・描画・picker・preset契約。非公開形式や私有データを含まない。\n変更理由: exact描画方式と比較実測値を追記\n変更理由: オーナーの長期品質方針と比較の限界を記録\n変更理由: 色テーブル量子化の実測と新engineの精度修正を記録\n変更理由: 描画精度・型・共有サンプル位置・キーボードの最終レビューを反映\n変更理由: Issue #30のpre-Q cube keyとSession plane cacheの依存・寿命・精度契約を追記。\n変更理由: 最終Qfloat後のLightroom比較実測値へ更新し再測定保留を解消。\n変更理由: 点補正の選択plane cacheと精度・依存関係・headroom回帰を整備"
     },
     {
       "path": "packages/develop-engine/crates/niho-develop/tests/color_points.rs",
-      "sha256": "4ba012832435931855419dc87fa0d4374f89864db1bc8ffef15bb9305a2ab855",
-      "origin": "Issue #30の公開仕様だけから新規作成した合成Oklch値・schema・preset・性能のRust回帰。実写真・非公開fixture・私有参照出力を含まない。\n変更理由: 最小rangeの非grid描画回帰テストを追加\n変更理由: small-full-small picker source回帰を追加\n変更理由: crop正規化座標picker回帰を追加\n変更理由: picker回帰assertをcross-target向けに整理\n変更理由: 描画精度・型・共有サンプル位置・キーボードの最終レビューを反映"
+      "sha256": "926cd67c721425fe55be925b2414024b71fc9c338200c5176a2084fdd9d94097",
+      "origin": "Issue #30の公開仕様だけから新規作成した合成Oklch値・schema・preset・性能のRust回帰。実写真・非公開fixture・私有参照出力を含まない。\n変更理由: 最小rangeの非grid描画回帰テストを追加\n変更理由: small-full-small picker source回帰を追加\n変更理由: crop正規化座標picker回帰を追加\n変更理由: picker回帰assertをcross-target向けに整理\n変更理由: 描画精度・型・共有サンプル位置・キーボードの最終レビューを反映\n変更理由: Issue #30の最小range、cache再利用、grading外側不変、独立roundtrip精度検査を追加。\n変更理由: 点補正の選択plane cacheと精度・依存関係・headroom回帰を整備"
     },
     {
       "path": "packages/photo-editing/src/editor/photo-editing-color-mixer.tsx",
@@ -8584,8 +8590,8 @@
     },
     {
       "path": "packages/develop-engine/crates/niho-develop/tests/color_probe.rs",
-      "sha256": "5e40d645e322d8b23a5e27b1965adfc5ff63ca02bf13bfe23b5e3dafc1d98ca2",
-      "origin": "Issue #28のため公開仕様だけから独立作成した合成Oklch色見本のRust回帰。実写真・非公開fixture・私有参照出力を含まない。\n変更理由: 旧式との差分L/Cと色相改善量を合成sRGB sweepへ記録。\n変更理由: 新しい色相保持エンジンと新旧バイナリの能力境界・数値回帰を整合。\n変更理由: Issue #30 Oklch色ミキサーとengine 10/11対応を反映\n変更理由: 補間後の色相ずれを回帰に追加\n変更理由: 描画精度・型・共有サンプル位置・キーボードの最終レビューを反映\n変更理由: 最終色テーブルの全色相sweepを追加"
+      "sha256": "74587349ce7dd1ea38a673da404afadac2aa082a9c50d1a4704400016e563c62",
+      "origin": "Issue #28のため公開仕様だけから独立作成した合成Oklch色見本のRust回帰。実写真・非公開fixture・私有参照出力を含まない。\n変更理由: 旧式との差分L/Cと色相改善量を合成sRGB sweepへ記録。\n変更理由: 新しい色相保持エンジンと新旧バイナリの能力境界・数値回帰を整合。\n変更理由: Issue #30 Oklch色ミキサーとengine 10/11対応を反映\n変更理由: 補間後の色相ずれを回帰に追加\n変更理由: 描画精度・型・共有サンプル位置・キーボードの最終レビューを反映\n変更理由: 最終色テーブルの全色相sweepを追加\n変更理由: clippy指摘の冗長closureを同値な関数参照へ修正。\n変更理由: 点補正の選択plane cacheと精度・依存関係・headroom回帰を整備"
     },
     {
       "path": "packages/photo-editing/src/fixtures/cutout-brush-parity.json",

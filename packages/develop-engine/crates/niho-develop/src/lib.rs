@@ -628,6 +628,10 @@ pub struct Session {
     local: Option<pipeline::LocalPass>,
     /// The effects' planes (vignette radius, grain field).
     effects: effects::EffectsCache,
+    /// One output-sized plane through the active-point selection input.
+    /// Point and grading changes reuse it; every earlier-stage change gets a
+    /// different key and replaces it before allocating the next plane.
+    color_points: Option<pipeline::ColorPointPlane>,
     /// NIHO 3 master. Final and framed renders keep the full-source master;
     /// reduced unframed Interactive renders prepare at their display size.
     niho3: Option<PreparedNiho3>,
@@ -694,6 +698,7 @@ impl Session {
             cubes: None,
             local: None,
             effects: effects::EffectsCache::default(),
+            color_points: None,
             niho3: None,
             parked_niho3: None,
             niho3_seed: None,
@@ -810,6 +815,7 @@ impl Session {
                 render_settings,
                 self.cubes.as_ref(),
                 self.local.as_ref(),
+                self.color_points.as_ref(),
                 &mut self.effects,
             ),
             SessionSource::WorkingCopy {
@@ -822,6 +828,7 @@ impl Session {
                 render_settings,
                 self.cubes.as_ref(),
                 self.local.as_ref(),
+                self.color_points.as_ref(),
                 &mut self.effects,
             ),
             SessionSource::WorkingCopy { meta, .. } => pipeline::sample_raw_before_color_points(
@@ -831,6 +838,7 @@ impl Session {
                 render_settings,
                 self.cubes.as_ref(),
                 self.local.as_ref(),
+                self.color_points.as_ref(),
                 &mut self.effects,
             ),
         };
@@ -1385,6 +1393,7 @@ impl Session {
                         self.cubes.as_ref(),
                         &mut self.local,
                         &mut self.effects,
+                        &mut self.color_points,
                     ),
                 );
                 if let (None, Some(s)) = (cached, stats) {
@@ -1400,9 +1409,12 @@ impl Session {
                     None,
                     settings,
                     quality,
-                    self.cubes.as_ref(),
-                    &mut self.local,
-                    &mut self.effects,
+                    pipeline::RenderCaches::new(
+                        self.cubes.as_ref(),
+                        &mut self.local,
+                        &mut self.effects,
+                        &mut self.color_points,
+                    ),
                 );
                 self.cubes = Some(cubes);
                 frame
@@ -1482,6 +1494,7 @@ impl Session {
                         self.cubes.as_ref(),
                         &mut self.local,
                         &mut self.effects,
+                        &mut self.color_points,
                     ),
                 );
                 if let (None, Some(s)) = (cached, stats) {
@@ -1497,9 +1510,12 @@ impl Session {
                     Some(&framing),
                     settings,
                     quality,
-                    self.cubes.as_ref(),
-                    &mut self.local,
-                    &mut self.effects,
+                    pipeline::RenderCaches::new(
+                        self.cubes.as_ref(),
+                        &mut self.local,
+                        &mut self.effects,
+                        &mut self.color_points,
+                    ),
                 );
                 self.cubes = Some(cubes);
                 frame
@@ -1600,6 +1616,7 @@ impl Session {
         let mut cubes = None;
         let mut local = None;
         let mut effects = effects::EffectsCache::default();
+        let mut color_points = None;
         let session_cubes = self.cubes.as_ref();
         Ok(auto::run(settings, raw, |s| {
             let kept = cubes.as_ref().or(session_cubes);
@@ -1611,7 +1628,12 @@ impl Session {
                         s,
                         quality,
                         stats,
-                        pipeline::RenderCaches::new(kept, &mut local, &mut effects),
+                        pipeline::RenderCaches::new(
+                            kept,
+                            &mut local,
+                            &mut effects,
+                            &mut color_points,
+                        ),
                     );
                     stats = stats.or(computed);
                     (frame, used)
@@ -1622,9 +1644,12 @@ impl Session {
                         framing.as_ref(),
                         s,
                         quality,
-                        kept,
-                        &mut local,
-                        &mut effects,
+                        pipeline::RenderCaches::new(
+                            kept,
+                            &mut local,
+                            &mut effects,
+                            &mut color_points,
+                        ),
                     )
                 }
             };
@@ -1694,6 +1719,87 @@ mod tests {
             }),
             s.local.is_some(),
         )
+    }
+
+    #[test]
+    fn active_point_plane_is_warm_for_point_and_grading_but_cold_for_stage_or_size() {
+        let rgba: Vec<u8> = (0..8 * 6)
+            .flat_map(|index| {
+                let x = index % 8;
+                let y = index / 8;
+                [(x * 29) as u8, (y * 41) as u8, ((x + y) * 17) as u8, 255]
+            })
+            .collect();
+        let png = encode::encode_png(&rgba, 8, 6).unwrap();
+        let mut settings = DevelopSettings::neutral();
+        settings.v = 4;
+        settings.engine = settings::ENGINE_NIHO_10.into();
+        settings.look = settings::LOOK_NIHO_STANDARD_1.into();
+        settings.saturation = 5.0;
+        settings.color_points = vec![settings::ColorPoint {
+            id: "cache".into(),
+            target: settings::OklchTarget {
+                lightness: 0.6,
+                chroma: 0.1,
+                hue: 45.0,
+            },
+            range: settings::OklchRange {
+                hue: 30.0,
+                chroma: 0.1,
+                lightness: 0.2,
+            },
+            delta: settings::OklchDelta {
+                hue: 8.0,
+                chroma_scale: 1.1,
+                lightness: 0.01,
+            },
+        }];
+        fn state(session: &Session) -> (&str, usize, usize, usize) {
+            session
+                .color_points
+                .as_ref()
+                .expect("active-point plane")
+                .test_identity()
+        }
+
+        let mut session = Session::open_raster(&png, 0, Filter::Lanczos3).unwrap();
+        session.render(&settings, 8, Quality::Final).unwrap();
+        let (key, width, height, pixels) = state(&session);
+        let warm_key = key.to_string();
+        assert_eq!((width, height), (8, 6));
+
+        let mut moved = settings.clone();
+        moved.color_points[0].delta.hue = -11.0;
+        session.render(&moved, 8, Quality::Final).unwrap();
+        let (key, _, _, warm_pixels) = state(&session);
+        assert_eq!(key, warm_key);
+        assert_eq!(warm_pixels, pixels);
+
+        moved.color_grading.global.hue = 220.0;
+        moved.color_grading.global.saturation = 75.0;
+        session.render(&moved, 8, Quality::Final).unwrap();
+        let (key, _, _, grading_pixels) = state(&session);
+        assert_eq!(key, warm_key);
+        assert_eq!(grading_pixels, pixels);
+
+        let mut changed_stage = moved.clone();
+        changed_stage.saturation = 6.0;
+        session.render(&changed_stage, 8, Quality::Final).unwrap();
+        let (stage_key, _, _, _) = state(&session);
+        assert_ne!(stage_key, warm_key);
+
+        session
+            .render(&changed_stage, 8, Quality::Interactive)
+            .unwrap();
+        let (quality_key, _, _, _) = state(&session);
+        assert_ne!(quality_key, stage_key);
+
+        session
+            .render(&changed_stage, 4, Quality::Interactive)
+            .unwrap();
+        let (size_key, small_width, small_height, _) = state(&session);
+        assert_ne!(size_key, quality_key);
+        assert_eq!((small_width, small_height), (4, 3));
     }
 
     #[test]

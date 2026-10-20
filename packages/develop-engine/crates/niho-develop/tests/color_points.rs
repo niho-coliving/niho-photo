@@ -4,10 +4,13 @@
 
 use niho_develop::color::{mat_vec, srgb_encode, PROPHOTO_TO_SRGB, SRGB_TO_PROPHOTO};
 use niho_develop::color_ops::color_points;
-use niho_develop::pipeline::bake_color_cube;
+use niho_develop::pipeline::{bake_color_cube, settings_cubes};
 use niho_develop::settings::{ColorPoint, DevelopSettings, OklchDelta, OklchRange, OklchTarget};
 use niho_develop::xmp::{apply_preset, preset_settings, settings_to_xmp, XmpWriteOptions};
-use niho_develop::{encode, parse_settings, Filter, Quality, Session};
+use niho_develop::{
+    decode::encode_signed_working_copy, encode, parse_settings, Filter, LinearImage, Quality,
+    Session,
+};
 
 fn oklch_to_prophoto([l, c, h]: [f64; 3]) -> [f64; 3] {
     let angle = h * core::f64::consts::PI / 180.0;
@@ -70,6 +73,26 @@ fn point(target: [f64; 3], delta: OklchDelta) -> ColorPoint {
 
 fn hue_distance(a: f64, b: f64) -> f64 {
     ((a - b + 180.0).rem_euclid(360.0) - 180.0).abs()
+}
+
+// The fixture matrices intentionally use independently transcribed,
+// decimal OKLab coefficients. Their forward/inverse roundtrip has a small
+// numerical floor, so axis checks compare against the measured roundtrip
+// coordinate rather than pretending the authored decimal is exact. These
+// limits remain thousands of times tighter than the L=.005 / C=2% contract.
+fn assert_lch_close(actual: [f64; 3], expected: [f64; 3]) {
+    assert!(
+        (actual[0] - expected[0]).abs() <= 2e-6,
+        "lightness: actual={actual:?} expected={expected:?}"
+    );
+    assert!(
+        (actual[1] - expected[1]).abs() <= 2e-6,
+        "chroma: actual={actual:?} expected={expected:?}"
+    );
+    assert!(
+        hue_distance(actual[2], expected[2]) <= 1e-3,
+        "hue: actual={actual:?} expected={expected:?}"
+    );
 }
 
 fn srgb8(value: [f64; 3]) -> [u8; 3] {
@@ -283,6 +306,141 @@ fn minimum_non_grid_range_changes_the_center_exactly_and_not_its_neighbor() {
 
 #[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
 #[cfg_attr(not(target_arch = "wasm32"), test)]
+fn point_and_grading_changes_reuse_the_same_pre_point_cube() {
+    let target = [0.68, 0.09, 42.0];
+    let mut settings = DevelopSettings::neutral();
+    settings.v = 4;
+    settings.engine = "niho-10".into();
+    settings.look = "niho-standard-1".into();
+    settings.saturation = 12.0;
+    settings.color_points = vec![point(
+        target,
+        OklchDelta {
+            hue: 8.0,
+            chroma_scale: 1.1,
+            lightness: 0.01,
+        },
+    )];
+
+    let first = settings_cubes(&settings, 0.0, Quality::Final, None, true, None, false);
+    let first_cube = first.color.as_ref().expect("pre-point cube");
+
+    let mut moved_point = settings.clone();
+    moved_point.color_points[0].delta.hue = -12.0;
+    let second = settings_cubes(
+        &moved_point,
+        0.0,
+        Quality::Final,
+        Some(&first),
+        true,
+        None,
+        false,
+    );
+    assert_ne!(first.color_key, second.color_key);
+    assert!(std::sync::Arc::ptr_eq(
+        first_cube,
+        second.color.as_ref().expect("reused pre-point cube")
+    ));
+
+    let mut changed_grading = moved_point.clone();
+    changed_grading.color_grading.global.hue = 230.0;
+    changed_grading.color_grading.global.saturation = 80.0;
+    let third = settings_cubes(
+        &changed_grading,
+        0.0,
+        Quality::Final,
+        Some(&second),
+        true,
+        None,
+        false,
+    );
+    assert_ne!(second.color_key, third.color_key);
+    assert!(std::sync::Arc::ptr_eq(
+        second.color.as_ref().unwrap(),
+        third.color.as_ref().expect("grading reuses pre-point cube")
+    ));
+
+    let mut changed_pre_point = changed_grading.clone();
+    changed_pre_point.saturation = 13.0;
+    let fourth = settings_cubes(
+        &changed_pre_point,
+        0.0,
+        Quality::Final,
+        Some(&third),
+        true,
+        None,
+        false,
+    );
+    assert!(!std::sync::Arc::ptr_eq(
+        third.color.as_ref().unwrap(),
+        fourth.color.as_ref().expect("invalidated pre-point cube")
+    ));
+
+    let interactive = settings_cubes(
+        &changed_pre_point,
+        0.0,
+        Quality::Interactive,
+        Some(&fourth),
+        true,
+        None,
+        false,
+    );
+    assert!(!std::sync::Arc::ptr_eq(
+        fourth.color.as_ref().unwrap(),
+        interactive
+            .color
+            .as_ref()
+            .expect("quality-specific pre-point cube")
+    ));
+}
+
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
+fn a_point_does_not_move_strong_grading_outside_its_support() {
+    let pixels = [[191, 126, 91, 255], [89, 143, 196, 255]];
+    let rgba = pixels.into_iter().flatten().collect::<Vec<_>>();
+    let png = encode::encode_png(&rgba, 2, 1).unwrap();
+    let mut base = DevelopSettings::neutral();
+    base.v = 4;
+    base.engine = "niho-10".into();
+    base.look = "niho-standard-1".into();
+    base.color_grading.global.hue = 275.0;
+    base.color_grading.global.saturation = 100.0;
+
+    let mut sampler = Session::open_raster(&png, 0, Filter::Lanczos3).unwrap();
+    let target = sampler.sample_color(&base, 2, 0.25, 0.5).unwrap();
+    let mut adjusted = base.clone();
+    let mut selected = point(
+        target,
+        OklchDelta {
+            hue: 12.0,
+            chroma_scale: 1.2,
+            lightness: 0.04,
+        },
+    );
+    selected.range = OklchRange {
+        hue: 1.0,
+        chroma: 0.001,
+        lightness: 0.001,
+    };
+    adjusted.color_points = vec![selected];
+
+    let baseline = Session::open_raster(&png, 0, Filter::Lanczos3)
+        .unwrap()
+        .render(&base, 2, Quality::Final)
+        .unwrap()
+        .rgba;
+    let rendered = Session::open_raster(&png, 0, Filter::Lanczos3)
+        .unwrap()
+        .render(&adjusted, 2, Quality::Final)
+        .unwrap()
+        .rgba;
+    assert_ne!(&rendered[0..4], &baseline[0..4]);
+    assert_eq!(&rendered[4..8], &baseline[4..8]);
+}
+
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn picker_small_full_small_uses_the_source_for_each_requested_size() {
     let mut rgba = Vec::with_capacity(8 * 2 * 4);
     for _y in 0..2 {
@@ -321,6 +479,71 @@ fn picker_small_full_small_uses_the_source_for_each_requested_size() {
 
 #[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
 #[cfg_attr(not(target_arch = "wasm32"), test)]
+fn cached_raw_spatial_points_match_fresh_after_point_and_grading_changes() {
+    let (width, height) = (48, 32);
+    let mut data = Vec::with_capacity(width * height * 3);
+    for y in 0..height {
+        for x in 0..width {
+            data.extend_from_slice(&[
+                -0.01 + x as f32 / 60.0,
+                0.03 + y as f32 / 48.0,
+                0.12 + (x + y) as f32 / 120.0,
+            ]);
+        }
+    }
+    let image = LinearImage {
+        width,
+        height,
+        data,
+    };
+    let (png, encoding) = encode_signed_working_copy(&image).unwrap();
+    let meta = format!(
+        r#"{{"kind":"raw","baselineEV":-0.25,"asShotWhite":{{"x":0.3127,"y":0.329,"temperature":5500,"tint":0}},"asShotWhiteAdobe":null,"whiteBalanceTable":null,"dcpSha256":"apple-ciraw8/linear-prophoto-d50/cal-panasonic-dc-s5-apple-v4","lookTableIncluded":false,"encoding":{{"kind":"signed-gamma18-v1","ceiling":{}}}}}"#,
+        encoding.ceiling()
+    );
+    let mut settings = DevelopSettings::neutral();
+    settings.v = 4;
+    settings.engine = "niho-11".into();
+    settings.look = "niho-standard-5".into();
+    settings.texture = 20.0;
+    settings.clarity = 15.0;
+    settings.color_grading.global.hue = 240.0;
+    settings.color_grading.global.saturation = 35.0;
+    settings.color_points = vec![ColorPoint {
+        id: "raw".into(),
+        target: OklchTarget {
+            lightness: 0.6,
+            chroma: 0.1,
+            hue: 50.0,
+        },
+        range: OklchRange {
+            hue: 180.0,
+            chroma: 5.0,
+            lightness: 1.0,
+        },
+        delta: OklchDelta {
+            hue: 5.0,
+            chroma_scale: 1.1,
+            lightness: 0.12,
+        },
+    }];
+    let open = || Session::open_working_copy(&png, &meta, Filter::Lanczos3).unwrap();
+    let mut cached = open();
+    cached.render(&settings, 0, Quality::Final).unwrap();
+    for (lightness, saturation) in [(-0.12, 35.0), (-0.12, 80.0), (0.12, 80.0)] {
+        settings.color_points[0].delta.lightness = lightness;
+        settings.color_grading.global.saturation = saturation;
+        let actual = cached.render(&settings, 0, Quality::Final).unwrap();
+        let expected = open().render(&settings, 0, Quality::Final).unwrap();
+        assert_eq!(
+            actual.rgba, expected.rgba,
+            "lightness={lightness}, grading={saturation}"
+        );
+    }
+}
+
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn picker_normalized_coordinates_follow_the_rendered_crop() {
     let mut rgba = Vec::with_capacity(8 * 4 * 4);
     for _y in 0..4 {
@@ -355,6 +578,8 @@ fn picker_normalized_coordinates_follow_the_rendered_crop() {
 fn independent_axes_neutral_wrap_wide_gamut_and_overlap_are_safe() {
     let target = [0.70, 0.12, 359.0];
     let input = oklch_to_prophoto(target);
+    let roundtrip = prophoto_to_oklch(input);
+    assert_lch_close(roundtrip, target);
     let chroma = point(
         target,
         OklchDelta {
@@ -364,9 +589,7 @@ fn independent_axes_neutral_wrap_wide_gamut_and_overlap_are_safe() {
         },
     );
     let c = prophoto_to_oklch(color_points(input, std::slice::from_ref(&chroma)));
-    assert!((c[0] - target[0]).abs() < 1e-9);
-    assert!(hue_distance(c[2], target[2]) < 1e-7);
-    assert!((c[1] / target[1] - 1.5).abs() < 1e-7);
+    assert_lch_close(c, [roundtrip[0], roundtrip[1] * 1.5, roundtrip[2]]);
 
     let light = point(
         target,
@@ -377,8 +600,7 @@ fn independent_axes_neutral_wrap_wide_gamut_and_overlap_are_safe() {
         },
     );
     let l = prophoto_to_oklch(color_points(input, std::slice::from_ref(&light)));
-    assert!((l[1] / target[1] - 1.0).abs() < 1e-7);
-    assert!(hue_distance(l[2], target[2]) < 1e-7);
+    assert_lch_close(l, [roundtrip[0] + 0.05, roundtrip[1], roundtrip[2]]);
 
     let mut wrap = point(
         target,

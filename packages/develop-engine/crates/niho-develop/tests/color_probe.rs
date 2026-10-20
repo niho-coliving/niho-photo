@@ -40,10 +40,7 @@ fn oklch_to_prophoto(l: f64, c: f64, hue: f64) -> Option<Rgb> {
     if !srgb.iter().all(|channel| (0.0..=1.0).contains(channel)) {
         return None;
     }
-    Some(mat_vec(
-        &SRGB_TO_PROPHOTO,
-        srgb.map(|channel| f64::from(channel)),
-    ))
+    Some(mat_vec(&SRGB_TO_PROPHOTO, srgb.map(f64::from)))
 }
 
 fn oklab(value: Rgb) -> [f32; 3] {

@@ -3,7 +3,8 @@
 //! Every constant is transcribed verbatim. Linear ProPhoto in and out.
 
 use crate::color::{
-    mat_vec, srgb_decode, srgb_encode, Mat3, IDENTITY, PP_LUMA, PROPHOTO_TO_SRGB, SRGB_TO_PROPHOTO,
+    linear_srgb_to_oklab, mat_vec, mat_vec_f32, srgb_decode, srgb_encode, Mat3, IDENTITY, PP_LUMA,
+    PROPHOTO_TO_SRGB, PROPHOTO_TO_SRGB_F32, SRGB_TO_PROPHOTO,
 };
 use crate::settings::{
     CalibrationSettings, ColorGradingSettings, ColorPoint, DevelopSettings, HslAdjustment, HslBand,
@@ -74,6 +75,21 @@ fn oklab_to_oklch(lab: Rgb) -> Rgb {
 /// [`crate::Session::sample_color`] instead of being silently clamped.
 pub fn prophoto_to_oklch(value: Rgb) -> Rgb {
     oklab_to_oklch(linear_srgb_to_oklab_f64(mat_vec(&PROPHOTO_TO_SRGB, value)))
+}
+
+/// Compact coordinates kept by the session's active-point plane. The f64
+/// conversion above remains the reference. Cache generation uses the
+/// existing signed f32 OKLab kernel (including its bounded cube-root table),
+/// and one output-sized plane stays bounded on wasm.
+pub(crate) fn cached_prophoto_to_oklch(value: [f32; 3]) -> [f32; 3] {
+    let lab = linear_srgb_to_oklab(mat_vec_f32(&PROPHOTO_TO_SRGB_F32, value));
+    let chroma = libm::sqrtf(lab[1] * lab[1] + lab[2] * lab[2]);
+    let hue = if chroma <= 1e-12 {
+        0.0
+    } else {
+        (libm::atan2f(lab[2], lab[1]) * 180.0 / core::f32::consts::PI).rem_euclid(360.0)
+    };
+    [lab[0], chroma, if hue >= 360.0 { 0.0 } else { hue }]
 }
 
 #[inline]
@@ -292,15 +308,12 @@ fn point_axis_weight(distance: f64, range: f64) -> f64 {
 /// no point observes another point's result, so authored order is irrelevant.
 /// Extended-gamut ProPhoto values are not clipped here; the existing output
 /// transform remains the sole gamut policy.
-pub fn color_points(value: Rgb, points: &[ColorPoint]) -> Rgb {
-    if points.iter().all(|point| point.delta.is_zero()) || !value.iter().all(|v| v.is_finite()) {
+fn color_points_from_oklch(value: Rgb, lch: Rgb, points: &[ColorPoint]) -> Rgb {
+    if points.iter().all(|point| point.delta.is_zero())
+        || !value.iter().chain(lch.iter()).all(|v| v.is_finite())
+    {
         return value;
     }
-    let lab = linear_srgb_to_oklab_f64(mat_vec(&PROPHOTO_TO_SRGB, value));
-    if !lab.iter().all(|v| v.is_finite()) {
-        return value;
-    }
-    let lch = oklab_to_oklch(lab);
     let mut total = 0.0;
     let mut hue_delta = 0.0;
     let mut chroma_delta = 0.0;
@@ -343,6 +356,14 @@ pub fn color_points(value: Rgb, points: &[ColorPoint]) -> Rgb {
     } else {
         value
     }
+}
+
+pub fn color_points(value: Rgb, points: &[ColorPoint]) -> Rgb {
+    if points.iter().all(|point| point.delta.is_zero()) || !value.iter().all(|v| v.is_finite()) {
+        return value;
+    }
+    let lch = prophoto_to_oklch(value);
+    color_points_from_oklch(value, lch, points)
 }
 
 fn hsl_band_weight(hue_deg: f64, ordinal: usize) -> f64 {
@@ -1107,6 +1128,24 @@ impl PreparedColorOps {
         color_grading_with(value, &self.grading, &self.directions)
     }
 
+    /// Active-point tail using the session plane's coordinates. The f64
+    /// implementation above remains the independent reference; the cached
+    /// coordinates eliminate cbrt/atan2 work while dragging without moving
+    /// the point operation into a cube.
+    pub(crate) fn apply_cached_color_points_and_grading(
+        &self,
+        value: [f32; 3],
+        lch: [f32; 3],
+    ) -> [f32; 3] {
+        let value = value.map(f64::from);
+        let value = if self.gray_mix.is_some() {
+            value
+        } else {
+            color_points_from_oklch(value, lch.map(f64::from), &self.color_points)
+        };
+        color_grading_with(value, &self.grading, &self.directions).map(|channel| channel as f32)
+    }
+
     /// RAW-only split of the black & white operation. The mix is measured
     /// just after ACR3, before cube P and calibration; the remaining color
     /// operation is applied after those stages.
@@ -1161,6 +1200,7 @@ pub fn needs_color_ops(settings: &DevelopSettings) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::settings::{OklchDelta, OklchRange, OklchTarget};
     use crate::tone_ops::rgb_tone;
 
     const ORANGE: usize = 1;
@@ -1229,5 +1269,132 @@ mod tests {
         // same slider would darken it less.
         let naive = gray_mix(toned, &mix, false)[0];
         assert!(got < naive - 0.05, "{got} {naive}");
+    }
+
+    #[test]
+    fn cached_oklch_and_point_tail_track_the_f64_reference() {
+        let fixtures = [
+            [0.72_f32, 0.31, 0.12],
+            [0.300_001, 0.3, 0.299_999],
+            [-0.08, 0.45, 1.1],
+            [0.02, -0.01, 0.04],
+        ];
+        for value in fixtures {
+            let reference = prophoto_to_oklch(value.map(f64::from));
+            let cached = cached_prophoto_to_oklch(value).map(f64::from);
+            assert!((cached[0] - reference[0]).abs() <= 2e-6, "{value:?}");
+            assert!((cached[1] - reference[1]).abs() <= 2e-6, "{value:?}");
+            let hue_error = ((cached[2] - reference[2] + 180.0).rem_euclid(360.0) - 180.0).abs();
+            assert!(
+                reference[1] <= 1e-6 || hue_error <= 2e-3,
+                "{value:?}: {cached:?} {reference:?}"
+            );
+            assert!((0.0..360.0).contains(&cached[2]), "{cached:?}");
+        }
+
+        let target = prophoto_to_oklch(fixtures[0].map(f64::from));
+        let mut settings = DevelopSettings::neutral();
+        settings.color_points = vec![
+            ColorPoint {
+                id: "a".into(),
+                target: OklchTarget {
+                    lightness: target[0],
+                    chroma: target[1],
+                    hue: target[2],
+                },
+                range: OklchRange {
+                    hue: 25.0,
+                    chroma: 0.08,
+                    lightness: 0.15,
+                },
+                delta: OklchDelta {
+                    hue: 14.0,
+                    chroma_scale: 1.25,
+                    lightness: 0.03,
+                },
+            },
+            ColorPoint {
+                id: "b".into(),
+                target: OklchTarget {
+                    lightness: target[0],
+                    chroma: target[1],
+                    hue: target[2],
+                },
+                range: OklchRange {
+                    hue: 40.0,
+                    chroma: 0.12,
+                    lightness: 0.2,
+                },
+                delta: OklchDelta {
+                    hue: -6.0,
+                    chroma_scale: 0.9,
+                    lightness: -0.01,
+                },
+            },
+        ];
+        let prepared = PreparedColorOps::new(&settings);
+        for value in fixtures {
+            let value64 = value.map(f64::from);
+            let reference = prepared
+                .apply_color_points_and_grading(value64)
+                .map(|channel| channel as f32);
+            let cached = prepared
+                .apply_cached_color_points_and_grading(value, cached_prophoto_to_oklch(value));
+            for channel in 0..3 {
+                assert!(
+                    (cached[channel] - reference[channel]).abs() <= 3e-5,
+                    "{value:?}: {cached:?} {reference:?}"
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn cached_points_keep_negative_and_highlight_headroom_for_output() {
+        use crate::settings::{ColorPoint, OklchDelta, OklchRange, OklchTarget};
+        let value = [0.7_f32, 0.1, 0.05];
+        let target = prophoto_to_oklch(value.map(f64::from));
+        for delta in [
+            OklchDelta {
+                hue: 180.0,
+                chroma_scale: 3.0,
+                lightness: 0.0,
+            },
+            OklchDelta {
+                hue: 0.0,
+                chroma_scale: 1.0,
+                lightness: 0.6,
+            },
+        ] {
+            let mut settings = DevelopSettings::neutral();
+            settings.color_points = vec![ColorPoint {
+                id: "wide".into(),
+                target: OklchTarget {
+                    lightness: target[0],
+                    chroma: target[1],
+                    hue: target[2],
+                },
+                range: OklchRange {
+                    hue: 180.0,
+                    chroma: 5.0,
+                    lightness: 1.0,
+                },
+                delta,
+            }];
+            let prepared = PreparedColorOps::new(&settings);
+            let reference = prepared.apply_color_points_and_grading(value.map(f64::from));
+            assert!(
+                reference.iter().any(|value| *value < 0.0 || *value > 1.0),
+                "{reference:?}"
+            );
+            let cached = prepared
+                .apply_cached_color_points_and_grading(value, cached_prophoto_to_oklch(value));
+            for channel in 0..3 {
+                assert!(
+                    (f64::from(cached[channel]) - reference[channel]).abs() < 3e-5,
+                    "cached={cached:?}, reference={reference:?}"
+                );
+            }
+        }
     }
 }
