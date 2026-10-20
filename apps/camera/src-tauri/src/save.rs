@@ -310,7 +310,7 @@ mod tests {
       edits_limits(),
     )));
     let original = dir.join("DSC02072.JPG");
-    std::fs::write(&original, b"jpeg").unwrap();
+    std::fs::write(&original, b"\xff\xd8\xffjpeg").unwrap();
     photos.open("entry-1", &original).unwrap();
     // 大文字小文字の違う名前も同じファイル（APFS の既定は大文字小文字を区別しない）
     let same_file = if dir.join("dsc02072.jpg").exists() {

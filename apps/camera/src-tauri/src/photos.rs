@@ -9,6 +9,7 @@
 
 use crate::error::{invalid_request, parse_request, run_blocking, CameraError};
 use crate::library::library;
+use niho_desktop_photo::capabilities::{validate_photo, CapabilityStage};
 use niho_desktop_photo::common::{code, new_opaque_id, PageError};
 use niho_desktop_photo::develop::{DevelopPhotos, OpenPhoto};
 use niho_desktop_photo::library::{is_valid_id, iso8601_utc, photo_kind, LISTED_PHOTO_NOT_FOUND_MESSAGE};
@@ -125,6 +126,10 @@ impl CameraPhotos {
   pub fn open(&self, entry_id: &str, path: &Path) -> Result<(String, OpenedPhoto), CameraError> {
     let unreadable = || CameraError::new(code::NOT_FOUND, PHOTO_UNREADABLE_MESSAGE);
     let metadata = std::fs::metadata(path).map_err(|_| unreadable())?;
+    if !metadata.is_file() {
+      return Err(unreadable());
+    }
+    validate_photo(path, CapabilityStage::Decoder).map_err(CameraError::from)?;
     let digest = content_digest(path).map_err(|_| unreadable())?;
     let photo = OpenedPhoto {
       entry_id: entry_id.to_string(),

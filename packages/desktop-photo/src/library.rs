@@ -37,6 +37,8 @@
 //!   フォルダ名が入るため）。
 //! - テスト（`library_tests.rs`）は一時フォルダで確かめ、qlmanage / sips は `ThumbnailMaker` を差し替えて呼ばない。
 
+pub use crate::capabilities::PHOTO_FILE_EXTENSIONS;
+use crate::capabilities::{capability_for_file_name, validate_photo, CapabilityStage};
 use crate::common::{
   code, is_regular_file, lock, mark_used, new_opaque_id, random_hex, LogFn, PageError, MAX_ID_CHARS,
 };
@@ -54,11 +56,6 @@ use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 
 /// ネイティブの選択ダイアログで選べる写真の拡張子（RAW は LibRaw、RAW 以外は Core Image が読む）。
 /// クラウドの写真置き場の拡張子も同じ一覧（NIHO Desktop の `photo_cloud.rs`、API の `photo_cloud_file_type_unsupported`）。
-pub const PHOTO_FILE_EXTENSIONS: [&str; 34] = [
-  "jpg", "jpeg", "png", "tif", "tiff", "heic", "heif", "dng", "rw2", "cr2", "cr3", "crw", "nef", "nrw", "arw", "srf",
-  "sr2", "raf", "orf", "pef", "srw", "rwl", "3fr", "fff", "iiq", "erf", "mef", "mos", "mrw", "x3f", "raw", "kdc",
-  "dcr", "gpr",
-];
 /// フォルダの一覧の写真（`entryId`）が知らない ID か、ファイルがもう無い（サムネイルと、一覧から開く NIHO Desktop の `open_listed` も同じ文）。
 pub const LISTED_PHOTO_NOT_FOUND_MESSAGE: &str = "写真が見つかりません。";
 /// 選んだフォルダを 0 とした深さの上限（この深さのフォルダの写真までは出し、その下は見ない）。
@@ -74,8 +71,6 @@ pub const MAX_REMEMBERED_LISTED_PHOTOS: usize = MAX_LISTED_PHOTOS;
 pub const REMEMBERED_SCAN_TIME_BUDGET: Duration = Duration::from_secs(5);
 /// 中を見ないパッケージのフォルダ（名前の末尾。大文字・小文字を区別しない）。
 const PACKAGE_SUFFIXES: [&str; 6] = [".app", ".photoslibrary", ".lrdata", ".lrcat", ".bundle", ".framework"];
-/// RAW でない写真の拡張子（`kind: "raster"`）。ほかの `PHOTO_FILE_EXTENSIONS` は RAW（`kind: "raw"`）。
-const RASTER_EXTENSIONS: [&str; 7] = ["jpg", "jpeg", "png", "tif", "tiff", "heic", "heif"];
 /// サムネイルの長辺（px）の範囲。
 pub const MIN_THUMBNAIL_DIMENSION: u32 = 64;
 pub const MAX_THUMBNAIL_DIMENSION: u32 = 256;
@@ -162,16 +157,7 @@ struct Scan {
 
 /// 写真の種類（`raw` / `raster`）。写真の拡張子（大文字・小文字を区別しない）でなければ None。
 pub fn photo_kind(file_name: &str) -> Option<&'static str> {
-  let (_, extension) = file_name.rsplit_once('.')?;
-  let extension = extension.to_lowercase();
-  if !PHOTO_FILE_EXTENSIONS.contains(&extension.as_str()) {
-    return None;
-  }
-  Some(if RASTER_EXTENSIONS.contains(&extension.as_str()) {
-    "raster"
-  } else {
-    "raw"
-  })
+  capability_for_file_name(file_name).map(|capability| capability.kind.as_str())
 }
 
 fn is_hidden(name: &str) -> bool {
@@ -1191,6 +1177,7 @@ impl PhotoLibrary {
       .ok()
       .filter(|metadata| metadata.is_file())
       .ok_or_else(photo_not_found)?;
+    validate_photo(&path, CapabilityStage::Thumbnail)?;
     let cache = self.thumbnails.as_ref().ok_or_else(thumbnail_cache_failed)?;
     let key = thumbnail_key(&path, metadata.len(), modified_nanos(&metadata), max_dimension);
     if let Some(bytes) = cache.read(&key) {

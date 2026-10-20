@@ -21,7 +21,17 @@ impl TempDir {
   fn file(&self, name: &str, bytes: &[u8]) -> PathBuf {
     let path = self.0.join(name);
     fs::create_dir_all(path.parent().unwrap()).unwrap();
-    fs::write(&path, bytes).unwrap();
+    let extension = path.extension().and_then(|value| value.to_str()).unwrap_or_default();
+    let mut contents = match extension.to_ascii_lowercase().as_str() {
+      "jpg" | "jpeg" => b"\xff\xd8\xff".to_vec(),
+      "png" => b"\x89PNG\r\n\x1a\n".to_vec(),
+      "tif" | "tiff" => b"II*\0".to_vec(),
+      "rw2" => b"IIU\0".to_vec(),
+      "heic" | "heif" => b"\0\0\0\x14ftypheic\0\0\0\0mif1".to_vec(),
+      _ => Vec::new(),
+    };
+    contents.extend_from_slice(bytes);
+    fs::write(&path, contents).unwrap();
     path
   }
 }
@@ -46,19 +56,19 @@ fn an_opened_photo_has_an_opaque_id_and_no_path() {
   let path = temp.file("SD/P1524180.RW2", b"raw bytes");
   let (photo_id, photo) = photos.open("entry-1", &path).unwrap();
   assert!(photo_id.starts_with("photo") && is_valid_id(&photo_id), "{photo_id}");
-  assert_eq!(photo.digest.size_bytes, 9);
+  assert_eq!(photo.digest.size_bytes, 13);
   let value = opened_json(&photo_id, &photo, photos.saved(&photo.digest.key), true);
   assert_eq!(
     value,
     json!({
-      "photoId": photo_id, "entryId": "entry-1", "fileName": "P1524180.RW2", "format": "raw", "sizeBytes": 9,
+      "photoId": photo_id, "entryId": "entry-1", "fileName": "P1524180.RW2", "format": "raw", "sizeBytes": 13,
       "contentSha256": photo.digest.key, "modifiedAt": value["modifiedAt"], "nativeExport": true, "saved": null,
     })
   );
-  // 中身の SHA-256（16 進の小文字 64 文字。sha256("raw bytes")）と、一覧の modifiedAt と同じ形の更新日時
+  // 中身の SHA-256（16 進の小文字 64 文字。合成RW2 signature + "raw bytes"）と、一覧の modifiedAt と同じ形の更新日時
   assert_eq!(
     value["contentSha256"],
-    json!("9ab366ad455508d5f47b0128d7d243a2c0e4f5ce399b5f85cd10b343e745a4dc")
+    json!("012dd1e98d08e7d298b69650fce032553df51b696932243bf26b38411aad54aa")
   );
   let modified_at = value["modifiedAt"].as_str().expect("modifiedAt");
   assert!(modified_at.len() == 24 && modified_at.ends_with('Z'), "{modified_at}");
@@ -110,7 +120,7 @@ fn edits_are_saved_with_a_revision_and_follow_the_photo_content() {
     .join(format!("{}.json", photo.digest.key));
   let stored: Value = serde_json::from_slice(&fs::read(record).unwrap()).unwrap();
   assert_eq!(stored["fileName"], "DSC00001.JPG");
-  assert_eq!(stored["sizeBytes"], 10);
+  assert_eq!(stored["sizeBytes"], 13);
   assert!(stored["modifiedAtMs"].as_u64().is_some());
 }
 
@@ -230,15 +240,17 @@ fn listed_photos_show_has_edits_from_the_saved_size_and_modified_time() {
   let (photo_id, photo) = photos.open("entry-1", &edited).unwrap();
   let modified_at = |path: &Path| iso8601_utc(std::fs::metadata(path).unwrap().modified().unwrap());
   let entry = |name: &str, path: &Path, size: u64| json!({ "entryId": name, "fileName": name, "kind": "raw", "sizeBytes": size, "modifiedAt": modified_at(path) });
+  let size = photo.digest.size_bytes;
+  let untouched_size = std::fs::metadata(&untouched).unwrap().len();
   let mut tree = json!({
     "folderId": "folder-1", "name": "SD", "truncated": false,
-    "photos": [entry("P1.RW2", &edited, 7)],
-    "children": [{ "folderId": "folder-2", "name": "sub", "truncated": false, "children": [], "photos": [entry("P2.RW2", &untouched, 7)] }],
+    "photos": [entry("P1.RW2", &edited, size)],
+    "children": [{ "folderId": "folder-2", "name": "sub", "truncated": false, "children": [], "photos": [entry("P2.RW2", &untouched, untouched_size)] }],
   });
   // 保存する前（索引を作ったあと）
   photos.annotate_has_edits(&mut tree);
   assert_eq!(tree["photos"][0]["hasEdits"], false);
-  assert_eq!(photo.digest.size_bytes, 7);
+  assert_eq!(photo.digest.size_bytes, 11);
   photos
     .save(&photo_id, &json!({ "exposure": 1 }), 0, SystemTime::now())
     .unwrap();
@@ -249,7 +261,7 @@ fn listed_photos_show_has_edits_from_the_saved_size_and_modified_time() {
 
   // 次の起動（記録から索引を作る）。覚えた写真の一覧の形でも付く
   let restarted = camera_photos(&temp);
-  let mut remembered = json!({ "folders": [tree.clone()], "photos": [entry("P1.RW2", &edited, 7)] });
+  let mut remembered = json!({ "folders": [tree.clone()], "photos": [entry("P1.RW2", &edited, size)] });
   restarted.annotate_has_edits(&mut remembered);
   assert_eq!(remembered["photos"][0]["hasEdits"], true);
   assert_eq!(remembered["folders"][0]["photos"][0]["hasEdits"], true);

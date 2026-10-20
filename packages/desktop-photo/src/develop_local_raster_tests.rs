@@ -55,7 +55,17 @@ fn camera_develop(harness: &SidecarHarness) -> Arc<PhotoDevelop> {
 fn photo_file(harness: &SidecarHarness, name: &str, bytes: &[u8]) -> PathBuf {
   let path = harness.dir.join("photos").join(name);
   fs::create_dir_all(path.parent().unwrap()).unwrap();
-  fs::write(&path, bytes).unwrap();
+  let extension = path.extension().and_then(|value| value.to_str()).unwrap_or_default();
+  let mut contents = match extension.to_ascii_lowercase().as_str() {
+    "jpg" | "jpeg" => b"\xff\xd8\xff".to_vec(),
+    "png" => b"\x89PNG\r\n\x1a\n".to_vec(),
+    "tif" | "tiff" => b"II*\0".to_vec(),
+    "rw2" => b"IIU\0".to_vec(),
+    "heic" | "heif" => b"\0\0\0\x14ftypheic\0\0\0\0mif1".to_vec(),
+    _ => Vec::new(),
+  };
+  contents.extend_from_slice(bytes);
+  fs::write(&path, contents).unwrap();
   path
 }
 
@@ -170,7 +180,7 @@ fn a_jpeg_stays_the_original_unless_a_working_copy_is_forced() {
     develop
       .source_bytes(&photos, "p1", original["token"].as_str().unwrap())
       .unwrap(),
-    b"jpeg bytes"
+    b"\xff\xd8\xffjpeg bytes"
   );
   assert!(harness.work_calls().is_empty(), "{:?}", harness.work_calls());
 
