@@ -151,24 +151,19 @@ export function useBrowserPhotoDevelop(params: {
         );
         return;
       }
-      if (!session?.saver) {
-        disposeEngine();
-        return;
-      }
-      // route guard を通らない unmount でも、flush の完了値から補正後プレビューを上げ始めてから
-      // saver と engine を手放す。`flush()` を呼ぶだけで dispose すると、保存成功後の画が失われる。
-      void session.saver
-        .flush()
-        .then(async (result) => {
-          if (result.ok && result.saved) {
-            await uploadSavedEditedPreviewRef.current(session, result.saved);
-          }
+      // route guard を通らない unmount でも、provisional draft / canonical saver の最後の入力まで待ってから手放す。
+      void Promise.resolve()
+        .then(() => session?.provisionalDraft?.flush())
+        .then(async () => {
+          if (!session?.saver) return;
+          const result = await session.saver.flush();
+          if (result.ok && result.saved) await uploadSavedEditedPreviewRef.current(session, result.saved);
         })
         .catch((error: unknown) => {
-          console.warn("[photo-editing] edited preview upload deferred during unmount", error);
+          console.warn("[photo-editing] local edit flush failed during unmount", error);
         })
         .finally(() => {
-          session.saver?.dispose();
+          session?.saver?.dispose();
           disposeEngine();
         });
     },
@@ -387,6 +382,16 @@ export function useBrowserPhotoDevelop(params: {
       const task = Promise.resolve().then(async (): Promise<boolean> => {
         try {
           if (mountedRef.current) setLeaving(true);
+          if (session.provisionalDraft) {
+            try {
+              await session.provisionalDraft.flush();
+            } catch {
+              if (mountedRef.current) {
+                setStatus({ kind: "error", text: "未保存の補正をこの端末に退避できません。もう一度操作してください。" });
+              }
+              return false;
+            }
+          }
           if (session.saver) {
             const result = await session.saver.flush();
             if (!result.ok) return false;
@@ -428,7 +433,13 @@ export function useBrowserPhotoDevelop(params: {
    * 開いている写真なら今の写真で開き直す。移行元設計）。
    */
   const createSaver = useCallback(
-    (spotId: string, photoId: string, developRevision: number): DevelopSettingsSaver => {
+    (
+      spotId: string,
+      photoId: string,
+      developRevision: number,
+      contentSha256?: string,
+      provisionalGeneration?: number,
+    ): DevelopSettingsSaver => {
       const actorId = actorIdRef.current;
       let draftId: string | null = null;
       if (actorId) {
@@ -481,6 +492,9 @@ export function useBrowserPhotoDevelop(params: {
             (recoveredCleanupRef.current.get(saver) ?? []).filter((draft) => !acknowledged.has(draftFingerprint(draft))),
           );
           refreshDraftsRef.current();
+          if (contentSha256 && provisionalGeneration !== undefined && library.removeProvisionalDraft) {
+            void library.removeProvisionalDraft(photoId, contentSha256, provisionalGeneration).catch(() => undefined);
+          }
         },
         save: async (settings, expectedRevision) => {
           const result = await library.saveDevelopSettings(photoId, settings, { expectedRevision });

@@ -9,7 +9,8 @@ use crate::test_support::library::*;
 use crate::test_support::set_modified;
 use std::fs;
 use std::os::unix::fs::{symlink, PermissionsExt};
-use std::sync::atomic::{AtomicUsize, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
+use std::sync::Arc;
 
 #[cfg(target_os = "macos")]
 fn convert_with_sips(source: &Path, format: &str, output: &Path) {
@@ -752,6 +753,28 @@ fn run_tool_stops_a_process_that_passes_its_deadline() {
     ToolExit::Exited(false)
   );
   assert!(run_tool(Path::new("/nonexistent/qlmanage"), &[], far).is_err());
+}
+
+#[test]
+fn run_tool_stops_a_process_when_the_preview_is_cancelled() {
+  let cancelled = Arc::new(AtomicBool::new(false));
+  let trigger = cancelled.clone();
+  let cancel_thread = std::thread::spawn(move || {
+    std::thread::sleep(Duration::from_millis(100));
+    trigger.store(true, Ordering::Release);
+  });
+  let started = Instant::now();
+  let sleep: Vec<OsString> = vec!["-c".into(), "exec sleep 5".into()];
+  let outcome = run_tool_cancellable(
+    Path::new("/bin/sh"),
+    &sleep,
+    Instant::now() + Duration::from_secs(10),
+    Some(&cancelled),
+  )
+  .unwrap();
+  cancel_thread.join().unwrap();
+  assert_eq!(outcome, ToolExit::Cancelled);
+  assert!(started.elapsed() < Duration::from_secs(3), "{:?}", started.elapsed());
 }
 
 // --- 覚えて次回も出す（#16578） ---

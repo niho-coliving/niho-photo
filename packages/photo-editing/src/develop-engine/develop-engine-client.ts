@@ -235,8 +235,8 @@ export type CreateDevelopEngineOptions = {
 
 export function photoDevelopDiagnosticsEnabled(location: { pathname: string; search: string } | null =
   typeof window === "undefined" ? null : window.location): boolean {
-  return location?.pathname.endsWith("/photoEditing") === true &&
-    new URLSearchParams(location.search).get("photoDevelopPerf") === "1";
+  const optedIn = new URLSearchParams(location?.search ?? "").get("photoDevelopPerf") === "1";
+  return optedIn && (location?.pathname.endsWith("/photoEditing") === true || location?.pathname === "/");
 }
 
 /** wasm を起こすのを諦めるまでの時間。 */

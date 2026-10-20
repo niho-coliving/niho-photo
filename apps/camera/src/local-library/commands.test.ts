@@ -119,8 +119,18 @@ describe("createCameraCommands", () => {
 
   it("returns raw IPC bytes as a Uint8Array", async () => {
     const bytes = new Uint8Array([0x89, 0x50, 0x4e, 0x47]);
-    const { commands } = recording(() => bytes.buffer.slice(0));
+    const { calls, commands } = recording(() => bytes.buffer.slice(0));
     await expect(commands.developSourceBytes("photo-1", "token-1")).resolves.toEqual(bytes);
+    await expect(commands.interactivePreview("entry-1", 1600, "preview-1", "selected")).resolves.toEqual(bytes);
+    await commands.cancelInteractivePreview("preview-1");
+    expect(calls.map(({ command, args }) => [command, args])).toEqual([
+      ["camera_develop_source_bytes", { request: { photoId: "photo-1", token: "token-1" } }],
+      [
+        "camera_photo_interactive_preview",
+        { request: { entryId: "entry-1", maxDimension: 1600, requestId: "preview-1", priority: "selected" } },
+      ],
+      ["camera_photo_cancel_interactive_preview", { request: { requestId: "preview-1" } }],
+    ]);
   });
 
   it("uses the cutout command contract and keeps masks as raw bytes", async () => {

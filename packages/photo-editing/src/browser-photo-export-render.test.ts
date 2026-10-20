@@ -4,6 +4,7 @@ import { renderBrowserPhotoExportJpeg } from "./browser-photo-export-render";
 import type { DevelopEngine } from "./develop-engine/develop-engine-client";
 import { neutralDevelopSettings } from "./develop-engine/develop-settings";
 import type { DevelopRenderInput } from "./develop-engine/develop-render-input";
+import { copyDevelopInput, rebindDevelopSettings } from "./editor/browser-photo-editing-model";
 
 /** SOF0 に高さ・幅を書いた最小の JPEG（SOI・SOF0・EOI）。 */
 function jpegWithSize(width: number, height: number): Uint8Array<ArrayBuffer> {
@@ -98,6 +99,31 @@ afterEach(() => {
 });
 
 describe("renderBrowserPhotoExportJpeg（F7b #17127）", () => {
+  it("provisional入力を書き出しへ渡さず、canonicalへのrebindで利用者の補正値を保つ", async () => {
+    await expect(
+      copyDevelopInput({
+        kind: "provisional",
+        file: {} as File,
+        contentSha256: "a".repeat(64),
+        width: 1600,
+        height: 1067,
+      }),
+    ).rejects.toThrow("provisional input cannot be exported");
+    expect(
+      rebindDevelopSettings(
+        { v: 2, engine: "niho-6", look: "niho-standard-1", base: null, exposure: 0.7, geometry: { rotate: 90 } },
+        { v: 1, engine: "niho-7", look: "niho-standard-5", base: "raw-apple.d8.p3.e4.cal-test" },
+      ),
+    ).toEqual({
+      v: 2,
+      engine: "niho-7",
+      look: "niho-standard-5",
+      base: "raw-apple.d8.p3.e4.cal-test",
+      exposure: 0.7,
+      geometry: { rotate: 90 },
+    });
+  });
+
   it("幅 1080px: 元の寸法 → 長辺 2048px の出力の寸法 → 幅が 1080 になる長辺で描き（4:5 の縦は 1080×1350）、撮影日時を +09:00 で付ける", async () => {
     const engine = fakeEngine();
     const input = originalInput();

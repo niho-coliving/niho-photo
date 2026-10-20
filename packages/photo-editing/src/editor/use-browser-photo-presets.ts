@@ -6,6 +6,7 @@ import type { DevelopEngine, DevelopPresetResult } from "../develop-engine/devel
 import {
   developSettingsKey,
   presetDevelopSettings,
+  readDevelopSettings,
   sameDevelopSettings,
   type DevelopSettings,
 } from "../develop-engine/develop-settings";
@@ -275,6 +276,51 @@ export function useBrowserPhotoPresets(params: {
     [setApplyingPresetKey],
   );
 
+  /** canonical handoff で、選択・量を保ったままプリセット土台と仮表示を同じmetadataへ結び直す。 */
+  const rebaseSettings = useCallback((rebase: (value: DevelopSettings) => DevelopSettings) => {
+    const selection = rememberedRef.current;
+    if (selection) {
+      let resultKey = selection.resultKey;
+      try {
+        const result = readDevelopSettings(JSON.parse(selection.resultKey) as unknown);
+        if (result) resultKey = developSettingsKey(rebase(result));
+      } catch {
+        // 壊れた画面内keyは選択を維持せず、次の整合判定に任せる。
+      }
+      const next = { ...selection, base: rebase(selection.base), resultKey };
+      rememberedRef.current = next;
+      setRemembered(next);
+      if (amountWantedRef.current?.selection === selection) {
+        amountWantedRef.current = { ...amountWantedRef.current, selection: next };
+      }
+    }
+    setAmountPreview((current) => current ? {
+      ...current,
+      settings: rebase(current.settings),
+      forSettingsKey: (() => {
+        try {
+          const value = readDevelopSettings(JSON.parse(current.forSettingsKey) as unknown);
+          return value ? developSettingsKey(rebase(value)) : current.forSettingsKey;
+        } catch {
+          return current.forSettingsKey;
+        }
+      })(),
+    } : null);
+    setPreview((current) => current ? {
+      ...current,
+      settings: rebase(current.settings),
+      forSettingsKey: (() => {
+        try {
+          const value = readDevelopSettings(JSON.parse(current.forSettingsKey) as unknown);
+          return value ? developSettingsKey(rebase(value)) : current.forSettingsKey;
+        } catch {
+          return current.forSettingsKey;
+        }
+      })(),
+    } : null);
+    resultCacheRef.current.clear();
+  }, []);
+
   /** プリセットを 100% で当てる（選ばれているプリセットがあれば、その当てる前の編集内容に当て直す）。 */
   const apply = async (preset: PhotoEditingPresetTarget) => {
     const latest = latestRef.current;
@@ -505,6 +551,7 @@ export function useBrowserPhotoPresets(params: {
     apply,
     clear,
     reconcileSpotPresetKeys,
+    rebaseSettings,
     requestPreview,
     /** 写真に仮に見せる編集内容（無ければ null。適用量を動かしている間はその結果） */
     previewSettings: activeAmountPreview?.settings ?? activePreview?.settings ?? null,

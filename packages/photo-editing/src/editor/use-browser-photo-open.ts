@@ -12,11 +12,17 @@ import {
   type BrowserCloudPlace,
 } from "../browser-photo-cloud-source";
 import { describeBrowserPhotoSourceError, renderBrowserPhotoPreview } from "../browser-photo-source";
-import { photoDevelopDiagnosticsEnabled, type DevelopEngine, type DevelopFrame } from "../develop-engine/develop-engine-client";
+import {
+  createDevelopEngine,
+  photoDevelopDiagnosticsEnabled,
+  type DevelopEngine,
+  type DevelopFrame,
+} from "../develop-engine/develop-engine-client";
 import { paintDevelopFrame } from "../develop-engine/develop-frame";
 import type {
   PhotoLibraryDevelopSourceContext,
   PhotoLibraryPhoto,
+  PhotoLibraryProvisionalDraft,
   PhotoLibraryWorkingCopy,
   PhotoLibraryWorkingCopyResult,
 } from "../library/photo-library";
@@ -52,6 +58,7 @@ import {
   DISCARD_DESCRIPTION,
   cloudKey,
   developBaseVersion,
+  rebindDevelopSettings,
   workPreviewOpened,
   type BrowserItem,
   type BrowserPhotoAccess,
@@ -75,6 +82,17 @@ import type { BrowserPhotoItems } from "./use-browser-photo-items";
 import { useBrowserPhotoPresets } from "./use-browser-photo-presets";
 import { useBrowserPhotoSettingsClipboard } from "./use-browser-photo-settings-clipboard";
 import { useBrowserPhotoWorkingSize } from "./use-browser-photo-working-size";
+
+/** provisional rasterへ投影するのは構造項目だけ。利用者の数値・幾何・未知項目はcanonical handoffまでそのまま持つ。 */
+export function provisionalDevelopSettings(settings: DevelopSettings): DevelopSettings {
+  const raster = neutralDevelopSettings();
+  return {
+    ...settings,
+    engine: raster.engine,
+    look: raster.look,
+    base: null,
+  };
+}
 
 /**
  * 1 枚を開く（読み込みの世代・中止・作業コピーを待つ間の確かめ直し・URL で開く）と、開いた写真の描画・場所の切り替え。
@@ -168,6 +186,7 @@ export function useBrowserPhotoOpen(params: {
     developSessionRef,
     setCompareOriginal,
     editResetHandlerRef,
+    setStatus,
   });
 
   const sourceContextFor = useCallback(
@@ -185,7 +204,19 @@ export function useBrowserPhotoOpen(params: {
     },
     [params.develop.draftRecovery.selectedDraft],
   );
-  const { settings, settingsKey, savedSettingsKey, setSavedSettingsKey, dragging, setDragging, loadSettings, startHistory, dropHistory } = edit;
+  const {
+    settings,
+    settingsKey,
+    savedSettingsKey,
+    setSavedSettingsKey,
+    dragging,
+    setDragging,
+    loadSettings,
+    rebaseSettings,
+    createProvisionalDraftWriter,
+    startHistory,
+    dropHistory,
+  } = edit;
   // 切り抜きに合わせた wasm の作業サイズ（F3 移行元設計）。開き直せなかった写真は開き直しの経路に任せる（`openItem` は下で作る）
   const reopenRef = useRef<(key: string) => void>(() => undefined);
   const { ensureDevelopWorkingSize, workingEpoch } = useBrowserPhotoWorkingSize({
@@ -298,6 +329,13 @@ export function useBrowserPhotoOpen(params: {
         console.info("[photo-develop-ui-perf]", { stage: "firstVisible", elapsedMs });
       }
       console.info("[photo-develop-ui-perf]", { stage, elapsedMs });
+      if (stage === "finalVisible") {
+        console.info("[photo-develop-ui-perf]", { stage: "renderUpdated", elapsedMs });
+        if (!timeline.editingReady) {
+          timeline.editingReady = true;
+          console.info("[photo-develop-ui-perf]", { stage: "editable", elapsedMs });
+        }
+      }
     }));
   }, []);
   const onPreviewLoaded = useCallback((key: string, generation: number | null, element: HTMLImageElement) => {
@@ -605,10 +643,9 @@ export function useBrowserPhotoOpen(params: {
       setOpened(next);
       if (result.session) {
         const timeline = timelineRef.current;
-        if (timeline?.key === next.key && !timeline.editingReady && photoDevelopDiagnosticsEnabled()) {
-          timeline.editingReady = true;
+        if (timeline?.key === next.key && photoDevelopDiagnosticsEnabled()) {
           console.info("[photo-develop-ui-perf]", {
-            stage: "editingReady",
+            stage: "inputAccepted",
             elapsedMs: Math.max(0, performance.now() - timeline.selectedAt),
           });
         }
@@ -622,6 +659,167 @@ export function useBrowserPhotoOpen(params: {
     },
     [loadSettings, startSession],
   );
+
+  /** provisional frameまで描けたときだけ編集可能にする。canonical save/upload/exportへ通す saver はまだ持たない。 */
+  const commitProvisional = useCallback(
+    (
+      item: BrowserItem,
+      preview: Awaited<ReturnType<NonNullable<typeof library.loadInteractivePreview>>>,
+      provisionalSettings: DevelopSettings,
+      frame: DevelopFrame,
+      draft: Awaited<ReturnType<NonNullable<typeof library.loadProvisionalDraft>>> | null,
+    ) => {
+      const input = {
+        kind: "provisional" as const,
+        file: preview.file,
+        contentSha256: preview.photo.contentSha256,
+        width: preview.width,
+        height: preview.height,
+      };
+      rememberOpenedFrame(item.key, provisionalSettings, frame);
+      commitOpenResult({
+        opened: {
+          key: item.key,
+          fileName: item.photo.fileName,
+          decoded: null,
+          viewUrl: item.photo.previewUrl ?? item.localPreviewUrl,
+          previewPending: true,
+          previewCurrent: false,
+          lockedReason: null,
+          loadedForEditing: true,
+          mode: "wasm",
+          input,
+          canonicalPending: true,
+          work: { phase: "opening" },
+          photo: preview.photo,
+        },
+        session: {
+          key: item.key,
+          photoId: item.photo.id,
+          spotId,
+          input,
+          working: null,
+          workSize: { width: preview.width, height: preview.height },
+          photo: preview.photo,
+          settingsSource: preview.photo.hasDevelopSettings ? "develop" : "none",
+          saver: null,
+          provisionalDraft: createProvisionalDraftWriter(
+            item.photo.id,
+            preview.photo.contentSha256,
+            draft,
+          ),
+        },
+        settings: provisionalSettings,
+      });
+      setOpening(false);
+    },
+    [commitOpenResult, createProvisionalDraftWriter, rememberOpenedFrame, spotId],
+  );
+
+  /** 別engineでcanonicalの最新設定を描き終えてから、画・engine・sessionを一度に差し替える。 */
+  const handoffCanonical = useCallback(async (
+    item: BrowserItem,
+    result: OpenResult,
+    canonicalEngine: DevelopEngine,
+    isStale: () => boolean,
+  ): Promise<boolean> => {
+    const provisional = openedRef.current;
+    const candidateSession = result.session;
+    const discardCandidate = () => {
+      candidateSession?.saver?.dispose();
+      canonicalEngine.dispose();
+    };
+    if (isStale() || provisional?.key !== item.key || provisional.input?.kind !== "provisional" || !result.session) {
+      discardCandidate();
+      return false;
+    }
+    const provisionalSession = developSessionRef.current;
+    if (provisionalSession?.key !== item.key || provisionalSession.input.kind !== "provisional") {
+      discardCandidate();
+      return false;
+    }
+    let source = edit.settingsRef.current;
+    let rebound = rebindDevelopSettings(source, result.settings);
+    let frame: DevelopFrame;
+    let flushedDraft: PhotoLibraryProvisionalDraft | null;
+    try {
+      flushedDraft = await provisionalSession.provisionalDraft?.flush() ?? null;
+    } catch {
+      discardCandidate();
+      return false;
+    }
+    // 描画中に操作が進んだら最新値で描き直す。swap前なのでprovisional frameはそのまま見える。
+    for (;;) {
+      const rendered = await canonicalEngine
+        .render(rebound, { maxDimension: DEVELOP_PREVIEW_MAX_DIMENSION, interactive: false })
+        .catch(() => null);
+      if (!rendered || isStale() || openedRef.current !== provisional) {
+        discardCandidate();
+        return false;
+      }
+      frame = rendered;
+      const latest = edit.settingsRef.current;
+      let latestDraft: PhotoLibraryProvisionalDraft | null;
+      try {
+        latestDraft = await provisionalSession.provisionalDraft?.flush() ?? flushedDraft;
+      } catch {
+        discardCandidate();
+        return false;
+      }
+      if (sameDevelopSettings(latest, source)) {
+        flushedDraft = latestDraft;
+        break;
+      }
+      source = latest;
+      rebound = rebindDevelopSettings(latest, result.settings);
+      flushedDraft = latestDraft;
+    }
+    const oldEngine = engineRef.current;
+    engineRef.current = canonicalEngine;
+    const nextSettings = rebaseSettings((value) => rebindDevelopSettings(value, result.settings));
+    presets.rebaseSettings((value) => rebindDevelopSettings(value, result.settings));
+    frameCacheRef.current = { key: item.key, settingsJson: JSON.stringify(nextSettings), frame };
+    beforeFrameRef.current = null;
+    if (canvasRef.current) paintDevelopFrame(canvasRef.current, frame);
+    const nextOpened: OpenedSource = {
+      ...result.opened,
+      previewPending: false,
+      canonicalPending: false,
+      work: null,
+    };
+    openedRef.current = nextOpened;
+    setOpened(nextOpened);
+    initialFrameRef.current = null;
+    result.session.saver?.dispose();
+    result.session.saver = latestAccessRef.current.canEdit
+      ? createSaver(
+          result.session.spotId,
+          result.session.photoId,
+          result.session.photo.developRevision,
+          provisional.input.contentSha256,
+          flushedDraft?.generation,
+        )
+      : null;
+    startSession(result.session);
+    if (!sameDevelopSettings(nextSettings, result.settings)) {
+      result.session.saver?.schedule(nextSettings);
+    } else if (flushedDraft && library.removeProvisionalDraft) {
+      void library
+        .removeProvisionalDraft(item.photo.id, provisional.input.contentSha256, flushedDraft.generation)
+        .catch(() => undefined);
+    }
+    oldEngine?.dispose();
+    setSourceError(null);
+    setOpening(false);
+    const timeline = timelineRef.current;
+    if (timeline?.key === item.key && photoDevelopDiagnosticsEnabled()) {
+      console.info("[photo-develop-ui-perf]", {
+        stage: "canonicalReady",
+        elapsedMs: Math.max(0, performance.now() - timeline.selectedAt),
+      });
+    }
+    return true;
+  }, [beforeFrameRef, canvasRef, createSaver, developSessionRef, edit.settingsRef, engineRef, frameCacheRef, latestAccessRef, library, presets, rebaseSettings, startSession]);
 
   /** 作業コピーを待っている写真の状態を変える（その写真を開いたまま待っているときだけ）。 */
   const setWorkWait = useCallback((key: string, work: WorkWait) => {
@@ -705,6 +903,9 @@ export function useBrowserPhotoOpen(params: {
       const workAbort = new AbortController();
       const abortWork = () => workAbort.abort();
       abort.signal.addEventListener("abort", abortWork, { once: true });
+      const previewAbort = new AbortController();
+      const abortPreview = () => previewAbort.abort();
+      abort.signal.addEventListener("abort", abortPreview, { once: true });
       try {
         const allowEditing = editingAllowedRef.current;
         // 作業コピーで直す写真（RAW など。移行元設計）は、開いた瞬間はクラウドのプレビューを見せる（揃ったら 1 回だけ差し替える）
@@ -730,6 +931,14 @@ export function useBrowserPhotoOpen(params: {
             })
           : null;
         void pendingWork?.catch(() => undefined);
+        const pendingPreview = workTarget && library.loadInteractivePreview
+          ? library.loadInteractivePreview(item.photo.id, {
+              signal: previewAbort.signal,
+              maxDimension: 1600,
+            })
+          : null;
+        const previewDeadlineAt = pendingPreview ? performance.now() + 1_950 : null;
+        void pendingPreview?.catch(() => undefined);
         // 段 2 の wasm を使えるかを先に確かめる（使えればどちらの補正も描けるので、入力を読む前に閉じない）。開く前から閉じると
         // 分かる写真（記事の画像など）では起こさない
         const engine =
@@ -740,7 +949,8 @@ export function useBrowserPhotoOpen(params: {
         const openWork = async (
           readyEngine: DevelopEngine,
           prepared?: Promise<{ result: PhotoLibraryWorkingCopyResult; copy: Promise<PhotoLibraryWorkingCopy> | null }>,
-        ) => {
+          atomicHandoff = false,
+        ): Promise<WorkOutcome | "stale"> => {
           const { result: work, copy } = prepared
             ? await prepared
             : {
@@ -750,13 +960,103 @@ export function useBrowserPhotoOpen(params: {
                 }),
                 copy: null,
               };
-          if (isStale()) return;
-          const outcome = await resolveWorkOutcome(openFlowRef.current.context, item, work, readyEngine, abort.signal, isStale, copy ?? undefined);
-          if (outcome === "stale" || isStale()) return;
-          openFlowRef.current.applyWorkOutcome(item.key, outcome);
+          if (isStale()) return "stale";
+          const context = atomicHandoff
+            ? { ...openFlowRef.current.context, rememberOpenedFrame: () => undefined }
+            : openFlowRef.current.context;
+          const outcome = await resolveWorkOutcome(context, item, work, readyEngine, abort.signal, isStale, copy ?? undefined);
+          return isStale() ? "stale" : outcome;
         };
         if (workTarget && engine) {
-          await openWork(engine, pendingWork ?? undefined);
+          const failCanonical = () => {
+            const current = openedRef.current;
+            if (current?.key === item.key && current.input?.kind === "provisional") {
+              const next = { ...current, canonicalPending: false };
+              openedRef.current = next;
+              setOpened(next);
+            }
+            setSourceError("高画質表示を準備できませんでした。もう一度読み込んでください。");
+          };
+          let provisionalReady = false;
+          if (pendingPreview) {
+            try {
+              let timeout: ReturnType<typeof setTimeout> | null = null;
+              const preview = await Promise.race([
+                pendingPreview,
+                new Promise<never>((_, reject) => {
+                  timeout = setTimeout(
+                    () => {
+                      previewAbort.abort();
+                      reject(new Error("interactive preview deadline"));
+                    },
+                    Math.max(0, (previewDeadlineAt ?? performance.now()) - performance.now()),
+                  );
+                }),
+              ]).finally(() => {
+                if (timeout !== null) clearTimeout(timeout);
+              });
+              if (!isStale()) {
+                const draft = await library.loadProvisionalDraft?.(item.photo.id, preview.photo.contentSha256);
+                const sourceSettings = draft?.settings ?? readDevelopSettings(preview.photo.developSettings) ??
+                  neutralDevelopSettings(null, { raw: isBrowserCloudRawPhoto(item.photo) });
+                const projected = provisionalDevelopSettings(sourceSettings);
+                const bytes = await preview.file.arrayBuffer();
+                if (!isStale()) {
+                  await engine.open(bytes, Math.max(preview.width, preview.height));
+                  const frame = await engine.render(projected, {
+                    maxDimension: DEVELOP_PREVIEW_MAX_DIMENSION,
+                    interactive: false,
+                  });
+                  if (frame && !isStale()) {
+                    provisionalReady = true;
+                    commitProvisional(item, preview, projected, frame, draft ?? null);
+                    const timeline = timelineRef.current;
+                    if (timeline?.key === item.key && photoDevelopDiagnosticsEnabled()) {
+                      console.info("[photo-develop-ui-perf]", {
+                        stage: "proxyReady",
+                        elapsedMs: Math.max(0, performance.now() - timeline.selectedAt),
+                      });
+                    }
+                  }
+                }
+              }
+            } catch {
+              // provisional は任意。使えなければ従来どおり canonical を同じ engine で開く。
+            }
+          }
+          if (!provisionalReady) {
+            const outcome = await openWork(engine, pendingWork ?? undefined);
+            if (outcome !== "stale") openFlowRef.current.applyWorkOutcome(item.key, outcome);
+            return;
+          }
+
+          const canonicalEngine = createDevelopEngine({
+            manifestUrl: library.engineAssets.manifestUrl() ?? undefined,
+          });
+          const canonicalReady = await canonicalEngine.ready();
+          if (!canonicalReady || isStale()) {
+            canonicalEngine.dispose();
+            if (!isStale()) failCanonical();
+            return;
+          }
+          try {
+            const outcome = await openWork(canonicalEngine, pendingWork ?? undefined, true);
+            if (outcome === "stale") {
+              canonicalEngine.dispose();
+              return;
+            }
+            if (outcome.kind === "opened" && outcome.result.session) {
+              const handedOff = await handoffCanonical(item, outcome.result, canonicalEngine, isStale);
+              if (!handedOff && !isStale()) failCanonical();
+              return;
+            }
+            canonicalEngine.dispose();
+            if (outcome.kind === "wait") openFlowRef.current.applyWorkOutcome(item.key, outcome);
+            failCanonical();
+          } catch {
+            canonicalEngine.dispose();
+            if (!isStale()) failCanonical();
+          }
           return;
         }
         try {
@@ -784,7 +1084,8 @@ export function useBrowserPhotoOpen(params: {
           if (!engine || !canOpenDevelopWorkInstead(item.photo, error)) throw error;
           rememberDevelopOriginalTooLarge(item.photo.id);
           showWorkPreview();
-          await openWork(engine);
+          const outcome = await openWork(engine);
+          if (outcome !== "stale") openFlowRef.current.applyWorkOutcome(item.key, outcome);
         }
       } catch (error) {
         if (mountedRef.current && !abort.signal.aborted && generation === loadGenerationRef.current) {
@@ -792,7 +1093,9 @@ export function useBrowserPhotoOpen(params: {
         }
       } finally {
         abort.signal.removeEventListener("abort", abortWork);
+        abort.signal.removeEventListener("abort", abortPreview);
         workAbort.abort();
+        previewAbort.abort();
         if (generation === loadGenerationRef.current) {
           if (loadAbortRef.current === abort) loadAbortRef.current = null;
           openingKeyRef.current = null;
@@ -802,10 +1105,12 @@ export function useBrowserPhotoOpen(params: {
     },
     [
       commitOpenResult,
+      commitProvisional,
       confirmSourceSwitch,
       developUnavailable,
       developSessionRef,
       leaveEditing,
+      handoffCanonical,
       library,
       loadSettings,
       mountedRef,
@@ -824,6 +1129,78 @@ export function useBrowserPhotoOpen(params: {
   );
   const openItemRef = useRef(openItem);
   openItemRef.current = openItem;
+
+  /** provisional の履歴・プリセット・現在値を保ったまま canonical だけを作り直す。 */
+  const retryCanonical = useCallback(async (): Promise<void> => {
+    const current = openedRef.current;
+    if (!current || current.input?.kind !== "provisional" || current.canonicalPending || operationRef.current) return;
+    const item = allItemsRef.current.find((candidate) => candidate.key === current.key);
+    if (!item) return;
+    const generation = loadGenerationRef.current;
+    const abort = new AbortController();
+    loadAbortRef.current?.abort();
+    loadAbortRef.current = abort;
+    openingKeyRef.current = item.key;
+    const pending: OpenedSource = { ...current, canonicalPending: true };
+    openedRef.current = pending;
+    setOpened(pending);
+    setSourceError(null);
+    const isStale = () => {
+      const latest = openedRef.current;
+      return abort.signal.aborted || generation !== loadGenerationRef.current || latest?.key !== item.key || latest.input?.kind !== "provisional";
+    };
+    const fail = () => {
+      if (isStale()) return;
+      const latest = openedRef.current;
+      if (latest?.key === item.key && latest.input?.kind === "provisional") {
+        const failed = { ...latest, canonicalPending: false };
+        openedRef.current = failed;
+        setOpened(failed);
+      }
+      setSourceError("高画質表示を準備できませんでした。もう一度読み込んでください。");
+    };
+    let canonicalEngine: DevelopEngine | null = null;
+    try {
+      canonicalEngine = createDevelopEngine({ manifestUrl: library.engineAssets.manifestUrl() ?? undefined });
+      if (!(await canonicalEngine.ready()) || isStale()) {
+        canonicalEngine.dispose();
+        canonicalEngine = null;
+        fail();
+        return;
+      }
+      const work = await library.ensureWorkingCopy(item.photo.id, {
+        signal: abort.signal,
+        sourceContext: sourceContextFor(item.photo, edit.settingsRef.current),
+      });
+      if (isStale()) {
+        canonicalEngine.dispose();
+        canonicalEngine = null;
+        return;
+      }
+      const context = { ...openFlowRef.current.context, rememberOpenedFrame: () => undefined };
+      const outcome = await resolveWorkOutcome(context, item, work, canonicalEngine, abort.signal, isStale);
+      if (isStale()) {
+        canonicalEngine.dispose();
+        canonicalEngine = null;
+        return;
+      }
+      if (outcome.kind !== "opened" || !outcome.result.session) {
+        canonicalEngine.dispose();
+        canonicalEngine = null;
+        fail();
+        return;
+      }
+      const handedOff = await handoffCanonical(item, outcome.result, canonicalEngine, isStale);
+      canonicalEngine = null;
+      if (!handedOff) fail();
+    } catch {
+      canonicalEngine?.dispose();
+      fail();
+    } finally {
+      if (loadAbortRef.current === abort) loadAbortRef.current = null;
+      if (openingKeyRef.current === item.key) openingKeyRef.current = null;
+    }
+  }, [edit.settingsRef, handoffCanonical, library, operationRef, sourceContextFor]);
 
   /** 開いている写真を、今の開き直しの経路で開き直す（入力を落とし直して、今の行の補正で開く）。 */
   const reopen = (key: string) => {
@@ -1156,6 +1533,7 @@ export function useBrowserPhotoOpen(params: {
       initialFrameRef.current.settingsJson === JSON.stringify(settings) &&
       previewSettings === null && !compareOriginal && !cropActive),
     retryWork,
+    retryCanonical,
     showGrid,
     returnToGrid,
     selectPlace,

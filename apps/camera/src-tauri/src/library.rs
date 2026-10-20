@@ -11,8 +11,9 @@ use crate::photos::{photos, CameraPhotos};
 use crate::{app_log, dialog};
 use niho_desktop_photo::library::{
   folder_not_found, is_valid_id, make_with_macos_tools, photo_not_found, LibraryConfig, PhotoLibrary, RememberedBudget,
-  ScanLimits, MAX_THUMBNAIL_DIMENSION, MAX_THUMBNAIL_JOBS, MIN_THUMBNAIL_DIMENSION, THUMBNAIL_CACHE_DIR_NAME,
-  THUMBNAIL_CACHE_MAX_BYTES, THUMBNAIL_TIMEOUT,
+  ScanLimits, INTERACTIVE_PREVIEW_CACHE_DIR_NAME, INTERACTIVE_PREVIEW_CACHE_MAX_BYTES, INTERACTIVE_PREVIEW_TIMEOUT,
+  MAX_INTERACTIVE_PREVIEW_DIMENSION, MAX_THUMBNAIL_DIMENSION, MAX_THUMBNAIL_JOBS, MIN_INTERACTIVE_PREVIEW_DIMENSION,
+  MIN_THUMBNAIL_DIMENSION, THUMBNAIL_CACHE_DIR_NAME, THUMBNAIL_CACHE_MAX_BYTES, THUMBNAIL_TIMEOUT,
 };
 use niho_desktop_photo::remembered::{remembered_path, RememberedLimits, RememberedStore};
 use serde::Deserialize;
@@ -38,6 +39,13 @@ pub fn install(app: &tauri::AppHandle) {
     thumbnail_timeout: THUMBNAIL_TIMEOUT,
     max_thumbnail_jobs: MAX_THUMBNAIL_JOBS,
     maker: Arc::new(make_with_macos_tools),
+    interactive_preview_dir: app
+      .path()
+      .app_cache_dir()
+      .ok()
+      .map(|dir| dir.join(INTERACTIVE_PREVIEW_CACHE_DIR_NAME)),
+    interactive_preview_cache_max_bytes: INTERACTIVE_PREVIEW_CACHE_MAX_BYTES,
+    interactive_preview_timeout: INTERACTIVE_PREVIEW_TIMEOUT,
     remembered: app
       .path()
       .app_data_dir()
@@ -72,6 +80,29 @@ pub struct ThumbnailRequest {
   pub max_dimension: u32,
 }
 
+/// canonical 現像とは別の、編集開始用プレビュー。256px サムネイルの拡大は許さない。
+#[derive(Debug, Clone, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct InteractivePreviewRequest {
+  pub entry_id: String,
+  pub max_dimension: u32,
+  pub request_id: String,
+  pub priority: InteractivePreviewPriority,
+}
+
+#[derive(Debug, Clone, Copy, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub enum InteractivePreviewPriority {
+  Selected,
+  Prefetch,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct CancelInteractivePreviewRequest {
+  pub request_id: String,
+}
+
 /// 空・128 文字を超える `folderId` は `notFound`（知らない ID と同じ）。
 pub fn validate_folder_request(request: &FolderRequest) -> Result<(), CameraError> {
   if is_valid_id(&request.folder_id) {
@@ -87,6 +118,19 @@ pub fn validate_thumbnail_request(request: &ThumbnailRequest) -> Result<(), Came
   }
   if !is_valid_id(&request.entry_id) {
     return Err(photo_not_found().into());
+  }
+  Ok(())
+}
+
+pub fn validate_interactive_preview_request(request: &InteractivePreviewRequest) -> Result<(), CameraError> {
+  if !(MIN_INTERACTIVE_PREVIEW_DIMENSION..=MAX_INTERACTIVE_PREVIEW_DIMENSION).contains(&request.max_dimension) {
+    return Err(invalid_request());
+  }
+  if !is_valid_id(&request.entry_id) {
+    return Err(photo_not_found().into());
+  }
+  if !is_valid_id(&request.request_id) {
+    return Err(invalid_request());
   }
   Ok(())
 }
@@ -201,6 +245,40 @@ pub async fn camera_library_forget_photos(app: tauri::AppHandle) -> Result<Value
   .await
 }
 
+/// canonical RAW producer と別に作る、長辺 1280〜2048px の provisional JPEG/PNG（raw IPC）。path・名前は返さない。
+#[tauri::command]
+pub async fn camera_photo_interactive_preview(
+  app: tauri::AppHandle,
+  request: Option<Value>,
+) -> Result<tauri::ipc::Response, CameraError> {
+  let request: InteractivePreviewRequest = parse_request(request)?;
+  validate_interactive_preview_request(&request)?;
+  let library = library(&app)?;
+  let bytes = run_blocking(move || {
+    Ok(library.interactive_preview(
+      &request.entry_id,
+      request.max_dimension,
+      &request.request_id,
+      request.priority == InteractivePreviewPriority::Prefetch,
+    )?)
+  })
+  .await?;
+  Ok(tauri::ipc::Response::new(bytes))
+}
+
+#[tauri::command]
+pub async fn camera_photo_cancel_interactive_preview(
+  app: tauri::AppHandle,
+  request: Option<Value>,
+) -> Result<Value, CameraError> {
+  let request: CancelInteractivePreviewRequest = parse_request(request)?;
+  if !is_valid_id(&request.request_id) {
+    return Err(invalid_request());
+  }
+  library(&app)?.cancel_interactive_preview(&request.request_id);
+  Ok(json!({}))
+}
+
 #[cfg(test)]
 mod tests {
   use super::*;
@@ -239,6 +317,34 @@ mod tests {
     assert_eq!(
       validate_thumbnail_request(&thumbnail("", 128)).unwrap_err().code,
       code::NOT_FOUND
+    );
+    let interactive = |entry_id: &str, max_dimension| InteractivePreviewRequest {
+      entry_id: entry_id.into(),
+      max_dimension,
+      request_id: "preview-1".into(),
+      priority: InteractivePreviewPriority::Selected,
+    };
+    assert!(validate_interactive_preview_request(&interactive("entry-1", 1280)).is_ok());
+    assert!(validate_interactive_preview_request(&interactive("entry-1", 2048)).is_ok());
+    assert_eq!(
+      validate_interactive_preview_request(&interactive("entry-1", 1279))
+        .unwrap_err()
+        .code,
+      code::INVALID_REQUEST
+    );
+    assert_eq!(
+      validate_interactive_preview_request(&interactive("entry-1", 2049))
+        .unwrap_err()
+        .code,
+      code::INVALID_REQUEST
+    );
+    let mut invalid_request_id = interactive("entry-1", 1600);
+    invalid_request_id.request_id.clear();
+    assert_eq!(
+      validate_interactive_preview_request(&invalid_request_id)
+        .unwrap_err()
+        .code,
+      code::INVALID_REQUEST
     );
   }
 

@@ -103,6 +103,8 @@ pub fn run() {
       library::camera_library_list_folder,
       library::camera_library_forget_folder,
       library::camera_library_forget_photos,
+      library::camera_photo_interactive_preview,
+      library::camera_photo_cancel_interactive_preview,
       photos::camera_photo_open,
       photos::camera_photo_close,
       photos::camera_photo_save_settings,

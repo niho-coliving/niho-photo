@@ -29,6 +29,7 @@ import type {
   PhotoLibraryErrors,
   PhotoLibraryItem,
   PhotoLibraryPhoto,
+  PhotoLibraryProvisionalDraft,
 } from "../library/photo-library";
 import type { PhotoEditingPhoto } from "../photo-editing-types";
 import { BROWSER_CLOUD_ORIGINAL_FILE_EXTENSIONS, BrowserCloudOriginalError } from "../photo-original-files";
@@ -60,7 +61,17 @@ export type AddedPhoto = {
  * 直す JPEG（`isDevelopWorkTarget`。K5-a 移行元設計）は作業コピー（16bit PNG か ICC 付きの 8bit JPEG・メタデータ・土台の版。
  * {@link DevelopWorkingCopyInput}）。書き出しにはコピーを渡す。
  */
-export type DevelopSourceInput = { kind: "original"; file: File } | DevelopWorkingCopyInput;
+export type DevelopSourceInput =
+  | { kind: "original"; file: File }
+  | DevelopWorkingCopyInput
+  | {
+      /** canonical の producer / baseVersion を名乗らない、端末内だけの編集開始用 raster。 */
+      kind: "provisional";
+      file: File;
+      contentSha256: string;
+      width: number;
+      height: number;
+    };
 
 export type OpenedSource = {
   key: string;
@@ -82,6 +93,8 @@ export type OpenedSource = {
   mode: "wasm" | "canvas" | null;
   /** 補正の入力（オリジナルか作業コピー。wasm のときだけ。書き出しにはコピーを渡す） */
   input: DevelopSourceInput | null;
+  /** canonical 入力を別 engine で準備中。true の間も provisional の操作は有効。 */
+  canonicalPending?: boolean;
   /**
    * 作業コピーで直す写真が、作業コピーを待っている間の状態（その間はクラウドのプレビューを見せ、揃ったら 1 回だけ描いた画に
    * 差し替える。移行元設計）。ほかは null
@@ -129,6 +142,11 @@ export type DevelopSession = {
   settingsSource: DevelopOpenSettingsSource;
   /** 自動保存（閲覧のみの operator は null。保存も補正後のプレビューを上げることもしない） */
   saver: DevelopSettingsSaver | null;
+  /** provisional の入力だけが持つ、写真ごとに直列化された端末内 draft 保存境界。 */
+  provisionalDraft?: {
+    schedule(settings: DevelopSettings): void;
+    flush(): Promise<PhotoLibraryProvisionalDraft | null>;
+  };
 };
 
 /**
@@ -398,14 +416,37 @@ export function describeExportFailure(
 
 /** 開いている写真の入力を、Worker へ渡すコピーにする（Worker は受け取った bytes を手放す）。 */
 export async function copyDevelopInput(input: DevelopSourceInput): Promise<DevelopRenderInput> {
-  return input.kind === "workingCopy"
-    ? copyDevelopWorkingCopyInput(input)
-    : { kind: "original", bytes: await input.file.arrayBuffer() };
+  if (input.kind === "workingCopy") return copyDevelopWorkingCopyInput(input);
+  if (input.kind === "original") return { kind: "original", bytes: await input.file.arrayBuffer() };
+  throw new Error("provisional input cannot be exported");
 }
 
 /** 作業コピーの上で直している写真の土台の版（オリジナルから直接描く写真は null。`developSettings.base` と同じ）。 */
 export function developBaseVersion(input: DevelopSourceInput | null): string | null {
   return input?.kind === "workingCopy" ? input.baseVersion : null;
+}
+
+export function isProvisionalDevelopInput(input: DevelopSourceInput | null): boolean {
+  return input?.kind === "provisional";
+}
+
+/**
+ * provisional 上で作った数値・幾何を、canonical が確定した engine / look / base へ結び直す。値や未知項目は保持し、
+ * canonical の構造項目だけを正とする。
+ */
+export function rebindDevelopSettings(
+  settings: DevelopSettings,
+  canonical: DevelopSettings,
+): DevelopSettings {
+  const rebound: DevelopSettings = {
+    ...settings,
+    engine: canonical.engine,
+  };
+  for (const key of ["look", "base"] as const) {
+    if (Object.hasOwn(canonical, key)) rebound[key] = canonical[key];
+    else delete rebound[key];
+  }
+  return rebound;
 }
 
 /**

@@ -16,7 +16,11 @@
 import { BrowserPhotoSourceError } from "niho-photo-editing/browser-photo-source";
 import { browserCloudPhotoKind } from "niho-photo-editing/browser-photo-cloud-source";
 import { developEngineManifestPath } from "niho-photo-editing/develop-engine/develop-engine-manifest";
-import { isNeutralDevelopSettings, type DevelopSettings } from "niho-photo-editing/develop-engine/develop-settings";
+import {
+  isNeutralDevelopSettings,
+  readDevelopSettings,
+  type DevelopSettings,
+} from "niho-photo-editing/develop-engine/develop-settings";
 import { readJpegPixelSize, readPngPixelSize } from "niho-photo-editing/image-bytes-metadata";
 import type {
   PhotoLibrary,
@@ -27,6 +31,8 @@ import type {
   PhotoLibraryListPage,
   PhotoLibraryListQuery,
   PhotoLibraryPhoto,
+  PhotoLibraryInteractivePreview,
+  PhotoLibraryProvisionalDraft,
   PhotoLibraryWorkingCopy,
   PhotoLibraryWorkingCopyDownload,
   PhotoLibraryWorkingCopyResult,
@@ -46,6 +52,8 @@ import {
 
 /** 一覧のタイル・開いた直後の仮の画のサムネイルの長辺（native の上限 256px）。 */
 export const LOCAL_THUMBNAIL_SIZE = 256;
+/** provisional 編集入力は一覧の 256px を拡大せず、native にこの長辺を別途作らせる。 */
+export const LOCAL_INTERACTIVE_PREVIEW_SIZE = 1600;
 /** サムネイルの URI scheme（src-tauri の thumbnail_scheme.rs と tauri.conf.json の CSP の img-src）。 */
 export const LOCAL_THUMBNAIL_SCHEME = "niho-thumb";
 
@@ -68,6 +76,8 @@ const WORKING_COPY_UNREADABLE = "fetch_failed";
 /** 現像の sidecar の確かめを待つ間隔と回数（起動時の確かめが終わるまで `camera_develop_status` は false を返しうる）。 */
 const DEVELOP_STATUS_RETRY_MS = 400;
 const DEVELOP_STATUS_ATTEMPTS = 3;
+const INTERACTIVE_PREVIEW_CACHE_LIMIT = 3;
+const PROVISIONAL_DRAFT_PREFIX = "niho-photo:provisional-draft:v1:";
 
 /** 何もできない値（読めるまで・読めなかったとき。fail closed）。 */
 export const LOCAL_CLOSED_CAPABILITIES: PhotoLibraryCapabilities = Object.freeze({
@@ -273,6 +283,60 @@ function pixelSizeOf(bytes: Uint8Array): { width: number; height: number } | nul
   return readPngPixelSize(bytes) ?? readJpegPixelSize(bytes);
 }
 
+function provisionalDraftKey(contentSha256: string): string {
+  return `${PROVISIONAL_DRAFT_PREFIX}${contentSha256}`;
+}
+
+function validContentSha256(value: string): boolean {
+  return /^[0-9a-f]{64}$/u.test(value);
+}
+
+function readProvisionalDraft(contentSha256: string): PhotoLibraryProvisionalDraft | null {
+  if (typeof window === "undefined" || !validContentSha256(contentSha256)) return null;
+  let parsed: unknown;
+  try {
+    const stored = window.localStorage.getItem(provisionalDraftKey(contentSha256));
+    if (!stored) return null;
+    parsed = JSON.parse(stored) as unknown;
+  } catch {
+    return null;
+  }
+  if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) return null;
+  const record = parsed as Record<string, unknown>;
+  const settings = readDevelopSettings(record.settings);
+  if (
+    record.schemaVersion !== 1 ||
+    record.contentSha256 !== contentSha256 ||
+    !settings ||
+    typeof record.generation !== "number" ||
+    !Number.isSafeInteger(record.generation) ||
+    record.generation < 1 ||
+    typeof record.updatedAt !== "string"
+  ) {
+    return null;
+  }
+  return { contentSha256, settings, generation: record.generation, updatedAt: record.updatedAt };
+}
+
+function writeProvisionalDraft(contentSha256: string, settings: DevelopSettings, now: Date): PhotoLibraryProvisionalDraft {
+  if (typeof window === "undefined" || !validContentSha256(contentSha256)) {
+    throw new CameraCommandError("invalidRequest", "未保存の補正をこの端末に退避できません。");
+  }
+  const previous = readProvisionalDraft(contentSha256);
+  const draft = {
+    contentSha256,
+    settings,
+    generation: (previous?.generation ?? 0) + 1,
+    updatedAt: now.toISOString(),
+  } satisfies PhotoLibraryProvisionalDraft;
+  try {
+    window.localStorage.setItem(provisionalDraftKey(contentSha256), JSON.stringify({ schemaVersion: 1, ...draft }));
+  } catch {
+    throw new CameraCommandError("internal", "未保存の補正をこの端末に退避できません。");
+  }
+  return draft;
+}
+
 /** 作業コピーの中身（RAW は 16bit PNG、ラスタは ICC 付きの 8bit JPEG）。先頭のバイトで見分ける。 */
 function workingCopyEncoding(bytes: Uint8Array, meta: Record<string, unknown>): PhotoLibraryWorkingCopy["encoding"] {
   if (bytes[0] === 0x89 && bytes[1] === 0x50 && bytes[2] === 0x4e && bytes[3] === 0x47) return "png16";
@@ -317,6 +381,17 @@ export function createLocalPhotoLibrary(commands: CameraCommands, options: Local
    * 読み直さない）。数 MB の JPEG だけで、古いものから 2 つまで。
    */
   const prefetched = new Map<string, Uint8Array>();
+  /** content hash + 長辺ごとのimmutable bytes。entryId/revisionをcacheせず、返すrowは毎回現在のhandleから作る。 */
+  type CachedInteractivePreview = { bytes: Uint8Array; width: number; height: number; type: string };
+  type InteractivePreviewJob = {
+    requestId: string;
+    priority: "selected" | "prefetch";
+    consumers: Set<symbol>;
+    promise: Promise<CachedInteractivePreview>;
+  };
+  const interactivePreviews = new Map<string, CachedInteractivePreview>();
+  const interactivePreviewJobs = new Map<string, InteractivePreviewJob>();
+  let interactivePreviewSequence = 0;
 
   const toHandle = (opened: OpenedPhoto): OpenHandle => ({
     nativeId: opened.photoId,
@@ -413,6 +488,95 @@ export function createLocalPhotoLibrary(commands: CameraCommands, options: Local
       prefetched.delete(oldest);
     }
   };
+
+  const rememberInteractivePreview = (key: string, preview: CachedInteractivePreview) => {
+    interactivePreviews.delete(key);
+    interactivePreviews.set(key, preview);
+    while (interactivePreviews.size > INTERACTIVE_PREVIEW_CACHE_LIMIT) {
+      const oldest = interactivePreviews.keys().next().value;
+      if (oldest === undefined) break;
+      interactivePreviews.delete(oldest);
+    }
+  };
+
+  const loadInteractivePreviewWithPriority = async (
+    photoId: string,
+    request: { signal: AbortSignal; maxDimension: number },
+    priority: "selected" | "prefetch",
+  ): Promise<PhotoLibraryInteractivePreview> => {
+    throwIfAborted(request.signal);
+    if (request.maxDimension < 1280 || request.maxDimension > 2048) {
+      throw new CameraCommandError("invalidRequest", "写真を読み込み直してください。");
+    }
+    const handle = await handleOf(photoId);
+    throwIfAborted(request.signal);
+    const key = `${handle.contentSha256}:${request.maxDimension}`;
+    const cached = interactivePreviews.get(key);
+    if (cached) {
+      interactivePreviews.delete(key);
+      interactivePreviews.set(key, cached);
+      return {
+        photo: openedRow(photoId, handle),
+        file: new File([cached.bytes.slice()], "interactive-preview", { type: cached.type }),
+        width: cached.width,
+        height: cached.height,
+      };
+    }
+    let pending = interactivePreviewJobs.get(key);
+    if (pending?.priority === "prefetch" && priority === "selected") {
+      void commands.cancelInteractivePreview(pending.requestId).catch(() => undefined);
+      interactivePreviewJobs.delete(key);
+      pending = undefined;
+    }
+    if (!pending) {
+      const requestId = `preview-${++interactivePreviewSequence}`;
+      const job: InteractivePreviewJob = {
+        requestId,
+        priority,
+        consumers: new Set(),
+        promise: Promise.resolve({ bytes: new Uint8Array(), width: 0, height: 0, type: "" }),
+      };
+      job.promise = commands.interactivePreview(photoId, request.maxDimension, requestId, priority).then((bytes) => {
+        const size = pixelSizeOf(bytes);
+        if (!size || Math.max(size.width, size.height) < 1280 || Math.max(size.width, size.height) > 2048) {
+          throw new CameraCommandError("decodeFailed", "高画質表示を準備できませんでした。");
+        }
+        const type = bytes[0] === 0x89 ? "image/png" : "image/jpeg";
+        const preview = { bytes: bytes.slice(), width: size.width, height: size.height, type };
+        rememberInteractivePreview(key, preview);
+        return preview;
+      }).finally(() => {
+        if (interactivePreviewJobs.get(key) === job) interactivePreviewJobs.delete(key);
+      });
+      pending = job;
+      interactivePreviewJobs.set(key, job);
+    }
+    const consumer = Symbol();
+    pending.consumers.add(consumer);
+    const onAbort = () => {
+      pending?.consumers.delete(consumer);
+      if (pending?.consumers.size === 0) void commands.cancelInteractivePreview(pending.requestId).catch(() => undefined);
+    };
+    request.signal.addEventListener("abort", onAbort, { once: true });
+    try {
+      const preview = await pending.promise;
+      throwIfAborted(request.signal);
+      return {
+        photo: openedRow(photoId, handle),
+        file: new File([preview.bytes.slice()], "interactive-preview", { type: preview.type }),
+        width: preview.width,
+        height: preview.height,
+      };
+    } finally {
+      request.signal.removeEventListener("abort", onAbort);
+      pending.consumers.delete(consumer);
+    }
+  };
+
+  const loadInteractivePreview = (
+    photoId: string,
+    request: { signal: AbortSignal; maxDimension: number },
+  ) => loadInteractivePreviewWithPriority(photoId, request, "selected");
 
   const workingCopyDownload = async (
     handle: OpenHandle,
@@ -662,6 +826,39 @@ export function createLocalPhotoLibrary(commands: CameraCommands, options: Local
         encoding: workingCopyEncoding(bytes, meta),
         metaJson: JSON.stringify(meta),
       };
+    },
+
+    loadInteractivePreview,
+
+    async prefetchInteractivePreview(photoId, requestOptions) {
+      await loadInteractivePreviewWithPriority(photoId, requestOptions, "prefetch");
+    },
+
+    async loadProvisionalDraft(photoId, contentSha256) {
+      const handle = await handleOf(photoId);
+      if (handle.contentSha256 !== contentSha256) return null;
+      return readProvisionalDraft(contentSha256);
+    },
+
+    async saveProvisionalDraft(photoId, contentSha256, settings) {
+      const handle = await handleOf(photoId);
+      if (handle.contentSha256 !== contentSha256) {
+        throw new CameraCommandError("revisionConflict", "写真が更新されたため、補正を退避できませんでした。");
+      }
+      return writeProvisionalDraft(contentSha256, settings, now());
+    },
+
+    async removeProvisionalDraft(photoId, contentSha256, generation) {
+      const handle = await handleOf(photoId);
+      if (handle.contentSha256 !== contentSha256 || typeof window === "undefined") return false;
+      const draft = readProvisionalDraft(contentSha256);
+      if (!draft || draft.generation !== generation) return false;
+      try {
+        window.localStorage.removeItem(provisionalDraftKey(contentSha256));
+        return true;
+      } catch {
+        return false;
+      }
     },
 
     // この Mac は作り直しを ensureWorkingCopy でする（待ちの列が無い）

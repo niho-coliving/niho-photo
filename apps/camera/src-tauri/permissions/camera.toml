@@ -6,7 +6,7 @@ commands.allow = ["camera_app_info"]
 [[permission]]
 identifier = "allow-camera-library"
 description = "Allows the bundled NIHO photo UI to add a folder or photos chosen with native pickers, list them again, read selected-photo references without rescanning folders, list remembered sources that exist now (missing ones are skipped, not forgotten), and remove remembered folder or selected-photo references without touching original photos, edits, or other source registrations (thumbnails come from the niho-thumb URI scheme, not a command). Hidden files, packages and symlinks below folders are skipped; selected symlinks are canonicalized. Folder and photo paths never leave the app; the page only sees opaque folder and entry IDs and safe metadata."
-commands.allow = ["camera_library_add_folder", "camera_library_add_photos", "camera_library_remembered", "camera_library_selected_photos", "camera_library_list_folder", "camera_library_forget_folder", "camera_library_forget_photos"]
+commands.allow = ["camera_library_add_folder", "camera_library_add_photos", "camera_library_remembered", "camera_library_selected_photos", "camera_library_list_folder", "camera_library_forget_folder", "camera_library_forget_photos", "camera_photo_interactive_preview", "camera_photo_cancel_interactive_preview"]
 
 [[permission]]
 identifier = "allow-camera-photos"

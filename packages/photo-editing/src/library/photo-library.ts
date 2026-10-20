@@ -87,6 +87,28 @@ export type PhotoLibrary = {
     download: PhotoLibraryWorkingCopyDownload,
     options: { signal: AbortSignal },
   ): Promise<PhotoLibraryWorkingCopy>;
+  /**
+   * canonical 作業コピーを待つ間だけ使う、長辺 1280〜2048px の編集可能な仮入力。この口を持たない置き場は従来どおり
+   * canonical を待つ。返す JPEG は canonical の土台ではなく、通常保存・原寸書き出し・補正後プレビューには使わない。
+   */
+  loadInteractivePreview?(
+    photoId: string,
+    options: { signal: AbortSignal; maxDimension: number },
+  ): Promise<PhotoLibraryInteractivePreview>;
+  /** 選択写真の前後 1 枚だけを idle 時に温める。失敗は呼び出し側へ表示しない。 */
+  prefetchInteractivePreview?(
+    photoId: string,
+    options: { signal: AbortSignal; maxDimension: number },
+  ): Promise<void>;
+  /** content SHA-256 に結び付けた provisional 編集値。画像・path・元名は保存しない。 */
+  loadProvisionalDraft?(photoId: string, contentSha256: string): Promise<PhotoLibraryProvisionalDraft | null>;
+  saveProvisionalDraft?(
+    photoId: string,
+    contentSha256: string,
+    settings: DevelopSettings,
+  ): Promise<PhotoLibraryProvisionalDraft>;
+  /** canonical 保存が確認できた世代だけ消す（後発の draft を消さない）。 */
+  removeProvisionalDraft?(photoId: string, contentSha256: string, generation: number): Promise<boolean>;
   /** 作れなかった作業コピー（`failed`）を待ちに戻す */
   retryWorkingCopy(photoId: string): Promise<PhotoLibraryWorkingCopyRetry>;
   /**
@@ -511,6 +533,21 @@ export type PhotoLibraryWorkingCopy = {
   encoding: PhotoLibraryWorkingCopyEncoding;
   /** メタデータの JSON（段 2 の `openWorkingCopy` に渡す） */
   metaJson: string;
+};
+
+/** canonical を名乗らない編集用 JPEG。写真の行は content hash と保存済み設定を確定するためにだけ使う。 */
+export type PhotoLibraryInteractivePreview = {
+  photo: PhotoLibraryPhoto;
+  file: File;
+  width: number;
+  height: number;
+};
+
+export type PhotoLibraryProvisionalDraft = {
+  contentSha256: string;
+  settings: DevelopSettings;
+  generation: number;
+  updatedAt: string;
 };
 
 export type PhotoLibraryWorkingCopyRetry =
