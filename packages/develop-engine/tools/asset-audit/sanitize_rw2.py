@@ -70,9 +70,8 @@ def sanitize(data):
         else:
             continue
         selected.append((tag, kind, count, payload))
-    # Relocate every retained value; no bytes of the original metadata prefix survive.
-    prefix = bytearray(data[:24])
-    struct.pack_into('<I', prefix, 4, 24)
+    # Rebuild the header from its public magic only; unknown reserved bytes may carry private metadata.
+    prefix = bytearray(b'IIU\0' + struct.pack('<I', 24) + bytes(16))
     prefix += struct.pack('<H', len(selected)) + bytes(12 * len(selected) + 4)
     for index, (tag, kind, count, payload) in enumerate(selected):
         if len(payload) <= 4:
@@ -93,7 +92,7 @@ def sanitize(data):
              'outputSha256': hashlib.sha256(output).hexdigest(), 'rawStripSha256': hashlib.sha256(strip).hexdigest(),
              'rawStripBytes': len(strip), 'sourceBytes': len(data), 'outputBytes': len(output),
              'retainedTags': [f'{tag:04x}' for tag, _, _, _ in selected],
-             'removed': ['GPS', 'serial', 'names', 'EXIF', 'MakerNotes', 'camera IFD', 'embedded JPEG/thumbnail', 'ICC']}
+             'removed': ['unknown header bytes', 'GPS', 'serial', 'names', 'EXIF', 'MakerNotes', 'camera IFD', 'embedded JPEG/thumbnail', 'ICC']}
     return output, audit
 
 

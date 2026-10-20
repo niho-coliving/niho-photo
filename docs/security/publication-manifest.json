@@ -8470,13 +8470,13 @@
     },
     {
       "path": "packages/develop-engine/fixtures/public-raw/dc-s5-owner.audit.json",
-      "sha256": "4ffab0aa9f137eff85207ad7605594b4890abd5609bcd056fc3c460f0bf40867",
-      "origin": "#9で独立作成。所有測定対・metadataを除いた所有RAW/参照画像、検証tool、公開build/test契約または第三者license全文。詳細はdocs/migration/raw-engine.mdと資産台帳に記録。"
+      "sha256": "1f61788fadb0589e9a2bf3684d15e50a0019f5bfc5df19b7da54867c18ce1a7b",
+      "origin": "#9で独立作成。所有測定対・metadataを除いた所有RAW/参照画像、検証tool、公開build/test契約または第三者license全文。詳細はdocs/migration/raw-engine.mdと資産台帳に記録。\n変更理由: 未解釈ヘッダーbytesの除去を監査記録へ反映"
     },
     {
       "path": "packages/develop-engine/fixtures/public-raw/dc-s5-owner.rw2",
-      "sha256": "bca624f2ecb877ac68d3869d02ff2fc408077930cf47bd98dfac6c4f5b5c79b4",
-      "origin": "#9で独立作成。所有測定対・metadataを除いた所有RAW/参照画像、検証tool、公開build/test契約または第三者license全文。詳細はdocs/migration/raw-engine.mdと資産台帳に記録。"
+      "sha256": "78e36a38a9c8a7cdacfd4e9a94ead537098c2ce1acdc9b6447e419b8c7f2c297",
+      "origin": "#9で独立作成。所有測定対・metadataを除いた所有RAW/参照画像、検証tool、公開build/test契約または第三者license全文。詳細はdocs/migration/raw-engine.mdと資産台帳に記録。\n変更理由: 未解釈ヘッダーbytesをゼロ化して私有情報の継承を防止"
     },
     {
       "path": "packages/develop-engine/licenses/Adobe-DNG-SDK-LICENSE.txt",
@@ -8490,13 +8490,13 @@
     },
     {
       "path": "packages/develop-engine/tools/asset-audit/sanitize_rw2.py",
-      "sha256": "471d028f5d2f0898e9423775fa1a9da81e423a1c0654e188003c71512c45fc79",
-      "origin": "#9で独立作成。所有測定対・metadataを除いた所有RAW/参照画像、検証tool、公開build/test契約または第三者license全文。詳細はdocs/migration/raw-engine.mdと資産台帳に記録。"
+      "sha256": "ff588be0d23de1133e951e56a9b86464cc804ff464fe7e52ad2b07901a4388d0",
+      "origin": "#9で独立作成。所有測定対・metadataを除いた所有RAW/参照画像、検証tool、公開build/test契約または第三者license全文。詳細はdocs/migration/raw-engine.mdと資産台帳に記録。\n変更理由: 未解釈ヘッダーバイトを出力へ継承しないため再構築"
     },
     {
       "path": "packages/develop-engine/tools/asset-audit/test_sanitize_rw2.py",
-      "sha256": "52d47a9b3441abcf1ad52b4f5c5ee8c14bb701ccfee7040d433b800302901a88",
-      "origin": "#9で独立作成。所有測定対・metadataを除いた所有RAW/参照画像、検証tool、公開build/test契約または第三者license全文。詳細はdocs/migration/raw-engine.mdと資産台帳に記録。"
+      "sha256": "18887e46351644b10ebdb661bfdd8c40e9980f3d1c4138cf299e3c40c90a513f",
+      "origin": "#9で独立作成。所有測定対・metadataを除いた所有RAW/参照画像、検証tool、公開build/test契約または第三者license全文。詳細はdocs/migration/raw-engine.mdと資産台帳に記録。\n変更理由: 未解釈ヘッダー情報の除去回帰テストを追加"
     },
     {
       "path": "packages/develop-engine/tools/independent-profile/check.py",

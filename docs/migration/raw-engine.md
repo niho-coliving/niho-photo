@@ -16,7 +16,7 @@ DNG SDKから転記したACR3表・温度表等は所有係数とは扱わない
 
 公開対象は無人の教室・黒板・ストーブの所有写真。目視とローカル人物検出で確認し、自動検出0件だけを公開判断にしない。人物が含まれた先の候補は公開対象から除いた。一般の比較写真もテストに不要なものは同梱しない。
 
-ExifToolの一括削除だけではserialと埋込JPEGが残るため、元のmetadata領域をコピーしないsanitizerを作成した。必要なnumericタグ、Make/Model、圧縮sensor stripからRW2を再構築し、GPS・serial・氏名・EXIF・MakerNotes・camera IFD・埋込thumbnail/JPEG・ICC・撮影日時を含めない。元と再構築後で圧縮strip、sensor寸法/crop/CFA、WB、black/white、原寸camera RGB PNGを一致確認した。監査JSONにはsource/output/strip/原寸と512pxのhashを記録し、私有配置は記録しない。
+ExifToolの一括削除だけではserialと埋込JPEGが残るため、TIFF magicとIFD offsetからヘッダーを再構築し、未解釈ヘッダーバイトをゼロ化するsanitizerを作成した。必要なnumericタグ、Make/Model、圧縮sensor stripからRW2を再構築し、GPS・serial・氏名・EXIF・MakerNotes・camera IFD・埋込thumbnail/JPEG・ICC・撮影日時を含めない。元と再構築後で圧縮strip、sensor寸法/crop/CFA、WB、black/white、原寸camera RGB PNGを一致確認した。監査JSONにはsource/output/strip/原寸と512pxのhashを記録し、私有配置は記録しない。
 
 1ファイル上限はオーナー指示により50MiBへ変更した。RAW受入は実RW2で常時実行し、合成コンテナの単体テストを実RAWの証拠とは扱わない。
 

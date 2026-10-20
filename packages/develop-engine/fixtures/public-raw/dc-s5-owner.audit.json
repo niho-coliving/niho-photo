@@ -1,7 +1,7 @@
 {
   "schema": "niho.rw2-sanitization/1",
   "sourceSha256": "5a60c61081ee33465dc19be926116e5f0fd2b2515247fa7a2ef1331376597d62",
-  "outputSha256": "bca624f2ecb877ac68d3869d02ff2fc408077930cf47bd98dfac6c4f5b5c79b4",
+  "outputSha256": "78e36a38a9c8a7cdacfd4e9a94ead537098c2ce1acdc9b6447e419b8c7f2c297",
   "rawStripSha256": "f2aad1268cb00afcf578b556953e2e68a2c8ca236ee331c75f8c0d9892efb5c4",
   "rawStripBytes": 35469312,
   "sourceBytes": 36150272,
@@ -54,7 +54,8 @@
     "MakerNotes",
     "camera IFD",
     "embedded JPEG/thumbnail",
-    "ICC"
+    "ICC",
+    "unknown header bytes"
   ],
   "fullCameraPngSha256": "a495d8924ecf5777bd0ddeb1b173748b186e7c336f2952b6ec1a6b472e9555d5",
   "cameraPng512Sha256": "1f04842eafd0fa5ef3889ea1b7a7a9a50e22087c941639457a7090a73015cc18",

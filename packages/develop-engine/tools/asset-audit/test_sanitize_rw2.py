@@ -14,6 +14,7 @@ class SanitizationTests(unittest.TestCase):
                 (0x118, 4, 1, struct.pack('<I', 512)),
                 (0x8769, 4, 1, struct.pack('<I', 400))]
         output = bytearray(b'IIU\0' + struct.pack('<I', 24) + bytes(16))
+        output[8:24] = b'private-header!!'
         output += struct.pack('<H', len(tags)) + bytes(12 * len(tags) + 4)
         for index, (tag, kind, count, payload) in enumerate(tags):
             if len(payload) > 4:
@@ -34,6 +35,8 @@ class SanitizationTests(unittest.TestCase):
         fields = entries(clean)
         self.assertNotIn(0x8769, fields)
         self.assertNotIn(b'private serial marker', clean)
+        self.assertNotIn(b'private-header!!', clean)
+        self.assertEqual(clean[8:24], bytes(16))
         offset = scalar(fields, 0x118)
         self.assertEqual(clean[offset:], bytes(range(32)))
         self.assertEqual(audit['rawStripBytes'], 32)
