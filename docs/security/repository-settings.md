@@ -15,11 +15,12 @@
 | 必須レビュー | 0件。CODEOWNERS承認を含む承認レビューをマージ条件にしない。未解決review threadの解決は必須 |
 | 必須CI | `Public CI required` をGitHub Actions app ID 15368に固定して登録。最新mainでの成功を要求。外部fork PR #18で成功を確認済み |
 
-## 設定変更の確認
+## rulesetを再設定する手順
 
-1. CODEOWNERSと公開CIの定義を既定ブランチに反映済み。
-2. 外部fork PR #18でsecretやprivate runnerなしに `Public CI required` の成功を確認済み。
-3. `Public CI required` をrulesetのrequired status checksへ登録済み。承認レビュー0件・CODEOWNERS承認必須なし・未解決review thread解決必須を確認する。
-4. ruleset、Private vulnerability reporting、secret scanning、push protectionが有効であることを再確認済み。
+1. CODEOWNERSと公開CIのworkflowを既定ブランチに反映する。
+2. 外部forkのPRを作り、secretやprivate runnerなしで `Public CI required` が成功することを確認する。
+3. mainのrulesetに `Public CI required` をGitHub Actions app ID 15368で登録し、最新mainでの成功を要求する。承認レビューは0件、CODEOWNERS承認は不要、未解決review threadの解決は必須とする。
+4. squashのみ、mainの削除・force push禁止、Private vulnerability reporting、secret scanning、push protectionを確認する。
+5. 設定値と外部forkの検証結果をこの文書に記録する。
 
-必須CIはworkflowの既定ブランチ反映と外部fork実測の後に登録した。workflowの検査job名や集約条件を変えるPRでは、rulesetと検査の双方が成立することを確認する。
+2026-10-20にはworkflowを既定ブランチへ反映した後、外部fork PR #18の成功を確認して必須CIを登録した。workflowの検査job名や集約条件を変えるPRでは、rulesetと検査の双方が成立することを確認する。
