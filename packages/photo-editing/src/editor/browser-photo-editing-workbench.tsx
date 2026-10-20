@@ -102,6 +102,7 @@ import {
   type BrowserPhotoEditingGridHandle,
   type BrowserPhotoEditingGridItem,
 } from "./browser-photo-editing-grid";
+import { BrowserPhotoEditingFilmstrip } from "./browser-photo-editing-filmstrip";
 import { BrowserPhotoEditingLoupe } from "./browser-photo-editing-loupe";
 import {
   appendDevelopColorPoint,
@@ -959,12 +960,15 @@ export function BrowserPhotoEditingWorkbench(props: {
   }
   // スマホで直せる拠点の狭い幅は、直せる写真の 1 枚を全画面の編集の層で開く（F6c 移行元設計）。直せない写真は今の表示のまま
   const mobileEditorItem = mobileLayer && showAdjustments ? loupeItem : null;
+  // 1 枚の面の下のフィルムストリップ（L5 #54）。PC の広い幅で 1 枚を見ている間だけ（一覧・狭い幅・スマホの層には出さない）
+  const filmstripVisible = wide && loupeItem !== null && mobileEditorItem === null;
 
   const moveByArrow = (fromKey: string | null, event: ArrowKeyEvent & { shiftKey?: boolean }) => {
     if (event.altKey || event.metaKey || event.ctrlKey || operationRef.current || batchBusy) return;
     const keys = selectableKeys;
     if (viewModeRef.current === "loupe") {
-      if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
+      // 切り抜き・背景除去の道具の間は写真を替えない（L5 #54）
+      if ((event.key !== "ArrowLeft" && event.key !== "ArrowRight") || toolValue !== "adjust") return;
       event.preventDefault();
       const targetKey = movePhotoEditingPhotoId(keys, fromKey, event.key === "ArrowRight" ? 1 : -1);
       const target = targetKey && targetKey !== fromKey ? items.find((item) => item.key === targetKey) : undefined;
@@ -1788,135 +1792,153 @@ export function BrowserPhotoEditingWorkbench(props: {
           />
         )}
 
-        <div className="relative min-h-0 bg-[var(--photo-editing-surface,white)]">
-          {viewMode === "grid" ? (
-            <BrowserPhotoEditingGrid
-              ref={gridRef}
+        {/* 中央の列: 面（一覧か 1 枚）と、1 枚のときだけその下のフィルムストリップ（L5 #54） */}
+        <div className="relative flex min-h-0 flex-col bg-[var(--photo-editing-surface,white)]">
+          <div className="relative min-h-0 flex-1">
+            {viewMode === "grid" ? (
+              <BrowserPhotoEditingGrid
+                ref={gridRef}
+                items={gridItems}
+                listKey={listView.listKey}
+                compact={!wide}
+                selectedKeys={selection.selectedKeys}
+                selecting={selection.selecting}
+                activeKey={selectedKey}
+                // この Mac のフォルダの面は、フォルダを選ぶまで（木を読み込み中・選び直している途中）も読み込み中にする
+                loading={cloud.isPending || (folderUnselected && folderPlaceholder === null)}
+                metaStart={metaStart}
+                // 条件のある空の一覧でも上の行を残す（絞り込みのパネルを開いたまま選び直せる）
+                metaWhenEmpty={listView.filterCount > 0}
+                meta={meta}
+                placeholder={placeholder}
+                more={{
+                  hasMore: cloud.hasNextPage,
+                  loading: cloud.isFetchingNextPage,
+                  failedMessage: cloud.isFetchNextPageError ? "続きを読み込めませんでした。" : null,
+                  onLoad: cloud.fetchNextPage,
+                }}
+                onTileClick={(key, event) => {
+                  if (operationRef.current || batchBusy) return;
+                  const item = items.find((candidate) => candidate.key === key);
+                  if (!item || item.adding) return;
+                  setExportSheetOpen(false);
+                  // スマホの選択モード: 足す・外す（開かない。外して 0 枚になってもモードは続く）
+                  if (selection.selecting) {
+                    selection.select(key, { toggle: true, range: false });
+                    return;
+                  }
+                  // PC: クリック = その 1 枚だけ・⌘ / Ctrl = 足す・外す・⇧ = 範囲。スマホ: 修飾キーを無視して、選んで 1 枚で開く
+                  const compactTap = !isWideWindow();
+                  selection.select(
+                    key,
+                    compactTap ? { toggle: false, range: false } : { toggle: event.metaKey || event.ctrlKey, range: event.shiftKey },
+                  );
+                  if (compactTap) void openItem(item);
+                }}
+                onTileOpen={(key) => {
+                  if (operationRef.current || batchBusy) return;
+                  // 選択モードの間は、タップを続けても（ダブルタップが dblclick になっても）開かない
+                  if (selection.selecting) return;
+                  const item = items.find((candidate) => candidate.key === key);
+                  if (!item) return;
+                  selection.collapse();
+                  void openItem(item);
+                }}
+                onTileKeyDown={(key, event) => {
+                  if (operationRef.current || batchBusy) return;
+                  if (event.key === "Enter" && !event.shiftKey && !event.metaKey && !event.ctrlKey && !event.altKey) {
+                    event.preventDefault();
+                    const item = items.find((candidate) => candidate.key === key);
+                    if (item) {
+                      selection.collapse();
+                      void openItem(item);
+                    }
+                    return;
+                  }
+                  moveByArrow(key, event);
+                }}
+                onTileLongPress={
+                  // スマホの「写真」だけ（長押しで選択モードに入って、その 1 枚を選ぶ）
+                  !wide && place === "photos"
+                    ? (key) => {
+                        if (operationRef.current || batchBusy) return;
+                        const item = items.find((candidate) => candidate.key === key);
+                        if (!item || item.adding) return;
+                        setExportSheetOpen(false);
+                        // 選択モードの間の長押しは、ゆっくり押しただけ（1 回押したのと同じ。選んでいた写真を捨てない）
+                        if (selection.selecting) selection.select(key, { toggle: true, range: false });
+                        else selection.startSelecting(key);
+                      }
+                    : undefined
+                }
+              />
+            ) : mobileEditorItem ? null : (
+              <BrowserPhotoEditingLoupe
+                opened={opened}
+                opening={opening}
+                openedVisible={openedVisible}
+                onPreviewLoaded={open.onPreviewLoaded}
+                onPreviewFailed={open.onPreviewFailed}
+                previewGeneration={open.previewGeneration}
+                previewAccurate={open.previewAccurate}
+                compareOriginal={compareOriginal}
+                presetPreviewName={presets.previewName}
+                crop={
+                  cropping && crop.source
+                    ? {
+                        geometry: crop.geometry,
+                        source: crop.source,
+                        liveAngle: crop.liveAngle,
+                        disabled: controlsDisabled,
+                        onCommit: crop.commit,
+                    }
+                    : null
+                }
+                cutout={
+                  cutout.available
+                    ? {
+                        brushing: cutoutActive && cutout.canBrush,
+                        transparent: cutout.transparent,
+                        radius: cutout.brush.radius,
+                        disabled: controlsDisabled || cutout.running || cutout.loading,
+                        onLiveStroke: cutout.setLiveStroke,
+                        onCommitStroke: cutout.commitStroke,
+                      }
+                    : null
+                }
+                canvasRef={canvasRef}
+                colorPicker={colorMixerAvailable ? {
+                  active: colorPicking,
+                  position: colorPickPosition,
+                  onMove: setColorPickPosition,
+                  onPick: pickColor,
+                  onCancel: () => {
+                    colorPickGenerationRef.current += 1;
+                    setColorPicking(false);
+                  },
+                } : undefined}
+                lockedReason={loupeLockedReason}
+                sourceError={sourceError}
+                onReload={selectedItem ? () => void openItem(selectedItem, { reload: true }) : null}
+                favorite={!wide && !mobileEditorItem ? (shownFavoriteControl ?? null) : null}
+              />
+            )}
+          </div>
+          {filmstripVisible ? (
+            <BrowserPhotoEditingFilmstrip
               items={gridItems}
-              listKey={listView.listKey}
-              compact={!wide}
-              selectedKeys={selection.selectedKeys}
-              selecting={selection.selecting}
               activeKey={selectedKey}
-              // この Mac のフォルダの面は、フォルダを選ぶまで（木を読み込み中・選び直している途中）も読み込み中にする
-              loading={cloud.isPending || (folderUnselected && folderPlaceholder === null)}
-              metaStart={metaStart}
-              // 条件のある空の一覧でも上の行を残す（絞り込みのパネルを開いたまま選び直せる）
-              metaWhenEmpty={listView.filterCount > 0}
-              meta={meta}
-              placeholder={placeholder}
-              more={{
-                hasMore: cloud.hasNextPage,
-                loading: cloud.isFetchingNextPage,
-                failedMessage: cloud.isFetchNextPageError ? "続きを読み込めませんでした。" : null,
-                onLoad: cloud.fetchNextPage,
-              }}
-              onTileClick={(key, event) => {
+              onOpen={(key) => {
                 if (operationRef.current || batchBusy) return;
                 const item = items.find((candidate) => candidate.key === key);
                 if (!item || item.adding) return;
-                setExportSheetOpen(false);
-                // スマホの選択モード: 足す・外す（開かない。外して 0 枚になってもモードは続く）
-                if (selection.selecting) {
-                  selection.select(key, { toggle: true, range: false });
-                  return;
-                }
-                // PC: クリック = その 1 枚だけ・⌘ / Ctrl = 足す・外す・⇧ = 範囲。スマホ: 修飾キーを無視して、選んで 1 枚で開く
-                const compactTap = !isWideWindow();
-                selection.select(
-                  key,
-                  compactTap ? { toggle: false, range: false } : { toggle: event.metaKey || event.ctrlKey, range: event.shiftKey },
-                );
-                if (compactTap) void openItem(item);
-              }}
-              onTileOpen={(key) => {
-                if (operationRef.current || batchBusy) return;
-                // 選択モードの間は、タップを続けても（ダブルタップが dblclick になっても）開かない
-                if (selection.selecting) return;
-                const item = items.find((candidate) => candidate.key === key);
-                if (!item) return;
+                // 一覧のダブルクリックと同じ: その 1 枚だけにして 1 枚のまま開く（選択は、今の写真の保存を送り終えてから替わる）
                 selection.collapse();
-                void openItem(item);
+                return openItem(item);
               }}
-              onTileKeyDown={(key, event) => {
-                if (operationRef.current || batchBusy) return;
-                if (event.key === "Enter" && !event.shiftKey && !event.metaKey && !event.ctrlKey && !event.altKey) {
-                  event.preventDefault();
-                  const item = items.find((candidate) => candidate.key === key);
-                  if (item) {
-                    selection.collapse();
-                    void openItem(item);
-                  }
-                  return;
-                }
-                moveByArrow(key, event);
-              }}
-              onTileLongPress={
-                // スマホの「写真」だけ（長押しで選択モードに入って、その 1 枚を選ぶ）
-                !wide && place === "photos"
-                  ? (key) => {
-                      if (operationRef.current || batchBusy) return;
-                      const item = items.find((candidate) => candidate.key === key);
-                      if (!item || item.adding) return;
-                      setExportSheetOpen(false);
-                      // 選択モードの間の長押しは、ゆっくり押しただけ（1 回押したのと同じ。選んでいた写真を捨てない）
-                      if (selection.selecting) selection.select(key, { toggle: true, range: false });
-                      else selection.startSelecting(key);
-                    }
-                  : undefined
-              }
+              onArrowKey={(event) => moveByArrow(selectedKey, event)}
             />
-          ) : mobileEditorItem ? null : (
-            <BrowserPhotoEditingLoupe
-              opened={opened}
-              opening={opening}
-              openedVisible={openedVisible}
-              onPreviewLoaded={open.onPreviewLoaded}
-              onPreviewFailed={open.onPreviewFailed}
-              previewGeneration={open.previewGeneration}
-              previewAccurate={open.previewAccurate}
-              compareOriginal={compareOriginal}
-              presetPreviewName={presets.previewName}
-              crop={
-                cropping && crop.source
-                  ? {
-                      geometry: crop.geometry,
-                      source: crop.source,
-                      liveAngle: crop.liveAngle,
-                      disabled: controlsDisabled,
-                      onCommit: crop.commit,
-                  }
-                  : null
-              }
-              cutout={
-                cutout.available
-                  ? {
-                      brushing: cutoutActive && cutout.canBrush,
-                      transparent: cutout.transparent,
-                      radius: cutout.brush.radius,
-                      disabled: controlsDisabled || cutout.running || cutout.loading,
-                      onLiveStroke: cutout.setLiveStroke,
-                      onCommitStroke: cutout.commitStroke,
-                    }
-                  : null
-              }
-              canvasRef={canvasRef}
-              colorPicker={colorMixerAvailable ? {
-                active: colorPicking,
-                position: colorPickPosition,
-                onMove: setColorPickPosition,
-                onPick: pickColor,
-                onCancel: () => {
-                  colorPickGenerationRef.current += 1;
-                  setColorPicking(false);
-                },
-              } : undefined}
-              lockedReason={loupeLockedReason}
-              sourceError={sourceError}
-              onReload={selectedItem ? () => void openItem(selectedItem, { reload: true }) : null}
-              favorite={!wide && !mobileEditorItem ? (shownFavoriteControl ?? null) : null}
-            />
-          )}
+          ) : null}
           <PhotoEditingDropOverlay state={add.fileDrop.overlay} />
         </div>
         {mobileEditorItem ? (

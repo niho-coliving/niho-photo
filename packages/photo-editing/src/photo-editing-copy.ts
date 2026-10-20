@@ -88,6 +88,8 @@ export const PHOTO_EDITING_COPY_SETTINGS_DONE_TEXT = "補正をコピーしま�
 export const BROWSER_PHOTO_EDITING_READ_ONLY_TEXT = "この拠点は閲覧のみです。";
 /** ブラウザ版: 狭い幅で 1 枚を見ているときの状態欄。 */
 export const BROWSER_PHOTO_EDITING_WIDE_ONLY_TEXT = "基本補正はPCで使えます";
+/** ブラウザ版: 1 枚の面の下のフィルムストリップ（PC の広い幅。今の一覧のサムネイルの帯。L5 #54）の読み上げ名。 */
+export const BROWSER_PHOTO_EDITING_FILMSTRIP_LABEL = "この一覧の写真";
 
 /** 右パネルのプリセットの節（NIHO Photo 段 1 F2b 移行元設計）。 */
 export const PHOTO_EDITING_PRESETS_TITLE = "プリセット";
