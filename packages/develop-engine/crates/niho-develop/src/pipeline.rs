@@ -772,6 +772,21 @@ impl RasterTail {
         )
     }
 
+    /// Float-boundary evaluation for working halo pixels. Active points use
+    /// the same f32 selection coordinates as the output-sized point cache,
+    /// but the halo itself is never retained in that cache.
+    #[inline]
+    fn float_boundary_pixel(&self, value: [f32; 3]) -> [f32; 3] {
+        if self.point_tail.is_none() {
+            return self.pixel(value);
+        }
+        let value = self.before_color_points(value);
+        self.cached_point_pixel(CachedColorPointPixel {
+            value,
+            oklch: color_ops::cached_prophoto_to_oklch(value),
+        })
+    }
+
     /// Shared normal-render / picker chain through the input of independent
     /// color points, returned in linear ProPhoto.
     #[inline]
@@ -1071,6 +1086,133 @@ fn fill_rgba(
     for_each_output_pixel(pixels, head, |value, index| {
         emit(&mut rgba[index * 4..index * 4 + 4], value, index);
     });
+}
+
+/// Float boundary immediately before output transform. When sharpening is
+/// active this spans the working window, not just the output crop, so the
+/// convolution sees the geometry halo. Later mask composition can reuse the
+/// same boundary without decoding RGBA8.
+struct LinearRgbPlane {
+    width: usize,
+    height: usize,
+    data: Vec<f32>,
+}
+
+/// Builds a working-sized float plane. The local ratio is working-sized;
+/// the vignette remains defined on the post-crop output and evaluates halo
+/// coordinates relative to that output instead of indexing its rho table by
+/// a working index.
+#[allow(clippy::too_many_arguments)]
+fn collect_working_float_plane(
+    source: &[f32],
+    width: usize,
+    height: usize,
+    output: Rect,
+    local: Option<&Plane>,
+    vignette: Option<&LinearVignette<'_>>,
+    head: impl Fn([f32; 3]) -> [f32; 3],
+    tail: impl Fn([f32; 3]) -> [f32; 3],
+) -> LinearRgbPlane {
+    let mut data = vec![0.0f32; width * height * 3];
+    for y in 0..height {
+        for x in 0..width {
+            let index = y * width + x;
+            let offset = index * 3;
+            let mut value = head([source[offset], source[offset + 1], source[offset + 2]]);
+            let vignette_at = vignette.map(|effect| {
+                let rho = effect.radius_at(
+                    x as isize - output.x as isize,
+                    y as isize - output.y as isize,
+                );
+                (effect, rho)
+            });
+            value = linear_spatial_pixel(value, local.map(|plane| plane.data[index]), vignette_at);
+            data[offset..offset + 3].copy_from_slice(&tail(value));
+        }
+    }
+    LinearRgbPlane {
+        width,
+        height,
+        data,
+    }
+}
+
+fn replace_output_region(
+    plane: &mut LinearRgbPlane,
+    output: Rect,
+    values: impl IntoIterator<Item = [f32; 3]>,
+) {
+    let mut values = values.into_iter();
+    for y in 0..output.height {
+        for x in 0..output.width {
+            let index = ((output.y + y) * plane.width + output.x + x) * 3;
+            plane.data[index..index + 3]
+                .copy_from_slice(&values.next().expect("complete output float region"));
+        }
+    }
+    debug_assert!(values.next().is_none());
+}
+
+#[derive(Clone, Copy)]
+enum FloatEncoding<'a> {
+    Standard { transform: bool },
+    Niho3(&'a crate::fastmath::Niho3Srgb8Encoder),
+}
+
+/// Float -> optional sharp -> output crop -> existing output transform /
+/// encode -> output effects exactly once.
+fn finalize_float_plane(
+    mut plane: LinearRgbPlane,
+    output: Rect,
+    whole_long_edge: usize,
+    sharpening: Option<crate::settings::SharpeningSettings>,
+    encoding: FloatEncoding<'_>,
+    output_effects: Option<&OutputEffects>,
+    mark_out_of_srgb: bool,
+) -> Vec<u8> {
+    assert!(output.x + output.width <= plane.width);
+    assert!(output.y + output.height <= plane.height);
+    if let Some(sharpening) = sharpening.filter(|value| value.amount > 0.0) {
+        // FramePlan retains a full internal halo. Near an actual photo edge
+        // it clips that halo, and Gaussian clamping matches the whole render.
+        crate::detail::sharpen_linear_srgb(
+            &mut plane.data,
+            plane.width,
+            plane.height,
+            whole_long_edge,
+            sharpening,
+        )
+        .expect("validated float detail output");
+    }
+
+    let mut rgba = vec![0u8; output.width * output.height * 4];
+    for y in 0..output.height {
+        for x in 0..output.width {
+            let source_index = ((output.y + y) * plane.width + output.x + x) * 3;
+            let output_index = y * output.width + x;
+            let pixel = &plane.data[source_index..source_index + 3];
+            let value = [pixel[0], pixel[1], pixel[2]];
+            let destination = &mut rgba[output_index * 4..output_index * 4 + 4];
+            match encoding {
+                FloatEncoding::Standard { transform } => {
+                    write_rgba_fx(destination, value, transform, output_effects, output_index);
+                    if mark_out_of_srgb
+                        && transform
+                        && (value[0] < 0.0 || value[1] < 0.0 || value[2] < 0.0)
+                    {
+                        destination[3] = 0;
+                    }
+                }
+                FloatEncoding::Niho3(encoder) => match output_effects {
+                    None => write_niho3_output_rgba(destination, value, encoder),
+                    Some(effect) => {
+                        write_niho3_output_rgba_fx(destination, value, effect, output_index)
+                    }
+                },
+            }
+        }
+    }
+    rgba
 }
 
 fn color_point_plane_key(
@@ -1499,7 +1641,10 @@ fn render_linear(
                     &frame.stats_source.data,
                     frame.stats_source.width,
                     frame.stats_source.height,
-                    frame.long_edge,
+                    // Statistics read the full source before geometry. Its
+                    // NR footprint belongs to that full-resolution source;
+                    // the working window separately uses frame.long_edge.
+                    frame.stats_source.width.max(frame.stats_source.height),
                     source_space,
                     value,
                     value.color_noise_reduction,
@@ -1748,8 +1893,25 @@ fn render_linear(
     if let Some(sharpening) = final_sharpening {
         // Keep the tail in float. Detail sharpening must never decode the
         // already quantized Rendered.rgba, and output effects are applied
-        // exactly once after sharpening.
-        let mut linear = vec![0.0f32; out.width * out.height * 3];
+        // exactly once after sharpening. The float plane spans the working
+        // halo; only finalize extracts the output rectangle.
+        let mut linear = match &input_matrix {
+            Some(matrix) => collect_working_float_plane(
+                &img.data,
+                w,
+                h,
+                out,
+                local,
+                vignette,
+                |pixel| rest(mat_vec_f32(matrix, pixel)),
+                |value| tail.float_boundary_pixel(value),
+            ),
+            None => {
+                collect_working_float_plane(&img.data, w, h, out, local, vignette, rest, |value| {
+                    tail.float_boundary_pixel(value)
+                })
+            }
+        };
         if s.has_active_color_points() {
             let key = format!(
                 "{}|local={:?}",
@@ -1776,43 +1938,29 @@ fn render_linear(
                     |value| tail.before_color_points(value),
                 ),
             };
-            for (destination, pixel) in linear.chunks_exact_mut(3).zip(&plane.pixels) {
-                destination.copy_from_slice(&tail.cached_point_pixel(*pixel));
-            }
+            replace_output_region(
+                &mut linear,
+                out,
+                plane
+                    .pixels
+                    .iter()
+                    .copied()
+                    .map(|pixel| tail.cached_point_pixel(pixel)),
+            );
         } else {
             *color_point_cache = None;
-            match &input_matrix {
-                Some(matrix) => for_each_output_pixel(
-                    pixels,
-                    |pixel| rest(mat_vec_f32(matrix, pixel)),
-                    |value, index| {
-                        linear[index * 3..index * 3 + 3].copy_from_slice(&tail.pixel(value));
-                    },
-                ),
-                None => for_each_output_pixel(pixels, rest, |value, index| {
-                    linear[index * 3..index * 3 + 3].copy_from_slice(&tail.pixel(value));
-                }),
-            }
         }
-        crate::detail::sharpen_linear_srgb(
-            &mut linear,
-            out.width,
-            out.height,
+        rgba = finalize_float_plane(
+            linear,
+            out,
             frame.long_edge,
-            sharpening,
-        )
-        .expect("validated float detail output");
-        for (index, pixel) in linear.chunks_exact(3).enumerate() {
-            let value = [pixel[0], pixel[1], pixel[2]];
-            let destination = &mut rgba[index * 4..index * 4 + 4];
-            write_rgba_fx(destination, value, tail.output_transform, out_fx, index);
-            if mark_out_of_srgb
-                && tail.output_transform
-                && (value[0] < 0.0 || value[1] < 0.0 || value[2] < 0.0)
-            {
-                destination[3] = 0;
-            }
-        }
+            Some(sharpening),
+            FloatEncoding::Standard {
+                transform: tail.output_transform,
+            },
+            out_fx,
+            mark_out_of_srgb,
+        );
     } else if s.has_active_color_points() {
         let key = format!(
             "{}|local={:?}",
@@ -1959,6 +2107,19 @@ impl RawTail {
             .as_ref()
             .expect("active point tail")
             .apply_cached_color_points_and_grading(pixel.value, pixel.oklch)
+    }
+
+    /// Working-halo counterpart of the output-sized point cache.
+    #[inline]
+    fn float_boundary_pixel(&self, value: [f32; 3]) -> [f32; 3] {
+        if self.point_tail.is_none() {
+            return self.pixel(value);
+        }
+        let value = self.before_color_points(value);
+        self.cached_point_pixel(CachedColorPointPixel {
+            value,
+            oklch: color_ops::cached_prophoto_to_oklch(value),
+        })
     }
 
     /// Shared normal-render / picker chain through the input of independent
@@ -2599,7 +2760,28 @@ fn render_raw(
         .flatten()
         .filter(|sharpening| sharpening.amount > 0.0);
     if let Some(sharpening) = final_sharpening {
-        let mut linear = vec![0.0f32; out.width * out.height * 3];
+        let mut linear = match &white_balance {
+            Some(matrix) => collect_working_float_plane(
+                &img.data,
+                w,
+                h,
+                out,
+                local,
+                vignette,
+                |pixel| expose(mat_vec_f32(matrix, pixel)),
+                |value| finish(tail.float_boundary_pixel(value)),
+            ),
+            None => collect_working_float_plane(
+                &img.data,
+                w,
+                h,
+                out,
+                local,
+                vignette,
+                expose,
+                |value| finish(tail.float_boundary_pixel(value)),
+            ),
+        };
         if s.has_active_color_points() {
             let key = format!(
                 "{}|local={:?}",
@@ -2626,52 +2808,35 @@ fn render_raw(
                     |value| tail.before_color_points(value),
                 ),
             };
-            for (destination, pixel) in linear.chunks_exact_mut(3).zip(&plane.pixels) {
-                destination.copy_from_slice(&finish(tail.cached_point_pixel(*pixel)));
-            }
+            replace_output_region(
+                &mut linear,
+                out,
+                plane
+                    .pixels
+                    .iter()
+                    .copied()
+                    .map(|pixel| finish(tail.cached_point_pixel(pixel))),
+            );
         } else {
             *color_point_cache = None;
-            match &white_balance {
-                Some(matrix) => for_each_output_pixel(
-                    pixels,
-                    |pixel| expose(mat_vec_f32(matrix, pixel)),
-                    |value, index| {
-                        linear[index * 3..index * 3 + 3]
-                            .copy_from_slice(&finish(tail.pixel(value)));
-                    },
-                ),
-                None => for_each_output_pixel(pixels, expose, |value, index| {
-                    linear[index * 3..index * 3 + 3].copy_from_slice(&finish(tail.pixel(value)));
-                }),
-            }
         }
-        crate::detail::sharpen_linear_srgb(
-            &mut linear,
-            out.width,
-            out.height,
-            frame.long_edge,
-            sharpening,
-        )
-        .expect("validated float detail output");
         let legacy = matches!(
             s.engine.as_str(),
             ENGINE_NIHO_3 | ENGINE_NIHO_4 | ENGINE_NIHO_5 | ENGINE_NIHO_7 | ENGINE_NIHO_11
         );
         let encoder = legacy.then(crate::fastmath::niho3_srgb8);
-        for (index, pixel) in linear.chunks_exact(3).enumerate() {
-            let output = [pixel[0], pixel[1], pixel[2]];
-            let destination = &mut rgba[index * 4..index * 4 + 4];
-            match (encoder, out_fx) {
-                (Some(encoder), None) => write_niho3_output_rgba(destination, output, encoder),
-                (Some(_), Some(fx)) => write_niho3_output_rgba_fx(destination, output, fx, index),
-                (None, _) => {
-                    write_rgba_fx(destination, output, true, out_fx, index);
-                    if mark_out_of_srgb && (output[0] < 0.0 || output[1] < 0.0 || output[2] < 0.0) {
-                        destination[3] = 0;
-                    }
-                }
-            }
-        }
+        let encoding = encoder.map_or(FloatEncoding::Standard { transform: true }, |encoder| {
+            FloatEncoding::Niho3(encoder)
+        });
+        rgba = finalize_float_plane(
+            linear,
+            out,
+            frame.long_edge,
+            Some(sharpening),
+            encoding,
+            out_fx,
+            mark_out_of_srgb,
+        );
     } else if s.has_active_color_points() {
         let key = format!(
             "{}|local={:?}",
