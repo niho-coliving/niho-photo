@@ -88,7 +88,7 @@ def main():
     result = launch(args.iteration)
     print(json.dumps({"stagesMs": {
         "editable": result["timeToEditableMs"], "inputAccepted": result["inputAcceptedMs"],
-        "renderUpdated": result["exposurePaintMs"],
+        "renderUpdated": result["exposurePaintMs"], "presetRenderUpdated": result["presetPaintMs"],
         **({"proxyReady": result["proxyReadyMs"]} if result.get("proxyReadyMs") is not None else {}),
         **({"canonicalReady": result["canonicalReadyMs"]} if result.get("canonicalReadyMs") is not None else {}),
     }, "settingsRetained": result["settingsRetained"], "presetRetained": result["presetRetained"]}))

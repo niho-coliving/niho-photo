@@ -20,6 +20,7 @@ const ALLOWED_STAGES = new Set([
   "canonicalReady",
   "inputAccepted",
   "renderUpdated",
+  "presetRenderUpdated",
   "editable",
 ]);
 

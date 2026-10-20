@@ -8557,12 +8557,17 @@
     },
     {
       "path": "apps/camera/scripts/measure-progressive-open.mjs",
-      "sha256": "240cc81ba33d82387e7dbf6f7bf2f5d3e63edd5eb8bc509f34362a5e940ac083",
+      "sha256": "a0967123303356338f8d132467048951f44fbdf0ef5e53d2860f4ba977a2784a",
       "origin": "Issue #13のため独立作成。外から渡した実RAW pathを出力せず、case label、cold/warm条件、許可した区間時間だけを集計する公開ハーネス。実画像・原本名・個人path・画像由来hashを出力しない。"
     },
     {
+      "path": "apps/camera/scripts/measure-progressive-open.test.mjs",
+      "sha256": "a0395eeebbc239166857e746242eb02cb0c480c58221c959b1c50089d6f93c03",
+      "origin": "Issue #13の計測ハーネスの公開出力を合成probeで検査。画像名・hash・未許可項目を集計へ転送しないことを確認。実RAWの性能受入には使わない。"
+    },
+    {
       "path": "apps/camera/scripts/probe-progressive-open.py",
-      "sha256": "35404dfedcc1c56a946da9355423936a7e8b5e899bf5a719b58b31a9dfeb6a1c",
+      "sha256": "76ffe67de6650992ca8932f31169aca94e578d2f7c7f9daf36d4c11d3c5f4f93",
       "origin": "Issue #13のため独立作成した実UI検証probe。専用e2e bundleだけを操作し、実画像・元の名前・path・画像hashを公開出力しない。"
     },
     {
@@ -8587,7 +8592,7 @@
     },
     {
       "path": "docs/features/progressive-raw-open.md",
-      "sha256": "afa681e48798244006e79c283bec9d26a45a6fbec472f1a4d3717b67da1dda5f",
+      "sha256": "55fe0caf570efe299d7d1537938282cbe6333f4748ac5a309ed5803e9ec5ad2c",
       "origin": "Issue #13のため公開SSOT上で独立作成。段階RAW openの契約と合成入力による統合検証。利用者画像・原本名・非公開ソース・認証情報を含まない。"
     },
     {

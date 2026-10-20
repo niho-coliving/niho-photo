@@ -32,9 +32,9 @@ MacBook Air M2 / 8GBのcold p50 1秒・p95 2秒、warm p95 500ms、および入�
 
 ```sh
 node apps/camera/scripts/measure-progressive-open.mjs \
-  --case dc-s5=<入力RAW> --case fx30=<入力RAW> --case zv-e10m2=<入力RAW> \
+  --case "dc-s5=$RAW_DC_S5" --case "fx30=$RAW_FX30" --case "zv-e10m2=$RAW_ZV_E10M2" \
   --probe python3 --probe-arg apps/camera/scripts/probe-progressive-open.py \
-  --probe-arg --runtime --probe-arg <非公開runtime.json> \
+  --probe-arg --runtime --probe-arg "$RUNTIME_JSON" \
   --probe-arg --input --probe-arg '{input}' \
   --probe-arg --cache --probe-arg '{cache}' \
   --probe-arg --condition --probe-arg '{condition}' \
