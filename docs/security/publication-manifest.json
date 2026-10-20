@@ -755,10 +755,11 @@
         "path": "packages/photo-editing/src/editor/browser-photo-editing-footer.tsx",
         "sha256": "448c53cf1da0a5f3b41e1d507d2ac5d618a39c0b300571ad95a670bdba86bca0"
       },
-      "outputSha256": "79697bb74c09b38dfd2432571dadfc337a4a6809a2423812b67098400bc9e823",
+      "outputSha256": "0a36c44436185190ea8f72371ca6c70438ae939c4340bfe0f42861600ac665fb",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
-        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。"
+        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
+        "信頼済みhost接続時だけ共有操作を表示する任意のボタンを追加。"
       ]
     },
     {
@@ -952,12 +953,14 @@
         "path": "packages/photo-editing/src/editor/browser-photo-editing-workbench-folders.test.tsx",
         "sha256": "2466702c26e46adadb579736eb8edef22cc420e4b0189283fd7d4b762a62869e"
       },
-      "outputSha256": "09dcc9ade8de932ad8f5b1fbf33ccbc7387aa94d390d18144c82a76b4bd58b90",
+      "outputSha256": "01340078310b4cfe6776d5fef5f4fbf88b7e0bd322a5913b4a554f696dbe6820",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
         "任意の個別写真ソース契約と選んだ写真のUI、復元、取消、再試行、失敗時参照保持を追加",
-        "Issue #50のMac画面配置・表示色・パネル・版位置の変更。"
+        "クラウド写真の共有接続有無と本番機能の無効状態を合成テストで確認。",
+        "Issue #50のMac画面配置・表示色・パネル・版位置の変更。",
+        "クラウド共有・Issue #50の両接続口と表示を統合テスト。"
       ]
     },
     {
@@ -968,13 +971,16 @@
         "path": "packages/photo-editing/src/editor/browser-photo-editing-workbench.tsx",
         "sha256": "f655136ae0c985d793822ca8bef1668dba26ffd4bb8f13d2ba3d6c2ccb13ceb6"
       },
-      "outputSha256": "526e18c247804836a2196bc4b63ee1ec7c08f173480f0739e95d19c2fdb0ccf2",
+      "outputSha256": "de9ddf62e242fb7f137e911ba416b73e62462fa10dbe1e8002bde0a4af2af821",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
         "任意の個別写真ソース契約と選んだ写真のUI、復元、取消、再試行、失敗時参照保持を追加",
         "Issue #50のMac画面配置・表示色・パネル・版位置の変更。",
-        "PR #61 の切り抜きUI・完了/取消操作と回帰検証を公開repoで実装。"
+        "PR #61 の切り抜きUI・完了/取消操作と回帰検証を公開repoで実装。",
+        "クラウド共有UIを任意の信頼済みhost接続口へ限定し、Cameraのlocal-only境界を維持。",
+        "クラウド共有接続とIssue #50のMacレイアウトを統合。",
+        "PR #61 の切り抜き画面と共有UIの統合"
       ]
     },
     {
@@ -8831,8 +8837,8 @@
     },
     {
       "path": "packages/photo-editing/src/cloud-sharing-contract.ts",
-      "sha256": "a8a579d089e0f8bf1ed44ed1ee69a8e465ba6d17d510a2d744211ed602c0f89f",
-      "origin": "共有Docs contractの型・HTTP query配置・決定的mockをPhoto編集workspaceへ公開するre-export。"
+      "sha256": "b18550a154dac36fd9f1ed9f347e03a62dd850b8f2dab6f630f9250e78f6f35b",
+      "origin": "共有Docs contractの型・HTTP query配置・決定的mockをPhoto編集workspaceへ公開するre-export。\n変更理由: Photo共有クライアントとmockの公開型を追加。"
     },
     {
       "path": "packages/photo-editing/src/cloud-sharing-contract.test.ts",
@@ -8843,6 +8849,31 @@
       "path": "packages/photo-editing/src/editor/use-browser-photo-crop.test.tsx",
       "sha256": "4d44380672bf1fc4cc1a558eb227dce0f03d7d19c28b388f1e14e8314e7f979d",
       "origin": "公開repoで新規作成（#52）。所有する実画像・外部fixtureを使わず、切り抜き完了・取消の状態遷移を合成データで検証。"
+    },
+    {
+      "path": "packages/photo-editing/src/cloud-sharing-controller.test.ts",
+      "sha256": "363ee473313213fe2a44bb5734cb991ce08ea161951ea5ac57c0e29833f740e2",
+      "origin": "Issue #8 の共有状態遷移、競合、同一キー再試行、権限エラーを合成入力で検証する独立新規テスト。\n変更理由: 応答保留中の取消と一覧照合の競合を合成テストへ追加。\n変更理由: 画面再表示後の同一キー再開と後続ページの失効を合成テストで検証。"
+    },
+    {
+      "path": "packages/photo-editing/src/cloud-sharing-controller.ts",
+      "sha256": "5c55f6f0e034380af7574da143217cd7eedd2d5ca0a569dd5c9cf96196d06faa",
+      "origin": "Issue #8 の公開契約に基づく共有状態機械を独立新規作成。実token・実写真・private API情報を含まない。\n変更理由: 取消後の未確定mutationを保持したまま一覧照合を許可する。\n変更理由: 未確定操作を画面再表示まで同一キーで保持し共有一覧のcursor追加読込を実装。"
+    },
+    {
+      "path": "packages/photo-editing/src/cloud-sharing-preview-mock.ts",
+      "sha256": "bba27ccbbe9cb298ac140e3a1333643a36f1f3e164acbc82a606ec4f047f8930",
+      "origin": "Issue #8 の共有フロー確認用に合成URLとメモリ内状態だけを使う独立新規mock。"
+    },
+    {
+      "path": "packages/photo-editing/src/editor/browser-photo-cloud-share-sheet.test.tsx",
+      "sha256": "18e45d2459610c1979faa2ffdfa25da952c85d3d5b3c85fbac9f4b1b4bd1069a",
+      "origin": "Issue #8 の共有UIを合成resourceとmockで検証する独立新規component test。\n変更理由: 後続ページの共有リンク操作をcomponent testで検証。\n変更理由: 画面を閉じて再表示した後も同一idempotencyキーを使うcomponent testを追加。"
+    },
+    {
+      "path": "packages/photo-editing/src/editor/browser-photo-cloud-share-sheet.tsx",
+      "sha256": "da18c82c09268a8621e27c84d7fc956dbd2e5cbbb47e688956ef436708a26628",
+      "origin": "Issue #8 の共有対象確認、リンク表示と失効、通信・権限・容量エラーUIを独立新規作成。\n変更理由: 共有URLは再表示できないため、作成成功時にコピー期限を明示。\n変更理由: 取消後の応答保留中も共有一覧の照合操作を提供する。\n変更理由: 共有一覧の後続ページを利用者が明示的に読み込めるUIを追加。"
     }
   ],
   "excludedSources": [
