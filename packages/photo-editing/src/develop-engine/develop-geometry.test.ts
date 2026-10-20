@@ -9,6 +9,7 @@ import {
   developFrameSize,
   fitCropBox,
   flipGeometryHorizontal,
+  flipGeometryVertical,
   geometryOutputToSource,
   isCropBoxInsideFrame,
   isDevelopAspect,
@@ -21,6 +22,7 @@ import {
   resetDevelopGeometry,
   resizeCropBox,
   rotateGeometryClockwise,
+  rotateGeometryCounterClockwise,
   setGeometryAngle,
   setGeometryAspect,
   swapDevelopAspect,
@@ -672,6 +674,65 @@ describe("回転・反転", () => {
     }
     // 角度 0 は −0 にしない（保存の値が揺れない）
     expect(Object.is(flipGeometryHorizontal(geometry(), SOURCE).angle, 0)).toBe(true);
+  });
+
+  it("rotateGeometryCounterClockwise は時計回りに 3 回と同じ（表示される結果を反時計回りに 90° 回す）", () => {
+    for (const before of CASES) {
+      const after = rotateGeometryCounterClockwise(before, SOURCE);
+      let thrice = before;
+      for (let turn = 0; turn < 3; turn += 1) thrice = rotateGeometryClockwise(thrice, SOURCE);
+      expectGeometryClose(after, thrice);
+      expect(after.rotate).toBe((before.rotate + 270) % 360);
+      // 結果の左上の角は、回す前の結果の右上の角と同じ作業画像の点
+      expectPointClose(source(after, SOURCE, 0, 0), source(before, SOURCE, 1, 0));
+      expectPointClose(source(after, SOURCE, 0, 1), source(before, SOURCE, 0, 0));
+      expectPointClose(source(after, SOURCE, 0.2, 0.25), source(before, SOURCE, 0.75, 0.2));
+    }
+  });
+
+  it("rotateGeometryCounterClockwise と rotateGeometryClockwise で元に戻る（aspect も）", () => {
+    for (const before of CASES) {
+      expectGeometryClose(rotateGeometryClockwise(rotateGeometryCounterClockwise(before, SOURCE), SOURCE), before);
+      expectGeometryClose(rotateGeometryCounterClockwise(rotateGeometryClockwise(before, SOURCE), SOURCE), before);
+    }
+    expect(rotateGeometryCounterClockwise(geometry({ aspect: "4:5" }), SOURCE).aspect).toBe("5:4");
+    expect(rotateGeometryCounterClockwise(geometry({ aspect: "original" }), SOURCE).aspect).toBe("original");
+    expect(Object.hasOwn(rotateGeometryCounterClockwise(geometry(), SOURCE), "aspect")).toBe(false);
+  });
+
+  it("flipGeometryVertical は時計回りに 2 回 → 左右の反転と同じ結果（表示される結果を上下に鏡映する）", () => {
+    for (const before of CASES) {
+      const after = flipGeometryVertical(before, SOURCE);
+      const composed = flipGeometryHorizontal(
+        rotateGeometryClockwise(rotateGeometryClockwise(before, SOURCE), SOURCE),
+        SOURCE,
+      );
+      // 持ち方は違う（`rotate` は変えずに `flipV` を切り替える）が、描かれる結果は同じ
+      expect(after.rotate).toBe(before.rotate);
+      expect(after.flipV).toBe(!before.flipV);
+      expect(after.flipH).toBe(before.flipH);
+      expect(after.angle).toBeCloseTo(-before.angle, 12);
+      for (const [px, py] of [
+        [0, 0],
+        [1, 0],
+        [0, 1],
+        [1, 1],
+        [0.2, 0.7],
+        [0.5, 0.5],
+      ] as const) {
+        expectPointClose(source(after, SOURCE, px, py), source(composed, SOURCE, px, py));
+      }
+      // 結果の左上と左下が入れ替わる
+      expectPointClose(source(after, SOURCE, 0, 0), source(before, SOURCE, 0, 1));
+      expectPointClose(source(after, SOURCE, 0.2, 0.3), source(before, SOURCE, 0.2, 0.7));
+    }
+  });
+
+  it("flipGeometryVertical を 2 回で元に戻る", () => {
+    for (const before of CASES) {
+      expectGeometryClose(flipGeometryVertical(flipGeometryVertical(before, SOURCE), SOURCE), before);
+    }
+    expect(Object.is(flipGeometryVertical(geometry(), SOURCE).angle, 0)).toBe(true);
   });
 
   it("枠全体を回して保存すると、切り抜きは全体のまま（rotate だけが変わる）", () => {
