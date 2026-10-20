@@ -104,7 +104,7 @@ pub fn reduce_noise(
                 })
                 .collect(),
         };
-        let filtered = crate::raw_chroma::apply(&prophoto, width, height, amount)
+        let filtered = crate::raw_chroma::apply_detail(&prophoto, width, height, amount)
             .map_err(DetailError::Chroma)?;
         output = match space {
             SourceSpace::LinearProPhoto => filtered,
@@ -130,6 +130,28 @@ pub fn reduce_noise(
         return Err(DetailError::NonFiniteOutput(index));
     }
     Ok(output)
+}
+
+/// Source preparation uses the old frozen path unless v5 explicitly owns
+/// the color amount. This keeps every legacy RAW pixel unchanged.
+pub(crate) fn reduce_raw_chroma(
+    source: &[f32],
+    width: usize,
+    height: usize,
+    settings: &crate::settings::DevelopSettings,
+) -> Result<Vec<f32>, crate::raw_chroma::RawChromaError> {
+    match settings
+        .detail
+        .and_then(|detail| detail.color_noise_reduction)
+    {
+        Some(amount) => crate::raw_chroma::apply_detail(source, width, height, amount),
+        None => crate::raw_chroma::apply(
+            source,
+            width,
+            height,
+            settings.color_noise_reduction.min(50.0),
+        ),
+    }
 }
 
 fn guided_luminance(
@@ -394,7 +416,7 @@ mod tests {
     #[test]
     fn active_detail_keeps_tiny_constant_colors_constant() {
         for (width, height) in [(1, 1), (1, 7), (7, 1), (2, 2)] {
-            let source = vec![0.18, 0.42, 0.77].repeat(width * height);
+            let source = [0.18, 0.42, 0.77].repeat(width * height);
             let reduced = reduce_noise(
                 &source,
                 width,

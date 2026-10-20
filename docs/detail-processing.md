@@ -18,3 +18,5 @@ NRはlinear ProPhotoでカラーを処理する（JPEG/PNGは往復行列変換�
 Sessionの再利用単位はimmutable source、NR量、working size、geometry window、quality。量・サイズ・geometry・Interactive/Finalの変更で一致しないcacheを再利用しない。RAWのcanonical response/statistics cacheもeffective CNRと輝度NR量をkeyに含める。
 
 Studio計測は `scripts/bench-session.mjs` の `detail` scenarioを使い、2048px Finalと1280px Interactiveを別stepで記録する。未実測値は合格扱いにしない。
+
+明示v5カラーNRの0..50はR209と同じ。50を超える範囲では同じguided filterの正則化を連続的に強め、100で50時の4倍とする（複数のNR段を重ねる方式ではない）。旧top-levelは従来通り50で飽和する。新しい50..100の範囲はNIHOの設計値で、Lightroomへの一致を校正済みとは主張しない。

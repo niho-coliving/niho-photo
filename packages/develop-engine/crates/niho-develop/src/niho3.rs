@@ -218,7 +218,7 @@ pub fn prepare(
             let chroma = if cnr_amount == 0.0 {
                 image.data.clone()
             } else {
-                crate::raw_chroma::apply(&image.data, image.width, image.height, cnr_amount)
+                crate::detail::reduce_raw_chroma(&image.data, image.width, image.height, settings)
                     .map_err(PrepareError::Chroma)?
             };
             Arc::new(CnrSource::Filtered(

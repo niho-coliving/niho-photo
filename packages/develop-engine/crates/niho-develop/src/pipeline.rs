@@ -1108,6 +1108,7 @@ fn collect_working_float_plane(
     width: usize,
     height: usize,
     output: Rect,
+    output_filled_from_cache: bool,
     local: Option<&Plane>,
     vignette: Option<&LinearVignette<'_>>,
     head: impl Fn([f32; 3]) -> [f32; 3],
@@ -1116,6 +1117,16 @@ fn collect_working_float_plane(
     let mut data = vec![0.0f32; width * height * 3];
     for y in 0..height {
         for x in 0..width {
+            // The exact cached tail fills the interior once below. Only
+            // halo pixels need the uncached evaluation here.
+            if output_filled_from_cache
+                && x >= output.x
+                && x < output.x + output.width
+                && y >= output.y
+                && y < output.y + output.height
+            {
+                continue;
+            }
             let index = y * width + x;
             let offset = index * 3;
             let mut value = head([source[offset], source[offset + 1], source[offset + 2]]);
@@ -1901,16 +1912,23 @@ fn render_linear(
                 w,
                 h,
                 out,
+                s.has_active_color_points(),
                 local,
                 vignette,
                 |pixel| rest(mat_vec_f32(matrix, pixel)),
                 |value| tail.float_boundary_pixel(value),
             ),
-            None => {
-                collect_working_float_plane(&img.data, w, h, out, local, vignette, rest, |value| {
-                    tail.float_boundary_pixel(value)
-                })
-            }
+            None => collect_working_float_plane(
+                &img.data,
+                w,
+                h,
+                out,
+                s.has_active_color_points(),
+                local,
+                vignette,
+                rest,
+                |value| tail.float_boundary_pixel(value),
+            ),
         };
         if s.has_active_color_points() {
             let key = format!(
@@ -2766,6 +2784,7 @@ fn render_raw(
                 w,
                 h,
                 out,
+                s.has_active_color_points(),
                 local,
                 vignette,
                 |pixel| expose(mat_vec_f32(matrix, pixel)),
@@ -2776,6 +2795,7 @@ fn render_raw(
                 w,
                 h,
                 out,
+                s.has_active_color_points(),
                 local,
                 vignette,
                 expose,

@@ -2544,9 +2544,10 @@
         "path": "packages/develop-engine/crates/niho-develop/src/niho3.rs",
         "sha256": "c77c6115f19c1b11570cc4753578ff737d4d3ac6f2203c21d3a6c36e50771f35"
       },
-      "outputSha256": "a2776442829d4343df3d6f4c9d0de709f1001bdf19e61d4dc90cd837754955ca",
+      "outputSha256": "e6a95685be02b16cdcbc7ceb967525b98699b1847fcee65c0dc6a8cb89783996",
       "modifications": [
-        "Issue #32: detail v5の厳格保存、NRの共有source/cache、出力前floatシャープと対象合成検証を追加（初稿のStudio検証用）。"
+        "Issue #32: detail v5の厳格保存、NRの共有source/cache、出力前floatシャープと対象合成検証を追加（初稿のStudio検証用）。",
+        "明示v5のカラーNR範囲を連続拡張し、float haloの内部点処理の二重計算と将来版試験を修正する"
       ]
     },
     {
@@ -2557,12 +2558,13 @@
         "path": "packages/develop-engine/crates/niho-develop/src/niho4.rs",
         "sha256": "76c59b0f23b8b2a69d7c6b1602566fa222ee14d592ab7b42b6e37b5aba4ab319"
       },
-      "outputSha256": "d605c5dc865b1ab681666322fa58b42605d856c146c9ce3f42963fa67957ce6f",
+      "outputSha256": "5fdb61eeb8ffe07a86b510fe8bdbe1b91033f0d70e00ef8b227838f027214f84",
       "modifications": [
         "Issue #28の色相安定engine追加と互換回帰を反映。",
         "新しい色相保持エンジンと新旧バイナリの能力境界・数値回帰を整合。",
         "Issue #30 Oklch色ミキサーとengine 10/11対応を反映",
-        "Issue #32: detail v5の厳格保存、NRの共有source/cache、出力前floatシャープと対象合成検証を追加（初稿のStudio検証用）。"
+        "Issue #32: detail v5の厳格保存、NRの共有source/cache、出力前floatシャープと対象合成検証を追加（初稿のStudio検証用）。",
+        "明示v5のカラーNR範囲を連続拡張し、float haloの内部点処理の二重計算と将来版試験を修正する"
       ]
     },
     {
@@ -2641,7 +2643,7 @@
         "path": "packages/develop-engine/crates/niho-develop/src/pipeline.rs",
         "sha256": "d982d76cf1b5d34526f700e5edfcef00ae8647d22b845c0f7234ed340ba9d641"
       },
-      "outputSha256": "c0deba6f599c4e2df4dff155cf249986b40ecb50236dbd5b70df03216323a82f",
+      "outputSha256": "70c01bc3300c8b8613801cc2a59e937f0c8dd8c39b39d4b2e35658316c5750e5",
       "modifications": [
         "Issue #28の色相安定engine追加と互換回帰を反映。",
         "新しい色相保持エンジンと新旧バイナリの能力境界・数値回帰を整合。",
@@ -2658,7 +2660,8 @@
         "Issue #32: detail v5の厳格保存、NRの共有source/cache、出力前floatシャープと対象合成検証を追加（初稿のStudio検証用）。",
         "Issue #32レビュー: sharpのfloat境界をworking haloへ広げ、output crop後のtransform・encode・effectsを共通finalizeへ一本化。",
         "Issue #32レビュー: full-source statisticsのNR半径とgeometry working-frame半径を分離。",
-        "実際の画像端で短くなるhaloを許容し、境界cropの全体一致回帰とclippyを修正する"
+        "実際の画像端で短くなるhaloを許容し、境界cropの全体一致回帰とclippyを修正する",
+        "明示v5のカラーNR範囲を連続拡張し、float haloの内部点処理の二重計算と将来版試験を修正する"
       ]
     },
     {
@@ -2669,8 +2672,10 @@
         "path": "packages/develop-engine/crates/niho-develop/src/raw_chroma.rs",
         "sha256": "c1112a2ac5af26b7c591362a44930271e675d7e29910ae395ff20795a52a8d51"
       },
-      "outputSha256": "c1112a2ac5af26b7c591362a44930271e675d7e29910ae395ff20795a52a8d51",
-      "modifications": []
+      "outputSha256": "b2fe04dfe5660d6b3b621642f890c2ee04389a84e0d695d04d72e716af61e264",
+      "modifications": [
+        "明示v5のカラーNR範囲を連続拡張し、float haloの内部点処理の二重計算と将来版試験を修正する"
+      ]
     },
     {
       "path": "packages/develop-engine/crates/niho-develop/src/raw_chroma/simd.rs",
@@ -8813,8 +8818,8 @@
     },
     {
       "path": "docs/detail-processing.md",
-      "sha256": "b458600da7d0e7c1fdec07f33cfcd58f0612399d9d35d4f01e49d2f2bf8c086e",
-      "origin": "Issue #32でNIHOが独立作成したdetail処理・保存契約・合成検証または設計文書。実写真・第三者コードは含まない。"
+      "sha256": "d0324818923fe9a0ba4503bbd35fa0f82cfbf22839fb7906d096ec2d32635110",
+      "origin": "Issue #32でNIHOが独立作成したdetail処理・保存契約・合成検証または設計文書。実写真・第三者コードは含まない。\n変更理由: 明示v5のカラーNR範囲を連続拡張し、float haloの内部点処理の二重計算と将来版試験を修正する"
     },
     {
       "path": "packages/desktop-account/Cargo.lock",
@@ -8948,13 +8953,13 @@
     },
     {
       "path": "packages/develop-engine/crates/niho-develop/src/detail.rs",
-      "sha256": "227c33929b25c1c111c96b6ffaf429c21d2b5a4d111c8f6638b1f9cebd44029a",
-      "origin": "Issue #32でNIHOが独立作成したdetail処理・保存契約・合成検証または設計文書。実写真・第三者コードは含まない。\n変更理由: tiny画像のclamp-repeat box平均を修正し、連続sigma Gaussian sharpと独立合成回帰を追加。\n変更理由: 実際の画像端で短くなるhaloを許容し、境界cropの全体一致回帰とclippyを修正する"
+      "sha256": "61f4eb637e417142b3ed279c5e6d292e05e0bf9eca9b330a934cfc3894593c5f",
+      "origin": "Issue #32でNIHOが独立作成したdetail処理・保存契約・合成検証または設計文書。実写真・第三者コードは含まない。\n変更理由: tiny画像のclamp-repeat box平均を修正し、連続sigma Gaussian sharpと独立合成回帰を追加。\n変更理由: 実際の画像端で短くなるhaloを許容し、境界cropの全体一致回帰とclippyを修正する\n変更理由: 明示v5のカラーNR範囲を連続拡張し、float haloの内部点処理の二重計算と将来版試験を修正する"
     },
     {
       "path": "packages/develop-engine/crates/niho-develop/tests/color_points.rs",
-      "sha256": "390ef9d879b45839f376e9a77cf8c41dcb68ca4f7e2bdd631c480f0c2ffb9a71",
-      "origin": "Issue #30の公開仕様だけから新規作成した合成Oklch値・schema・preset・性能のRust回帰。実写真・非公開fixture・私有参照出力を含まない。\n変更理由: 最小rangeの非grid描画回帰テストを追加\n変更理由: small-full-small picker source回帰を追加\n変更理由: crop正規化座標picker回帰を追加\n変更理由: picker回帰assertをcross-target向けに整理\n変更理由: 描画精度・型・共有サンプル位置・キーボードの最終レビューを反映\n変更理由: Issue #30の最小range、cache再利用、grading外側不変、独立roundtrip精度検査を追加。\n変更理由: 点補正の選択plane cacheと精度・依存関係・headroom回帰を整備\n変更理由: 色相境界の選択重みを独立のsmoothstep期待値で検証する\n変更理由: 色点のサンプル座標と回帰試験を整合し、操作中640pxと確定解像度を分ける"
+      "sha256": "43c81b85b53d9a3c77facf3768c887ccfeacd095ba9afe351544c34a07dd98b0",
+      "origin": "Issue #30の公開仕様だけから新規作成した合成Oklch値・schema・preset・性能のRust回帰。実写真・非公開fixture・私有参照出力を含まない。\n変更理由: 最小rangeの非grid描画回帰テストを追加\n変更理由: small-full-small picker source回帰を追加\n変更理由: crop正規化座標picker回帰を追加\n変更理由: picker回帰assertをcross-target向けに整理\n変更理由: 描画精度・型・共有サンプル位置・キーボードの最終レビューを反映\n変更理由: Issue #30の最小range、cache再利用、grading外側不変、独立roundtrip精度検査を追加。\n変更理由: 点補正の選択plane cacheと精度・依存関係・headroom回帰を整備\n変更理由: 色相境界の選択重みを独立のsmoothstep期待値で検証する\n変更理由: 色点のサンプル座標と回帰試験を整合し、操作中640pxと確定解像度を分ける\n変更理由: 明示v5のカラーNR範囲を連続拡張し、float haloの内部点処理の二重計算と将来版試験を修正する"
     },
     {
       "path": "packages/develop-engine/crates/niho-develop/tests/color_probe.rs",
@@ -8963,8 +8968,8 @@
     },
     {
       "path": "packages/develop-engine/crates/niho-develop/tests/detail_cross_target.rs",
-      "sha256": "214986df0eb309c66f97a74ea710ca3d835fd02f91b61cec2e4bedf1a1e9a49d",
-      "origin": "Issue #32でNIHOが独立作成したdetail処理・保存契約・合成検証または設計文書。実写真・第三者コードは含まない。\n変更理由: signed RAWのNR override・旧CNR継承・cache fresh/warm・sharp crop・pre-point sampler・NIHO6共有解析を合成入力で検証。\n変更理由: 512pxのneutral float tailでFinal sharpの実作用をamount 0と独立比較。\n変更理由: 実際の画像端で短くなるhaloを許容し、境界cropの全体一致回帰とclippyを修正する"
+      "sha256": "7b44a9aef580fa6cd59808351cd038552eb01b2c0012f0cb7c00c32f9a5426c4",
+      "origin": "Issue #32でNIHOが独立作成したdetail処理・保存契約・合成検証または設計文書。実写真・第三者コードは含まない。\n変更理由: signed RAWのNR override・旧CNR継承・cache fresh/warm・sharp crop・pre-point sampler・NIHO6共有解析を合成入力で検証。\n変更理由: 512pxのneutral float tailでFinal sharpの実作用をamount 0と独立比較。\n変更理由: 実際の画像端で短くなるhaloを許容し、境界cropの全体一致回帰とclippyを修正する\n変更理由: 明示v5のカラーNR範囲を連続拡張し、float haloの内部点処理の二重計算と将来版試験を修正する"
     },
     {
       "path": "packages/develop-engine/fixtures/independent-profile/dc-s5-v1.measurements.json",
