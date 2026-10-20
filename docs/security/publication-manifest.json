@@ -8703,7 +8703,7 @@
     },
     {
       "path": "apps/camera/src/use-guarded-cloud-binding.ts",
-      "sha256": "61bc26e353d241f06b21f2f878db1e8c8bfaf564829a7a537e5b7b710b5ad26d",
+      "sha256": "c9f114015adec7bd382cb97746f8d3ce4e1360b0ae3d29ad86d616e70368b933",
       "origin": "PR #64の公開クライアントとして独立作成。cloudBindingの所有者変更を編集保存ガードの後に反映する。非公開コード・認証情報・写真データを含まない。"
     },
     {

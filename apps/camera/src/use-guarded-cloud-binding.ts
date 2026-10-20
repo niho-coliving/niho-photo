@@ -42,7 +42,13 @@ export function useGuardedCloudBinding<T extends CloudBindingOwner>(params: {
     switchingRef.current = true;
     setSwitching(true);
     try {
-      if (leaveGuardRef.current && !(await leaveGuardRef.current({ release: false }))) {
+      let canLeave = true;
+      try {
+        if (leaveGuardRef.current) canLeave = await leaveGuardRef.current({ release: false });
+      } catch {
+        canLeave = false;
+      }
+      if (!canLeave) {
         setFailed(!sameCloudOwner(bindingRef.current, incomingRef.current));
         return;
       }
