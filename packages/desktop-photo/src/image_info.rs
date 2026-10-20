@@ -56,6 +56,9 @@ mod macos {
     fn CFGetTypeID(value: CFTypeRef) -> usize;
     fn CFNumberGetTypeID() -> usize;
     fn CFNumberGetValue(number: CFTypeRef, number_type: CFIndex, value: *mut c_void) -> Boolean;
+    fn CFStringGetLength(string: CFStringRef) -> CFIndex;
+    fn CFStringGetMaximumSizeForEncoding(length: CFIndex, encoding: u32) -> CFIndex;
+    fn CFStringGetCString(string: CFStringRef, buffer: *mut c_char, buffer_size: CFIndex, encoding: u32) -> Boolean;
     fn CFRelease(value: CFTypeRef);
   }
 
@@ -68,9 +71,12 @@ mod macos {
     fn CGImageSourceGetCount(source: CFTypeRef) -> usize;
     fn CGImageSourceGetPrimaryImageIndex(source: CFTypeRef) -> usize;
     fn CGImageSourceGetStatusAtIndex(source: CFTypeRef, index: usize) -> i32;
+    fn CGImageSourceGetType(source: CFTypeRef) -> CFStringRef;
     fn CGImageSourceCopyPropertiesAtIndex(source: CFTypeRef, index: usize, options: CFDictionaryRef)
       -> CFDictionaryRef;
   }
+
+  const UTF8_ENCODING: u32 = 0x0800_0100;
 
   struct OwnedCf(CFTypeRef);
 
@@ -95,7 +101,21 @@ mod macos {
     (CFNumberGetValue(value, CF_NUMBER_SINT64_TYPE, (&mut result as *mut i64).cast()) != 0).then_some(result)
   }
 
-  pub(super) fn read(path: &Path) -> Result<RasterInfo, String> {
+  unsafe fn string(value: CFStringRef) -> Option<String> {
+    if value.is_null() {
+      return None;
+    }
+    let length = CFStringGetLength(value);
+    let capacity = CFStringGetMaximumSizeForEncoding(length, UTF8_ENCODING).checked_add(1)?;
+    let mut bytes = vec![0u8; usize::try_from(capacity).ok()?];
+    if CFStringGetCString(value, bytes.as_mut_ptr().cast(), capacity, UTF8_ENCODING) == 0 {
+      return None;
+    }
+    let end = bytes.iter().position(|byte| *byte == 0).unwrap_or(bytes.len());
+    String::from_utf8(bytes[..end].to_vec()).ok()
+  }
+
+  fn source(path: &Path) -> Result<OwnedCf, String> {
     let bytes = path.as_os_str().as_bytes();
     let length = CFIndex::try_from(bytes.len()).map_err(|_| "file path is too long".to_string())?;
     // SAFETY: `bytes` stays alive for this call. Core Foundation copies the file-system representation.
@@ -109,7 +129,11 @@ mod macos {
     if source.is_null() {
       return Err("ImageIO could not open the image".into());
     }
-    let source = OwnedCf(source);
+    Ok(OwnedCf(source))
+  }
+
+  pub(super) fn read(path: &Path) -> Result<RasterInfo, String> {
+    let source = source(path)?;
     // 非incremental source は完全に読めるときだけ Complete (0)。metadataだけ偶然読める壊れた入力を受け入れない。
     // SAFETY: `source` is a valid CGImageSource.
     let count = unsafe { CGImageSourceGetCount(source.0) };
@@ -147,6 +171,12 @@ mod macos {
       orientation,
     })
   }
+
+  pub(super) fn type_identifier(path: &Path) -> Option<String> {
+    let source = source(path).ok()?;
+    // SAFETY: `source` is a valid CGImageSource. The returned type string is borrowed for the source lifetime.
+    unsafe { string(CGImageSourceGetType(source.0)) }
+  }
 }
 
 /// Primary image の properties を読む。失敗文はログ専用で、ページへ直接返してはならない。
@@ -159,6 +189,19 @@ pub fn read_raster_info(path: &Path) -> Result<RasterInfo, String> {
   {
     let _ = path;
     Err("ImageIO is only available on macOS".into())
+  }
+}
+
+/// ImageIOが実データから認識したUTType identifier。取得不能はNoneで、拡張子から推測した値は返さない。
+pub fn detected_ut_type(path: &Path) -> Option<String> {
+  #[cfg(target_os = "macos")]
+  {
+    macos::type_identifier(path)
+  }
+  #[cfg(not(target_os = "macos"))]
+  {
+    let _ = path;
+    None
   }
 }
 
