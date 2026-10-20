@@ -1,0 +1,33 @@
+# NIHO photo への貢献
+
+このリポジトリは source-visible / all rights reserved で、オープンソースではありません。Issueでの提案や不具合報告を歓迎します。外部からのコード・画像等のPRは、著作権者と利用・改変・配布に必要な権利条件をメンテナーが個別に確認してから取り込みます。CLAは未整備です。PRの投稿だけで著作権の譲渡や、NIHOへの追加の利用許諾に合意したとは扱いません。合意できないPRはマージしません。
+
+## Issueを開く前に
+
+- 既存Issueを検索し、bug、feature、decoder/camera support のフォームを使ってください。
+- token、秘密鍵、内部URL、個人情報、実写真・RAW・音声、未修正の脆弱性を公開フォームへ貼らないでください。
+- 脆弱性は [SECURITY.md](SECURITY.md) の非公開報告経路を使ってください。
+- 再現データは、生成方法を添えた合成fixtureか公開許可を確認できる最小例にしてください。実データの提出が必要な場合は、公開Issueへ添付せずメンテナーと非公開で調整してください。
+
+## PRの進め方
+
+1. Issueで対象範囲を確認し、変更を小さく分けます。既存のprivateソースのcommit履歴は公開リポジトリへ持ち込まないでください。
+2. 変更した資産の出所、著作権者、第三者ライセンス、必要なnotice、不要metadataを確認します。NIHO所有資産は公開既定で、一件ずつ許可申請しません。[公開ゲート](docs/security/publication-gates.md) と [資産台帳](docs/legal/asset-inventory.csv) に従います。
+3. PRテンプレートに検証結果、公開境界、Issue参照、資産の差分を記入します。検出値やprivate URLを本文・ログへ書かないでください。
+4. 公開CIを通し、メンテナーが必要に応じて内容を確認してからsquashで統合します。承認レビューはGitHub上の必須マージ条件ではありません。外部からのコード・資産は、別途合意した利用許諾を記録するまでマージしません。
+
+## ローカル確認
+
+現在の`main`は公開移行前で、アプリのworkspaceはまだありません。文書だけを変更した場合は次を実行します。
+
+```bash
+python3 -m json.tool docs/security/publication-policy.json >/dev/null
+git diff --check
+gitleaks dir --redact --no-banner .
+```
+
+アプリ移行後は、対象パッケージのREADMEにinstall、format、targeted test、unsigned Mac buildのコマンドを追記します。公開CIはfork PRでもsecretを渡さず実行する設計です。
+
+## 責務境界
+
+本リポジトリはMacクライアント、写真編集、RAW現像、PKCEログイン、クラウド共有のUI・公開API contract・mock、updaterクライアントを扱います。API、DB、object storage、認証・認可の最終判定、Apple署名・公証、本番配布は非公開側の責務です。公開PRでこれらの権限やsecretを追加しないでください。

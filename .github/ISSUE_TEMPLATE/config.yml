@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 脆弱性を非公開で報告する
+    url: https://github.com/niho-coliving/niho-photo/security/advisories
+    about: 未修正の脆弱性や秘密情報を公開Issueに書かず、Report a vulnerabilityを使ってください。
