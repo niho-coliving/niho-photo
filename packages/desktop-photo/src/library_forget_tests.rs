@@ -17,6 +17,7 @@ fn folder_names(remembered: &Value) -> Vec<String> {
 fn a_remembered_folder_is_taken_off_the_list_without_touching_its_photos() {
   let fixture = Fixture::new("forget-folder");
   let photo = fixture.file("SD/DCIM/DSC00001.JPG");
+  let photo_before = fs::read(&photo).unwrap();
   fixture.file("Pictures/P1524180.RW2");
   let library = fixture.library();
   let dcim = library.add_folder(&fixture.root().join("SD/DCIM")).unwrap();
@@ -27,7 +28,7 @@ fn a_remembered_folder_is_taken_off_the_list_without_touching_its_photos() {
   assert_eq!(folder_names(&library.remembered()), ["Pictures"]);
   // 次の起動でも出ない。写真は消さない
   assert_eq!(folder_names(&fixture.library().remembered()), ["Pictures"]);
-  assert_eq!(fs::read_to_string(&photo).unwrap(), "photo SD/DCIM/DSC00001.JPG");
+  assert_eq!(fs::read(&photo).unwrap(), photo_before);
   assert!(fixture.has_log("remembered_folder_forgotten"));
 }
 

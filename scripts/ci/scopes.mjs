@@ -4,16 +4,16 @@ import { fileURLToPath } from "node:url";
 import path from "node:path";
 
 export const scopes = {
-  "photo-editing": { paths: ["packages/photo-editing/", "packages/ui/"], root: "packages/photo-editing", runner: "ubuntu-24.04", kind: "npm", workspaces: ["packages/ui", "packages/photo-editing"] },
+  "photo-editing": { paths: ["packages/photo-editing/", "packages/niho-cloud-contract/", "packages/ui/"], root: "packages/photo-editing", runner: "ubuntu-24.04", kind: "npm", workspaces: ["packages/ui", "packages/photo-editing"] },
   camera: { paths: ["apps/camera/", "packages/desktop-account/", "packages/desktop-photo/", "packages/photo-editing/", "packages/ui/", "packages/develop-engine/"], root: "apps/camera", runner: "macos-14", kind: "npm", workspaces: ["apps/camera"], native: true },
   "desktop-photo": { paths: ["packages/desktop-photo/", "packages/desktop-account/", "packages/photo-editing/", "packages/ui/", "packages/develop-engine/"], root: "packages/desktop-photo", runner: "macos-14", kind: "native" },
   "desktop-account": { paths: ["packages/desktop-account/", "packages/ui/"], root: "packages/desktop-account", runner: "macos-14", kind: "hybrid", workspaces: ["packages/desktop-account/ts"] },
-  "develop-engine": { paths: ["packages/develop-engine/"], root: "packages/develop-engine", runner: "macos-14", kind: "native" },
+  "develop-engine": { paths: ["packages/develop-engine/"], root: "packages/develop-engine", runner: "macos-14", kind: "native", swift: true },
 };
 
 export function selectScopes(changed, present) {
-  const all = changed.some((name) => /^(?:\.github\/|scripts\/|docs\/(?:security|legal|ci)\/)/.test(name) || /^(?:package(?:-lock)?\.json|\.node-version|\.nvmrc)$/.test(name));
-  return Object.entries(scopes).map(([scope, config]) => ({ scope, runner: config.runner, present: present.includes(config.root), selected: all || changed.some((name) => config.paths.some((prefix) => name.startsWith(prefix))) }));
+  const all = changed.some((name) => /^(?:\.github\/|scripts\/|docs\/(?:security|legal|ci|contracts)\/)/.test(name) || /^(?:package(?:-lock)?\.json|\.node-version|\.nvmrc)$/.test(name));
+  return Object.entries(scopes).map(([scope, config]) => ({ scope, runner: config.runner, swift: config.swift === true, present: present.includes(config.root), selected: all || changed.some((name) => config.paths.some((prefix) => name.startsWith(prefix))) }));
 }
 
 export function changedFiles(root, eventName, event, head = "HEAD") {
@@ -41,7 +41,7 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
     const include = result.filter((item) => item.scope !== "photo-editing" && item.present && item.selected).map(({ scope }) => ({ scope }));
     // 空matrixもvalidな値にし、job自体はhas-workでskipする。
     const matrix = { include: include.length ? include : [{ scope: "camera" }] };
-    await appendFile(process.env.GITHUB_OUTPUT, `matrix=${JSON.stringify(matrix)}\nhas-native=${include.length > 0}\nphoto-editing=${result.some((item) => item.scope === "photo-editing" && item.present && item.selected)}\n`);
+    await appendFile(process.env.GITHUB_OUTPUT, `matrix=${JSON.stringify(matrix)}\nhas-native=${include.length > 0}\nhas-swift=${result.some((item) => item.swift && item.present && item.selected)}\nphoto-editing=${result.some((item) => item.scope === "photo-editing" && item.present && item.selected)}\n`);
   } catch {
     console.error("変更範囲の判定に失敗しました（入力値は非表示）");
     process.exitCode = 1;

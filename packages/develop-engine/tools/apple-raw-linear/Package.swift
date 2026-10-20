@@ -3,7 +3,7 @@
 // apple-raw-linear: macOS Core Image (CIRAWFilter) RAW decode to a linear,
 // as-shot white balanced image in linear ProPhoto (D50) or linear sRGB.
 // Measurement / working-copy tool for the NIHO develop engine (Epic #16939,
-// S9a #16975). macOS only; not built or run in CI (see README.md).
+// S9a #16975). macOS only; its synthetic raster regression runs in public CI.
 import PackageDescription
 
 let package = Package(

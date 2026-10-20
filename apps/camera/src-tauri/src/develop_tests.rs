@@ -18,7 +18,17 @@ fn camera_photos(harness: &SidecarHarness) -> CameraPhotos {
 fn photo_file(harness: &SidecarHarness, name: &str, bytes: &[u8]) -> PathBuf {
   let path = harness.dir.join("photos").join(name);
   fs::create_dir_all(path.parent().unwrap()).unwrap();
-  fs::write(&path, bytes).unwrap();
+  let extension = path.extension().and_then(|value| value.to_str()).unwrap_or_default();
+  let mut contents = match extension.to_ascii_lowercase().as_str() {
+    "jpg" | "jpeg" => b"\xff\xd8\xff".to_vec(),
+    "png" => b"\x89PNG\r\n\x1a\n".to_vec(),
+    "tif" | "tiff" => b"II*\0".to_vec(),
+    "rw2" => b"IIU\0".to_vec(),
+    "heic" | "heif" => b"\0\0\0\x14ftypheic\0\0\0\0mif1".to_vec(),
+    _ => Vec::new(),
+  };
+  contents.extend_from_slice(bytes);
+  fs::write(&path, contents).unwrap();
   path
 }
 
@@ -167,7 +177,7 @@ fn the_original_is_never_an_export_destination() {
   )
   .unwrap();
   assert_eq!(written, "DSC00001-2.jpg");
-  assert_eq!(fs::read(&jpeg).unwrap(), b"jpeg");
+  assert_eq!(fs::read(&jpeg).unwrap(), b"\xff\xd8\xffjpeg");
 }
 
 #[test]

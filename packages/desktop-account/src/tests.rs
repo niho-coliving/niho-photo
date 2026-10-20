@@ -1,0 +1,853 @@
+use super::*;
+use crate::account::Clock;
+use crate::connect::{Pending, PENDING_TTL_MS};
+use base64::{engine::general_purpose::URL_SAFE_NO_PAD, Engine};
+use serde_json::{json, Value};
+use sha2::{Digest, Sha256};
+use std::collections::BTreeMap;
+use std::sync::{
+  atomic::{AtomicBool, AtomicU64, Ordering},
+  Arc, Mutex,
+};
+use std::time::{Duration, Instant};
+use url::Url;
+
+#[derive(Default)]
+struct MemoryStore {
+  entries: Mutex<BTreeMap<&'static str, Secret>>,
+  fail_pending: AtomicBool,
+  fail_refresh: AtomicBool,
+}
+impl CredentialStore for MemoryStore {
+  fn load(&self, kind: SecretKind) -> Result<Option<Secret>, AccountError> {
+    Ok(self.entries.lock().unwrap().get(kind.name()).cloned())
+  }
+  fn save(&self, kind: SecretKind, value: &Secret) -> Result<(), AccountError> {
+    if (matches!(kind, SecretKind::Pending) && self.fail_pending.load(Ordering::SeqCst))
+      || (matches!(kind, SecretKind::RefreshToken) && self.fail_refresh.load(Ordering::SeqCst))
+    {
+      return Err(AccountError::Storage);
+    }
+    self.entries.lock().unwrap().insert(kind.name(), value.clone());
+    Ok(())
+  }
+  fn clear(&self, kind: SecretKind) -> Result<(), AccountError> {
+    self.entries.lock().unwrap().remove(kind.name());
+    Ok(())
+  }
+}
+#[derive(Default)]
+struct CaptureBrowser(Mutex<Option<Secret>>);
+impl Browser for CaptureBrowser {
+  fn open(&self, url: &Secret) -> Result<(), AccountError> {
+    *self.0.lock().unwrap() = Some(url.clone());
+    Ok(())
+  }
+}
+struct TestClock(AtomicU64);
+impl Clock for TestClock {
+  fn now_ms(&self) -> Result<u64, AccountError> {
+    Ok(self.0.load(Ordering::SeqCst))
+  }
+}
+#[derive(Default)]
+struct ServerState {
+  calls: Vec<String>,
+  refresh_count: u8,
+  exchanged: bool,
+  error: Option<(String, u16, &'static str)>,
+  wrong_user: bool,
+  accept_previous_refresh: bool,
+}
+struct MockServer {
+  state: Mutex<ServerState>,
+  store: Arc<MemoryStore>,
+  browser: Arc<CaptureBrowser>,
+}
+fn connection_token(index: u8) -> String {
+  char::from(b'a' + index).to_string().repeat(43)
+}
+impl Transport for MockServer {
+  fn send(&self, config: &Config, request: &Request, _: &Cancel) -> Result<Response, AccountError> {
+    let url = Url::parse(request.url.expose()).unwrap();
+    let path = url.path().to_string();
+    let body: Value = request
+      .body
+      .as_ref()
+      .map(|v| serde_json::from_str(v.expose()).unwrap())
+      .unwrap_or(Value::Null);
+    let mut state = self.state.lock().unwrap();
+    state.calls.push(path.clone());
+    if let Some((failed_path, status, reason)) = &state.error {
+      if *failed_path == path {
+        return Ok(Response {
+          status: *status,
+          body: Secret::new(
+            json!({"code":"UNAUTHORIZED","details":{"reason":reason},"message":"synthetic-sensitive-server-body"})
+              .to_string(),
+          ),
+        });
+      }
+    }
+    let value = match path.as_str() {
+      "/api/auth/app-connect/exchange" => {
+        assert_eq!(request.method, "POST");
+        assert!(request.bearer.is_none());
+        assert_eq!(body.as_object().unwrap().len(), 4);
+        assert_eq!(body["clientId"], "niho-camera");
+        assert_eq!(body["deviceName"], "Mac");
+        let browser = self.browser.0.lock().unwrap();
+        let browser_url = Url::parse(browser.as_ref().unwrap().expose()).unwrap();
+        let params: BTreeMap<_, _> = browser_url.query_pairs().collect();
+        assert_eq!(params["v"], "1");
+        assert_eq!(browser_url.path(), "/connect/niho-camera");
+        assert!(
+          params["challenge"]
+            == URL_SAFE_NO_PAD.encode(Sha256::digest(body["codeVerifier"].as_str().unwrap().as_bytes()))
+        );
+        assert!(body["code"].as_str().unwrap() == "C".repeat(43));
+        assert!(!state.exchanged);
+        state.exchanged = true;
+        let stored = self.store.load(SecretKind::Pending)?.unwrap();
+        let pending: Pending = serde_json::from_str(stored.expose()).unwrap();
+        assert!(pending.consumed);
+        json!({"customToken":"synthetic-custom-token", "refreshToken":connection_token(0), "connectionId":"synthetic-connection", "user":{"id":"synthetic-user"}})
+      }
+      "/api/auth/app-connect/refresh" => {
+        assert_eq!(request.method, "POST");
+        assert_eq!(body["clientId"], "niho-camera");
+        let supplied = body["refreshToken"].as_str().unwrap();
+        let current = supplied == connection_token(state.refresh_count);
+        let previous = state.accept_previous_refresh
+          && state.refresh_count > 0
+          && supplied == connection_token(state.refresh_count - 1);
+        if !(current || previous) {
+          return Ok(Response {
+            status: 401,
+            body: Secret::new(json!({"details":{"reason":"app_connection_revoked"}}).to_string()),
+          });
+        }
+        assert!(body.get("grant_type").is_none());
+        state.refresh_count += 1;
+        json!({"customToken":"synthetic-custom-token", "refreshToken":connection_token(state.refresh_count)})
+      }
+      "/v1/accounts:signInWithCustomToken" => {
+        assert_eq!(request.method, "POST");
+        assert_eq!(url.query_pairs().next().unwrap().0, "key");
+        assert_eq!(body["token"], "synthetic-custom-token");
+        assert_eq!(body["returnSecureToken"], true);
+        let stored = self.store.load(SecretKind::RefreshToken)?.unwrap();
+        let stored: Value = serde_json::from_str(stored.expose()).unwrap();
+        // rotationはFirebase交換より前に保存されている。
+        assert!(stored["refreshToken"].as_str().unwrap() == connection_token(state.refresh_count));
+        json!({"idToken":"synthetic-id-token", "expiresIn":"3600", "refreshToken":"firebase-refresh-must-be-discarded"})
+      }
+      "/api/auth/me" => {
+        assert_eq!(request.method, "GET");
+        assert!(request.body.is_none());
+        assert!(request.bearer.as_ref().unwrap().expose() == "synthetic-id-token");
+        assert!(url.query().is_none());
+        json!({"user":{"id":if state.wrong_user {"other-user"} else {"synthetic-user"},"role":"admin","tenant":"untrusted-claim"}})
+      }
+      "/api/auth/app-connections/synthetic-connection" => {
+        assert_eq!(request.method, "DELETE");
+        assert!(request.bearer.is_some());
+        return Ok(Response {
+          status: 204,
+          body: Secret::new(""),
+        });
+      }
+      _ => panic!("unexpected public endpoint"),
+    };
+    let _ = config;
+    Ok(Response {
+      status: 200,
+      body: Secret::new(value.to_string()),
+    })
+  }
+}
+struct Fixture {
+  account: Arc<Account>,
+  store: Arc<MemoryStore>,
+  browser: Arc<CaptureBrowser>,
+  server: Arc<MockServer>,
+  clock: Arc<TestClock>,
+  config: Config,
+}
+impl Fixture {
+  fn new() -> Self {
+    let config = Config::mock("http://127.0.0.1:12345");
+    let store = Arc::new(MemoryStore::default());
+    let browser = Arc::new(CaptureBrowser::default());
+    let clock = Arc::new(TestClock(AtomicU64::new(1_000_000)));
+    let server = Arc::new(MockServer {
+      state: Mutex::new(ServerState::default()),
+      store: store.clone(),
+      browser: browser.clone(),
+    });
+    let account = Arc::new(
+      Account::with_adapters(config.clone(), store.clone(), browser.clone(), server.clone()).with_clock(clock.clone()),
+    );
+    Self {
+      account,
+      store,
+      browser,
+      server,
+      clock,
+      config,
+    }
+  }
+  fn callback(&self) -> Secret {
+    let browser = self.browser.0.lock().unwrap();
+    let browser = Url::parse(browser.as_ref().unwrap().expose()).unwrap();
+    let state = browser
+      .query_pairs()
+      .find(|(key, _)| key == "state")
+      .unwrap()
+      .1
+      .into_owned();
+    Secret::new(format!("niho-camera://auth?code={}&state={state}", "C".repeat(43)))
+  }
+  fn login(&self) {
+    self.account.login().unwrap();
+    self.account.handle_callback(&self.callback()).unwrap();
+  }
+}
+#[test]
+fn real_contract_config_is_fixed_https_and_public_key_is_not_a_client_secret() {
+  let config = Config::production(ClientId::Camera, "synthetic-public-web-key").unwrap();
+  let pending = Pending::new(ClientId::Camera, 1).unwrap();
+  let url = Url::parse(config.connect_url(&pending).expose()).unwrap();
+  assert_eq!(url.origin().ascii_serialization(), "https://niho.life");
+  assert_eq!(url.path(), "/connect/niho-camera");
+  assert!(!url.as_str().contains(pending.verifier.expose()));
+  assert!(!url.as_str().contains("client_secret"));
+  assert_eq!(config.identity_url().host_str(), Some("identitytoolkit.googleapis.com"));
+  assert!(Config::production(ClientId::Camera, "").is_err());
+  assert!(Config::production(ClientId::Camera, "key?redirect=other").is_err());
+  assert!(!format!("{config:?}").contains("synthetic-public-web-key"));
+}
+#[test]
+fn pkce_vector_and_separate_state_have_the_registered_shape() {
+  let mut pending = Pending::new(ClientId::Camera, 1).unwrap();
+  pending.verifier = Secret::new("dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk");
+  let config = Config::production(ClientId::Camera, "public-key").unwrap();
+  let url = Url::parse(config.connect_url(&pending).expose()).unwrap();
+  assert_eq!(
+    url.query_pairs().find(|(key, _)| key == "challenge").unwrap().1,
+    "E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM"
+  );
+  assert_eq!(pending.state.expose().len(), 43);
+  assert!(!equal(&pending.state, &pending.verifier));
+  assert_eq!(format!("{pending:?}"), "Pending([REDACTED])");
+}
+fn equal(a: &Secret, b: &Secret) -> bool {
+  a.expose() == b.expose()
+}
+#[test]
+fn callbacks_reject_noncanonical_redirects_duplicate_unknown_fields_and_malformed_secrets() {
+  let good = format!("niho-camera://auth?code={}&state={}", "C".repeat(43), "S".repeat(43));
+  assert!(parse_callback(ClientId::Camera, &Secret::new(&good)).is_ok());
+  for invalid in [
+    good.replace("niho-camera", "niho-docs"),
+    good.replace("://auth?", "://auth/?"),
+    good.replace("://auth?", ":///auth?"),
+    good.replace("://auth?", ":auth?"),
+    good.replace("://auth?", "://auth:80?"),
+    good.replace("://auth?", "://other?"),
+    format!("{good}&state=second"),
+    format!("{good}&code=second"),
+    format!("{good}&unknown=1"),
+    format!("{good}#fragment"),
+    good.replace("code=", "code=short"),
+  ] {
+    assert_eq!(
+      parse_callback(ClientId::Camera, &Secret::new(invalid)).unwrap_err(),
+      AccountError::InvalidRedirect
+    );
+  }
+}
+#[test]
+fn sign_in_refresh_and_me_follow_the_real_public_contract_without_exposing_claims() {
+  let f = Fixture::new();
+  f.login();
+  assert_eq!(f.account.snapshot().phase, AccountPhase::Connected);
+  f.account.refresh().unwrap();
+  let state = f.server.state.lock().unwrap();
+  assert_eq!(
+    state.calls,
+    [
+      "/api/auth/app-connect/exchange",
+      "/v1/accounts:signInWithCustomToken",
+      "/api/auth/me",
+      "/api/auth/app-connect/refresh",
+      "/v1/accounts:signInWithCustomToken",
+      "/api/auth/me"
+    ]
+  );
+  drop(state);
+  let view = serde_json::to_string(&f.account.snapshot()).unwrap();
+  for forbidden in ["token", "admin", "tenant", "synthetic-user"] {
+    assert!(!view.contains(forbidden));
+  }
+  let saved = f.store.load(SecretKind::RefreshToken).unwrap().unwrap();
+  assert!(!saved.expose().contains("firebase-refresh"));
+  assert!(!saved.expose().contains("synthetic-id-token"));
+  assert!(!saved.expose().contains("synthetic-custom-token"));
+  f.account.logout().unwrap();
+  assert_eq!(
+    f.server.state.lock().unwrap().calls.last().map(String::as_str),
+    Some("/api/auth/app-connections/synthetic-connection")
+  );
+  assert!(f.store.load(SecretKind::RefreshToken).unwrap().is_none());
+}
+#[test]
+fn wrong_state_does_not_consume_the_good_attempt_and_callback_is_single_use() {
+  let f = Fixture::new();
+  f.account.login().unwrap();
+  let callback = f.callback();
+  let url = Url::parse(callback.expose()).unwrap();
+  let state = url
+    .query_pairs()
+    .find(|(key, _)| key == "state")
+    .unwrap()
+    .1
+    .into_owned();
+  assert_eq!(
+    f.account
+      .handle_callback(&Secret::new(callback.expose().replace(&state, &"Z".repeat(43))))
+      .unwrap_err(),
+    AccountError::InvalidState
+  );
+  assert!(f.server.state.lock().unwrap().calls.is_empty());
+  f.account.handle_callback(&callback).unwrap();
+  let calls = f.server.state.lock().unwrap().calls.len();
+  assert!(f.account.handle_callback(&callback).is_err());
+  assert_eq!(f.server.state.lock().unwrap().calls.len(), calls);
+}
+#[test]
+fn pending_survives_restart_expires_and_never_replays_consumed_codes() {
+  let f = Fixture::new();
+  f.account.login().unwrap();
+  let callback = f.callback();
+  let restored = Account::with_adapters(f.config.clone(), f.store.clone(), f.browser.clone(), f.server.clone())
+    .with_clock(f.clock.clone());
+  restored.restore().unwrap();
+  assert_eq!(restored.snapshot().phase, AccountPhase::Waiting);
+  restored.handle_callback(&callback).unwrap();
+  let f = Fixture::new();
+  f.account.login().unwrap();
+  let raw = f.store.load(SecretKind::Pending).unwrap().unwrap();
+  let mut pending: Pending = serde_json::from_str(raw.expose()).unwrap();
+  pending.consumed = true;
+  f.store.save(SecretKind::Pending, &pending.encode().unwrap()).unwrap();
+  f.account.restore().unwrap();
+  assert!(f.account.handle_callback(&f.callback()).is_err());
+  assert!(f.server.state.lock().unwrap().calls.is_empty());
+  let f = Fixture::new();
+  f.account.login().unwrap();
+  f.clock.0.fetch_add(PENDING_TTL_MS, Ordering::SeqCst);
+  assert_eq!(
+    f.account.handle_callback(&f.callback()).unwrap_err(),
+    AccountError::Expired
+  );
+  assert_eq!(f.account.snapshot().error, Some(AccountError::Expired));
+  assert!(f.account.snapshot().local_editing_available);
+}
+#[test]
+fn refresh_rotation_is_saved_before_identity_failure_and_recovered_from_store() {
+  let f = Fixture::new();
+  f.login();
+  f.server.state.lock().unwrap().error = Some(("/v1/accounts:signInWithCustomToken".into(), 500, "temporary"));
+  assert_eq!(f.account.refresh().unwrap_err(), AccountError::Network);
+  assert_eq!(f.account.snapshot().phase, AccountPhase::Offline);
+  let saved = f.store.load(SecretKind::RefreshToken).unwrap().unwrap();
+  assert!(saved.expose().contains(&connection_token(1)));
+  f.server.state.lock().unwrap().error = None;
+  f.account.restore().unwrap();
+  assert_eq!(f.account.snapshot().phase, AccountPhase::Connected);
+}
+#[test]
+fn pause_preserves_connection_but_revocation_expiry_and_deleted_account_fail_closed() {
+  for (status, reason, expected, retained) in [
+    (404, "app_connect_disabled", AccountError::Paused, true),
+    (503, "unavailable", AccountError::Network, true),
+    (401, "app_connection_revoked", AccountError::Expired, false),
+    (401, "session_revoked", AccountError::Expired, false),
+    (403, "firebase_user_disabled", AccountError::AccountUnavailable, false),
+  ] {
+    let f = Fixture::new();
+    f.login();
+    f.server.state.lock().unwrap().error = Some(("/api/auth/app-connect/refresh".into(), status, reason));
+    assert_eq!(f.account.refresh().unwrap_err(), expected);
+    assert_eq!(f.store.load(SecretKind::RefreshToken).unwrap().is_some(), retained);
+    assert!(f.account.snapshot().local_editing_available);
+    assert!(!format!("{:?}", f.account.snapshot()).contains("sensitive"));
+  }
+}
+#[test]
+fn me_rejection_or_identity_mismatch_never_produces_connected_state() {
+  let f = Fixture::new();
+  f.server.state.lock().unwrap().wrong_user = true;
+  f.account.login().unwrap();
+  assert_eq!(
+    f.account.handle_callback(&f.callback()).unwrap_err(),
+    AccountError::InvalidResponse
+  );
+  assert_eq!(f.account.snapshot().phase, AccountPhase::Failed);
+  let f = Fixture::new();
+  f.server.state.lock().unwrap().error = Some(("/api/auth/me".into(), 401, "app_connection_revoked"));
+  f.account.login().unwrap();
+  assert_eq!(
+    f.account.handle_callback(&f.callback()).unwrap_err(),
+    AccountError::Expired
+  );
+  assert!(f.store.load(SecretKind::RefreshToken).unwrap().is_none());
+}
+#[test]
+fn pending_and_rotation_store_failures_are_not_login_successes() {
+  let f = Fixture::new();
+  f.store.fail_pending.store(true, Ordering::SeqCst);
+  assert_eq!(f.account.login().unwrap_err(), AccountError::Storage);
+  assert_eq!(f.account.snapshot().error, Some(AccountError::Storage));
+  assert!(f.browser.0.lock().unwrap().is_none());
+  let f = Fixture::new();
+  f.login();
+  f.store.fail_refresh.store(true, Ordering::SeqCst);
+  assert_eq!(f.account.refresh().unwrap_err(), AccountError::Storage);
+  assert_eq!(
+    f.server
+      .state
+      .lock()
+      .unwrap()
+      .calls
+      .iter()
+      .filter(|p| p.as_str() == "/v1/accounts:signInWithCustomToken")
+      .count(),
+    1
+  );
+}
+#[test]
+fn secrets_callbacks_requests_and_responses_are_redacted() {
+  let value = Secret::new("synthetic-sensitive-value");
+  let request = Request {
+    method: "POST",
+    url: value.clone(),
+    body: Some(value.clone()),
+    bearer: Some(value.clone()),
+  };
+  let response = Response {
+    status: 200,
+    body: value.clone(),
+  };
+  for text in [format!("{value:?}"), format!("{request:?}"), format!("{response:?}")] {
+    assert!(!text.contains(value.expose()));
+  }
+  let f = Fixture::new();
+  f.account.login().unwrap();
+  let callback = parse_callback(ClientId::Camera, &f.callback()).unwrap();
+  assert_eq!(format!("{callback:?}"), "Callback([REDACTED])");
+}
+#[test]
+fn local_only_build_never_opens_browser_or_storage_and_needs_no_login_for_editing() {
+  let account = Account::disabled();
+  assert_eq!(account.login().unwrap_err(), AccountError::NotConfigured);
+  assert_eq!(account.snapshot().phase, AccountPhase::LocalOnly);
+  assert!(account.snapshot().local_editing_available);
+}
+#[test]
+fn rust_contract_matches_photo_docs_versioned_spec() {
+  let contract: Value = serde_json::from_str(SAFETY_CONTRACT).unwrap();
+  assert_eq!(contract["version"], SAFETY_CONTRACT_VERSION);
+  let phases = [
+    AccountPhase::LocalOnly,
+    AccountPhase::SignedOut,
+    AccountPhase::Waiting,
+    AccountPhase::Refreshing,
+    AccountPhase::Connected,
+    AccountPhase::Offline,
+    AccountPhase::Failed,
+  ];
+  assert_eq!(serde_json::to_value(phases).unwrap(), contract["phases"]);
+  let errors = [
+    AccountError::NotConfigured,
+    AccountError::InvalidConfig,
+    AccountError::Busy,
+    AccountError::Cancelled,
+    AccountError::Expired,
+    AccountError::InvalidRedirect,
+    AccountError::InvalidState,
+    AccountError::InvalidResponse,
+    AccountError::Rejected,
+    AccountError::Network,
+    AccountError::Paused,
+    AccountError::AccountUnavailable,
+    AccountError::Browser,
+    AccountError::Storage,
+    AccountError::Internal,
+  ];
+  assert_eq!(serde_json::to_value(errors).unwrap(), contract["errorCodes"]);
+}
+
+struct PausedTransport {
+  path: &'static str,
+  server: Arc<MockServer>,
+  received: Arc<AtomicBool>,
+  release: Arc<AtomicBool>,
+}
+impl Transport for PausedTransport {
+  fn send(&self, config: &Config, request: &Request, cancel: &Cancel) -> Result<Response, AccountError> {
+    let response = self.server.send(config, request, cancel)?;
+    if Url::parse(request.url.expose()).unwrap().path() == self.path {
+      self.received.store(true, Ordering::SeqCst);
+      let deadline = Instant::now() + Duration::from_secs(3);
+      while !self.release.load(Ordering::SeqCst) {
+        assert!(Instant::now() < deadline);
+        std::thread::sleep(Duration::from_millis(2));
+      }
+    }
+    Ok(response)
+  }
+}
+#[test]
+fn cancel_logout_and_duplicate_callbacks_cannot_restore_late_exchange_results() {
+  for logout in [false, true] {
+    let f = Fixture::new();
+    let received = Arc::new(AtomicBool::new(false));
+    let release = Arc::new(AtomicBool::new(false));
+    let account = Arc::new(
+      Account::with_adapters(
+        f.config.clone(),
+        f.store.clone(),
+        f.browser.clone(),
+        Arc::new(PausedTransport {
+          path: "/api/auth/app-connect/exchange",
+          server: f.server.clone(),
+          received: received.clone(),
+          release: release.clone(),
+        }),
+      )
+      .with_clock(f.clock.clone()),
+    );
+    account.login().unwrap();
+    let callback = f.callback();
+    let worker_account = account.clone();
+    let callback_copy = callback.clone();
+    let worker = std::thread::spawn(move || worker_account.handle_callback(&callback_copy));
+    let deadline = Instant::now() + Duration::from_secs(3);
+    while !received.load(Ordering::SeqCst) {
+      assert!(Instant::now() < deadline);
+      std::thread::sleep(Duration::from_millis(2));
+    }
+    assert_eq!(account.handle_callback(&callback).unwrap_err(), AccountError::Busy);
+    if logout {
+      account.logout().unwrap();
+    } else {
+      account.cancel().unwrap();
+    }
+    release.store(true, Ordering::SeqCst);
+    assert_eq!(worker.join().unwrap().unwrap_err(), AccountError::Cancelled);
+    assert!(f.store.load(SecretKind::RefreshToken).unwrap().is_none());
+    assert_eq!(account.snapshot().phase, AccountPhase::SignedOut);
+  }
+}
+#[test]
+fn maintenance_refreshes_before_expiry_and_backs_off_without_clearing_connection() {
+  let f = Fixture::new();
+  f.login();
+  let calls = f.server.state.lock().unwrap().calls.len();
+  f.account.maintain().unwrap();
+  assert_eq!(f.server.state.lock().unwrap().calls.len(), calls);
+  f.clock.0.fetch_add(3_300_000, Ordering::SeqCst);
+  f.account.maintain().unwrap();
+  assert_eq!(f.server.state.lock().unwrap().refresh_count, 1);
+  f.clock.0.fetch_add(3_300_000, Ordering::SeqCst);
+  f.server.state.lock().unwrap().error = Some(("/api/auth/app-connect/refresh".into(), 503, "temporary"));
+  assert_eq!(f.account.maintain().unwrap_err(), AccountError::Network);
+  let calls = f.server.state.lock().unwrap().calls.len();
+  f.account.maintain().unwrap();
+  assert_eq!(f.server.state.lock().unwrap().calls.len(), calls);
+  f.clock.0.fetch_add(1000, Ordering::SeqCst);
+  assert_eq!(f.account.maintain().unwrap_err(), AccountError::Network);
+  assert!(f.store.load(SecretKind::RefreshToken).unwrap().is_some());
+}
+
+#[test]
+fn cancelling_after_refresh_save_or_before_me_commit_never_restores_a_new_login() {
+  for path in ["/v1/accounts:signInWithCustomToken", "/api/auth/me"] {
+    for logout in [false, true] {
+      let f = Fixture::new();
+      let received = Arc::new(AtomicBool::new(false));
+      let release = Arc::new(AtomicBool::new(false));
+      let account = Arc::new(
+        Account::with_adapters(
+          f.config.clone(),
+          f.store.clone(),
+          f.browser.clone(),
+          Arc::new(PausedTransport {
+            path,
+            server: f.server.clone(),
+            received: received.clone(),
+            release: release.clone(),
+          }),
+        )
+        .with_clock(f.clock.clone()),
+      );
+      account.login().unwrap();
+      let callback = f.callback();
+      let worker_account = account.clone();
+      let worker = std::thread::spawn(move || worker_account.handle_callback(&callback));
+      let deadline = Instant::now() + Duration::from_secs(3);
+      while !received.load(Ordering::SeqCst) {
+        assert!(Instant::now() < deadline);
+        std::thread::sleep(Duration::from_millis(2));
+      }
+      assert!(f.store.load(SecretKind::RefreshToken).unwrap().is_some());
+      if logout {
+        account.logout().unwrap();
+      } else {
+        account.cancel().unwrap();
+      }
+      assert!(f.store.load(SecretKind::RefreshToken).unwrap().is_none());
+      release.store(true, Ordering::SeqCst);
+      assert_eq!(worker.join().unwrap().unwrap_err(), AccountError::Cancelled);
+      account.restore().unwrap();
+      assert_eq!(account.snapshot().phase, AccountPhase::SignedOut);
+      assert!(f.store.load(SecretKind::RefreshToken).unwrap().is_none());
+    }
+  }
+}
+#[test]
+fn an_existing_connection_cannot_be_replaced_by_a_new_login_and_refresh_cancel_keeps_it() {
+  let f = Fixture::new();
+  f.login();
+  assert_eq!(f.account.login().unwrap_err(), AccountError::Busy);
+  let received = Arc::new(AtomicBool::new(false));
+  let release = Arc::new(AtomicBool::new(false));
+  let account = Arc::new(
+    Account::with_adapters(
+      f.config.clone(),
+      f.store.clone(),
+      f.browser.clone(),
+      Arc::new(PausedTransport {
+        path: "/api/auth/me",
+        server: f.server.clone(),
+        received: received.clone(),
+        release: release.clone(),
+      }),
+    )
+    .with_clock(f.clock.clone()),
+  );
+  let worker_account = account.clone();
+  let worker = std::thread::spawn(move || worker_account.refresh());
+  let deadline = Instant::now() + Duration::from_secs(3);
+  while !received.load(Ordering::SeqCst) {
+    assert!(Instant::now() < deadline);
+    std::thread::sleep(Duration::from_millis(2));
+  }
+  account.cancel().unwrap();
+  release.store(true, Ordering::SeqCst);
+  assert_eq!(worker.join().unwrap().unwrap_err(), AccountError::Cancelled);
+  assert_eq!(account.snapshot().phase, AccountPhase::Offline);
+  assert!(f.store.load(SecretKind::RefreshToken).unwrap().is_some());
+  assert_eq!(account.login().unwrap_err(), AccountError::Busy);
+}
+#[test]
+fn rotation_save_failure_retries_only_within_server_grace_and_expired_old_token_is_removed() {
+  for grace in [true, false] {
+    let f = Fixture::new();
+    f.login();
+    let old = f.store.load(SecretKind::RefreshToken).unwrap().unwrap();
+    f.store.fail_refresh.store(true, Ordering::SeqCst);
+    assert_eq!(f.account.refresh().unwrap_err(), AccountError::Storage);
+    assert!(f.store.load(SecretKind::RefreshToken).unwrap().unwrap().expose() == old.expose());
+    f.store.fail_refresh.store(false, Ordering::SeqCst);
+    f.server.state.lock().unwrap().accept_previous_refresh = grace;
+    if grace {
+      f.account.refresh().unwrap();
+      assert_eq!(f.account.snapshot().phase, AccountPhase::Connected);
+    } else {
+      assert_eq!(f.account.refresh().unwrap_err(), AccountError::Expired);
+      assert!(f.store.load(SecretKind::RefreshToken).unwrap().is_none());
+    }
+  }
+}
+
+#[test]
+fn real_http_mock_runs_exchange_firebase_me_and_connection_refresh_rotation() {
+  use std::io::{Read, Write};
+  use std::net::TcpListener;
+  let listener = TcpListener::bind(("127.0.0.1", 0)).unwrap();
+  listener.set_nonblocking(true).unwrap();
+  let origin = format!("http://127.0.0.1:{}", listener.local_addr().unwrap().port());
+  let config = Config::mock(&origin);
+  let store = Arc::new(MemoryStore::default());
+  let browser = Arc::new(CaptureBrowser::default());
+  let server = Arc::new(MockServer {
+    state: Mutex::new(ServerState::default()),
+    store: store.clone(),
+    browser: browser.clone(),
+  });
+  let worker_server = server.clone();
+  let worker_config = config.clone();
+  let worker = std::thread::spawn(move || {
+    let deadline = Instant::now() + Duration::from_secs(5);
+    for _ in 0..6 {
+      let mut stream = loop {
+        match listener.accept() {
+          Ok((stream, _)) => break stream,
+          Err(error) if error.kind() == std::io::ErrorKind::WouldBlock => {
+            assert!(Instant::now() < deadline);
+            std::thread::sleep(Duration::from_millis(2));
+          }
+          Err(_) => panic!("mock connection failed"),
+        }
+      };
+      stream.set_nonblocking(false).unwrap();
+      stream.set_read_timeout(Some(Duration::from_secs(3))).unwrap();
+      let mut bytes = Vec::new();
+      let end = loop {
+        let mut chunk = [0; 2048];
+        let count = stream.read(&mut chunk).unwrap();
+        assert!(count > 0);
+        bytes.extend_from_slice(&chunk[..count]);
+        if let Some(index) = bytes.windows(4).position(|part| part == b"\r\n\r\n") {
+          break index + 4;
+        }
+      };
+      let header = String::from_utf8(bytes[..end].to_vec()).unwrap();
+      let mut lines = header.lines();
+      let first = lines.next().unwrap();
+      let parts: Vec<_> = first.split(' ').collect();
+      let mut length = 0;
+      let mut bearer = None;
+      for line in lines {
+        if let Some((key, value)) = line.split_once(':') {
+          if key.eq_ignore_ascii_case("content-length") {
+            length = value.trim().parse::<usize>().unwrap();
+          }
+          if key.eq_ignore_ascii_case("authorization") {
+            bearer = Some(Secret::new(value.trim().strip_prefix("Bearer ").unwrap()));
+          }
+        }
+      }
+      while bytes.len() < end + length {
+        let mut chunk = [0; 2048];
+        let count = stream.read(&mut chunk).unwrap();
+        assert!(count > 0);
+        bytes.extend_from_slice(&chunk[..count]);
+      }
+      let request = Request {
+        method: if parts[0] == "POST" { "POST" } else { "GET" },
+        url: Secret::new(format!("{origin}{}", parts[1])),
+        body: if length > 0 {
+          Some(Secret::new(std::str::from_utf8(&bytes[end..end + length]).unwrap()))
+        } else {
+          None
+        },
+        bearer,
+      };
+      let response = worker_server
+        .send(&worker_config, &request, &Cancel::default())
+        .unwrap();
+      let body = response.body.expose();
+      write!(
+        stream,
+        "HTTP/1.1 {} OK\r\nContent-Type: application/json\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{body}",
+        response.status,
+        body.len()
+      )
+      .unwrap();
+    }
+  });
+  let account = Account::with_adapters(config, store.clone(), browser.clone(), Arc::new(HttpTransport));
+  account.login().unwrap();
+  let connect = Url::parse(browser.0.lock().unwrap().as_ref().unwrap().expose()).unwrap();
+  let state = connect
+    .query_pairs()
+    .find(|(key, _)| key == "state")
+    .unwrap()
+    .1
+    .into_owned();
+  account
+    .handle_callback(&Secret::new(format!(
+      "niho-camera://auth?code={}&state={state}",
+      "C".repeat(43)
+    )))
+    .unwrap();
+  account.refresh().unwrap();
+  assert_eq!(account.snapshot().phase, AccountPhase::Connected);
+  worker.join().unwrap();
+}
+
+#[test]
+fn initial_identity_failure_restores_only_an_explicitly_retryable_connection() {
+  for (status, reason, recoverable) in [
+    (503, "temporary", true),
+    (404, "app_connect_disabled", true),
+    (400, "invalid_custom_token", false),
+  ] {
+    let f = Fixture::new();
+    f.account.login().unwrap();
+    f.server.state.lock().unwrap().error = Some(("/v1/accounts:signInWithCustomToken".into(), status, reason));
+    assert!(f.account.handle_callback(&f.callback()).is_err());
+    assert_eq!(f.store.load(SecretKind::RefreshToken).unwrap().is_some(), recoverable);
+    f.server.state.lock().unwrap().error = None;
+    f.account.restore().unwrap();
+    assert_eq!(
+      f.account.snapshot().phase,
+      if recoverable {
+        AccountPhase::Connected
+      } else {
+        AccountPhase::SignedOut
+      }
+    );
+  }
+}
+
+#[test]
+fn transport_rejects_unknown_endpoints_and_token_urls_before_network_access() {
+  let config = Config::production(ClientId::Camera, "public-web-key").unwrap();
+  for target in [
+    "https://other.example/steal",
+    "https://niho.life/api/auth/me?access_token=synthetic",
+    "http://niho.life/api/auth/me",
+  ] {
+    let request = Request {
+      method: "GET",
+      url: Secret::new(target),
+      body: None,
+      bearer: Some(Secret::new("synthetic-token")),
+    };
+    assert_eq!(
+      HttpTransport.send(&config, &request, &Cancel::default()).unwrap_err(),
+      AccountError::InvalidConfig
+    );
+  }
+}
+
+#[test]
+fn exchange_network_failure_without_saved_credentials_requires_a_fresh_login_not_refresh() {
+  let f = Fixture::new();
+  f.account.login().unwrap();
+  let old_callback = f.callback();
+  let old_connect = f.browser.0.lock().unwrap().as_ref().unwrap().expose().to_string();
+  f.server.state.lock().unwrap().error = Some(("/api/auth/app-connect/exchange".into(), 503, "temporary"));
+  assert_eq!(
+    f.account.handle_callback(&old_callback).unwrap_err(),
+    AccountError::Network
+  );
+  assert_eq!(f.account.snapshot().phase, AccountPhase::Failed);
+  assert!(f.store.load(SecretKind::RefreshToken).unwrap().is_none());
+  let calls = f.server.state.lock().unwrap().calls.len();
+  f.clock.0.fetch_add(1_000_000, Ordering::SeqCst);
+  f.account.maintain().unwrap();
+  assert_eq!(f.server.state.lock().unwrap().calls.len(), calls);
+  f.account.login().unwrap();
+  assert!(f.browser.0.lock().unwrap().as_ref().unwrap().expose() != old_connect);
+  assert_eq!(
+    f.account.handle_callback(&old_callback).unwrap_err(),
+    AccountError::InvalidState
+  );
+  assert_eq!(f.server.state.lock().unwrap().calls.len(), calls);
+}
