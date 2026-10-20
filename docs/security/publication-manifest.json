@@ -8603,13 +8603,13 @@
     },
     {
       "path": "packages/develop-engine/crates/niho-develop/src/research/analytic_hs.rs",
-      "sha256": "ea9b67afe3c716853e4506b97b2855c20562e32e3a6d46686e96b208a957741d",
-      "origin": "公開Issue #26/#27/#29 のため公開済み数式・既存primitiveから独立実装した研究用コード・合成テスト・日本語手順。非公開の写真・参照画素・パス・履歴・第三者ソースを含まない。"
+      "sha256": "738a0dabbdd5e3bbff4c11250957849ee59e26e8732b7d4cfcc6dc263305e79f",
+      "origin": "公開Issue #26/#27/#29 のため公開済み数式・既存primitiveから独立実装した研究用コード・合成テスト・日本語手順。非公開の写真・参照画素・パス・履歴・第三者ソースを含まない。\n変更理由: 有界EV適用後の浮動小数点overflowも非有限出力として拒否。"
     },
     {
       "path": "packages/develop-engine/crates/niho-develop/src/research/linear_jpeg_wb.rs",
-      "sha256": "5d42b3341600865cba0d35987eecd181b36a5f56de7e2c4c99c135e55fe8d0bf",
-      "origin": "公開Issue #26/#27/#29 のため公開済み数式・既存primitiveから独立実装した研究用コード・合成テスト・日本語手順。非公開の写真・参照画素・パス・履歴・第三者ソースを含まない。"
+      "sha256": "3132cce397517ae59fee0953edb99c0a5a1ec4f5f2b77fbaec6abf03b85c6aac",
+      "origin": "公開Issue #26/#27/#29 のため公開済み数式・既存primitiveから独立実装した研究用コード・合成テスト・日本語手順。非公開の写真・参照画素・パス・履歴・第三者ソースを含まない。\n変更理由: 表示色評価で使用するProPhotoからsRGBへの行列importを補正。"
     },
     {
       "path": "packages/develop-engine/crates/niho-develop/src/research/mod.rs",

@@ -224,6 +224,9 @@ pub fn prepare(
             *value *= gain;
         }
     }
+    if !output.data.iter().all(|value| value.is_finite()) {
+        return Err("non-finite output from analytic H/S candidate".into());
+    }
     Ok((
         output,
         ApplySummary {

@@ -7,6 +7,7 @@
 //! a separate pass over all ten variants. This module does not replace the
 //! production encoded-output LUT in `jpeg_wb.rs`.
 
+use crate::color::PROPHOTO_TO_SRGB;
 use crate::color::{
     bradford_xyz, mat_mul, mat_vec, srgb_decode, xy_from_temperature, Mat3, PROPHOTO_TO_XYZ_D50,
     SRGB_TO_PROPHOTO, XYZ_D50_TO_PROPHOTO,
