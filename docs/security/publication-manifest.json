@@ -3954,8 +3954,10 @@
         "path": "packages/desktop-photo/src/library_forget_tests.rs",
         "sha256": "c71423bedc3459a20066134ecfbc3ba5aea4787f2611e87196e8c29c24b145a5"
       },
-      "outputSha256": "c71423bedc3459a20066134ecfbc3ba5aea4787f2611e87196e8c29c24b145a5",
-      "modifications": []
+      "outputSha256": "f828fb3401d4bc15a3fac99b49224d08ea4c472615a26e395068e36b32318308",
+      "modifications": [
+        "合成写真の内容変更後も、フォルダ忘却が写真の元bytesを保持することを検証する。"
+      ]
     },
     {
       "path": "packages/desktop-photo/src/library_tests.rs",
