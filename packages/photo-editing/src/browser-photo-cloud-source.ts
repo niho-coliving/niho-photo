@@ -29,7 +29,7 @@ import { isPhotoEditingRawExtension, photoEditingFileStem } from "./photo-editin
  * フォルダのある写真の出どころ（この Mac。`PhotoLibrary.folders`。NIHO camera C3 移行元設計）は、選んだフォルダを `folder:<folderId>` に
  * する（一覧は `list` の `folderId` で読む。クラウドの場所は使わない）。
  */
-export type BrowserCloudPlace = "photos" | "favorites" | "articleImages" | `album:${string}` | `folder:${string}`;
+export type BrowserCloudPlace = "photos" | "favorites" | "articleImages" | "selected" | `album:${string}` | `folder:${string}`;
 
 export function browserCloudAlbumPlace(albumId: string): BrowserCloudPlace {
   return `album:${albumId}`;
@@ -49,6 +49,11 @@ export function browserPlaceFolderId(place: BrowserCloudPlace): string | null {
   return place.startsWith("folder:") ? place.slice("folder:".length) || null : null;
 }
 
+/** ネイティブの選択ダイアログで追加した「選んだ写真」の場所か。 */
+export function isBrowserSelectedPhotosPlace(place: BrowserCloudPlace): boolean {
+  return place === "selected";
+}
+
 /**
  * 写真のもとの場所。「写真」はクラウドにオリジナルのある行。ほか（オリジナルの無い行。記事から取り込んだ画像・過去のコピー保存・
  * Desktop の「オリジナルを置かない」で置いた写真）は「記事の画像」。
@@ -64,7 +69,8 @@ export function browserCloudPhotoPlace(photo: Pick<PhotoLibraryItem, "hasOrigina
  */
 export function browserCloudPlaceListFilter(
   place: BrowserCloudPlace,
-): { hasOriginal?: boolean; favorite?: boolean; albumId?: string; folderId?: string } {
+): { hasOriginal?: boolean; favorite?: boolean; albumId?: string; folderId?: string; localSource?: "selected" } {
+  if (isBrowserSelectedPhotosPlace(place)) return { localSource: "selected" };
   const folderId = browserPlaceFolderId(place);
   if (folderId) return { folderId };
   const albumId = browserCloudPlaceAlbumId(place);
@@ -90,7 +96,7 @@ export function isBrowserCloudPhotoInPlace(
   photo: Pick<PhotoLibraryItem, "hasOriginal" | "favorite">,
   place: BrowserCloudPlace,
 ): boolean {
-  if (browserPlaceFolderId(place)) return true;
+  if (browserPlaceFolderId(place) || isBrowserSelectedPhotosPlace(place)) return true;
   if (browserCloudPlaceAlbumId(place)) return photo.hasOriginal;
   switch (place) {
     case "photos":
@@ -140,7 +146,7 @@ export const BROWSER_CLOUD_NO_LIST_FILTER: BrowserCloudListFilter = { kind: null
  * 持たないので掛けない）。
  */
 export function canFilterBrowserCloudPlace(place: BrowserCloudPlace): boolean {
-  return place === "photos" || place === "favorites" || browserPlaceFolderId(place) !== null;
+  return place === "photos" || place === "favorites" || place === "selected" || browserPlaceFolderId(place) !== null;
 }
 
 /** その場所で掛ける条件（「記事の画像」では絞らない。選んだ条件はそのまま残り、場所を戻すとまた掛かる）。 */
@@ -169,6 +175,7 @@ export function browserCloudListParams(
   favorite?: boolean;
   albumId?: string;
   folderId?: string;
+  localSource?: "selected";
   kind?: BrowserCloudPhotoKind;
   edited?: boolean;
 } {

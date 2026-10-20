@@ -40,7 +40,7 @@
 use crate::common::{
   code, is_regular_file, lock, mark_used, new_opaque_id, random_hex, LogFn, PageError, MAX_ID_CHARS,
 };
-use crate::remembered::RememberedStore;
+use crate::remembered::{RememberedStore, MAX_REMEMBERED_PHOTOS};
 use crate::saved_settings::{ensure_private_dir, hex_lower, is_content_key, set_mode};
 use serde_json::{json, Value};
 use sha2::{Digest, Sha256};
@@ -868,6 +868,8 @@ pub struct ListedPhoto {
 pub struct PhotoLibrary {
   config: LibraryConfig,
   ids: Mutex<LibraryIds>,
+  /// この起動中に選んだ写真。remembered.json を書けなくても一覧へ出し続け、毎回存在を確かめる。
+  selected_session: Mutex<Vec<PathBuf>>,
   thumbnails: Option<ThumbnailCache>,
   jobs: JobSlots,
 }
@@ -883,6 +885,7 @@ impl PhotoLibrary {
     Arc::new(Self {
       config,
       ids: Mutex::new(LibraryIds::default()),
+      selected_session: Mutex::new(Vec::new()),
       thumbnails,
       jobs,
     })
@@ -910,6 +913,12 @@ impl PhotoLibrary {
   /// ファイルでない・写真の拡張子でない・隠しファイルのものは黙って飛ばす。同じ写真は 1 つ（選んだ順）。
   pub fn add_photos(&self, picked: &[PathBuf]) -> Vec<Value> {
     let started = Instant::now();
+    let max_photos = self
+      .config
+      .remembered
+      .as_ref()
+      .map(RememberedStore::max_photos)
+      .unwrap_or(MAX_REMEMBERED_PHOTOS);
     let mut seen = HashSet::new();
     let photos: Vec<ScannedPhoto> = picked
       .iter()
@@ -917,8 +926,16 @@ impl PhotoLibrary {
       .filter(|path| seen.insert(path.clone()))
       .filter_map(existing_photo)
       .collect();
+    // 返す写真は従来どおり全件。上限は再表示用の参照だけに適用する。
     if !photos.is_empty() {
       let paths: Vec<PathBuf> = photos.iter().map(|photo| photo.path.clone()).collect();
+      let mut session = lock(&self.selected_session);
+      let chosen: HashSet<PathBuf> = paths.iter().cloned().collect();
+      let older = std::mem::take(&mut *session)
+        .into_iter()
+        .filter(|path| !chosen.contains(path));
+      *session = paths.iter().cloned().chain(older).take(max_photos).collect();
+      drop(session);
       self.remember("addPhotos", |store, now| store.remember_photos(&paths, now));
     }
     let entries = self.page_entries(photos);
@@ -966,13 +983,20 @@ impl PhotoLibrary {
         folders.push(value);
       }
     }
-    let photos = self.page_entries(
-      remembered
-        .photos
-        .iter()
-        .filter_map(|photo| existing_photo(photo.path.clone()))
-        .collect(),
-    );
+    let session = lock(&self.selected_session).clone();
+    let mut seen = HashSet::new();
+    let max_photos = self
+      .config
+      .remembered
+      .as_ref()
+      .map(RememberedStore::max_photos)
+      .unwrap_or(MAX_REMEMBERED_PHOTOS);
+    let selected_paths = session
+      .into_iter()
+      .chain(remembered.photos.iter().map(|photo| photo.path.clone()))
+      .filter(|path| seen.insert(path.clone()))
+      .take(max_photos);
+    let photos = self.page_entries(selected_paths.filter_map(existing_photo).collect());
     self.log(
       "remembered_listed",
       json!({
@@ -1007,14 +1031,17 @@ impl PhotoLibrary {
 
   /// 覚えたフォルダ・写真を全部消す（`cache_purge`＝スタッフの Mac を返す・渡すとき）。置き場が無ければ何もしない。
   pub fn purge_remembered(&self) -> io::Result<()> {
-    let Some(store) = self.config.remembered.as_ref() else {
-      return Ok(());
+    let purged = match self.config.remembered.as_ref() {
+      Some(store) => store.purge(),
+      None => Ok(()),
     };
-    let purged = store.purge();
     self.log(
       "remembered_purged",
       json!({ "ok": purged.is_ok(), "error": purged.as_ref().err().map(|err| err.kind().to_string()) }),
     );
+    if purged.is_ok() {
+      lock(&self.selected_session).clear();
+    }
     purged
   }
 
@@ -1064,6 +1091,26 @@ impl PhotoLibrary {
     match forgotten {
       Some(Ok(_)) => Ok(()),
       _ => Err(PageError::new(code::INTERNAL, FORGET_FAILED_MESSAGE)),
+    }
+  }
+
+  /// 「選んだ写真」をすべて一覧から外す。元の写真・覚えたフォルダ・補正には触れない。永続参照を書き換えられなければ
+  /// セッション参照も残し、成功を返さない。
+  pub fn forget_photos(&self) -> Result<(), PageError> {
+    let forgotten = match self.config.remembered.as_ref() {
+      Some(store) => store.forget_photos(),
+      None => Ok(false),
+    };
+    self.log(
+      "remembered_photos_forgotten",
+      json!({ "ok": forgotten.is_ok(), "error": forgotten.as_ref().err().map(|err| err.kind().to_string()) }),
+    );
+    match forgotten {
+      Ok(_) => {
+        lock(&self.selected_session).clear();
+        Ok(())
+      }
+      Err(_) => Err(PageError::new(code::INTERNAL, FORGET_FAILED_MESSAGE)),
     }
   }
 

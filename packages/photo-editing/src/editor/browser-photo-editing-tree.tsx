@@ -10,7 +10,7 @@ import {
   browserPlaceFolderId,
   type BrowserCloudPlace,
 } from "../browser-photo-cloud-source";
-import { PHOTO_EDITING_FOLDER_FALLBACK_LABEL } from "../photo-editing-copy";
+import { PHOTO_EDITING_FOLDER_FALLBACK_LABEL, PHOTO_EDITING_SELECTED_PHOTOS_LABEL } from "../photo-editing-copy";
 import { cn } from "niho-ui/cn";
 
 import { findPhotoLibraryFolder } from "./use-browser-photo-folders";
@@ -26,7 +26,7 @@ import { findPhotoLibraryFolder } from "./use-browser-photo-folders";
 export type BrowserPhotoTreeCounts = { photos: number; favorites: number; articleImages: number } | null;
 
 const PLACE_NODES: readonly {
-  place: Exclude<BrowserCloudPlace, `album:${string}` | `folder:${string}`>;
+  place: Exclude<BrowserCloudPlace, "selected" | `album:${string}` | `folder:${string}`>;
   label: string;
   Icon: LucideIcon;
 }[] = [
@@ -44,6 +44,7 @@ export function browserPhotoPlaceLabel(
   albums: readonly BrowserPhotoAlbumSummary[] = [],
   folders: readonly PhotoLibraryFolder[] = [],
 ): string {
+  if (place === "selected") return PHOTO_EDITING_SELECTED_PHOTOS_LABEL;
   const folderId = browserPlaceFolderId(place);
   if (folderId) return findPhotoLibraryFolder(folders, folderId)?.name ?? PHOTO_EDITING_FOLDER_FALLBACK_LABEL;
   const albumId = browserCloudPlaceAlbumId(place);

@@ -107,14 +107,23 @@ type FakeLibraryOptions = {
   /** クラウドの一覧（`folders` の無い写真の出どころ） */
   cloudPhotos?: PhotoLibraryItem[];
   added?: PhotoLibraryFolder | null;
+  /** 指定したときだけ「選んだ写真」を扱えるローカルライブラリにする。 */
+  selected?: PhotoLibraryItem[];
+  selectedAdded?: PhotoLibraryItem[];
 };
 
 function fakeLibrary(options: FakeLibraryOptions = {}) {
   const place = options.place ?? "local";
-  const state = { tree: options.tree ?? [] };
+  const state = { tree: options.tree ?? [], selected: options.selected ?? [] };
   const list = vi.fn(async (query: PhotoLibraryListQuery): Promise<PhotoLibraryListPage> => {
     const items =
-      place === "cloud" ? (options.cloudPhotos ?? []) : query.folderId ? (options.photos?.[query.folderId] ?? []) : [];
+      place === "cloud"
+        ? (options.cloudPhotos ?? [])
+        : query.localSource === "selected"
+          ? state.selected
+          : query.folderId
+            ? (options.photos?.[query.folderId] ?? [])
+            : [];
     return { items, next: null, usage: null, counts: null };
   });
   const folders = {
@@ -130,6 +139,17 @@ function fakeLibrary(options: FakeLibraryOptions = {}) {
   };
   const capabilities = place === "cloud" ? CLOUD_CAPABILITIES : LOCAL_CAPABILITIES;
   const deletePhotos = vi.fn(async () => ({ deleted: [], errors: [] }));
+  const selectedPhotos = {
+    count: vi.fn(async () => state.selected.length),
+    add: vi.fn(async () => {
+      const added = options.selectedAdded ?? [];
+      if (added.length > 0) state.selected = [...added, ...state.selected.filter((item) => !added.some(({ id }) => id === item.id))];
+      return added;
+    }),
+    forget: vi.fn(async () => {
+      state.selected = [];
+    }),
+  };
   const library = {
     place,
     initialCapabilities: capabilities,
@@ -156,8 +176,9 @@ function fakeLibrary(options: FakeLibraryOptions = {}) {
     delete: deletePhotos,
     presets: { nameMaxChars: 100, list: vi.fn(async () => []) },
     ...(place === "local" ? { folders } : {}),
+    ...(place === "local" && (options.selected !== undefined || options.selectedAdded !== undefined) ? { selectedPhotos } : {}),
   } as unknown as PhotoLibrary;
-  return { library, list, folders, state, deletePhotos };
+  return { library, list, folders, selectedPhotos, state, deletePhotos };
 }
 
 const host: PhotoEditingHost = {
@@ -430,6 +451,110 @@ describe("この Mac のフォルダの面", () => {
     expect(container.textContent).toContain("このフォルダに写真はありません");
     expect(byLabel("写真を追加")).toBeNull();
     expect(Array.from(container.querySelectorAll("button")).some((button) => button.textContent === "写真を追加")).toBe(false);
+  });
+
+  it("写真選択に対応したときだけ追加メニューと「選んだ写真」を出し、cancel は場所を変えない", async () => {
+    const picked = photo("picked", "PICKED.JPG");
+    const fake = fakeLibrary({ tree: [FAMILY], selected: [], selectedAdded: [] });
+    await render(fake.library);
+
+    expect(byLabel("フォルダを追加", tree())).toBeNull();
+    await click(byLabel("フォルダや写真を追加", tree()));
+    expect(Array.from(document.body.querySelectorAll('[role="menuitem"]')).map((item) => item.textContent)).toEqual([
+      "フォルダを追加",
+      "写真を選ぶ",
+    ]);
+    await click(Array.from(document.body.querySelectorAll('[role="menuitem"]')).find((item) => item.textContent === "写真を選ぶ"));
+    expect(fake.selectedPhotos.add).toHaveBeenCalledTimes(1);
+    expect(lastListQuery(fake.list)?.folderId).toBe("f2");
+    expect(tree().textContent).not.toContain("選んだ写真");
+
+    const withPhoto = fakeLibrary({ tree: [FAMILY], selected: [], selectedAdded: [picked] });
+    await remount(withPhoto.library);
+    await click(byLabel("フォルダや写真を追加", tree()));
+    await click(Array.from(document.body.querySelectorAll('[role="menuitem"]')).find((item) => item.textContent === "写真を選ぶ"));
+    expect(lastListQuery(withPhoto.list)).toMatchObject({ localSource: "selected" });
+    expect(lastListQuery(withPhoto.list)).not.toHaveProperty("folderId");
+    expect(tile("PICKED.JPG")).toBeDefined();
+    expect(tree().textContent).toContain("選んだ写真1");
+    expect(getPhotoEditingBreadcrumbSnapshot()?.map((item) => item.label)).toEqual(["この Mac", "選んだ写真"]);
+    expect(window.localStorage.getItem(browserPhotoLastFolderStorageKey("local"))).toBe("source:selected");
+
+    await remount(withPhoto.library);
+    expect(lastListQuery(withPhoto.list)).toMatchObject({ localSource: "selected" });
+    withPhoto.state.selected = [];
+    await remount(withPhoto.library);
+    expect(lastListQuery(withPhoto.list)?.folderId).toBe("f2");
+    expect(tree().textContent).not.toContain("選んだ写真");
+  });
+
+  it("folder-only adapter では従来の単独ボタンと空状態を保つ", async () => {
+    const fake = fakeLibrary({ tree: [] });
+    await render(fake.library);
+    expect(byLabel("フォルダを追加", tree())).not.toBeNull();
+    expect(byLabel("フォルダや写真を追加", tree())).toBeNull();
+    expect(container.textContent).not.toContain("写真を選ぶ");
+    expect(container.querySelector('section[aria-label="写真の一覧"]')?.querySelector("h3")?.textContent).toBe("フォルダを追加");
+  });
+
+  it("選んだ写真の読み込みに失敗しても、再読み込みで場所と写真を復元できる", async () => {
+    const fake = fakeLibrary({ tree: [], selected: [photo("picked", "PICKED.JPG")] });
+    fake.selectedPhotos.count.mockRejectedValueOnce(new Error("unavailable"));
+    window.localStorage.setItem(browserPhotoLastFolderStorageKey("local"), "source:selected");
+    await render(fake.library);
+    expect(fake.list).not.toHaveBeenCalled();
+
+    const center = container.querySelector('section[aria-label="写真の一覧"]') ?? container;
+    await click(Array.from(center.querySelectorAll("button")).find((button) => button.textContent === "もう一度読み込む"));
+    expect(lastListQuery(fake.list)).toMatchObject({ localSource: "selected" });
+    expect(tile("PICKED.JPG")).toBeDefined();
+  });
+
+  it("写真選択に対応した初期状態はフォルダと写真の両方を選べる", async () => {
+    const fake = fakeLibrary({ tree: [], selected: [], selectedAdded: [] });
+    await render(fake.library);
+    const center = container.querySelector('section[aria-label="写真の一覧"]') ?? container;
+    expect(center.textContent).toContain("フォルダや写真を追加すると、ここで編集できます。");
+    await click(Array.from(center.querySelectorAll("button")).find((button) => button.textContent === "フォルダや写真を追加"));
+    expect(Array.from(document.body.querySelectorAll('[role="menuitem"]')).map((item) => item.textContent)).toEqual([
+      "フォルダを追加",
+      "写真を選ぶ",
+    ]);
+  });
+
+  it("「選んだ写真」は確認後に参照だけを外してフォルダへ戻る", async () => {
+    const fake = fakeLibrary({ tree: [FAMILY], selected: [photo("picked", "PICKED.JPG")] });
+    window.localStorage.setItem(browserPhotoLastFolderStorageKey("local"), "source:selected");
+    await render(fake.library);
+    expect(lastListQuery(fake.list)).toMatchObject({ localSource: "selected" });
+
+    mocks.confirm.mockResolvedValueOnce(false);
+    await click(byLabel("選んだ写真のメニュー", tree()));
+    await click(Array.from(document.body.querySelectorAll('[role="menuitem"]')).find((item) => item.textContent === "一覧から外す"));
+    expect(mocks.confirm).toHaveBeenCalledWith({
+      title: "選んだ写真を一覧から外しますか？",
+      description: "選んだ写真を一覧から外します。元の写真、フォルダ、保存した補正は消えません。",
+      confirmLabel: "一覧から外す",
+    });
+    expect(fake.selectedPhotos.forget).not.toHaveBeenCalled();
+
+    await click(byLabel("選んだ写真のメニュー", tree()));
+    await click(Array.from(document.body.querySelectorAll('[role="menuitem"]')).find((item) => item.textContent === "一覧から外す"));
+    expect(fake.selectedPhotos.forget).toHaveBeenCalledTimes(1);
+    expect(lastListQuery(fake.list)?.folderId).toBe("f2");
+    expect(tree().textContent).not.toContain("選んだ写真");
+  });
+
+  it("参照を外せなかった場合は選んだ写真を残してエラーを表示する", async () => {
+    const fake = fakeLibrary({ tree: [FAMILY], selected: [photo("picked", "PICKED.JPG")] });
+    fake.selectedPhotos.forget.mockRejectedValueOnce(new Error("unavailable"));
+    window.localStorage.setItem(browserPhotoLastFolderStorageKey("local"), "source:selected");
+    await render(fake.library);
+    await click(byLabel("選んだ写真のメニュー", tree()));
+    await click(Array.from(document.body.querySelectorAll('[role="menuitem"]')).find((item) => item.textContent === "一覧から外す"));
+    expect(fake.state.selected).toHaveLength(1);
+    expect(tree().textContent).toContain("選んだ写真1");
+    expect(container.textContent).toContain("選んだ写真を一覧から外せませんでした");
   });
 });
 

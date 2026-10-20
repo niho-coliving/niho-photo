@@ -67,6 +67,9 @@ type FakeOptions = {
   /** token のバイト列（entryId ごと） */
   bytes?: Record<string, Uint8Array>;
   saved?: Record<string, SavedDevelopSettings>;
+  rememberedPhotos?: LibraryEntry[];
+  addedPhotos?: LibraryEntry[];
+  forgetPhotosError?: CameraCommandError;
 };
 
 function sha(entryId: string): string {
@@ -76,7 +79,8 @@ function sha(entryId: string): string {
 function fakeNative(options: FakeOptions = {}) {
   const calls: Call[] = [];
   const entries = new Map(
-    [...ROOT.photos, ...ROOT.children.flatMap((child) => child.photos)].map((photo) => [photo.entryId, photo]),
+    [...ROOT.photos, ...ROOT.children.flatMap((child) => child.photos), ...(options.rememberedPhotos ?? []), ...(options.addedPhotos ?? [])]
+      .map((photo) => [photo.entryId, photo]),
   );
   const open = new Map<string, string>();
   const tokens = new Map<string, { photoId: string; entryId: string }>();
@@ -103,10 +107,15 @@ function fakeNative(options: FakeOptions = {}) {
         case "camera_develop_status":
           return statuses.length > 1 ? statuses.shift() : statuses[0];
         case "camera_library_remembered":
-          return { folders: [ROOT], photos: [] };
+          return { folders: [ROOT], photos: options.rememberedPhotos ?? [] };
         case "camera_library_add_folder":
           return { folder: ROOT.children[0] };
+        case "camera_library_add_photos":
+          return { photos: options.addedPhotos ?? [] };
         case "camera_library_forget_folder":
+          return {};
+        case "camera_library_forget_photos":
+          if (options.forgetPhotosError) return fail(options.forgetPhotosError.code, options.forgetPhotosError.message);
           return {};
         case "camera_library_list_folder":
           if (request?.folderId === "f-root") return { folder: ROOT };
@@ -331,6 +340,43 @@ describe("folders and list", () => {
     const { library } = fakeNative();
     await expect(library.list({ folderId: "f-gone" })).rejects.toMatchObject({ code: "notFound" });
     expect(localThumbnailUrl("entry 1/2", 128)).toBe("niho-thumb://localhost/entry%201%2F2?size=128");
+  });
+
+  it("lists selected photos in picker order even with an inherited captured sort and rejects an ambiguous source", async () => {
+    const first = entry("picked-first", "first.jpg", "2026-01-01T00:00:00.000Z");
+    const second = entry("picked-second", "second.jpg", "2026-10-01T00:00:00.000Z");
+    const { library, calls } = fakeNative({ rememberedPhotos: [first, second] });
+
+    await expect(library.list({ localSource: "selected", sort: "captured" })).resolves.toMatchObject({
+      items: [{ id: "picked-first" }, { id: "picked-second" }],
+      counts: { photos: 2, matching: 2 },
+    });
+    const before = calls.length;
+    await expect(library.list({ folderId: "f-root", localSource: "selected" })).rejects.toMatchObject({
+      code: "invalidRequest",
+    });
+    expect(calls).toHaveLength(before);
+  });
+
+  it("adds, counts and forgets selected-photo references, while cancel leaves an empty result", async () => {
+    const picked = entry("picked", "picked.jpg", "2026-10-01T00:00:00.000Z");
+    const selected = fakeNative({ rememberedPhotos: [picked], addedPhotos: [picked] });
+    await expect(selected.library.selectedPhotos.count()).resolves.toBe(1);
+    await expect(selected.library.selectedPhotos.add()).resolves.toMatchObject([{ id: "picked", fileName: "picked.jpg" }]);
+    await selected.library.selectedPhotos.forget();
+    expect(commandsOf(selected.calls).slice(-3)).toEqual([
+      "camera_library_remembered",
+      "camera_library_add_photos",
+      "camera_library_forget_photos",
+    ]);
+
+    await expect(fakeNative({ addedPhotos: [] }).library.selectedPhotos.add()).resolves.toEqual([]);
+    const failure = fakeNative({
+      rememberedPhotos: [picked],
+      forgetPhotosError: new CameraCommandError("io", "一覧から外せませんでした。"),
+    });
+    await expect(failure.library.selectedPhotos.forget()).rejects.toMatchObject({ code: "io" });
+    await expect(failure.library.selectedPhotos.count()).resolves.toBe(1);
   });
 });
 

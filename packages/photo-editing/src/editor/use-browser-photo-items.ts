@@ -6,6 +6,7 @@ import {
   BROWSER_CLOUD_NO_LIST_FILTER,
   appliedBrowserCloudListFilter,
   browserCloudPlaceAlbumId,
+  isBrowserSelectedPhotosPlace,
   browserPlaceFolderId,
   countBrowserCloudListFilter,
   isBrowserCloudPhotoInFilter,
@@ -80,7 +81,8 @@ export function useBrowserPhotoItems(
   allItemsRef.current = allItems;
   const listedPhotoIds = useMemo(() => new Set(photos.map((photo) => photo.id)), [photos]);
   // アルバム・この Mac のフォルダは行だけでは入るか分からないので、その一覧に載った写真だけを出す
-  const listedOnly = browserCloudPlaceAlbumId(place) !== null || browserPlaceFolderId(place) !== null;
+  const listedOnly =
+    browserCloudPlaceAlbumId(place) !== null || browserPlaceFolderId(place) !== null || isBrowserSelectedPhotosPlace(place);
   const items = useMemo(
     () =>
       allItems.filter(

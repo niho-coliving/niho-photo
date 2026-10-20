@@ -165,8 +165,10 @@ export function usePhotoCloudPhotos(options: {
   edited?: boolean;
   /** この Mac のフォルダ（`PhotoLibrary.folders` のある写真の出どころだけ。そのフォルダとその下の写真。NIHO camera C3 移行元設計） */
   folderId?: string;
+  /** この Mac の「選んだ写真」。`folderId` と同時には渡さない。 */
+  localSource?: "selected";
 }): PhotoCloudPhotos {
-  const { spotId, enabled, sort, hasOriginal, favorite, albumId, kind, edited, folderId } = options;
+  const { spotId, enabled, sort, hasOriginal, favorite, albumId, kind, edited, folderId, localSource } = options;
   const library = usePhotoLibrary();
   const host = usePhotoEditingHost();
   const queryClient = useQueryClient();
@@ -178,6 +180,7 @@ export function usePhotoCloudPhotos(options: {
     kind: kind ?? null,
     edited: edited ?? null,
     folderId: folderId ?? null,
+    localSource: localSource ?? null,
   });
   const pendingWorkPollRef = useRef<PendingWorkPoll>({ photoIds: new Set(), since: 0 });
   const listQuery = useInfiniteQuery({
@@ -193,6 +196,7 @@ export function usePhotoCloudPhotos(options: {
         ...(kind === undefined ? {} : { kind }),
         ...(edited === undefined ? {} : { edited }),
         ...(folderId === undefined ? {} : { folderId }),
+        ...(localSource === undefined ? {} : { localSource }),
       });
       return { photos: page.items, nextCursor: page.next, usage: page.usage, counts: page.counts };
     },

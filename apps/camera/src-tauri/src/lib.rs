@@ -90,9 +90,11 @@ pub fn run() {
     .invoke_handler(tauri::generate_handler![
       camera_app_info,
       library::camera_library_add_folder,
+      library::camera_library_add_photos,
       library::camera_library_remembered,
       library::camera_library_list_folder,
       library::camera_library_forget_folder,
+      library::camera_library_forget_photos,
       photos::camera_photo_open,
       photos::camera_photo_close,
       photos::camera_photo_save_settings,

@@ -2,7 +2,7 @@
 //! コマンドの引数の確かめを使わないもの。C2 #18390 で移した）。
 
 use super::*;
-use crate::remembered::{remembered_path, Remembered};
+use crate::remembered::{remembered_path, Remembered, RememberedLimits, RememberedStore};
 use crate::test_support::library::*;
 use crate::test_support::set_modified;
 use std::fs;
@@ -880,6 +880,7 @@ fn adding_still_works_when_nothing_can_be_remembered() {
   let folder = library.add_folder(&fixture.root()).unwrap();
   assert_eq!(child_names(&folder), ["Sub"]);
   assert_eq!(library.add_photos(std::slice::from_ref(&photo)).len(), 1);
+  assert_eq!(photo_names(&library.remembered()), ["a.jpg"]);
   let failures: Vec<String> = fixture
     .logs
     .lock()
@@ -897,7 +898,7 @@ fn adding_still_works_when_nothing_can_be_remembered() {
       .all(|line| line.contains(r#""error":""#) && !line.contains('/')),
     "{failures:?}"
   );
-  // 覚えていないので次の起動でも出ない（エラーにもならない）
+  // 書けなくてもこの起動では返した行を出し続け、次の起動では出ない（エラーにもならない）
   assert_eq!(fixture.remembered_store().load(), Remembered::default());
   assert_eq!(fixture.library().remembered(), json!({ "folders": [], "photos": [] }));
 
@@ -907,13 +908,68 @@ fn adding_still_works_when_nothing_can_be_remembered() {
   let without_store = PhotoLibrary::new(config);
   assert!(without_store.add_folder(&fixture.root()).is_ok());
   assert_eq!(without_store.add_photos(&[photo]).len(), 1);
-  assert_eq!(without_store.remembered(), json!({ "folders": [], "photos": [] }));
+  assert_eq!(photo_names(&without_store.remembered()), ["a.jpg"]);
   assert!(!fixture
     .logs
     .lock()
     .unwrap()
     .iter()
     .any(|line| line.contains("niho-photo-library-test")));
+}
+
+#[test]
+fn selected_session_uses_the_remembered_photo_limit_and_keeps_picker_group_order() {
+  let fixture = Fixture::new("selected-session-limit");
+  let a = fixture.file("a.jpg");
+  let b = fixture.file("b.jpg");
+  let c = fixture.file("c.jpg");
+  let d = fixture.file("d.jpg");
+  let mut config = fixture.config(ScanLimits::default(), failing_maker(), THUMBNAIL_CACHE_MAX_BYTES, None);
+  config.remembered = Some(RememberedStore::new(
+    remembered_path(&fixture.app_data()),
+    RememberedLimits {
+      max_folders: 50,
+      max_photos: 2,
+    },
+  ));
+  let library = PhotoLibrary::new(config);
+
+  assert_eq!(library.add_photos(&[a.clone(), b.clone(), c]).len(), 3);
+  assert_eq!(photo_names(&library.remembered()), ["a.jpg", "b.jpg"]);
+  // 新しい選択グループが先頭、グループ内は picker 順。同じ b は重複せず先頭へ動く。
+  assert_eq!(library.add_photos(&[b, d]).len(), 2);
+  assert_eq!(photo_names(&library.remembered()), ["b.jpg", "d.jpg"]);
+  assert_eq!(fixture.remembered_store().load().photos.len(), 2);
+}
+
+#[test]
+fn forgetting_selected_photos_clears_session_and_persisted_references_but_preserves_sources() {
+  let fixture = Fixture::new("selected-forget-success");
+  let photo = fixture.file("stays.jpg");
+  let library = fixture.library();
+  library.add_folder(&fixture.root()).unwrap();
+  library.add_photos(std::slice::from_ref(&photo));
+
+  library.forget_photos().unwrap();
+  assert!(photo.is_file());
+  assert_eq!(photo_names(&library.remembered()), Vec::<String>::new());
+  assert_eq!(library.remembered()["folders"].as_array().unwrap().len(), 1);
+  assert!(fixture.remembered_store().load().photos.is_empty());
+  assert_eq!(photo_names(&fixture.library().remembered()), Vec::<String>::new());
+  assert_eq!(library.add_photos(&[photo]).len(), 1);
+}
+
+#[test]
+fn selected_session_stays_visible_when_forgetting_cannot_persist() {
+  let fixture = Fixture::new("selected-forget-failure");
+  let photo = fixture.file("stays.jpg");
+  let library = fixture.library();
+  library.add_photos(std::slice::from_ref(&photo));
+  fs::create_dir_all(remembered_path(&fixture.app_data()).with_extension("json.tmp")).unwrap();
+
+  assert!(library.forget_photos().is_err());
+  assert_eq!(photo_names(&library.remembered()), ["stays.jpg"]);
+  assert_eq!(fixture.remembered_store().load().photos.len(), 1);
 }
 
 /// 予算だけを変えたライブラリ（覚えたものは `fixture.library()` と同じ置き場）。
@@ -1048,14 +1104,18 @@ fn purging_removes_everything_remembered_and_remembering_works_again_afterwards(
   assert_eq!(fixture.library().remembered(), json!({ "folders": [], "photos": [] }));
   assert!(fixture.has_log("photo_editing.remembered_purged") && fixture.has_log(r#""ok":true"#));
   // 消したあとも足せて、次の起動で出る
-  library.add_photos(&[photo]);
+  library.add_photos(std::slice::from_ref(&photo));
   assert_eq!(fixture.library().remembered()["photos"].as_array().unwrap().len(), 1);
   // 置き場が無いライブラリ・何も覚えていないときは何もしない
   library.purge_remembered().unwrap();
   library.purge_remembered().unwrap();
   let mut config = fixture.config(ScanLimits::default(), failing_maker(), THUMBNAIL_CACHE_MAX_BYTES, None);
   config.remembered = None;
-  PhotoLibrary::new(config).purge_remembered().unwrap();
+  let without_store = PhotoLibrary::new(config);
+  without_store.add_photos(std::slice::from_ref(&photo));
+  assert_eq!(photo_names(&without_store.remembered()), ["a.jpg"]);
+  without_store.purge_remembered().unwrap();
+  assert_eq!(without_store.remembered(), json!({ "folders": [], "photos": [] }));
   assert!(!fixture
     .logs
     .lock()

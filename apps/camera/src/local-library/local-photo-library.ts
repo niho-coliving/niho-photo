@@ -298,6 +298,7 @@ export type LocalPhotoLibraryOptions = {
 export type LocalPhotoLibrary = PhotoLibrary & {
   place: "local";
   folders: NonNullable<PhotoLibrary["folders"]>;
+  selectedPhotos: NonNullable<PhotoLibrary["selectedPhotos"]>;
   exportNative: NonNullable<PhotoLibrary["exportNative"]>;
   chooseExportFolder: NonNullable<PhotoLibrary["chooseExportFolder"]>;
   /** 背景除去 adapter だけが使う: entryId を、同じ中身の開いた photoId へ解決する。 */
@@ -440,6 +441,27 @@ export function createLocalPhotoLibrary(commands: CameraCommands, options: Local
 
   const describe = (error: unknown, fallback: string) => (error instanceof CameraCommandError ? error.message : fallback);
 
+  const selectedEntries = async (): Promise<LibraryEntry[]> => (await commands.remembered()).photos;
+
+  const pageFromEntries = (
+    entries: readonly LibraryEntry[],
+    query: PhotoLibraryListQuery,
+  ): PhotoLibraryListPage => {
+    const all = entries.filter((entry) => matchesQuery(entry, query));
+    // 「選んだ写真」は前のクラウド表示で覚えた並びに左右されず、選択グループの新しい順・picker の順を保つ。
+    const matching = all;
+    const offset = readOffset(query.cursor);
+    const limit = Math.max(1, Math.min(query.limit ?? LOCAL_LIST_PAGE_SIZE, LOCAL_LIST_PAGE_SIZE));
+    const page = matching.slice(offset, offset + limit);
+    const end = offset + page.length;
+    return {
+      items: page.map((entry) => listedRow(entry, handles.get(entry.entryId))),
+      next: end < matching.length ? String(end) : null,
+      usage: null,
+      counts: offset === 0 ? { photos: entries.length, articleImages: 0, favorites: 0, matching: matching.length } : null,
+    };
+  };
+
   const library: LocalPhotoLibrary = {
     place: "local",
     initialCapabilities: LOCAL_CLOSED_CAPABILITIES,
@@ -489,12 +511,25 @@ export function createLocalPhotoLibrary(commands: CameraCommands, options: Local
     },
 
     async list(query, requestOptions) {
-      if (!query.folderId) return emptyPage();
+      if (query.folderId && query.localSource) {
+        throw new CameraCommandError("invalidRequest", "写真の場所を選び直してください。");
+      }
+      if (query.localSource !== undefined && query.localSource !== "selected") {
+        throw new CameraCommandError("invalidRequest", "写真の場所を選び直してください。");
+      }
+      if (!query.folderId && query.localSource !== "selected") return emptyPage();
       // お気に入り・アルバム・記事の画像（オリジナルの無い写真）はこの Mac に無い
       if (query.hasOriginal === false || query.favorite === true || query.albumId) {
         return { ...emptyPage(), counts: query.cursor ? null : { photos: 0, articleImages: 0, favorites: 0, matching: 0 } };
       }
-      const folder = await commands.listFolder(query.folderId);
+      if (query.localSource === "selected") {
+        const entries = await selectedEntries();
+        throwIfAborted(requestOptions?.signal);
+        return pageFromEntries(entries, query);
+      }
+      const folderId = query.folderId;
+      if (!folderId) return emptyPage();
+      const folder = await commands.listFolder(folderId);
       throwIfAborted(requestOptions?.signal);
       const all = flattenEntries(folder);
       const matching = all.filter((entry) => matchesQuery(entry, query)).sort(byModifiedDesc);
@@ -684,6 +719,18 @@ export function createLocalPhotoLibrary(commands: CameraCommands, options: Local
         return added ? folderTree(added) : null;
       },
       forget: (folderId) => commands.forgetFolder(folderId),
+    },
+
+    selectedPhotos: {
+      async count(requestOptions) {
+        const entries = await selectedEntries();
+        throwIfAborted(requestOptions?.signal);
+        return entries.length;
+      },
+      async add() {
+        return (await commands.addPhotos()).map((entry) => listedRow(entry, handles.get(entry.entryId)));
+      },
+      forget: () => commands.forgetPhotos(),
     },
 
     presets: {

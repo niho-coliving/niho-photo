@@ -24,6 +24,7 @@ export const photoEditingQueryKeys = {
       kind?: "raw" | "jpeg" | "heic" | null;
       edited?: boolean | null;
       folderId?: string | null;
+      localSource?: "selected" | null;
     },
   ) =>
     [
@@ -39,6 +40,7 @@ export const photoEditingQueryKeys = {
         kind: list.kind ?? null,
         edited: list.edited ?? null,
         ...(list.folderId ? { folderId: list.folderId } : {}),
+        ...(list.localSource ? { localSource: list.localSource } : {}),
       },
     ] as const,
   /** クラウドのアルバム一覧（名前順、表紙と写真件数を含む） */
@@ -47,4 +49,6 @@ export const photoEditingQueryKeys = {
   cloudUsage: (spotId: string | null | undefined) => ["admin", "photoEditing", "cloudUsage", spotId] as const,
   /** 写真のフォルダの木（`PhotoLibrary.folders.tree`。置き場ごと。NIHO camera C3 移行元設計） */
   folders: (place: "cloud" | "local") => ["admin", "photoEditing", "folders", place] as const,
+  /** この Mac の「選んだ写真」の現在も読める件数。 */
+  selectedPhotos: (place: "cloud" | "local") => ["admin", "photoEditing", "selectedPhotos", place] as const,
 };
