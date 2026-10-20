@@ -14,7 +14,7 @@
 1. Issueで対象範囲を確認し、変更を小さく分けます。既存のprivateソースのcommit履歴は公開リポジトリへ持ち込まないでください。
 2. 変更した資産の出所、著作権者、第三者ライセンス、必要なnotice、不要metadataを確認します。NIHO所有資産は公開既定で、一件ずつ許可申請しません。[公開ゲート](docs/security/publication-gates.md) と [資産台帳](docs/legal/asset-inventory.csv) に従います。
 3. PRテンプレートに検証結果、公開境界、Issue参照、資産の差分を記入します。検出値やprivate URLを本文・ログへ書かないでください。
-4. 公開CIを通し、メンテナーが必要に応じて内容を確認してからsquashで統合します。CODEOWNERSによる承認レビュー1件と `Public CI required` の成功がGitHub上の必須マージ条件です。外部からのコード・資産は、別途合意した利用許諾を記録するまでマージしません。
+4. 公開CIを通し、CODEOWNERSが内容を確認してからsquashで統合します。CODEOWNERSによる承認レビュー1件と `Public CI required` の成功がGitHub上の必須マージ条件です。外部からのコード・資産は、別途合意した利用許諾を記録するまでマージしません。
 
 ## ローカル確認
 
