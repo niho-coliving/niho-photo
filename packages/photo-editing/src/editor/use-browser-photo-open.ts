@@ -432,6 +432,7 @@ export function useBrowserPhotoOpen(params: {
     const engine = engineRef.current;
     if (!canvas || !engine) return;
     const key = activeOpened.key;
+    const provisionalQuality = activeOpened.input?.kind === "provisional";
     const timelineGeneration = timelineRef.current?.generation ?? null;
     const order = paintOrderRef.current;
     const paintGeneration = order.generation;
@@ -486,7 +487,7 @@ export function useBrowserPhotoOpen(params: {
       }
       const sequence = ++order.requested;
       void engine
-        .render(frameSettings, { maxDimension: DEVELOP_PREVIEW_MAX_DIMENSION, interactive: false })
+        .render(frameSettings, { maxDimension: DEVELOP_PREVIEW_MAX_DIMENSION, interactive: provisionalQuality })
         .then((frame) => {
           if (!frame) return;
           if (engineRef.current !== engine || order.generation !== paintGeneration) return;
@@ -511,7 +512,7 @@ export function useBrowserPhotoOpen(params: {
       }
       const sequence = ++order.requested;
       void engine
-        .render(beforeSettings, { maxDimension: DEVELOP_PREVIEW_MAX_DIMENSION, interactive: false })
+        .render(beforeSettings, { maxDimension: DEVELOP_PREVIEW_MAX_DIMENSION, interactive: provisionalQuality })
         .then((frame) => {
           if (!frame) return;
           if (engineRef.current !== engine || order.generation !== paintGeneration) return;
@@ -544,7 +545,7 @@ export function useBrowserPhotoOpen(params: {
       return;
     }
     const sequence = ++order.requested;
-    const interactive = previewing ? previewInteractive : dragging;
+    const interactive = provisionalQuality || (previewing ? previewInteractive : dragging);
     const renderRequestedAt = photoDevelopDiagnosticsEnabled() ? performance.now() : null;
     void engine
       .render(shownSettings, { maxDimension: DEVELOP_PREVIEW_MAX_DIMENSION, interactive })
@@ -557,7 +558,7 @@ export function useBrowserPhotoOpen(params: {
         const paintedCanvas = canvasRef.current;
         order.painted = sequence;
         if (!interactive && !previewing) frameCacheRef.current = { key, settingsJson, frame };
-        paint(paintedCanvas, frame, !interactive && !previewing);
+        paint(paintedCanvas, frame, (provisionalQuality || !interactive) && !previewing);
         if (renderRequestedAt !== null) {
           requestAnimationFrame(() => requestAnimationFrame(() => {
             if (engineRef.current !== engine || order.generation !== paintGeneration ||
@@ -1091,7 +1092,7 @@ export function useBrowserPhotoOpen(params: {
                   await engine.open(bytes, Math.max(preview.width, preview.height));
                   const frame = await engine.render(projected, {
                     maxDimension: DEVELOP_PREVIEW_MAX_DIMENSION,
-                    interactive: false,
+                    interactive: true,
                   });
                   if (frame && !isStale()) {
                     provisionalReady = true;

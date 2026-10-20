@@ -1568,7 +1568,7 @@
         "path": "packages/photo-editing/src/editor/use-browser-photo-open.ts",
         "sha256": "2755ea206c0fe9edc8df05ff40d78326310449cb9d509e75a291fdc3822a1d2e"
       },
-      "outputSha256": "46717eb5db1189319bb0524424086d8315c2f243e694408970027dbe0acb19db",
+      "outputSha256": "742c6bf0dd15a56728d378fbca9201d2ce305658c00fc9e422fd151555e80849",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
@@ -1578,7 +1578,8 @@
         "Issue 13 review: canonical handoff世代・表示設定・旧engine frame遮断を修正",
         "Issue 13 Studio初回typecheckのnarrowing不備を修正",
         "Issue 13 retry outcomeのstale判定位置を修正",
-        "Issue #13の段階RAW open、競合回帰、匿名の区間計測を追加。正規producerの数式と成果物は維持。"
+        "Issue #13の段階RAW open、競合回帰、匿名の区間計測を追加。正規producerの数式と成果物は維持。",
+        "暫定入力だけ既存Interactive品質を使い、正規Finalへの切替と実UIの再現計測を追加。"
       ]
     },
     {
@@ -8550,9 +8551,19 @@
       "origin": "公開Macクライアント #7 のため新規作成。秘密なしunsignedビルド・公開CI・ライセンス・lint契約を明示。"
     },
     {
+      "path": "apps/camera/scripts/e2e/progressive-open.js",
+      "sha256": "1cc7cd93408776711c7dea600eff48b13155bd10272839d8115960acbcc16936",
+      "origin": "Issue #13のため独立作成した実UI検証probe。専用e2e bundleだけを操作し、実画像・元の名前・path・画像hashを公開出力しない。"
+    },
+    {
       "path": "apps/camera/scripts/measure-progressive-open.mjs",
       "sha256": "240cc81ba33d82387e7dbf6f7bf2f5d3e63edd5eb8bc509f34362a5e940ac083",
       "origin": "Issue #13のため独立作成。外から渡した実RAW pathを出力せず、case label、cold/warm条件、許可した区間時間だけを集計する公開ハーネス。実画像・原本名・個人path・画像由来hashを出力しない。"
+    },
+    {
+      "path": "apps/camera/scripts/probe-progressive-open.py",
+      "sha256": "35404dfedcc1c56a946da9355423936a7e8b5e899bf5a719b58b31a9dfeb6a1c",
+      "origin": "Issue #13のため独立作成した実UI検証probe。専用e2e bundleだけを操作し、実画像・元の名前・path・画像hashを公開出力しない。"
     },
     {
       "path": "apps/camera/src-tauri/src/account.rs",
@@ -8576,7 +8587,7 @@
     },
     {
       "path": "docs/features/progressive-raw-open.md",
-      "sha256": "ee3afd37a13b924d32d30fa88fa0210bddcb8935305734905a6241d143f144af",
+      "sha256": "afa681e48798244006e79c283bec9d26a45a6fbec472f1a4d3717b67da1dda5f",
       "origin": "Issue #13のため公開SSOT上で独立作成。段階RAW openの契約と合成入力による統合検証。利用者画像・原本名・非公開ソース・認証情報を含まない。"
     },
     {

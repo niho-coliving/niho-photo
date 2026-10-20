@@ -6,7 +6,7 @@
 
 `previewOnly → proxyInteractive → canonicalReady` の順に開きます。専用の長辺1600px Quick Look画像を暫定sRGB入力として段2へ渡し、256pxの一覧画像を拡大しません。取得できない・長辺1280px未満・時間切れの場合は従来の正規RAW入力を待ちます。Quick Lookは機種やmacOSによってフルdecodeを起こすため、常に2秒を保証するAPIではありません。
 
-正規入力は従来と同じ2560px・16bit・linear ProPhoto・signed RAWのまま並行生成します。暫定入力は`provisional`で区別し、RAWのbaseVersionを付けません。300ms続く待機には「高画質表示を準備中」を表示します。
+正規入力は従来と同じ2560px・16bit・linear ProPhoto・signed RAWのまま並行生成します。暫定入力は`provisional`で区別し、RAWのbaseVersionを付けません。暫定中は段2の既存Interactive品質で応答を優先し、正規切替時にFinal品質へ戻します。300ms続く待機には「高画質表示を準備中」を表示します。
 
 補正値は暫定段階から編集できます。内容hashに結び付く、設定だけの端末内draftへ直列保存し、写真切替・終了時にflushします。正規入力を実際に開くまで通常保存・画像uploadを行いません。正規入力で最新の画を描き終えた後に、engine・session・canvasをまとめて替えます。補正値、preset選択と適用量、crop、undo/redoを保ち、構造metadataだけを正規入力へ結び直します。通常保存が成功した世代に対応するdraftだけを消します。
 
@@ -23,3 +23,24 @@
 集計入口は`node apps/camera/scripts/measure-progressive-open.mjs --case dc-s5=<非公開入力> --probe <実測probe> --probe-arg ... --runs 20`です。probeへ`{input}`、`{cache}`、`{condition}`、`{iteration}`を渡せます。coldは反復ごとにアプリcacheを空にし、warmは保持します。OS file cacheは落としません。probeは渡されたcache領域を実際に使う必要があります。mockの反復やnative producerだけの計測をUIの性能受入値に読み替えません。
 
 MacBook Air M2 / 8GBのcold p50 1秒・p95 2秒、warm p95 500ms、および入力100ms・描画p95 300msが性能受入条件です。Studioの実測はその代替にはしません。実機受入と非公開側のexact SHA取込み・署名・本番配布は別途行います。
+
+## 実UI probeの再現
+
+`e2e` featureのdebug appを、identifier `life.niho.photo.raw-bench`、専用deep-link scheme、ad-hoc署名で作ります。通常の製品identifierではprobeが停止します。段2は公開crateをrelease WASMでbuildし、既存のversioned manifest入口へ配置します。sidecarも公開sourceからbuildします。
+
+`--runtime`には `app`（`.app`）、`apple`（apple-raw-linear）、`render`（niho-develop-render）、`calibration`（校正dir）の4つのローカルパスを持つ非公開JSONを渡します。現行公開checkoutの新規signed RAWだけを試す場合、試験専用校正dirへ公開校正をコピーし、起動probe用`apple-registry.json`にも公開signed registryの内容を配置できます。正規生成は元の`apple-signed-registry.json`を使います。このstagingは旧unsigned recipe復元や配布artifactの検証には使いません。
+
+```sh
+node apps/camera/scripts/measure-progressive-open.mjs \
+  --case dc-s5=<入力RAW> --case fx30=<入力RAW> --case zv-e10m2=<入力RAW> \
+  --probe python3 --probe-arg apps/camera/scripts/probe-progressive-open.py \
+  --probe-arg --runtime --probe-arg <非公開runtime.json> \
+  --probe-arg --input --probe-arg '{input}' \
+  --probe-arg --cache --probe-arg '{cache}' \
+  --probe-arg --condition --probe-arg '{condition}' \
+  --probe-arg --iteration --probe-arg '{iteration}' --runs 20
+```
+
+probeは写真を1枚だけ選んだ一覧を作り、段2のidle準備後にT0を開始します。露光とpresetが両方有効な状態で、最初の露光入力のstate反映と二度のrAF後の変更画を`editable`とし、presetも別操作で描画を検証します。warmの最初の1回は計測外でprimeします。
+
+専用bundleの設定とWebKit storageは反復ごとに初期化し、native cacheはcoldだけ消します。アプリを前面にするため、無人の試験Macで実行します。probe自体は直列です。元画像は読み取りだけで、公開出力は許可した時間と検証結果だけです。失敗時のログ・script・reportは渡したcache内でローカルに確認します。
