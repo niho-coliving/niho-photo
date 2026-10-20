@@ -8781,13 +8781,13 @@
     },
     {
       "path": "packages/photo-editing/src/editor/use-browser-photo-export-delete.test.tsx",
-      "sha256": "eec74bf3a8a0c520c8397dfa9927f96ceba6686ac23accfe930bcbf118a364b1",
-      "origin": "Issue #13のため独立作成。actual export hookと公開fixtureだけで、補正書き出しのcanonical待機とRAW original copyの非待機を検証。外部画像・非公開コード・個体metadataを含まない。"
+      "sha256": "fdffb574516823f97e0f98c23f626e2c67cb499db894efbe53235d5f517029e6",
+      "origin": "Issue #13のため独立作成。actual export hookと公開fixtureだけで、補正書き出しのcanonical待機とRAW original copyの非待機を検証。外部画像・非公開コード・個体metadataを含まない。\n変更理由: 書出しhost境界のmockを実際の保存関数型に限定。"
     },
     {
       "path": "packages/photo-editing/src/editor/use-browser-photo-progressive-open.test.tsx",
-      "sha256": "86acd0f17e915bb4f033128e80453262216546f3778aace09c7f6d0e813344f0",
-      "origin": "Issue #13のため独立作成。actual React hooksと合成library/engine/frameだけで、provisional編集、canonical handoff、history、retry、abort、旧frame遮断を検証。外部画像・非公開コード・個体metadataを含まない。"
+      "sha256": "59e08b44698cc556d7358813a13776fe092b78e288f65aea13fb6e11ec878cd9",
+      "origin": "Issue #13のため独立作成。actual React hooksと合成library/engine/frameだけで、provisional編集、canonical handoff、history、retry、abort、旧frame遮断を検証。外部画像・非公開コード・個体metadataを含まない。\n変更理由: 公開signed RAW契約に合う合成metadataで実hookの正規切替を検証。"
     },
     {
       "path": "packages/photo-editing/src/fixtures/cutout-brush-parity.json",

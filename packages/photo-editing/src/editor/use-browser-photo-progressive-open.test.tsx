@@ -78,7 +78,12 @@ const CAPABILITIES: PhotoLibraryCapabilities = {
   addFromDeviceFolder: false,
 };
 
-const BASE_VERSION = "raw-apple.d1.p1.e1";
+const BASE_VERSION = "raw-apple.d8.p3.e4.cal-sony-ilme-fx30-apple-v4.lens-apple";
+const WORK_META = {
+  kind: "raw",
+  encoding: { kind: "signed-gamma18-v1", ceiling: 2 },
+  dcpSha256: "apple-ciraw8/linear-prophoto-d50/cal-sony-ilme-fx30-apple-v4",
+};
 const HASH = "a".repeat(64);
 
 function photo(id: string): PhotoLibraryPhoto {
@@ -127,7 +132,7 @@ function readyWork(): PhotoLibraryWorkingCopyResult {
         sizeBytes: 2_000,
         width: 3000,
         height: 2000,
-        meta: {},
+        meta: WORK_META,
         renderedAt: "2026-10-20T00:00:00.000Z",
       },
     },
@@ -252,7 +257,7 @@ function createLibrary(
       baseVersion: BASE_VERSION,
       bytes: new ArrayBuffer(8),
       encoding: "png16" as const,
-      metaJson: "{}",
+      metaJson: JSON.stringify(WORK_META),
     })),
     loadInteractivePreview: vi.fn(async (photoId: string) => ({
       photo: photo(photoId),

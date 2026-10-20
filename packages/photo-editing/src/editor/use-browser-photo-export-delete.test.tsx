@@ -118,7 +118,7 @@ let runExport: (
 let openedRefForTest: { current: OpenedSource | null };
 let engine: DevelopEngine;
 let downloadOriginal: ReturnType<typeof vi.fn>;
-let saveFile: ReturnType<typeof vi.fn>;
+let saveFile = vi.fn<PhotoEditingHost["saveFile"]>();
 
 function Harness() {
   const mountedRef = useRef(true);
