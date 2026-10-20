@@ -1,0 +1,49 @@
+{
+  "schema": "niho.color-review-wasm-timing.v1",
+  "environment": "Node wasm SIMD on Studio; browser/device performance remains separate",
+  "node": "v24.18.0",
+  "engineBundle": "niho-develop 0.16.0 (engine niho-8)",
+  "dimensions": [
+    1024,
+    768
+  ],
+  "inputSha256": "95c149d7585cb77d833e21943d494e6bfbd3c5501b1a66123cc6269c125a9e5a",
+  "rows": [
+    {
+      "engine": "niho-6",
+      "timingsMs": {
+        "coldInteractive": 1148.26925,
+        "coldFinal": 518.6027920000001,
+        "cachedInteractive": 27.90683299999978,
+        "cachedFinal": 374.1878330000002,
+        "editedInteractiveMedian": 68.63904200000025,
+        "editedInteractiveMax": 69.28762499999993
+      },
+      "interactive100ms": true,
+      "final1000ms": true
+    },
+    {
+      "engine": "niho-8",
+      "timingsMs": {
+        "coldInteractive": 965.973,
+        "coldFinal": 448.8699590000001,
+        "cachedInteractive": 26.080875000000106,
+        "cachedFinal": 342.66645900000003,
+        "editedInteractiveMedian": 64.9088329999995,
+        "editedInteractiveMax": 65.21366699999999
+      },
+      "interactive100ms": true,
+      "final1000ms": true
+    }
+  ],
+  "measurementSourceCommit": "ffdc46ad31d1619c48a3e1499465a6c8a712b23c",
+  "measurementHost": "Mac Studio",
+  "measurementDate": "2026-10-20",
+  "rustToolchain": "1.98.1",
+  "wasmSha256": "79d24741f9243408ab677e5ac7b2ae90f80c61e2e789e29b0ee28996eeb3d279",
+  "timingNotes": [
+    "Node wasm SIMD; engines run sequentially niho-6 then niho-8; not a browser/device or isolated comparative-speed claim",
+    "interactive100ms refers to editedInteractiveMax, not coldInteractive",
+    "coldFinal is the first Final after the initial Interactive frame; initialization/decode are outside these timings"
+  ]
+}
