@@ -1163,6 +1163,7 @@ pub(crate) struct RenderCaches<'a> {
     local: &'a mut Option<LocalPass>,
     effects: &'a mut EffectsCache,
     color_points: &'a mut Option<ColorPointPlane>,
+    noise: &'a mut Option<NoiseCache>,
 }
 
 impl<'a> RenderCaches<'a> {
@@ -1171,14 +1172,27 @@ impl<'a> RenderCaches<'a> {
         local: &'a mut Option<LocalPass>,
         effects: &'a mut EffectsCache,
         color_points: &'a mut Option<ColorPointPlane>,
+        noise: &'a mut Option<NoiseCache>,
     ) -> Self {
         Self {
             cubes,
             local,
             effects,
             color_points,
+            noise,
         }
     }
+}
+
+/// The exact pre-local v5 raster source retained by a Session. The key
+/// includes immutable source identity, NR amounts, working size, geometry
+/// window, whole-image scale and quality. `sampleColor` reads `image`, so it
+/// cannot accidentally sample the unfiltered source used to create it.
+pub(crate) struct NoiseCache {
+    key: String,
+    pub(crate) source_ptr: usize,
+    pub(crate) image: LinearImage,
+    stats: Option<LinearImage>,
 }
 
 /// Keeps only a local pass that may be reused by the next frame. A frame
@@ -1245,16 +1259,24 @@ pub fn render_raster(
         Some(Err(_)) => (raster, true),
         None => (raster, false),
     };
+    let downstream;
+    let render_settings = if matches!(&prepared, Some(Ok(_))) {
+        downstream = crate::detail::source_noise_disabled(s);
+        &downstream
+    } else {
+        s
+    };
     let (mut rendered, cubes, stats) = render_raster_in_session(
         raster,
         None,
-        s,
+        render_settings,
         quality,
         stats_cache,
         RenderCaches::new(
             cubes_cache,
             &mut None,
             &mut EffectsCache::default(),
+            &mut None,
             &mut None,
         ),
     );
@@ -1276,9 +1298,34 @@ fn niho6_one_shot(
         return None;
     }
     let space = crate::niho6::SourceSpace::LinearSrgb;
+    let reduced;
+    let image = if let Some(detail) = s.detail.filter(|detail| {
+        detail.luminance_noise_reduction > 0.0
+            || detail
+                .color_noise_reduction
+                .is_some_and(|amount| amount > 0.0)
+    }) {
+        reduced = LinearImage {
+            width: raster.image.width,
+            height: raster.image.height,
+            data: crate::detail::reduce_noise(
+                &raster.image.data,
+                raster.image.width,
+                raster.image.height,
+                raster.image.width.max(raster.image.height),
+                crate::detail::SourceSpace::LinearSrgb,
+                detail,
+                detail.color_noise_reduction,
+            )
+            .expect("validated decoded NIHO 6 detail input"),
+        };
+        &reduced
+    } else {
+        &raster.image
+    };
     Some(
-        crate::niho6::analysis(&raster.image, space, crate::niho6::analysis_exposure(s))
-            .and_then(|analysis| crate::niho6::apply(&raster.image, space, &analysis, s))
+        crate::niho6::analysis(image, space, crate::niho6::analysis_exposure(s))
+            .and_then(|analysis| crate::niho6::apply(image, space, &analysis, s))
             .map(|image| Raster {
                 image,
                 info: raster.info.clone(),
@@ -1314,6 +1361,7 @@ pub(crate) fn render_raster_in_session(
         local,
         effects,
         color_points,
+        noise,
     } = caches;
     render_linear(
         &raster.image,
@@ -1327,6 +1375,7 @@ pub(crate) fn render_raster_in_session(
         local,
         effects,
         color_points,
+        noise,
         false,
     )
 }
@@ -1338,17 +1387,25 @@ pub(crate) fn render_raster_in_session(
 pub fn render_raster_marking_out_of_srgb(raster: &Raster, s: &DevelopSettings) -> Rendered {
     let prepared = niho6_one_shot(raster, s).and_then(Result::ok);
     let raster = prepared.as_ref().unwrap_or(raster);
+    let downstream;
+    let render_settings = if prepared.is_some() {
+        downstream = crate::detail::source_noise_disabled(s);
+        &downstream
+    } else {
+        s
+    };
     render_linear(
         &raster.image,
         None,
         raster.info.is_bounded_srgb(),
         None,
-        s,
+        render_settings,
         Quality::Final,
         None,
         None,
         &mut None,
         &mut EffectsCache::default(),
+        &mut None,
         &mut None,
         true,
     )
@@ -1364,7 +1421,7 @@ pub fn render_raster_marking_out_of_srgb(raster: &Raster, s: &DevelopSettings) -
 /// geometry, `img` is the window ([`Framing`]).
 #[allow(clippy::too_many_arguments)]
 fn render_linear(
-    img: &LinearImage,
+    source_img: &LinearImage,
     framing: Option<&Framing<'_>>,
     bounded_srgb: bool,
     input: Option<[[f32; 3]; 3]>,
@@ -1375,6 +1432,7 @@ fn render_linear(
     local_cache: &mut Option<LocalPass>,
     effects_cache: &mut EffectsCache,
     color_point_cache: &mut Option<ColorPointPlane>,
+    noise_cache: &mut Option<NoiseCache>,
     mark_out_of_srgb: bool,
 ) -> (Rendered, SettingsCubes, Option<AdaptiveStats>) {
     // NIHO 3 changes only signed RAW rendering. Raster input inherits the
@@ -1389,6 +1447,84 @@ fn render_linear(
         legacy
     });
     let s = raster_legacy.as_ref().unwrap_or(s);
+    // v5 source NR precedes NIHO local tone processing. Raster color NR is
+    // opt-in only: the legacy top-level field remains ignored on JPEG/PNG.
+    // Geometry windows include a halo and use the whole-frame long edge, so
+    // their filter footprint matches an uncropped render.
+    let detail = s.detail;
+    let source_long_edge = framing.map_or(source_img.width.max(source_img.height), |frame| {
+        frame.long_edge
+    });
+    let source_space = if input.is_some() {
+        crate::detail::SourceSpace::LinearProPhoto
+    } else {
+        crate::detail::SourceSpace::LinearSrgb
+    };
+    let active_detail = detail.filter(|value| {
+        value.luminance_noise_reduction > 0.0
+            || value
+                .color_noise_reduction
+                .is_some_and(|amount| amount > 0.0)
+    });
+    if let Some(value) = active_detail {
+        let frame_key = framing.map_or("", |frame| frame.key);
+        let output = framing.map(|frame| frame.output);
+        let key = format!(
+            "{:p}|{}x{}|{source_long_edge}|{frame_key}|{output:?}|{quality:?}|{source_space:?}|{}|{:?}",
+            source_img.data.as_ptr(),
+            source_img.width,
+            source_img.height,
+            value.luminance_noise_reduction,
+            value.color_noise_reduction,
+        );
+        if noise_cache.as_ref().is_none_or(|cache| cache.key != key) {
+            let image = LinearImage {
+                width: source_img.width,
+                height: source_img.height,
+                data: crate::detail::reduce_noise(
+                    &source_img.data,
+                    source_img.width,
+                    source_img.height,
+                    source_long_edge,
+                    source_space,
+                    value,
+                    value.color_noise_reduction,
+                )
+                .expect("validated decoded raster detail input"),
+            };
+            let stats = framing.map(|frame| LinearImage {
+                width: frame.stats_source.width,
+                height: frame.stats_source.height,
+                data: crate::detail::reduce_noise(
+                    &frame.stats_source.data,
+                    frame.stats_source.width,
+                    frame.stats_source.height,
+                    frame.long_edge,
+                    source_space,
+                    value,
+                    value.color_noise_reduction,
+                )
+                .expect("validated decoded raster detail statistics input"),
+            });
+            *noise_cache = Some(NoiseCache {
+                key,
+                source_ptr: source_img.data.as_ptr() as usize,
+                image,
+                stats,
+            });
+        }
+    } else {
+        *noise_cache = None;
+    }
+    let cached_noise = noise_cache.as_ref();
+    let img = cached_noise.map_or(source_img, |cache| &cache.image);
+    let reduced_framing = framing.map(|frame| Framing {
+        stats_source: cached_noise
+            .and_then(|cache| cache.stats.as_ref())
+            .unwrap_or(frame.stats_source),
+        ..*frame
+    });
+    let framing = reduced_framing.as_ref();
     let mut approximations = Vec::new();
     if ignored_cnr_detail {
         approximations.push("colorNoiseReductionDetail");
@@ -1605,7 +1741,79 @@ fn render_linear(
             }
         };
     }
-    if s.has_active_color_points() {
+    let final_sharpening = (quality == Quality::Final)
+        .then(|| s.detail.map(|detail| detail.sharpening))
+        .flatten()
+        .filter(|sharpening| sharpening.amount > 0.0);
+    if let Some(sharpening) = final_sharpening {
+        // Keep the tail in float. Detail sharpening must never decode the
+        // already quantized Rendered.rgba, and output effects are applied
+        // exactly once after sharpening.
+        let mut linear = vec![0.0f32; out.width * out.height * 3];
+        if s.has_active_color_points() {
+            let key = format!(
+                "{}|local={:?}",
+                color_point_plane_key("raster", img, frame, quality, s),
+                local_pass.map(|pass| &pass.params_key)
+            );
+            let plane = match &input_matrix {
+                Some(m) => cached_color_point_plane(
+                    color_point_cache,
+                    key,
+                    out.width,
+                    out.height,
+                    pixels,
+                    |px| rest(mat_vec_f32(m, px)),
+                    |value| tail.before_color_points(value),
+                ),
+                None => cached_color_point_plane(
+                    color_point_cache,
+                    key,
+                    out.width,
+                    out.height,
+                    pixels,
+                    rest,
+                    |value| tail.before_color_points(value),
+                ),
+            };
+            for (destination, pixel) in linear.chunks_exact_mut(3).zip(&plane.pixels) {
+                destination.copy_from_slice(&tail.cached_point_pixel(*pixel));
+            }
+        } else {
+            *color_point_cache = None;
+            match &input_matrix {
+                Some(matrix) => for_each_output_pixel(
+                    pixels,
+                    |pixel| rest(mat_vec_f32(matrix, pixel)),
+                    |value, index| {
+                        linear[index * 3..index * 3 + 3].copy_from_slice(&tail.pixel(value));
+                    },
+                ),
+                None => for_each_output_pixel(pixels, rest, |value, index| {
+                    linear[index * 3..index * 3 + 3].copy_from_slice(&tail.pixel(value));
+                }),
+            }
+        }
+        crate::detail::sharpen_linear_srgb(
+            &mut linear,
+            out.width,
+            out.height,
+            frame.long_edge,
+            sharpening,
+        )
+        .expect("validated float detail output");
+        for (index, pixel) in linear.chunks_exact(3).enumerate() {
+            let value = [pixel[0], pixel[1], pixel[2]];
+            let destination = &mut rgba[index * 4..index * 4 + 4];
+            write_rgba_fx(destination, value, tail.output_transform, out_fx, index);
+            if mark_out_of_srgb
+                && tail.output_transform
+                && (value[0] < 0.0 || value[1] < 0.0 || value[2] < 0.0)
+            {
+                destination[3] = 0;
+            }
+        }
+    } else if s.has_active_color_points() {
         let key = format!(
             "{}|local={:?}",
             color_point_plane_key("raster", img, frame, quality, s),
@@ -1814,18 +2022,26 @@ pub fn render_working_copy(
         Some(Err(_)) => (wc.image, true),
         None => (wc.image, false),
     };
+    let downstream;
+    let render_settings = if matches!(&prepared, Some(Ok(_))) {
+        downstream = crate::detail::source_noise_disabled(s);
+        &downstream
+    } else {
+        s
+    };
     let (mut rendered, cubes) = render_working_copy_in_session(
         &WorkingCopy {
             image,
             meta: wc.meta,
         },
         None,
-        s,
+        render_settings,
         quality,
         RenderCaches::new(
             cubes_cache,
             &mut None,
             &mut EffectsCache::default(),
+            &mut None,
             &mut None,
         ),
     );
@@ -1849,9 +2065,34 @@ fn niho6_working_copy_one_shot(
         return None;
     }
     let space = crate::niho6::SourceSpace::LinearProPhoto;
+    let reduced;
+    let image = if let Some(detail) = s.detail.filter(|detail| {
+        detail.luminance_noise_reduction > 0.0
+            || detail
+                .color_noise_reduction
+                .is_some_and(|amount| amount > 0.0)
+    }) {
+        reduced = LinearImage {
+            width: wc.image.width,
+            height: wc.image.height,
+            data: crate::detail::reduce_noise(
+                &wc.image.data,
+                wc.image.width,
+                wc.image.height,
+                wc.image.width.max(wc.image.height),
+                crate::detail::SourceSpace::LinearProPhoto,
+                detail,
+                detail.color_noise_reduction,
+            )
+            .expect("validated NIHO 6 working-copy detail input"),
+        };
+        &reduced
+    } else {
+        wc.image
+    };
     Some(
-        crate::niho6::analysis(wc.image, space, crate::niho6::analysis_exposure(s))
-            .and_then(|analysis| crate::niho6::apply(wc.image, space, &analysis, s)),
+        crate::niho6::analysis(image, space, crate::niho6::analysis_exposure(s))
+            .and_then(|analysis| crate::niho6::apply(image, space, &analysis, s)),
     )
 }
 
@@ -1881,15 +2122,28 @@ pub fn render_working_copy_marking_out_of_srgb(
         Some(Err(_)) => (wc.image, true),
         None => (wc.image, false),
     };
+    let downstream;
+    let render_settings = if matches!(&prepared, Some(Ok(_))) {
+        downstream = crate::detail::source_noise_disabled(s);
+        &downstream
+    } else {
+        s
+    };
     let mut rendered = render_working_copy_with(
         &WorkingCopy {
             image,
             meta: wc.meta,
         },
         None,
-        s,
+        render_settings,
         Quality::Final,
-        RenderCaches::new(None, &mut None, &mut EffectsCache::default(), &mut None),
+        RenderCaches::new(
+            None,
+            &mut None,
+            &mut EffectsCache::default(),
+            &mut None,
+            &mut None,
+        ),
         true,
     )
     .0;
@@ -1912,6 +2166,7 @@ fn render_working_copy_with(
         local,
         effects,
         color_points,
+        noise,
     } = caches;
     match wc.meta {
         WorkingCopyMeta::Raster { .. } => {
@@ -1929,6 +2184,7 @@ fn render_working_copy_with(
                 local,
                 effects,
                 color_points,
+                noise,
                 mark_out_of_srgb,
             );
             (r, c)
@@ -2338,7 +2594,85 @@ fn render_raw(
             }
         };
     }
-    if s.has_active_color_points() {
+    let final_sharpening = (quality == Quality::Final)
+        .then(|| s.detail.map(|detail| detail.sharpening))
+        .flatten()
+        .filter(|sharpening| sharpening.amount > 0.0);
+    if let Some(sharpening) = final_sharpening {
+        let mut linear = vec![0.0f32; out.width * out.height * 3];
+        if s.has_active_color_points() {
+            let key = format!(
+                "{}|local={:?}",
+                color_point_plane_key("raw", img, frame, quality, s),
+                local_pass.map(|pass| &pass.params_key)
+            );
+            let plane = match &white_balance {
+                Some(matrix) => cached_color_point_plane(
+                    color_point_cache,
+                    key,
+                    out.width,
+                    out.height,
+                    pixels,
+                    |pixel| expose(mat_vec_f32(matrix, pixel)),
+                    |value| tail.before_color_points(value),
+                ),
+                None => cached_color_point_plane(
+                    color_point_cache,
+                    key,
+                    out.width,
+                    out.height,
+                    pixels,
+                    expose,
+                    |value| tail.before_color_points(value),
+                ),
+            };
+            for (destination, pixel) in linear.chunks_exact_mut(3).zip(&plane.pixels) {
+                destination.copy_from_slice(&finish(tail.cached_point_pixel(*pixel)));
+            }
+        } else {
+            *color_point_cache = None;
+            match &white_balance {
+                Some(matrix) => for_each_output_pixel(
+                    pixels,
+                    |pixel| expose(mat_vec_f32(matrix, pixel)),
+                    |value, index| {
+                        linear[index * 3..index * 3 + 3]
+                            .copy_from_slice(&finish(tail.pixel(value)));
+                    },
+                ),
+                None => for_each_output_pixel(pixels, expose, |value, index| {
+                    linear[index * 3..index * 3 + 3].copy_from_slice(&finish(tail.pixel(value)));
+                }),
+            }
+        }
+        crate::detail::sharpen_linear_srgb(
+            &mut linear,
+            out.width,
+            out.height,
+            frame.long_edge,
+            sharpening,
+        )
+        .expect("validated float detail output");
+        let legacy = matches!(
+            s.engine.as_str(),
+            ENGINE_NIHO_3 | ENGINE_NIHO_4 | ENGINE_NIHO_5 | ENGINE_NIHO_7 | ENGINE_NIHO_11
+        );
+        let encoder = legacy.then(crate::fastmath::niho3_srgb8);
+        for (index, pixel) in linear.chunks_exact(3).enumerate() {
+            let output = [pixel[0], pixel[1], pixel[2]];
+            let destination = &mut rgba[index * 4..index * 4 + 4];
+            match (encoder, out_fx) {
+                (Some(encoder), None) => write_niho3_output_rgba(destination, output, encoder),
+                (Some(_), Some(fx)) => write_niho3_output_rgba_fx(destination, output, fx, index),
+                (None, _) => {
+                    write_rgba_fx(destination, output, true, out_fx, index);
+                    if mark_out_of_srgb && (output[0] < 0.0 || output[1] < 0.0 || output[2] < 0.0) {
+                        destination[3] = 0;
+                    }
+                }
+            }
+        }
+    } else if s.has_active_color_points() {
         let key = format!(
             "{}|local={:?}",
             color_point_plane_key("raw", img, frame, quality, s),

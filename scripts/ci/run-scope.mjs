@@ -45,7 +45,7 @@ export async function scopeCommands(root, scope) {
       commands.push(["python3", ["-m", "unittest", "discover", "-s", "packages/develop-engine/tools/asset-audit", "-p", "test_*.py"]]);
       commands.push(["cargo", [...cargoPrefix, "build", "--locked", "--config", "packages/develop-engine/.cargo/config.toml", "--manifest-path", "packages/develop-engine/Cargo.toml", "--target", "wasm32-unknown-unknown", "-p", "niho-develop-wasm"]]);
       commands.push(["cargo", [...cargoPrefix, "install", "wasm-bindgen-cli", "--version", "0.2.129", "--locked"]]);
-      commands.push(["cargo", [...cargoPrefix, "test", "--locked", "--config", "packages/develop-engine/.cargo/config.toml", "--manifest-path", "packages/develop-engine/Cargo.toml", "--target", "wasm32-unknown-unknown", "-p", "niho-develop", "--test", "camera_linear_codec_cross_target", "--test", "niho6_cross_target", "--test", "niho7_cross_target", "--test", "color_points"]]);
+      commands.push(["cargo", [...cargoPrefix, "test", "--locked", "--config", "packages/develop-engine/.cargo/config.toml", "--manifest-path", "packages/develop-engine/Cargo.toml", "--target", "wasm32-unknown-unknown", "-p", "niho-develop", "--test", "camera_linear_codec_cross_target", "--test", "niho6_cross_target", "--test", "niho7_cross_target", "--test", "color_points", "--test", "detail_cross_target"]]);
     }
     for (const directory of metadata.swiftPackages) {
       if (typeof directory !== "string" || !/^(?:[A-Za-z0-9_-]+\/?)+$/.test(directory)) throw new Error(`${scope}: Swiftパスが不正です`);

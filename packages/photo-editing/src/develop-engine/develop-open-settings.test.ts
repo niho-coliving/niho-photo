@@ -137,7 +137,7 @@ describe("resolveDevelopOpenSettings", () => {
     ).toEqual({ kind: "newer" });
     expect(
       resolveDevelopOpenSettings({
-        cloudPhoto: cloudPhoto({ ...SAVED_DEVELOP, developSettings: { v: 5, engine: "niho-1" } as unknown as DevelopSettings }),
+        cloudPhoto: cloudPhoto({ ...SAVED_DEVELOP, developSettings: { v: 6, engine: "niho-1" } as unknown as DevelopSettings }),
         baseVersion: null,
       }),
     ).toEqual({ kind: "newer" });

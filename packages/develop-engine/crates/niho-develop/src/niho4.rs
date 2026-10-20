@@ -17,6 +17,7 @@ const PANASONIC_PRE_PROFILE_HEX: &str = include_str!("../niho4/pre-profile-panas
 #[derive(Debug)]
 pub enum PrepareError {
     Chroma(crate::raw_chroma::RawChromaError),
+    Detail(crate::detail::DetailError),
     Response(niho4_response::RawResponseError),
     UnsupportedCamera,
     NonFinite(&'static str),
@@ -26,6 +27,7 @@ impl fmt::Display for PrepareError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Self::Chroma(e) => write!(f, "CNR: {e}"),
+            Self::Detail(e) => write!(f, "detail: {e}"),
             Self::Response(e) => write!(f, "H/S response: {e}"),
             Self::UnsupportedCamera => write!(f, "unsupported camera for niho-4"),
             Self::NonFinite(stage) => write!(f, "non-finite value during {stage}"),
@@ -54,6 +56,7 @@ pub struct Prepared {
 pub struct AnalysisCache {
     camera: Camera,
     cnr_amount: f64,
+    luminance_nr_amount: f64,
     baseline_ev_bits: u64,
     source_width: usize,
     source_height: usize,
@@ -81,7 +84,8 @@ impl AnalysisCache {
         baseline_ev: f64,
     ) -> bool {
         self.camera == camera
-            && self.cnr_amount == effective_cnr_amount(settings.color_noise_reduction)
+            && self.cnr_amount == effective_cnr_amount(settings)
+            && self.luminance_nr_amount == luminance_nr_amount(settings)
             && self.baseline_ev_bits == baseline_ev.to_bits()
             && self.source_width == image.width
             && self.source_height == image.height
@@ -95,6 +99,7 @@ impl AnalysisCache {
         AnalysisSeed {
             camera: self.camera,
             cnr_amount: self.cnr_amount,
+            luminance_nr_amount: self.luminance_nr_amount,
             baseline_ev_bits: self.baseline_ev_bits,
             source_width: self.source_width,
             source_height: self.source_height,
@@ -112,6 +117,7 @@ impl AnalysisCache {
 pub(crate) struct AnalysisSeed {
     camera: Camera,
     cnr_amount: f64,
+    luminance_nr_amount: f64,
     baseline_ev_bits: u64,
     source_width: usize,
     source_height: usize,
@@ -128,6 +134,7 @@ impl AnalysisSeed {
         Some(AnalysisCache {
             camera: self.camera,
             cnr_amount: self.cnr_amount,
+            luminance_nr_amount: self.luminance_nr_amount,
             baseline_ev_bits: self.baseline_ev_bits,
             source_width: self.source_width,
             source_height: self.source_height,
@@ -176,8 +183,17 @@ pub struct PreparationTarget {
     pub filter: Filter,
 }
 
-fn effective_cnr_amount(amount: f64) -> f64 {
-    amount.min(50.0)
+fn effective_cnr_amount(settings: &DevelopSettings) -> f64 {
+    settings
+        .detail
+        .and_then(|detail| detail.color_noise_reduction)
+        .unwrap_or_else(|| settings.color_noise_reduction.min(50.0))
+}
+
+fn luminance_nr_amount(settings: &DevelopSettings) -> f64 {
+    settings
+        .detail
+        .map_or(0.0, |detail| detail.luminance_noise_reduction)
 }
 
 pub(crate) fn camera(meta: &WorkingCopyMeta) -> Option<Camera> {
@@ -206,7 +222,7 @@ pub fn preparation_key(
         None => "full".to_owned(),
     };
     format!(
-        "{}|{camera:?}|{baseline}|{}|{}|{}|{}|{:?}|{}|{target}",
+        "{}|{camera:?}|{baseline}|{}|{}|{}|{}|{}|{:?}|{}|{target}",
         if settings.engine == crate::settings::ENGINE_NIHO_5 {
             "niho5"
         } else if matches!(
@@ -217,7 +233,8 @@ pub fn preparation_key(
         } else {
             "niho4"
         },
-        effective_cnr_amount(settings.color_noise_reduction),
+        effective_cnr_amount(settings),
+        luminance_nr_amount(settings),
         settings.highlights.min(0.0),
         settings.shadows.max(0.0),
         settings.texture,
@@ -244,10 +261,12 @@ pub fn prepare(
         WorkingCopyMeta::Raster { .. } => 0.0,
     };
     let key = preparation_key(camera, meta, settings, white_balance, target);
-    let cnr_amount = effective_cnr_amount(settings.color_noise_reduction);
+    let cnr_amount = effective_cnr_amount(settings);
+    let luminance_nr_amount = luminance_nr_amount(settings);
     let mut analysis = if let Some(cached) = cached_analysis.filter(|cached| {
         cached.camera == camera
             && cached.cnr_amount == cnr_amount
+            && cached.luminance_nr_amount == luminance_nr_amount
             && cached.baseline_ev_bits == baseline_ev.to_bits()
             && cached.source_width == image.width
             && cached.source_height == image.height
@@ -256,19 +275,34 @@ pub fn prepare(
     }) {
         cached
     } else {
-        let cnr_source = if cnr_amount == 0.0 {
+        let cnr_source = if cnr_amount == 0.0 && luminance_nr_amount == 0.0 {
             crate::raw_chroma::validate(&image.data, image.width, image.height, cnr_amount)
                 .map_err(PrepareError::Chroma)?;
             Arc::new(CnrSource::Original)
         } else {
-            Arc::new(CnrSource::Filtered(
+            let chroma = if cnr_amount == 0.0 {
+                image.data.clone()
+            } else {
                 crate::raw_chroma::apply(&image.data, image.width, image.height, cnr_amount)
-                    .map_err(PrepareError::Chroma)?,
+                    .map_err(PrepareError::Chroma)?
+            };
+            Arc::new(CnrSource::Filtered(
+                crate::detail::reduce_noise(
+                    &chroma,
+                    image.width,
+                    image.height,
+                    image.width.max(image.height),
+                    crate::detail::SourceSpace::LinearProPhoto,
+                    settings.detail.unwrap_or_default(),
+                    None,
+                )
+                .map_err(PrepareError::Detail)?,
             ))
         };
         AnalysisCache {
             camera,
             cnr_amount,
+            luminance_nr_amount,
             baseline_ev_bits: baseline_ev.to_bits(),
             source_width: image.width,
             source_height: image.height,

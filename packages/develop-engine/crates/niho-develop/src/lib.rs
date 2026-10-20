@@ -13,6 +13,7 @@ pub mod color;
 pub mod color_ops;
 pub mod convert;
 pub mod decode;
+pub mod detail;
 pub mod effects;
 pub mod encode;
 pub mod exif;
@@ -570,12 +571,13 @@ enum RawEngine {
 /// (once) and the coefficient maps of the last exposure.
 #[derive(Default)]
 struct Niho6AnalysisCache {
-    features: std::sync::OnceLock<Result<Arc<niho6::SourceFeatures>, String>>,
+    features: std::sync::Mutex<Option<Niho6Features>>,
     at_exposure: std::sync::Mutex<Option<Niho6AtExposure>>,
 }
 
+type Niho6Features = (String, Result<Arc<niho6::SourceFeatures>, String>);
 /// The analysis made at an exposure (its `f64` bits) and its result.
-type Niho6AtExposure = (u64, Result<Arc<niho6::Analysis>, String>);
+type Niho6AtExposure = (String, u64, Result<Arc<niho6::Analysis>, String>);
 
 /// A full-source NIHO 3 master and its reduction, set aside while unframed
 /// reduced Interactive frames draw from a display-size master. Releasing a
@@ -632,6 +634,8 @@ pub struct Session {
     /// Point and grading changes reuse it; every earlier-stage change gets a
     /// different key and replaces it before allocating the next plane.
     color_points: Option<pipeline::ColorPointPlane>,
+    /// v5 pre-local raster source shared by render and sampleColor.
+    noise: Option<pipeline::NoiseCache>,
     /// NIHO 3 master. Final and framed renders keep the full-source master;
     /// reduced unframed Interactive renders prepare at their display size.
     niho3: Option<PreparedNiho3>,
@@ -656,6 +660,7 @@ pub struct Session {
     /// shared cache also holds the analyses of preset previews and auto
     /// candidates at their exposures, which must not stand in for it.
     niho6_last_used: Option<Arc<niho6::Analysis>>,
+    niho6_last_detail: Option<String>,
     /// Whether Interactive frames may reuse [`Session::niho6_last_used`]. Off
     /// for sessions made from another one (preset previews, auto
     /// candidates): each of their frames is drawn at its own exposure.
@@ -688,6 +693,7 @@ impl Session {
             niho6_analysis: Arc::default(),
             niho6_source: Arc::clone(&source),
             niho6_last_used: None,
+            niho6_last_detail: None,
             niho6_reuse_while_dragging: true,
             source,
             filter,
@@ -699,6 +705,7 @@ impl Session {
             local: None,
             effects: effects::EffectsCache::default(),
             color_points: None,
+            noise: None,
             niho3: None,
             parked_niho3: None,
             niho3_seed: None,
@@ -798,9 +805,19 @@ impl Session {
         let output_x = sx - output.x;
         let output_y = sy - output.y;
         let output_index = output_y * output.width + output_x;
-        let index = sy * source.image().width + sx;
+        let source_image = source.image();
+        let sampled_image = self
+            .noise
+            .as_ref()
+            .filter(|cache| {
+                cache.source_ptr == source_image.data.as_ptr() as usize
+                    && cache.image.width == source_image.width
+                    && cache.image.height == source_image.height
+            })
+            .map_or(source_image, |cache| &cache.image);
+        let index = sy * sampled_image.width + sx;
         let offset = index * 3;
-        let data = &source.image().data;
+        let data = &sampled_image.data;
         let px = [data[offset], data[offset + 1], data[offset + 2]];
         let location = pipeline::ColorSampleLocation {
             working_index: index,
@@ -918,39 +935,94 @@ impl Session {
         self.niho6_analysis = Arc::clone(&parent.niho6_analysis);
         self.niho6_source = Arc::clone(&parent.niho6_source);
         self.niho6_last_used = None;
+        self.niho6_last_detail = None;
         self.niho6_reuse_while_dragging = false;
     }
 
     /// The `niho-6` analysis of the whole photo at `exposure_ev` (shared: the
     /// features once per photo, the networks again only when the exposure
     /// changes).
-    fn niho6_analysis(&self, exposure_ev: f64) -> Result<Arc<niho6::Analysis>, Error> {
-        let features = self
+    fn niho6_analysis(
+        &self,
+        exposure_ev: f64,
+        settings: &DevelopSettings,
+    ) -> Result<Arc<niho6::Analysis>, Error> {
+        let detail_key = settings.detail.map_or_else(
+            || "none".to_string(),
+            |detail| {
+                format!(
+                    "{}|{:?}",
+                    detail.luminance_noise_reduction, detail.color_noise_reduction
+                )
+            },
+        );
+        let mut feature_cache = self
             .niho6_analysis
             .features
-            .get_or_init(|| {
-                niho6::source_features(self.niho6_source.image(), self.niho6_source.space())
+            .lock()
+            .unwrap_or_else(std::sync::PoisonError::into_inner);
+        if feature_cache
+            .as_ref()
+            .is_none_or(|(key, _)| key != &detail_key)
+        {
+            let source = self.niho6_source.image();
+            let reduced = settings.detail.filter(|detail| {
+                detail.luminance_noise_reduction > 0.0
+                    || detail
+                        .color_noise_reduction
+                        .is_some_and(|amount| amount > 0.0)
+            });
+            let prepared = reduced.map(|detail| LinearImage {
+                width: source.width,
+                height: source.height,
+                data: detail::reduce_noise(
+                    &source.data,
+                    source.width,
+                    source.height,
+                    source.width.max(source.height),
+                    match self.niho6_source.space() {
+                        niho6::SourceSpace::LinearSrgb => detail::SourceSpace::LinearSrgb,
+                        niho6::SourceSpace::LinearProPhoto => detail::SourceSpace::LinearProPhoto,
+                    },
+                    detail,
+                    detail.color_noise_reduction,
+                )
+                .expect("validated NIHO 6 session detail input"),
+            });
+            let image = prepared.as_ref().unwrap_or(source);
+            *feature_cache = Some((
+                detail_key.clone(),
+                niho6::source_features(image, self.niho6_source.space())
                     .map(Arc::new)
-                    .map_err(|e| e.to_string())
-            })
+                    .map_err(|error| error.to_string()),
+            ));
+        }
+        let features = feature_cache
+            .as_ref()
+            .expect("NIHO 6 features")
+            .1
             .clone()
             .map_err(Error::Niho6Prepare)?;
+        drop(feature_cache);
         let mut cached = self
             .niho6_analysis
             .at_exposure
             .lock()
             .unwrap_or_else(std::sync::PoisonError::into_inner);
         let key = exposure_ev.to_bits();
-        if cached.as_ref().is_none_or(|(k, _)| *k != key) {
+        if cached
+            .as_ref()
+            .is_none_or(|(detail, k, _)| detail != &detail_key || *k != key)
+        {
             let made = niho6::analysis_at(&features, exposure_ev)
                 .map(Arc::new)
                 .map_err(|e| e.to_string());
-            *cached = Some((key, made));
+            *cached = Some((detail_key, key, made));
         }
         cached
             .as_ref()
             .expect("niho6 analysis")
-            .1
+            .2
             .clone()
             .map_err(Error::Niho6Prepare)
     }
@@ -1265,15 +1337,29 @@ impl Session {
         // exposure, as a one-shot render. Only this session's own frames count
         // (preset previews and auto candidates share the cache at their own
         // exposures and do not reuse while dragging).
+        let detail_key = settings.detail.map_or_else(
+            || "none".to_string(),
+            |detail| {
+                format!(
+                    "{}|{:?}",
+                    detail.luminance_noise_reduction, detail.color_noise_reduction
+                )
+            },
+        );
         let analysis = match (
             quality,
             self.niho6_reuse_while_dragging,
             self.niho6_last_used.clone(),
         ) {
-            (Quality::Interactive, true, Some(analysis)) => analysis,
-            _ => self.niho6_analysis(niho6::analysis_exposure(settings))?,
+            (Quality::Interactive, true, Some(analysis))
+                if self.niho6_last_detail.as_ref() == Some(&detail_key) =>
+            {
+                analysis
+            }
+            _ => self.niho6_analysis(niho6::analysis_exposure(settings), settings)?,
         };
         self.niho6_last_used = Some(Arc::clone(&analysis));
+        self.niho6_last_detail = Some(detail_key);
         let key = niho6::preparation_key(w, h, settings, analysis.exposure_ev);
         if self
             .niho3
@@ -1283,15 +1369,45 @@ impl Session {
             self.niho3 = None;
             self.parked_niho3 = None;
             self.sized = None;
-            let reduced = target.map(|t| self.source.reduced(t.width, t.height, t.filter));
-            let base = reduced.as_ref().unwrap_or(self.source.as_ref());
+            let filtered = settings.detail.filter(|detail| {
+                detail.luminance_noise_reduction > 0.0
+                    || detail
+                        .color_noise_reduction
+                        .is_some_and(|amount| amount > 0.0)
+            });
+            let filtered_source = filtered.map(|detail| {
+                let source = self.source.image();
+                self.source.with_image(LinearImage {
+                    width: source.width,
+                    height: source.height,
+                    data: detail::reduce_noise(
+                        &source.data,
+                        source.width,
+                        source.height,
+                        source.width.max(source.height),
+                        match self.source.space() {
+                            niho6::SourceSpace::LinearSrgb => detail::SourceSpace::LinearSrgb,
+                            niho6::SourceSpace::LinearProPhoto => {
+                                detail::SourceSpace::LinearProPhoto
+                            }
+                        },
+                        detail,
+                        detail.color_noise_reduction,
+                    )
+                    .expect("validated NIHO 6 source detail input"),
+                })
+            });
+            let unscaled = filtered_source.as_ref().unwrap_or(self.source.as_ref());
+            let reduced =
+                target.map(|target| unscaled.reduced(target.width, target.height, target.filter));
+            let base = reduced.as_ref().unwrap_or(unscaled);
             let image = pipeline::prepare_niho6(base.image(), base.space(), &analysis, settings)
                 .map_err(|e| Error::Niho6Prepare(e.to_string()))?;
             self.niho3 = Some(PreparedNiho3 {
                 key,
                 full: target.is_none(),
                 source: self.source.with_image(image),
-                settings: settings.clone(),
+                settings: detail::source_noise_disabled(settings),
                 approximate_white_balance: false,
                 analysis: RawAnalysisCache::Niho6,
             });
@@ -1299,7 +1415,8 @@ impl Session {
             self.stats.clear();
             self.local = None;
         }
-        self.niho3.as_mut().expect("prepared niho6").settings = settings.clone();
+        self.niho3.as_mut().expect("prepared niho6").settings =
+            detail::source_noise_disabled(settings);
         Ok(true)
     }
 
@@ -1393,6 +1510,7 @@ impl Session {
                         &mut self.local,
                         &mut self.effects,
                         &mut self.color_points,
+                        &mut self.noise,
                     ),
                 );
                 if let (None, Some(s)) = (cached, stats) {
@@ -1413,6 +1531,7 @@ impl Session {
                         &mut self.local,
                         &mut self.effects,
                         &mut self.color_points,
+                        &mut self.noise,
                     ),
                 );
                 self.cubes = Some(cubes);
@@ -1494,6 +1613,7 @@ impl Session {
                         &mut self.local,
                         &mut self.effects,
                         &mut self.color_points,
+                        &mut self.noise,
                     ),
                 );
                 if let (None, Some(s)) = (cached, stats) {
@@ -1514,6 +1634,7 @@ impl Session {
                         &mut self.local,
                         &mut self.effects,
                         &mut self.color_points,
+                        &mut self.noise,
                     ),
                 );
                 self.cubes = Some(cubes);
@@ -1616,6 +1737,7 @@ impl Session {
         let mut local = None;
         let mut effects = effects::EffectsCache::default();
         let mut color_points = None;
+        let mut noise = None;
         let session_cubes = self.cubes.as_ref();
         Ok(auto::run(settings, raw, |s| {
             let kept = cubes.as_ref().or(session_cubes);
@@ -1632,6 +1754,7 @@ impl Session {
                             &mut local,
                             &mut effects,
                             &mut color_points,
+                            &mut noise,
                         ),
                     );
                     stats = stats.or(computed);
@@ -1648,6 +1771,7 @@ impl Session {
                             &mut local,
                             &mut effects,
                             &mut color_points,
+                            &mut noise,
                         ),
                     )
                 }
