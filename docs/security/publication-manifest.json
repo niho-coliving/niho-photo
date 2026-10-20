@@ -615,11 +615,12 @@
         "path": "packages/photo-editing/src/editor/browser-photo-editing-adjustments.tsx",
         "sha256": "2473ef7ca64f61e5ce7a72efb21f436f799f04a90a3a73b114cba15b7b5d23b1"
       },
-      "outputSha256": "afc2fd27845fff09433e228e2213ae7cd955b4e72fc1344d8ae4fd88465d43bb",
+      "outputSha256": "f6963a90d6dde84aba8428281c61cdb0ebb25bfb66c1c795fd0992c06f9177c6",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
-        "Issue #50のMac画面配置・表示色・パネル・版位置の変更。"
+        "Issue #50のMac画面配置・表示色・パネル・版位置の変更。",
+        "niho-photo#51 L2: 右端の道具の帯と補正パネルの並び（見出し行・自動 / 白黒のチップ・プリセットの行・面の切り替え）。"
       ]
     },
     {
@@ -849,10 +850,11 @@
         "path": "packages/photo-editing/src/editor/browser-photo-editing-model.ts",
         "sha256": "98c0a3ee8ff431c0f6f0b63a9666b1e5f723e75c5b9e2d33f17199f40f69c41d"
       },
-      "outputSha256": "a591b853a8171497d4d6452d4aa40c8d49269781fd504f2f6d2d8369ccb01a4b",
+      "outputSha256": "b240b262ddde85feb234ad8ca95902cf383590521748f96aef479b886765f39f",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
-        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。"
+        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
+        "niho-photo#51 L2: 右端の道具の帯と補正パネルの並び（見出し行・自動 / 白黒のチップ・プリセットの行・面の切り替え）。"
       ]
     },
     {
@@ -877,10 +879,11 @@
         "path": "packages/photo-editing/src/editor/browser-photo-editing-presets.tsx",
         "sha256": "801648f9ced4999b839a58837c622df0af14464c73bcddd789450ece458e4763"
       },
-      "outputSha256": "52248dfb452e823ca8b6650628e82f8906cacb981742c7eb469300409319e29e",
+      "outputSha256": "4707b8dfa33d9b60539421ffdf5c3fd50aa0a98d76303efe41b7559f19ac571d",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
-        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。"
+        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
+        "niho-photo#51 L2: 右端の道具の帯と補正パネルの並び（見出し行・自動 / 白黒のチップ・プリセットの行・面の切り替え）。"
       ]
     },
     {
@@ -949,12 +952,13 @@
         "path": "packages/photo-editing/src/editor/browser-photo-editing-workbench-folders.test.tsx",
         "sha256": "2466702c26e46adadb579736eb8edef22cc420e4b0189283fd7d4b762a62869e"
       },
-      "outputSha256": "09dcc9ade8de932ad8f5b1fbf33ccbc7387aa94d390d18144c82a76b4bd58b90",
+      "outputSha256": "b6695a656f544ae20a1d2b474a7809cd24392ded2fa2cf700f383eef1d2ba592",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
         "任意の個別写真ソース契約と選んだ写真のUI、復元、取消、再試行、失敗時参照保持を追加",
-        "Issue #50のMac画面配置・表示色・パネル・版位置の変更。"
+        "Issue #50のMac画面配置・表示色・パネル・版位置の変更。",
+        "niho-photo#51 L2: 右端の道具の帯と補正パネルの並び（見出し行・自動 / 白黒のチップ・プリセットの行・面の切り替え）。"
       ]
     },
     {
@@ -965,12 +969,13 @@
         "path": "packages/photo-editing/src/editor/browser-photo-editing-workbench.tsx",
         "sha256": "f655136ae0c985d793822ca8bef1668dba26ffd4bb8f13d2ba3d6c2ccb13ceb6"
       },
-      "outputSha256": "a563a40206e16c9952927964635969adb6055deeb5873e85c6bb3d82602d4a82",
+      "outputSha256": "42e58835cf77ab0375f2d2195455a640337d109fc98022b0f26a1a063b2f66cf",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
         "任意の個別写真ソース契約と選んだ写真のUI、復元、取消、再試行、失敗時参照保持を追加",
-        "Issue #50のMac画面配置・表示色・パネル・版位置の変更。"
+        "Issue #50のMac画面配置・表示色・パネル・版位置の変更。",
+        "niho-photo#51 L2: 右端の道具の帯と補正パネルの並び（見出し行・自動 / 白黒のチップ・プリセットの行・面の切り替え）。"
       ]
     },
     {
@@ -981,10 +986,11 @@
         "path": "packages/photo-editing/src/editor/photo-editing-adjustment-controls-effects.test.tsx",
         "sha256": "6ec1a62922d7d058f4753e87cf5a9e32429b50a48ef61861b15c5a3894e7c891"
       },
-      "outputSha256": "28bf4ab3a696d2ab5a795804654140668fa43581650bfb145b690a7c0d35b602",
+      "outputSha256": "fa21d6bb82f49b9a7e34b5f1d980715588d68a96065f224910a5bb3e94222a99",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
-        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。"
+        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
+        "niho-photo#51 L2: 右端の道具の帯と補正パネルの並び（見出し行・自動 / 白黒のチップ・プリセットの行・面の切り替え）。"
       ]
     },
     {
@@ -1034,10 +1040,11 @@
         "path": "packages/photo-editing/src/editor/photo-editing-adjustment-controls.tsx",
         "sha256": "f8950078f7342eb7a6c6f6dfb026828a94f33b8355427d1485ce18a6cbb73773"
       },
-      "outputSha256": "042c5d5de5d5734d7e813ebba8b678a95cbb6bff67650fa78e8c29e93a6069b2",
+      "outputSha256": "b53af13c502469311e9dff9a6798f6b19fec6f10438dec216014445eab336a3d",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
-        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。"
+        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
+        "niho-photo#51 L2: 右端の道具の帯と補正パネルの並び（見出し行・自動 / 白黒のチップ・プリセットの行・面の切り替え）。"
       ]
     },
     {
@@ -1297,10 +1304,11 @@
         "path": "packages/photo-editing/src/editor/photo-editing-presets-panel.tsx",
         "sha256": "7f0524e5e1764f9274b39979d5887193faa96e37dcb6944fdd44d10a3e406541"
       },
-      "outputSha256": "8629df836c426ed0be926e9ea8111223cc78f1350e258e2645334453f589dc9e",
+      "outputSha256": "e5dd4a37698691cca4cb7a0e2d3ab641210ba38da3314fd5ded7f91928336d01",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
-        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。"
+        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
+        "niho-photo#51 L2: 右端の道具の帯と補正パネルの並び（見出し行・自動 / 白黒のチップ・プリセットの行・面の切り替え）。"
       ]
     },
     {
@@ -1888,11 +1896,12 @@
         "path": "packages/photo-editing/src/photo-editing-copy.ts",
         "sha256": "1208d4124dca26c951d73f6f84c560879e69beddfb9a16426e1a9dcc9fd30c27"
       },
-      "outputSha256": "0e4b639dbfb7ba43ab9d3f4e8f6b7f167cdcc437f1b3d52b25f693143f12ec8f",
+      "outputSha256": "3dad89b013eb5a26ed420d7169c7447b0a70fd18db026403414feae2ab8e4d75",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
-        "任意の個別写真ソース契約と選んだ写真のUI、復元、取消、再試行、失敗時参照保持を追加"
+        "任意の個別写真ソース契約と選んだ写真のUI、復元、取消、再試行、失敗時参照保持を追加",
+        "niho-photo#51 L2: 右端の道具の帯と補正パネルの並び（見出し行・自動 / 白黒のチップ・プリセットの行・面の切り替え）。"
       ]
     },
     {
@@ -8824,6 +8833,26 @@
       "path": "packages/photo-editing/src/cloud-sharing-contract.test.ts",
       "sha256": "bf2b8750f99efb6364e2ed3475ab3a53f92d532ca217cc7033c65c6ec9121452",
       "origin": "Docs共通の負例vector・reference model・mock検証にPhoto packageのre-export確認を加えた独立合成テスト。\n変更理由: Docs固定SHAの全operation HTTP method・path・request配置をPhotoでも検証する。"
+    },
+    {
+      "path": "packages/photo-editing/src/editor/browser-photo-editing-adjustments.test.tsx",
+      "sha256": "13d13d32908ac1ae814a6a4aa0abfae0bb350349c0d607d3da78053068a38939",
+      "origin": "niho-photo#51 のため新規作成。右端の道具の帯と右パネルの面の部品・test。"
+    },
+    {
+      "path": "packages/photo-editing/src/editor/browser-photo-editing-tool-rail.test.tsx",
+      "sha256": "54c4be84eb0c7d03fb1911047741a582e95fea6c8212254c5c740b61d71c3663",
+      "origin": "niho-photo#51 のため新規作成。右端の道具の帯と右パネルの面の部品・test。"
+    },
+    {
+      "path": "packages/photo-editing/src/editor/browser-photo-editing-tool-rail.tsx",
+      "sha256": "b8eea050f9e485169a1f225783a80f845a99b8f7de3c39dbffc75c52a3e57dfb",
+      "origin": "niho-photo#51 のため新規作成。右端の道具の帯と右パネルの面の部品・test。"
+    },
+    {
+      "path": "packages/photo-editing/src/editor/photo-editing-presets-panel-variants.test.tsx",
+      "sha256": "b044699a340836f23b7cc5d87ccf9d6a543ad09ff8f45df541e884c7fcc30160",
+      "origin": "niho-photo#51 のため新規作成。右端の道具の帯と右パネルの面の部品・test。"
     }
   ],
   "excludedSources": [

@@ -2,7 +2,7 @@
 
 import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { ChevronDown, MoreHorizontal } from "lucide-react";
+import { ChevronDown, LayoutGrid, MoreHorizontal } from "lucide-react";
 
 import { ConfirmDialog } from "niho-ui/components/confirm-dialog";
 import { Skeleton } from "niho-ui/components/skeleton";
@@ -11,6 +11,7 @@ import type { PhotoEditingBuiltinPreset } from "../photo-editing-types";
 import { usePhotoEditingPresetsSectionCollapsed } from "../photo-editing-adjustment-groups-state";
 import type { DevelopSettingsXmp } from "../develop-engine/develop-engine-client";
 import {
+  PHOTO_EDITING_PRESETS_OPEN_PANEL_LABEL,
   PHOTO_EDITING_PRESETS_TITLE,
   PHOTO_EDITING_PRESET_ACTIONS_LABEL,
   PHOTO_EDITING_PRESET_DELETE_MENU_LABEL,
@@ -29,6 +30,7 @@ import {
   PHOTO_EDITING_PRESET_NONE_LABEL,
   PHOTO_EDITING_SPOT_PRESETS_TITLE,
   photoEditingPresetColorTableConfirmTitle,
+  photoEditingPresetCurrentLabel,
   photoEditingPresetRowActionsLabel,
   PHOTO_PRESET_NAME_TAKEN_RENAME_MESSAGE,
   PHOTO_PRESET_XMP_INVALID_MESSAGE,
@@ -267,7 +269,16 @@ export function PhotoEditingPresetsPanel(props: {
   saveCurrent?: PhotoEditingPresetSaveCurrent;
   /** 拠点プリセット一覧が読み込まれた後、現在存在するキーを通知する（ブラウザの選択状態を同期） */
   onSpotPresetKeysChange?: (keys: readonly string[]) => void;
+  /**
+   * 描き方（niho-photo#51）。`section`（既定。NIHO Desktop・今までの面）は折りたためる節、`panel` はプリセットの面いっぱいの一覧
+   * （折りたたみの見出しを出さず常に開く。右上の「⋯」は残す）、`row` は補正の面の 1 行（「プリセット」・今のプリセット名・一覧を
+   * 開くボタンだけ。押すと `onOpenPanel`。一覧・取り込みの結果・ダイアログは描かない）
+   */
+  variant?: "section" | "panel" | "row";
+  /** `row` の今のプリセット名・一覧のボタンを押した（プリセットの面を開く） */
+  onOpenPanel?: () => void;
 }) {
+  const variant = props.variant ?? "section";
   const headingId = useId();
   const bodyId = useId();
   const spotHeadingId = useId();
@@ -460,6 +471,44 @@ export function PhotoEditingPresetsPanel(props: {
   const rowsDisabled = !props.canApply || applying;
   const builtinPresets = builtinPresetsQuery.data ?? [];
   const spotPresets = spotPresetsQuery.data?.presets ?? [];
+
+  if (variant === "row") {
+    // 補正の面の 1 行: 今のプリセット名は一覧の query から引く（当てたプリセットは一覧から選んだものなので、名前は読めている）
+    const appliedKey = props.appliedPresetKey;
+    const appliedBuiltin =
+      appliedKey === null ? undefined : builtinPresets.find((preset) => builtinPhotoPresetKey(preset.id) === appliedKey);
+    const appliedSpot =
+      appliedKey === null ? undefined : spotPresets.find((preset) => spotPhotoPresetKey(preset.id) === appliedKey);
+    const appliedName = appliedBuiltin
+      ? builtinPhotoPresetDisplayName(appliedBuiltin)
+      : (appliedSpot?.name ?? PHOTO_EDITING_PRESET_NONE_LABEL);
+    return (
+      <div role="group" aria-labelledby={headingId} className="flex h-9 items-center gap-2 text-xs">
+        <span id={headingId} className="shrink-0 text-niho-text-muted">
+          {PHOTO_EDITING_PRESETS_TITLE}
+        </span>
+        <button
+          type="button"
+          aria-label={photoEditingPresetCurrentLabel(appliedName)}
+          onClick={() => props.onOpenPanel?.()}
+          className="flex h-7 min-w-0 items-center gap-1 rounded-lg px-1.5 font-bold text-niho-text transition hover:bg-niho-pale/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-niho-accent-ink"
+        >
+          <span className="truncate">{appliedName}</span>
+          <ChevronDown className="h-3 w-3 shrink-0" aria-hidden />
+        </button>
+        <button
+          type="button"
+          aria-label={PHOTO_EDITING_PRESETS_OPEN_PANEL_LABEL}
+          title={PHOTO_EDITING_PRESETS_OPEN_PANEL_LABEL}
+          onClick={() => props.onOpenPanel?.()}
+          className="ml-auto flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-niho-text-sub transition hover:bg-niho-pale/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-niho-accent-ink"
+        >
+          <LayoutGrid className="h-3.5 w-3.5" aria-hidden />
+        </button>
+      </div>
+    );
+  }
+
   const errorTextClassName = "text-niho-danger";
   const onPreview = props.onPreview;
   const thumbnails = props.thumbnails;
@@ -664,7 +713,8 @@ export function PhotoEditingPresetsPanel(props: {
     />
   );
 
-  const expanded = !collapsed;
+  // 面いっぱいの一覧（`panel`）は折りたたまない
+  const expanded = variant === "panel" || !collapsed;
     const none = props.none;
     const browserDialogs = props.canEdit ? (
       <>
@@ -688,24 +738,34 @@ export function PhotoEditingPresetsPanel(props: {
     ) : null;
     return (
       <div role="group" aria-labelledby={headingId} className="pt-1">
-        <div className="flex min-h-11 items-center gap-1">
-          <h4 id={headingId} className="min-w-0">
-            <button
-              type="button"
-              aria-expanded={expanded}
-              aria-controls={bodyId}
-              onClick={toggleCollapsed}
-              className="-ml-1 flex min-h-11 items-center gap-1 rounded-full pl-1 pr-2 text-xs font-bold text-niho-text-muted transition hover:text-niho-text-sub focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-niho-accent-ink"
-            >
-              <ChevronDown
-                className={cn("h-4 w-4 shrink-0 motion-safe:transition-transform", expanded ? null : "-rotate-90")}
-                aria-hidden
-              />
+        {variant === "panel" ? (
+          // 見出しは右パネルの見出しが兼ねる（読み上げの名前だけ残す）。右上の「⋯」は上の行に右寄せで残す
+          <>
+            <h4 id={headingId} className="sr-only">
               {PHOTO_EDITING_PRESETS_TITLE}
-            </button>
-          </h4>
-          {browserActions}
-        </div>
+            </h4>
+            {browserActions ? <div className="flex min-h-11 items-center gap-1">{browserActions}</div> : null}
+          </>
+        ) : (
+          <div className="flex min-h-11 items-center gap-1">
+            <h4 id={headingId} className="min-w-0">
+              <button
+                type="button"
+                aria-expanded={expanded}
+                aria-controls={bodyId}
+                onClick={toggleCollapsed}
+                className="-ml-1 flex min-h-11 items-center gap-1 rounded-full pl-1 pr-2 text-xs font-bold text-niho-text-muted transition hover:text-niho-text-sub focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-niho-accent-ink"
+              >
+                <ChevronDown
+                  className={cn("h-4 w-4 shrink-0 motion-safe:transition-transform", expanded ? null : "-rotate-90")}
+                  aria-hidden
+                />
+                {PHOTO_EDITING_PRESETS_TITLE}
+              </button>
+            </h4>
+            {browserActions}
+          </div>
+        )}
         {/* 取り込みの結果は、節を閉じていても出す */}
         {messages}
         <div id={bodyId} hidden={!expanded} className="pb-1">
