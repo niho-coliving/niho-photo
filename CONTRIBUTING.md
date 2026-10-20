@@ -18,15 +18,16 @@
 
 ## ローカル確認
 
-現在の`main`は公開移行前で、アプリのworkspaceはまだありません。文書だけを変更した場合は次を実行します。
+公開済みのphoto-editing・共有UIはNode.js 24とnpmで検証します。
 
 ```bash
-python3 -m json.tool docs/security/publication-policy.json >/dev/null
+npm ci --ignore-scripts --no-audit --no-fund
+npm run verify
 git diff --check
-gitleaks dir --redact --no-banner .
+gitleaks dir --redact=100 --ignore-gitleaks-allow --no-banner .
 ```
 
-アプリ移行後は、対象パッケージのREADMEにinstall、format、targeted test、unsigned Mac buildのコマンドを追記します。公開CIはfork PRでもsecretを渡さず実行する設計です。
+import済みファイルを編集した場合は、出典hashを保持したまま変更理由付きでmanifestを更新してください。画像等の追加は公開可能の資産台帳とexact hashの一致が必要です。合成fixture、未移行nativeのコマンド、公開CIの範囲と制約は [公開CIの実行契約](docs/ci/public-ci.md) を参照してください。外部fork PRにも本番secretやprivate runnerを渡しません。
 
 ## 責務境界
 

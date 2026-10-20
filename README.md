@@ -23,6 +23,8 @@ npm run verify
 
 `niho-photo-editing` は編集ロジックとReact部品、`niho-ui` は必要最小限のUIを提供します。ホストがCSS・写真の読み書き・保存・実行環境を提供する構成です。単独で起動するアプリは含まれません。組み込み条件、fixtureの置換、後続Issueへの移行範囲は [allowlist-base.md](docs/migration/allowlist-base.md) を参照してください。
 
+公開CIは全PRとmain pushで動きます。安定した必須チェック名は `Public CI required` です。変更範囲、未移行のnative scope、資産・ライセンス検査、manifest更新手順は [公開CIの実行契約](docs/ci/public-ci.md) を参照してください。
+
 公開前の追加確認:
 
 ```bash
