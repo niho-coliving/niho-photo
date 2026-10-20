@@ -1,0 +1,16 @@
+{
+  "contractVersion": "1",
+  "cases": [
+    { "id": "cross-owner-object", "mutation": "select-resource-owned-by-another-tenant", "expected": "not_found" },
+    { "id": "forged-owner-context", "mutation": "submit-client-owned-subject-or-role-as-authority", "expected": "not_found" },
+    { "id": "expired-upload-capability", "mutation": "use-capability-after-expiry", "expected": "capability_expired" },
+    { "id": "revoked-upload-capability", "mutation": "use-capability-after-revocation", "expected": "capability_revoked" },
+    { "id": "replayed-upload-capability", "mutation": "reuse-single-use-upload-capability", "expected": "capability_replayed" },
+    { "id": "revoked-share", "mutation": "open-share-after-revocation", "expected": "capability_revoked" },
+    { "id": "idempotent-retry", "mutation": "repeat-same-key-and-identical-payload", "expected": "same-result" },
+    { "id": "idempotency-key-conflict", "mutation": "reuse-key-with-different-payload", "expected": "idempotency_conflict" },
+    { "id": "mime-spoof", "mutation": "send-bytes-that-disagree-with-declared-content-type", "expected": "content_rejected" },
+    { "id": "checksum-mismatch", "mutation": "send-bytes-that-disagree-with-declared-sha256", "expected": "content_rejected" },
+    { "id": "size-over-limit", "mutation": "send-more-bytes-than-authorized", "expected": "content_rejected" }
+  ]
+}

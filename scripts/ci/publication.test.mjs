@@ -44,6 +44,26 @@ test("監査済みソースは許可し、manifest hash更新だけでは出典�
   await rejected(f, /出典不正/);
 });
 
+test("Docsの外部固定SHAだけを共通contractの許可出典として認める", async (t) => {
+  const f = await fixture(t);
+  const sourceCommit = "c".repeat(40);
+  const sourcePath = "packages/niho-cloud-contract/src/v1.ts";
+  const source = "export const contract = 1;\n";
+  await f.put(sourcePath, source);
+  f.manifest.externalSources = [{ repository: "niho-docs", commit: sourceCommit }];
+  f.manifest.importedFiles.push({
+    path: sourcePath,
+    source: { repository: "niho-docs", commit: sourceCommit, path: sourcePath, sha256: digest(source) },
+    outputSha256: digest(source),
+    modifications: [],
+  });
+  await f.save();
+  assert.deepEqual(await f.check(), []);
+  f.manifest.importedFiles[1].source.commit = "d".repeat(40);
+  await f.save();
+  await rejected(f, /出典不正/);
+});
+
 test("packages外の禁止パス、秘密ファイル、巨大fixtureも拒否する", async (t) => {
   const f = await fixture(t);
   for (const name of ["apps/api/index.ts", "docs/.env.production", "misc/ID_RSA", "misc/key.PEM", ".gitmodules", ".npmrc", ".gitleaksignore", "sample.ICC"]) await f.put(name, "synthetic forbidden input\n");
