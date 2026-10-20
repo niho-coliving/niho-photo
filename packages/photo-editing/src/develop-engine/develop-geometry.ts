@@ -542,6 +542,44 @@ export function rotateGeometryClockwise(geometry: DevelopGeometry, source: Devel
 }
 
 /**
+ * 表示される結果を反時計回りに 90° 回す（{@link rotateGeometryClockwise} を 3 回と同じ）。枠の点 (x, y) は回した枠の (y, W − x)
+ * へ移る。`rotate`・反転・`aspect` の扱いは時計回りと同じ。
+ */
+export function rotateGeometryCounterClockwise(geometry: DevelopGeometry, source: DevelopSize): DevelopGeometry {
+  const frame = developFrameSize(source, geometry.rotate);
+  const box = rawCropBox(geometry.crop, geometry.angle, frame);
+  const rotate = ((geometry.rotate + 270) % 360) as DevelopGeometryRotate;
+  const turned: CropBox = { cx: box.cy, cy: frame.width - box.cx, width: box.height, height: box.width };
+  const next: DevelopGeometry = {
+    ...geometry,
+    rotate,
+    flipH: geometry.flipV,
+    flipV: geometry.flipH,
+    crop: cropFromBox(turned, geometry.angle, { width: frame.height, height: frame.width }),
+  };
+  if (geometry.aspect !== undefined && FIXED_ASPECT_PATTERN.test(geometry.aspect)) {
+    next.aspect = swapDevelopAspect(geometry.aspect);
+  }
+  return next;
+}
+
+/**
+ * 表示される結果を上下に鏡映する（{@link rotateGeometryClockwise} を 2 回してから {@link flipGeometryHorizontal} と同じ結果）。
+ * `flipV` を切り替え、切り抜きの箱も枠の上で上下に鏡映し、角度の符号を反転する（`rotate` は変えない）。
+ */
+export function flipGeometryVertical(geometry: DevelopGeometry, source: DevelopSize): DevelopGeometry {
+  const frame = developFrameSize(source, geometry.rotate);
+  const box = rawCropBox(geometry.crop, geometry.angle, frame);
+  const angle = -geometry.angle + 0;
+  return {
+    ...geometry,
+    flipV: !geometry.flipV,
+    angle,
+    crop: cropFromBox({ ...box, cy: frame.height - box.cy }, angle, frame),
+  };
+}
+
+/**
  * 表示される結果を左右に鏡映する。`flipH` を切り替え、切り抜きの箱も枠の上で鏡映し、角度の符号を反転する。`source` は作業画像の
  * 大きさ。
  */

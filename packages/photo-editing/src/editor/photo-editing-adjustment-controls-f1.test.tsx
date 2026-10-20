@@ -394,6 +394,39 @@ describe("スライダーの操作", () => {
   });
 });
 
+describe("見た目（Lightroom の細い線と白い丸。L6 #55）", () => {
+  it("線とつまみは疑似要素で描き、既定値から動かした値だけ accent-ink の太字、色温度・色かぶり補正だけ線に色の帯", async () => {
+    await render({
+      initial: { exposure: 0.3, whiteBalance: { mode: "custom", temperature: 6000, tint: 4 } },
+      photo: { asShotWhiteBalance: { temperature: 5200, tint: 4 } },
+    });
+    const exposure = slider("露光量");
+    expect(exposure.className).toContain("appearance-none");
+    expect(exposure.className).toContain("[&::-webkit-slider-runnable-track]:h-0.5");
+    expect(exposure.className).toContain("[&::-moz-range-track]:h-0.5");
+    expect(exposure.className).toContain("[&::-webkit-slider-thumb]:size-3");
+    expect(exposure.className).toContain("[&::-moz-range-thumb]:size-3");
+    expect(exposure.className).not.toContain("accent-niho-accent-ink");
+
+    // 既定値から動かした値（露光量・撮影時と違う色温度）は値を太字にし、つまみの線も accent-ink
+    for (const label of ["露光量", "色温度"]) {
+      expect(valueButton(label).className).toContain("font-bold");
+      expect(valueButton(label).className).toContain("text-niho-accent-ink");
+      expect(slider(label).className).toContain("[&::-webkit-slider-thumb]:border-niho-accent-ink");
+    }
+    // 既定値のまま（コントラスト・撮影時と同じ色かぶり補正）は印を出さない
+    for (const label of ["コントラスト", "色かぶり補正"]) {
+      expect(valueButton(label).className).not.toContain("font-bold");
+      expect(valueButton(label).className).toContain("text-niho-text");
+      expect(slider(label).className).toContain("[&::-webkit-slider-thumb]:border-niho-text-sub");
+    }
+
+    expect(slider("色温度").className).toContain("[&::-webkit-slider-runnable-track]:bg-[linear-gradient(90deg,#9CBBF0");
+    expect(slider("色かぶり補正").className).toContain("[&::-webkit-slider-runnable-track]:bg-[linear-gradient(90deg,#A9D59A");
+    expect(exposure.className).not.toContain("linear-gradient");
+  });
+});
+
 describe("値の読み方と丸め", () => {
   it("全角・「−」を受け、数値でなければ null", () => {
     expect(parsePhotoEditingValueText(" +0.5 ")).toBe(0.5);

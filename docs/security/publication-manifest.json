@@ -364,8 +364,10 @@
         "path": "packages/photo-editing/src/develop-engine/develop-geometry.test.ts",
         "sha256": "cf9d90f6ac01857db07966a7fc123e34028aea69ab8ffcb2b2fa287c0da3c073"
       },
-      "outputSha256": "cf9d90f6ac01857db07966a7fc123e34028aea69ab8ffcb2b2fa287c0da3c073",
-      "modifications": []
+      "outputSha256": "40c8b0ca507ace567949714c2358e5af5111e1f84b19fe5ecd9f7b24c1158c78",
+      "modifications": [
+        "PR #61 の切り抜きUI・完了/取消操作と回帰検証を公開repoで実装。"
+      ]
     },
     {
       "path": "packages/photo-editing/src/develop-engine/develop-geometry.ts",
@@ -375,10 +377,11 @@
         "path": "packages/photo-editing/src/develop-engine/develop-geometry.ts",
         "sha256": "ccb700dcbc95759de670ce6dae1ea52deeb57fe06b533cdda4101192b38339f5"
       },
-      "outputSha256": "45d44e5ea938718cd53c94e9604719d98eac5d8366fde3b9707561312711aecf",
+      "outputSha256": "d5b4391bf5da154190bb2075c283e9fd9c579065455ee81f0576c66c7d08ba68",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
-        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。"
+        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
+        "PR #61 の切り抜きUI・完了/取消操作と回帰検証を公開repoで実装。"
       ]
     },
     {
@@ -615,11 +618,13 @@
         "path": "packages/photo-editing/src/editor/browser-photo-editing-adjustments.tsx",
         "sha256": "2473ef7ca64f61e5ce7a72efb21f436f799f04a90a3a73b114cba15b7b5d23b1"
       },
-      "outputSha256": "afc2fd27845fff09433e228e2213ae7cd955b4e72fc1344d8ae4fd88465d43bb",
+      "outputSha256": "f6963a90d6dde84aba8428281c61cdb0ebb25bfb66c1c795fd0992c06f9177c6",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
-        "Issue #50のMac画面配置・表示色・パネル・版位置の変更。"
+        "Issue #50のMac画面配置・表示色・パネル・版位置の変更。",
+        "niho-photo#51 L2: 右端の道具の帯と補正パネルの並び（見出し行・自動 / 白黒のチップ・プリセットの行・面の切り替え）。",
+        "niho-photo#51の右パネルと道具帯を#35の共有UI統合後の最新mainへ合わせる。"
       ]
     },
     {
@@ -851,11 +856,14 @@
         "path": "packages/photo-editing/src/editor/browser-photo-editing-model.ts",
         "sha256": "98c0a3ee8ff431c0f6f0b63a9666b1e5f723e75c5b9e2d33f17199f40f69c41d"
       },
-      "outputSha256": "35a89f41955703002bc15c9c848d5b563d85ee3f8bccb0702abbae55d0964df6",
+      "outputSha256": "729c730061a6c1a6a18ff36b1f5966181c8cecddf5cd43cc3b992a66b6917e10",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
-        "個人クラウドの明示binding、保存先切替、単一写真コピーと公開境界を追加。"
+        "niho-photo#51 L2: 右端の道具の帯と補正パネルの並び（見出し行・自動 / 白黒のチップ・プリセットの行・面の切り替え）。",
+        "niho-photo#35の共有写真操作を#51の編集画面と統合する。",
+        "個人クラウドの明示binding、保存先切替、単一写真コピーと公開境界を追加。",
+        "Allow guarded leave to retain edit session"
       ]
     },
     {
@@ -880,10 +888,13 @@
         "path": "packages/photo-editing/src/editor/browser-photo-editing-presets.tsx",
         "sha256": "801648f9ced4999b839a58837c622df0af14464c73bcddd789450ece458e4763"
       },
-      "outputSha256": "52248dfb452e823ca8b6650628e82f8906cacb981742c7eb469300409319e29e",
+      "outputSha256": "d96b4b120a6d3558c224c4a3962b00214401cc521f09e3e82c55238ea9ebc200",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
-        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。"
+        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
+        "niho-photo#51 L2: 右端の道具の帯と補正パネルの並び（見出し行・自動 / 白黒のチップ・プリセットの行・面の切り替え）。",
+        "niho-photo#51の道具帯から呼び出すプリセット面を#35統合後の編集画面へ合わせる。",
+        "L4 #53: ブラウザ版のプリセット一覧をサムネイルの升の2列にし、升の見本を長辺192pxで描く。NIHO Desktop・スマホの行と見本の大きさは据え置き。"
       ]
     },
     {
@@ -952,14 +963,17 @@
         "path": "packages/photo-editing/src/editor/browser-photo-editing-workbench-folders.test.tsx",
         "sha256": "2466702c26e46adadb579736eb8edef22cc420e4b0189283fd7d4b762a62869e"
       },
-      "outputSha256": "01340078310b4cfe6776d5fef5f4fbf88b7e0bd322a5913b4a554f696dbe6820",
+      "outputSha256": "1a9aebf0cb3c3d53c109d360d1020cd23c34e8bd0afe785c4a827838dc85a808",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
         "任意の個別写真ソース契約と選んだ写真のUI、復元、取消、再試行、失敗時参照保持を追加",
         "クラウド写真の共有接続有無と本番機能の無効状態を合成テストで確認。",
         "Issue #50のMac画面配置・表示色・パネル・版位置の変更。",
-        "クラウド共有・Issue #50の両接続口と表示を統合テスト。"
+        "クラウド共有・Issue #50の両接続口と表示を統合テスト。",
+        "niho-photo#51 L2: 右端の道具の帯と補正パネルの並び（見出し行・自動 / 白黒のチップ・プリセットの行・面の切り替え）。",
+        "niho-photo#35の共有接続テストと#51の道具帯テストを統合する。",
+        "niho-photo#35の共有接続テストと#51の道具帯テストを統合した書式調整。"
       ]
     },
     {
@@ -970,7 +984,7 @@
         "path": "packages/photo-editing/src/editor/browser-photo-editing-workbench.tsx",
         "sha256": "f655136ae0c985d793822ca8bef1668dba26ffd4bb8f13d2ba3d6c2ccb13ceb6"
       },
-      "outputSha256": "42f0292523773787e4c1372d584a7aad119f6f93c93db8aae43b7510acb0bedc",
+      "outputSha256": "fbd557ede8574a461f65e79f596ab4bbe9e8dde192233585bc2369d13bcdc30e",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
@@ -978,9 +992,14 @@
         "クラウド共有UIを任意の信頼済みhost接続口へ限定し、Cameraのlocal-only境界を維持。",
         "Issue #50のMac画面配置・表示色・パネル・版位置の変更。",
         "クラウド共有接続とIssue #50のMacレイアウトを統合。",
+        "niho-photo#51 L2: 右端の道具の帯と補正パネルの並び（見出し行・自動 / 白黒のチップ・プリセットの行・面の切り替え）。",
+        "niho-photo#35のクラウド共有UIと#51の右端道具帯を統合する。",
+        "PR #61 の切り抜きUI・完了/取消操作と回帰検証を公開repoで実装。",
+        "PR #61 の切り抜き画面と共有UIの統合",
         "個人クラウドの明示binding、保存先切替、単一写真コピーと公開境界を追加。",
         "コピー進捗の競合と不正値を閉じ、完了後の遅延通知を無視。",
-        "公開編集面の個人クラウドコピー操作を更新"
+        "公開編集面の個人クラウドコピー操作を更新",
+        "Keep edit session while copying local photo"
       ]
     },
     {
@@ -991,10 +1010,12 @@
         "path": "packages/photo-editing/src/editor/photo-editing-adjustment-controls-effects.test.tsx",
         "sha256": "6ec1a62922d7d058f4753e87cf5a9e32429b50a48ef61861b15c5a3894e7c891"
       },
-      "outputSha256": "28bf4ab3a696d2ab5a795804654140668fa43581650bfb145b690a7c0d35b602",
+      "outputSha256": "fa21d6bb82f49b9a7e34b5f1d980715588d68a96065f224910a5bb3e94222a99",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
-        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。"
+        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
+        "niho-photo#51 L2: 右端の道具の帯と補正パネルの並び（見出し行・自動 / 白黒のチップ・プリセットの行・面の切り替え）。",
+        "niho-photo#51の補正パネル変更を#35統合後の現像コントロールテストへ反映する。"
       ]
     },
     {
@@ -1005,10 +1026,11 @@
         "path": "packages/photo-editing/src/editor/photo-editing-adjustment-controls-f1.test.tsx",
         "sha256": "31c60f83f5622ae4d2ea25b4a7bb8a584309c44d50508b2f47294613d555b7d2"
       },
-      "outputSha256": "44ef134015d4861687ffd2af7aa689ca4c8b2f5e2dc937dac5af7c08e03c51e5",
+      "outputSha256": "5bef1ab9d7751cd13c469c66d1a281a1c406d384a16ec507d8351f46ccb2a9f8",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
-        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。"
+        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
+        "公開repoでの機能変更（#55）: スライダーを Lightroom の見た目（細い線・白い丸・色温度 / 色かぶり補正の帯・変更ありの太字）にした。"
       ]
     },
     {
@@ -1044,10 +1066,13 @@
         "path": "packages/photo-editing/src/editor/photo-editing-adjustment-controls.tsx",
         "sha256": "f8950078f7342eb7a6c6f6dfb026828a94f33b8355427d1485ce18a6cbb73773"
       },
-      "outputSha256": "042c5d5de5d5734d7e813ebba8b678a95cbb6bff67650fa78e8c29e93a6069b2",
+      "outputSha256": "5fbe75b93ce59738a9ccc8678351cdf998ee7c62ba66610c29fdcdc70307a102",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
-        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。"
+        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
+        "niho-photo#51 L2: 右端の道具の帯と補正パネルの並び（見出し行・自動 / 白黒のチップ・プリセットの行・面の切り替え）。",
+        "niho-photo#51の補正パネル変更を#35統合後のコントロールへ反映する。",
+        "公開repoでの機能変更（#55）: スライダーを Lightroom の見た目（細い線・白い丸・色温度 / 色かぶり補正の帯・変更ありの太字）にした。"
       ]
     },
     {
@@ -1125,10 +1150,11 @@
         "path": "packages/photo-editing/src/editor/photo-editing-crop-tools.test.tsx",
         "sha256": "936965e961fe0f92eaadf6241f4297085f1cdd13b2e83359c749a9ec381512b9"
       },
-      "outputSha256": "38f174c18e77258750681852107fb7a6dcd477077b7073244de612e67b8dac4c",
+      "outputSha256": "0a2bf987580eab39618007a80eca3ad9423e90de2da9cc4706508e889d46e445",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
-        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。"
+        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
+        "PR #61 の切り抜きUI・完了/取消操作と回帰検証を公開repoで実装。"
       ]
     },
     {
@@ -1139,10 +1165,11 @@
         "path": "packages/photo-editing/src/editor/photo-editing-crop-tools.tsx",
         "sha256": "7a261c902f9b1e7b98d171a7744ca4c9fb44c5df64dc6e2ef78d8b0833f72f22"
       },
-      "outputSha256": "449698e0c70278aae6b7dbdab0a3d35b8bd2f44d660271459214d7872afbeaf1",
+      "outputSha256": "ab429fec770d7424b709d8b33b66718b5e7947a32813a7524509d5660170ad50",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
-        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。"
+        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
+        "PR #61 の切り抜きUI・完了/取消操作と回帰検証を公開repoで実装。"
       ]
     },
     {
@@ -1265,10 +1292,11 @@
         "path": "packages/photo-editing/src/editor/photo-editing-menu.tsx",
         "sha256": "e04c7c1d87b4558386139c966b9cce53e5abd07da5173c52d73c4a4940939d95"
       },
-      "outputSha256": "4b28c9ef184c10a5d5f6833b645b89c86033a16a22dc74c188fda9ea9deeb9a4",
+      "outputSha256": "4cd6fd6b916ff388670d58bd7f1335cdd9723c19908250e9702539a475650d7c",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
-        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。"
+        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
+        "PR #61 の切り抜きUI・完了/取消操作と回帰検証を公開repoで実装。"
       ]
     },
     {
@@ -1293,10 +1321,11 @@
         "path": "packages/photo-editing/src/editor/photo-editing-preset-thumbnail.tsx",
         "sha256": "69abea81653f3c0aed5972a2c886451d942087895286c9e3bf48cf2b3ee6355b"
       },
-      "outputSha256": "7f72caa96220016781251c43bee55e6b1647a2abd2907b9ac3a28f73dd01da79",
+      "outputSha256": "b03b88de5c82e883ea09e7b2a66723ef21389111fc3e23d0347980afafaa8080",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
-        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。"
+        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
+        "L4 #53: ブラウザ版のプリセット一覧をサムネイルの升の2列にし、升の見本を長辺192pxで描く。NIHO Desktop・スマホの行と見本の大きさは据え置き。"
       ]
     },
     {
@@ -1307,10 +1336,13 @@
         "path": "packages/photo-editing/src/editor/photo-editing-presets-panel.tsx",
         "sha256": "7f0524e5e1764f9274b39979d5887193faa96e37dcb6944fdd44d10a3e406541"
       },
-      "outputSha256": "8629df836c426ed0be926e9ea8111223cc78f1350e258e2645334453f589dc9e",
+      "outputSha256": "ac64f5f789b6e4f296b87eec901d89dcdbea8670bacc03922927d80d8919b74f",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
-        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。"
+        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
+        "niho-photo#51 L2: 右端の道具の帯と補正パネルの並び（見出し行・自動 / 白黒のチップ・プリセットの行・面の切り替え）。",
+        "niho-photo#51のプリセット面切替を#35統合後のパネルへ反映する。",
+        "L4 #53: ブラウザ版のプリセット一覧をサムネイルの升の2列にし、升の見本を長辺192pxで描く。NIHO Desktop・スマホの行と見本の大きさは据え置き。"
       ]
     },
     {
@@ -1349,10 +1381,11 @@
         "path": "packages/photo-editing/src/editor/photo-editing-slider.tsx",
         "sha256": "af79b8b767d17781a3371b87d40c6214eaac5e45a06709964252103f1ee9dfd4"
       },
-      "outputSha256": "faeec15e2357af28a00524ec5c735c4c925f4ecabdf908ad1b8ed4faef42b1ff",
+      "outputSha256": "e9ea9e7cab07c969db5f34ce062779a898d7345dbffd4d3e59c98f0492ae07dc",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
-        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。"
+        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
+        "公開repoでの機能変更（#55）: スライダーを Lightroom の見た目（細い線・白い丸・色温度 / 色かぶり補正の帯・変更ありの太字）にした。"
       ]
     },
     {
@@ -1406,10 +1439,11 @@
         "path": "packages/photo-editing/src/editor/use-browser-photo-crop.ts",
         "sha256": "42a650250b0a21968956fb2f055e87c59b6706e3730c2ef037c5775241e0a7df"
       },
-      "outputSha256": "cb2b3817f6ae1b0a97ab0f0d6069c3a39e2e874d32f21ccb18fee9e2a3f94651",
+      "outputSha256": "e7f2d361d816d82959da403de9560d9eb6a00a0b2d801ac4df52e6c06d50b534",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
-        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。"
+        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
+        "PR #61 の切り抜きUI・完了/取消操作と回帰検証を公開repoで実装。"
       ]
     },
     {
@@ -1476,8 +1510,10 @@
         "path": "packages/photo-editing/src/editor/use-browser-photo-editing-keys.test.ts",
         "sha256": "9a3c9ab4818e0e9f3bb3c00f9dd720fee808dae707c3bff1e0eaabcf1f2787c1"
       },
-      "outputSha256": "9a3c9ab4818e0e9f3bb3c00f9dd720fee808dae707c3bff1e0eaabcf1f2787c1",
-      "modifications": []
+      "outputSha256": "1e878e95e6c808ed02fc32b00e5c495b19c2981552436c4543e4d48e047ebef5",
+      "modifications": [
+        "PR #61 の切り抜きUI・完了/取消操作と回帰検証を公開repoで実装。"
+      ]
     },
     {
       "path": "packages/photo-editing/src/editor/use-browser-photo-editing-keys.ts",
@@ -1487,10 +1523,11 @@
         "path": "packages/photo-editing/src/editor/use-browser-photo-editing-keys.ts",
         "sha256": "869fc1769c085f4affe0fb260ad2cc9c0df21bd16c3e893ce65f015da29ce2fa"
       },
-      "outputSha256": "9f26284e76a7e12bc1cc07f0b4fce88f2bf5aea1e5a66e038ed6f9bcabed0538",
+      "outputSha256": "18c0778c7cb43595659a93319d8b180adfdb2e99e7a9993c137df107ba730b34",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
-        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。"
+        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
+        "PR #61 の切り抜きUI・完了/取消操作と回帰検証を公開repoで実装。"
       ]
     },
     {
@@ -1561,9 +1598,10 @@
         "path": "packages/photo-editing/src/editor/use-browser-photo-leave-guards.ts",
         "sha256": "3080836ffb0f730bc94303f4b561ed3c2a553512746b3ced1ef3b2e06780adf5"
       },
-      "outputSha256": "fad8f6a6bba5973fa2b3dde559484c002fa43226a53d20b2ae9b56e586bcadec",
+      "outputSha256": "116f019854bc83344d8e6a66743ec3d6697d08cd6cc3af6e1be2cc47c330d079",
       "modifications": [
-        "個人クラウドの明示binding、保存先切替、単一写真コピーと公開境界を追加。"
+        "個人クラウドの明示binding、保存先切替、単一写真コピーと公開境界を追加。",
+        "Support guarded session retention for copy"
       ]
     },
     {
@@ -1672,10 +1710,11 @@
         "path": "packages/photo-editing/src/editor/use-browser-preset-thumbnails.ts",
         "sha256": "509a581f578384cd68e938306a37c30f420998435c708bbd2a857cfd8e156d10"
       },
-      "outputSha256": "f6c9dfea6ee05d31f7d31b4094171425b78d0f60d0a7c6caafd600345f224b25",
+      "outputSha256": "daefd92861f4492db0ea9e9360bf31eadf385cce8b2f2d7b29737d0b2ca7da32",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
-        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。"
+        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
+        "L4 #53: ブラウザ版のプリセット一覧をサムネイルの升の2列にし、升の見本を長辺192pxで描く。NIHO Desktop・スマホの行と見本の大きさは据え置き。"
       ]
     },
     {
@@ -1902,11 +1941,14 @@
         "path": "packages/photo-editing/src/photo-editing-copy.ts",
         "sha256": "1208d4124dca26c951d73f6f84c560879e69beddfb9a16426e1a9dcc9fd30c27"
       },
-      "outputSha256": "0e4b639dbfb7ba43ab9d3f4e8f6b7f167cdcc437f1b3d52b25f693143f12ec8f",
+      "outputSha256": "2516ee98e62cf6a2717b3ad5bf6d8ccc5ecd20a403fe95c56e76809b5a4722c9",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
-        "任意の個別写真ソース契約と選んだ写真のUI、復元、取消、再試行、失敗時参照保持を追加"
+        "任意の個別写真ソース契約と選んだ写真のUI、復元、取消、再試行、失敗時参照保持を追加",
+        "niho-photo#51 L2: 右端の道具の帯と補正パネルの並び（見出し行・自動 / 白黒のチップ・プリセットの行・面の切り替え）。",
+        "niho-photo#35と#51の統合後に公開用の画面文言契約を更新する。",
+        "PR #61 の切り抜きUI・完了/取消操作と回帰検証を公開repoで実装。"
       ]
     },
     {
@@ -1917,10 +1959,11 @@
         "path": "packages/photo-editing/src/photo-editing-crop.test.ts",
         "sha256": "1e8e683320ba0b21fce4d182957525eed17ad691bbf9e29f824f2746aeed6194"
       },
-      "outputSha256": "b3bf8acad58f74e2558001a384aaa748149234c1da019f584743a47c8f0b946a",
+      "outputSha256": "94c625c6aa62bacd0b6f7aa251ca0a3ed9425b2498bb50d2ce44ae4031a644d4",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
-        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。"
+        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
+        "PR #61 の切り抜きUI・完了/取消操作と回帰検証を公開repoで実装。"
       ]
     },
     {
@@ -1931,10 +1974,11 @@
         "path": "packages/photo-editing/src/photo-editing-crop.ts",
         "sha256": "133816741c792873822ec61dd3b5b2472767ff8490ec5736c6adf5b3ed50728e"
       },
-      "outputSha256": "782719e35186ef22417c7cdf8293affe55f61546802a32b569fc5f6765595592",
+      "outputSha256": "44dae7c9b671373b61c361a96cc722c7424a14b391c329cd2f14d2962d995be7",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
-        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。"
+        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
+        "PR #61 の切り抜きUI・完了/取消操作と回帰検証を公開repoで実装。"
       ]
     },
     {
@@ -3596,14 +3640,15 @@
         "path": "apps/camera/src/App.tsx",
         "sha256": "ca49b85f8269569ef243f5b0164751b3347c1cc268f906ce53dd984aa470c19e"
       },
-      "outputSha256": "de327bf1d9e8a2d270c6cf6ae1f6235d711b721f14c3228570b65ba1a483cba3",
+      "outputSha256": "0ab64d887f061668c3751e70aaf6b4c350aa407ef8b53779dad4f2c5dc1fc9c8",
       "modifications": [
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
         "Issue #3のpublic OAuth/PKCE、ローカル専用UI、安全契約と公開依存を新規接続。実issuer・署名検証器が未契約のため本番接続は無効。",
         "Issue #50のMac画面配置・表示色・パネル・版位置の変更。",
         "個人クラウドの明示binding、保存先切替、単一写真コピーと公開境界を追加。",
         "個人クラウドnamespaceと写真ソース境界の説明を明確化。",
-        "保存先切替を常時表示しクラウド削除を停止"
+        "保存先切替を常時表示しクラウド削除を停止",
+        "Guard cloud binding changes before remount"
       ]
     },
     {
@@ -4780,7 +4825,6 @@
       },
       "outputSha256": "ec8fa1d705894e9149b6b8befb85d6c84e9fafc9e13ca5df9a54c9018598aa5b",
       "modifications": [
-        "公開現像workspace向けにLibRaw由来値と参照を除去。独立測定DCP・合成テスト・metadata正規化・公開契約と書式へ調整。",
         "公開現像workspace向けにLibRaw由来値と参照を除去。独立測定DCP・合成テスト・metadata正規化・公開契約と書式へ調整。"
       ]
     },
@@ -4997,7 +5041,6 @@
       },
       "outputSha256": "e78769ca2bf9350310ec3f24b60e0f0bf7c8bea43973651b06ad2c97877239ca",
       "modifications": [
-        "公開現像workspace向けにLibRaw由来値と参照を除去。独立測定DCP・合成テスト・metadata正規化・公開契約と書式へ調整。",
         "公開現像workspace向けにLibRaw由来値と参照を除去。独立測定DCP・合成テスト・metadata正規化・公開契約と書式へ調整。"
       ]
     },
@@ -5020,8 +5063,10 @@
         "path": "packages/develop-engine/crates/niho-develop-render/src/lib.rs",
         "sha256": "a9ac3a784a2eb9250747dc2eaabc10c958c1a10d71c7ca16ffdd0d96b40456bc"
       },
-      "outputSha256": "a9ac3a784a2eb9250747dc2eaabc10c958c1a10d71c7ca16ffdd0d96b40456bc",
-      "modifications": []
+      "outputSha256": "aa468ef96507b57f3c8dbdae2c484d7aa56afaae6e3b6a3e7ef4bc0c88e7b463",
+      "modifications": [
+        "公開Issue #26/#27/#29: 旧版を保つfloat cube候補、研究用WB/H-Sプローブ、合成検証と計測契約を追加。"
+      ]
     },
     {
       "path": "packages/develop-engine/crates/niho-develop-render/src/main.rs",
@@ -5042,8 +5087,11 @@
         "path": "packages/develop-engine/crates/niho-develop-render/tests/cli.rs",
         "sha256": "8ddf42804ccd8202fb8834bc499d2d03a331eb0ff96e020421a776f2286ef9bd"
       },
-      "outputSha256": "8ddf42804ccd8202fb8834bc499d2d03a331eb0ff96e020421a776f2286ef9bd",
-      "modifications": []
+      "outputSha256": "b83ca2f3a076317e59cfc81c58931dcb17b5e4c00414c7b42b744edb37ba3eb4",
+      "modifications": [
+        "公開Issue #26/#27/#29: 旧版を保つfloat cube候補、研究用WB/H-Sプローブ、合成検証と計測契約を追加。",
+        "新engine受入と未知版拒否の境界を更新し、既存wasm CIで候補のFinal/Interactive固定画素を検証する。"
+      ]
     },
     {
       "path": "packages/develop-engine/crates/niho-develop-wasm/Cargo.toml",
@@ -5365,8 +5413,10 @@
         "path": "packages/develop-engine/crates/niho-develop/src/color_ops.rs",
         "sha256": "cd0c61a609a12094f4f95b019c1671187e1d320b95c36b34da5c87dc7c3835d1"
       },
-      "outputSha256": "cd0c61a609a12094f4f95b019c1671187e1d320b95c36b34da5c87dc7c3835d1",
-      "modifications": []
+      "outputSha256": "989173ee1e35e2f8f83d59d7c0377e0ac0ab6b90ce7730c41910c86cba975227",
+      "modifications": [
+        "公開Issue #26/#27/#29: 旧版を保つfloat cube候補、研究用WB/H-Sプローブ、合成検証と計測契約を追加。"
+      ]
     },
     {
       "path": "packages/develop-engine/crates/niho-develop/src/convert.rs",
@@ -5486,8 +5536,10 @@
         "path": "packages/develop-engine/crates/niho-develop/src/lib.rs",
         "sha256": "1591d49effaa779c8e23ad6877508ccf336565eec8336d5b4e6faa3b5d3846b0"
       },
-      "outputSha256": "1591d49effaa779c8e23ad6877508ccf336565eec8336d5b4e6faa3b5d3846b0",
-      "modifications": []
+      "outputSha256": "c22b1276b79d365adaf15a98de7942329368eb085cb0f9fb05e1489b9f24a984",
+      "modifications": [
+        "公開Issue #26/#27/#29: 旧版を保つfloat cube候補、研究用WB/H-Sプローブ、合成検証と計測契約を追加。"
+      ]
     },
     {
       "path": "packages/develop-engine/crates/niho-develop/src/look.rs",
@@ -5508,8 +5560,10 @@
         "path": "packages/develop-engine/crates/niho-develop/src/lut.rs",
         "sha256": "d0b9d65a032d449a1f234d6e65ecc328dd44f6fe51ede51d602c5c58aae7e96e"
       },
-      "outputSha256": "d0b9d65a032d449a1f234d6e65ecc328dd44f6fe51ede51d602c5c58aae7e96e",
-      "modifications": []
+      "outputSha256": "171c263e2978ce26e7049232f80ee992330c307e613daa61a236f9e39f2e408a",
+      "modifications": [
+        "公開Issue #26/#27/#29: 旧版を保つfloat cube候補、研究用WB/H-Sプローブ、合成検証と計測契約を追加。"
+      ]
     },
     {
       "path": "packages/develop-engine/crates/niho-develop/src/niho3.rs",
@@ -5552,8 +5606,10 @@
         "path": "packages/develop-engine/crates/niho-develop/src/niho6.rs",
         "sha256": "6383017c670ab330829ebd61fde9e374e58f468440969b75cb64f1f4e8d376fd"
       },
-      "outputSha256": "6383017c670ab330829ebd61fde9e374e58f468440969b75cb64f1f4e8d376fd",
-      "modifications": []
+      "outputSha256": "a5fd4fc8eae33e304795649646dec98b95f61efa4526fa86cdf7158e38bf3dc0",
+      "modifications": [
+        "公開Issue #26/#27/#29: 旧版を保つfloat cube候補、研究用WB/H-Sプローブ、合成検証と計測契約を追加。"
+      ]
     },
     {
       "path": "packages/develop-engine/crates/niho-develop/src/niho6_response.rs",
@@ -5607,8 +5663,10 @@
         "path": "packages/develop-engine/crates/niho-develop/src/pipeline.rs",
         "sha256": "d982d76cf1b5d34526f700e5edfcef00ae8647d22b845c0f7234ed340ba9d641"
       },
-      "outputSha256": "d982d76cf1b5d34526f700e5edfcef00ae8647d22b845c0f7234ed340ba9d641",
-      "modifications": []
+      "outputSha256": "f96100f58f2e04ec047bd0c38e1430d9b76b17313b47d802a34bb12efcf4d3d8",
+      "modifications": [
+        "公開Issue #26/#27/#29: 旧版を保つfloat cube候補、研究用WB/H-Sプローブ、合成検証と計測契約を追加。"
+      ]
     },
     {
       "path": "packages/develop-engine/crates/niho-develop/src/raw_chroma.rs",
@@ -5717,8 +5775,10 @@
         "path": "packages/develop-engine/crates/niho-develop/src/settings.rs",
         "sha256": "756a24a09d738b2341974d92d89b82f55b42eb6060b6e0c99ee4a532947a1b47"
       },
-      "outputSha256": "756a24a09d738b2341974d92d89b82f55b42eb6060b6e0c99ee4a532947a1b47",
-      "modifications": []
+      "outputSha256": "7459cdc1956c1e68412a9da7ae6360f60dce79c55af7208bc7c4139238bf11af",
+      "modifications": [
+        "公開Issue #26/#27/#29: 旧版を保つfloat cube候補、研究用WB/H-Sプローブ、合成検証と計測契約を追加。"
+      ]
     },
     {
       "path": "packages/develop-engine/crates/niho-develop/src/spatial.rs",
@@ -5739,8 +5799,10 @@
         "path": "packages/develop-engine/crates/niho-develop/src/tone_ops.rs",
         "sha256": "394b07235a9b58a8f3756a1391bcc1b286eeda30f348f3334ebc4db4c42a2ef8"
       },
-      "outputSha256": "394b07235a9b58a8f3756a1391bcc1b286eeda30f348f3334ebc4db4c42a2ef8",
-      "modifications": []
+      "outputSha256": "e9583a92e5b6315365baee8789654816c6734f2278e7be9e7e1f5cd99a29fb29",
+      "modifications": [
+        "公開Issue #26/#27/#29: 旧版を保つfloat cube候補、研究用WB/H-Sプローブ、合成検証と計測契約を追加。"
+      ]
     },
     {
       "path": "packages/develop-engine/crates/niho-develop/src/wb_table.rs",
@@ -5761,8 +5823,10 @@
         "path": "packages/develop-engine/crates/niho-develop/src/xmp.rs",
         "sha256": "be5ddce69eceafb334c173ee92af3614c044039b103903ad1dfef24758f1ec45"
       },
-      "outputSha256": "be5ddce69eceafb334c173ee92af3614c044039b103903ad1dfef24758f1ec45",
-      "modifications": []
+      "outputSha256": "90564d45b4b74011d48de33eb5717afa575d64e18cee8914d136d65c4094043e",
+      "modifications": [
+        "公開Issue #26/#27/#29: 旧版を保つfloat cube候補、研究用WB/H-Sプローブ、合成検証と計測契約を追加。"
+      ]
     },
     {
       "path": "packages/develop-engine/crates/niho-develop/src/xmp/amount.rs",
@@ -5783,8 +5847,10 @@
         "path": "packages/develop-engine/crates/niho-develop/src/xmp/write.rs",
         "sha256": "f583b51766c756fe31b623949a8174abd304ff660a7793e332b3153faf2aa749"
       },
-      "outputSha256": "f583b51766c756fe31b623949a8174abd304ff660a7793e332b3153faf2aa749",
-      "modifications": []
+      "outputSha256": "ac370a40e924f0b59674b062c04b51501dc7b06521099b9ae865ff2481533a96",
+      "modifications": [
+        "公開Issue #26/#27/#29: 旧版を保つfloat cube候補、研究用WB/H-Sプローブ、合成検証と計測契約を追加。"
+      ]
     },
     {
       "path": "packages/develop-engine/crates/niho-develop/tests/auto.rs",
@@ -6142,8 +6208,11 @@
         "path": "packages/develop-engine/crates/niho-develop/tests/niho6_cross_target.rs",
         "sha256": "eba5bf799e46cf4c475d9d60d4a7092993dfbe766722b890f2f78e165a3f3da5"
       },
-      "outputSha256": "eba5bf799e46cf4c475d9d60d4a7092993dfbe766722b890f2f78e165a3f3da5",
-      "modifications": []
+      "outputSha256": "44450dca1474be560e7d164cf8a7ad5d11e9a0f049c3c286f782b1ec0c13d047",
+      "modifications": [
+        "新engine受入と未知版拒否の境界を更新し、既存wasm CIで候補のFinal/Interactive固定画素を検証する。",
+        "実測に基づくWB節点別fit、旧版を維持する候補のnative/wasm固定hashと再現可能な性能計測を整備。"
+      ]
     },
     {
       "path": "packages/develop-engine/crates/niho-develop/tests/niho6_working_copy.rs",
@@ -8588,14 +8657,14 @@
   ],
   "generatedFiles": [
     {
-      "path": "packages/desktop-photo/src/capabilities.rs",
-      "sha256": "fa479ac2df91c88af6f68726dfb8a2d335c4f7b5ecd2f7613dc9a836bc49f963",
-      "origin": "Issue #5のため独立作成。公開仕様から拡張子・MIME・UTType・magic bytes・処理段階の能力レジストリと権利安全な合成signatureテストを実装。外部コード・画像・個体metadataを含まない。\n変更理由: Issue #5親レビューに従い形式検査・エラー保持・実decoder公開CI回帰を補強。\n変更理由: AVIFをHEICと誤認しない拡張子不一致回帰を追加。"
+      "path": "apps/camera/account-contract.json",
+      "sha256": "000cb019ddfa98e2ebca59c970d5b434e7497d59150f06b105e6b0e53124cb75",
+      "origin": "Issue #3のpublic client契約に従いNIHOが独立新規作成。実token・秘密鍵・個人情報・旧private認証実装を含まない。\n変更理由: Issue #3の公式NIHO app-connect v1契約へ適合。deep link・NIHO接続token/Firebase交換・FileSecretStore・取消と再起動を独立実装し、安全契約をv2へ改版。"
     },
     {
-      "path": "packages/photo-editing/src/fixtures/cutout-brush-parity.json",
-      "sha256": "13d6754635b45a621dda5322dff2fe68ecfcb99ed97db5f86c93b332f1e4f5b3",
-      "origin": "公開移植用に新規作成した5×5整数ランプ。中央行をeraseし中央の1画素をrestoreする手計算の期待値。外部画像・モデル・元fixtureのデータは含まない。"
+      "path": "apps/camera/eslint.config.mjs",
+      "sha256": "4cb4e5e9316ddc238a9ed36bb8433f43837d26a32c7e5acb9c5107c72440171a",
+      "origin": "公開Macクライアント #7 のため新規作成。秘密なしunsignedビルド・公開CI・ライセンス・lint契約を明示。"
     },
     {
       "path": "apps/camera/LICENSES.md",
@@ -8608,129 +8677,9 @@
       "origin": "公開Macクライアント #7 のため新規作成。秘密なしunsignedビルド・公開CI・ライセンス・lint契約を明示。"
     },
     {
-      "path": "apps/camera/eslint.config.mjs",
-      "sha256": "4cb4e5e9316ddc238a9ed36bb8433f43837d26a32c7e5acb9c5107c72440171a",
-      "origin": "公開Macクライアント #7 のため新規作成。秘密なしunsignedビルド・公開CI・ライセンス・lint契約を明示。"
-    },
-    {
       "path": "apps/camera/scripts/build-unsigned.mjs",
       "sha256": "2031ed9fca3c9a66c9b43b864d9118eb70327dc4b955385f3f04e3271527cb2f",
       "origin": "公開Macクライアント #7 のため新規作成。秘密なしunsignedビルド・公開CI・ライセンス・lint契約を明示。"
-    },
-    {
-      "path": "packages/desktop-photo/LICENSES.md",
-      "sha256": "3212dbaec919dec49add88e0775b4b010d7df604717abad219183fb5f17a7fc3",
-      "origin": "公開Macクライアント #7 のため新規作成。秘密なしunsignedビルド・公開CI・ライセンス・lint契約を明示。"
-    },
-    {
-      "path": "packages/desktop-photo/public-ci.json",
-      "sha256": "7fb9422b1e1c301ae4e85b5529c3ca1c8d27d826b4f73e836218c8d94c7ea3b1",
-      "origin": "公開Macクライアント #7 のため新規作成。秘密なしunsignedビルド・公開CI・ライセンス・lint契約を明示。"
-    },
-    {
-      "path": "packages/desktop-photo/rustfmt.toml",
-      "sha256": "9682e0b5639ac5872a6c026bc1a14f8a83243392603cad683c382d0b0fab6734",
-      "origin": "公開Macクライアント #7 のため新規作成。秘密なしunsignedビルド・公開CI・ライセンス・lint契約を明示。"
-    },
-    {
-      "path": "packages/develop-engine/LICENSES.md",
-      "sha256": "2df1d30db20c3cf1ece1391fea221970d56639d40b4db375b59300db07009a50",
-      "origin": "#9で独立作成。所有測定対・metadataを除いた所有RAW/参照画像、検証tool、公開build/test契約または第三者license全文。詳細はdocs/migration/raw-engine.mdと資産台帳に記録。"
-    },
-    {
-      "path": "packages/develop-engine/README.md",
-      "sha256": "9b50996a622b88566bc59c929efe3276843e812a29461ec6b4dd97faf2b6d400",
-      "origin": "#9で独立作成。所有測定対・metadataを除いた所有RAW/参照画像、検証tool、公開build/test契約または第三者license全文。詳細はdocs/migration/raw-engine.mdと資産台帳に記録。"
-    },
-    {
-      "path": "packages/develop-engine/crates/niho-base-raw/README.md",
-      "sha256": "1e72064d9d7f3b85e6fc8efa504533661e3ebd7c92b6dfcd3e34bad59ec192ad",
-      "origin": "#9で独立作成。所有測定対・metadataを除いた所有RAW/参照画像、検証tool、公開build/test契約または第三者license全文。詳細はdocs/migration/raw-engine.mdと資産台帳に記録。"
-    },
-    {
-      "path": "packages/develop-engine/crates/niho-base-raw/profiles/panasonic-dc-s5/niho-dc-s5-independent-v1.dcp",
-      "sha256": "177c2f0454fdd9d7e7496f7c9123fd0f04b3b8fae8b5417287cc871f06758229",
-      "origin": "#9で独立作成。所有測定対・metadataを除いた所有RAW/参照画像、検証tool、公開build/test契約または第三者license全文。詳細はdocs/migration/raw-engine.mdと資産台帳に記録。"
-    },
-    {
-      "path": "packages/develop-engine/crates/niho-base-raw/profiles/panasonic-dc-s5/niho-dc-s5-independent-v1.spec.json",
-      "sha256": "30dc8eb8306489e39be5c495c53adb8b49ac473fbf9cbe8c411a38ed13e91b43",
-      "origin": "#9で独立作成。所有測定対・metadataを除いた所有RAW/参照画像、検証tool、公開build/test契約または第三者license全文。詳細はdocs/migration/raw-engine.mdと資産台帳に記録。"
-    },
-    {
-      "path": "packages/develop-engine/fixtures/independent-profile/dc-s5-v1.measurements.json",
-      "sha256": "03038a59042ed975edd51f863acbabf8230e7c10d2850cb9b060821594ad6379",
-      "origin": "#9で独立作成。所有測定対・metadataを除いた所有RAW/参照画像、検証tool、公開build/test契約または第三者license全文。詳細はdocs/migration/raw-engine.mdと資産台帳に記録。"
-    },
-    {
-      "path": "packages/develop-engine/fixtures/independent-profile/dc-s5-v1.validation.json",
-      "sha256": "0ba55c74868ba5cf518bdad0f4a22ead1156fb7d68c4a56bacd11c12b4219ead",
-      "origin": "#9で独立作成。所有測定対・metadataを除いた所有RAW/参照画像、検証tool、公開build/test契約または第三者license全文。詳細はdocs/migration/raw-engine.mdと資産台帳に記録。"
-    },
-    {
-      "path": "packages/develop-engine/fixtures/public-raw/dc-s5-camera512.png",
-      "sha256": "1f04842eafd0fa5ef3889ea1b7a7a9a50e22087c941639457a7090a73015cc18",
-      "origin": "#9で独立作成。所有測定対・metadataを除いた所有RAW/参照画像、検証tool、公開build/test契約または第三者license全文。詳細はdocs/migration/raw-engine.mdと資産台帳に記録。"
-    },
-    {
-      "path": "packages/develop-engine/fixtures/public-raw/dc-s5-owner-camera.jpg",
-      "sha256": "5882e836d7e29314783d81c8e96108fb771477e6a9452d751b047e4d19bc4c67",
-      "origin": "#9で独立作成。所有測定対・metadataを除いた所有RAW/参照画像、検証tool、公開build/test契約または第三者license全文。詳細はdocs/migration/raw-engine.mdと資産台帳に記録。"
-    },
-    {
-      "path": "packages/develop-engine/fixtures/public-raw/dc-s5-owner.audit.json",
-      "sha256": "1f61788fadb0589e9a2bf3684d15e50a0019f5bfc5df19b7da54867c18ce1a7b",
-      "origin": "#9で独立作成。所有測定対・metadataを除いた所有RAW/参照画像、検証tool、公開build/test契約または第三者license全文。詳細はdocs/migration/raw-engine.mdと資産台帳に記録。\n変更理由: 未解釈ヘッダーbytesの除去を監査記録へ反映"
-    },
-    {
-      "path": "packages/develop-engine/fixtures/public-raw/dc-s5-owner.rw2",
-      "sha256": "78e36a38a9c8a7cdacfd4e9a94ead537098c2ce1acdc9b6447e419b8c7f2c297",
-      "origin": "#9で独立作成。所有測定対・metadataを除いた所有RAW/参照画像、検証tool、公開build/test契約または第三者license全文。詳細はdocs/migration/raw-engine.mdと資産台帳に記録。\n変更理由: 未解釈ヘッダーbytesをゼロ化して私有情報の継承を防止"
-    },
-    {
-      "path": "packages/develop-engine/licenses/Adobe-DNG-SDK-LICENSE.txt",
-      "sha256": "7d79b475bc595c1d7744bc06ea16c2a298828260a991f57c71389cabf1a64b5f",
-      "origin": "#9で独立作成。所有測定対・metadataを除いた所有RAW/参照画像、検証tool、公開build/test契約または第三者license全文。詳細はdocs/migration/raw-engine.mdと資産台帳に記録。"
-    },
-    {
-      "path": "packages/develop-engine/public-ci.json",
-      "sha256": "037b44592b92776d7de822c5d90c376a3d1d27092ed1b4749434155b64eda8cb",
-      "origin": "#9で独立作成。所有測定対・metadataを除いた所有RAW/参照画像、検証tool、公開build/test契約または第三者license全文。詳細はdocs/migration/raw-engine.mdと資産台帳に記録。\n変更理由: Issue #5親レビューに従い形式検査・エラー保持・実decoder公開CI回帰を補強。\n変更理由: Swift regressionをmacOS 26専用jobへ分離し、macOS 14のnative scopeはRust/WASM検査だけにする。"
-    },
-    {
-      "path": "packages/develop-engine/tools/asset-audit/sanitize_rw2.py",
-      "sha256": "d0bb1715f97c46f8b165065372a828b4474649759dfda48c3e422308cec407c9",
-      "origin": "#9で独立作成。所有測定対・metadataを除いた所有RAW/参照画像、検証tool、公開build/test契約または第三者license全文。詳細はdocs/migration/raw-engine.mdと資産台帳に記録。\n変更理由: 未解釈ヘッダーバイトを出力へ継承しないため再構築\n変更理由: RW2監査出力の入力・出力path aliasを事前拒否する。"
-    },
-    {
-      "path": "packages/develop-engine/tools/asset-audit/test_sanitize_rw2.py",
-      "sha256": "0c2e4bb7f152aa11daf230d8ebadb1d4c0e2db59f6a3cc6745ed30df8b744f35",
-      "origin": "#9で独立作成。所有測定対・metadataを除いた所有RAW/参照画像、検証tool、公開build/test契約または第三者license全文。詳細はdocs/migration/raw-engine.mdと資産台帳に記録。\n変更理由: 未解釈ヘッダー情報の除去回帰テストを追加\n変更理由: RW2監査path alias時に原本を保護するCLI回帰を追加する。"
-    },
-    {
-      "path": "packages/develop-engine/tools/independent-profile/check.py",
-      "sha256": "a00fee1fa004e70b379b7453162b015ec13cfd75208fc446db050553f4762850",
-      "origin": "#9で独立作成。所有測定対・metadataを除いた所有RAW/参照画像、検証tool、公開build/test契約または第三者license全文。詳細はdocs/migration/raw-engine.mdと資産台帳に記録。"
-    },
-    {
-      "path": "packages/develop-engine/tools/independent-profile/extract.py",
-      "sha256": "a1cb22f579fb53edbab80c3b1776e20578a65639d8836ff76bd179e64c557d56",
-      "origin": "#9で独立作成。所有測定対・metadataを除いた所有RAW/参照画像、検証tool、公開build/test契約または第三者license全文。詳細はdocs/migration/raw-engine.mdと資産台帳に記録。"
-    },
-    {
-      "path": "packages/develop-engine/tools/independent-profile/fit.py",
-      "sha256": "d7c067b6bf2fdcb6e6801d40a37bc582cc499ebc20b823e1384ab27d24ec0ba4",
-      "origin": "#9で独立作成。所有測定対・metadataを除いた所有RAW/参照画像、検証tool、公開build/test契約または第三者license全文。詳細はdocs/migration/raw-engine.mdと資産台帳に記録。"
-    },
-    {
-      "path": "packages/develop-engine/tools/independent-profile/requirements-extract.txt",
-      "sha256": "172e9ac1e2fee27cbad9a1ac0d62b903960e8c86e287f1c8f9851def49c70afd",
-      "origin": "#9で独立作成。所有測定対・metadataを除いた所有RAW/参照画像、検証tool、公開build/test契約または第三者license全文。詳細はdocs/migration/raw-engine.mdと資産台帳に記録。\n変更理由: Dependency reviewで検出されたPillow 12.0.0の脆弱性を修正するため13.0.0へ更新。"
-    },
-    {
-      "path": "apps/camera/account-contract.json",
-      "sha256": "000cb019ddfa98e2ebca59c970d5b434e7497d59150f06b105e6b0e53124cb75",
-      "origin": "Issue #3のpublic client契約に従いNIHOが独立新規作成。実token・秘密鍵・個人情報・旧private認証実装を含まない。\n変更理由: Issue #3の公式NIHO app-connect v1契約へ適合。deep link・NIHO接続token/Firebase交換・FileSecretStore・取消と再起動を独立実装し、安全契約をv2へ改版。"
     },
     {
       "path": "apps/camera/src-tauri/src/account.rs",
@@ -8748,6 +8697,16 @@
       "origin": "Issue #3のpublic client契約に従いNIHOが独立新規作成。実token・秘密鍵・個人情報・旧private認証実装を含まない。\n変更理由: Issue #3の公式NIHO app-connect v1契約へ適合。deep link・NIHO接続token/Firebase交換・FileSecretStore・取消と再起動を独立実装し、安全契約をv2へ改版。\n変更理由: 失効後はrefresh資格が無いので、再接続ボタンを出さず新しいブラウザログインを案内する。\n変更理由: cold start後のrestoreとOS deep linkでnative状態が非同期更新されても、設定済みUIが追従する。"
     },
     {
+      "path": "apps/camera/src/use-guarded-cloud-binding.test.tsx",
+      "sha256": "5e4e77c0813b253819322fd2112677afcf70a59fa0e5db0f54c27788e5b21f41",
+      "origin": "PR #64の公開クライアント回帰テストとして独立作成。所有者変更の保存成功・失敗と再試行を合成bindingで検証する。"
+    },
+    {
+      "path": "apps/camera/src/use-guarded-cloud-binding.ts",
+      "sha256": "541a7315be1fad83b7ead934fa11d2c68b224160d1929f5cf18acfd9f1ada3be",
+      "origin": "PR #64の公開クライアントとして独立作成。cloudBindingの所有者変更を編集保存ガードの後に反映する。非公開コード・認証情報・写真データを含まない。"
+    },
+    {
       "path": "docs/contracts/native-account.md",
       "sha256": "296e1bae560ef634a125d15517a8fa901afd465d55b3293ac1fedec8ac366a9f",
       "origin": "Issue #3のpublic client契約に従いNIHOが独立新規作成。実token・秘密鍵・個人情報・旧private認証実装を含まない。\n変更理由: Issue #3の公式NIHO app-connect v1契約へ適合。deep link・NIHO接続token/Firebase交換・FileSecretStore・取消と再起動を独立実装し、安全契約をv2へ改版。"
@@ -8763,19 +8722,24 @@
       "origin": "Issue #3のpublic client契約に従いNIHOが独立新規作成。実token・秘密鍵・個人情報・旧private認証実装を含まない。\n変更理由: Issue #3の公式NIHO app-connect v1契約へ適合。deep link・NIHO接続token/Firebase交換・FileSecretStore・取消と再起動を独立実装し、安全契約をv2へ改版。\n変更理由: NIHO app-connectのJSON HTTPとprivate file storeに必要な公開依存だけを残し、末尾空行を整理。"
     },
     {
+      "path": "packages/desktop-account/contract/native-account-v2.json",
+      "sha256": "38c5289fa6e981afcfed18d8e2e4b806f67b4477bd96b92470bc3594f55c6a4f",
+      "origin": "NIHO app-connectの公開wire contractと採用済み仕様に基づき独立新規作成。private server実装・実token・実個人情報を含まない。"
+    },
+    {
       "path": "packages/desktop-account/LICENSES.md",
       "sha256": "3c408d5890a1307e14130c6550b7bfbb1278745b3c1ebf95b81b34b4ee1bdee8",
       "origin": "Issue #3のpublic client契約に従いNIHOが独立新規作成。実token・秘密鍵・個人情報・旧private認証実装を含まない。\n変更理由: Issue #3の公式NIHO app-connect v1契約へ適合。deep link・NIHO接続token/Firebase交換・FileSecretStore・取消と再起動を独立実装し、安全契約をv2へ改版。"
     },
     {
-      "path": "packages/desktop-account/README.md",
-      "sha256": "03a741115f0f9f06715def50fb3c15762d611d23d62f98260a1be72b9e0f27f6",
-      "origin": "Issue #3のpublic client契約に従いNIHOが独立新規作成。実token・秘密鍵・個人情報・旧private認証実装を含まない。\n変更理由: 取消はUI状態と保存を直ちに無効化し、送信済みHTTP workerは最大10秒で終了する境界を明記。\n変更理由: Issue #3の公式NIHO app-connect v1契約へ適合。deep link・NIHO接続token/Firebase交換・FileSecretStore・取消と再起動を独立実装し、安全契約をv2へ改版。\n変更理由: 公式公開keyの出典・release設定とsmokeの留保、logoutの接続DELETEの扱いを明記。"
-    },
-    {
       "path": "packages/desktop-account/public-ci.json",
       "sha256": "c184b6a649bfe23ecc385da20816986ebce737235c02caca3c8d51f96bea3e10",
       "origin": "Issue #3のpublic client契約に従いNIHOが独立新規作成。実token・秘密鍵・個人情報・旧private認証実装を含まない。"
+    },
+    {
+      "path": "packages/desktop-account/README.md",
+      "sha256": "03a741115f0f9f06715def50fb3c15762d611d23d62f98260a1be72b9e0f27f6",
+      "origin": "Issue #3のpublic client契約に従いNIHOが独立新規作成。実token・秘密鍵・個人情報・旧private認証実装を含まない。\n変更理由: 取消はUI状態と保存を直ちに無効化し、送信済みHTTP workerは最大10秒で終了する境界を明記。\n変更理由: Issue #3の公式NIHO app-connect v1契約へ適合。deep link・NIHO接続token/Firebase交換・FileSecretStore・取消と再起動を独立実装し、安全契約をv2へ改版。\n変更理由: 公式公開keyの出典・release設定とsmokeの留保、logoutの接続DELETEの扱いを明記。"
     },
     {
       "path": "packages/desktop-account/rustfmt.toml",
@@ -8786,6 +8750,11 @@
       "path": "packages/desktop-account/src/account.rs",
       "sha256": "f1ab0cf17422c64799588cb04dd438241dc407326f37dddbd8bc0877b99e6834",
       "origin": "Issue #3のpublic client契約に従いNIHOが独立新規作成。実token・秘密鍵・個人情報・旧private認証実装を含まない。\n変更理由: pending login の取消時に残存するOS資格情報を削除し、旧資格情報を含む取消テストを追加。\n変更理由: Issue #3の公式NIHO app-connect v1契約へ適合。deep link・NIHO接続token/Firebase交換・FileSecretStore・取消と再起動を独立実装し、安全契約をv2へ改版。\n変更理由: このMacのlogoutは取得済みID tokenで現在接続のDELETEも試み、ローカル資格削除と別世代の保持を守る。"
+    },
+    {
+      "path": "packages/desktop-account/src/connect.rs",
+      "sha256": "7867f0ab0a8955be7c4ec142855f8cc051ae4cf725e57af1f3b0e5f81860dc98",
+      "origin": "NIHO app-connectの公開wire contractと採用済み仕様に基づき独立新規作成。private server実装・実token・実個人情報を含まない。"
     },
     {
       "path": "packages/desktop-account/src/lib.rs",
@@ -8828,24 +8797,209 @@
       "origin": "Issue #3のpublic client契約に従いNIHOが独立新規作成。実token・秘密鍵・個人情報・旧private認証実装を含まない。"
     },
     {
-      "path": "packages/desktop-account/contract/native-account-v2.json",
-      "sha256": "38c5289fa6e981afcfed18d8e2e4b806f67b4477bd96b92470bc3594f55c6a4f",
-      "origin": "NIHO app-connectの公開wire contractと採用済み仕様に基づき独立新規作成。private server実装・実token・実個人情報を含まない。"
+      "path": "packages/desktop-photo/LICENSES.md",
+      "sha256": "3212dbaec919dec49add88e0775b4b010d7df604717abad219183fb5f17a7fc3",
+      "origin": "公開Macクライアント #7 のため新規作成。秘密なしunsignedビルド・公開CI・ライセンス・lint契約を明示。"
     },
     {
-      "path": "packages/desktop-account/src/connect.rs",
-      "sha256": "7867f0ab0a8955be7c4ec142855f8cc051ae4cf725e57af1f3b0e5f81860dc98",
-      "origin": "NIHO app-connectの公開wire contractと採用済み仕様に基づき独立新規作成。private server実装・実token・実個人情報を含まない。"
+      "path": "packages/desktop-photo/public-ci.json",
+      "sha256": "7fb9422b1e1c301ae4e85b5529c3ca1c8d27d826b4f73e836218c8d94c7ea3b1",
+      "origin": "公開Macクライアント #7 のため新規作成。秘密なしunsignedビルド・公開CI・ライセンス・lint契約を明示。"
     },
     {
-      "path": "packages/photo-editing/src/cloud-sharing-contract.ts",
-      "sha256": "b18550a154dac36fd9f1ed9f347e03a62dd850b8f2dab6f630f9250e78f6f35b",
-      "origin": "共有Docs contractの型・HTTP query配置・決定的mockをPhoto編集workspaceへ公開するre-export。\n変更理由: Photo共有クライアントとmockの公開型を追加。"
+      "path": "packages/desktop-photo/rustfmt.toml",
+      "sha256": "9682e0b5639ac5872a6c026bc1a14f8a83243392603cad683c382d0b0fab6734",
+      "origin": "公開Macクライアント #7 のため新規作成。秘密なしunsignedビルド・公開CI・ライセンス・lint契約を明示。"
+    },
+    {
+      "path": "packages/desktop-photo/src/capabilities.rs",
+      "sha256": "fa479ac2df91c88af6f68726dfb8a2d335c4f7b5ecd2f7613dc9a836bc49f963",
+      "origin": "Issue #5のため独立作成。公開仕様から拡張子・MIME・UTType・magic bytes・処理段階の能力レジストリと権利安全な合成signatureテストを実装。外部コード・画像・個体metadataを含まない。\n変更理由: Issue #5親レビューに従い形式検査・エラー保持・実decoder公開CI回帰を補強。\n変更理由: AVIFをHEICと誤認しない拡張子不一致回帰を追加。"
+    },
+    {
+      "path": "packages/develop-engine/crates/niho-base-raw/profiles/panasonic-dc-s5/niho-dc-s5-independent-v1.dcp",
+      "sha256": "177c2f0454fdd9d7e7496f7c9123fd0f04b3b8fae8b5417287cc871f06758229",
+      "origin": "#9で独立作成。所有測定対・metadataを除いた所有RAW/参照画像、検証tool、公開build/test契約または第三者license全文。詳細はdocs/migration/raw-engine.mdと資産台帳に記録。"
+    },
+    {
+      "path": "packages/develop-engine/crates/niho-base-raw/profiles/panasonic-dc-s5/niho-dc-s5-independent-v1.spec.json",
+      "sha256": "30dc8eb8306489e39be5c495c53adb8b49ac473fbf9cbe8c411a38ed13e91b43",
+      "origin": "#9で独立作成。所有測定対・metadataを除いた所有RAW/参照画像、検証tool、公開build/test契約または第三者license全文。詳細はdocs/migration/raw-engine.mdと資産台帳に記録。"
+    },
+    {
+      "path": "packages/develop-engine/crates/niho-base-raw/README.md",
+      "sha256": "1e72064d9d7f3b85e6fc8efa504533661e3ebd7c92b6dfcd3e34bad59ec192ad",
+      "origin": "#9で独立作成。所有測定対・metadataを除いた所有RAW/参照画像、検証tool、公開build/test契約または第三者license全文。詳細はdocs/migration/raw-engine.mdと資産台帳に記録。"
+    },
+    {
+      "path": "packages/develop-engine/crates/niho-develop/examples/analytic_hs_probe.rs",
+      "sha256": "7a81a2cabd84d445acb30922b0f5d831072afb1d25e20a6f5475061670823aa1",
+      "origin": "公開Issue #26/#27/#29 のため公開済み数式・既存primitiveから独立実装した研究用コード・合成テスト・日本語手順。非公開の写真・参照画素・パス・履歴・第三者ソースを含まない。\n変更理由: 暗所A/Bで現行niho-6を基準とし、H/S以外の色・黒レベル等を同じ数式で比較する。"
+    },
+    {
+      "path": "packages/develop-engine/crates/niho-develop/examples/linear_jpeg_wb_fit.rs",
+      "sha256": "50a2516485f6fcec6f2be0083026469be97bb8c5fc0c6608083896a707152a5f",
+      "origin": "公開Issue #26/#27/#29 のため公開済み数式・既存primitiveから独立実装した研究用コード・合成テスト・日本語手順。非公開の写真・参照画素・パス・履歴・第三者ソースを含まない。\n変更理由: 実測に基づくWB節点別fit、旧版を維持する候補のnative/wasm固定hashと再現可能な性能計測を整備。"
+    },
+    {
+      "path": "packages/develop-engine/crates/niho-develop/examples/niho8_measure.rs",
+      "sha256": "6a2c452bf1df3df6f93e61212deca8294b2eaf82b8f54a8470158ba19aaf0892",
+      "origin": "公開Issue #26/#27/#29 のため公開済み数式・既存primitiveから独立実装した研究用コード・合成テスト・日本語手順。非公開の写真・参照画素・パス・履歴・第三者ソースを含まない。"
+    },
+    {
+      "path": "packages/develop-engine/crates/niho-develop/src/research/analytic_hs.rs",
+      "sha256": "821b18e256f14d28045785d2040d693ea6b91b22352cd7bc5fbb62526bac3149",
+      "origin": "公開Issue #26/#27/#29 のため公開済み数式・既存primitiveから独立実装した研究用コード・合成テスト・日本語手順。非公開の写真・参照画素・パス・履歴・第三者ソースを含まない。\n変更理由: 有界EV適用後の浮動小数点overflowも非有限出力として拒否。\n変更理由: 暗所A/Bで現行niho-6を基準とし、H/S以外の色・黒レベル等を同じ数式で比較する。"
+    },
+    {
+      "path": "packages/develop-engine/crates/niho-develop/src/research/linear_jpeg_wb.rs",
+      "sha256": "a4c4ce9c9ae2eb202bc5ba018055bcb1c5d02e9682abab6ff837fdd469f2f643",
+      "origin": "公開Issue #26/#27/#29 のため公開済み数式・既存primitiveから独立実装した研究用コード・合成テスト・日本語手順。非公開の写真・参照画素・パス・履歴・第三者ソースを含まない。\n変更理由: 表示色評価で使用するProPhotoからsRGBへの行列importを補正。\n変更理由: 実測に基づくWB節点別fit、旧版を維持する候補のnative/wasm固定hashと再現可能な性能計測を整備。"
+    },
+    {
+      "path": "packages/develop-engine/crates/niho-develop/src/research/mod.rs",
+      "sha256": "35ea6f84d1d46b781371658dbbdf68f4a742ee1660a881476a6f985e893c05fd",
+      "origin": "公開Issue #26/#27/#29 のため公開済み数式・既存primitiveから独立実装した研究用コード・合成テスト・日本語手順。非公開の写真・参照画素・パス・履歴・第三者ソースを含まない。"
+    },
+    {
+      "path": "packages/develop-engine/crates/niho-develop/tests/niho8.rs",
+      "sha256": "9783610b158502303471a645233537d33041c50b45e152aae929d60bdc470220",
+      "origin": "公開Issue #26/#27/#29 のため公開済み数式・既存primitiveから独立実装した研究用コード・合成テスト・日本語手順。非公開の写真・参照画素・パス・履歴・第三者ソースを含まない。\n変更理由: 既存PresetResultのsettingsを介してengineとXMP保持を検証する。\n変更理由: 候補の一発描画・crop・drag release・旧版へ戻す精度cacheの一致を回帰検証。"
+    },
+    {
+      "path": "packages/develop-engine/fixtures/color/review-2026-10-20/float-cubes.json",
+      "sha256": "0c719ab3947ce36b961493c184e6c2a9303d77de142c8581074254659889bcca",
+      "origin": "2026-10-20のStudio実測。公開済みLUTまたは独立した合成画像から計測し、source commit・実行環境・適用範囲とともに数値だけを記録。実写真・非公開参照画素を含まない。"
+    },
+    {
+      "path": "packages/develop-engine/fixtures/color/review-2026-10-20/linear-jpeg-wb.json",
+      "sha256": "b1a4fff8d50fc3e7cfa5c948b37a354b4b403fd196369210584c28e641f3f72f",
+      "origin": "2026-10-20のStudio実測。公開済みLUTまたは独立した合成画像から計測し、source commit・実行環境・適用範囲とともに数値だけを記録。実写真・非公開参照画素を含まない。"
+    },
+    {
+      "path": "packages/develop-engine/fixtures/color/review-2026-10-20/teacher-development.json",
+      "sha256": "c675b216a4e38cb6ff48ce894ae65a1dfb5762c5215ebec98db9b3bd88922a77",
+      "origin": "owner所有の既存非公開教師をStudioで比較した匿名集計のみ。source commit・renderer hash・測定手順・cohort件数を記録し、写真・scene名・私有path・参照画素・個別結果は公開しない。独立評価画像の参照は0枚。"
+    },
+    {
+      "path": "packages/develop-engine/fixtures/color/review-2026-10-20/wasm-performance.json",
+      "sha256": "83f878d7d79600d57cf87bc03c3a0a3a1915459a71872986eff2344582165015",
+      "origin": "2026-10-20のStudio実測。公開済みLUTまたは独立した合成画像から計測し、source commit・実行環境・適用範囲とともに数値だけを記録。実写真・非公開参照画素を含まない。"
+    },
+    {
+      "path": "packages/develop-engine/fixtures/independent-profile/dc-s5-v1.measurements.json",
+      "sha256": "03038a59042ed975edd51f863acbabf8230e7c10d2850cb9b060821594ad6379",
+      "origin": "#9で独立作成。所有測定対・metadataを除いた所有RAW/参照画像、検証tool、公開build/test契約または第三者license全文。詳細はdocs/migration/raw-engine.mdと資産台帳に記録。"
+    },
+    {
+      "path": "packages/develop-engine/fixtures/independent-profile/dc-s5-v1.validation.json",
+      "sha256": "0ba55c74868ba5cf518bdad0f4a22ead1156fb7d68c4a56bacd11c12b4219ead",
+      "origin": "#9で独立作成。所有測定対・metadataを除いた所有RAW/参照画像、検証tool、公開build/test契約または第三者license全文。詳細はdocs/migration/raw-engine.mdと資産台帳に記録。"
+    },
+    {
+      "path": "packages/develop-engine/fixtures/public-raw/dc-s5-camera512.png",
+      "sha256": "1f04842eafd0fa5ef3889ea1b7a7a9a50e22087c941639457a7090a73015cc18",
+      "origin": "#9で独立作成。所有測定対・metadataを除いた所有RAW/参照画像、検証tool、公開build/test契約または第三者license全文。詳細はdocs/migration/raw-engine.mdと資産台帳に記録。"
+    },
+    {
+      "path": "packages/develop-engine/fixtures/public-raw/dc-s5-owner-camera.jpg",
+      "sha256": "5882e836d7e29314783d81c8e96108fb771477e6a9452d751b047e4d19bc4c67",
+      "origin": "#9で独立作成。所有測定対・metadataを除いた所有RAW/参照画像、検証tool、公開build/test契約または第三者license全文。詳細はdocs/migration/raw-engine.mdと資産台帳に記録。"
+    },
+    {
+      "path": "packages/develop-engine/fixtures/public-raw/dc-s5-owner.audit.json",
+      "sha256": "1f61788fadb0589e9a2bf3684d15e50a0019f5bfc5df19b7da54867c18ce1a7b",
+      "origin": "#9で独立作成。所有測定対・metadataを除いた所有RAW/参照画像、検証tool、公開build/test契約または第三者license全文。詳細はdocs/migration/raw-engine.mdと資産台帳に記録。\n変更理由: 未解釈ヘッダーbytesの除去を監査記録へ反映"
+    },
+    {
+      "path": "packages/develop-engine/fixtures/public-raw/dc-s5-owner.rw2",
+      "sha256": "78e36a38a9c8a7cdacfd4e9a94ead537098c2ce1acdc9b6447e419b8c7f2c297",
+      "origin": "#9で独立作成。所有測定対・metadataを除いた所有RAW/参照画像、検証tool、公開build/test契約または第三者license全文。詳細はdocs/migration/raw-engine.mdと資産台帳に記録。\n変更理由: 未解釈ヘッダーbytesをゼロ化して私有情報の継承を防止"
+    },
+    {
+      "path": "packages/develop-engine/LICENSES.md",
+      "sha256": "2df1d30db20c3cf1ece1391fea221970d56639d40b4db375b59300db07009a50",
+      "origin": "#9で独立作成。所有測定対・metadataを除いた所有RAW/参照画像、検証tool、公開build/test契約または第三者license全文。詳細はdocs/migration/raw-engine.mdと資産台帳に記録。"
+    },
+    {
+      "path": "packages/develop-engine/licenses/Adobe-DNG-SDK-LICENSE.txt",
+      "sha256": "7d79b475bc595c1d7744bc06ea16c2a298828260a991f57c71389cabf1a64b5f",
+      "origin": "#9で独立作成。所有測定対・metadataを除いた所有RAW/参照画像、検証tool、公開build/test契約または第三者license全文。詳細はdocs/migration/raw-engine.mdと資産台帳に記録。"
+    },
+    {
+      "path": "packages/develop-engine/NIHO8.md",
+      "sha256": "d125741c5661caa41fa06258b5cce8eafffa9b0deb86b9a4fbce69dbf78c3583",
+      "origin": "公開Issue #26/#27/#29 のため公開済み数式・既存primitiveから独立実装した研究用コード・合成テスト・日本語手順。非公開の写真・参照画素・パス・履歴・第三者ソースを含まない。\n変更理由: 実測に基づくWB節点別fit、旧版を維持する候補のnative/wasm固定hashと再現可能な性能計測を整備。\n変更理由: Studio実測の段差・WB gate未達・wasm初期解析と継続編集の性能をsource SHA付きで記録。\n変更理由: 57場面のfloat対比較と6場面の原理式Bのgate未達を、匿名数値・残作業として記録。"
+    },
+    {
+      "path": "packages/develop-engine/public-ci.json",
+      "sha256": "037b44592b92776d7de822c5d90c376a3d1d27092ed1b4749434155b64eda8cb",
+      "origin": "#9で独立作成。所有測定対・metadataを除いた所有RAW/参照画像、検証tool、公開build/test契約または第三者license全文。詳細はdocs/migration/raw-engine.mdと資産台帳に記録。\n変更理由: Issue #5親レビューに従い形式検査・エラー保持・実decoder公開CI回帰を補強。\n変更理由: Swift regressionをmacOS 26専用jobへ分離し、macOS 14のnative scopeはRust/WASM検査だけにする。"
+    },
+    {
+      "path": "packages/develop-engine/README.md",
+      "sha256": "413cd3fe309dcdbeedda925df35542c545bef04758d38033df4ffbb3ae6a0a73",
+      "origin": "#9で独立作成。所有測定対・metadataを除いた所有RAW/参照画像、検証tool、公開build/test契約または第三者license全文。詳細はdocs/migration/raw-engine.mdと資産台帳に記録。\n#9で独立作成。所有測定対・metadataを除いた所有RAW/参照画像、検証tool、公開build/test契約または第三者license全文。詳細はdocs/migration/raw-engine.mdと資産台帳に記録。\n#9で独立作成。所有測定対・metadataを除いた所有RAW/参照画像、検証tool、公開build/test契約または第三者license全文。詳細はdocs/migration/raw-engine.mdと資産台帳に記録。\n変更理由: 公開Issue #26/#27/#29: 旧版を保つfloat cube候補、研究用WB/H-Sプローブ、合成検証と計測契約を追加。"
+    },
+    {
+      "path": "packages/develop-engine/RESEARCH26-27.md",
+      "sha256": "0eaf15ac385b234c3ea8035dc9bd37ed18a38baad75c3bbdcb54fb495e7e8459",
+      "origin": "公開Issue #26/#27/#29 のため公開済み数式・既存primitiveから独立実装した研究用コード・合成テスト・日本語手順。非公開の写真・参照画素・パス・履歴・第三者ソースを含まない。\n変更理由: 暗所A/Bで現行niho-6を基準とし、H/S以外の色・黒レベル等を同じ数式で比較する。\n変更理由: 実測に基づくWB節点別fit、旧版を維持する候補のnative/wasm固定hashと再現可能な性能計測を整備。\n変更理由: 非公開出力をrepository外へ限定しsealed独立評価を拒否する、匿名集計の再現手順を追加。\n変更理由: Studio実測の段差・WB gate未達・wasm初期解析と継続編集の性能をsource SHA付きで記録。\n変更理由: 57場面のfloat対比較と6場面の原理式Bのgate未達を、匿名数値・残作業として記録。\n変更理由: 教師上の次候補fitとownerの撮影作業を区別し、独立評価前の未達判定であることを明確化。"
+    },
+    {
+      "path": "packages/develop-engine/tools/asset-audit/sanitize_rw2.py",
+      "sha256": "d0bb1715f97c46f8b165065372a828b4474649759dfda48c3e422308cec407c9",
+      "origin": "#9で独立作成。所有測定対・metadataを除いた所有RAW/参照画像、検証tool、公開build/test契約または第三者license全文。詳細はdocs/migration/raw-engine.mdと資産台帳に記録。\n変更理由: 未解釈ヘッダーバイトを出力へ継承しないため再構築\n変更理由: RW2監査出力の入力・出力path aliasを事前拒否する。"
+    },
+    {
+      "path": "packages/develop-engine/tools/asset-audit/test_sanitize_rw2.py",
+      "sha256": "0c2e4bb7f152aa11daf230d8ebadb1d4c0e2db59f6a3cc6745ed30df8b744f35",
+      "origin": "#9で独立作成。所有測定対・metadataを除いた所有RAW/参照画像、検証tool、公開build/test契約または第三者license全文。詳細はdocs/migration/raw-engine.mdと資産台帳に記録。\n変更理由: 未解釈ヘッダー情報の除去回帰テストを追加\n変更理由: RW2監査path alias時に原本を保護するCLI回帰を追加する。"
+    },
+    {
+      "path": "packages/develop-engine/tools/color-review-teachers.py",
+      "sha256": "3339ba4cb57737dce3a1ef9ae7d2efded00265fecf90bbd1369e9b39906d8dab",
+      "origin": "公開Issue #26/#29 のため独立実装した既存colorcheck呼出用の開発教師比較tool。入力は利用者指定、非公開の写真・パス・scene名・参照画素をsourceへ含めず匿名数値だけを公開する。\n変更理由: Rerender reused teacher jobs and record current renderer settings and input hashes"
+    },
+    {
+      "path": "packages/develop-engine/tools/color-review-wasm-bench.cjs",
+      "sha256": "e4663199c62a7602aa3a134f4317f36355a639d7dca51a0bb83f82ac722a7286",
+      "origin": "公開Issue #29 のため独立作成した合成1024×768 PNGとNode/wasm性能計測。Node標準ライブラリのみ、非公開写真・参照画素・依存を含まない。"
+    },
+    {
+      "path": "packages/develop-engine/tools/colorcheck/tests/test_teacher_render_cache.py",
+      "sha256": "a692f09a376b34cedf40a6278b9bb45f12e84ee8c43ee19c15bed786947dc6a9",
+      "origin": "PR #33の教師render再利用を防ぐため独立作成した公開CI unittest。subprocessをstubし合成bytesだけを使い、実写真・第三者資産を含まない。"
+    },
+    {
+      "path": "packages/develop-engine/tools/independent-profile/check.py",
+      "sha256": "a00fee1fa004e70b379b7453162b015ec13cfd75208fc446db050553f4762850",
+      "origin": "#9で独立作成。所有測定対・metadataを除いた所有RAW/参照画像、検証tool、公開build/test契約または第三者license全文。詳細はdocs/migration/raw-engine.mdと資産台帳に記録。"
+    },
+    {
+      "path": "packages/develop-engine/tools/independent-profile/extract.py",
+      "sha256": "a1cb22f579fb53edbab80c3b1776e20578a65639d8836ff76bd179e64c557d56",
+      "origin": "#9で独立作成。所有測定対・metadataを除いた所有RAW/参照画像、検証tool、公開build/test契約または第三者license全文。詳細はdocs/migration/raw-engine.mdと資産台帳に記録。"
+    },
+    {
+      "path": "packages/develop-engine/tools/independent-profile/fit.py",
+      "sha256": "d7c067b6bf2fdcb6e6801d40a37bc582cc499ebc20b823e1384ab27d24ec0ba4",
+      "origin": "#9で独立作成。所有測定対・metadataを除いた所有RAW/参照画像、検証tool、公開build/test契約または第三者license全文。詳細はdocs/migration/raw-engine.mdと資産台帳に記録。"
+    },
+    {
+      "path": "packages/develop-engine/tools/independent-profile/requirements-extract.txt",
+      "sha256": "172e9ac1e2fee27cbad9a1ac0d62b903960e8c86e287f1c8f9851def49c70afd",
+      "origin": "#9で独立作成。所有測定対・metadataを除いた所有RAW/参照画像、検証tool、公開build/test契約または第三者license全文。詳細はdocs/migration/raw-engine.mdと資産台帳に記録。\n変更理由: Dependency reviewで検出されたPillow 12.0.0の脆弱性を修正するため13.0.0へ更新。"
     },
     {
       "path": "packages/photo-editing/src/cloud-sharing-contract.test.ts",
       "sha256": "bf2b8750f99efb6364e2ed3475ab3a53f92d532ca217cc7033c65c6ec9121452",
       "origin": "Docs共通の負例vector・reference model・mock検証にPhoto packageのre-export確認を加えた独立合成テスト。\n変更理由: Docs固定SHAの全operation HTTP method・path・request配置をPhotoでも検証する。"
+    },
+    {
+      "path": "packages/photo-editing/src/cloud-sharing-contract.ts",
+      "sha256": "b18550a154dac36fd9f1ed9f347e03a62dd850b8f2dab6f630f9250e78f6f35b",
+      "origin": "共有Docs contractの型・HTTP query配置・決定的mockをPhoto編集workspaceへ公開するre-export。\n変更理由: Photo共有クライアントとmockの公開型を追加。\n共有Docs contractの型・HTTP query配置・決定的mockをPhoto編集workspaceへ公開するre-export。\n変更理由: Photo共有クライアントとmockの公開型を追加。\n共有Docs contractの型・HTTP query配置・決定的mockをPhoto編集workspaceへ公開するre-export。\n共有Docs contractの型・HTTP query配置・決定的mockをPhoto編集workspaceへ公開するre-export。\n変更理由: Photo共有クライアントとmockの公開型を追加。"
     },
     {
       "path": "packages/photo-editing/src/cloud-sharing-controller.test.ts",
@@ -8871,6 +9025,46 @@
       "path": "packages/photo-editing/src/editor/browser-photo-cloud-share-sheet.tsx",
       "sha256": "da18c82c09268a8621e27c84d7fc956dbd2e5cbbb47e688956ef436708a26628",
       "origin": "Issue #8 の共有対象確認、リンク表示と失効、通信・権限・容量エラーUIを独立新規作成。\n変更理由: 共有URLは再表示できないため、作成成功時にコピー期限を明示。\n変更理由: 取消後の応答保留中も共有一覧の照合操作を提供する。\n変更理由: 共有一覧の後続ページを利用者が明示的に読み込めるUIを追加。"
+    },
+    {
+      "path": "packages/photo-editing/src/editor/browser-photo-editing-adjustments.test.tsx",
+      "sha256": "13d13d32908ac1ae814a6a4aa0abfae0bb350349c0d607d3da78053068a38939",
+      "origin": "niho-photo#51 のため新規作成。右端の道具の帯と右パネルの面の部品・test。"
+    },
+    {
+      "path": "packages/photo-editing/src/editor/browser-photo-editing-tool-rail.test.tsx",
+      "sha256": "54c4be84eb0c7d03fb1911047741a582e95fea6c8212254c5c740b61d71c3663",
+      "origin": "niho-photo#51 のため新規作成。右端の道具の帯と右パネルの面の部品・test。"
+    },
+    {
+      "path": "packages/photo-editing/src/editor/browser-photo-editing-tool-rail.tsx",
+      "sha256": "b8eea050f9e485169a1f225783a80f845a99b8f7de3c39dbffc75c52a3e57dfb",
+      "origin": "niho-photo#51 のため新規作成。右端の道具の帯と右パネルの面の部品・test。"
+    },
+    {
+      "path": "packages/photo-editing/src/editor/photo-editing-presets-panel-variants.test.tsx",
+      "sha256": "b044699a340836f23b7cc5d87ccf9d6a543ad09ff8f45df541e884c7fcc30160",
+      "origin": "niho-photo#51 のため新規作成。右端の道具の帯と右パネルの面の部品・test。"
+    },
+    {
+      "path": "packages/photo-editing/src/editor/photo-editing-presets-panel.test.tsx",
+      "sha256": "f84cf4ab96b6712af8ece79e66ed40f909823892fb6c1da1323157882815d08f",
+      "origin": "L4 #53でNIHOが独立新規作成した合成テスト。実写真・個人情報・秘密を含まず、見本は描かない偽の口で置き換える。\n変更理由: プリセットの升の2列（見本・名前・当てている升の見分け・仮の表示・拠点の⋯）と、見本を描けない wasm や layout を省く面で行のままになること、見本の長辺（192px／96px）を検証する。"
+    },
+    {
+      "path": "packages/photo-editing/src/editor/use-browser-photo-crop.test.tsx",
+      "sha256": "4d44380672bf1fc4cc1a558eb227dce0f03d7d19c28b388f1e14e8314e7f979d",
+      "origin": "公開repoで新規作成（#52）。所有する実画像・外部fixtureを使わず、切り抜き完了・取消の状態遷移を合成データで検証。"
+    },
+    {
+      "path": "packages/photo-editing/src/editor/use-browser-photo-leave-guards.test.tsx",
+      "sha256": "cffbc0ad407489d7309fb4b72ab4ebb833d3b6d5200553d3decbb0c47bbe0228",
+      "origin": "PR #64の公開クライアント回帰テストとして独立作成。写真コピー時の編集session保持を検証する。"
+    },
+    {
+      "path": "packages/photo-editing/src/fixtures/cutout-brush-parity.json",
+      "sha256": "13d6754635b45a621dda5322dff2fe68ecfcb99ed97db5f86c93b332f1e4f5b3",
+      "origin": "公開移植用に新規作成した5×5整数ランプ。中央行をeraseし中央の1画素をrestoreする手計算の期待値。外部画像・モデル・元fixtureのデータは含まない。"
     }
   ],
   "excludedSources": [

@@ -1,0 +1,248 @@
+{
+  "candidate": "niho-8",
+  "cubeContract": {
+    "entries": "f32-unquantized",
+    "finalDimension": 64,
+    "gamma": 1.8,
+    "interactiveDimension": 33,
+    "interpolation": "trilinear"
+  },
+  "publicFixtures": [
+    {
+      "fixture": "dsc02072.jpg",
+      "niho8MinusReference": {
+        "changedPixels": 524432,
+        "maxAbsoluteCodeDelta": 5,
+        "meanAbsoluteCodeDelta": 0.24729756944444445,
+        "pixels": 960000
+      },
+      "reference": "niho-6 raster formula on the same public input"
+    },
+    {
+      "fixture": "dsc02078.jpg",
+      "niho8MinusReference": {
+        "changedPixels": 516904,
+        "maxAbsoluteCodeDelta": 5,
+        "meanAbsoluteCodeDelta": 0.24507708333333333,
+        "pixels": 960000
+      },
+      "reference": "niho-6 raster formula on the same public input"
+    },
+    {
+      "fixture": "dsc02150.jpg",
+      "niho8MinusReference": {
+        "changedPixels": 561086,
+        "maxAbsoluteCodeDelta": 6,
+        "meanAbsoluteCodeDelta": 0.2652309027777778,
+        "pixels": 960000
+      },
+      "reference": "niho-6 raster formula on the same public input"
+    },
+    {
+      "fixture": "saturated-blue.png",
+      "niho8MinusReference": {
+        "changedPixels": 55100,
+        "maxAbsoluteCodeDelta": 9,
+        "meanAbsoluteCodeDelta": 0.4701334635416667,
+        "pixels": 73728
+      },
+      "reference": "niho-6 raster formula on the same public input"
+    }
+  ],
+  "qualityClaim": false,
+  "remainingGates": [
+    "external Lightroom preset plus white-balance references",
+    "independent teacher/holdout evaluation",
+    "product promotion decision"
+  ],
+  "schema": "niho.niho8-public-measurement.v1",
+  "status": "unpromoted-evaluation-candidate",
+  "syntheticRamps": {
+    "input": "1024 distinct linear f32 steps; no input 8-bit quantization",
+    "legacyRaw": {
+      "skinNiho2": {
+        "adjacentEqual": [
+          913,
+          864,
+          847
+        ],
+        "adjacentGe2": [
+          0,
+          0,
+          0
+        ],
+        "maxAdjacent": [
+          1,
+          1,
+          1
+        ]
+      },
+      "skinNiho8": {
+        "adjacentEqual": [
+          914,
+          866,
+          847
+        ],
+        "adjacentGe2": [
+          0,
+          0,
+          0
+        ],
+        "maxAdjacent": [
+          1,
+          1,
+          1
+        ]
+      },
+      "skyNiho2": {
+        "adjacentEqual": [
+          863,
+          919,
+          976
+        ],
+        "adjacentGe2": [
+          1,
+          0,
+          0
+        ],
+        "maxAdjacent": [
+          2,
+          1,
+          1
+        ]
+      },
+      "skyNiho8": {
+        "adjacentEqual": [
+          863,
+          918,
+          979
+        ],
+        "adjacentGe2": [
+          0,
+          0,
+          0
+        ],
+        "maxAdjacent": [
+          1,
+          1,
+          1
+        ]
+      }
+    },
+    "skin": {
+      "niho6Final": {
+        "adjacentEqual": [
+          879,
+          883,
+          893
+        ],
+        "adjacentGe2": [
+          0,
+          0,
+          0
+        ],
+        "maxAdjacent": [
+          1,
+          1,
+          1
+        ]
+      },
+      "niho8Final": {
+        "adjacentEqual": [
+          880,
+          882,
+          892
+        ],
+        "adjacentGe2": [
+          0,
+          0,
+          0
+        ],
+        "maxAdjacent": [
+          1,
+          1,
+          1
+        ]
+      },
+      "niho8Interactive": {
+        "adjacentEqual": [
+          880,
+          883,
+          892
+        ],
+        "adjacentGe2": [
+          0,
+          0,
+          0
+        ],
+        "maxAdjacent": [
+          1,
+          1,
+          1
+        ]
+      }
+    },
+    "sky": {
+      "niho6Final": {
+        "adjacentEqual": [
+          887,
+          898,
+          921
+        ],
+        "adjacentGe2": [
+          0,
+          0,
+          0
+        ],
+        "maxAdjacent": [
+          1,
+          1,
+          1
+        ]
+      },
+      "niho8Final": {
+        "adjacentEqual": [
+          894,
+          898,
+          921
+        ],
+        "adjacentGe2": [
+          0,
+          0,
+          0
+        ],
+        "maxAdjacent": [
+          1,
+          1,
+          1
+        ]
+      },
+      "niho8Interactive": {
+        "adjacentEqual": [
+          892,
+          898,
+          921
+        ],
+        "adjacentGe2": [
+          0,
+          0,
+          0
+        ],
+        "maxAdjacent": [
+          1,
+          1,
+          1
+        ]
+      }
+    },
+    "width": 1024
+  },
+  "timingsMs": {
+    "final": 229.887958,
+    "interactive": 89.35391700000001,
+    "scope": "native cold pipeline render of 1024x64 ramp; not a wasm frame performance gate"
+  },
+  "measurementSourceCommit": "6ea10cd5d09027f9aaf6c58d9aab67bb05cdf08f",
+  "measurementHost": "Mac Studio",
+  "measurementDate": "2026-10-20"
+}

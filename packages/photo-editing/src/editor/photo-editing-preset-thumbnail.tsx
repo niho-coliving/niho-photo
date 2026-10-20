@@ -28,8 +28,8 @@ export type PhotoEditingPresetThumbnails = {
 export const PHOTO_EDITING_PRESET_NONE_THUMBNAIL_KEY = "none";
 
 /**
- * 行の左の見本（48px 角・角丸・`object-cover`）。描く前は同じ大きさの薄い面（skeleton）を置き、作り直す間は前の見本を出した
- * まま（点滅させない）。読み上げない（行の名前で足りる）。
+ * 行の左の見本（48px 角・角丸・`object-cover`。升の 2 列などは `className` で大きさを替える）。描く前は同じ大きさの薄い面
+ * （skeleton）を置き、作り直す間は前の見本を出したまま（点滅させない）。読み上げない（行の名前で足りる）。
  */
 export function PhotoEditingPresetThumbnail(props: {
   thumbnailKey: string;

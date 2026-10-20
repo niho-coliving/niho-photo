@@ -845,9 +845,16 @@ impl PreparedColorOps {
                     crate::settings::ENGINE_NIHO_4
                         | crate::settings::ENGINE_NIHO_5
                         | crate::settings::ENGINE_NIHO_7
-                ) | (false, crate::settings::ENGINE_NIHO_6)
+                ) | (
+                    false,
+                    crate::settings::ENGINE_NIHO_6 | crate::settings::ENGINE_NIHO_8
+                )
             ),
-            raster_niho6: !toned && settings.engine == crate::settings::ENGINE_NIHO_6,
+            raster_niho6: !toned
+                && matches!(
+                    settings.engine.as_str(),
+                    crate::settings::ENGINE_NIHO_6 | crate::settings::ENGINE_NIHO_8
+                ),
         }
     }
 

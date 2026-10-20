@@ -54,7 +54,7 @@ use crate::relative_wb::relative_matrix;
 use crate::resize::{bilinear_downscale, bilinear_downscale_with, Filter};
 use crate::settings::{
     DevelopSettings, VignetteStyle, WhiteBalanceMode, ENGINE_NIHO_2, ENGINE_NIHO_3, ENGINE_NIHO_4,
-    ENGINE_NIHO_5, ENGINE_NIHO_6, ENGINE_NIHO_7,
+    ENGINE_NIHO_5, ENGINE_NIHO_6, ENGINE_NIHO_7, ENGINE_NIHO_8,
 };
 use crate::spatial::{
     self, adaptive_parameters, AdaptivePath, AdaptiveStats, Plane, Quality, SpatialParams,
@@ -188,7 +188,12 @@ pub fn bake_post_ops_cube_with_look(
     look: Option<&'static crate::look::LookParams>,
 ) -> Cube {
     let prepared = PreparedPostOps::with_exposure(s, exposure_non_raw_ev).with_look(look);
-    Cube::bake_with_dimension(dimension, &move |v| prepared.apply(v))
+    let transform = move |v| prepared.apply(v);
+    if s.engine == ENGINE_NIHO_8 {
+        Cube::bake_float_with_dimension(dimension, &transform)
+    } else {
+        Cube::bake_with_dimension(dimension, &transform)
+    }
 }
 
 fn bake_raw_post_ops_cube_niho3(
@@ -225,7 +230,9 @@ pub fn bake_color_cube_for(s: &DevelopSettings, dimension: usize, raw: bool) -> 
             prepared.apply(v)
         }
     };
-    if raw
+    if s.engine == ENGINE_NIHO_8 {
+        Cube::bake_float_with_dimension(dimension, &transform)
+    } else if raw
         && matches!(
             s.engine.as_str(),
             ENGINE_NIHO_3 | ENGINE_NIHO_4 | ENGINE_NIHO_5 | ENGINE_NIHO_7
@@ -234,6 +241,27 @@ pub fn bake_color_cube_for(s: &DevelopSettings, dimension: usize, raw: bool) -> 
         Cube::bake_float(&transform)
     } else {
         Cube::bake_with_dimension(dimension, &transform)
+    }
+}
+
+fn bake_color_cube_with_precision(
+    s: &DevelopSettings,
+    dimension: usize,
+    raw: bool,
+    float_entries: bool,
+) -> Cube {
+    if float_entries {
+        let prepared = color_ops_for(s, raw);
+        let transform = move |v| {
+            if raw {
+                prepared.apply_raw_after_pre_post(v)
+            } else {
+                prepared.apply(v)
+            }
+        };
+        Cube::bake_float_with_dimension(dimension, &transform)
+    } else {
+        bake_color_cube_for(s, dimension, raw)
     }
 }
 
@@ -278,10 +306,25 @@ pub fn look_cube(look: &str) -> &'static Cube {
     acr3_cube()
 }
 
+fn bake_float_look_cube(look: &str, dimension: usize) -> Cube {
+    match crate::look::params(look) {
+        Some(params) => Cube::bake_float_with_dimension(dimension, &|v| {
+            rgb_tone(params.pre_acr3(v), &crate::acr3::evaluate)
+        }),
+        None => {
+            Cube::bake_float_with_dimension(dimension, &|v| rgb_tone(v, &crate::acr3::evaluate))
+        }
+    }
+}
+
 /// Cubes that depend on the settings; reusable across frames whose
 /// relevant settings did not change (the session keeps them).
 #[derive(Clone)]
 pub struct SettingsCubes {
+    /// `niho-8` only: dimension-aware float look + ACR3 cube. Existing
+    /// engines continue to use their process-wide frozen cube.
+    pub acr3_key: String,
+    pub acr3: Option<Arc<Cube>>,
     pub post_key: String,
     pub post: Option<Arc<Cube>>,
     pub color_key: String,
@@ -336,13 +379,20 @@ pub fn settings_cubes(
     look: Option<&'static crate::look::LookParams>,
     raw: bool,
 ) -> SettingsCubes {
-    let raster_legacy = (!raw && s.engine == ENGINE_NIHO_3).then(|| {
+    let formula_override = if !raw && s.engine == ENGINE_NIHO_3 {
         let mut legacy = s.clone();
         legacy.engine = ENGINE_NIHO_2.to_string();
         legacy.look = crate::look::LOOK_NIHO_INTERIM_1.to_string();
-        legacy
-    });
-    let formula_settings = raster_legacy.as_ref().unwrap_or(s);
+        Some(legacy)
+    } else if raw && s.engine == ENGINE_NIHO_8 {
+        let mut legacy = s.clone();
+        legacy.engine = ENGINE_NIHO_2.to_string();
+        Some(legacy)
+    } else {
+        None
+    };
+    let formula_settings = formula_override.as_ref().unwrap_or(s);
+    let float_candidate = s.engine == ENGINE_NIHO_8;
     let dimension = if raw
         && matches!(
             s.engine.as_str(),
@@ -355,10 +405,24 @@ pub fn settings_cubes(
             Quality::Final => CUBE_DIMENSION,
         }
     };
+    let precision_key = if float_candidate { "f32" } else { "u8" };
+    let ak = if raw && float_candidate {
+        format!("{}|{dimension}|{precision_key}", s.look)
+    } else {
+        String::new()
+    };
+    let acr3 = if ak.is_empty() {
+        None
+    } else {
+        match cache {
+            Some(c) if c.acr3_key == ak && c.acr3.is_some() => c.acr3.clone(),
+            _ => Some(Arc::new(bake_float_look_cube(&s.look, dimension))),
+        }
+    };
     let want_post =
         exposure_non_raw_ev != 0.0 || needs_post_ops(formula_settings) || look.is_some();
     let pk = format!(
-        "{}|{}",
+        "{}|{}|{precision_key}",
         post_key(formula_settings, exposure_non_raw_ev, dimension),
         if look.is_some() { s.look.as_str() } else { "" }
     );
@@ -377,6 +441,15 @@ pub fn settings_cubes(
             // A drag frame can keep a matching final cube without
             // baking one; releasing H/S or WB then reuses it.
             _ if !bake => None,
+            _ if float_candidate => {
+                let prepared =
+                    PreparedPostOps::with_exposure(formula_settings, exposure_non_raw_ev)
+                        .with_look(look);
+                Some(Arc::new(Cube::bake_float_with_dimension(
+                    dimension,
+                    &move |v| prepared.apply(v),
+                )))
+            }
             _ if raw
                 && matches!(
                     s.engine.as_str(),
@@ -397,7 +470,10 @@ pub fn settings_cubes(
             ))),
         }
     };
-    let ck = color_key(formula_settings, dimension, raw);
+    let ck = format!(
+        "{}|{precision_key}",
+        color_key(formula_settings, dimension, raw)
+    );
     let color = if !needs_color_ops(formula_settings)
         || (!bake
             && !(raw
@@ -410,14 +486,17 @@ pub fn settings_cubes(
         match cache {
             Some(c) if c.color_key == ck && c.color.is_some() => c.color.clone(),
             _ if !bake => None,
-            _ => Some(Arc::new(bake_color_cube_for(
+            _ => Some(Arc::new(bake_color_cube_with_precision(
                 formula_settings,
                 dimension,
                 raw,
+                float_candidate,
             ))),
         }
     };
     SettingsCubes {
+        acr3_key: ak,
+        acr3,
         post_key: pk,
         post,
         color_key: ck,
@@ -1006,7 +1085,7 @@ fn niho6_one_shot(
     raster: &Raster,
     s: &DevelopSettings,
 ) -> Option<Result<Raster, crate::niho6::PrepareError>> {
-    if s.engine != ENGINE_NIHO_6 || !crate::niho6::uses_response(s) {
+    if !crate::niho6::uses_raster_formula(s) || !crate::niho6::uses_response(s) {
         return None;
     }
     let space = crate::niho6::SourceSpace::LinearSrgb;
@@ -1129,7 +1208,7 @@ fn render_linear(
     // niho-6: the prepared image (niho6.rs) holds the learned share of
     // Highlights <= 0 and Shadows >= 0; the legacy local pass keeps the other
     // directions and `LEGACY_SHARE` of those (R24).
-    let (spatial_highlights, spatial_shadows) = if s.engine == ENGINE_NIHO_6 {
+    let (spatial_highlights, spatial_shadows) = if crate::niho6::uses_raster_formula(s) {
         let legacy = |v: f64, learned: bool| {
             if learned {
                 v * crate::niho6::LEGACY_SHARE
@@ -1154,7 +1233,7 @@ fn render_linear(
     let mut stats = stats_cache;
     let jpeg_white_balance = if matches!(
         s.engine.as_str(),
-        ENGINE_NIHO_2 | ENGINE_NIHO_3 | ENGINE_NIHO_6
+        ENGINE_NIHO_2 | ENGINE_NIHO_3 | ENGINE_NIHO_6 | ENGINE_NIHO_8
     ) && s.white_balance.mode == WhiteBalanceMode::Relative
     {
         PreparedJpegWhiteBalance::new(s.relative_temperature, s.relative_tint)
@@ -1163,7 +1242,7 @@ fn render_linear(
     };
     let relative = if !matches!(
         s.engine.as_str(),
-        ENGINE_NIHO_2 | ENGINE_NIHO_3 | ENGINE_NIHO_6
+        ENGINE_NIHO_2 | ENGINE_NIHO_3 | ENGINE_NIHO_6 | ENGINE_NIHO_8
     ) && s.white_balance.mode == WhiteBalanceMode::Relative
     {
         relative_matrix(s.relative_temperature, s.relative_tint)
@@ -1385,7 +1464,8 @@ fn render_linear(
 /// ProPhoto: look + ACR3 cube -> RAW black & white mix -> cube P ->
 /// Calibration -> cube Q.
 struct RawTail {
-    acr3: &'static Cube,
+    legacy_acr3: &'static Cube,
+    candidate_acr3: Option<Arc<Cube>>,
     niho4_camera: Option<crate::niho4_response::Camera>,
     post: Option<Arc<Cube>>,
     calibration: Option<[[f32; 3]; 3]>,
@@ -1400,7 +1480,8 @@ impl RawTail {
         niho4_camera: Option<crate::niho4_response::Camera>,
     ) -> Self {
         Self {
-            acr3: look_cube(&s.look),
+            legacy_acr3: look_cube(&s.look),
+            candidate_acr3: cubes.acr3.clone(),
             niho4_camera,
             post: cubes.post.clone(),
             calibration: needs_calibration(&s.calibration)
@@ -1419,7 +1500,11 @@ impl RawTail {
     #[inline]
     fn pixel_encoded(&self, e: [f32; 3]) -> [f32; 3] {
         // Adjacent cubes pass values in the encoded domain.
-        let mut e = self.acr3.lookup_encoded(e);
+        let mut e = self
+            .candidate_acr3
+            .as_deref()
+            .unwrap_or(self.legacy_acr3)
+            .lookup_encoded(e);
         if let Some(camera) = self.niho4_camera {
             e = encode(crate::niho4::pre_profile(camera, decode(e)));
         }
@@ -1496,7 +1581,7 @@ fn niho6_working_copy_one_shot(
     s: &DevelopSettings,
 ) -> Option<Result<LinearImage, crate::niho6::PrepareError>> {
     if !matches!(wc.meta, WorkingCopyMeta::Raster { .. })
-        || s.engine != ENGINE_NIHO_6
+        || !crate::niho6::uses_raster_formula(s)
         || !crate::niho6::uses_response(s)
     {
         return None;
@@ -1813,6 +1898,15 @@ fn render_raw(
     effects_cache: &mut EffectsCache,
     mark_out_of_srgb: bool,
 ) -> (Rendered, SettingsCubes) {
+    // The opt-in candidate deliberately keeps the legacy unsigned-RAW
+    // formula. Only its three cubes change precision; signed RAW never
+    // reaches this path with niho-8.
+    let legacy_formula = (s.engine == ENGINE_NIHO_8).then(|| {
+        let mut legacy = s.clone();
+        legacy.engine = ENGINE_NIHO_2.to_string();
+        legacy
+    });
+    let formula = legacy_formula.as_ref().unwrap_or(s);
     let mut approximations = vec!["dcpLookTableNotApplied"];
     if white_balance.is_some_and(|wb| wb.approximate) {
         approximations.push("absoluteWhiteBalance");
@@ -1824,7 +1918,7 @@ fn render_raw(
         approximations.push("colorNoiseReductionSmoothness");
     }
     let white_balance = white_balance.map(|wb| wb.matrix);
-    let gain = libm::exp2(baseline_ev + s.exposure) as f32;
+    let gain = libm::exp2(baseline_ev + formula.exposure) as f32;
     let expose = move |v: [f32; 3]| [v[0] * gain, v[1] * gain, v[2] * gain];
     // [absolute WB] -> exposure, per pixel (recomputed where needed).
     let head = |px: [f32; 3]| -> [f32; 3] {
@@ -1836,14 +1930,14 @@ fn render_raw(
     let (w, h) = (img.width, img.height);
     let frame = frame_of(img, framing);
     let out = frame.output;
-    let fx = effects::prepare(s, out.width, out.height, effects_cache);
+    let fx = effects::prepare(formula, out.width, out.height, effects_cache);
     approximations.extend(&fx.approximations);
     let (vignette, out_fx) = (fx.linear.as_ref(), fx.output.as_ref());
 
-    let spatial_on = needs_spatial(s);
+    let spatial_on = needs_spatial(formula);
     let input_key = format!(
         "raw|{w}x{h}|{white_balance:?}|{gain}|{}|{}|{}|{}|{}",
-        s.highlights, s.shadows, s.texture, s.clarity, frame.key
+        formula.highlights, formula.shadows, formula.texture, formula.clarity, frame.key
     );
     prepare_local_cache(local_cache, spatial_on, &input_key);
     // Drag frames bake cube P / Q only for the adaptive statistics of a new
@@ -1852,7 +1946,7 @@ fn render_raw(
         && local_cache
             .as_ref()
             .is_some_and(|c| c.input_key == input_key);
-    let look_tone = raw_look_tone(s);
+    let look_tone = raw_look_tone(formula);
     let mut cubes = settings_cubes(
         s,
         0.0,
@@ -1862,7 +1956,7 @@ fn render_raw(
         look_tone,
         true,
     );
-    let tail = RawTail::new(s, &cubes, niho4_camera);
+    let tail = RawTail::new(formula, &cubes, niho4_camera);
     let local = if spatial_on {
         local_pass(
             local_cache,
@@ -1887,10 +1981,10 @@ fn render_raw(
                 let stats = spatial::compute_stats(&small, sw, sh, PP_LUMA_F32);
                 let (gain_scale, shift) = adaptive_parameters(Some(&stats), AdaptivePath::Raw);
                 SpatialParams {
-                    highlights: s.highlights,
-                    shadows: s.shadows,
-                    texture: s.texture,
-                    clarity: s.clarity,
+                    highlights: formula.highlights,
+                    shadows: formula.shadows,
+                    texture: formula.texture,
+                    clarity: formula.clarity,
                     scale_px: spatial::scale_px(frame.long_edge as f64),
                     long_edge: frame.long_edge,
                     gain_scale,
@@ -1909,8 +2003,8 @@ fn render_raw(
     } else {
         None
     };
-    let relative = if s.white_balance.mode == WhiteBalanceMode::Relative {
-        relative_matrix(s.relative_temperature, s.relative_tint)
+    let relative = if formula.white_balance.mode == WhiteBalanceMode::Relative {
+        relative_matrix(formula.relative_temperature, formula.relative_tint)
     } else {
         None
     };
@@ -1924,19 +2018,21 @@ fn render_raw(
     // Drag frames: the ACR3 cube clamps its input, so the whole tail is one
     // cube of the encoded value.
     let preview = (quality == Quality::Interactive).then(|| {
-        let post = (needs_post_ops(s) || look_tone.is_some())
-            .then(|| PreparedPostOps::with_exposure(s, 0.0).with_look(look_tone));
-        let color = needs_color_ops(s).then(|| PreparedColorOps::after_default_curve(s));
+        let post = (needs_post_ops(formula) || look_tone.is_some())
+            .then(|| PreparedPostOps::with_exposure(formula, 0.0).with_look(look_tone));
+        let color =
+            needs_color_ops(formula).then(|| PreparedColorOps::after_default_curve(formula));
         // The RAW black & white mix is part of stage A, before cube P.
         let key_a = format!(
             "raw|{}|{:?}|{}|{}",
-            s.look, niho4_camera, cubes.post_key, cubes.color_key
+            formula.look, niho4_camera, cubes.post_key, cubes.color_key
         );
         let key = format!(
             "{key_a}|{}|{:?}|{:?}",
             cubes.color_key, tail.calibration, relative
         );
-        let acr3 = look_cube(&s.look);
+        let legacy_acr3 = look_cube(&formula.look);
+        let acr3 = cubes.acr3.as_deref().unwrap_or(legacy_acr3);
         let drag = drag_tail(
             cubes.drag.as_ref(),
             key_a,

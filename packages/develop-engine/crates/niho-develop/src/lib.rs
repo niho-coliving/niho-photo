@@ -39,6 +39,7 @@ pub mod raw_response;
 #[path = "raw_response/simd.rs"]
 mod raw_response_simd;
 pub mod relative_wb;
+pub mod research;
 pub mod resize;
 pub mod settings;
 pub mod spatial;
@@ -61,7 +62,7 @@ use std::{fmt, sync::Arc};
 
 /// Latest formula version this bundle can render. Settings constructors keep
 /// their own compatibility defaults; this advertises reader capability.
-pub const ENGINE_VERSION: &str = settings::ENGINE_NIHO_7;
+pub const ENGINE_VERSION: &str = settings::ENGINE_NIHO_8;
 /// Crate version (build artifacts are published per version).
 pub const CRATE_VERSION: &str = env!("CARGO_PKG_VERSION");
 
@@ -204,7 +205,7 @@ pub fn render(
     }
     if rendered_geometry(&settings).is_none() {
         let raster = decode::decode_raster(input, options.max_dimension, options.filter)?;
-        if settings.engine == settings::ENGINE_NIHO_6 && niho6::uses_response(&settings) {
+        if niho6::uses_raster_formula(&settings) && niho6::uses_response(&settings) {
             // The decoded size is the output size: the Session renders it as is.
             return Session::new(SessionSource::Raster(raster), options.filter).render(
                 &settings,
@@ -276,6 +277,12 @@ pub fn render_camera_linear(
     if settings.engine == settings::ENGINE_NIHO_6 {
         return Err(Error::IncompatibleWorkingCopy(
             "niho-6 supports JPEG / PNG originals and raster working copies only".into(),
+        ));
+    }
+    if settings.engine == settings::ENGINE_NIHO_8 {
+        return Err(Error::IncompatibleWorkingCopy(
+            "niho-8 camera-linear input is unsupported; use a raster or legacy unsigned RAW working copy"
+                .into(),
         ));
     }
     camera_linear::validate_work_meta(meta)?;
@@ -835,6 +842,9 @@ impl Session {
             }
             return Ok(niho6::uses_response(settings).then_some(RawEngine::Niho6));
         }
+        if settings.engine == settings::ENGINE_NIHO_8 && !raw {
+            return Ok(niho6::uses_response(settings).then_some(RawEngine::Niho6));
+        }
         let engine = match settings.engine.as_str() {
             settings::ENGINE_NIHO_3 => Some(RawEngine::Niho3),
             settings::ENGINE_NIHO_4 => Some(RawEngine::Niho4),
@@ -842,6 +852,11 @@ impl Session {
             settings::ENGINE_NIHO_7 => Some(RawEngine::Niho4),
             _ => None,
         };
+        if signed && settings.engine == settings::ENGINE_NIHO_8 {
+            return Err(Error::IncompatibleWorkingCopy(
+                "niho-8 does not define signed-gamma18-v1 semantics; use niho-3/4/5/7".into(),
+            ));
+        }
         if signed && engine.is_none() {
             return Err(Error::IncompatibleWorkingCopy(
                 "signed-gamma18-v1 requires engine niho-3 or newer signed RAW engine".into(),
@@ -1363,8 +1378,15 @@ impl Session {
             return Err(Error::InvalidSettings(issues));
         }
         let use_niho3 = self.niho3_mode(settings)?;
+        let source_is_raw = matches!(
+            self.source.as_ref(),
+            SessionSource::WorkingCopy {
+                meta: WorkingCopyMeta::Raw { .. },
+                ..
+            }
+        );
         // niho-6: a candidate's Highlights / Shadows need the prepared master.
-        if use_niho3.is_some() || settings.engine == settings::ENGINE_NIHO_6 {
+        if use_niho3.is_some() || (niho6::uses_raster_formula(settings) && !source_is_raw) {
             // Auto candidates use an isolated Session so their full-source
             // preparation, canonical 750 analysis, geometry, and rendering
             // are identical to normal NIHO 3 frames without mutating the
@@ -1417,13 +1439,7 @@ impl Session {
                 .find(|(k, q, _)| *k == SOURCE_STATS_KEY && *q == quality)
                 .map(|(_, _, s)| *s)
         });
-        let raw = matches!(
-            self.source.as_ref(),
-            SessionSource::WorkingCopy {
-                meta: WorkingCopyMeta::Raw { .. },
-                ..
-            }
-        );
+        let raw = source_is_raw;
         let mut cubes = None;
         let mut local = None;
         let mut effects = effects::EffectsCache::default();

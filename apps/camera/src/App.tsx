@@ -24,6 +24,7 @@ import { createCameraCommands, type CameraCommands } from "./local-library/comma
 import { createLocalPhotoEditingHost } from "./local-library/local-photo-editing-host";
 import { createLocalPhotoCutoutHost } from "./local-library/local-photo-cutout-host";
 import { createLocalPhotoLibrary } from "./local-library/local-photo-library";
+import { useGuardedCloudBinding } from "./use-guarded-cloud-binding";
 
 /** 初回の案内（旧 NIHO camera の補正は引き継がない）を閉じたことを、この端末に覚える鍵。 */
 export const PHOTO_BENCH_NOTICE_DISMISSED_KEY = "niho-camera:photo-bench-notice-dismissed";
@@ -163,12 +164,22 @@ export function App({ commands, loadAppInfo = readAppInfo, watchUpdate, cloudBin
   const localLibrary = useMemo(() => createLocalPhotoLibrary(native), [native]);
   const localHost = useMemo(() => createLocalPhotoEditingHost(native), [native]);
   const cutout = useMemo(() => createLocalPhotoCutoutHost(native, localLibrary.withStablePhoto), [localLibrary, native]);
-  const cloud = usableCloudBinding(cloudBinding) ? cloudBinding : null;
+  const incomingCloud = usableCloudBinding(cloudBinding) ? cloudBinding : null;
   const [source, setSource] = useState<PhotoSource>("local");
   const [sourceSwitching, setSourceSwitching] = useState(false);
   const [openCloudPhotoId, setOpenCloudPhotoId] = useState<string | null>(null);
   const leaveGuardRef = useRef<PhotoEditingLeaveGuard | null>(null);
   const sourceSwitchRef = useRef(false);
+  const resetForCloudOwnerChange = useCallback(() => {
+    setSource("local");
+    setOpenCloudPhotoId(null);
+  }, []);
+  const cloudBindingTransition = useGuardedCloudBinding({
+    incoming: incomingCloud,
+    leaveGuardRef,
+    onOwnerChange: resetForCloudOwnerChange,
+  });
+  const cloud = cloudBindingTransition.binding;
   const [queryClient] = useState(createQueryClient);
   const [appInfo, setAppInfo] = useState<CameraAppInfo | null>(null);
   const notice = usePhotoBenchNotice(native);
@@ -201,16 +212,17 @@ export function App({ commands, loadAppInfo = readAppInfo, watchUpdate, cloudBin
   const host = activeSource === "cloud" && cloud ? cloud.host : localHost;
   const sourceKey = cloud ? personalPhotoScope(cloud.actorId, activeSource) : "local";
   const actorId = cloud ? cloud.actorId : "local";
-  const copyToCloud = useMemo<BrowserPhotoCopyToCloudBinding | undefined>(() => cloud ? {
-    copyLocalPhoto: cloud.copyLocalPhoto,
-    onOpenCloudPhoto: (photoId) => {
-      void selectSource("cloud", photoId);
-    },
-  } : undefined, [cloud, selectSource]);
+  const copyToCloud = useMemo<BrowserPhotoCopyToCloudBinding | undefined>(() =>
+    cloud && !cloudBindingTransition.switching && !cloudBindingTransition.failed ? {
+      copyLocalPhoto: cloud.copyLocalPhoto,
+      onOpenCloudPhoto: (photoId) => {
+        void selectSource("cloud", photoId);
+      },
+    } : undefined, [cloud, cloudBindingTransition.failed, cloudBindingTransition.switching, selectSource]);
   const sourceTabs = cloud ? (
     <PhotoSourceTabs
       source={activeSource}
-      switching={sourceSwitching}
+      switching={sourceSwitching || cloudBindingTransition.switching || cloudBindingTransition.failed}
       onSelect={(next) => void selectSource(next)}
     />
   ) : undefined;
@@ -255,6 +267,19 @@ export function App({ commands, loadAppInfo = readAppInfo, watchUpdate, cloudBin
         <main className="flex min-h-0 flex-1 flex-col">
           <div className="shrink-0 px-4 pt-3 empty:hidden">
             <CameraUpdateNotice watch={watchUpdate} />
+            {cloudBindingTransition.failed ? (
+              <div role="alert" className="mb-3 flex items-center gap-3 rounded-xl border border-niho-danger/30 bg-niho-danger/10 px-4 py-2.5 text-sm text-niho-text-sub">
+                <p className="min-w-0 flex-1">写真の編集中または操作中のため、アカウントの切替を保留しました。編集を保存または操作を完了してから再試行してください。</p>
+                <button
+                  type="button"
+                  disabled={cloudBindingTransition.switching}
+                  onClick={() => void cloudBindingTransition.retry()}
+                  className="shrink-0 rounded-lg px-3 py-1.5 font-bold text-niho-accent-ink hover:bg-niho-pale/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-niho-accent-ink disabled:cursor-wait"
+                >
+                  再試行
+                </button>
+              </div>
+            ) : null}
             {notice.shown ? (
               <div
                 role="status"
@@ -283,7 +308,7 @@ export function App({ commands, loadAppInfo = readAppInfo, watchUpdate, cloudBin
               active
               openCloudPhotoId={activeSource === "cloud" ? openCloudPhotoId : null}
               onOpenCloudPhotoHandled={() => setOpenCloudPhotoId(null)}
-              registerRouteLeaveGuard={cloud ? registerRouteLeaveGuard : undefined}
+              registerRouteLeaveGuard={registerRouteLeaveGuard}
               // 個人クラウドの削除・退会purge APIはまだ非公開側で未実装なので、接続後も削除を止める。
               disableCloudDelete
               cutout={activeSource === "local" ? cutout : undefined}

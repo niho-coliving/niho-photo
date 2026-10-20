@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { cn } from "niho-ui/cn";
 
 import { photoEditingValueEditLabel, photoEditingValueInputLabel } from "../photo-editing-copy";
 
@@ -30,6 +31,25 @@ export type PhotoEditingSliderEntry = {
 
 /** ⇧ を押しながらの矢印で動かす目盛りの数 */
 const SHIFT_STEP_COUNT = 10;
+
+/**
+ * 線とつまみ（Lightroom と同じ。L6 #55）。線は 2px（文字の色を 15% に薄めた色）、つまみは 12px の白い丸に 1.5px の線と薄い影。
+ * WebKit（Mac アプリ・Safari・Chrome）と Firefox で同じに見えるよう、両方の疑似要素に書く。押せる高さは 44px のまま、上下の余白は
+ * 詰めて行の見た目は変えない。focus-visible はつまみの ring。
+ */
+const SLIDER_INPUT_CLASS_NAME = [
+  "-my-1.5 block h-11 w-full cursor-pointer appearance-none bg-transparent focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-40",
+  "[&::-webkit-slider-runnable-track]:h-0.5 [&::-webkit-slider-runnable-track]:rounded-full [&::-webkit-slider-runnable-track]:bg-[color-mix(in_srgb,var(--niho-text)_15%,transparent)]",
+  "[&::-moz-range-track]:h-0.5 [&::-moz-range-track]:rounded-full [&::-moz-range-track]:bg-[color-mix(in_srgb,var(--niho-text)_15%,transparent)]",
+  "[&::-webkit-slider-thumb]:-mt-[5px] [&::-webkit-slider-thumb]:box-border [&::-webkit-slider-thumb]:size-3 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:border-[1.5px] [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:shadow-sm",
+  "[&::-moz-range-thumb]:box-border [&::-moz-range-thumb]:size-3 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:border-[1.5px] [&::-moz-range-thumb]:bg-white [&::-moz-range-thumb]:shadow-sm",
+  "focus-visible:[&::-webkit-slider-thumb]:ring-2 focus-visible:[&::-webkit-slider-thumb]:ring-niho-accent-ink focus-visible:[&::-moz-range-thumb]:ring-2 focus-visible:[&::-moz-range-thumb]:ring-niho-accent-ink",
+].join(" ");
+
+/** つまみの線の色。既定値から動かしている間は accent-ink（値の文字と同じ「変更あり」の目印） */
+const SLIDER_THUMB_BORDER_CLASS_NAME = "[&::-webkit-slider-thumb]:border-niho-text-sub [&::-moz-range-thumb]:border-niho-text-sub";
+const SLIDER_THUMB_CHANGED_BORDER_CLASS_NAME =
+  "[&::-webkit-slider-thumb]:border-niho-accent-ink [&::-moz-range-thumb]:border-niho-accent-ink";
 
 function stepDecimals(step: number): number {
   if (step >= 1) return 0;
@@ -87,6 +107,10 @@ export function PhotoEditingSlider(props: {
    * `onChange(value, "commit")` で通知する
    */
   entry?: PhotoEditingSliderEntry;
+  /** 既定値から動かしている（値を accent-ink の太字にし、つまみの線も同じ色にする。Lightroom の「変更あり」の目印）。省略時は印を出さない */
+  changed?: boolean;
+  /** 線の背景に足す class（色温度・色かぶり補正の薄い色の帯。`::-webkit-slider-runnable-track` と `::-moz-range-track` に書く） */
+  trackClassName?: string;
 }) {
   const inputRef = useRef<HTMLInputElement | null>(null);
   const valueButtonRef = useRef<HTMLButtonElement | null>(null);
@@ -219,7 +243,10 @@ export function PhotoEditingSlider(props: {
             aria-label={photoEditingValueEditLabel(props.label, props.valueText)}
             onClick={startEntry}
             // 見た目は今の値の文字のまま、押せる高さだけ 44px にする
-            className="relative min-w-[3rem] rounded text-right text-xs tabular-nums text-niho-text after:absolute after:inset-x-0 after:-inset-y-3.5 after:content-[''] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-niho-accent-ink enabled:cursor-text disabled:cursor-not-allowed"
+            className={cn(
+              "relative min-w-[3rem] rounded text-right text-xs tabular-nums after:absolute after:inset-x-0 after:-inset-y-3.5 after:content-[''] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-niho-accent-ink enabled:cursor-text disabled:cursor-not-allowed",
+              props.changed ? "font-bold text-niho-accent-ink" : "text-niho-text",
+            )}
           >
             {props.valueText}
           </button>
@@ -261,8 +288,11 @@ export function PhotoEditingSlider(props: {
           dirtyRef.current = false;
           props.onReset();
         }}
-        // 押せる高さは 44px、上下の余白は詰めて行の見た目は変えない
-        className="-my-1.5 block h-11 w-full cursor-pointer accent-niho-accent-ink disabled:cursor-not-allowed disabled:opacity-40"
+        className={cn(
+          SLIDER_INPUT_CLASS_NAME,
+          props.changed ? SLIDER_THUMB_CHANGED_BORDER_CLASS_NAME : SLIDER_THUMB_BORDER_CLASS_NAME,
+          props.trackClassName,
+        )}
       />
     </div>
   );
