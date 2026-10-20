@@ -4,6 +4,7 @@
   "private": true,
   "description": "NIHO photoの公開クライアント共通基盤",
   "workspaces": [
+    "packages/desktop-account/ts",
     "packages/ui",
     "packages/photo-editing",
     "apps/camera"

@@ -4,7 +4,7 @@ import { fileURLToPath } from "node:url";
 import path from "node:path";
 
 export const scopes = {
-  "photo-editing": { paths: ["packages/photo-editing/", "packages/ui/"], root: "packages/photo-editing", runner: "ubuntu-24.04", kind: "npm", workspaces: ["packages/ui", "packages/photo-editing"] },
+  "photo-editing": { paths: ["packages/photo-editing/", "packages/niho-cloud-contract/", "packages/ui/"], root: "packages/photo-editing", runner: "ubuntu-24.04", kind: "npm", workspaces: ["packages/ui", "packages/photo-editing"] },
   camera: { paths: ["apps/camera/", "packages/desktop-account/", "packages/desktop-photo/", "packages/photo-editing/", "packages/ui/", "packages/develop-engine/"], root: "apps/camera", runner: "macos-14", kind: "npm", workspaces: ["apps/camera"], native: true },
   "desktop-photo": { paths: ["packages/desktop-photo/", "packages/desktop-account/", "packages/photo-editing/", "packages/ui/", "packages/develop-engine/"], root: "packages/desktop-photo", runner: "macos-14", kind: "native" },
   "desktop-account": { paths: ["packages/desktop-account/", "packages/ui/"], root: "packages/desktop-account", runner: "macos-14", kind: "hybrid", workspaces: ["packages/desktop-account/ts"] },
@@ -12,7 +12,7 @@ export const scopes = {
 };
 
 export function selectScopes(changed, present) {
-  const all = changed.some((name) => /^(?:\.github\/|scripts\/|docs\/(?:security|legal|ci)\/)/.test(name) || /^(?:package(?:-lock)?\.json|\.node-version|\.nvmrc)$/.test(name));
+  const all = changed.some((name) => /^(?:\.github\/|scripts\/|docs\/(?:security|legal|ci|contracts)\/)/.test(name) || /^(?:package(?:-lock)?\.json|\.node-version|\.nvmrc)$/.test(name));
   return Object.entries(scopes).map(([scope, config]) => ({ scope, runner: config.runner, present: present.includes(config.root), selected: all || changed.some((name) => config.paths.some((prefix) => name.startsWith(prefix))) }));
 }
 

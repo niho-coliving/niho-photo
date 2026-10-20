@@ -12,6 +12,7 @@
 //! - 自動更新（`updater.rs`。C5 #18393）: 起動時に 1 回、Rust の側で更新フィードを見て、次に開いたときに新しい版になる
 //!   （画面の通信ではない。spec 決まりごと 4 の唯一の例外）。
 
+mod account;
 mod activity;
 mod app_log;
 mod cutout;
@@ -55,7 +56,7 @@ fn camera_app_info() -> CameraAppInfo {
 pub fn run() {
   #[allow(unused_mut)]
   let mut context = tauri::generate_context!();
-  let builder = tauri::Builder::default();
+  let builder = tauri::Builder::default().plugin(tauri_plugin_deep_link::init());
   #[cfg(feature = "e2e")]
   let builder = {
     e2e::configure(&mut context);
@@ -74,6 +75,7 @@ pub fn run() {
     .register_asynchronous_uri_scheme_protocol(thumbnail_scheme::SCHEME, thumbnail_scheme::handle)
     .setup(move |app| {
       // フォルダは最初の「フォルダを追加」か覚えたフォルダの一覧まで読まない。現像の sidecar は裏で 1 回だけ確かめる
+      account::install(app.handle());
       library::install(app.handle());
       photos::install(app.handle());
       develop::install(app.handle());
@@ -89,6 +91,11 @@ pub fn run() {
     })
     .invoke_handler(tauri::generate_handler![
       camera_app_info,
+      account::camera_account_state,
+      account::camera_account_login,
+      account::camera_account_cancel,
+      account::camera_account_logout,
+      account::camera_account_refresh,
       library::camera_library_add_folder,
       library::camera_library_add_photos,
       library::camera_library_remembered,

@@ -9,6 +9,7 @@ import { readLocalStorageItemSafely, writeLocalStorageItemSafely } from "niho-ui
 import { AppDialogHost } from "niho-ui/components/app-dialog-host";
 
 import { readAppInfo, type CameraAppInfo } from "./camera-bridge";
+import { CameraAccount } from "./camera-account";
 import { CameraHeaderBreadcrumb } from "./camera-header-breadcrumb";
 import { CameraUpdateNotice, type WatchUpdate } from "./camera-update-notice";
 import { createCameraCommands, type CameraCommands } from "./local-library/commands";
@@ -112,6 +113,7 @@ export function App({ commands, loadAppInfo = readAppInfo, watchUpdate }: AppPro
           <div className="min-w-0 flex-1" data-tauri-drag-region>
             <CameraHeaderBreadcrumb />
           </div>
+          <CameraAccount />
         </header>
         <main className="min-h-0 flex-1 overflow-auto px-4 pt-3">
           <CameraUpdateNotice watch={watchUpdate} />

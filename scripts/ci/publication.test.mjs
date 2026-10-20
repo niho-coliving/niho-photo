@@ -44,6 +44,48 @@ test("監査済みソースは許可し、manifest hash更新だけでは出典�
   await rejected(f, /出典不正/);
 });
 
+test("Docsの外部固定SHAだけを共通contractの許可出典として認める", async (t) => {
+  const f = await fixture(t);
+  const sourceCommit = "c".repeat(40);
+  const repository = "niho-coliving/niho-docs";
+  const sourcePath = "packages/niho-cloud-contract/src/v1.ts";
+  const source = "export const contract = 1;\n";
+  await f.put(sourcePath, source);
+  f.manifest.externalSources = [{ repository, commit: sourceCommit }];
+  f.manifest.importedFiles.push({
+    path: sourcePath,
+    source: { repository, commit: sourceCommit, path: sourcePath, sha256: digest(source) },
+    outputSha256: digest(source),
+    modifications: [],
+  });
+  await f.json("docs/security/cloud-contract-source.json", {
+    schemaVersion: 1,
+    repository,
+    commit: sourceCommit,
+    files: [{ source: sourcePath, target: sourcePath }],
+  });
+  await f.save();
+  assert.deepEqual(await f.check(), []);
+  f.manifest.externalSources.push({ repository: "attacker/repo", commit: sourceCommit });
+  await f.save();
+  await rejected(f, /外部出典契約不正/);
+  f.manifest.externalSources.pop();
+  const extraPath = "packages/niho-cloud-contract/src/unlisted.ts";
+  await f.put(extraPath, "export const unlisted = true;\n");
+  f.manifest.importedFiles.push({
+    path: extraPath,
+    source: { repository, commit: sourceCommit, path: extraPath, sha256: digest("export const unlisted = true;\n") },
+    outputSha256: digest("export const unlisted = true;\n"),
+    modifications: [],
+  });
+  await f.save();
+  await rejected(f, /外部出典契約不正/);
+  f.manifest.importedFiles.pop();
+  f.manifest.importedFiles[1].source.commit = "d".repeat(40);
+  await f.save();
+  await rejected(f, /外部出典契約不正/);
+});
+
 test("packages外の禁止パス、秘密ファイル、巨大fixtureも拒否する", async (t) => {
   const f = await fixture(t);
   for (const name of ["apps/api/index.ts", "docs/.env.production", "misc/ID_RSA", "misc/key.PEM", ".gitmodules", ".npmrc", ".gitleaksignore", "sample.ICC"]) await f.put(name, "synthetic forbidden input\n");
@@ -242,4 +284,13 @@ test("正規化した資産は元source SHAと監査済みoutput SHAを両方照
   assert.deepEqual(await f.check(), []);
   await f.put("docs/legal/asset-inventory.csv", row("0".repeat(64)));
   await rejected(f, /公開許可未確認/);
+});
+
+test("runtime tokenの置き場はGitignoreを無視してもfixtureを含む全公開候補で拒否する", async (t) => {
+  const f = await fixture(t);
+  for (const name of ["misc/refresh-token.json", "fixtures/access_token.json", "misc/id-token.txt", "misc/account-secrets/pending.json", "misc/oauth-tokens/export", "misc/Account-Session.JSON", "misc/tokens", "misc/runtime-tokens/copy.bin", "misc/pending", "fixtures/pending.json", "misc/public-account-v2/account-secrets/refresh-token"]) {
+    await f.put(name, "synthetic-runtime-copy\n");
+    await rejected(f, /公開禁止パス/);
+    await rm(path.join(f.root, name));
+  }
 });

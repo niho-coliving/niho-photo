@@ -67,6 +67,16 @@
           "run": "node --test scripts/ci/*.test.mjs"
         },
         {
+          "id": "contract-source",
+          "run": "node -e 'const value = JSON.parse(require(\"node:fs\").readFileSync(\"docs/security/cloud-contract-source.json\", \"utf8\")); if (!/^[a-f0-9]{40}$/.test(value.commit)) process.exit(1); process.stdout.write(\"commit=\" + value.commit + String.fromCharCode(10));' >> \"$GITHUB_OUTPUT\""
+        },
+        {
+          "env": {
+            "CONTRACT_SOURCE_SHA": "${{ steps.contract-source.outputs.commit }}"
+          },
+          "run": "set -euo pipefail\nsource_dir=\"$RUNNER_TEMP/niho-docs-contract\"\nif ! [[ \"$CONTRACT_SOURCE_SHA\" =~ ^[a-f0-9]{40}$ ]]; then exit 1; fi\ngit init --quiet \"$source_dir\"\ngit -C \"$source_dir\" -c credential.helper= fetch --quiet --no-tags --depth=1 https://github.com/niho-coliving/niho-docs.git \"$CONTRACT_SOURCE_SHA\"\ngit -C \"$source_dir\" checkout --quiet --detach FETCH_HEAD\nnode scripts/ci/cloud-contract-sync.mjs \"$source_dir\""
+        },
+        {
           "run": "npm run verify:publication"
         },
         {

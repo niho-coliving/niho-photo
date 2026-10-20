@@ -40,3 +40,7 @@
 ## 報告と記録
 
 公開 Issue・PR には検出件数、分類、影響範囲、修正 commit だけを書く。secret の値、検出行の原文、private URL、実画像やログを貼らない。脆弱性は公開 Issue にせず、[GitHub の非公開報告窓口](https://github.com/niho-coliving/niho-photo/security/advisories)を使う。窓口を利用できない場合も公開Issueへ投稿せず、メンテナーへ非公開で連絡する。監査の元レポートは非公開環境で保持し、公開側には値を除いた [検出台帳](gitleaks-findings.csv) だけ置く。
+
+## Docs / Photo 共通contract
+
+[Docs #15](https://github.com/niho-coliving/niho-docs/issues/15) を共通仕様の起点とし、Docs正本の [`packages/niho-cloud-contract`](https://github.com/niho-coliving/niho-docs/tree/main/packages/niho-cloud-contract) と [`cloud-contract-v1.md`](cloud-contract-v1.md) を完全な40桁SHAで固定して取り込む。Photo側の `packages/niho-cloud-contract` は型、mock、負例vector、test-only reference modelを同一byte列で保ち、`docs/security/cloud-contract-source.json` と Publication manifest の双方で出典SHA・各ファイルhashを記録する。CIは公開Docsを資格情報なしで取得し、固定SHAと全対象ファイルのhash一致を検証する。契約変更はDocsを先に更新し、Photoを同じSHAへ追随させる対応PRを用意する。公開contractとmockはクライアントの合意面・テスト用であり、認証・認可を実行するコードではない。
