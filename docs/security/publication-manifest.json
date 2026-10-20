@@ -3942,12 +3942,13 @@
         "path": "packages/desktop-photo/src/develop_tests.rs",
         "sha256": "1cc6592304eb32e255c6318bb07fe762c88a3da142125c8004be1bdd436958cc"
       },
-      "outputSha256": "f60e8c1ab07589da1a30d568cd543b71fd3432d03f118119c81b3eaf37c2ecfc",
+      "outputSha256": "b89dbe6ae9c7a020fd3494b9308ae2da3da4465380a1755f863485624f517394",
       "modifications": [
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
         "private絶対path guardに合わせ、合成テスト用のpathを予約済み/test-data配下へ正規化。実装の挙動は変更しない。",
         "公開現像workspace向けにLibRaw由来値と参照を除去。独立測定DCP・合成テスト・metadata正規化・公開契約と書式へ調整。",
-        "Issue #13の段階RAW open、競合回帰、匿名の区間計測を追加。正規producerの数式と成果物は維持。"
+        "Issue #13の段階RAW open、競合回帰、匿名の区間計測を追加。正規producerの数式と成果物は維持。",
+        "区間ログへ設定や画像識別情報を含めない公開合成テストを追加。"
       ]
     },
     {
