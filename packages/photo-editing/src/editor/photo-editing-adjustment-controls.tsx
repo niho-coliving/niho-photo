@@ -367,6 +367,11 @@ export function PhotoEditingAdjustmentGroups(props: {
   idPrefix?: string;
   /** ライトの群の見出しの横に置く要素（省略時は何も置かない） */
   lightAccessory?: ReactNode;
+  /**
+   * 「白黒」の切り替えの置き場（`visibleKeys` に `grayscale` を入れた面だけ）。`group`（既定）はカラーの群の先頭の行、`hidden` は
+   * 群の中に描かない（ブラウザ版は補正の面の一番上のチップに置く。niho-photo#51）。どちらでも、白黒の間は自然な彩度・彩度を押せない
+   */
+  grayscaleToggle?: "group" | "hidden";
   onSettingsChange: (update: PhotoEditingSettingsUpdate, phase: PhotoEditingSliderPhase) => void;
 }) {
   const ownIdPrefix = useId();
@@ -385,9 +390,11 @@ export function PhotoEditingAdjustmentGroups(props: {
   });
 
   const groups = visiblePhotoEditingAdjustmentGroups(props.visibleKeys);
-  // 白黒の切り替えを出している面だけ、白黒の間の彩度を押せなくする（出していない面の見た目は変えない）
-  const grayscale =
-    readGrayscale(settings) && groups.some((group) => group.controls.some((control) => control.kind === "toggle"));
+  // 白黒の切り替えを出せる面（群の定義に切り替えがある）だけ、白黒の間の彩度を押せなくする（出せない面の見た目は変えない）。
+  // 切り替えを群の外に置く面（`grayscaleToggle: "hidden"`）も同じ
+  const togglePresent = groups.some((group) => group.controls.some((control) => control.kind === "toggle"));
+  const grayscale = readGrayscale(settings) && togglePresent;
+  const toggleHidden = props.grayscaleToggle === "hidden";
 
   const renderControl = (control: PhotoEditingAdjustmentControl) => {
     if (control.kind === "toggle") {
@@ -459,9 +466,14 @@ export function PhotoEditingAdjustmentGroups(props: {
   return (
     <>
       {groups.map((group) => {
+        // 白黒を群の外に置く面は、群の中の切り替えの行を描かない（描く項目が残らない群は見出しごと出さない）
+        const controls: ReadonlyArray<PhotoEditingAdjustmentControl> = toggleHidden
+          ? group.controls.filter((control) => control.kind !== "toggle")
+          : group.controls;
+        if (controls.length === 0) return null;
         const info = group.info;
         const infoItems = info
-          ? group.controls.flatMap((control) => {
+          ? controls.flatMap((control) => {
               const text = info.descriptions[control.key];
               return text ? [{ label: controlLabel(control), text }] : [];
             })
@@ -487,7 +499,7 @@ export function PhotoEditingAdjustmentGroups(props: {
               group.id === "color" ? resetWhiteBalanceButton : group.id === "light" ? props.lightAccessory : undefined
             }
           >
-            {group.controls.map(renderControl)}
+            {controls.map(renderControl)}
           </AdjustmentGroup>
         );
       })}
