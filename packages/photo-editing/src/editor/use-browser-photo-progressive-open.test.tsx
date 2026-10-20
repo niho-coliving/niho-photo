@@ -398,6 +398,30 @@ afterEach(async () => {
 });
 
 describe("useBrowserPhotoOpen progressive RAW integration", () => {
+  it("同じ内容hashの端末draftを再表示し、canonical base確定後に既存saverへ保存する", async () => {
+    const work = deferred<PhotoLibraryWorkingCopyResult>();
+    engineFactory.mockImplementationOnce(() => createEngine({ marker: 1 })).mockImplementationOnce(() => createEngine({ marker: 9 }));
+    const fixture = createLibrary(async () => work.promise);
+    const settings = { ...neutralDevelopSettings(), exposure: 0.9, contrast: 23 };
+    vi.mocked(fixture.library.loadProvisionalDraft!).mockResolvedValue({
+      contentSha256: HASH, settings, generation: 12, updatedAt: "2026-10-20T00:00:00.000Z",
+    });
+    const target = item("restored-draft");
+    await mount(fixture.library, [target]);
+    let opening!: Promise<void>;
+    await run(() => { opening = current.openItem(target); });
+    await settleUntil(() => current.opened?.input?.kind === "provisional", "restored provisional");
+    expect(fixture.library.loadProvisionalDraft).toHaveBeenCalledWith(target.photo.id, HASH);
+    expect(current.settings).toMatchObject({ base: null, exposure: 0.9, contrast: 23 });
+    expect(fixture.saveDevelopSettings).not.toHaveBeenCalled();
+    await run(() => work.resolve(readyWork()));
+    await run(async () => { await opening; });
+    expect(current.settings).toMatchObject({ base: BASE_VERSION, exposure: 0.9, contrast: 23 });
+    await run(() => current.returnToGrid());
+    expect(fixture.saveDevelopSettings).toHaveBeenCalledWith(target.photo.id,
+      expect.objectContaining({ base: BASE_VERSION, exposure: 0.9, contrast: 23 }), expect.anything());
+  });
+
   it("保留中の露光・preset・amountをdraftだけへ保存し、最新値と選択/historyをcanonicalへ渡して旧engineの遅延frameを捨てる", async () => {
     const firstCanonical = deferred<DevelopFrame | null>();
     const lateProvisional = deferred<DevelopFrame | null>();

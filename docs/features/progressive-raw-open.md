@@ -10,15 +10,15 @@
 
 補正値は暫定段階から編集できます。内容hashに結び付く、設定だけの端末内draftへ直列保存し、写真切替・終了時にflushします。正規入力を実際に開くまで通常保存・画像uploadを行いません。正規入力で最新の画を描き終えた後に、engine・session・canvasをまとめて替えます。未解決のpreset・適用量・hoverは旧engineで確定させてから切り替えます。補正値、preset選択と適用量、crop、undo/redoを保ち、構造metadataだけを正規入力へ結び直します。通常保存が成功した世代に対応するdraftだけを消します。
 
-正規生成の失敗後も暫定編集とdraftを保ち、再読込では正規側だけを再試行します。補正を書き込む書出しは正規入力を待ち、準備中を表示します。RAW原本のバイトコピーは待ちません。
+正規生成の失敗後も暫定編集とdraftを保ち、再読込では正規側だけを再試行します。補正を書き込む書出しは、受け付けたプリセット操作を確定してから編集をロックし、正規入力を待って準備中を表示します。RAW原本のバイトコピーは待ちません。
 
 暫定画像は正規作業コピーと別cache・queueを持ちます。表示対象は古い暫定jobを止めて優先し、同一内容の処理をまとめます。idle先読みは隣接各1枚に限ります。利用者の画像、元の名前、パス、画像由来のhashを公開計測結果へ出しません。
 
 ## 検証と性能の読み方
 
-`use-browser-photo-open.test.tsx` は実hookで、暫定編集、draft、正規切替、preset量、crop、履歴、遅い旧frame、失敗と再試行、写真切替を検査します。`use-browser-photo-export-delete.test.tsx` は実controllerで書出しの待機境界を検査します。ライブラリのテストはnativeキャンセルと内容hashの分離を検査します。
+`use-browser-photo-progressive-open.test.tsx` は実hookで、暫定編集、draft、正規切替、preset量、crop、履歴、遅い旧frame、失敗と再試行、写真切替を検査します。`use-browser-photo-export-delete.test.tsx` は実controllerで書出しの待機境界を検査します。ライブラリのテストはnativeキャンセルと内容hashの分離を検査します。
 
-`photoDevelopPerf=1` をcamera rootのURLに付けると、区間だけの診断を明示的に有効化できます。native producer単体の時間とUIの`timeToEditable`は別の測定です。後者はT0から、露光と同梱presetの入力が状態へ反映され、変更後canvasが描画されたところまでを測ります。
+`photoDevelopPerf=1` をcamera rootのURLに付けると、区間だけの診断を明示的に有効化できます。native producer単体の時間とUIの`timeToEditable`は別の測定です。後者はT0から、露光と同梱presetが両方有効な状態で、最初の露光入力が状態へ反映され、変更後canvasが描画されたところまでを測ります。同梱presetも別操作で変更後paintを検証し、別区間として記録します。
 
 集計入口は`node apps/camera/scripts/measure-progressive-open.mjs --case dc-s5=<非公開入力> --probe <実測probe> --probe-arg ... --runs 20`です。probeへ`{input}`、`{cache}`、`{condition}`、`{iteration}`を渡せます。coldは反復ごとにアプリcacheを空にし、warmは保持します。OS file cacheは落としません。probeは渡されたcache領域を実際に使う必要があります。mockの反復やnative producerだけの計測をUIの性能受入値に読み替えません。
 
