@@ -176,16 +176,11 @@ pub fn numbered_file_name(file_name: &str, number: u32) -> String {
 }
 
 /// 書き出しの保存先が開いている写真の元ファイルなら断る（原本は書き換えない。spec 決まりごと 9）。
-fn refuse_original(photos: &CameraPhotos, photo_id: &str, destination: &Path) -> Result<(), CameraError> {
-  let same = |a: &Path, b: &Path| match (std::fs::canonicalize(a), std::fs::canonicalize(b)) {
-    (Ok(a), Ok(b)) => a == b,
-    _ => a == b,
-  };
-  match photos.get(photo_id) {
-    Some(photo) if same(&photo.path, destination) => {
-      Err(CameraError::new(code::EXPORT_FAILED, ORIGINAL_OVERWRITE_MESSAGE))
-    }
-    _ => Ok(()),
+fn refuse_original(photos: &CameraPhotos, destination: &Path) -> Result<(), CameraError> {
+  if photos.is_open_original(destination) {
+    Err(CameraError::new(code::EXPORT_FAILED, ORIGINAL_OVERWRITE_MESSAGE))
+  } else {
+    Ok(())
   }
 }
 
@@ -410,7 +405,7 @@ pub async fn camera_export(app: tauri::AppHandle, request: Option<Value>) -> Res
   let Some(destination) = dialog::save_jpeg(&file_name).await?.map(ensure_jpeg_extension) else {
     return Ok(json!({ "saved": false }));
   };
-  refuse_original(&photos, &request.photo_id, &destination)?;
+  refuse_original(&photos, &destination)?;
   let saved_name = destination
     .file_name()
     .map(|name| name.to_string_lossy().into_owned())

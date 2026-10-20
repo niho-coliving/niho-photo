@@ -47,6 +47,21 @@ fn numbered_names_keep_the_extension_and_the_byte_limit() {
 }
 
 #[test]
+fn export_refuses_any_open_photo_as_its_destination() {
+  let harness = SidecarHarness::new("camera-export-open-original");
+  let photos = camera_photos(&harness);
+  let source = photo_file(&harness, "A.RW2", b"source");
+  let other_open_photo = photo_file(&harness, "B.RW2", b"other");
+  photos.open("entry-1", &source).unwrap();
+  photos.open("entry-2", &other_open_photo).unwrap();
+
+  assert_eq!(
+    refuse_original(&photos, &other_open_photo).unwrap_err().code,
+    code::EXPORT_FAILED
+  );
+}
+
+#[test]
 fn heic_opened_in_camera_gets_a_raster_working_copy_through_the_camera_photos() {
   let harness = SidecarHarness::new("camera-heic-source");
   let develop = camera_develop(&harness);
