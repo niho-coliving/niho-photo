@@ -206,6 +206,7 @@ async function settle() {
 }
 
 type WorkbenchExtraProps = Partial<Parameters<typeof BrowserPhotoEditingWorkbench>[0]>;
+
 type WorkbenchRenderOptions = WorkbenchExtraProps | BrowserPhotoCloudSharingBinding;
 
 async function render(library: PhotoLibrary, options: WorkbenchRenderOptions = {}) {
@@ -690,6 +691,59 @@ describe("NIHO photo の窓いっぱいの見た目（appearance・treeHidden・
     expect(container.querySelector('section[aria-label="ブラウザ写真編集"] .grid')?.className).toContain("lg:grid-cols-[minmax(0,1fr)]");
     // 一覧はそのまま読めている
     expect(tile("IMG_0001.JPG")).toBeDefined();
+  });
+});
+
+describe("右端の道具の帯（niho-photo#51）", () => {
+  it("1 枚で見ると右パネルの右に帯を置き、「プリセット」「補正」で右パネルを丸ごと入れ替える（写真を開いている途中でも）", async () => {
+    // wasm の用意が終わらない（開いている途中のまま）。段 2 を使えないとは分からないので、プリセットを出せる
+    mocks.createEngine.mockImplementation(() => ({
+      ready: vi.fn(() => new Promise<boolean>(() => undefined)),
+      dispose: vi.fn(),
+      close: vi.fn(async () => undefined),
+    }));
+    const fake = fakeLibrary({ tree: [TRAVEL], photos: { f1: [photo("p1", "IMG_0001.JPG")] } });
+    await render(fake.library);
+    expect(container.querySelector('nav[aria-label="道具"]')).toBeNull();
+    const target = tile("IMG_0001.JPG");
+    if (!target) throw new Error("tile not found");
+    await act(async () => {
+      target.dispatchEvent(new MouseEvent("dblclick", { bubbles: true, cancelable: true }));
+    });
+    await settle();
+
+    const grid = container.querySelector('section[aria-label="ブラウザ写真編集"] .grid');
+    expect(grid?.className).toContain("lg:grid-cols-[14rem_minmax(0,1fr)_15.5rem_2.75rem]");
+    const rail = container.querySelector<HTMLElement>('nav[aria-label="道具"]');
+    if (!rail) throw new Error("tool rail not found");
+    // 右パネルの直後の兄弟（grid の 4 列目）
+    expect(rail.previousElementSibling?.matches('aside[aria-label="補正"]')).toBe(true);
+    // 切り抜き・背景除去を使えない写真は、プリセットと補正だけ
+    expect(Array.from(rail.querySelectorAll("button")).map((button) => button.getAttribute("aria-label"))).toEqual([
+      "プリセット",
+      "補正",
+    ]);
+    const panelHeading = () => container.querySelector('aside[aria-label="補正"] h2')?.textContent;
+    expect(panelHeading()).toBe("補正");
+    expect(byLabel("補正", rail)?.getAttribute("aria-pressed")).toBe("true");
+    expect(byLabel("プリセットの一覧")).not.toBeNull();
+    // 道具の切り替えのピルは無い
+    expect(container.querySelector('[aria-label="編集の道具"]')).toBeNull();
+
+    await click(byLabel("プリセット", rail));
+    expect(panelHeading()).toBe("プリセット");
+    expect(byLabel("プリセット", rail)?.getAttribute("aria-pressed")).toBe("true");
+    expect(byLabel("補正", rail)?.getAttribute("aria-pressed")).toBe("false");
+    expect(byLabel("プリセットの一覧")).toBeNull();
+    expect(container.querySelector('aside[aria-label="補正"] input[type="range"]')).toBeNull();
+
+    await click(byLabel("補正", rail));
+    expect(panelHeading()).toBe("補正");
+    expect(container.querySelector('aside[aria-label="補正"] input[type="range"]')).not.toBeNull();
+
+    // プリセットの行の一覧のボタンからも、プリセットの面を開く
+    await click(byLabel("プリセットの一覧"));
+    expect(panelHeading()).toBe("プリセット");
   });
 });
 

@@ -615,11 +615,13 @@
         "path": "packages/photo-editing/src/editor/browser-photo-editing-adjustments.tsx",
         "sha256": "2473ef7ca64f61e5ce7a72efb21f436f799f04a90a3a73b114cba15b7b5d23b1"
       },
-      "outputSha256": "afc2fd27845fff09433e228e2213ae7cd955b4e72fc1344d8ae4fd88465d43bb",
+      "outputSha256": "f6963a90d6dde84aba8428281c61cdb0ebb25bfb66c1c795fd0992c06f9177c6",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
-        "Issue #50のMac画面配置・表示色・パネル・版位置の変更。"
+        "Issue #50のMac画面配置・表示色・パネル・版位置の変更。",
+        "niho-photo#51 L2: 右端の道具の帯と補正パネルの並び（見出し行・自動 / 白黒のチップ・プリセットの行・面の切り替え）。",
+        "niho-photo#51の右パネルと道具帯を#35の共有UI統合後の最新mainへ合わせる。"
       ]
     },
     {
@@ -850,10 +852,12 @@
         "path": "packages/photo-editing/src/editor/browser-photo-editing-model.ts",
         "sha256": "98c0a3ee8ff431c0f6f0b63a9666b1e5f723e75c5b9e2d33f17199f40f69c41d"
       },
-      "outputSha256": "a591b853a8171497d4d6452d4aa40c8d49269781fd504f2f6d2d8369ccb01a4b",
+      "outputSha256": "b240b262ddde85feb234ad8ca95902cf383590521748f96aef479b886765f39f",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
-        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。"
+        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
+        "niho-photo#51 L2: 右端の道具の帯と補正パネルの並び（見出し行・自動 / 白黒のチップ・プリセットの行・面の切り替え）。",
+        "niho-photo#35の共有写真操作を#51の編集画面と統合する。"
       ]
     },
     {
@@ -878,10 +882,12 @@
         "path": "packages/photo-editing/src/editor/browser-photo-editing-presets.tsx",
         "sha256": "801648f9ced4999b839a58837c622df0af14464c73bcddd789450ece458e4763"
       },
-      "outputSha256": "52248dfb452e823ca8b6650628e82f8906cacb981742c7eb469300409319e29e",
+      "outputSha256": "4707b8dfa33d9b60539421ffdf5c3fd50aa0a98d76303efe41b7559f19ac571d",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
-        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。"
+        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
+        "niho-photo#51 L2: 右端の道具の帯と補正パネルの並び（見出し行・自動 / 白黒のチップ・プリセットの行・面の切り替え）。",
+        "niho-photo#51の道具帯から呼び出すプリセット面を#35統合後の編集画面へ合わせる。"
       ]
     },
     {
@@ -950,16 +956,19 @@
         "path": "packages/photo-editing/src/editor/browser-photo-editing-workbench-folders.test.tsx",
         "sha256": "2466702c26e46adadb579736eb8edef22cc420e4b0189283fd7d4b762a62869e"
       },
-      "outputSha256": "42b1032292e9e4a2790eac9b0628653f75be8f6008afd37bc116de07260bea4f",
+      "outputSha256": "674e8289141952be442fd954b80b2277bdb906dbb2e46955175458beb43db96a",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
         "任意の個別写真ソース契約と選んだ写真のUI、復元、取消、再試行、失敗時参照保持を追加",
-        "公開repoでの機能変更（#54）: 1 枚の面の下にフィルムストリップを置き、切り抜き・背景除去の間は ← → で写真を替えないようにした。",
-        "Issue #50のMac画面配置・表示色・パネル・版位置の変更。",
-        "PR #59 の main 競合解消と切替拒否時のフォーカス復元",
         "クラウド写真の共有接続有無と本番機能の無効状態を合成テストで確認。",
+        "Issue #50のMac画面配置・表示色・パネル・版位置の変更。",
         "クラウド共有・Issue #50の両接続口と表示を統合テスト。",
+        "niho-photo#51 L2: 右端の道具の帯と補正パネルの並び（見出し行・自動 / 白黒のチップ・プリセットの行・面の切り替え）。",
+        "niho-photo#35の共有接続テストと#51の道具帯テストを統合する。",
+        "niho-photo#35の共有接続テストと#51の道具帯テストを統合した書式調整。",
+        "公開repoでの機能変更（#54）: 1 枚の面の下にフィルムストリップを置き、切り抜き・背景除去の間は ← → で写真を替えないようにした。",
+        "PR #59 の main 競合解消と切替拒否時のフォーカス復元",
         "PR #59 のフィルムストリップと共有UIの統合"
       ]
     },
@@ -971,16 +980,18 @@
         "path": "packages/photo-editing/src/editor/browser-photo-editing-workbench.tsx",
         "sha256": "f655136ae0c985d793822ca8bef1668dba26ffd4bb8f13d2ba3d6c2ccb13ceb6"
       },
-      "outputSha256": "faf9ddffbd6e48c508b950e7c9347ed0139715f4e58714d29e7913d3be87aabd",
+      "outputSha256": "8cb590ea470a1eb6b7a268285aaeec1c9b8856c15e7baa29dd5fac52837a9c88",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
         "任意の個別写真ソース契約と選んだ写真のUI、復元、取消、再試行、失敗時参照保持を追加",
-        "公開repoでの機能変更（#54）: 1 枚の面の下にフィルムストリップを置き、切り抜き・背景除去の間は ← → で写真を替えないようにした。",
-        "Issue #50のMac画面配置・表示色・パネル・版位置の変更。",
-        "PR #59 の main 競合解消と切替拒否時のフォーカス復元",
         "クラウド共有UIを任意の信頼済みhost接続口へ限定し、Cameraのlocal-only境界を維持。",
+        "Issue #50のMac画面配置・表示色・パネル・版位置の変更。",
         "クラウド共有接続とIssue #50のMacレイアウトを統合。",
+        "niho-photo#51 L2: 右端の道具の帯と補正パネルの並び（見出し行・自動 / 白黒のチップ・プリセットの行・面の切り替え）。",
+        "niho-photo#35のクラウド共有UIと#51の右端道具帯を統合する。",
+        "公開repoでの機能変更（#54）: 1 枚の面の下にフィルムストリップを置き、切り抜き・背景除去の間は ← → で写真を替えないようにした。",
+        "PR #59 の main 競合解消と切替拒否時のフォーカス復元",
         "PR #59 のフィルムストリップと共有UIの統合"
       ]
     },
@@ -992,10 +1003,12 @@
         "path": "packages/photo-editing/src/editor/photo-editing-adjustment-controls-effects.test.tsx",
         "sha256": "6ec1a62922d7d058f4753e87cf5a9e32429b50a48ef61861b15c5a3894e7c891"
       },
-      "outputSha256": "28bf4ab3a696d2ab5a795804654140668fa43581650bfb145b690a7c0d35b602",
+      "outputSha256": "fa21d6bb82f49b9a7e34b5f1d980715588d68a96065f224910a5bb3e94222a99",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
-        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。"
+        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
+        "niho-photo#51 L2: 右端の道具の帯と補正パネルの並び（見出し行・自動 / 白黒のチップ・プリセットの行・面の切り替え）。",
+        "niho-photo#51の補正パネル変更を#35統合後の現像コントロールテストへ反映する。"
       ]
     },
     {
@@ -1045,10 +1058,12 @@
         "path": "packages/photo-editing/src/editor/photo-editing-adjustment-controls.tsx",
         "sha256": "f8950078f7342eb7a6c6f6dfb026828a94f33b8355427d1485ce18a6cbb73773"
       },
-      "outputSha256": "042c5d5de5d5734d7e813ebba8b678a95cbb6bff67650fa78e8c29e93a6069b2",
+      "outputSha256": "b53af13c502469311e9dff9a6798f6b19fec6f10438dec216014445eab336a3d",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
-        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。"
+        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
+        "niho-photo#51 L2: 右端の道具の帯と補正パネルの並び（見出し行・自動 / 白黒のチップ・プリセットの行・面の切り替え）。",
+        "niho-photo#51の補正パネル変更を#35統合後のコントロールへ反映する。"
       ]
     },
     {
@@ -1308,10 +1323,12 @@
         "path": "packages/photo-editing/src/editor/photo-editing-presets-panel.tsx",
         "sha256": "7f0524e5e1764f9274b39979d5887193faa96e37dcb6944fdd44d10a3e406541"
       },
-      "outputSha256": "8629df836c426ed0be926e9ea8111223cc78f1350e258e2645334453f589dc9e",
+      "outputSha256": "e5dd4a37698691cca4cb7a0e2d3ab641210ba38da3314fd5ded7f91928336d01",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
-        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。"
+        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
+        "niho-photo#51 L2: 右端の道具の帯と補正パネルの並び（見出し行・自動 / 白黒のチップ・プリセットの行・面の切り替え）。",
+        "niho-photo#51のプリセット面切替を#35統合後のパネルへ反映する。"
       ]
     },
     {
@@ -1899,11 +1916,13 @@
         "path": "packages/photo-editing/src/photo-editing-copy.ts",
         "sha256": "1208d4124dca26c951d73f6f84c560879e69beddfb9a16426e1a9dcc9fd30c27"
       },
-      "outputSha256": "53c20e88ac67e893a3384c658068e7ab309ef07d6afbf85a95aba669152698ca",
+      "outputSha256": "2fcd1aeb40f22a64ecbfeac66a545dfd4becb7177c1a57d97a816a13ed92d608",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
         "任意の個別写真ソース契約と選んだ写真のUI、復元、取消、再試行、失敗時参照保持を追加",
+        "niho-photo#51 L2: 右端の道具の帯と補正パネルの並び（見出し行・自動 / 白黒のチップ・プリセットの行・面の切り替え）。",
+        "niho-photo#35と#51の統合後に公開用の画面文言契約を更新する。",
         "公開repoでの機能変更（#54）: 1 枚の面の下にフィルムストリップを置き、切り抜き・背景除去の間は ← → で写真を替えないようにした。"
       ]
     },
@@ -4770,7 +4789,6 @@
       },
       "outputSha256": "ec8fa1d705894e9149b6b8befb85d6c84e9fafc9e13ca5df9a54c9018598aa5b",
       "modifications": [
-        "公開現像workspace向けにLibRaw由来値と参照を除去。独立測定DCP・合成テスト・metadata正規化・公開契約と書式へ調整。",
         "公開現像workspace向けにLibRaw由来値と参照を除去。独立測定DCP・合成テスト・metadata正規化・公開契約と書式へ調整。"
       ]
     },
@@ -4987,7 +5005,6 @@
       },
       "outputSha256": "e78769ca2bf9350310ec3f24b60e0f0bf7c8bea43973651b06ad2c97877239ca",
       "modifications": [
-        "公開現像workspace向けにLibRaw由来値と参照を除去。独立測定DCP・合成テスト・metadata正規化・公開契約と書式へ調整。",
         "公開現像workspace向けにLibRaw由来値と参照を除去。独立測定DCP・合成テスト・metadata正規化・公開契約と書式へ調整。"
       ]
     },
@@ -8838,16 +8855,6 @@
       "origin": "Docs共通の負例vector・reference model・mock検証にPhoto packageのre-export確認を加えた独立合成テスト。\n変更理由: Docs固定SHAの全operation HTTP method・path・request配置をPhotoでも検証する。"
     },
     {
-      "path": "packages/photo-editing/src/editor/browser-photo-editing-filmstrip.tsx",
-      "sha256": "b03f56b4aaec23c0871f4d0c4b1135f0c2193159e79dba3590802d1d5c69ff58",
-      "origin": "公開repoで新規作成（#54）: 1 枚の面の下のフィルムストリップ（今の一覧のサムネイルの帯）。既存の公開部品（PhotoEditingTileImage・niho-ui の cn）だけを使い、非公開ソース・実写真を含まない。\n変更理由: PR #59 の main 競合解消と切替拒否時のフォーカス復元"
-    },
-    {
-      "path": "packages/photo-editing/src/editor/browser-photo-editing-filmstrip.test.tsx",
-      "sha256": "b593231648719b6e3557f36fb11ba2555612d234c5694cca0ef9cdc381862b26",
-      "origin": "公開repoで新規作成（#54）: フィルムストリップの合成テスト（予約済み .test ドメインの URL と架空の写真名だけを使う）。\n変更理由: PR #59 の main 競合解消と切替拒否時のフォーカス復元"
-    },
-    {
       "path": "packages/photo-editing/src/cloud-sharing-controller.test.ts",
       "sha256": "363ee473313213fe2a44bb5734cb991ce08ea161951ea5ac57c0e29833f740e2",
       "origin": "Issue #8 の共有状態遷移、競合、同一キー再試行、権限エラーを合成入力で検証する独立新規テスト。\n変更理由: 応答保留中の取消と一覧照合の競合を合成テストへ追加。\n変更理由: 画面再表示後の同一キー再開と後続ページの失効を合成テストで検証。"
@@ -8871,6 +8878,36 @@
       "path": "packages/photo-editing/src/editor/browser-photo-cloud-share-sheet.tsx",
       "sha256": "da18c82c09268a8621e27c84d7fc956dbd2e5cbbb47e688956ef436708a26628",
       "origin": "Issue #8 の共有対象確認、リンク表示と失効、通信・権限・容量エラーUIを独立新規作成。\n変更理由: 共有URLは再表示できないため、作成成功時にコピー期限を明示。\n変更理由: 取消後の応答保留中も共有一覧の照合操作を提供する。\n変更理由: 共有一覧の後続ページを利用者が明示的に読み込めるUIを追加。"
+    },
+    {
+      "path": "packages/photo-editing/src/editor/browser-photo-editing-adjustments.test.tsx",
+      "sha256": "13d13d32908ac1ae814a6a4aa0abfae0bb350349c0d607d3da78053068a38939",
+      "origin": "niho-photo#51 のため新規作成。右端の道具の帯と右パネルの面の部品・test。"
+    },
+    {
+      "path": "packages/photo-editing/src/editor/browser-photo-editing-tool-rail.test.tsx",
+      "sha256": "54c4be84eb0c7d03fb1911047741a582e95fea6c8212254c5c740b61d71c3663",
+      "origin": "niho-photo#51 のため新規作成。右端の道具の帯と右パネルの面の部品・test。"
+    },
+    {
+      "path": "packages/photo-editing/src/editor/browser-photo-editing-tool-rail.tsx",
+      "sha256": "b8eea050f9e485169a1f225783a80f845a99b8f7de3c39dbffc75c52a3e57dfb",
+      "origin": "niho-photo#51 のため新規作成。右端の道具の帯と右パネルの面の部品・test。"
+    },
+    {
+      "path": "packages/photo-editing/src/editor/photo-editing-presets-panel-variants.test.tsx",
+      "sha256": "b044699a340836f23b7cc5d87ccf9d6a543ad09ff8f45df541e884c7fcc30160",
+      "origin": "niho-photo#51 のため新規作成。右端の道具の帯と右パネルの面の部品・test。"
+    },
+    {
+      "path": "packages/photo-editing/src/editor/browser-photo-editing-filmstrip.tsx",
+      "sha256": "b03f56b4aaec23c0871f4d0c4b1135f0c2193159e79dba3590802d1d5c69ff58",
+      "origin": "公開repoで新規作成（#54）: 1 枚の面の下のフィルムストリップ（今の一覧のサムネイルの帯）。既存の公開部品（PhotoEditingTileImage・niho-ui の cn）だけを使い、非公開ソース・実写真を含まない。\n変更理由: PR #59 の main 競合解消と切替拒否時のフォーカス復元"
+    },
+    {
+      "path": "packages/photo-editing/src/editor/browser-photo-editing-filmstrip.test.tsx",
+      "sha256": "b593231648719b6e3557f36fb11ba2555612d234c5694cca0ef9cdc381862b26",
+      "origin": "公開repoで新規作成（#54）: フィルムストリップの合成テスト（予約済み .test ドメインの URL と架空の写真名だけを使う）。\n変更理由: PR #59 の main 競合解消と切替拒否時のフォーカス復元"
     }
   ],
   "excludedSources": [

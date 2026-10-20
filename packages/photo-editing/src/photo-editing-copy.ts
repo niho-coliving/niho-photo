@@ -39,6 +39,8 @@ export const PHOTO_EDITING_AUTO_LABEL = "自動";
 export const PHOTO_EDITING_AUTO_TITLE = "明るさと色を自動で整える";
 /** 「自動」を当てられなかったときの状態欄の 1 行（エラー）。 */
 export const PHOTO_EDITING_AUTO_FAILED_TEXT = "自動補正ができませんでした";
+/** ブラウザ版の右パネルの補正の面で、見出しの下に並べるチップ（自動 / 白黒。niho-photo#51）の読み上げ名。 */
+export const PHOTO_EDITING_QUICK_ACTIONS_LABEL = "自動と白黒";
 
 /** 効果の群名の横の ⓘ（押すと群の先頭に項目ごとの説明を出す）。 */
 export const PHOTO_EDITING_EFFECTS_INFO_LABEL = "効果の説明";
@@ -93,6 +95,12 @@ export const BROWSER_PHOTO_EDITING_FILMSTRIP_LABEL = "この一覧の写真";
 export const PHOTO_EDITING_PRESETS_TITLE = "プリセット";
 /** プリセットを当てていない（一番上の行。選ばれているプリセットを外して、当てる前の補正に戻す）。 */
 export const PHOTO_EDITING_PRESET_NONE_LABEL = "なし";
+/** ブラウザ版の補正の面のプリセットの行（niho-photo#51）: 今のプリセット名のボタン（押すとプリセットの面を開く）の読み上げ名。 */
+export function photoEditingPresetCurrentLabel(presetName: string): string {
+  return `プリセット: ${presetName}`;
+}
+/** 同じ行の右端の、プリセットの面を開くボタンの読み上げ名。 */
+export const PHOTO_EDITING_PRESETS_OPEN_PANEL_LABEL = "プリセットの一覧";
 
 /**
  * スマホ（1024px 未満）の 1 枚の編集の層（NIHO Photo 段 1 F6c 移行元設計・モック `idea/mock/photo-editing-mobile-v1.html`）。
@@ -334,6 +342,11 @@ export const PHOTO_EDITING_TOOL_GROUP_LABEL = "編集の道具";
 export const PHOTO_EDITING_TOOL_ADJUST_LABEL = "補正";
 export const PHOTO_EDITING_TOOL_CROP_LABEL = "切り抜き";
 export const PHOTO_EDITING_TOOL_CUTOUT_LABEL = "背景除去";
+/**
+ * ブラウザ版の右端の道具の帯（niho-photo#51。Lightroom と同じく、押した道具で右パネルを丸ごと入れ替える）の読み上げ名。
+ * 道具の名前は プリセット（`PHOTO_EDITING_PRESETS_TITLE`）と上の 補正 / 切り抜き / 背景除去。
+ */
+export const PHOTO_EDITING_TOOL_RAIL_LABEL = "道具";
 
 /**
  * 背景除去の道具（NIHO camera だけ。`capabilities.cutout`。C4 移行元設計）。推論はこの Mac の中（Apple Vision）。
