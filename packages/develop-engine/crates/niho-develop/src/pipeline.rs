@@ -226,9 +226,7 @@ pub fn bake_color_cube_for(s: &DevelopSettings, dimension: usize, raw: bool) -> 
             prepared.apply(v)
         }
     };
-    if s.has_active_color_points() {
-        Cube::bake_float_with_dimension(dimension, &transform)
-    } else if !raw && s.engine == ENGINE_NIHO_10 {
+    if s.has_active_color_points() || (!raw && s.engine == ENGINE_NIHO_10) {
         // Hue restoration alone is insufficient if Q's entries are then
         // rounded to 8-bit: saturation -50 can still drift over two degrees.
         // Keep the new raster engine's color stage unquantized; legacy

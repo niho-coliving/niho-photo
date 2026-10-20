@@ -308,3 +308,37 @@ fn full_hue_sweep_stays_within_two_degrees() {
         metrics.max_delta_c
     );
 }
+
+#[test]
+#[ignore = "diagnostic 5-degree sweep through the final raster color cube"]
+fn final_raster_cube_sweep_stays_within_two_degrees() {
+    let mut maximum = 0.0_f64;
+    for band in std::iter::once(None).chain(HslBand::ALL.into_iter().map(Some)) {
+        for amount in [-50.0, 50.0] {
+            let mut value = settings(ENGINE_NIHO_10);
+            match band {
+                None => value.saturation = amount,
+                Some(band) => value.hsl.set(
+                    band,
+                    HslAdjustment {
+                        hue: 0.0,
+                        saturation: amount,
+                        luminance: 0.0,
+                    },
+                ),
+            }
+            let cube =
+                niho_develop::pipeline::bake_color_cube(&value, niho_develop::lut::CUBE_DIMENSION);
+            for (lightness, chroma) in [(0.45, 0.1), (0.65, 0.1), (0.8, 0.08)] {
+                for hue in (0..360).step_by(5) {
+                    if let Some(input) = oklch_to_prophoto(lightness, chroma, f64::from(hue)) {
+                        let output = cube.apply(input.map(|v| v as f32)).map(f64::from);
+                        maximum = maximum.max(hue_distance(output, input));
+                    }
+                }
+            }
+        }
+    }
+    eprintln!("final raster Q maximum hue drift={maximum:.6} degrees");
+    assert!(maximum <= 2.0, "final raster Q hue drift={maximum:.6}");
+}

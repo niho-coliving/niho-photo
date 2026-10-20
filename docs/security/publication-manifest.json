@@ -5619,7 +5619,7 @@
         "path": "packages/develop-engine/crates/niho-develop/src/pipeline.rs",
         "sha256": "d982d76cf1b5d34526f700e5edfcef00ae8647d22b845c0f7234ed340ba9d641"
       },
-      "outputSha256": "849340facb3c62727346550fa64e9098ad76321c49fb0b505e060ecbe7996f80",
+      "outputSha256": "c7bb833332c57aff3403efc60e48251c8f3ff9dc708437c2d3d542190ed9b885",
       "modifications": [
         "Issue #28の色相安定engine追加と互換回帰を反映。",
         "新しい色相保持エンジンと新旧バイナリの能力境界・数値回帰を整合。",
@@ -5627,7 +5627,8 @@
         "狭い選択範囲向けのexact描画と共有sampling段を追加",
         "sample cube選択を明示分岐へ整理",
         "新raster engineのQをfloatにして描画時の色相誤差を2度以内に保つ",
-        "描画精度・型・共有サンプル位置・キーボードの最終レビューを反映"
+        "描画精度・型・共有サンプル位置・キーボードの最終レビューを反映",
+        "float Q分岐を一本化"
       ]
     },
     {
@@ -8583,8 +8584,8 @@
     },
     {
       "path": "packages/develop-engine/crates/niho-develop/tests/color_probe.rs",
-      "sha256": "53085f24be01e322bfed6186a5053022ab3cb9a5fd5b69317b0973a3cb71b52e",
-      "origin": "Issue #28のため公開仕様だけから独立作成した合成Oklch色見本のRust回帰。実写真・非公開fixture・私有参照出力を含まない。\n変更理由: 旧式との差分L/Cと色相改善量を合成sRGB sweepへ記録。\n変更理由: 新しい色相保持エンジンと新旧バイナリの能力境界・数値回帰を整合。\n変更理由: Issue #30 Oklch色ミキサーとengine 10/11対応を反映\n変更理由: 補間後の色相ずれを回帰に追加\n変更理由: 描画精度・型・共有サンプル位置・キーボードの最終レビューを反映"
+      "sha256": "5e40d645e322d8b23a5e27b1965adfc5ff63ca02bf13bfe23b5e3dafc1d98ca2",
+      "origin": "Issue #28のため公開仕様だけから独立作成した合成Oklch色見本のRust回帰。実写真・非公開fixture・私有参照出力を含まない。\n変更理由: 旧式との差分L/Cと色相改善量を合成sRGB sweepへ記録。\n変更理由: 新しい色相保持エンジンと新旧バイナリの能力境界・数値回帰を整合。\n変更理由: Issue #30 Oklch色ミキサーとengine 10/11対応を反映\n変更理由: 補間後の色相ずれを回帰に追加\n変更理由: 描画精度・型・共有サンプル位置・キーボードの最終レビューを反映\n変更理由: 最終色テーブルの全色相sweepを追加"
     },
     {
       "path": "packages/photo-editing/src/fixtures/cutout-brush-parity.json",
