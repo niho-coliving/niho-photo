@@ -10,7 +10,7 @@
 
 ## 公開する範囲
 
-camera のローカル写真UIとRustホスト、desktop-photo、必要な共有テーマをallowlist移植する。アイコン5件と校正JSONは資産台帳のSHA・サイズ・由来・公開許可を照合する。校正JSONは desktop-photo/calibration へ配置し、未移行の develop-engine scope を作らない。NunitoはOFL本文と同梱し第三者ライセンスを明示する。
+camera のローカル写真UIとRustホスト、desktop-photo、必要な共有テーマをallowlist移植する。アイコン5件と校正JSONは資産台帳のSHA・サイズ・由来・公開許可を照合する。desktop-photo/calibrationへ移す校正JSON 8件はJSON内の参照先、署名関連情報、認証情報を監査し、内部パス・署名payload・認証情報がないことを確認した。カメラ生成の画像ファイル名とSHA-256は検証記録として残る。残り6件は確認待ちとして移植しない。未移行のdevelop-engine scopeを作らない。NunitoはOFL本文と同梱し第三者ライセンスを明示する。
 
 ログイン/OAuth/deep linkは #3、クラウド共有は #8、RAW/WASM/背景除去sidecar・モデルは #9。既存DCP8件はコピーせず、将来独立計測へ置換する。JPEG/PNGの端末内閲覧・元画像保存・プリセット管理はオフラインで動く。エンジンが必要な補正描画・RAW・背景除去は未導入を既存能力判定で示す。
 
