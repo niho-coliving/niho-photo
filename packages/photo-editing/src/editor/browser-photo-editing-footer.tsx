@@ -181,6 +181,8 @@ export function BrowserPhotoEditingFooter(props: {
   favorite?: BrowserPhotoFavoriteControl;
   /** PC の一覧で 1 枚を選んだときのアルバム操作 */
   albumAction?: { label: string; disabled: boolean; onClick: () => void };
+  /** Trusted host が明示的にクラウド共有を接続したときだけ出す。 */
+  shareAction?: { disabled: boolean; onClick: () => void };
   /** 「補正前」を出す（1 枚で補正の入力を開けている） */
   showCompare: boolean;
   compareDisabled: boolean;
@@ -244,6 +246,16 @@ export function BrowserPhotoEditingFooter(props: {
       {props.favorite ? (
         // PC だけ（「補正前」と同じ）。狭い幅はスマホの 1 枚の層の上の帯に置き、下段は状態欄の幅を残す
         <BrowserPhotoFavoriteButton {...props.favorite} className="hidden lg:flex" />
+      ) : null}
+      {props.shareAction ? (
+        <button
+          type="button"
+          disabled={props.shareAction.disabled}
+          onClick={props.shareAction.onClick}
+          className={cn(PHOTO_EDITING_SECONDARY_BUTTON_CLASS_NAME, "h-11")}
+        >
+          共有
+        </button>
       ) : null}
       {props.showCompare ? (
         <button

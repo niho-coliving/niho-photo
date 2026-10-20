@@ -751,7 +751,7 @@ export const BrowserPhotoEditingGrid = forwardRef<BrowserPhotoEditingGridHandle,
           // 一覧を下へ送っても上に残す（移行元設計）。上の余白（pt-2.5）の分も白で覆い、高さはボタン（32px）に合わせて固定する
           <div
             className={cn(
-              "sticky -top-2.5 z-10 -mt-2.5 mb-1.5 box-content flex h-8 shrink-0 items-center gap-3 bg-white pt-2.5 text-xs font-bold tabular-nums text-niho-text-muted",
+              "sticky -top-2.5 z-10 -mt-2.5 mb-1.5 box-content flex h-8 shrink-0 items-center gap-3 bg-[var(--photo-editing-surface,white)] pt-2.5 text-xs font-bold tabular-nums text-niho-text-muted",
               compact && "px-3.5",
             )}
           >

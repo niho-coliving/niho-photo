@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState, type MutableRefObject, type ReactElement } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type MutableRefObject, type ReactElement, type ReactNode } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { FolderOpen, Laptop, Plus, Trash2 } from "lucide-react";
 
@@ -82,6 +82,11 @@ import {
 } from "./browser-photo-editing-albums";
 import { BrowserPhotoEditingAdjustments } from "./browser-photo-editing-adjustments";
 import { BrowserPhotoEditingBulkMenu } from "./browser-photo-editing-bulk-menu";
+import {
+  BrowserPhotoCloudShareSheet,
+  type BrowserPhotoCloudSharingBinding,
+} from "./browser-photo-cloud-share-sheet";
+export type { BrowserPhotoCloudSharingBinding } from "./browser-photo-cloud-share-sheet";
 import type { BrowserPhotoFavoriteControl } from "./browser-photo-editing-favorite-button";
 import { BrowserPhotoListFilterControl } from "./browser-photo-editing-filter";
 import { BrowserPhotoEditingFolderTree } from "./browser-photo-editing-folder-tree";
@@ -249,6 +254,17 @@ export function BrowserPhotoEditingWorkbench(props: {
   articlePrepareForInsert?: MutableRefObject<((photoIds: readonly string[]) => Promise<BrowserPhotoPrepareForInsertResult>) | null>;
   /** 記事へ写真を入れる間は、同じ編集面から対象のクラウド写真を消せないようにする。 */
   disableCloudDelete?: boolean;
+  /** 公開クラウド共有のtrusted host接続口。省略時は共有操作を表示しない。Cameraはprivate integrationまで渡さない。 */
+  cloudSharing?: BrowserPhotoCloudSharingBinding;
+  /**
+   * 外枠の見た目。`card`（既定）は web の写真編集タブ（角丸の枠・影・画面の高さから引いた固定の高さ）。`fill` は NIHO photo
+   * （窓いっぱい。親の flex の高さに合わせ、枠と影を付けない。地は `--photo-editing-surface`。niho-photo#50）
+   */
+  appearance?: "card" | "fill";
+  /** PC の左の木を出さない（NIHO photo の header の「左のパネル」。狭い幅には影響しない） */
+  treeHidden?: boolean;
+  /** PC の左の木の底に出す 1 行（NIHO photo の「版」） */
+  treeFooter?: ReactNode;
 }) {
   const queryClient = useQueryClient();
   // 写真の出どころ（接続口 PhotoLibrary。web は拠点のクラウドの写真置き場、NIHO camera はこの Mac のフォルダ。移行元設計）
@@ -335,6 +351,7 @@ export function BrowserPhotoEditingWorkbench(props: {
   const saveGenerationRef = useRef(0);
   const [status, setStatus] = useState<FooterStatus | null>(null);
   const [exportSheetOpen, setExportSheetOpen] = useState(false);
+  const [cloudShareSheetOpen, setCloudShareSheetOpen] = useState(false);
   const batchExportFocusPendingRef = useRef(false);
   const [wide, setWide] = useState(isWideWindow);
   // アプリの都合
@@ -1500,7 +1517,10 @@ export function BrowserPhotoEditingWorkbench(props: {
     <section
       ref={rootRef}
       aria-label="ブラウザ写真編集"
-      className="overflow-hidden rounded-2xl border border-white/70 bg-white shadow-sm"
+      className={cn(
+        "overflow-hidden bg-[var(--photo-editing-surface,white)]",
+        props.appearance === "fill" ? "flex min-h-0 flex-1 flex-col" : "rounded-2xl border border-white/70 shadow-sm",
+      )}
       // スマホの 1 枚の編集の層を出している間、後ろの面は操作も読み上げもさせない（層は document.body に出る）
       inert={inertAttribute(mobileEditorItem !== null)}
       {...add.fileDrop.zoneProps}
@@ -1534,12 +1554,21 @@ export function BrowserPhotoEditingWorkbench(props: {
       )}
       <div
         className={cn(
-          "grid min-h-[520px] grid-cols-1 grid-rows-[minmax(0,1fr)_auto] lg:h-[calc(100dvh-12rem)] lg:min-h-[620px] lg:grid-rows-[minmax(0,1fr)_3.5rem]",
-          showAdjustments ? "lg:grid-cols-[14rem_minmax(0,1fr)_19rem]" : "lg:grid-cols-[14rem_minmax(0,1fr)]",
+          "grid grid-cols-1 grid-rows-[minmax(0,1fr)_auto] lg:grid-rows-[minmax(0,1fr)_3.5rem]",
+          // web の写真編集タブは画面の高さから引いた固定の高さ。NIHO photo（fill）は親の flex に合わせて窓の底まで
+          props.appearance === "fill" ? "min-h-0 flex-1" : "min-h-[520px] lg:h-[calc(100dvh-12rem)] lg:min-h-[620px]",
+          props.treeHidden
+            ? showAdjustments
+              ? "lg:grid-cols-[minmax(0,1fr)_19rem]"
+              : "lg:grid-cols-[minmax(0,1fr)]"
+            : showAdjustments
+              ? "lg:grid-cols-[14rem_minmax(0,1fr)_19rem]"
+              : "lg:grid-cols-[14rem_minmax(0,1fr)]",
         )}
       >
-        {folderMode ? (
+        {props.treeHidden ? null : folderMode ? (
           <BrowserPhotoEditingFolderTree
+            footer={props.treeFooter}
             folders={folders.tree}
             error={folders.error}
             selectedFolderId={folders.selectedFolderId}
@@ -1556,6 +1585,7 @@ export function BrowserPhotoEditingWorkbench(props: {
           />
         ) : (
           <BrowserPhotoEditingTree
+            footer={props.treeFooter}
             place={place}
             counts={treeCounts}
             albums={albumLibrary.albums}
@@ -1569,7 +1599,7 @@ export function BrowserPhotoEditingWorkbench(props: {
           />
         )}
 
-        <div className="relative min-h-0 bg-white">
+        <div className="relative min-h-0 bg-[var(--photo-editing-surface,white)]">
           {viewMode === "grid" ? (
             <BrowserPhotoEditingGrid
               ref={gridRef}
@@ -1961,6 +1991,16 @@ export function BrowserPhotoEditingWorkbench(props: {
             disabled: !props.canEdit || batchBusy || operation !== null,
             onClick: () => currentAlbumId ? void removeSelectedFromCurrentAlbum() : setAlbumAddOpen(true),
           } : undefined}
+          shareAction={props.cloudSharing && library.place === "cloud" ? {
+            disabled:
+              props.cloudSharing.access === "unavailable" ||
+              selectedItem === null ||
+              selectedItem.adding ||
+              selection.count > 1 ||
+              batchBusy ||
+              operation !== null,
+            onClick: () => setCloudShareSheetOpen(true),
+          } : undefined}
           showCompare={editable}
           // 切り抜き・背景除去の間は補正前を見せない（押せない表示）
           compareDisabled={controlsDisabled || cropping || cutoutActive}
@@ -2017,6 +2057,13 @@ export function BrowserPhotoEditingWorkbench(props: {
         onAdd={addSelectedToAlbum}
         onCreate={albumLibrary.createAlbum}
       />
+      {cloudShareSheetOpen && props.cloudSharing && selectedItem && !selectedItem.adding ? (
+        <BrowserPhotoCloudShareSheet
+          binding={props.cloudSharing}
+          photoId={selectedItem.photo.id}
+          onClose={() => setCloudShareSheetOpen(false)}
+        />
+      ) : null}
     </section>
   );
 }

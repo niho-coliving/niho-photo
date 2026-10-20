@@ -1,6 +1,6 @@
 # NIHO photo
 
-NIHO photo の**原則公開（default-public）**なクライアント開発SSOTです。現在はMacアプリ、写真編集のTypeScript/React共通パッケージと共有UIを含みます。RAW現像、OAuth/PKCEログイン、クラウド共有、公式build/release手順は後続Issueで移行します。公開ソース・API contract・アプリバイナリは誰でも解析・改変できる前提です。
+NIHO photo の**原則公開（default-public）**なクライアント開発SSOTです。現在はMacアプリ、RAW現像、OAuth/PKCEログイン、写真編集のTypeScript/React共通パッケージ、クラウド共有の公開契約と任意UIを含みます。実API接続・本番有効化・公式build/release手順は後続Issueで扱います。公開ソース・API contract・アプリバイナリは誰でも解析・改変できる前提です。
 
 認証・認可の最終判定、API・DB・object storage、実ユーザーデータ、署名秘密鍵・公証資格情報・本番配布権限は非公開の `niho-app` と実行環境が管理します。公開クライアントの自己申告や画面上の制限をサーバーの認可に使いません。ここにあるコードやCIの成功だけで本番配布やクラウドへのアクセス権は得られません。
 
@@ -42,6 +42,6 @@ gitleaks dir --redact --no-banner .
 
 秘密情報、実利用データ、内部 URL、未修正の脆弱性を公開 Issue・PR・CI ログへ載せないでください。脆弱性は [SECURITY.md](SECURITY.md) の非公開窓口（[GitHubの非公開報告窓口](https://github.com/niho-coliving/niho-photo/security/advisories)）から報告してください。非公開移行元と公開Issueの対応は [source-map.md](docs/migration/source-map.md) に記録します。
 
-Docs/Photo共通の認証・クラウド安全契約は [Photo #8](https://github.com/niho-coliving/niho-photo/issues/8) と [Docs #15](https://github.com/niho-coliving/niho-docs/issues/15) に追跡します。両クライアントは同じ版の公開contract・mock・security testを使い、片方だけの境界変更を避けます。
+Docs/Photo共通の認証・クラウド安全契約は [cloud contract v1](docs/security/cloud-contract-v1.md) と [Photo #8](https://github.com/niho-coliving/niho-photo/issues/8)・[Docs #15](https://github.com/niho-coliving/niho-docs/issues/15) に追跡します。Photo編集面への接続条件とmockは [Photo共有クライアント境界](docs/security/photo-cloud-sharing-client.md) を参照してください。両クライアントは同じ版の公開contract・mock・security testを使い、片方だけの境界変更を避けます。
 
 RAW現像workspaceは [packages/develop-engine](packages/develop-engine/README.md) として移植した。所有モデル・独立DCP・metadataを除いた実RW2を含み、由来と限定した精度は [RAW移植の記録](docs/migration/raw-engine.md) に記載する。
