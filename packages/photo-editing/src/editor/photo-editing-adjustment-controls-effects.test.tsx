@@ -26,7 +26,12 @@ let container: HTMLDivElement;
 let root: Root;
 let changes: { settings: PhotoEditingSettings; phase: PhotoEditingSliderPhase }[];
 
-function Harness(props: { initial: PhotoEditingSettings | null; visibleKeys?: PhotoEditingControlKey[]; disabled?: boolean }) {
+function Harness(props: {
+  initial: PhotoEditingSettings | null;
+  visibleKeys?: PhotoEditingControlKey[];
+  disabled?: boolean;
+  grayscaleToggle?: "group" | "hidden";
+}) {
   const [settings, setSettings] = useState<PhotoEditingSettings | null>(props.initial);
   const settingsRef = useRef<PhotoEditingSettings>(props.initial ?? {});
   return (
@@ -35,6 +40,7 @@ function Harness(props: { initial: PhotoEditingSettings | null; visibleKeys?: Ph
       photo={{ asShotWhiteBalance: null }}
       disabled={props.disabled ?? false}
       visibleKeys={props.visibleKeys}
+      grayscaleToggle={props.grayscaleToggle}
       onSettingsChange={(update, phase) => {
         const next = update(settingsRef.current);
         settingsRef.current = next;
@@ -233,6 +239,27 @@ describe("白黒の切り替え", () => {
     expect(toggle?.disabled).toBe(true);
     if (toggle) await click(toggle);
     expect(changes).toEqual([]);
+  });
+
+  it("grayscaleToggle: hidden は群の中に切り替えを描かない（ブラウザ版のチップ。niho-photo#51）が、白黒の間は彩度を押せないまま", async () => {
+    await render({ initial: NEUTRAL, visibleKeys: EFFECT_KEYS, grayscaleToggle: "hidden" });
+    expect(grayscaleSwitch()).toBeNull();
+    expect(groupBodyItems("カラー")).toEqual(["色温度", "色かぶり補正", "自然な彩度", "彩度"]);
+    expect(slider("彩度").disabled).toBe(false);
+
+    const saved: DevelopSettings = { ...NEUTRAL, vibrance: 20, saturation: -10, grayscale: true };
+    await act(async () => root.unmount());
+    root = createRoot(container);
+    await render({ initial: saved, visibleKeys: EFFECT_KEYS, grayscaleToggle: "hidden" });
+    expect(grayscaleSwitch()).toBeNull();
+    expect(slider("自然な彩度").disabled).toBe(true);
+    expect(slider("彩度").disabled).toBe(true);
+    expect(slider("色温度").disabled).toBe(false);
+  });
+
+  it("grayscaleToggle を省くか group なら、今までどおりカラーの先頭に切り替えを描く", async () => {
+    await render({ initial: NEUTRAL, visibleKeys: EFFECT_KEYS, grayscaleToggle: "group" });
+    expect(groupBodyItems("カラー")).toEqual(["白黒", "色温度", "色かぶり補正", "自然な彩度", "彩度"]);
   });
 });
 
