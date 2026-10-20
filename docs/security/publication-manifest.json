@@ -988,10 +988,11 @@
         "path": "packages/photo-editing/src/editor/photo-editing-adjustment-controls-f1.test.tsx",
         "sha256": "31c60f83f5622ae4d2ea25b4a7bb8a584309c44d50508b2f47294613d555b7d2"
       },
-      "outputSha256": "44ef134015d4861687ffd2af7aa689ca4c8b2f5e2dc937dac5af7c08e03c51e5",
+      "outputSha256": "5bef1ab9d7751cd13c469c66d1a281a1c406d384a16ec507d8351f46ccb2a9f8",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
-        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。"
+        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
+        "公開repoでの機能変更（#55）: スライダーを Lightroom の見た目（細い線・白い丸・色温度 / 色かぶり補正の帯・変更ありの太字）にした。"
       ]
     },
     {
@@ -1027,10 +1028,11 @@
         "path": "packages/photo-editing/src/editor/photo-editing-adjustment-controls.tsx",
         "sha256": "f8950078f7342eb7a6c6f6dfb026828a94f33b8355427d1485ce18a6cbb73773"
       },
-      "outputSha256": "042c5d5de5d5734d7e813ebba8b678a95cbb6bff67650fa78e8c29e93a6069b2",
+      "outputSha256": "3b3bcf1e833ad30f772580249a12ae0a8595542d9e69c758d8f197a26bc5de5c",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
-        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。"
+        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
+        "公開repoでの機能変更（#55）: スライダーを Lightroom の見た目（細い線・白い丸・色温度 / 色かぶり補正の帯・変更ありの太字）にした。"
       ]
     },
     {
@@ -1329,10 +1331,11 @@
         "path": "packages/photo-editing/src/editor/photo-editing-slider.tsx",
         "sha256": "af79b8b767d17781a3371b87d40c6214eaac5e45a06709964252103f1ee9dfd4"
       },
-      "outputSha256": "faeec15e2357af28a00524ec5c735c4c925f4ecabdf908ad1b8ed4faef42b1ff",
+      "outputSha256": "e9ea9e7cab07c969db5f34ce062779a898d7345dbffd4d3e59c98f0492ae07dc",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
-        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。"
+        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
+        "公開repoでの機能変更（#55）: スライダーを Lightroom の見た目（細い線・白い丸・色温度 / 色かぶり補正の帯・変更ありの太字）にした。"
       ]
     },
     {
