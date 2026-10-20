@@ -64,6 +64,7 @@ describe("useGuardedCloudBinding", () => {
     expect(container.querySelector('[data-testid="owner"]')?.textContent).toBe("owner-b");
     expect(container.querySelector('[data-testid="failed"]')?.textContent).toBe("false");
     expect(onOwnerChange).toHaveBeenCalledTimes(1);
+    expect(guard).toHaveBeenCalledWith({ release: false });
   });
 
   it("refreshes a binding for the same owner without leaving the active edit session", async () => {
@@ -75,5 +76,20 @@ describe("useGuardedCloudBinding", () => {
     expect(container.querySelector('[data-testid="owner"]')?.textContent).toBe("owner-a");
     expect(container.querySelector('[data-testid="marker"]')?.textContent).toBe("refreshed");
     expect(guard).not.toHaveBeenCalled();
+  });
+
+  it("does not report a failed transition if the incoming binding returns to the current owner", async () => {
+    let finishGuard: (canLeave: boolean) => void = () => undefined;
+    const guard = vi.fn(() => new Promise<boolean>((resolve) => { finishGuard = resolve; }));
+    const { Harness, onOwnerChange } = setup(guard);
+    await act(async () => root.render(<Harness incoming={{ actorId: "owner-a", marker: "old" }} />));
+    await act(async () => root.render(<Harness incoming={{ actorId: "owner-b", marker: "pending" }} />));
+    await act(async () => root.render(<Harness incoming={{ actorId: "owner-a", marker: "current" }} />));
+    await act(async () => finishGuard(false));
+
+    expect(container.querySelector('[data-testid="owner"]')?.textContent).toBe("owner-a");
+    expect(container.querySelector('[data-testid="marker"]')?.textContent).toBe("current");
+    expect(container.querySelector('[data-testid="failed"]')?.textContent).toBe("false");
+    expect(onOwnerChange).not.toHaveBeenCalled();
   });
 });

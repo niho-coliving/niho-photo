@@ -42,12 +42,20 @@ export function useGuardedCloudBinding<T extends CloudBindingOwner>(params: {
     switchingRef.current = true;
     setSwitching(true);
     try {
-      if (leaveGuardRef.current && !(await leaveGuardRef.current())) {
-        setFailed(true);
+      if (leaveGuardRef.current && !(await leaveGuardRef.current({ release: false }))) {
+        setFailed(!sameCloudOwner(bindingRef.current, incomingRef.current));
         return;
       }
 
       const latest = incomingRef.current;
+      if (sameCloudOwner(bindingRef.current, latest)) {
+        if (bindingRef.current !== latest) {
+          bindingRef.current = latest;
+          setBinding(latest);
+        }
+        setFailed(false);
+        return;
+      }
       bindingRef.current = latest;
       setBinding(latest);
       onOwnerChange();
