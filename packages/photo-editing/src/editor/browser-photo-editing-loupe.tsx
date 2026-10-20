@@ -135,10 +135,12 @@ export function BrowserPhotoEditingLoupe(props: {
           } else if (["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"].includes(event.key)) {
             event.preventDefault();
             event.stopPropagation();
-            const step = event.shiftKey ? 0.05 : 0.01;
+            const pixels = event.shiftKey ? 10 : 1;
+            const stepX = pixels / Math.max(1, event.currentTarget.width);
+            const stepY = pixels / Math.max(1, event.currentTarget.height);
             colorPicker.onMove({
-              x: Math.max(0, Math.min(1, colorPicker.position.x + (event.key === "ArrowRight" ? step : event.key === "ArrowLeft" ? -step : 0))),
-              y: Math.max(0, Math.min(1, colorPicker.position.y + (event.key === "ArrowDown" ? step : event.key === "ArrowUp" ? -step : 0))),
+              x: Math.max(0, Math.min(1, colorPicker.position.x + (event.key === "ArrowRight" ? stepX : event.key === "ArrowLeft" ? -stepX : 0))),
+              y: Math.max(0, Math.min(1, colorPicker.position.y + (event.key === "ArrowDown" ? stepY : event.key === "ArrowUp" ? -stepY : 0))),
             });
           }
         },

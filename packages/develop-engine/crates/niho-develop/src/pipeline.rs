@@ -228,6 +228,12 @@ pub fn bake_color_cube_for(s: &DevelopSettings, dimension: usize, raw: bool) -> 
     };
     if s.has_active_color_points() {
         Cube::bake_float_with_dimension(dimension, &transform)
+    } else if !raw && s.engine == ENGINE_NIHO_10 {
+        // Hue restoration alone is insufficient if Q's entries are then
+        // rounded to 8-bit: saturation -50 can still drift over two degrees.
+        // Keep the new raster engine's color stage unquantized; legacy
+        // engines retain their original cube precision.
+        Cube::bake_float_with_dimension(dimension, &transform)
     } else if raw
         && matches!(
             s.engine.as_str(),
@@ -2173,20 +2179,30 @@ pub fn raster_pointwise(v: [f64; 3], s: &DevelopSettings) -> [f64; 3] {
     PreparedColorOps::new(s).apply(v)
 }
 
+#[derive(Clone, Copy)]
+pub(crate) struct ColorSampleLocation {
+    pub working_index: usize,
+    pub output_size: (usize, usize),
+    pub output_index: usize,
+}
+
 /// Samples the normal raster path at Stage Q immediately before independent
 /// color points and Color Grading. `index` addresses the same working image
 /// and local-pass plane used by the preceding Session render.
 pub(crate) fn sample_raster_before_color_points(
     px: [f32; 3],
-    index: usize,
+    location: ColorSampleLocation,
     input_is_prophoto: bool,
     s: &DevelopSettings,
     cubes: Option<&SettingsCubes>,
     local: Option<&LocalPass>,
     effects_cache: &mut EffectsCache,
-    output_size: (usize, usize),
-    output_index: usize,
 ) -> [f64; 3] {
+    let ColorSampleLocation {
+        working_index: index,
+        output_size,
+        output_index,
+    } = location;
     let input = if input_is_prophoto {
         Some(&PROPHOTO_TO_SRGB_F32)
     } else {
@@ -2240,15 +2256,18 @@ pub(crate) fn sample_raster_before_color_points(
 
 pub(crate) fn sample_raw_before_color_points(
     px: [f32; 3],
-    index: usize,
+    location: ColorSampleLocation,
     meta: &WorkingCopyMeta,
     s: &DevelopSettings,
     cubes: Option<&SettingsCubes>,
     local: Option<&LocalPass>,
     effects_cache: &mut EffectsCache,
-    output_size: (usize, usize),
-    output_index: usize,
 ) -> [f64; 3] {
+    let ColorSampleLocation {
+        working_index: index,
+        output_size,
+        output_index,
+    } = location;
     let WorkingCopyMeta::Raw {
         baseline_ev,
         as_shot_white,

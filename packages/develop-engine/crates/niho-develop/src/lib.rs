@@ -797,42 +797,41 @@ impl Session {
         let offset = index * 3;
         let data = &source.image().data;
         let px = [data[offset], data[offset + 1], data[offset + 2]];
+        let location = pipeline::ColorSampleLocation {
+            working_index: index,
+            output_size: (output.width, output.height),
+            output_index,
+        };
         let sampled = match source {
             SessionSource::Raster(_) => pipeline::sample_raster_before_color_points(
                 px,
-                index,
+                location,
                 false,
                 render_settings,
                 self.cubes.as_ref(),
                 self.local.as_ref(),
                 &mut self.effects,
-                (output.width, output.height),
-                output_index,
             ),
             SessionSource::WorkingCopy {
                 meta: WorkingCopyMeta::Raster { .. },
                 ..
             } => pipeline::sample_raster_before_color_points(
                 px,
-                index,
+                location,
                 true,
                 render_settings,
                 self.cubes.as_ref(),
                 self.local.as_ref(),
                 &mut self.effects,
-                (output.width, output.height),
-                output_index,
             ),
             SessionSource::WorkingCopy { meta, .. } => pipeline::sample_raw_before_color_points(
                 px,
-                index,
+                location,
                 meta,
                 render_settings,
                 self.cubes.as_ref(),
                 self.local.as_ref(),
                 &mut self.effects,
-                (output.width, output.height),
-                output_index,
             ),
         };
         if !sampled.iter().all(|value| value.is_finite())

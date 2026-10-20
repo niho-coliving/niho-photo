@@ -67,6 +67,23 @@ fn assert_finite(value: Rgb) {
     assert!(value.iter().all(|channel| channel.is_finite()), "{value:?}");
 }
 
+#[test]
+fn raster_color_cube_preserves_hue_after_interpolation() {
+    for (input_hue, amount) in [(250.0, -50.0), (65.0, 50.0)] {
+        let input = oklch_to_prophoto(0.45, 0.1, input_hue).unwrap();
+        let mut value = settings(ENGINE_NIHO_10);
+        value.saturation = amount;
+        let cube =
+            niho_develop::pipeline::bake_color_cube(&value, niho_develop::lut::CUBE_DIMENSION);
+        let output = cube.apply(input.map(|v| v as f32)).map(f64::from);
+        assert!(
+            hue_distance(output, input) <= 2.0,
+            "interpolated Q drift: hue={input_hue}, saturation={amount}, drift={}",
+            hue_distance(output, input)
+        );
+    }
+}
+
 #[derive(Default)]
 struct ProbeMetrics {
     max_hue_drift: f64,

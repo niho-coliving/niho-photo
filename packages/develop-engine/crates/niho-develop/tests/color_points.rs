@@ -159,7 +159,11 @@ fn skin_and_sky_hue_move_without_l_or_c_drift_in_exact_and_final_cube_paths() {
             settings.engine = "niho-10".into();
             settings.look = "niho-standard-1".into();
             settings.color_points = vec![p];
-            let sampled = prophoto_to_oklch(bake_color_cube(&settings, 64).apply(input));
+            let sampled = prophoto_to_oklch(
+                bake_color_cube(&settings, 64)
+                    .apply(input.map(|value| value as f32))
+                    .map(f64::from),
+            );
             assert!(
                 (sampled[0] - exact[0]).abs() <= 0.005,
                 "{target:?} {sampled:?} {exact:?}"
@@ -433,8 +437,8 @@ fn independent_axes_neutral_wrap_wide_gamut_and_overlap_are_safe() {
     zero_settings.v = 4;
     zero_settings.color_points = vec![zero];
     assert_eq!(
-        bake_color_cube(&neutral, 16).apply(input),
-        bake_color_cube(&zero_settings, 16).apply(input)
+        bake_color_cube(&neutral, 16).apply(input.map(|value| value as f32)),
+        bake_color_cube(&zero_settings, 16).apply(input.map(|value| value as f32))
     );
 }
 

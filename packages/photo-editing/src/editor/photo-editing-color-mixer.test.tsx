@@ -184,11 +184,18 @@ describe("PhotoEditingColorMixer desktop/mobile common UI", () => {
     }
     act(() => root.render(<PickerHarness />));
     const canvas = container.querySelector("canvas");
+    if (!canvas) throw new Error("picker canvas missing");
+    canvas.width = 1000;
+    canvas.height = 500;
     act(() => canvas?.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowRight", bubbles: true })));
+    expect(moved.x).toBeCloseTo(0.501);
+    act(() => root.render(<PickerHarness />));
+    act(() => canvas.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowDown", shiftKey: true, bubbles: true })));
+    expect(moved.y).toBeCloseTo(0.52);
     act(() => canvas?.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true })));
     act(() => canvas?.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true })));
     expect(picked).toBe(1);
     expect(cancelled).toBe(1);
-    expect(moved.x).toBeCloseTo(0.51);
+    expect(moved.x).toBeCloseTo(0.501);
   });
 });
