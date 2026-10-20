@@ -59,6 +59,7 @@ def main():
         env = {key: value for key, value in os.environ.items()
                if not key.startswith(("APPLE_", "TAURI_SIGNING_", "NIHO_FIREBASE_", "NIHO_ACCOUNT_", "NIHO_CAMERA_E2E_"))}
         env.update(NIHO_CAMERA_E2E_SCRIPT=str(script), NIHO_CAMERA_E2E_REPORT=str(report),
+                   NIHO_CAMERA_E2E_TRACE=str(work / "trace.log"),
                    NIHO_CAMERA_E2E_WINDOW="visible", NIHO_CAMERA_E2E_PICK_PHOTOS=str(source),
                    NIHO_APPLE_RAW_LINEAR_PATH=runtime["apple"], NIHO_DEVELOP_RENDER_PATH=runtime["render"],
                    NIHO_DEVELOP_CALIBRATION_DIR=runtime["calibration"], NIHO_CAMERA_SIGNED_RAW="1")

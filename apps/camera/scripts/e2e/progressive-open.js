@@ -61,6 +61,7 @@
   const report = (value) => { location.href = `https://niho-e2e.invalid/report?data=${encodeURIComponent(JSON.stringify(value))}`; };
   let stage = "boot";
   const observations = {};
+  setInterval(() => { location.href = `https://niho-e2e.invalid/trace?step=${encodeURIComponent(stage)}`; }, 2000);
   try {
     history.replaceState(null, "", "?photoDevelopPerf=1");
     localStorage.clear();

@@ -8631,13 +8631,13 @@
     },
     {
       "path": "apps/camera/scripts/e2e/progressive-open.js",
-      "sha256": "1cc7cd93408776711c7dea600eff48b13155bd10272839d8115960acbcc16936",
-      "origin": "Issue #13のため独立作成した実UI検証probe。専用e2e bundleだけを操作し、実画像・元の名前・path・画像hashを公開出力しない。"
+      "sha256": "db54c98900a0e88503ae40dda1a2f95aba1c721d67f96db4656130619b189c73",
+      "origin": "Issue #13のため独立作成した実UI検証probe。専用e2e bundleだけを操作し、実画像・元の名前・path・画像hashを公開出力しない。\n変更理由: 画像情報を含まないE2E待機段階traceを追加。"
     },
     {
       "path": "apps/camera/scripts/measure-progressive-open.mjs",
-      "sha256": "a0967123303356338f8d132467048951f44fbdf0ef5e53d2860f4ba977a2784a",
-      "origin": "Issue #13のため独立作成。外から渡した実RAW pathを出力せず、case label、cold/warm条件、許可した区間時間だけを集計する公開ハーネス。実画像・原本名・個人path・画像由来hashを出力しない。"
+      "sha256": "189ccf7b8e2a7fd02d2aaae5292fba8116f60cafd6463421036c2ca0be035f3e",
+      "origin": "Issue #13のため独立作成。外から渡した実RAW pathを出力せず、case label、cold/warm条件、許可した区間時間だけを集計する公開ハーネス。実画像・原本名・個人path・画像由来hashを出力しない。\n変更理由: 計測失敗時は非公開のprobe診断を保持して再現調査可能にする。"
     },
     {
       "path": "apps/camera/scripts/measure-progressive-open.test.mjs",
@@ -8646,8 +8646,8 @@
     },
     {
       "path": "apps/camera/scripts/probe-progressive-open.py",
-      "sha256": "76ffe67de6650992ca8932f31169aca94e578d2f7c7f9daf36d4c11d3c5f4f93",
-      "origin": "Issue #13のため独立作成した実UI検証probe。専用e2e bundleだけを操作し、実画像・元の名前・path・画像hashを公開出力しない。"
+      "sha256": "d607004b288ca1ffb14c25a7f7c2ae4283f0a874d975addf9270e919ace4efb7",
+      "origin": "Issue #13のため独立作成した実UI検証probe。専用e2e bundleだけを操作し、実画像・元の名前・path・画像hashを公開出力しない。\n変更理由: UIの待機段階だけを非公開traceへ残す。"
     },
     {
       "path": "apps/camera/src-tauri/src/account.rs",

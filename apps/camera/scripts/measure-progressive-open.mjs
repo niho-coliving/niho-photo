@@ -127,6 +127,7 @@ function summarize(samples) {
 const options = parseArguments(process.argv.slice(2));
 const root = await mkdtemp(join(tmpdir(), "niho-progressive-open-"));
 const measurements = [];
+let completed = false;
 try {
   for (const testCase of options.cases) {
     for (const condition of ["cold", "warm"]) {
@@ -153,6 +154,7 @@ try {
     }
   }
   process.stdout.write(`${JSON.stringify({ schemaVersion: 1, measurements }, null, 2)}\n`);
+  completed = true;
 } finally {
-  await rm(root, { recursive: true, force: true });
+  if (completed) await rm(root, { recursive: true, force: true });
 }
