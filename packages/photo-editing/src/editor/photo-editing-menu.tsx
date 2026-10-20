@@ -34,6 +34,11 @@ export type PhotoEditingMenuItem = {
   /** キーの近道（項目の右に薄く出す。`aria` は `aria-keyshortcuts` の書き方。`hint` のある項目には出さない） */
   shortcut?: { text: string; aria: string };
   /**
+   * 1 つを選ぶメニュー（切り抜きの縦横比）の項目。指定した項目は `menuitemradio` にし、選んでいる項目の右にチェックの印を出す
+   * （省くと今までどおりの `menuitem`）
+   */
+  checked?: boolean;
+  /**
    * 押せない理由の 1 行（項目のすぐ下に、薄くせずに読める濃さで出す。読み上げは `aria-describedby`）。`hint` より長い文
    * （「先に 1 枚の補正をコピーしてください」。F5a-2 移行元設計）
    */
@@ -61,7 +66,9 @@ const MENU_NAVIGATION_KEYS = new Set(["ArrowDown", "ArrowUp", "Home", "End"]);
 function moveMenuFocus(event: ReactKeyboardEvent<HTMLDivElement>): void {
   if (!MENU_NAVIGATION_KEYS.has(event.key)) return;
   const items = Array.from(
-    event.currentTarget.querySelectorAll<HTMLButtonElement>('[role="menuitem"]:not(:disabled)'),
+    event.currentTarget.querySelectorAll<HTMLButtonElement>(
+      '[role="menuitem"]:not(:disabled), [role="menuitemradio"]:not(:disabled)',
+    ),
   );
   if (items.length === 0) return;
   event.preventDefault();
@@ -113,7 +120,8 @@ export function PhotoEditingMenu(props: {
       <Fragment key={item.key}>
         <button
           type="button"
-          role="menuitem"
+          role={item.checked === undefined ? "menuitem" : "menuitemradio"}
+          aria-checked={item.checked}
           disabled={item.disabled}
           aria-label={item.hint ? `${item.label}（${item.hint}）` : undefined}
           aria-describedby={reasonId}
@@ -162,6 +170,8 @@ export function PhotoEditingMenu(props: {
             <span aria-hidden className="ml-auto shrink-0 pl-5 text-xs font-bold tracking-[0.05em] text-niho-text-muted">
               {item.shortcut.text}
             </span>
+          ) : item.checked ? (
+            <Check aria-hidden className="ml-auto h-4 w-4 shrink-0 text-niho-accent-ink" strokeWidth={2.5} />
           ) : null}
         </button>
         {item.reason ? (

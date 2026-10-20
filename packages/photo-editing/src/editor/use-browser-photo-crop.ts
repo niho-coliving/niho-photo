@@ -62,6 +62,7 @@ async function readCropSource(
  *   まま）。切り抜きの間は「補正前」を外し、面の描画は枠全体（切り抜きと角度を外した画）を描く
  * - 確定は `commitEdit(writeDevelopGeometry(今の編集内容, 新しい幾何))` だけ（取り消しの 1 単位。自動保存と履歴はそこに任せる。
  *   同じ幾何なら何もしない）。「初期化」は切り抜きだけを戻す（`resetDevelopGeometry`。色は触らない）
+ * - 入ったときの幾何を覚える。［完了］（Enter）は「補正」に戻るだけ、［キャンセル］（Esc）は覚えた幾何に戻してから戻る（#52）
  * - 「補正」に戻るとき（と、切り抜きの間に写真を離れるとき）は、切り抜きに合わせて wasm の作業サイズを確かめ直す
  *   （`ensureDevelopWorkingSize`）。終わるまで `settling`（面はその間描かず、終わってから切り抜いた画を丁寧に描く）
  * - 編集内容がまるごと入れ替わった（別の写真・別の端末の補正の読み直し）・写真を離れた（一覧へ戻った）・出す条件を満たさなく
@@ -103,6 +104,8 @@ export function useBrowserPhotoCrop(params: {
   const generationRef = useRef(0);
   /** 切り抜きの座標を読んでいる間に別の道具へ移ったとき、遅れて入らないようにする */
   const enteringRef = useRef(false);
+  /** 切り抜きに入ったときの幾何（［キャンセル］・Esc で戻す先。開いていない間は null） */
+  const entryGeometryRef = useRef<DevelopGeometry | null>(null);
 
   const wanted = rollout && wide && photoKey !== null;
   useEffect(() => {
@@ -152,6 +155,7 @@ export function useBrowserPhotoCrop(params: {
         if (!source || latestRef.current.photoKey !== key || !latestRef.current.available) return;
         setLiveAngle(null);
         setCompareOriginal(false);
+        entryGeometryRef.current = readDevelopGeometry(settingsRef.current);
         replaceCropSource({ key, ...source });
       },
       () => {
@@ -171,6 +175,7 @@ export function useBrowserPhotoCrop(params: {
     const generation = ++generationRef.current;
     enteringRef.current = false;
     const wasOpen = cropSourceRef.current !== null;
+    entryGeometryRef.current = null;
     replaceCropSource(null);
     setLiveAngle(null);
     setExportLongEdge(null);
@@ -212,6 +217,16 @@ export function useBrowserPhotoCrop(params: {
     const written = writeDevelopGeometry(current, next);
     if (sameDevelopSettings(written, current)) return;
     commitEdit(written);
+  };
+
+  /**
+   * ［キャンセル］・Esc: 入ったときの幾何に戻し（今と違えば取り消しの 1 単位。↶ でキャンセルの前に戻せる）、「補正」に戻る。
+   * ［完了］・Enter・ほかの道具へ移るのは {@link leave}（幾何は押すたびに確定済みなので、そのまま残す）。
+   */
+  const cancel = () => {
+    const entry = entryGeometryRef.current;
+    if (entry) commit(entry);
+    leave();
   };
 
   /** 切り抜きの「初期化」: 切り抜き・回転・角度を消す（色の補正は残す）。 */
@@ -262,7 +277,10 @@ export function useBrowserPhotoCrop(params: {
     setLiveAngle,
     exportLongEdge: active ? exportLongEdge : null,
     enter,
+    /** 「補正」に戻る（［完了］・Enter・ほかの道具へ移る・R。幾何はそのまま） */
     leave,
+    /** ［キャンセル］・Esc（入ったときの幾何に戻して「補正」に戻る） */
+    cancel,
     toggle: () => (latestRef.current.active ? leave() : enter()),
     commit,
     reset,
