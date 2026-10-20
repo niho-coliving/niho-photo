@@ -3791,7 +3791,7 @@
         "path": "apps/camera/src/local-library/local-photo-library.test.ts",
         "sha256": "e86937a17a1b2655448cdcf9d43313df2d5b53c37ec16172b6eaa81371d4e1aa"
       },
-      "outputSha256": "51d976d4f91a4b456a73d4c5648ce272fbbc6538578b2e1d517c9c3b29263d1f",
+      "outputSha256": "eaaeb8c15464d00efab8854a84c7c33987fbac4f1f0426b4389a8628884ac40f",
       "modifications": [
         "個別写真の追加・件数・一覧・参照削除を不透明なentryIdの既存経路へ接続 / 選択写真取得の専用IPC経路をテスト。",
         "Issue #5親レビューに従い形式検査・エラー保持・実decoder公開CI回帰を補強。",
@@ -3802,7 +3802,8 @@
         "Issue 13 cancel fixtureのresolver型をstrict typecheck対応",
         "Issue #13の段階RAW open、競合回帰、匿名の区間計測を追加。正規producerの数式と成果物は維持。",
         "abort直後の同一写真再選択が新native要求を発行する回帰を追加。",
-        "最新mainのUI・共有機能と段階RAW openを統合し、既存の境界と補正保持を両立する。"
+        "最新mainのUI・共有機能と段階RAW openを統合し、既存の境界と補正保持を両立する。",
+        "選択済みhandleの再利用と未open近隣先読みの抑止を回帰検証"
       ]
     },
     {
@@ -3813,7 +3814,7 @@
         "path": "apps/camera/src/local-library/local-photo-library.ts",
         "sha256": "bda72efc4c68731a2695be4906aedba55368d065dafbad6d577906ffa8441ed8"
       },
-      "outputSha256": "06ee1c024a057930b4303760cc3cef090105500fd053451432d5f84ea8b75478",
+      "outputSha256": "a7c3a1007ea585e55110ddf2f0a9f1cf74d874b606133319238035ab62e245d9",
       "modifications": [
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
         "個別写真の追加・件数・一覧・参照削除を不透明なentryIdの既存経路へ接続 / 選択写真一覧でフォルダ再走査commandを呼ばない。",
@@ -3822,7 +3823,8 @@
         "Issue 13 progressive RAW open implementation",
         "Issue #13の段階RAW open、競合回帰、匿名の区間計測を追加。正規producerの数式と成果物は維持。",
         "最後のconsumer中止時にjobを外し、直後の同じ写真の再選択へcancel済みPromiseを渡さない。",
-        "最新mainのUI・共有機能と段階RAW openを統合し、既存の境界と補正保持を両立する。"
+        "最新mainのUI・共有機能と段階RAW openを統合し、既存の境界と補正保持を両立する。",
+        "プレビュー照会で開いた写真のhandleを再利用し不要なRAW再hashを避ける"
       ]
     },
     {

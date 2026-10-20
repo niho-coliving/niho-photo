@@ -573,6 +573,18 @@ describe("working copies", () => {
     await expect(fake.library.loadProvisionalDraft!("e-raw", sha("e-raw"))).resolves.toMatchObject({ generation: nextDraft.generation });
   });
 
+  it("reuses the selected photo handle for previews and skips opening unopened prefetch neighbors", async () => {
+    const fake = fakeNative();
+    await fake.library.openOriginal("e-raw");
+    await fake.library.loadInteractivePreview!("e-raw", { signal: signal(), maxDimension: 1600 });
+
+    expect(commandsOf(fake.calls).filter((command) => command === "camera_photo_open")).toHaveLength(1);
+
+    const beforePrefetch = fake.calls.length;
+    await fake.library.prefetchInteractivePreview!("e-heic", { signal: signal(), maxDimension: 1600 });
+    expect(fake.calls.slice(beforePrefetch)).toEqual([]);
+  });
+
   it("abort直後の同じ写真の再選択はcancel済みjobを待たず、新しいnative要求を出す", async () => {
     const finish: Array<(bytes: ArrayBuffer) => void> = [];
     const fake = fakeNative({ interactivePreview: () => new Promise<ArrayBuffer>((resolve) => { finish.push(resolve); }) });

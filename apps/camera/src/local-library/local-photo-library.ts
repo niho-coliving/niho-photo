@@ -510,7 +510,7 @@ export function createLocalPhotoLibrary(commands: CameraCommands, options: Local
     if (request.maxDimension < 1280 || request.maxDimension > 2048) {
       throw new CameraCommandError("invalidRequest", "写真を読み込み直してください。");
     }
-    const handle = await reopen(photoId);
+    const handle = await handleOf(photoId);
     throwIfAborted(request.signal);
     const key = `${handle.contentSha256}:${request.maxDimension}`;
     const cached = interactivePreviews.get(key);
@@ -837,6 +837,9 @@ export function createLocalPhotoLibrary(commands: CameraCommands, options: Local
     loadInteractivePreview,
 
     async prefetchInteractivePreview(photoId, requestOptions) {
+      // Neighbor rows are not necessarily open yet. Opening them here hashes the entire RAW
+      // before the user selects them, and cannot be canceled through the preview AbortSignal.
+      if (!handles.has(photoId)) return;
       await loadInteractivePreviewWithPriority(photoId, requestOptions, "prefetch");
     },
 
