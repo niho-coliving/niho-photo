@@ -136,6 +136,9 @@ describe("describeUnsupportedPresetItems", () => {
       "シャープ・ほか 2 項目は使えないので、それ以外を取り込みました",
     );
     expect(describeUnsupportedPresetItems(["FutureThing"])).toBe("1 項目は使えないので、それ以外を取り込みました");
+    expect(describeUnsupportedPresetItems(["PointColors"])).toBe(
+      "Lightroom の色ミキサーは使えないので、それ以外を取り込みました",
+    );
   });
 
   it("知らせる項目が無ければ null", () => {

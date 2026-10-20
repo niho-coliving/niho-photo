@@ -27,6 +27,8 @@ import { parseDevelopEngineManifest } from "./develop-engine-manifest";
  * - 効果（白黒・周辺光量補正・粒子。E1 移行元設計）のある設定は `v: 3` で保存する。`v: 3` を読めない wasm は描画を断る
  *   （`unsupportedVersion`）ので、起こした wasm に `validateSettings` で小さな `v: 3` の設定を確かめさせ、読めるときだけ `ready` に
  *   `effects: true` を付ける（crate の版の比較では、画面と wasm の公開が前後したときに食い違った。移行元設計）
+ * - 色ミキサーは `v: 4` の `colorPoints` を読めるときだけ `ready` に `colorPoints: true` を付ける。公開版番号だけで推測せず、
+ *   `validateSettings` に実際の最小設定を渡して確かめる
  * - プリセットの適用量・書き出し・見本（F2a 移行元設計 の口。crate 0.5.0 から）: `applyPreset`（開いている写真の撮影時の白
  *   `asShotWhite()` を渡す）・`settingsToXmp`・`renderPresetThumbnail`（開いている写真の `thumbnail(256)` の別の session を初回に
  *   作って持ち、丁寧に〔final〕描く。親のengine/CNR設定が変わったら手放し、次回に現在の解析から作り直す。写真を手放すと一緒に手放す）。口が glue にあれば `ready` に `presetAmount` /
@@ -44,6 +46,7 @@ export type DevelopEngineWorkerRequest =
   | { type: "init"; id: number; manifestUrl: string; diagnostics?: boolean }
   | { type: "open"; id: number; bytes: ArrayBuffer; workingMaxDimension: number }
   | { type: "render"; id: number; settingsJson: string; maxDimension: number; interactive: boolean }
+  | { type: "sampleColor"; id: number; settingsJson: string; maxDimension: number; x: number; y: number }
   | {
       type: "exportJpeg";
       id: number;
@@ -111,6 +114,8 @@ export type DevelopEngineWorkerFeatures = {
   geometry?: true;
   /** wasm が効果のある設定（`v: 3`）を読める（E1b 移行元設計） */
   effects?: true;
+  /** wasm が独立した色ミキサーの設定（`v: 4`）を読める。 */
+  colorPoints?: true;
   /** `applyPreset`（プリセットの適用量。F2a 移行元設計） */
   presetAmount?: true;
   /** `settingsToXmp`（今の補正をプリセットに書き出す） */
@@ -143,6 +148,7 @@ export type DevelopEngineWorkerResponse =
   | { type: "xmp"; id: number; resultJson: string }
   /** `autoSettings` の結果（完成した設定の JSON のまま） */
   | { type: "auto"; id: number; settingsJson: string }
+  | { type: "sampledColor"; id: number; lightness: number; chroma: number; hue: number }
   | { type: "error"; id: number; message: string };
 
 export type DevelopEngineWorkerDeps = {
@@ -169,6 +175,7 @@ export type DevelopEnginePerfRecord = {
 /** glue の `Developer`（wasm-bindgen のクラス。使い終わったら `free`）。 */
 type DevelopDeveloper = {
   render: (settingsJson: string, maxDimension: number, interactive: boolean) => unknown;
+  sampleColor?: (settingsJson: string, maxDimension: number, x: number, y: number) => unknown;
   free: () => void;
   readonly width: number;
   readonly height: number;
@@ -221,6 +228,8 @@ type DevelopGlue = {
   presetThumbnails: boolean;
   /** `Developer.prototype.autoSettings` がある（無い glue では「自動」を使えない） */
   auto: boolean;
+  /** `Developer.prototype.sampleColor` がある。 */
+  colorSampling: boolean;
 };
 
 /** 幾何（切り抜き・回転。F3 移行元設計）の口。 */
@@ -277,6 +286,7 @@ function readGlue(module: unknown): DevelopGlue | null {
   const thumbnail: unknown = isRecord(developerPrototype) ? Reflect.get(developerPrototype, "thumbnail") : undefined;
   // 「自動」の口（無い glue でも、手で直す分は使う）
   const autoSettings: unknown = isRecord(developerPrototype) ? Reflect.get(developerPrototype, "autoSettings") : undefined;
+  const sampleColor: unknown = isRecord(developerPrototype) ? Reflect.get(developerPrototype, "sampleColor") : undefined;
   const geometry: DevelopGeometryGlue | null =
     typeof imageSize === "function" &&
     typeof rasterDecodeSize === "function" &&
@@ -308,6 +318,7 @@ function readGlue(module: unknown): DevelopGlue | null {
     settingsToXmp: typeof settingsToXmp === "function" ? (settingsToXmp as DevelopGlue["settingsToXmp"]) : null,
     presetThumbnails: typeof thumbnail === "function",
     auto: typeof autoSettings === "function",
+    colorSampling: typeof sampleColor === "function",
   };
 }
 
@@ -325,6 +336,29 @@ function acceptsEffectSettings(validateSettings: DevelopGlue["validateSettings"]
   if (!validateSettings) return false;
   try {
     const issues: unknown = JSON.parse(String(validateSettings(EFFECTS_PROBE_SETTINGS_JSON)));
+    return Array.isArray(issues) && issues.length === 0;
+  } catch {
+    return false;
+  }
+}
+
+const COLOR_POINTS_PROBE_SETTINGS_JSON = JSON.stringify({
+  v: 4,
+  engine: "niho-10",
+  look: "niho-standard-1",
+  base: null,
+  colorPoints: [{
+    id: "probe",
+    target: { lightness: 0.7, chroma: 0.1, hue: 50 },
+    range: { hue: 20, chroma: 0.05, lightness: 0.1 },
+    delta: { hue: 1, chromaScale: 1, lightness: 0 },
+  }],
+});
+
+function acceptsColorPointSettings(validateSettings: DevelopGlue["validateSettings"]): boolean {
+  if (!validateSettings) return false;
+  try {
+    const issues: unknown = JSON.parse(String(validateSettings(COLOR_POINTS_PROBE_SETTINGS_JSON)));
     return Array.isArray(issues) && issues.length === 0;
   } catch {
     return false;
@@ -443,6 +477,7 @@ export function createDevelopEngineWorkerHandler(
   let version = "";
   // 起こした wasm が効果のある設定（v: 3）を読めるか（起こしたときに 1 回だけ確かめる）
   let effects = false;
+  let colorPoints = false;
   let wasmMemory: () => ArrayBufferLike | null = () => null;
   let diagnostics = false;
   let unavailableReason: string | null = null;
@@ -561,6 +596,7 @@ export function createDevelopEngineWorkerHandler(
       version,
       ...(glue ? glueFeatures(glue) : {}),
       ...(effects ? { effects: true as const } : {}),
+      ...(colorPoints ? { colorPoints: true as const } : {}),
     });
   };
 
@@ -595,6 +631,7 @@ export function createDevelopEngineWorkerHandler(
       glue = loaded;
       version = typeof reported === "string" && reported ? reported : manifest.version;
       effects = acceptsEffectSettings(loaded.validateSettings);
+      colorPoints = loaded.colorSampling && acceptsColorPointSettings(loaded.validateSettings);
       postReady(id);
     } catch (error) {
       unavailableReason = errorMessage(error);
@@ -686,6 +723,25 @@ export function createDevelopEngineWorkerHandler(
             return { frame, rgba: transferableBuffer(frame.rgba, wasmMemory()) };
           });
           deps.post({ type: "frame", id, width: frame.width, height: frame.height, rgba }, [rgba]);
+          return;
+        }
+        case "sampleColor": {
+          requireGlue();
+          const opened = developer;
+          if (!opened || typeof opened.sampleColor !== "function") throw new Error("develop engine cannot sample colors");
+          const result = opened.sampleColor(message.settingsJson, message.maxDimension, message.x, message.y);
+          if (!isRecord(result)) throw new Error("develop engine returned no sampled color");
+          const { lightness, chroma, hue } = result;
+          if (![lightness, chroma, hue].every((value) => typeof value === "number" && Number.isFinite(value))) {
+            throw new Error("develop engine returned an invalid sampled color");
+          }
+          deps.post({
+            type: "sampledColor",
+            id,
+            lightness: lightness as number,
+            chroma: chroma as number,
+            hue: hue as number,
+          });
           return;
         }
         case "exportJpeg": {

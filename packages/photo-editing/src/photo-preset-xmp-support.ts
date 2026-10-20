@@ -62,6 +62,7 @@ const UNSUPPORTED_GROUPS: readonly UnsupportedGroup[] = [
   { label: LABELS.grain, prefixes: ["Grain"], masters: ["GrainAmount"] },
   { label: LABELS.colorGradeLuminance, keys: ["ColorGradeMidtoneLum", "ColorGradeGlobalLum"] },
   { label: LABELS.curveSaturation, keys: ["CurveRefineSaturation"], always: true },
+  { label: LABELS.pointColors, keys: ["PointColors"], always: true },
   {
     label: LABELS.transform,
     prefixes: ["Perspective", "Upright"],

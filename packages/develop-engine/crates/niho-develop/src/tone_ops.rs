@@ -838,7 +838,9 @@ impl PreparedPostOps {
                     | crate::settings::ENGINE_NIHO_4
                     | crate::settings::ENGINE_NIHO_5
                     | crate::settings::ENGINE_NIHO_7
+                    | crate::settings::ENGINE_NIHO_11
                     | crate::settings::ENGINE_NIHO_6
+                    | crate::settings::ENGINE_NIHO_10
                     | crate::settings::ENGINE_NIHO_8
             ) && amount > 0.0;
             if niho3_positive {

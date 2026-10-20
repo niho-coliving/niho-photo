@@ -523,6 +523,39 @@ describe("createDevelopEngine", () => {
     expect(worker.requests("init")).toHaveLength(1);
   });
 
+  it("ready に colorPoints: true が付いた wasm だけ色ミキサーを公開する", async () => {
+    const worker = new FakeWorker();
+    const engine = createDevelopEngine({ createWorker: () => worker as unknown as Worker, manifestUrl: MANIFEST_URL });
+    const supported = engine.supportsColorPoints();
+    worker.respond({
+      type: "ready",
+      id: worker.lastRequest("init").id,
+      version: "niho-develop 0.18.0 (engine niho-11)",
+      colorPoints: true,
+    });
+
+    expect(await supported).toBe(true);
+    expect(await engine.supportsColorPoints()).toBe(true);
+    expect(await engine.supportsEffects()).toBe(false);
+
+    engine.dispose();
+    expect(await engine.supportsColorPoints()).toBe(false);
+  });
+
+  it("sampleColor は設定・描画長辺・正規化座標を worker に渡す", async () => {
+    const { worker, engine } = await readyEngine({ features: { colorPoints: true } });
+    const sampled = engine.sampleColor({ v: 4, colorPoints: [] }, { maxDimension: 1280, x: 0.2, y: 0.8 });
+    const request = worker.lastRequest("sampleColor");
+    expect(request).toMatchObject({
+      type: "sampleColor",
+      maxDimension: 1280,
+      x: 0.2,
+      y: 0.8,
+    });
+    worker.respond({ type: "sampledColor", id: request.id, lightness: 0.72, chroma: 0.08, hue: 50 });
+    await expect(sampled).resolves.toEqual({ lightness: 0.72, chroma: 0.08, hue: 50 });
+  });
+
   it("effects が付かない ready（v: 3 を読めない wasm）・使えない engine では supportsEffects は false（版が新しくても。throw しない）", async () => {
     const respondReady = async (message: { version: string; effects?: true }) => {
       const worker = new FakeWorker();

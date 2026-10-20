@@ -54,6 +54,7 @@ function fakeEngine(options: { source?: { width: number; height: number }; frame
     ready: vi.fn(async () => true),
     open: vi.fn(async () => ({ width: 1, height: 1 })),
     render: vi.fn(async () => null),
+    sampleColor: vi.fn(async () => ({ lightness: 0.7, chroma: 0.1, hue: 50 })),
     exportJpeg: vi.fn(async (_bytes: ArrayBuffer, _settings: object, exportOptions: { maxDimension: number; quality: number }) =>
       jpegAt(exportOptions.maxDimension),
     ),
@@ -77,6 +78,7 @@ function fakeEngine(options: { source?: { width: number; height: number }; frame
     supportsAuto: vi.fn(async () => false),
     supportsGeometry: vi.fn(async () => true),
     supportsEffects: vi.fn(async () => true),
+    supportsColorPoints: vi.fn(async () => true),
     imageSize: vi.fn(async () => source),
     rasterDecodeSize: vi.fn(async () => 2048),
     geometryOutputSize: vi.fn(async () => frame),

@@ -1,6 +1,13 @@
 "use client";
 
-import { useEffect, useState, type CSSProperties, type MutableRefObject } from "react";
+import {
+  useEffect,
+  useState,
+  type CSSProperties,
+  type KeyboardEvent,
+  type MutableRefObject,
+  type PointerEvent,
+} from "react";
 
 import { Spinner } from "niho-ui/components/spinner";
 import type { DevelopGeometry, DevelopSize } from "../develop-engine/develop-geometry";
@@ -15,6 +22,7 @@ import { DEVELOP_PREVIEW_MAX_DIMENSION, type OpenedSource } from "./browser-phot
 import { BrowserPhotoFavoriteButton, type BrowserPhotoFavoriteControl } from "./browser-photo-editing-favorite-button";
 import { PhotoEditingCropOverlay } from "./photo-editing-crop-overlay";
 import { PhotoEditingCutoutBrushOverlay } from "./photo-editing-cutout-brush-overlay";
+import { canvasNormalizedPoint } from "./photo-editing-color-mixer";
 
 /** 写真の左上の札（「補正前」・プリセットの仮の表示）。 */
 const LOUPE_BADGE_CLASS_NAME =
@@ -84,6 +92,13 @@ export function BrowserPhotoEditingLoupe(props: {
     onCommitStroke: (points: CutoutPoint[]) => void;
   } | null;
   canvasRef: MutableRefObject<HTMLCanvasElement | null>;
+  colorPicker?: {
+    active: boolean;
+    position: { x: number; y: number };
+    onMove: (position: { x: number; y: number }) => void;
+    onPick: (position: { x: number; y: number }) => void;
+    onCancel: () => void;
+  };
   lockedReason: string | null;
   sourceError: string | null;
   /** 読み込み直す（選んでいる写真が無ければ null） */
@@ -107,12 +122,51 @@ export function BrowserPhotoEditingLoupe(props: {
   const drawn = openedVisible && opened !== null && (Boolean(opened.decoded) || opened.mode === "wasm");
   const crop = props.crop ?? null;
   const cutout = props.cutout ?? null;
+  const colorPicker = props.colorPicker;
+  useEffect(() => {
+    if (colorPicker?.active) props.canvasRef.current?.focus({ preventScroll: true });
+  }, [colorPicker?.active, props.canvasRef]);
+  const pickerEvents = colorPicker?.active
+    ? {
+        tabIndex: 0,
+        onPointerUp: (event: PointerEvent<HTMLCanvasElement>) => {
+          event.preventDefault();
+          event.stopPropagation();
+          const position = canvasNormalizedPoint(event.currentTarget, event.clientX, event.clientY);
+          if (!position) return;
+          colorPicker.onMove(position);
+          colorPicker.onPick(position);
+        },
+        onKeyDown: (event: KeyboardEvent<HTMLCanvasElement>) => {
+          if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            event.stopPropagation();
+            colorPicker.onPick(colorPicker.position);
+          } else if (event.key === "Escape") {
+            event.preventDefault();
+            event.stopPropagation();
+            colorPicker.onCancel();
+          } else if (["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"].includes(event.key)) {
+            event.preventDefault();
+            event.stopPropagation();
+            const pixels = event.shiftKey ? 10 : 1;
+            const stepX = pixels / Math.max(1, event.currentTarget.width);
+            const stepY = pixels / Math.max(1, event.currentTarget.height);
+            colorPicker.onMove({
+              x: Math.max(0, Math.min(1, colorPicker.position.x + (event.key === "ArrowRight" ? stepX : event.key === "ArrowLeft" ? -stepX : 0))),
+              y: Math.max(0, Math.min(1, colorPicker.position.y + (event.key === "ArrowDown" ? stepY : event.key === "ArrowUp" ? -stepY : 0))),
+            });
+          }
+        },
+      }
+    : {};
   const canvas =
     opened && !crop ? (
       <canvas
         ref={props.canvasRef}
         aria-label={props.compareOriginal ? `${opened.fileName} の補正前` : `${opened.fileName} のプレビュー`}
-        className={cn("max-h-full max-w-full object-contain", ZOOMABLE_CLASS_NAME, opened.previewPending && "absolute inset-0 h-full w-full invisible")}
+        {...pickerEvents}
+        className={cn("max-h-full max-w-full object-contain", ZOOMABLE_CLASS_NAME, colorPicker?.active && "cursor-crosshair outline-none ring-2 ring-niho-accent-ink", opened.previewPending && "absolute inset-0 h-full w-full invisible")}
         style={cutout?.transparent ? CUTOUT_CHECKERBOARD_STYLE : undefined}
       />
     ) : null;
@@ -147,6 +201,16 @@ export function BrowserPhotoEditingLoupe(props: {
         </PhotoEditingCutoutBrushOverlay>
       ) : null}
       {drawn && canvas && !cutout ? canvas : null}
+      {drawn && colorPicker?.active && props.canvasRef.current ? (() => {
+        const rect = props.canvasRef.current.getBoundingClientRect();
+        return (
+          <span
+            aria-hidden
+            className="pointer-events-none fixed z-20 h-4 w-4 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white shadow-[0_0_0_1px_var(--niho-text)]"
+            style={{ left: rect.left + colorPicker.position.x * rect.width, top: rect.top + colorPicker.position.y * rect.height }}
+          />
+        );
+      })() : null}
       {drawn && !opened?.previewPending && props.compareOriginal ? (
         <span aria-hidden data-testid="photo-compare-original-badge" className={LOUPE_BADGE_CLASS_NAME}>
           {PHOTO_EDITING_COMPARE_ORIGINAL_LABEL}

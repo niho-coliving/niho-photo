@@ -517,7 +517,7 @@ describe("useBrowserPhotoOpen progressive RAW integration", () => {
     await run(() => presetResult.resolve(undefined));
     await run(async () => { await applying; });
     await settleUntil(() => current.opened?.input?.kind === "workingCopy", "pending preset handoff");
-    expect(current.settings).toMatchObject({ base: BASE_VERSION, engine: "niho-7", contrast: 40 });
+    expect(current.settings).toMatchObject({ base: BASE_VERSION, engine: "niho-11", contrast: 40 });
     expect(current.presets.appliedPresetKey).toBe("builtin:bright");
     expect(current.canUndo).toBe(true);
   });
@@ -562,7 +562,7 @@ describe("useBrowserPhotoOpen progressive RAW integration", () => {
     await mount(fixture.library, [target]);
     await run(() => current.openItem(target));
     expect(current.opened?.input?.kind).toBe("workingCopy");
-    expect(current.settings).toMatchObject({ engine: "niho-7", base: BASE_VERSION });
+    expect(current.settings).toMatchObject({ engine: "niho-11", base: BASE_VERSION });
     await run(() => current.changeSettings((settings) => ({ ...settings, exposure: 0.4 }), "commit"));
     expect(current.settings.exposure).toBe(0.4);
     expect(fixture.saveProvisionalDraft).not.toHaveBeenCalled();

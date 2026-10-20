@@ -30,14 +30,14 @@ import {
  * settings は Photo Bench の `EditSettings` の JSON で、ページはここに書いたキーだけを書き換え、
  * 他のキー（トーンカーブ・HSL・カラーグレーディングなど、プリセットが入れた値）はそのまま返す。
  *
- * NIHO Desktop がクラウドの写真を段 2 の wasm で描くとき（移行元設計 S7b）は、settings は `developSettings`（v1 / v2 / v3）になる。項目名・
+ * NIHO Desktop がクラウドの写真を段 2 の wasm で描くとき（移行元設計 S7b）は、settings は `developSettings`（v1 / v2 / v3 / v4）になる。項目名・
  * 単位は同じで、違うのはホワイトバランスだけ（Photo Bench の `whiteBalance.mode: "custom"` ⇔ developSettings の `"absolute"`、
  * 相対の色温度 / 色かぶり補正は developSettings では `whiteBalance.mode: "relative"` を伴う）。読み書きはここで両方の形を扱い、
  * 呼び出し側（スライダー）は形で分けない。
  */
 
 /**
- * 段 2 の `developSettings` の形か（形の版 `v` が 1 か 2 で、数式の版 `engine` を持つ。v2 は幾何のある設定。移行元設計）。ほかは
+ * 段 2 の `developSettings` の形か（形の版 `v` が 1〜4 で、数式の版 `engine` を持つ。v2 は幾何、v3 は効果、v4 は色ポイント。移行元設計）。ほかは
  * Photo Bench の `EditSettings`。
  */
 export function isDevelopSettingsForm(settings: PhotoEditingSettings): boolean {
