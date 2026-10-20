@@ -476,7 +476,7 @@ describe("useBrowserPhotoOpen progressive RAW integration", () => {
     const provisional = createEngine({ marker: 1 });
     vi.mocked(provisional.presetSettings).mockImplementation(async (_xmp, base) => {
       await presetResult.promise;
-      return { converted: true, name: "明るい", unsupported: [], settings: { ...(base ?? neutralDevelopSettings()), contrast: 40 } };
+      return { converted: true, name: "明るい", unsupported: [], settings: { ...neutralDevelopSettings(), ...base, contrast: 40 } };
     });
     const canonical = createEngine({ marker: 9, render: async (_settings, call) => call === 1 ? canonicalFrame.promise : frame(9) });
     engineFactory.mockImplementationOnce(() => provisional).mockImplementationOnce(() => canonical);
