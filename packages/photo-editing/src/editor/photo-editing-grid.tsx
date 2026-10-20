@@ -193,7 +193,7 @@ export function PhotoEditingGrid(props: {
         // 一覧を下へ送っても上に残す（下のほうの写真を選んでも「クラウドから消す」が見えて押せるように。移行元設計）。
         // 上の余白（pt-2.5）の分も白で覆い、送ったタイルが行の上に透けないようにする。高さはボタン（32px）に合わせて
         // 固定し、写真を選んでボタンが出ても一覧を動かさない
-        <div className="sticky -top-2.5 z-10 -mt-2.5 mb-1.5 box-content flex h-8 shrink-0 items-center justify-end gap-3 bg-white pt-2.5 text-xs font-bold tabular-nums text-niho-text-muted">
+        <div className="sticky -top-2.5 z-10 -mt-2.5 mb-1.5 box-content flex h-8 shrink-0 items-center justify-end gap-3 bg-[var(--photo-editing-surface,white)] pt-2.5 text-xs font-bold tabular-nums text-niho-text-muted">
           {props.meta}
         </div>
       ) : null}

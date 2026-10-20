@@ -615,10 +615,11 @@
         "path": "packages/photo-editing/src/editor/browser-photo-editing-adjustments.tsx",
         "sha256": "2473ef7ca64f61e5ce7a72efb21f436f799f04a90a3a73b114cba15b7b5d23b1"
       },
-      "outputSha256": "48a2cae8eb279b7137657b30058e3de461956f8925f34a685ff8e977de06c224",
+      "outputSha256": "afc2fd27845fff09433e228e2213ae7cd955b4e72fc1344d8ae4fd88465d43bb",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
-        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。"
+        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
+        "Issue #50のMac画面配置・表示色・パネル・版位置の変更。"
       ]
     },
     {
@@ -724,11 +725,12 @@
         "path": "packages/photo-editing/src/editor/browser-photo-editing-folder-tree.tsx",
         "sha256": "9b60d2ed952bd8af30a3199cb82df81ed1909f4aa3aa77a603a48798b5cd0a81"
       },
-      "outputSha256": "ae9c847a1f1d9756f0849f70c6cba2b5296b4dc31117e938b2758788a8be3e2d",
+      "outputSha256": "8ce3dd7210d8babcedb6f2bd871836cb48317e09917cecb77a8ac1713de07c87",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
-        "任意の個別写真ソース契約と選んだ写真のUI、復元、取消、再試行、失敗時参照保持を追加"
+        "任意の個別写真ソース契約と選んだ写真のUI、復元、取消、再試行、失敗時参照保持を追加",
+        "Issue #50のMac画面配置・表示色・パネル・版位置の変更。"
       ]
     },
     {
@@ -775,10 +777,11 @@
         "path": "packages/photo-editing/src/editor/browser-photo-editing-grid.tsx",
         "sha256": "2284b5463f202d550fc6ba7d65147b994badecdb28ee3b0bccefb70d7e90ad2d"
       },
-      "outputSha256": "4bba238a01b555c7415a533e4d915ac3b30f568c3c4b7f7ab62059bd43958311",
+      "outputSha256": "aa219e8943b2cb1546b86e49ba29495eb8cf305a591fcefecaaee4328ebe7f03",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
-        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。"
+        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
+        "Issue #50のMac画面配置・表示色・パネル・版位置の変更。"
       ]
     },
     {
@@ -789,10 +792,11 @@
         "path": "packages/photo-editing/src/editor/browser-photo-editing-loupe.tsx",
         "sha256": "51859688628c86e65c882ff94a59b6324ecb621ac9f759121c7c3d7ed4ccc35a"
       },
-      "outputSha256": "0aff9a80e17c46c51e8e2f9c90c3acc6b04e6d013cff5fd909157dab235bda5a",
+      "outputSha256": "0bac3de26861b66f41a18eb4484938848572577e3053bd3108e1958aae3d1464",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
-        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。"
+        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
+        "Issue #50のMac画面配置・表示色・パネル・版位置の変更。"
       ]
     },
     {
@@ -929,11 +933,12 @@
         "path": "packages/photo-editing/src/editor/browser-photo-editing-tree.tsx",
         "sha256": "2291c76ce46a907e917c9a33160c36f1b069c9a4a9f71ad64b2c21c6c9849a28"
       },
-      "outputSha256": "7c4719de9c3ec40a8089982a1d776c5a94c01881d365d69be0be05800e5b6ee8",
+      "outputSha256": "66970fb7bb2333ef1a159a95a598d8157d7c563251f92cbfe4a71bb174aaa20b",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
-        "任意の個別写真ソース契約と選んだ写真のUI、復元、取消、再試行、失敗時参照保持を追加"
+        "任意の個別写真ソース契約と選んだ写真のUI、復元、取消、再試行、失敗時参照保持を追加",
+        "Issue #50のMac画面配置・表示色・パネル・版位置の変更。"
       ]
     },
     {
@@ -944,11 +949,12 @@
         "path": "packages/photo-editing/src/editor/browser-photo-editing-workbench-folders.test.tsx",
         "sha256": "2466702c26e46adadb579736eb8edef22cc420e4b0189283fd7d4b762a62869e"
       },
-      "outputSha256": "d4a377aa24b55fc0321ec1010328f0bf8322591b3bf5cc8b1e3dd383075cd025",
+      "outputSha256": "09dcc9ade8de932ad8f5b1fbf33ccbc7387aa94d390d18144c82a76b4bd58b90",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
-        "任意の個別写真ソース契約と選んだ写真のUI、復元、取消、再試行、失敗時参照保持を追加"
+        "任意の個別写真ソース契約と選んだ写真のUI、復元、取消、再試行、失敗時参照保持を追加",
+        "Issue #50のMac画面配置・表示色・パネル・版位置の変更。"
       ]
     },
     {
@@ -959,11 +965,12 @@
         "path": "packages/photo-editing/src/editor/browser-photo-editing-workbench.tsx",
         "sha256": "f655136ae0c985d793822ca8bef1668dba26ffd4bb8f13d2ba3d6c2ccb13ceb6"
       },
-      "outputSha256": "bc6e411e1cff57a51128b98dcf83bec995166353bc9acd8c2094f058f2fdee02",
+      "outputSha256": "a563a40206e16c9952927964635969adb6055deeb5873e85c6bb3d82602d4a82",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
-        "任意の個別写真ソース契約と選んだ写真のUI、復元、取消、再試行、失敗時参照保持を追加"
+        "任意の個別写真ソース契約と選んだ写真のUI、復元、取消、再試行、失敗時参照保持を追加",
+        "Issue #50のMac画面配置・表示色・パネル・版位置の変更。"
       ]
     },
     {
@@ -1220,8 +1227,10 @@
         "path": "packages/photo-editing/src/editor/photo-editing-grid.test.tsx",
         "sha256": "7d3c1c32e7bea6ab62c3eca9f3a7455ae4a6a9c51b3349111c9923049f6a386a"
       },
-      "outputSha256": "7d3c1c32e7bea6ab62c3eca9f3a7455ae4a6a9c51b3349111c9923049f6a386a",
-      "modifications": []
+      "outputSha256": "cafb0050a52e12de39ca55eef48bc0d77285916bda13c8a8e54d87a60a44bcc0",
+      "modifications": [
+        "Issue #50の背景色トークン変更に合わせ既存testを更新。"
+      ]
     },
     {
       "path": "packages/photo-editing/src/editor/photo-editing-grid.tsx",
@@ -1231,10 +1240,11 @@
         "path": "packages/photo-editing/src/editor/photo-editing-grid.tsx",
         "sha256": "1b6e669fa72c10a2fd80f68fdc8ccb7141b06d6073741e87118a07cd1ad4a6a2"
       },
-      "outputSha256": "ec8de6ab41a220f84634fa7d2bc06a586798f6d7865d7f30aa91164f3239c855",
+      "outputSha256": "f437a4999c6dc44ec1edb92c9ebbf726753bb6abc304593067e0ea9211adf45b",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
-        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。"
+        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
+        "Issue #50のMac画面配置・表示色・パネル・版位置の変更。"
       ]
     },
     {
@@ -3552,10 +3562,11 @@
         "path": "apps/camera/src/App.test.tsx",
         "sha256": "a6e473f6f16afb180c6be04a32b8a2560bfc69c30f8f077300156bcd291ddb98"
       },
-      "outputSha256": "25dd65fb4f53850946b0d3f4147fa08d3abf8ba3bb9ca4f57df7d7a3ae26d7c4",
+      "outputSha256": "12364bbdd9e72e08a43fa79784a46e5c4a26e2c0de32c099bf9ac8a8bf26b3d6",
       "modifications": [
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
-        "複合空状態の写真追加アクションに期待値を更新。 / 選択写真専用commandをApp test fixtureにも追加。"
+        "複合空状態の写真追加アクションに期待値を更新。 / 選択写真専用commandをApp test fixtureにも追加。",
+        "Issue #50のMac画面配置・表示色・パネル・版位置の変更。"
       ]
     },
     {
@@ -3566,10 +3577,11 @@
         "path": "apps/camera/src/App.tsx",
         "sha256": "ca49b85f8269569ef243f5b0164751b3347c1cc268f906ce53dd984aa470c19e"
       },
-      "outputSha256": "da2389a8c6aa3a3979a9864d02fe79d9f6250512c4cfd7df92d09af9ae84af56",
+      "outputSha256": "4c5c054e907f7485f9a057326792045c216b409d0848f4f347bfcd9df14f6140",
       "modifications": [
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
-        "Issue #3のpublic OAuth/PKCE、ローカル専用UI、安全契約と公開依存を新規接続。実issuer・署名検証器が未契約のため本番接続は無効。"
+        "Issue #3のpublic OAuth/PKCE、ローカル専用UI、安全契約と公開依存を新規接続。実issuer・署名検証器が未契約のため本番接続は無効。",
+        "Issue #50のMac画面配置・表示色・パネル・版位置の変更。"
       ]
     },
     {
@@ -3739,8 +3751,10 @@
         "path": "apps/camera/src/styles.css",
         "sha256": "7af8bc23fd3975b031725ace28bb5e108bef8c882a76cec549f7a6ed109e11fd"
       },
-      "outputSha256": "7af8bc23fd3975b031725ace28bb5e108bef8c882a76cec549f7a6ed109e11fd",
-      "modifications": []
+      "outputSha256": "7515816d14e96eb95907cf3c1f5718ddc46600e0c12b6ff08284d76cee58262d",
+      "modifications": [
+        "Issue #50のMac画面配置・表示色・パネル・版位置の変更。"
+      ]
     },
     {
       "path": "apps/camera/tailwind.config.cjs",
