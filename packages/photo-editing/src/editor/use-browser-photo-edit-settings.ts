@@ -20,6 +20,8 @@ import {
   undoEditHistory,
   type EditHistory,
 } from "../photo-editing-edit-history";
+import { usePhotoLibrary } from "../library/photo-library-context";
+import type { PhotoLibraryProvisionalDraft } from "../library/photo-library";
 
 import {
   developBaseVersion,
@@ -46,6 +48,7 @@ export function useBrowserPhotoEditSettings(params: {
   operationRef: MutableRefObject<BrowserPhotoOperationKind | null>;
   leavingRef: MutableRefObject<Promise<boolean> | null>;
   developSessionRef: MutableRefObject<DevelopSession | null>;
+  setStatus: (status: { kind: "error"; text: string } | null) => void;
   setCompareOriginal: (compare: boolean) => void;
   /**
    * 編集内容がまるごと入れ替わった（開いた・手放した・別の端末の補正を読み直した）・写真を離れた（一覧へ戻った）ときに呼ぶ係
@@ -53,7 +56,8 @@ export function useBrowserPhotoEditSettings(params: {
    */
   editResetHandlerRef?: MutableRefObject<(() => void) | null>;
 }) {
-  const { canEdit, openedRef, operationRef, leavingRef, developSessionRef, setCompareOriginal, editResetHandlerRef } = params;
+  const { canEdit, openedRef, operationRef, leavingRef, developSessionRef, setCompareOriginal, setStatus, editResetHandlerRef } = params;
+  const library = usePhotoLibrary();
   const [settings, setSettings] = useState<DevelopSettings>(NEUTRAL_SETTINGS);
   const settingsRef = useRef(settings);
   const settingsKey = useMemo(() => developSettingsKey(settings), [settings]);
@@ -88,6 +92,30 @@ export function useBrowserPhotoEditSettings(params: {
     [editResetHandlerRef, replaceHistory],
   );
 
+  /** canonical handoff 時に履歴cursorを保ったまま、全entryを同じcanonical metadataへ結び直す。 */
+  const rebaseSettings = useCallback((rebase: (value: DevelopSettings) => DevelopSettings): DevelopSettings => {
+    const next = rebase(settingsRef.current);
+    settingsRef.current = next;
+    setSettings(next);
+    setSavedSettingsKey((current) => {
+      try {
+        const parsed = readDevelopSettings(JSON.parse(current) as unknown);
+        return parsed ? developSettingsKey(rebase(parsed)) : current;
+      } catch {
+        return current;
+      }
+    });
+    const currentHistory = historyRef.current;
+    if (currentHistory) {
+      replaceHistory({
+        past: currentHistory.past.map(rebase),
+        present: rebase(currentHistory.present),
+        future: currentHistory.future.map(rebase),
+      });
+    }
+    return next;
+  }, [replaceHistory]);
+
   /** 開いたままの写真を 1 枚で見始める（一覧から戻った）。履歴は今の編集内容から始める。 */
   const startHistory = useCallback(() => {
     setResetDone(false);
@@ -104,6 +132,36 @@ export function useBrowserPhotoEditSettings(params: {
   /** 切り抜きと補正の道具を切り替えたら、直前の「初期化しました」を残さない。 */
   const clearResetDone = useCallback(() => setResetDone(false), []);
 
+  /** provisional 1 session 専用の直列保存係。flush は最後の入力の失敗を呼び出し側へ返す。 */
+  const createProvisionalDraftWriter = useCallback(
+    (
+      photoId: string,
+      contentSha256: string,
+      initial: PhotoLibraryProvisionalDraft | null,
+    ): NonNullable<DevelopSession["provisionalDraft"]> | undefined => {
+      if (!library.saveProvisionalDraft) return undefined;
+      let pending = Promise.resolve<PhotoLibraryProvisionalDraft | null>(initial);
+      const writer: NonNullable<DevelopSession["provisionalDraft"]> = {
+        schedule(next) {
+          pending = pending
+            .catch(() => null)
+            .then(() => library.saveProvisionalDraft!(photoId, contentSha256, next));
+          void pending.catch(() => {
+            if (developSessionRef.current?.provisionalDraft === writer) {
+              setStatus({
+                kind: "error",
+                text: "未保存の補正をこの端末に退避できません。もう一度操作してください。",
+              });
+            }
+          });
+        },
+        flush: () => pending,
+      };
+      return writer;
+    },
+    [developSessionRef, library, setStatus],
+  );
+
   /** 今の写真を直せるなら返す（閲覧のみ・入力を開けていない・書き出し / 消している途中・離れる処理の途中は直さない）。 */
   const editableOpened = (): OpenedSource | null => {
     const current = openedRef.current;
@@ -118,7 +176,13 @@ export function useBrowserPhotoEditSettings(params: {
     settingsRef.current = versioned;
     setSettings(versioned);
     setCompareOriginal(false);
-    if (current.mode === "wasm") developSessionRef.current?.saver?.schedule(versioned);
+    if (current.mode !== "wasm") return;
+    const session = developSessionRef.current;
+    if (session?.input.kind === "provisional") {
+      session.provisionalDraft?.schedule(versioned);
+      return;
+    }
+    session?.saver?.schedule(versioned);
   };
 
   /**
@@ -225,6 +289,8 @@ export function useBrowserPhotoEditSettings(params: {
     dragging,
     setDragging,
     loadSettings,
+    rebaseSettings,
+    createProvisionalDraftWriter,
     startHistory,
     dropHistory,
     commitEdit,

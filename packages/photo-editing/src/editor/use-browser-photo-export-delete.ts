@@ -173,6 +173,8 @@ export function useBrowserPhotoExportAndDelete(params: {
   selectedItem: BrowserItem | null;
   /** 一覧で選んでいる複数枚（選択した順）。1 枚書き出しは `selectedItem` を使う。 */
   selectedItems?: readonly BrowserItem[];
+  /** 受け付けた非同期プリセット操作は、書き出しによる編集ロックの前に確定する。 */
+  pendingEdits?: { hasPending: () => boolean; waitForPending: () => Promise<void> };
   operationRef: MutableRefObject<BrowserPhotoOperationKind | null>;
   setOperation: (operation: BrowserPhotoOperation | null) => void;
   saveGenerationRef: MutableRefObject<number>;
@@ -236,6 +238,13 @@ export function useBrowserPhotoExportAndDelete(params: {
 
   // 写真・複数選択の順を替えたら、待っていた写真は捨てる
   const selectedKey = (params.selectedItems ?? (selectedItem ? [selectedItem] : [])).map((item) => item.key).join("\u001f") || null;
+  const selectedKeyRef = useRef(selectedKey);
+  selectedKeyRef.current = selectedKey;
+  const settleAcceptedEdits = async (): Promise<boolean> => {
+    const key = selectedKeyRef.current;
+    await params.pendingEdits?.waitForPending();
+    return mountedRef.current && latestAccessRef.current.spotId === spotId && selectedKeyRef.current === key && !operationRef.current;
+  };
   useEffect(() => {
     if (pendingShareRef.current && pendingShareRef.current.key !== selectedKey) setPendingShare(null);
   }, [selectedKey, setPendingShare]);
@@ -273,6 +282,37 @@ export function useBrowserPhotoExportAndDelete(params: {
     return "done";
   };
 
+  /** provisional は書き出しへ渡さず、同じ写真の atomic canonical handoff を待つ。 */
+  const waitForCanonical = async (target: BrowserItem, signal: AbortSignal): Promise<void> => {
+    let announced = false;
+    for (;;) {
+      if (signal.aborted) throw signal.reason ?? new DOMException("Aborted", "AbortError");
+      const current = openedRef.current;
+      if (current?.key !== target.key || current.input?.kind !== "provisional") {
+        if (announced) setStatus(null);
+        return;
+      }
+      if (!current.canonicalPending) {
+        throw new Error("高画質表示を準備できませんでした。もう一度読み込んでください。");
+      }
+      if (!announced) {
+        announced = true;
+        setStatus({ kind: "notice", text: "高画質表示を準備中です。補正を保ったまま書き出しを待っています。" });
+      }
+      await new Promise<void>((resolve, reject) => {
+        const onAbort = () => {
+          window.clearTimeout(timer);
+          reject(signal.reason ?? new DOMException("Aborted", "AbortError"));
+        };
+        const timer = window.setTimeout(() => {
+          signal.removeEventListener("abort", onAbort);
+          resolve();
+        }, 50);
+        signal.addEventListener("abort", onAbort, { once: true });
+      });
+    }
+  };
+
   /**
    * JPEG を段 2 の wasm で入力から描く（F7b 移行元設計。経路 `engine`）。1 枚で wasm で開いている写真は、持っている入力のコピーと今の
    * 補正で描く。一覧で選んだだけの写真は、最新の行を読み直して保存してある補正（無ければ補正なし）で、入力（オリジナルか作業コピー。
@@ -284,6 +324,7 @@ export function useBrowserPhotoExportAndDelete(params: {
     size: BrowserPhotoExportSize,
     signal: AbortSignal,
   ): Promise<BrowserPhotoExportRendered | null> => {
+    await waitForCanonical(target, signal);
     const current = openedRef.current;
     const loupeEngine = engineRef.current;
     if (viewModeRef.current === "loupe" && current?.key === target.key && current.mode === "wasm" && current.input && loupeEngine) {
@@ -350,6 +391,12 @@ export function useBrowserPhotoExportAndDelete(params: {
   ): Promise<{ saved: boolean; fileName: string }> => {
     // 原寸を出しているが、アプリの更新が要る（押すと更新の 1 行。オリジナルを開く前に止める）
     if (!params.capabilities.nativeExport) throw new Error(PHOTO_EDITING_EXPORT_FULL_SIZE_UPDATE_TEXT);
+    await waitForCanonical(target, signal);
+    const liveSession = developSessionRef.current;
+    if (folderId !== undefined && liveSession?.key === target.key && liveSession.saver) {
+      const flushed = await liveSession.saver.flush();
+      if (!flushed.ok) throw new Error("補正を保存できなかったため、書き出しを始められませんでした。");
+    }
     const original = await library.openOriginal(target.photo.id, { signal });
     const latest = original.photo;
     const current = openedRef.current;
@@ -429,6 +476,7 @@ export function useBrowserPhotoExportAndDelete(params: {
     size: BrowserPhotoExportSize,
     signal: AbortSignal,
   ): Promise<{ blob: Blob; rendered: BrowserPhotoExportRendered }> => {
+    await waitForCanonical(target, signal);
     const current = loupeCutoutPhoto(target, cutout);
     const engine = engineRef.current;
     if (!current?.input || !engine) throw new BrowserPhotoSourceError("encode_failed");
@@ -477,7 +525,9 @@ export function useBrowserPhotoExportAndDelete(params: {
     cutout: BrowserPhotoCutoutExport,
     exportFullSize: NonNullable<BrowserPhotoCutoutExport["exportFullSize"]>,
     format: BrowserPhotoCutoutExportFormat,
+    signal: AbortSignal,
   ): Promise<{ saved: boolean; fileName: string }> => {
+    await waitForCanonical(target, signal);
     if (!loupeCutoutPhoto(target, cutout)) throw new BrowserPhotoSourceError("encode_failed");
     try {
       return await exportFullSize({ recipe: cutout.recipe, settings: settingsRef.current, format });
@@ -525,6 +575,7 @@ export function useBrowserPhotoExportAndDelete(params: {
     if (format === "png" && !cutout) return "skipped";
     const rendersImage = format !== "original";
     if (rendersImage && jpegRoute === null) return "skipped";
+    if (rendersImage && params.pendingEdits?.hasPending() && (!(await settleAcceptedEdits()) || operationRef.current)) return "skipped";
     // 原寸の書き出しを出しているときだけ（できる・更新が要る版）。背景除去の原寸は camera の口
     const exportNative =
       params.capabilities.nativeExport || params.capabilities.nativeExportUpdateRequired ? library.exportNative : undefined;
@@ -552,7 +603,7 @@ export function useBrowserPhotoExportAndDelete(params: {
         // 背景除去は camera の口、ほかは写真の出どころの原寸の書き出し（どちらがあるかは上で確かめてある）
         const exported =
           cutout && cutoutFormat && cutoutFullSize
-            ? await exportCutoutFullSize(target, cutout, cutoutFullSize, cutoutFormat)
+            ? await exportCutoutFullSize(target, cutout, cutoutFullSize, cutoutFormat, controller.signal)
             : !cutout && exportNative
               ? await exportFullSizeOnMac(target, exportNative, controller.signal)
               : null;
@@ -669,6 +720,7 @@ export function useBrowserPhotoExportAndDelete(params: {
       return "skipped";
     }
     const key = targets.map((target) => target.key).join("\u001f");
+    if (params.pendingEdits?.hasPending() && (!(await settleAcceptedEdits()) || operationRef.current)) return "skipped";
     clearPendingShare();
     const controller = new AbortController();
     exportAbortRef.current?.abort();
@@ -731,6 +783,7 @@ export function useBrowserPhotoExportAndDelete(params: {
     const selected = (params.selectedItems ?? []).filter((item) => !item.adding);
     // 複数枚に背景除去は当てない（PNG は 1 枚の書き出しだけ。C4 移行元設計）
     if (format === "png" || selected.length < 2 || operationRef.current) return "skipped";
+    if (format !== "original" && params.pendingEdits?.hasPending() && (!(await settleAcceptedEdits()) || operationRef.current)) return "skipped";
     const targets: BrowserPhotoBatchExportTarget[] = selected.map((item) => ({
       photoId: item.photo.id,
       fileName: item.photo.fileName,
@@ -878,6 +931,7 @@ export function useBrowserPhotoExportAndDelete(params: {
     const chooseExportFolder = folderExport ? library.chooseExportFolder : undefined;
     const selected = (params.selectedItems ?? []).filter((item) => !item.adding);
     if (!exportNative || !chooseExportFolder || selected.length < 2 || operationRef.current) return "skipped";
+    if (params.pendingEdits?.hasPending() && (!(await settleAcceptedEdits()) || operationRef.current)) return "skipped";
     const itemsById = new Map(selected.map((item) => [item.photo.id, item]));
     const targets = selected.map((item) => ({ photoId: item.photo.id, fileName: item.photo.fileName }));
     const controller = new AbortController();

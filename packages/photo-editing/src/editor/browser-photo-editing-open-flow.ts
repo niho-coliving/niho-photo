@@ -59,7 +59,13 @@ export type BrowserPhotoOpenFlowContext = {
   /** 開き終えた時点の権限（保存係を作るか） */
   canEdit: () => boolean;
   /** 保存係（`developRevision` は直し始めた版＝開いた写真の今の行の版。保存のたびに照合する。移行元設計） */
-  createSaver: (spotId: string, photoId: string, developRevision: number) => DevelopSettingsSaver;
+  createSaver: (
+    spotId: string,
+    photoId: string,
+    developRevision: number,
+    contentSha256?: string,
+    provisionalGeneration?: number,
+  ) => DevelopSettingsSaver;
   /** wasm で開いた 1 枚目の丁寧な画を覚え、「補正前」の画を捨てる */
   rememberOpenedFrame: (key: string, settings: DevelopSettings, frame: DevelopFrame | null) => void;
 };
@@ -264,7 +270,9 @@ function developedOpenResult(
       workSize: params.workSize,
       photo: cloudPhoto,
       settingsSource: resolved.settingsSource,
-      saver: context.canEdit() ? context.createSaver(spotId, item.photo.id, cloudPhoto.developRevision) : null,
+      saver: context.canEdit()
+        ? context.createSaver(spotId, item.photo.id, cloudPhoto.developRevision, cloudPhoto.contentSha256)
+        : null,
     },
     settings,
   };

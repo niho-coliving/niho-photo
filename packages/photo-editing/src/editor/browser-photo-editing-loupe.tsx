@@ -1,6 +1,13 @@
 "use client";
 
-import { useEffect, type CSSProperties, type KeyboardEvent, type MutableRefObject, type PointerEvent } from "react";
+import {
+  useEffect,
+  useState,
+  type CSSProperties,
+  type KeyboardEvent,
+  type MutableRefObject,
+  type PointerEvent,
+} from "react";
 
 import { Spinner } from "niho-ui/components/spinner";
 import type { DevelopGeometry, DevelopSize } from "../develop-engine/develop-geometry";
@@ -105,6 +112,13 @@ export function BrowserPhotoEditingLoupe(props: {
   unclipped?: boolean;
 }) {
   const { opened, opening, openedVisible } = props;
+  const [showCanonicalPending, setShowCanonicalPending] = useState(false);
+  useEffect(() => {
+    setShowCanonicalPending(false);
+    if (!opened?.canonicalPending) return;
+    const timer = window.setTimeout(() => setShowCanonicalPending(true), 300);
+    return () => window.clearTimeout(timer);
+  }, [opened?.canonicalPending, opened?.key]);
   const drawn = openedVisible && opened !== null && (Boolean(opened.decoded) || opened.mode === "wasm");
   const crop = props.crop ?? null;
   const cutout = props.cutout ?? null;
@@ -220,6 +234,11 @@ export function BrowserPhotoEditingLoupe(props: {
       ) : null}
       {openedVisible && opened?.previewPending && !props.previewAccurate ? (
         <span role="status" className={LOUPE_BADGE_CLASS_NAME}>補正を反映中</span>
+      ) : null}
+      {openedVisible && showCanonicalPending && opened?.canonicalPending ? (
+        <span role="status" className="pointer-events-none absolute bottom-3 left-1/2 -translate-x-1/2 rounded-full bg-white/90 px-3 py-1.5 text-xs font-bold text-niho-text-sub shadow-sm">
+          高画質表示を準備中
+        </span>
       ) : null}
       {openedVisible && opened && !opened.decoded && (opened.mode !== "wasm" || opened.previewPending) && !opened.viewUrl ? (
         <p className="break-all px-6 text-center text-body font-bold text-niho-text-muted">{opened.fileName}</p>

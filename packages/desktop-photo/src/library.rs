@@ -51,6 +51,7 @@ use std::ffi::OsString;
 use std::io;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Condvar, Mutex};
 use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 
@@ -74,6 +75,11 @@ const PACKAGE_SUFFIXES: [&str; 6] = [".app", ".photoslibrary", ".lrdata", ".lrca
 /// サムネイルの長辺（px）の範囲。
 pub const MIN_THUMBNAIL_DIMENSION: u32 = 64;
 pub const MAX_THUMBNAIL_DIMENSION: u32 = 256;
+pub const MIN_INTERACTIVE_PREVIEW_DIMENSION: u32 = 1280;
+pub const MAX_INTERACTIVE_PREVIEW_DIMENSION: u32 = 2048;
+pub const INTERACTIVE_PREVIEW_CACHE_DIR_NAME: &str = "photo-interactive-previews";
+pub const INTERACTIVE_PREVIEW_CACHE_MAX_BYTES: u64 = 500 * 1024 * 1024;
+pub const INTERACTIVE_PREVIEW_TIMEOUT: Duration = Duration::from_millis(1_900);
 /// サムネイル 1 枚にかける時間の上限と、そのうち QuickLook を待つ時間。
 pub const THUMBNAIL_TIMEOUT: Duration = Duration::from_secs(20);
 const QUICKLOOK_TIMEOUT: Duration = Duration::from_secs(10);
@@ -84,6 +90,7 @@ pub const THUMBNAIL_CACHE_DIR_NAME: &str = "photo-thumbnails";
 pub const THUMBNAIL_CACHE_MAX_BYTES: u64 = 500 * 1024 * 1024;
 /// 作ったサムネイルの大きさの上限（長辺 256px の PNG でも数百 KB。超えるものは作れなかったとみなす）。
 const MAX_THUMBNAIL_BYTES: u64 = 4 * 1024 * 1024;
+const MAX_INTERACTIVE_PREVIEW_BYTES: u64 = 16 * 1024 * 1024;
 /// サムネイルを作る一時フォルダ（キャッシュの中の `work-<乱数>`）。これより古いものは落ちた仕事の残りとして消す。
 pub(crate) const WORK_DIR_PREFIX: &str = "work-";
 const ORPHAN_WORK_AGE: Duration = Duration::from_secs(60 * 60);
@@ -472,11 +479,22 @@ pub(crate) enum ToolExit {
   Exited(bool),
   /// `deadline` を過ぎたので止めた
   TimedOut,
+  /// 呼び出し側が写真を切り替えたので止めた。
+  Cancelled,
 }
 
 /// 子プロセスを走らせ、終わるか `deadline` まで待つ。過ぎたら止めて（SIGKILL）`TimedOut`。起動できなければ Err。
 /// blocking のスレッドから呼ぶ（`tokio::process` は使っていないので、終わるまで見に行く）。
 pub(crate) fn run_tool(program: &Path, args: &[OsString], deadline: Instant) -> io::Result<ToolExit> {
+  run_tool_cancellable(program, args, deadline, None)
+}
+
+pub(crate) fn run_tool_cancellable(
+  program: &Path,
+  args: &[OsString],
+  deadline: Instant,
+  cancelled: Option<&AtomicBool>,
+) -> io::Result<ToolExit> {
   let mut child = Command::new(program)
     .args(args)
     .stdin(Stdio::null())
@@ -486,6 +504,11 @@ pub(crate) fn run_tool(program: &Path, args: &[OsString], deadline: Instant) -> 
   loop {
     match child.try_wait() {
       Ok(Some(status)) => return Ok(ToolExit::Exited(status.success())),
+      Ok(None) if cancelled.is_some_and(|flag| flag.load(Ordering::Acquire)) => {
+        let _ = child.kill();
+        let _ = child.wait();
+        return Ok(ToolExit::Cancelled);
+      }
       Ok(None) if Instant::now() >= deadline => {
         let _ = child.kill();
         let _ = child.wait();
@@ -498,6 +521,26 @@ pub(crate) fn run_tool(program: &Path, args: &[OsString], deadline: Instant) -> 
         return Err(err);
       }
     }
+  }
+}
+
+fn make_interactive_preview_with_macos_tools(
+  source: &Path,
+  max_dimension: u32,
+  work_dir: &Path,
+  deadline: Instant,
+  cancelled: &AtomicBool,
+) -> Result<PathBuf, MakeFailure> {
+  // RAWでsips fallbackするとfull decodeになり得るため、interactive経路はQuickLookの大きい埋込previewだけに限定する。
+  match run_tool_cancellable(
+    Path::new(QLMANAGE),
+    &quicklook_args(source, max_dimension, work_dir),
+    deadline,
+    Some(cancelled),
+  ) {
+    Ok(ToolExit::Exited(_)) => first_made_file(work_dir).ok_or(MakeFailure::Failed),
+    Ok(ToolExit::TimedOut | ToolExit::Cancelled) => Err(MakeFailure::TimedOut),
+    Err(_) => Err(MakeFailure::Failed),
   }
 }
 
@@ -566,7 +609,7 @@ pub fn make_with_macos_tools(job: &ThumbnailJob) -> Result<PathBuf, MakeFailure>
     job.deadline,
   ) {
     Ok(ToolExit::Exited(true)) if is_regular_file(&output) => Ok(output),
-    Ok(ToolExit::TimedOut) => Err(MakeFailure::TimedOut),
+    Ok(ToolExit::TimedOut | ToolExit::Cancelled) => Err(MakeFailure::TimedOut),
     _ => Err(MakeFailure::Failed),
   }
 }
@@ -785,8 +828,12 @@ impl Drop for JobSlot<'_> {
 
 /// 作ったサムネイルを読む。空・大きすぎる・PNG でも JPEG でもないものは None。
 fn read_made_thumbnail(made: &Path) -> Option<(Vec<u8>, ThumbnailFormat)> {
+  read_made_image(made, MAX_THUMBNAIL_BYTES)
+}
+
+fn read_made_image(made: &Path, max_bytes: u64) -> Option<(Vec<u8>, ThumbnailFormat)> {
   let metadata = std::fs::symlink_metadata(made).ok()?;
-  if !metadata.is_file() || metadata.len() == 0 || metadata.len() > MAX_THUMBNAIL_BYTES {
+  if !metadata.is_file() || metadata.len() == 0 || metadata.len() > max_bytes {
     return None;
   }
   let bytes = std::fs::read(made).ok()?;
@@ -836,6 +883,10 @@ pub struct LibraryConfig {
   pub thumbnail_timeout: Duration,
   pub max_thumbnail_jobs: usize,
   pub maker: ThumbnailMaker,
+  /// provisional編集入力専用。256px tile cacheとqueueを共有しない。
+  pub interactive_preview_dir: Option<PathBuf>,
+  pub interactive_preview_cache_max_bytes: u64,
+  pub interactive_preview_timeout: Duration,
   /// 覚えたフォルダ・写真の置き場（`<app data>/photo-editing/remembered.json`、#16578）。None なら覚えない
   /// （`photo_editing_remembered` は空）
   pub remembered: Option<RememberedStore>,
@@ -858,6 +909,9 @@ pub struct PhotoLibrary {
   selected_session: Mutex<Vec<PathBuf>>,
   thumbnails: Option<ThumbnailCache>,
   jobs: JobSlots,
+  interactive_previews: Option<ThumbnailCache>,
+  interactive_jobs: Mutex<HashMap<String, (bool, Arc<AtomicBool>)>>,
+  interactive_slot: JobSlots,
 }
 
 impl PhotoLibrary {
@@ -868,12 +922,19 @@ impl PhotoLibrary {
       .clone()
       .map(|dir| ThumbnailCache::new(dir, config.thumbnail_cache_max_bytes));
     let jobs = JobSlots::new(config.max_thumbnail_jobs);
+    let interactive_previews = config
+      .interactive_preview_dir
+      .clone()
+      .map(|dir| ThumbnailCache::new(dir, config.interactive_preview_cache_max_bytes));
     Arc::new(Self {
       config,
       ids: Mutex::new(LibraryIds::default()),
       selected_session: Mutex::new(Vec::new()),
       thumbnails,
       jobs,
+      interactive_previews,
+      interactive_jobs: Mutex::new(HashMap::new()),
+      interactive_slot: JobSlots::new(1),
     })
   }
 
@@ -1198,6 +1259,80 @@ impl PhotoLibrary {
     let made = self.make_thumbnail(cache, &key, &path, max_dimension, &work_dir);
     let _ = std::fs::remove_dir_all(&work_dir);
     made
+  }
+
+  /// 1280〜2048pxのprovisional入力。専用cache/1本queueを使い、selectedは古いselected/prefetchを止めて先行する。
+  pub fn interactive_preview(
+    &self,
+    entry_id: &str,
+    max_dimension: u32,
+    request_id: &str,
+    prefetch: bool,
+  ) -> Result<Vec<u8>, PageError> {
+    if !(MIN_INTERACTIVE_PREVIEW_DIMENSION..=MAX_INTERACTIVE_PREVIEW_DIMENSION).contains(&max_dimension)
+      || !is_valid_id(request_id)
+    {
+      return Err(PageError::new(code::INVALID_REQUEST, THUMBNAIL_FAILED_MESSAGE));
+    }
+    let path = self.entry_path(entry_id).ok_or_else(photo_not_found)?;
+    let metadata = std::fs::symlink_metadata(&path)
+      .ok()
+      .filter(|metadata| metadata.is_file())
+      .ok_or_else(photo_not_found)?;
+    validate_photo(&path, CapabilityStage::Thumbnail)?;
+    let cache = self.interactive_previews.as_ref().ok_or_else(thumbnail_cache_failed)?;
+    let key = thumbnail_key(&path, metadata.len(), modified_nanos(&metadata), max_dimension);
+    if let Some(bytes) = cache.read(&key) {
+      return Ok(bytes);
+    }
+    let cancelled = Arc::new(AtomicBool::new(false));
+    {
+      let mut jobs = lock(&self.interactive_jobs);
+      if !prefetch {
+        for (_, flag) in jobs.values() {
+          flag.store(true, Ordering::Release);
+        }
+      }
+      jobs.insert(request_id.to_string(), (prefetch, cancelled.clone()));
+    }
+    let result = (|| {
+      let _slot = self.interactive_slot.acquire();
+      if cancelled.load(Ordering::Acquire) {
+        return Err(PageError::new(code::INTERNAL, THUMBNAIL_FAILED_MESSAGE));
+      }
+      if let Some(bytes) = cache.read(&key) {
+        return Ok(bytes);
+      }
+      let work_dir = cache.work_dir().map_err(|_| thumbnail_cache_failed())?;
+      let outcome = (|| {
+        let made = match make_interactive_preview_with_macos_tools(
+          &path,
+          max_dimension,
+          &work_dir,
+          Instant::now() + self.config.interactive_preview_timeout,
+          &cancelled,
+        ) {
+          Ok(made) => made,
+          Err(MakeFailure::TimedOut) => return Err(PageError::new(code::INTERNAL, THUMBNAIL_TIMEOUT_MESSAGE)),
+          Err(MakeFailure::Failed) => return Err(PageError::new(code::DECODE_FAILED, THUMBNAIL_FAILED_MESSAGE)),
+        };
+        let (bytes, format) = read_made_image(&made, MAX_INTERACTIVE_PREVIEW_BYTES)
+          .ok_or_else(|| PageError::new(code::DECODE_FAILED, THUMBNAIL_FAILED_MESSAGE))?;
+        // cache書込失敗でも今回の表示は返す。
+        let _ = cache.store(&key, format, &made, bytes.len() as u64, SystemTime::now());
+        Ok(bytes)
+      })();
+      let _ = std::fs::remove_dir_all(&work_dir);
+      outcome
+    })();
+    lock(&self.interactive_jobs).remove(request_id);
+    result
+  }
+
+  pub fn cancel_interactive_preview(&self, request_id: &str) {
+    if let Some((_, cancelled)) = lock(&self.interactive_jobs).get(request_id) {
+      cancelled.store(true, Ordering::Release);
+    }
   }
 
   fn make_thumbnail(

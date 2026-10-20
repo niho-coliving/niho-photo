@@ -59,6 +59,8 @@ export function BrowserPhotoEditingPresets(props: {
   settings: DevelopSettings;
   /** 補正のスライダーを動かしている */
   dragging: boolean;
+  /** 暫定入力の間は見本生成を待ち、編集の描画を優先する。 */
+  provisional?: boolean;
   /** wasm にある口（面が 1 回確かめて覚える。`useBrowserPhotoPresetSupport`） */
   support: BrowserPhotoPresetSupport;
   /**
@@ -81,7 +83,11 @@ export function BrowserPhotoEditingPresets(props: {
     photoKey: props.photoKey,
     // 選ばれているプリセットがあれば当てる前の補正、無ければ今の補正に当てた絵
     base: presets.selectedBase ?? settings,
-    paused: props.dragging || presets.amountActive,
+    paused:
+      props.provisional === true ||
+      props.dragging ||
+      presets.amountActive ||
+      presets.applyingPresetKey !== null,
     maxDimension: BROWSER_PRESET_GRID_THUMBNAIL_MAX_DIMENSION,
     resolvePreset: presets.resolvePreset,
   });

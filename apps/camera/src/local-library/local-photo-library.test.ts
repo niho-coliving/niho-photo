@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import { BrowserPhotoSourceError } from "niho-photo-editing/browser-photo-source";
 import { developEngineManifestPath } from "niho-photo-editing/develop-engine/develop-engine-manifest";
@@ -70,6 +70,7 @@ type FakeOptions = {
   rememberedPhotos?: LibraryEntry[];
   addedPhotos?: LibraryEntry[];
   forgetPhotosError?: CameraCommandError;
+  interactivePreview?: () => Promise<ArrayBuffer> | ArrayBuffer;
 };
 
 function sha(entryId: string): string {
@@ -181,6 +182,10 @@ function fakeNative(options: FakeOptions = {}) {
           tokens.delete(String(request?.token));
           return (options.bytes?.[token.entryId] ?? new Uint8Array([1, 2, 3])).slice().buffer;
         }
+        case "camera_photo_interactive_preview":
+          return options.interactivePreview?.() ?? JPEG_HEADER.slice().buffer;
+        case "camera_photo_cancel_interactive_preview":
+          return {};
         case "camera_export":
           openEntry(request?.photoId);
           return { saved: true, fileName: "P1524180.jpg" };
@@ -526,6 +531,95 @@ describe("working copies", () => {
       photoId: "photo-1",
       sourceContext: { hasSavedDevelopSettings: true, hasDevelopEdits: false, baseVersion: savedBase },
     });
+  });
+
+  it("loads a real-size provisional preview, deduplicates it, and keeps a hash-bound settings-only draft", async () => {
+    const fake = fakeNative();
+    await expect(
+      fake.library.loadInteractivePreview!("e-raw", { signal: signal(), maxDimension: 256 }),
+    ).rejects.toMatchObject({ code: "invalidRequest" });
+    const [first, second] = await Promise.all([
+      fake.library.loadInteractivePreview!("e-raw", { signal: signal(), maxDimension: 1600 }),
+      fake.library.loadInteractivePreview!("e-raw", { signal: signal(), maxDimension: 1600 }),
+    ]);
+    expect(first.file).not.toBe(second.file);
+    expect(first.photo).not.toBe(second.photo);
+    expect(first).toMatchObject({ width: 2000, height: 1500, photo: { id: "e-raw", contentSha256: sha("e-raw") } });
+    expect(first.file.name).toBe("interactive-preview");
+    expect(commandsOf(fake.calls).filter((command) => command === "camera_photo_interactive_preview")).toHaveLength(1);
+
+    const sameContent = fakeNative({ hashes: { "e-raw": ["c".repeat(64)], "e-heic": ["c".repeat(64)] } });
+    const raw = await sameContent.library.loadInteractivePreview!("e-raw", { signal: signal(), maxDimension: 1600 });
+    const heic = await sameContent.library.loadInteractivePreview!("e-heic", { signal: signal(), maxDimension: 1600 });
+    expect(raw.photo.id).toBe("e-raw");
+    expect(heic.photo.id).toBe("e-heic");
+    expect(commandsOf(sameContent.calls).filter((command) => command === "camera_photo_interactive_preview")).toHaveLength(1);
+
+    const settings = { v: 1, engine: "niho-6", look: "niho-standard-1", base: null, exposure: 0.4 } as DevelopSettings;
+    const firstDraft = await fake.library.saveProvisionalDraft!("e-raw", sha("e-raw"), settings);
+    await expect(fake.library.loadProvisionalDraft!("e-raw", sha("e-raw"))).resolves.toMatchObject({
+      contentSha256: sha("e-raw"),
+      settings,
+      generation: firstDraft.generation,
+    });
+    const secondDraft = await fake.library.saveProvisionalDraft!("e-raw", sha("e-raw"), { ...settings, exposure: 0.5 });
+    await expect(fake.library.removeProvisionalDraft!("e-raw", sha("e-raw"), firstDraft.generation)).resolves.toBe(false);
+    await expect(fake.library.removeProvisionalDraft!("e-raw", sha("e-raw"), secondDraft.generation)).resolves.toBe(true);
+    await expect(fake.library.loadProvisionalDraft!("e-raw", sha("e-raw"))).resolves.toBeNull();
+    // A deleted draft must not reuse an old save acknowledgement's generation (ABA).
+    const nextDraft = await fake.library.saveProvisionalDraft!("e-raw", sha("e-raw"), settings);
+    expect(nextDraft.generation).toBeGreaterThan(secondDraft.generation);
+    await expect(fake.library.removeProvisionalDraft!("e-raw", sha("e-raw"), firstDraft.generation)).resolves.toBe(false);
+    await expect(fake.library.loadProvisionalDraft!("e-raw", sha("e-raw"))).resolves.toMatchObject({ generation: nextDraft.generation });
+  });
+
+  it("reuses the selected photo handle for previews and skips opening unopened prefetch neighbors", async () => {
+    const fake = fakeNative();
+    await fake.library.openOriginal("e-raw");
+    await fake.library.loadInteractivePreview!("e-raw", { signal: signal(), maxDimension: 1600 });
+
+    expect(commandsOf(fake.calls).filter((command) => command === "camera_photo_open")).toHaveLength(1);
+
+    const beforePrefetch = fake.calls.length;
+    await fake.library.prefetchInteractivePreview!("e-heic", { signal: signal(), maxDimension: 1600 });
+    expect(fake.calls.slice(beforePrefetch)).toEqual([]);
+  });
+
+  it("abort直後の同じ写真の再選択はcancel済みjobを待たず、新しいnative要求を出す", async () => {
+    const finish: Array<(bytes: ArrayBuffer) => void> = [];
+    const fake = fakeNative({ interactivePreview: () => new Promise<ArrayBuffer>((resolve) => { finish.push(resolve); }) });
+    const abort = new AbortController();
+    const first = fake.library.loadInteractivePreview!("e-raw", { signal: abort.signal, maxDimension: 1600 });
+    await vi.waitFor(() => expect(finish).toHaveLength(1));
+    abort.abort();
+    const second = fake.library.loadInteractivePreview!("e-raw", { signal: signal(), maxDimension: 1600 });
+    await vi.waitFor(() => expect(finish).toHaveLength(2));
+    finish[1]!(JPEG_HEADER.slice().buffer);
+    await expect(second).resolves.toMatchObject({ width: 2000, height: 1500 });
+    finish[0]!(JPEG_HEADER.slice().buffer);
+    await expect(first).rejects.toMatchObject({ name: "AbortError" });
+    expect(commandsOf(fake.calls).filter((command) => command === "camera_photo_interactive_preview")).toHaveLength(2);
+  });
+
+  it("cancels the native provisional job when its last consumer switches photos", async () => {
+    let finish: (bytes: ArrayBuffer) => void = () => undefined;
+    let started: () => void = () => undefined;
+    const previewStarted = new Promise<void>((resolve) => {
+      started = resolve;
+    });
+    const fake = fakeNative({
+      interactivePreview: () => new Promise<ArrayBuffer>((resolve) => {
+        finish = resolve;
+        started();
+      }),
+    });
+    const abort = new AbortController();
+    const pending = fake.library.loadInteractivePreview!("e-raw", { signal: abort.signal, maxDimension: 1600 });
+    await previewStarted;
+    abort.abort();
+    finish(JPEG_HEADER.slice().buffer);
+    await expect(pending).rejects.toMatchObject({ name: "AbortError" });
+    expect(commandsOf(fake.calls)).toContain("camera_photo_cancel_interactive_preview");
   });
 
   it("prepares a RAW working copy with its size and reads it once by the token", async () => {

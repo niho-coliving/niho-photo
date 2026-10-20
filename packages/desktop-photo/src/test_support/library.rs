@@ -112,6 +112,9 @@ impl Fixture {
       thumbnail_timeout: Duration::from_secs(5),
       max_thumbnail_jobs: MAX_THUMBNAIL_JOBS,
       maker,
+      interactive_preview_dir: None,
+      interactive_preview_cache_max_bytes: 0,
+      interactive_preview_timeout: Duration::from_secs(1),
       remembered: Some(self.remembered_store()),
       log: Arc::new(move |kind, payload| logs.lock().unwrap().push(format!("{kind} {payload}"))),
     }

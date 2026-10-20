@@ -3001,15 +3001,16 @@ impl PhotoDevelop {
     requested_base: Option<&str>,
   ) -> Result<(CachedWorkingCopy, bool), DevelopError> {
     let (mut recipe, mut renderer) = self.recipe_of(sidecars, maker);
-    // producer を ON にした後も、同じ写真に未保存の旧 unsigned cache があれば、その編集途中の土台を維持する。
-    // 保存済み/draft の exact base を要求した場合は、この代替をせず必ずその base を復元する。
-    if maker == WorkCopyMaker::RawSigned && requested_base.is_none() {
+    let lookup_started = Instant::now();
+    let legacy_cached = if maker == WorkCopyMaker::RawSigned && requested_base.is_none() {
       let (legacy_recipe, _) = self.recipe_of(sidecars, WorkCopyMaker::RawLegacy);
-      if let Some(cached) = cache.find(&photo.digest.key, &legacy_recipe, None) {
-        return Ok((cached, true));
-      }
-    }
-    if let Some(cached) = cache.find(&photo.digest.key, &recipe, requested_base) {
+      cache.find(&photo.digest.key, &legacy_recipe, None)
+    } else {
+      None
+    };
+    let cached = legacy_cached.or_else(|| cache.find(&photo.digest.key, &recipe, requested_base));
+    self.log("develop_stage", json!({ "stage": "cacheLookup", "elapsedMs": lookup_started.elapsed().as_secs_f64() * 1000.0, "cached": cached.is_some() }));
+    if let Some(cached) = cached {
       return Ok((cached, true));
     }
     let _turn = self.queue.enter();
@@ -3072,6 +3073,7 @@ impl PhotoDevelop {
     }
     // 描いている間に写真が変わっていたら、その作業コピーは使わない
     self.verify_original(photo)?;
+    let store_started = Instant::now();
     let cached = cache
       .store(
         generation,
@@ -3093,6 +3095,10 @@ impl PhotoDevelop {
         ),
         kind => internal(format!("cache store: {kind}")),
       })?;
+    self.log(
+      "develop_stage",
+      json!({ "stage": "cacheStore", "elapsedMs": store_started.elapsed().as_secs_f64() * 1000.0 }),
+    );
     self.sweep_cache(std::slice::from_ref(&cached.file));
     Ok((cached, false))
   }
@@ -3278,10 +3284,15 @@ impl PhotoDevelop {
       &sidecars.registry
     };
     let tool = &sidecars.paths.apple_raw_linear;
+    let info_started = Instant::now();
     let info = self.run(
       tool,
       &os_args([OsStr::new("info"), photo.path.as_os_str(), OsStr::new("--json")]),
       self.config.timeouts.query,
+    );
+    self.log(
+      "develop_stage",
+      json!({ "stage": "info", "elapsedMs": info_started.elapsed().as_secs_f64() * 1000.0 }),
     );
     if !info.succeeded() {
       return Err(self.failure(operation, "info", &info, photo, work, &[]));
@@ -3408,6 +3419,11 @@ impl PhotoDevelop {
     let rendered = self.run(tool, &args, self.config.timeouts.heavy);
     if !rendered.succeeded() {
       return Err(self.failure(operation, "render", &rendered, photo, work, &[]));
+    }
+    if let Some(meta) = read_json_file(&tool_meta) {
+      for (stage, elapsed_ms) in raw_stage_timings(&meta) {
+        self.log("develop_stage", json!({ "stage": stage, "elapsedMs": elapsed_ms }));
+      }
     }
     let working_copy_meta: Value = std::fs::read(&meta_path)
       .ok()
@@ -4041,3 +4057,21 @@ mod tests;
 #[cfg(test)]
 #[path = "develop_local_raster_tests.rs"]
 mod local_raster_tests;
+
+// Tool metadata also contains private paths and capture metadata. Only these finite timings may enter logs.
+fn raw_stage_timings(meta: &Value) -> Vec<(&'static str, f64)> {
+  [
+    ("decodeRender", "decode"),
+    ("lens", "lens"),
+    ("whiteBalanceTableCheck", "whiteBalance"),
+    ("color", "color"),
+    ("lanczos4", "downsample"),
+    ("encode", "encode"),
+  ]
+  .into_iter()
+  .filter_map(|(key, stage)| {
+    let elapsed = meta.get("timingMs")?.get(key)?.as_f64()?;
+    (elapsed.is_finite() && elapsed >= 0.0).then_some((stage, elapsed))
+  })
+  .collect()
+}

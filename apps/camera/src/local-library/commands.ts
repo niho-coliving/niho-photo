@@ -203,6 +203,16 @@ export function createCameraCommands(invoke: Invoke = tauriInvoke) {
     /** `developSource` の `token` のバイト列（1 回限り）。 */
     developSourceBytes: async (photoId: string, token: string) =>
       toBytes(await call<unknown>("camera_develop_source_bytes", { photoId, token })),
+    /** canonical とは別の QuickLook / ImageIO 系プレビュー（raw IPC、長辺 1280〜2048px）。 */
+    interactivePreview: async (
+      entryId: string,
+      maxDimension: number,
+      requestId: string,
+      priority: "selected" | "prefetch",
+    ) => toBytes(await call<unknown>("camera_photo_interactive_preview", { entryId, maxDimension, requestId, priority })),
+    cancelInteractivePreview: async (requestId: string) => {
+      await call<Record<string, never>>("camera_photo_cancel_interactive_preview", { requestId });
+    },
     /** 原寸の JPEG を保存ダイアログで選んだ場所へ書き出す。 */
     exportPhoto: (
       photoId: string,

@@ -417,6 +417,14 @@ export function BrowserPhotoEditingWorkbench(props: {
     replaceCloudPhoto: cloud.replacePhoto,
     markEditedPreviewPending: cloud.markEditedPreviewPending,
   });
+  // フォルダを読めた後の idle に段2 engineを1個だけ起こす。RAWのdecode・全件先読みはしない。
+  useEffect(() => {
+    if (!editingAllowed || items.length === 0 || !items.some((item) => isDevelopWorkTarget(item.photo))) return;
+    const timer = window.setTimeout(() => {
+      void develop.readyDevelopEngine().catch(() => undefined);
+    }, 0);
+    return () => window.clearTimeout(timer);
+  }, [develop.readyDevelopEngine, editingAllowed, items]);
   if (props.articlePrepareForInsert) {
     props.articlePrepareForInsert.current = async (photoIds) => {
       const checkDrafts = () => {
@@ -481,6 +489,29 @@ export function BrowserPhotoEditingWorkbench(props: {
     presets,
     crop,
   } = open;
+  // 選択の前後1枚だけをidle prefetchする。cacheはcontent hash別で、canonical producerとは共有しない。
+  useEffect(() => {
+    if (!library.prefetchInteractivePreview || !selectedItem) return;
+    const index = items.findIndex((item) => item.key === selectedItem.key);
+    if (index < 0) return;
+    const neighbors = [items[index - 1], items[index + 1]].filter(
+      (item): item is BrowserItem => Boolean(item && !item.adding && isDevelopWorkTarget(item.photo)),
+    );
+    if (neighbors.length === 0) return;
+    const abort = new AbortController();
+    const timer = window.setTimeout(() => {
+      for (const item of neighbors) {
+        void library.prefetchInteractivePreview?.(item.photo.id, {
+          signal: abort.signal,
+          maxDimension: 1600,
+        }).catch(() => undefined);
+      }
+    }, 500);
+    return () => {
+      window.clearTimeout(timer);
+      abort.abort();
+    };
+  }, [items, library, selectedItem]);
   const currentAlbumId = browserCloudPlaceAlbumId(place);
   // この Mac のフォルダの木と、選んでいるフォルダ（フォルダのある写真の出どころだけ。C3 移行元設計）
   const folders = useBrowserPhotoFolders({ library, spotId: props.spotId, place, selectPlace, setStatus, mountedRef });
@@ -510,7 +541,7 @@ export function BrowserPhotoEditingWorkbench(props: {
     supported: mobileEditing && presetSupport.thumbnails,
     photoKey: mobileEditing ? wasmPhotoKey : null,
     base: presets.selectedBase ?? settings,
-    paused: open.dragging || presets.amountActive,
+    paused: opened?.input?.kind === "provisional" || open.dragging || presets.amountActive || presets.applyingPresetKey !== null,
     resolvePreset: presets.resolvePreset,
   });
   const add = useBrowserPhotoAdd({
@@ -551,6 +582,7 @@ export function BrowserPhotoEditingWorkbench(props: {
     latestAccessRef,
     selectedItem,
     selectedItems,
+    pendingEdits: presets,
     operationRef,
     setOperation,
     saveGenerationRef,
@@ -1919,7 +1951,9 @@ export function BrowserPhotoEditingWorkbench(props: {
                 } : undefined}
                 lockedReason={loupeLockedReason}
                 sourceError={sourceError}
-                onReload={selectedItem ? () => void openItem(selectedItem, { reload: true }) : null}
+                onReload={selectedItem
+                  ? () => void (opened?.input?.kind === "provisional" ? open.retryCanonical() : openItem(selectedItem, { reload: true }))
+                  : null}
                 favorite={!wide && !mobileEditorItem ? (shownFavoriteControl ?? null) : null}
               />
             )}
@@ -1983,7 +2017,9 @@ export function BrowserPhotoEditingWorkbench(props: {
                 } : undefined}
                 lockedReason={loupeLockedReason}
                 sourceError={sourceError}
-                onReload={selectedItem ? () => void openItem(selectedItem, { reload: true }) : null}
+                onReload={selectedItem
+                  ? () => void (opened?.input?.kind === "provisional" ? open.retryCanonical() : openItem(selectedItem, { reload: true }))
+                  : null}
                 unclipped
               />
             }
@@ -2124,6 +2160,7 @@ export function BrowserPhotoEditingWorkbench(props: {
                       photoKey={wasmPhotoKey}
                       settings={settings}
                       dragging={open.dragging}
+                      provisional={opened?.input?.kind === "provisional"}
                       support={presetSupport}
                       variant={view.variant}
                       onOpenPanel={view.onOpenPanel}

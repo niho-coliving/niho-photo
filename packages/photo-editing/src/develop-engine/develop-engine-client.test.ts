@@ -76,6 +76,7 @@ afterEach(() => {
 describe("createDevelopEngine", () => {
   it("写真編集タブの正確な opt-in query だけを Worker init の診断フラグにする", async () => {
     expect(photoDevelopDiagnosticsEnabled({ pathname: "/host/spot/photoEditing", search: "?photoDevelopPerf=1" })).toBe(true);
+    expect(photoDevelopDiagnosticsEnabled({ pathname: "/", search: "?photoDevelopPerf=1" })).toBe(true);
     expect(photoDevelopDiagnosticsEnabled({ pathname: "/host/spot/photoEditing", search: "?photoDevelopPerf=0" })).toBe(false);
     expect(photoDevelopDiagnosticsEnabled({ pathname: "/host/spot/other", search: "?photoDevelopPerf=1" })).toBe(false);
     const worker = new FakeWorker();

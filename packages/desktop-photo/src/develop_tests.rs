@@ -769,3 +769,13 @@ fn a_working_copy_made_across_a_cache_purge_is_not_kept() {
     )
     .is_ok());
 }
+
+#[test]
+fn raw_stage_diagnostics_only_exposes_finite_allowlisted_times() {
+  let value = serde_json::json!({
+    "input": { "path": "fixture-input.rw2" },
+    "timingMs": { "decodeRender": 21.5, "encode": 3, "lens": -1,
+      "color": "not-a-time", "path": "fixture-input.rw2", "serialNumber": 99 }
+  });
+  assert_eq!(raw_stage_timings(&value), vec![("decode", 21.5), ("encode", 3.0)]);
+}
