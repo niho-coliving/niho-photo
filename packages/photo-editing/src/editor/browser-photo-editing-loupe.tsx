@@ -119,7 +119,7 @@ export function BrowserPhotoEditingLoupe(props: {
   return (
     <section
       aria-label="写真プレビュー"
-      className={cn("absolute inset-0 flex items-center justify-center bg-white", props.unclipped ? null : "overflow-hidden")}
+      className={cn("absolute inset-0 flex items-center justify-center bg-[var(--photo-editing-surface,white)]", props.unclipped ? null : "overflow-hidden")}
     >
       {opening && !openedVisible ? <Spinner size="lg" label="写真を読み込み中" /> : null}
       {drawn && opened && crop ? (

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { ChevronRight, Folder, FolderOpen, Images, Laptop, MoreHorizontal, Plus } from "lucide-react";
 
 import type { PhotoLibraryFolder } from "../library/photo-library";
@@ -44,6 +44,8 @@ export function BrowserPhotoEditingFolderTree(props: {
   onForgetFolder: (folder: PhotoLibraryFolder) => void;
   onForgetSelectedPhotos?: () => void;
   onRetry: () => void;
+  /** 木の底に出す 1 行（NIHO photo の「版」） */
+  footer?: ReactNode;
 }) {
   const [expanded, setExpanded] = useState<ReadonlySet<string>>(() => new Set());
   const { folders, selectedFolderId } = props;
@@ -157,7 +159,7 @@ export function BrowserPhotoEditingFolderTree(props: {
   );
 
   return (
-    <aside aria-label="写真の場所" className="hidden min-h-0 overflow-y-auto border-r border-niho-border bg-white p-3 lg:block">
+    <aside aria-label="写真の場所" className="hidden min-h-0 flex-col overflow-y-auto border-r border-niho-border bg-[var(--photo-editing-surface,white)] p-3 lg:flex">
       <div className="mb-1 flex min-h-11 items-center justify-between gap-2 pr-1">
         <h3 className="flex min-h-9 min-w-0 items-center gap-2 px-3 text-sub font-bold text-niho-text-sub">
           <Laptop className="h-4 w-4 shrink-0 text-niho-text-muted" aria-hidden />
@@ -239,6 +241,11 @@ export function BrowserPhotoEditingFolderTree(props: {
       ) : (
         renderNodes(folders, 0)
       )}
+      {props.footer ? (
+        <div className="sticky bottom-0 -mx-3 -mb-3 mt-auto border-t border-niho-border bg-[var(--photo-editing-surface,white)] px-3 py-2 text-xs text-niho-text-muted">
+          {props.footer}
+        </div>
+      ) : null}
     </aside>
   );
 }

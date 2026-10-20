@@ -35,8 +35,9 @@ import type {
 } from "../library/photo-library";
 import { PhotoLibraryProvider, type PhotoEditingHost } from "../library/photo-library-context";
 import { getPhotoEditingBreadcrumbSnapshot } from "../photo-editing-breadcrumb-store";
+import { createCloudMockClient } from "../cloud-sharing-contract";
 
-import { BrowserPhotoEditingWorkbench } from "./browser-photo-editing-workbench";
+import { BrowserPhotoEditingWorkbench, type BrowserPhotoCloudSharingBinding } from "./browser-photo-editing-workbench";
 import { browserPhotoLastFolderStorageKey } from "./use-browser-photo-folders";
 
 (globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
@@ -204,7 +205,11 @@ async function settle() {
   }
 }
 
-async function render(library: PhotoLibrary) {
+type WorkbenchExtraProps = Partial<Parameters<typeof BrowserPhotoEditingWorkbench>[0]>;
+type WorkbenchRenderOptions = WorkbenchExtraProps | BrowserPhotoCloudSharingBinding;
+
+async function render(library: PhotoLibrary, options: WorkbenchRenderOptions = {}) {
+  const extra: WorkbenchExtraProps = "client" in options ? { cloudSharing: options } : options;
   await act(async () => {
     root.render(
       <QueryClientProvider client={client}>
@@ -216,6 +221,7 @@ async function render(library: PhotoLibrary) {
             active
             openCloudPhotoId={null}
             onOpenCloudPhotoHandled={() => undefined}
+            {...extra}
           />
         </PhotoLibraryProvider>
       </QueryClientProvider>,
@@ -224,12 +230,12 @@ async function render(library: PhotoLibrary) {
   await settle();
 }
 
-async function remount(library: PhotoLibrary) {
+async function remount(library: PhotoLibrary, extra: WorkbenchExtraProps = {}) {
   await act(async () => root.unmount());
   client.clear();
   client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   root = createRoot(container);
-  await render(library);
+  await render(library, extra);
 }
 
 async function click(element: Element | null | undefined) {
@@ -558,6 +564,37 @@ describe("この Mac のフォルダの面", () => {
   });
 });
 
+describe("NIHO photo の窓いっぱいの見た目（appearance・treeHidden・treeFooter。niho-photo#50）", () => {
+  it("既定（card）は web の角丸の枠と固定の高さのまま、左の木の底には何も出さない", async () => {
+    const fake = fakeLibrary({ tree: [TRAVEL], photos: { f1: [photo("p1", "IMG_0001.JPG")] } });
+    await render(fake.library);
+    const surface = container.querySelector('section[aria-label="ブラウザ写真編集"]');
+    expect(surface?.className).toContain("rounded-2xl");
+    expect(surface?.className).not.toContain("flex-1");
+    expect(surface?.querySelector(".grid")?.className).toContain("lg:h-[calc(100dvh-12rem)]");
+    expect(tree().textContent).not.toContain("版");
+  });
+
+  it("fill は枠と固定の高さを付けず親の高さに合わせ、木の底に 1 行、treeHidden で木を出さない", async () => {
+    const fake = fakeLibrary({ tree: [TRAVEL], photos: { f1: [photo("p1", "IMG_0001.JPG")] } });
+    await render(fake.library, { appearance: "fill", treeFooter: <span>版 1.2.3</span> });
+    const surface = container.querySelector('section[aria-label="ブラウザ写真編集"]');
+    expect(surface?.className).toContain("flex-1");
+    expect(surface?.className).not.toContain("rounded-2xl");
+    const grid = surface?.querySelector(".grid");
+    expect(grid?.className).not.toContain("lg:h-[calc(100dvh-12rem)]");
+    expect(grid?.className).toContain("flex-1");
+    expect(grid?.className).toContain("lg:grid-cols-[14rem_minmax(0,1fr)]");
+    expect(tree().textContent).toContain("版 1.2.3");
+
+    await remount(fake.library, { appearance: "fill", treeHidden: true });
+    expect(container.querySelector('aside[aria-label="写真の場所"]')).toBeNull();
+    expect(container.querySelector('section[aria-label="ブラウザ写真編集"] .grid')?.className).toContain("lg:grid-cols-[minmax(0,1fr)]");
+    // 一覧はそのまま読めている
+    expect(tile("IMG_0001.JPG")).toBeDefined();
+  });
+});
+
 describe("置き場が「この Mac」のときのクラウドの文言と道具", () => {
   it("クラウドの文言・クラウドから消す・写真を足す・お気に入り・クラウドの印を出さず、消すキーも効かない", async () => {
     const fake = fakeLibrary({ tree: [FAMILY], photos: { f2: [photo("p2", "FAMILY.JPG"), photo("p4", "SEA.JPG")] } });
@@ -608,5 +645,35 @@ describe("クラウドの写真の出どころ", () => {
     expect(query).toMatchObject({ hasOriginal: true });
     expect(query).not.toHaveProperty("folderId");
     expect(getPhotoEditingBreadcrumbSnapshot()?.map((item) => item.label)).toEqual(["クラウド", "写真"]);
+    // Optional trusted host binding が無い production boundary では共有能力を見せない。
+    expect(Array.from(container.querySelectorAll("button")).some((button) => button.textContent === "共有")).toBe(false);
+  });
+
+  it("trusted host binding を明示したときだけ、選んだクラウド写真に共有操作を出す", async () => {
+    const fake = fakeLibrary({ place: "cloud", cloudPhotos: [photo("c1", "CLOUD.JPG")] });
+    const cloudSharing: BrowserPhotoCloudSharingBinding = {
+      client: createCloudMockClient(),
+      access: "unavailable",
+      selectResource: () => ({
+        resourceType: "photo",
+        resourceId: "server-photo-c1",
+        ownerType: "user",
+        ownerId: "server-owner",
+        tenantId: "server-tenant",
+        workspaceId: null,
+      }),
+    };
+    await render(fake.library, cloudSharing);
+    await click(tile("CLOUD.JPG"));
+    const shareButton = Array.from(container.querySelectorAll<HTMLButtonElement>("button")).find(
+      (candidate) => candidate.textContent === "共有",
+    );
+    expect(shareButton?.disabled).toBe(true);
+
+    await render(fake.library, { ...cloudSharing, access: "available" });
+    const enabledShareButton = Array.from(container.querySelectorAll<HTMLButtonElement>("button")).find(
+      (candidate) => candidate.textContent === "共有",
+    );
+    expect(enabledShareButton?.disabled).toBe(false);
   });
 });

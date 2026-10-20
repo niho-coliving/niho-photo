@@ -139,7 +139,7 @@ export function BrowserPhotoEditingAdjustments(props: {
     </button>
   ) : undefined;
   return (
-    <aside aria-label="補正" className="hidden min-h-0 overflow-y-auto border-l border-niho-border bg-white px-4 py-2 lg:block">
+    <aside aria-label="補正" className="hidden min-h-0 overflow-y-auto border-l border-niho-border bg-[var(--photo-editing-surface,white)] px-4 py-2 lg:block">
       {tool ? (
         <div role="group" aria-label={PHOTO_EDITING_TOOL_GROUP_LABEL} className="mb-1 flex gap-1">
           {tool.tools.map((item) => {

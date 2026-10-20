@@ -36,6 +36,30 @@ fn make_raster_seed_with_sips(source: &Path, output: &Path) {
   assert!(status.success(), "sips cannot make the synthetic PNG fixture");
 }
 
+#[cfg(target_os = "macos")]
+fn convert_with_sips(source: &Path, format: &str, output: &Path) {
+  let status = std::process::Command::new("/usr/bin/sips")
+    .args(["-s", "format", format])
+    .arg(source)
+    .arg("--out")
+    .arg(output)
+    .status()
+    .expect("the public macOS runner provides /usr/bin/sips");
+  assert!(status.success(), "unsupported capability: sips cannot encode {format}");
+}
+
+#[cfg(target_os = "macos")]
+fn make_raster_seed_with_sips(source: &Path, output: &Path) {
+  let status = std::process::Command::new("/usr/bin/sips")
+    .args(["-z", "24", "32", "-s", "format", "png"])
+    .arg(source)
+    .arg("--out")
+    .arg(output)
+    .status()
+    .expect("the public macOS runner provides /usr/bin/sips");
+  assert!(status.success(), "sips cannot make the synthetic PNG fixture");
+}
+
 // --- 走査の規則 ---
 
 #[test]

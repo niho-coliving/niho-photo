@@ -7,8 +7,13 @@ export type {
   CloudOperationMap,
   CloudResourceRef,
   CloudResult,
+  MutationHeaders,
   ShareCreateRequest,
+  ShareCreateResponse,
   ShareListRequest,
+  ShareListItem,
+  ShareListResponse,
   ShareRevokeRequest,
+  ShareRevokeResponse,
   VerifiedAuthContext,
 } from "../../niho-cloud-contract/src/v1.js";
