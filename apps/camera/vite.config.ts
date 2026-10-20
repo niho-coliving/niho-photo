@@ -12,7 +12,7 @@ import { defineConfig } from "vitest/config";
 // 公開移植前の内部構成については docs/migration/mac-client.md を参照。
 // package の外のファイル（../../packages/*）から import しても camera の 1 つになるよう、peerDependencies を全部 dedupe する
 // （二重の React はフックを壊す）。
-const SHARED_PACKAGE_DIRS = ["../../packages/photo-editing", "../../packages/ui"].map((dir) =>
+const SHARED_PACKAGE_DIRS = ["../../packages/photo-editing", "../../packages/ui", "../../packages/desktop-account/ts"].map((dir) =>
   fileURLToPath(new URL(dir, import.meta.url)),
 );
 
