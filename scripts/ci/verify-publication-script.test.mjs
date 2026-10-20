@@ -35,7 +35,7 @@ test("公開guardはmanifest外も含めてrepository全体の禁止pathを検�
     generatedFiles: [], excludedSources: [], deferredScopes: [],
   }, null, 2)}\n`);
   await put("docs/legal/asset-inventory.csv", "source_commit,source_path,sha256,size_bytes,category,origin,license_evidence,redistribution,decision\n");
-  await put("package-lock.json", '{"packages":{}}\n');
+  await put("package-lock.json", '{"name":"fixture","version":"0.0.0","lockfileVersion":3,"requires":true,"packages":{"":{"name":"fixture","version":"0.0.0"}}}\n');
   await put(sourcePath, source);
   execFileSync("git", ["init", "--quiet"], { cwd: root });
   execFileSync("git", ["add", "-A"], { cwd: root });
