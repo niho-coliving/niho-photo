@@ -807,15 +807,18 @@ impl Session {
             output_size: (output.width, output.height),
             output_index,
         };
+        let stages = pipeline::ColorSampleStages {
+            cubes: self.cubes.as_ref(),
+            local: self.local.as_ref(),
+            color_points: self.color_points.as_ref(),
+        };
         let sampled = match source {
             SessionSource::Raster(_) => pipeline::sample_raster_before_color_points(
                 px,
                 location,
                 false,
                 render_settings,
-                self.cubes.as_ref(),
-                self.local.as_ref(),
-                self.color_points.as_ref(),
+                stages,
                 &mut self.effects,
             ),
             SessionSource::WorkingCopy {
@@ -826,9 +829,7 @@ impl Session {
                 location,
                 true,
                 render_settings,
-                self.cubes.as_ref(),
-                self.local.as_ref(),
-                self.color_points.as_ref(),
+                stages,
                 &mut self.effects,
             ),
             SessionSource::WorkingCopy { meta, .. } => pipeline::sample_raw_before_color_points(
@@ -836,9 +837,7 @@ impl Session {
                 location,
                 meta,
                 render_settings,
-                self.cubes.as_ref(),
-                self.local.as_ref(),
-                self.color_points.as_ref(),
+                stages,
                 &mut self.effects,
             ),
         };
@@ -1785,13 +1784,13 @@ mod tests {
         let mut changed_stage = moved.clone();
         changed_stage.saturation = 6.0;
         session.render(&changed_stage, 8, Quality::Final).unwrap();
-        let (stage_key, _, _, _) = state(&session);
+        let stage_key = state(&session).0.to_string();
         assert_ne!(stage_key, warm_key);
 
         session
             .render(&changed_stage, 8, Quality::Interactive)
             .unwrap();
-        let (quality_key, _, _, _) = state(&session);
+        let quality_key = state(&session).0.to_string();
         assert_ne!(quality_key, stage_key);
 
         session

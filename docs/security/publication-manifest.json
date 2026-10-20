@@ -888,10 +888,11 @@
         "path": "packages/photo-editing/src/editor/browser-photo-editing-model.ts",
         "sha256": "98c0a3ee8ff431c0f6f0b63a9666b1e5f723e75c5b9e2d33f17199f40f69c41d"
       },
-      "outputSha256": "a591b853a8171497d4d6452d4aa40c8d49269781fd504f2f6d2d8369ccb01a4b",
+      "outputSha256": "9519189754fb909a729c2b68f0ab10489a7b2951fa00e6cb39ab68768defd6f0",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
-        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。"
+        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
+        "色点のサンプル座標と回帰試験を整合し、操作中640pxと確定解像度を分ける"
       ]
     },
     {
@@ -1600,10 +1601,11 @@
         "path": "packages/photo-editing/src/editor/use-browser-photo-open.ts",
         "sha256": "2755ea206c0fe9edc8df05ff40d78326310449cb9d509e75a291fdc3822a1d2e"
       },
-      "outputSha256": "0a9a31787ce0e02a7a02b1826f2c740a03903f9a02c86e510e5cf348d49f2f00",
+      "outputSha256": "380313b9e1f51a3f65eab2d96bd7f4c2db49d51b75c27d5de9b297b2e07e8191",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
-        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。"
+        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
+        "色点のサンプル座標と回帰試験を整合し、操作中640pxと確定解像度を分ける"
       ]
     },
     {
@@ -5486,7 +5488,7 @@
         "path": "packages/develop-engine/crates/niho-develop/src/lib.rs",
         "sha256": "1591d49effaa779c8e23ad6877508ccf336565eec8336d5b4e6faa3b5d3846b0"
       },
-      "outputSha256": "cb2934fba42c48cb435b19b87f6d6f5fe75ba450e5c1f83e6dcc198ce447b676",
+      "outputSha256": "523750008b11159dfc162c5a5e0d2408a478df2dc24e3a146d970081652cb192",
       "modifications": [
         "Issue #28の色相安定engine追加と互換回帰を反映。",
         "新しい色相保持エンジンと新旧バイナリの能力境界・数値回帰を整合。",
@@ -5496,7 +5498,9 @@
         "size key source共有をfield分離可能なhelperへ整理",
         "描画精度・型・共有サンプル位置・キーボードの最終レビューを反映",
         "Issue #30のSession単位pre-point plane cacheとwarm/cold invalidation検査を追加。",
-        "点補正の選択plane cacheと精度・依存関係・headroom回帰を整備"
+        "点補正の選択plane cacheと精度・依存関係・headroom回帰を整備",
+        "色サンプルの段参照を集約し、キャッシュキーの回帰試験では借用を次描画前に解放する",
+        "色点のサンプル座標と回帰試験を整合し、操作中640pxと確定解像度を分ける"
       ]
     },
     {
@@ -5623,7 +5627,7 @@
         "path": "packages/develop-engine/crates/niho-develop/src/pipeline.rs",
         "sha256": "d982d76cf1b5d34526f700e5edfcef00ae8647d22b845c0f7234ed340ba9d641"
       },
-      "outputSha256": "100a5133cb58fa0bbedc468ad803ef1c34c94e7ed0837198240690e15093ea6b",
+      "outputSha256": "c658df800807838d8075637bc61c2f3c354b2bef8dd2e9fc1a59c24650ad7867",
       "modifications": [
         "Issue #28の色相安定engine追加と互換回帰を反映。",
         "新しい色相保持エンジンと新旧バイナリの能力境界・数値回帰を整合。",
@@ -5634,7 +5638,9 @@
         "描画精度・型・共有サンプル位置・キーボードの最終レビューを反映",
         "float Q分岐を一本化",
         "Issue #30のpoint非依存pre-Q cube key、pre-point plane再利用、picker共有経路を実装。",
-        "点補正の選択plane cacheと精度・依存関係・headroom回帰を整備"
+        "点補正の選択plane cacheと精度・依存関係・headroom回帰を整備",
+        "色サンプルの有効点有無で共通のf32選択座標を使い、段の依存参照を構造体で共有する",
+        "色点のサンプル座標と回帰試験を整合し、操作中640pxと確定解像度を分ける"
       ]
     },
     {
@@ -8570,13 +8576,13 @@
   "generatedFiles": [
     {
       "path": "docs/color-mixer.md",
-      "sha256": "445c7a7a460bc387d2669e625c4659cad3ea4c97549db80522fd81e913300d7d",
-      "origin": "Issue #30の公開仕様だけから新規作成したOklch色ミキサーの保存・描画・picker・preset契約。非公開形式や私有データを含まない。\n変更理由: exact描画方式と比較実測値を追記\n変更理由: オーナーの長期品質方針と比較の限界を記録\n変更理由: 色テーブル量子化の実測と新engineの精度修正を記録\n変更理由: 描画精度・型・共有サンプル位置・キーボードの最終レビューを反映\n変更理由: Issue #30のpre-Q cube keyとSession plane cacheの依存・寿命・精度契約を追記。\n変更理由: 最終Qfloat後のLightroom比較実測値へ更新し再測定保留を解消。\n変更理由: 点補正の選択plane cacheと精度・依存関係・headroom回帰を整備"
+      "sha256": "3cb6d64fdc127ab607c1d3c164b277418adadb1426b42ef02adcc2cbf51b0121",
+      "origin": "Issue #30の公開仕様だけから新規作成したOklch色ミキサーの保存・描画・picker・preset契約。非公開形式や私有データを含まない。\n変更理由: exact描画方式と比較実測値を追記\n変更理由: オーナーの長期品質方針と比較の限界を記録\n変更理由: 色テーブル量子化の実測と新engineの精度修正を記録\n変更理由: 描画精度・型・共有サンプル位置・キーボードの最終レビューを反映\n変更理由: Issue #30のpre-Q cube keyとSession plane cacheの依存・寿命・精度契約を追記。\n変更理由: 最終Qfloat後のLightroom比較実測値へ更新し再測定保留を解消。\n変更理由: 点補正の選択plane cacheと精度・依存関係・headroom回帰を整備\n変更理由: 色点のサンプル座標と回帰試験を整合し、操作中640pxと確定解像度を分ける"
     },
     {
       "path": "packages/develop-engine/crates/niho-develop/tests/color_points.rs",
-      "sha256": "926cd67c721425fe55be925b2414024b71fc9c338200c5176a2084fdd9d94097",
-      "origin": "Issue #30の公開仕様だけから新規作成した合成Oklch値・schema・preset・性能のRust回帰。実写真・非公開fixture・私有参照出力を含まない。\n変更理由: 最小rangeの非grid描画回帰テストを追加\n変更理由: small-full-small picker source回帰を追加\n変更理由: crop正規化座標picker回帰を追加\n変更理由: picker回帰assertをcross-target向けに整理\n変更理由: 描画精度・型・共有サンプル位置・キーボードの最終レビューを反映\n変更理由: Issue #30の最小range、cache再利用、grading外側不変、独立roundtrip精度検査を追加。\n変更理由: 点補正の選択plane cacheと精度・依存関係・headroom回帰を整備"
+      "sha256": "390ef9d879b45839f376e9a77cf8c41dcb68ca4f7e2bdd631c480f0c2ffb9a71",
+      "origin": "Issue #30の公開仕様だけから新規作成した合成Oklch値・schema・preset・性能のRust回帰。実写真・非公開fixture・私有参照出力を含まない。\n変更理由: 最小rangeの非grid描画回帰テストを追加\n変更理由: small-full-small picker source回帰を追加\n変更理由: crop正規化座標picker回帰を追加\n変更理由: picker回帰assertをcross-target向けに整理\n変更理由: 描画精度・型・共有サンプル位置・キーボードの最終レビューを反映\n変更理由: Issue #30の最小range、cache再利用、grading外側不変、独立roundtrip精度検査を追加。\n変更理由: 点補正の選択plane cacheと精度・依存関係・headroom回帰を整備\n変更理由: 色相境界の選択重みを独立のsmoothstep期待値で検証する\n変更理由: 色点のサンプル座標と回帰試験を整合し、操作中640pxと確定解像度を分ける"
     },
     {
       "path": "packages/photo-editing/src/editor/photo-editing-color-mixer.tsx",

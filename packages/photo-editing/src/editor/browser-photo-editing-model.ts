@@ -210,6 +210,8 @@ export const WIDE_MIN_WIDTH_PX = 1024;
 export const DISCARD_DESCRIPTION = "書き出していない補正は失われます。";
 /** 段 2 で描く長辺（プレビューと同じ 1280px。持っておく写真もこの大きさに縮める） */
 export const DEVELOP_PREVIEW_MAX_DIMENSION = BROWSER_PHOTO_PREVIEW_LONG_EDGE;
+/** 独立点のexact計算を保つ操作中の一時プレビュー。確定時は通常サイズへ戻す。 */
+export const DEVELOP_COLOR_POINT_DRAG_MAX_DIMENSION = 640;
 /** 切り抜きのある写真のオリジナルを開く作業サイズの上限（crate の一発の描画の既定 `decodeCap` と同じ 4096px） */
 export const DEVELOP_GEOMETRY_WORKING_CAP = 4096;
 export const DEVELOP_SAVE_FAILED_TEXT = "保存できませんでした";

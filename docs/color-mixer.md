@@ -47,3 +47,5 @@ Issue #30 の色ミキサーは、従来の HSL、彩度、自然な彩度の式
 picker は表示 canvas の `getBoundingClientRect()` から 0〜1 の描画座標へ換算し、Session/Wasm/Worker の `sampleColor` で通常描画と同じ source・geometry・local pass・cube を通した Stage Q の float Oklch を得る。採取位置は niho-10/11 色相補正の後、既存 `colorPoints` と Color Grading と出力変換の前であり、Canvas の 8-bit sRGB を逆変換しない。保存契約外の HDR/負値・非有限値は clamp せずエラーにする。写真や設定の世代、プリセット、補正前比較、crop/cutout、preview pending が変わった非同期結果は破棄する。表示中の crosshair は矢印キー（Shift で大きく移動）で動かし、Enter/Space で確定、Esc で取消す。
 
 Adobe `crs:PointColors` は非公開形式のため、属性・入れ子・point-only XMP のいずれでも「使えない項目」として報告し、読み書きや推測変換をしない。XMP preset を適用しても NIHO の `colorPoints` は保持する。NIHO 点を補間する場合は id ごとに数値を線形補間し、target hue だけ最短角を使う。0% は base と完全一致する。XMP 書き出しは `PointColors` を捏造せず、`notWritten: ["colorPoints"]` を利用者へ返す。
+
+操作中の有効な色点は長辺640pxの一時プレビューを用い、点の式・選択範囲はexactのまま保つ。操作を離すと通常の1280px Finalへ戻り、書き出しの指定解像度は変えない。Studio実測（0.18.0、合成2048×1365、WASM、1/8点）で2048px Finalは0.67–0.85秒。1280px dragは0.20–0.29秒で100ms目標を超えたため、640px操作中サイズを採用した。640pxの最終測定値は検証後に記録する。

@@ -612,7 +612,18 @@ fn independent_axes_neutral_wrap_wide_gamut_and_overlap_are_safe() {
     );
     wrap.target.hue = 1.0;
     wrap.range.hue = 5.0;
-    assert!(hue_distance(prophoto_to_oklch(color_points(input, &[wrap]))[2], 9.0) < 0.1);
+    // At 359° the target at 1° is two degrees away. The 5° support
+    // therefore contributes smoothstep(1 - 2/5) = 0.648 of the 10° delta.
+    let hue_weight = 0.6 * 0.6 * (3.0 - 2.0 * 0.6);
+    let wrapped = prophoto_to_oklch(color_points(input, &[wrap]));
+    assert_lch_close(
+        wrapped,
+        [
+            roundtrip[0],
+            roundtrip[1],
+            (roundtrip[2] + 10.0 * hue_weight).rem_euclid(360.0),
+        ],
+    );
 
     let gray = color_points([0.3, 0.3, 0.3], std::slice::from_ref(&chroma));
     assert!(gray.iter().all(|value| value.is_finite()));

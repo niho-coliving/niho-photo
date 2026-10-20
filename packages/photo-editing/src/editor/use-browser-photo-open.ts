@@ -49,6 +49,7 @@ import { appDialog } from "niho-ui/app-dialog";
 
 import {
   DEVELOP_PREVIEW_MAX_DIMENSION,
+  DEVELOP_COLOR_POINT_DRAG_MAX_DIMENSION,
   DISCARD_DESCRIPTION,
   cloudKey,
   developBaseVersion,
@@ -492,9 +493,15 @@ export function useBrowserPhotoOpen(params: {
     }
     const sequence = ++order.requested;
     const interactive = previewing ? previewInteractive : dragging;
+    // Point selections stay exact while dragging; only the temporary preview
+    // is smaller. Final render, sampling, saved previews and export keep their size.
+    const activePoints = shownSettings.colorPoints?.some((point) =>
+      point.delta.hue !== 0 || point.delta.chromaScale !== 1 || point.delta.lightness !== 0);
+    const maxDimension = interactive && activePoints
+      ? DEVELOP_COLOR_POINT_DRAG_MAX_DIMENSION : DEVELOP_PREVIEW_MAX_DIMENSION;
     const renderRequestedAt = photoDevelopDiagnosticsEnabled() ? performance.now() : null;
     void engine
-      .render(shownSettings, { maxDimension: DEVELOP_PREVIEW_MAX_DIMENSION, interactive })
+      .render(shownSettings, { maxDimension, interactive })
       .then((frame) => {
         if (!frame) return;
         if (!interactive && !previewing) uploadInitial(settingsJson, frame);

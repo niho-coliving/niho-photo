@@ -2452,6 +2452,13 @@ pub(crate) struct ColorSampleLocation {
     pub output_index: usize,
 }
 
+#[derive(Clone, Copy)]
+pub(crate) struct ColorSampleStages<'a> {
+    pub cubes: Option<&'a SettingsCubes>,
+    pub local: Option<&'a LocalPass>,
+    pub color_points: Option<&'a ColorPointPlane>,
+}
+
 /// Samples the normal raster path at Stage Q immediately before independent
 /// color points and Color Grading. `index` addresses the same working image
 /// and local-pass plane used by the preceding Session render.
@@ -2460,11 +2467,14 @@ pub(crate) fn sample_raster_before_color_points(
     location: ColorSampleLocation,
     input_is_prophoto: bool,
     s: &DevelopSettings,
-    cubes: Option<&SettingsCubes>,
-    local: Option<&LocalPass>,
-    color_points: Option<&ColorPointPlane>,
+    stages: ColorSampleStages<'_>,
     effects_cache: &mut EffectsCache,
 ) -> [f64; 3] {
+    let ColorSampleStages {
+        cubes,
+        local,
+        color_points,
+    } = stages;
     let ColorSampleLocation {
         working_index: index,
         output_size,
@@ -2520,8 +2530,7 @@ pub(crate) fn sample_raster_before_color_points(
         point_tail: None,
         output_transform: false,
     };
-    let before = tail.before_color_points(v).map(f64::from);
-    color_ops::prophoto_to_oklch(before)
+    color_ops::cached_prophoto_to_oklch(tail.before_color_points(v)).map(f64::from)
 }
 
 pub(crate) fn sample_raw_before_color_points(
@@ -2529,11 +2538,14 @@ pub(crate) fn sample_raw_before_color_points(
     location: ColorSampleLocation,
     meta: &WorkingCopyMeta,
     s: &DevelopSettings,
-    cubes: Option<&SettingsCubes>,
-    local: Option<&LocalPass>,
-    color_points: Option<&ColorPointPlane>,
+    stages: ColorSampleStages<'_>,
     effects_cache: &mut EffectsCache,
 ) -> [f64; 3] {
+    let ColorSampleStages {
+        cubes,
+        local,
+        color_points,
+    } = stages;
     let ColorSampleLocation {
         working_index: index,
         output_size,
@@ -2601,8 +2613,7 @@ pub(crate) fn sample_raw_before_color_points(
         color,
         point_tail: None,
     };
-    let before = tail.before_color_points(v).map(f64::from);
-    color_ops::prophoto_to_oklch(before)
+    color_ops::cached_prophoto_to_oklch(tail.before_color_points(v)).map(f64::from)
 }
 
 #[cfg(test)]
