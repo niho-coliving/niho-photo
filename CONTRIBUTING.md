@@ -1,6 +1,6 @@
 # NIHO photo への貢献
 
-このリポジトリは source-visible / all rights reserved です。Issueでの提案や不具合報告を歓迎します。外部からのコード・画像等のPRは、権利条件をメンテナーと個別に確認してから取り込みます。PRの投稿だけで著作権が移転したり、NIHOに再配布許諾が自動で与えられたりするものとは扱いません。
+このリポジトリは source-visible / all rights reserved で、オープンソースではありません。Issueでの提案や不具合報告を歓迎します。外部からのコード・画像等のPRは、著作権者と利用・改変・配布に必要な権利条件をメンテナーが個別に確認してから取り込みます。CLAは未整備です。PRの投稿だけで著作権の譲渡や、NIHOへの追加の利用許諾に合意したとは扱いません。合意できないPRはマージしません。
 
 ## Issueを開く前に
 
@@ -12,7 +12,7 @@
 ## PRの進め方
 
 1. Issueで対象範囲を確認し、変更を小さく分けます。既存のprivateソースのcommit履歴は公開リポジトリへ持ち込まないでください。
-2. 変更した資産の出所、著作権者、公開許可、第三者ライセンス、必要なnoticeを確認します。[公開ゲート](docs/security/publication-gates.md) と [資産台帳](docs/legal/asset-inventory.csv) に従います。
+2. 変更した資産の出所、著作権者、第三者ライセンス、必要なnotice、不要metadataを確認します。NIHO所有資産は公開既定で、一件ずつ許可申請しません。[公開ゲート](docs/security/publication-gates.md) と [資産台帳](docs/legal/asset-inventory.csv) に従います。
 3. PRテンプレートに検証結果、公開境界、Issue参照、資産の差分を記入します。検出値やprivate URLを本文・ログへ書かないでください。
 4. メンテナーのレビューと公開CIを通してからsquashで統合します。外部からのコード・資産は、別途合意した利用許諾を記録するまでマージしません。
 
@@ -30,4 +30,4 @@ gitleaks dir --redact --no-banner .
 
 ## 責務境界
 
-本リポジトリはMacクライアント、写真編集、RAW現像の公開可能部分、PKCEログインクライアントを扱います。API、DB、クラウド写真、認証・認可の最終判定、Apple署名・公証、本番配布は非公開側の責務です。公開PRでこれらの権限やsecretを追加しないでください。
+本リポジトリはMacクライアント、写真編集、RAW現像、PKCEログイン、クラウド共有のUI・公開API contract・mock、updaterクライアントを扱います。API、DB、object storage、認証・認可の最終判定、Apple署名・公証、本番配布は非公開側の責務です。公開PRでこれらの権限やsecretを追加しないでください。
