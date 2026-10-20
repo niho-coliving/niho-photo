@@ -45,3 +45,8 @@ private-reference owner は長辺1500、blur 2、flat pixel の同じ評価で n
 - preset 3本と WB を含む gate 判定
 
 WB測定は、順応したlinear ProPhotoをlinear sRGBへ戻しclipと8bit符号化を通した表示色を比較するmatrix単体の測定である。負値や範囲外のlinear値を、clip済み参照へ直接比べない。完全な処理順・presetとの相互作用を検証した結果とは扱わない。CIEDE2000は[Sharma/Wu/Dalalの実装検証資料](https://hajim.rochester.edu/ece/sites/gsharma/ciede2000/)の代表的数値例で確認する。
+
+
+調整用の既存教師データは `tools/color-review-teachers.py --repo <checkout> --work <private-directory>` で比較する。private-directory の `data/teachers` と `data/teachers2` に従来のmanifest・inputs・lr-exportを置く。出力先がrepository内なら拒否し、sealed manifestも拒否する。niho-6/8は全教師のneutral＋3 presetを比較し、原理式Bは各cohortのISO最小・中央値・最大というmetadataだけの部分集合で開発時の失敗を調べる。白紙除外は従来の90%以上clip条件のまま。Bの部分集合の平均を全教師平均と比較せず、同じscene/variantの対で差を確認する。
+
+全入力hash・scene名・画像は非公開出力内に残す。公開するのは `teacher-summary-sanitized.json` の匿名集計、exact commit、renderer hash、測定手順だけである。このツールは独立評価を実行せず、既存164条件・夜24・独立20やRAWの最終gateを完了扱いにしない。
