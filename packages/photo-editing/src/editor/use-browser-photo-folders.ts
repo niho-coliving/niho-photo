@@ -133,7 +133,7 @@ export function useBrowserPhotoFolders(params: {
   const foldersTool = library.folders;
   const selectedTool = library.selectedPhotos;
   const queryClient = useQueryClient();
-  const queryKey = photoEditingQueryKeys.folders(library.place);
+  const queryKey = photoEditingQueryKeys.folders(library.place, params.spotId);
   const storageKey = browserPhotoLastFolderStorageKey(library.place);
   const query = useQuery({
     queryKey,
@@ -145,7 +145,7 @@ export function useBrowserPhotoFolders(params: {
     staleTime: 0,
     refetchOnWindowFocus: false,
   });
-  const selectedQueryKey = photoEditingQueryKeys.selectedPhotos(library.place);
+  const selectedQueryKey = photoEditingQueryKeys.selectedPhotos(library.place, params.spotId);
   const selectedQuery = useQuery({
     queryKey: selectedQueryKey,
     queryFn: ({ signal }) => {

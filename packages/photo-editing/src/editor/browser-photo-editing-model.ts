@@ -192,7 +192,7 @@ export type BrowserPhotoOperation = {
 };
 
 /** 止めている操作の種類（`operationRef` に入れる）。 */
-export type BrowserPhotoOperationKind = "export" | "delete" | "bulk";
+export type BrowserPhotoOperationKind = "export" | "delete" | "bulk" | "copy";
 
 export type BrowserViewMode = "grid" | "loupe";
 
@@ -212,7 +212,7 @@ export type BrowserPhotoPresetsVariant = "row" | "panel";
 export type BrowserPhotoAccess = { canEdit: boolean; cloudOriginalsAllowed: boolean; spotId: string };
 
 /** 画面を離れる前に呼ぶ確かめ（false なら離れない。開いた写真の保存・破棄の確認を済ませる）。 */
-export type PhotoEditingLeaveGuard = () => Promise<boolean>;
+export type PhotoEditingLeaveGuard = (options?: { release?: boolean }) => Promise<boolean>;
 
 /**
  * 離れる前の確かめを、アプリの殻の遷移（web は admin の route。`AdminRouteLeaveGuardRegistrar` と同じ形）に登録する口。null で外す。

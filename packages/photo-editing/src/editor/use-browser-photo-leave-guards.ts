@@ -54,13 +54,13 @@ export function useBrowserPhotoLeaveGuards(params: {
   const flushPendingSavesRef = useRef(flushPendingSaves);
   flushPendingSavesRef.current = flushPendingSaves;
 
-  const confirmRouteLeave = useCallback(async (): Promise<boolean> => {
+  const confirmRouteLeave = useCallback(async (options: { release?: boolean } = {}): Promise<boolean> => {
     if (operationRef.current || addQueue.running) return false;
     // 補正のほかの保存（背景除去）も送り終えてから離れる（送れなければ離れない。離れようとするたびに失敗分を送り直す）
     const flushPending = flushPendingSavesRef.current;
     if (flushPending && !(await flushPending())) return false;
     // wasm は確かめず、保存を送り終えてから離れる（保存できなければ離れない）
-    if (developSessionRef.current) return leaveEditing({ release: true });
+    if (developSessionRef.current) return leaveEditing({ release: options.release !== false });
     if (!dirty) return true;
     const saveGeneration = saveGenerationRef.current;
     const confirmed = await appDialog.confirm({
@@ -143,4 +143,6 @@ export function useBrowserPhotoLeaveGuards(params: {
     };
     // 画面の切り替え（タブを戻した・URL の依頼が来た）でも登録し直す
   }, [confirmRouteLeave, guarded, surfaceActive, openCloudPhotoId]);
+
+  return confirmRouteLeave;
 }

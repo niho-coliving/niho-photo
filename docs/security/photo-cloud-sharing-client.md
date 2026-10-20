@@ -11,3 +11,7 @@ Photo 編集面は `cloudSharing` が明示的に渡されたクラウド写真�
 `PhotoCloudShareController` は作成・一覧（cursorによる追加読み込み）・失効を状態機械として扱います。mutation の再試行と再開では同じ idempotency key と payload を使い、取消・通信切替・応答競合の後は一覧で照合します。結果が不確かな操作は同じ `CloudClient` instanceのメモリ内で画面を閉じても保持し、別 key の操作を開始しません。host は共有セッション中に adapter instance を安定させます。UI は対象写真と期限を確認させ、共有 URL を作成成功時だけ表示します。URL は画面を閉じるか対象が変わると破棄し、一覧 response、永続 storage、log、analytics に残しません。
 
 `createPhotoCloudSharingPreviewClient` は合成 URL を返すメモリ内 mock で、unit/component test と明示的な preview 専用です。private adapter の実装、実 API E2E、本番有効化は private integration の固定 SHA 取り込みとサーバー側の受入検証を経て行います。
+
+## 個人クラウドの編集面とは分ける
+
+NIHO photo の本人用「クラウド / この Mac」と「クラウドにコピー」は、共有リンクとは別の `cloudBinding` で接続します。この binding を渡しても `cloudSharing` は有効にならず、逆も同様です。公開版単体はどちらの private adapter も持たず、本番の個人クラウドと共有操作は trusted host が各 binding を明示的に注入するまで無効です。個人クラウドの公開契約と転送境界は [この Mac の写真ソース](../features/local-photo-sources.md#個人クラウドとの接続境界) を参照してください。

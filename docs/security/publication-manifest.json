@@ -802,11 +802,12 @@
         "path": "packages/photo-editing/src/editor/browser-photo-editing-footer.tsx",
         "sha256": "448c53cf1da0a5f3b41e1d507d2ac5d618a39c0b300571ad95a670bdba86bca0"
       },
-      "outputSha256": "0a36c44436185190ea8f72371ca6c70438ae939c4340bfe0f42861600ac665fb",
+      "outputSha256": "a20c8ba79f0bddbf404ee10a6d2662e7009ae2e14963cb177e2711bb8cea9041",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
-        "信頼済みhost接続時だけ共有操作を表示する任意のボタンを追加。"
+        "信頼済みhost接続時だけ共有操作を表示する任意のボタンを追加。",
+        "個人クラウドの明示binding、保存先切替、単一写真コピーと公開境界を追加。"
       ]
     },
     {
@@ -907,13 +908,15 @@
         "path": "packages/photo-editing/src/editor/browser-photo-editing-model.ts",
         "sha256": "98c0a3ee8ff431c0f6f0b63a9666b1e5f723e75c5b9e2d33f17199f40f69c41d"
       },
-      "outputSha256": "0a8e4312315cec2c11a87697da81ffd7a303df8cdb013ca1e1e2245a5823a6f5",
+      "outputSha256": "284750cd51bb21171e4ae94d78faca465f339ee75c389a7301f3c6858fab0cba",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
         "niho-photo#51 L2: 右端の道具の帯と補正パネルの並び（見出し行・自動 / 白黒のチップ・プリセットの行・面の切り替え）。",
         "niho-photo#35の共有写真操作を#51の編集画面と統合する。",
         "色点のサンプル座標と回帰試験を整合し、操作中640pxと確定解像度を分ける",
+        "個人クラウドの明示binding、保存先切替、単一写真コピーと公開境界を追加。",
+        "Allow guarded leave to retain edit session",
         "Issue #13の段階表示、provisional draft、canonical handoffと書き出し境界を実装。",
         "Issue 13 progressive RAW open implementation",
         "右パネルの補正・プリセット面の切替と段階RAW openを統合し、暫定中の見本生成停止を保つ。"
@@ -1044,7 +1047,7 @@
         "path": "packages/photo-editing/src/editor/browser-photo-editing-workbench.tsx",
         "sha256": "f655136ae0c985d793822ca8bef1668dba26ffd4bb8f13d2ba3d6c2ccb13ceb6"
       },
-      "outputSha256": "4c4de699a7b70dc7350911af225ae63b137afd2f74ae9afbd8638ceeca6da829",
+      "outputSha256": "0f9bf9edbed146c56b31f2774072c41638f6ecda63ed2ee34442b64ea91dc496",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
@@ -1067,6 +1070,10 @@
         "PR #59 の main 競合解消と切替拒否時のフォーカス復元",
         "PR #59 のフィルムストリップと共有UIの統合",
         "Keep filmstrip and hue mixer loupe integration",
+        "個人クラウドの明示binding、保存先切替、単一写真コピーと公開境界を追加。",
+        "コピー進捗の競合と不正値を閉じ、完了後の遅延通知を無視。",
+        "公開編集面の個人クラウドコピー操作を更新",
+        "Keep edit session while copying local photo",
         "Issue #13の段階表示、provisional draft、canonical handoffと書き出し境界を実装。",
         "Issue 13 progressive RAW open implementation",
         "PCとmobileのpreset見本を暫定中は先読みせず操作を優先。",
@@ -1470,10 +1477,11 @@
         "path": "packages/photo-editing/src/editor/use-browser-photo-add.ts",
         "sha256": "13f9a4fc8d664358e9dddd1adc8681841cb8ad5e79f74edbcd8bff07f5adb6b9"
       },
-      "outputSha256": "606f485ab1236fe7e764a92c050c49896d4d8018ce5a7c64686b14f987602720",
+      "outputSha256": "a354965a31056fb5f016d54a9fbb64c9a238c584a40b43d92b0b38357910da2b",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
-        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。"
+        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
+        "個人クラウドの明示binding、保存先切替、単一写真コピーと公開境界を追加。"
       ]
     },
     {
@@ -1648,12 +1656,13 @@
         "path": "packages/photo-editing/src/editor/use-browser-photo-folders.ts",
         "sha256": "69941494097660785d1ce690c32ce4518598ec6e90baf626a92099c43d4caa34"
       },
-      "outputSha256": "a63207c8c7e85a5cd2fd9cdc0331a3c3817612bc88af4fe8a6328251c1e3f4bf",
+      "outputSha256": "42d35e39fa435b2ef889c9bbf93042895605f7b1d8b7ed3edac7439921540f18",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "行末空白と余分な末尾空行を整理。",
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
-        "任意の個別写真ソース契約と選んだ写真のUI、復元、取消、再試行、失敗時参照保持を追加"
+        "任意の個別写真ソース契約と選んだ写真のUI、復元、取消、再試行、失敗時参照保持を追加",
+        "個人クラウドの明示binding、保存先切替、単一写真コピーと公開境界を追加。"
       ]
     },
     {
@@ -1679,8 +1688,11 @@
         "path": "packages/photo-editing/src/editor/use-browser-photo-leave-guards.ts",
         "sha256": "3080836ffb0f730bc94303f4b561ed3c2a553512746b3ced1ef3b2e06780adf5"
       },
-      "outputSha256": "3080836ffb0f730bc94303f4b561ed3c2a553512746b3ced1ef3b2e06780adf5",
-      "modifications": []
+      "outputSha256": "116f019854bc83344d8e6a66743ec3d6697d08cd6cc3af6e1be2cc47c330d079",
+      "modifications": [
+        "個人クラウドの明示binding、保存先切替、単一写真コピーと公開境界を追加。",
+        "Support guarded session retention for copy"
+      ]
     },
     {
       "path": "packages/photo-editing/src/editor/use-browser-photo-open.ts",
@@ -2196,11 +2208,13 @@
         "path": "packages/photo-editing/src/photo-editing-query-keys.ts",
         "sha256": "b0873ce957f9eca6dd2451b13e87d38e52e28d08ab5fbc5c31c6ebf6e94c0248"
       },
-      "outputSha256": "c6838c5d0dfef6308f8baa02069d379783a53a6573003c95cea059bcd14bc06a",
+      "outputSha256": "aeeba9917099875bd9bc82a1442520a2ec6d4bb67bc1e5bdbdea24410260783f",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
-        "任意の個別写真ソース契約と選んだ写真のUI、復元、取消、再試行、失敗時参照保持を追加"
+        "任意の個別写真ソース契約と選んだ写真のUI、復元、取消、再試行、失敗時参照保持を追加",
+        "個人クラウドの明示binding、保存先切替、単一写真コピーと公開境界を追加。",
+        "個人クラウドnamespaceと写真ソース境界の説明を明確化。"
       ]
     },
     {
@@ -3730,11 +3744,14 @@
         "path": "apps/camera/src/App.test.tsx",
         "sha256": "a6e473f6f16afb180c6be04a32b8a2560bfc69c30f8f077300156bcd291ddb98"
       },
-      "outputSha256": "12364bbdd9e72e08a43fa79784a46e5c4a26e2c0de32c099bf9ac8a8bf26b3d6",
+      "outputSha256": "06a401ccdc367d534c475052f470e6f1cdf0850ee372ca6743e0c6bf16194346",
       "modifications": [
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
         "複合空状態の写真追加アクションに期待値を更新。 / 選択写真専用commandをApp test fixtureにも追加。",
-        "Issue #50のMac画面配置・表示色・パネル・版位置の変更。"
+        "Issue #50のMac画面配置・表示色・パネル・版位置の変更。",
+        "個人クラウドの明示binding、保存先切替、単一写真コピーと公開境界を追加。",
+        "保存先切替UIのアクセシビリティ検証を更新",
+        "コピー中の保存先切替拒否テストを更新"
       ]
     },
     {
@@ -3745,11 +3762,15 @@
         "path": "apps/camera/src/App.tsx",
         "sha256": "ca49b85f8269569ef243f5b0164751b3347c1cc268f906ce53dd984aa470c19e"
       },
-      "outputSha256": "4c5c054e907f7485f9a057326792045c216b409d0848f4f347bfcd9df14f6140",
+      "outputSha256": "0ab64d887f061668c3751e70aaf6b4c350aa407ef8b53779dad4f2c5dc1fc9c8",
       "modifications": [
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
         "Issue #3のpublic OAuth/PKCE、ローカル専用UI、安全契約と公開依存を新規接続。実issuer・署名検証器が未契約のため本番接続は無効。",
-        "Issue #50のMac画面配置・表示色・パネル・版位置の変更。"
+        "Issue #50のMac画面配置・表示色・パネル・版位置の変更。",
+        "個人クラウドの明示binding、保存先切替、単一写真コピーと公開境界を追加。",
+        "個人クラウドnamespaceと写真ソース境界の説明を明確化。",
+        "保存先切替を常時表示しクラウド削除を停止",
+        "Guard cloud binding changes before remount"
       ]
     },
     {
@@ -8942,7 +8963,7 @@
     {
       "path": "packages/develop-engine/README.md",
       "sha256": "413cd3fe309dcdbeedda925df35542c545bef04758d38033df4ffbb3ae6a0a73",
-      "origin": "#9で独立作成。所有測定対・metadataを除いた所有RAW/参照画像、検証tool、公開build/test契約または第三者license全文。詳細はdocs/migration/raw-engine.mdと資産台帳に記録。\n#9で独立作成。所有測定対・metadataを除いた所有RAW/参照画像、検証tool、公開build/test契約または第三者license全文。詳細はdocs/migration/raw-engine.mdと資産台帳に記録。\n変更理由: 公開Issue #26/#27/#29: 旧版を保つfloat cube候補、研究用WB/H-Sプローブ、合成検証と計測契約を追加。"
+      "origin": "#9で独立作成。所有測定対・metadataを除いた所有RAW/参照画像、検証tool、公開build/test契約または第三者license全文。詳細はdocs/migration/raw-engine.mdと資産台帳に記録。\n#9で独立作成。所有測定対・metadataを除いた所有RAW/参照画像、検証tool、公開build/test契約または第三者license全文。詳細はdocs/migration/raw-engine.mdと資産台帳に記録。\n変更理由: 公開Issue #26/#27/#29: 旧版を保つfloat cube候補、研究用WB/H-Sプローブ、合成検証と計測契約を追加。\n#9で独立作成。所有測定対・metadataを除いた所有RAW/参照画像、検証tool、公開build/test契約または第三者license全文。詳細はdocs/migration/raw-engine.mdと資産台帳に記録。\n#9で独立作成。所有測定対・metadataを除いた所有RAW/参照画像、検証tool、公開build/test契約または第三者license全文。詳細はdocs/migration/raw-engine.mdと資産台帳に記録。\n#9で独立作成。所有測定対・metadataを除いた所有RAW/参照画像、検証tool、公開build/test契約または第三者license全文。詳細はdocs/migration/raw-engine.mdと資産台帳に記録。\n変更理由: 公開Issue #26/#27/#29: 旧版を保つfloat cube候補、研究用WB/H-Sプローブ、合成検証と計測契約を追加。\n#9で独立作成。所有測定対・metadataを除いた所有RAW/参照画像、検証tool、公開build/test契約または第三者license全文。詳細はdocs/migration/raw-engine.mdと資産台帳に記録。\n#9で独立作成。所有測定対・metadataを除いた所有RAW/参照画像、検証tool、公開build/test契約または第三者license全文。詳細はdocs/migration/raw-engine.mdと資産台帳に記録。\n変更理由: 公開Issue #26/#27/#29: 旧版を保つfloat cube候補、研究用WB/H-Sプローブ、合成検証と計測契約を追加。\n#9で独立作成。所有測定対・metadataを除いた所有RAW/参照画像、検証tool、公開build/test契約または第三者license全文。詳細はdocs/migration/raw-engine.mdと資産台帳に記録。\n#9で独立作成。所有測定対・metadataを除いた所有RAW/参照画像、検証tool、公開build/test契約または第三者license全文。詳細はdocs/migration/raw-engine.mdと資産台帳に記録。\n変更理由: 公開Issue #26/#27/#29: 旧版を保つfloat cube候補、研究用WB/H-Sプローブ、合成検証と計測契約を追加。"
     },
     {
       "path": "packages/develop-engine/crates/niho-base-raw/README.md",
@@ -8997,7 +9018,7 @@
     {
       "path": "packages/develop-engine/public-ci.json",
       "sha256": "037b44592b92776d7de822c5d90c376a3d1d27092ed1b4749434155b64eda8cb",
-      "origin": "#9で独立作成。所有測定対・metadataを除いた所有RAW/参照画像、検証tool、公開build/test契約または第三者license全文。詳細はdocs/migration/raw-engine.mdと資産台帳に記録。\n変更理由: Issue #5親レビューに従い形式検査・エラー保持・実decoder公開CI回帰を補強。\n変更理由: Swift regressionをmacOS 26専用jobへ分離し、macOS 14のnative scopeはRust/WASM検査だけにする。\n統合元の由来: #9で独立作成。所有測定対・metadataを除いた所有RAW/参照画像、検証tool、公開build/test契約または第三者license全文。詳細はdocs/migration/raw-engine.mdと資産台帳に記録。\n#9で独立作成。所有測定対・metadataを除いた所有RAW/参照画像、検証tool、公開build/test契約または第三者license全文。詳細はdocs/migration/raw-engine.mdと資産台帳に記録。\n変更理由: Issue #5親レビューに従い形式検査・エラー保持・実decoder公開CI回帰を補強。\n変更理由: Swift regressionをmacOS 26専用jobへ分離し、macOS 14のnative scopeはRust/WASM検査だけにする。\n#9で独立作成。所有測定対・metadataを除いた所有RAW/参照画像、検証tool、公開build/test契約または第三者license全文。詳細はdocs/migration/raw-engine.mdと資産台帳に記録。\n変更理由: Issue #5親レビューに従い形式検査・エラー保持・実decoder公開CI回帰を補強。\n変更理由: Swift regressionをmacOS 26専用jobへ分離し、macOS 14のnative scopeはRust/WASM検査だけにする。\n#9で独立作成。所有測定対・metadataを除いた所有RAW/参照画像、検証tool、公開build/test契約または第三者license全文。詳細はdocs/migration/raw-engine.mdと資産台帳に記録。\n変更理由: Issue #5親レビューに従い形式検査・エラー保持・実decoder公開CI回帰を補強。\n変更理由: Swift regressionをmacOS 26専用jobへ分離し、macOS 14のnative scopeはRust/WASM検査だけにする。\n#9で独立作成。所有測定対・metadataを除いた所有RAW/参照画像、検証tool、公開build/test契約または第三者license全文。詳細はdocs/migration/raw-engine.mdと資産台帳に記録。\n変更理由: Issue #5親レビューに従い形式検査・エラー保持・実decoder公開CI回帰を補強。\n変更理由: Swift regressionをmacOS 26専用jobへ分離し、macOS 14のnative scopeはRust/WASM検査だけにする。\n#9で独立作成。所有測定対・metadataを除いた所有RAW/参照画像、検証tool、公開build/test契約または第三者license全文。詳細はdocs/migration/raw-engine.mdと資産台帳に記録。\n変更理由: Issue #5親レビューに従い形式検査・エラー保持・実decoder公開CI回帰を補強。\n変更理由: Swift regressionをmacOS 26専用jobへ分離し、macOS 14のnative scopeはRust/WASM検査だけにする。"
+      "origin": "#9で独立作成。所有測定対・metadataを除いた所有RAW/参照画像、検証tool、公開build/test契約または第三者license全文。詳細はdocs/migration/raw-engine.mdと資産台帳に記録。\n変更理由: Issue #5親レビューに従い形式検査・エラー保持・実decoder公開CI回帰を補強。\n変更理由: Swift regressionをmacOS 26専用jobへ分離し、macOS 14のnative scopeはRust/WASM検査だけにする。\n統合元の由来: #9で独立作成。所有測定対・metadataを除いた所有RAW/参照画像、検証tool、公開build/test契約または第三者license全文。詳細はdocs/migration/raw-engine.mdと資産台帳に記録。\n#9で独立作成。所有測定対・metadataを除いた所有RAW/参照画像、検証tool、公開build/test契約または第三者license全文。詳細はdocs/migration/raw-engine.mdと資産台帳に記録。\n変更理由: Issue #5親レビューに従い形式検査・エラー保持・実decoder公開CI回帰を補強。\n変更理由: Swift regressionをmacOS 26専用jobへ分離し、macOS 14のnative scopeはRust/WASM検査だけにする。\n#9で独立作成。所有測定対・metadataを除いた所有RAW/参照画像、検証tool、公開build/test契約または第三者license全文。詳細はdocs/migration/raw-engine.mdと資産台帳に記録。\n変更理由: Issue #5親レビューに従い形式検査・エラー保持・実decoder公開CI回帰を補強。\n変更理由: Swift regressionをmacOS 26専用jobへ分離し、macOS 14のnative scopeはRust/WASM検査だけにする。\n#9で独立作成。所有測定対・metadataを除いた所有RAW/参照画像、検証tool、公開build/test契約または第三者license全文。詳細はdocs/migration/raw-engine.mdと資産台帳に記録。\n変更理由: Issue #5親レビューに従い形式検査・エラー保持・実decoder公開CI回帰を補強。\n変更理由: Swift regressionをmacOS 26専用jobへ分離し、macOS 14のnative scopeはRust/WASM検査だけにする。\n#9で独立作成。所有測定対・metadataを除いた所有RAW/参照画像、検証tool、公開build/test契約または第三者license全文。詳細はdocs/migration/raw-engine.mdと資産台帳に記録。\n変更理由: Issue #5親レビューに従い形式検査・エラー保持・実decoder公開CI回帰を補強。\n変更理由: Swift regressionをmacOS 26専用jobへ分離し、macOS 14のnative scopeはRust/WASM検査だけにする。\n#9で独立作成。所有測定対・metadataを除いた所有RAW/参照画像、検証tool、公開build/test契約または第三者license全文。詳細はdocs/migration/raw-engine.mdと資産台帳に記録。\n変更理由: Issue #5親レビューに従い形式検査・エラー保持・実decoder公開CI回帰を補強。\n変更理由: Swift regressionをmacOS 26専用jobへ分離し、macOS 14のnative scopeはRust/WASM検査だけにする。\n#9で独立作成。所有測定対・metadataを除いた所有RAW/参照画像、検証tool、公開build/test契約または第三者license全文。詳細はdocs/migration/raw-engine.mdと資産台帳に記録。\n変更理由: Issue #5親レビューに従い形式検査・エラー保持・実decoder公開CI回帰を補強。\n変更理由: Swift regressionをmacOS 26専用jobへ分離し、macOS 14のnative scopeはRust/WASM検査だけにする。"
     },
     {
       "path": "packages/develop-engine/tools/asset-audit/sanitize_rw2.py",
@@ -9142,7 +9163,7 @@
     {
       "path": "packages/photo-editing/src/cloud-sharing-contract.ts",
       "sha256": "b18550a154dac36fd9f1ed9f347e03a62dd850b8f2dab6f630f9250e78f6f35b",
-      "origin": "共有Docs contractの型・HTTP query配置・決定的mockをPhoto編集workspaceへ公開するre-export。\n変更理由: Photo共有クライアントとmockの公開型を追加。\n共有Docs contractの型・HTTP query配置・決定的mockをPhoto編集workspaceへ公開するre-export。\n共有Docs contractの型・HTTP query配置・決定的mockをPhoto編集workspaceへ公開するre-export。\n変更理由: Photo共有クライアントとmockの公開型を追加。"
+      "origin": "共有Docs contractの型・HTTP query配置・決定的mockをPhoto編集workspaceへ公開するre-export。\n変更理由: Photo共有クライアントとmockの公開型を追加。\n共有Docs contractの型・HTTP query配置・決定的mockをPhoto編集workspaceへ公開するre-export。\n共有Docs contractの型・HTTP query配置・決定的mockをPhoto編集workspaceへ公開するre-export。\n変更理由: Photo共有クライアントとmockの公開型を追加。\n共有Docs contractの型・HTTP query配置・決定的mockをPhoto編集workspaceへ公開するre-export。\n変更理由: Photo共有クライアントとmockの公開型を追加。\n共有Docs contractの型・HTTP query配置・決定的mockをPhoto編集workspaceへ公開するre-export。\n変更理由: Photo共有クライアントとmockの公開型を追加。\n共有Docs contractの型・HTTP query配置・決定的mockをPhoto編集workspaceへ公開するre-export。\n共有Docs contractの型・HTTP query配置・決定的mockをPhoto編集workspaceへ公開するre-export。\n変更理由: Photo共有クライアントとmockの公開型を追加。\n共有Docs contractの型・HTTP query配置・決定的mockをPhoto編集workspaceへ公開するre-export。\n変更理由: Photo共有クライアントとmockの公開型を追加。\n共有Docs contractの型・HTTP query配置・決定的mockをPhoto編集workspaceへ公開するre-export。\n共有Docs contractの型・HTTP query配置・決定的mockをPhoto編集workspaceへ公開するre-export。\n変更理由: Photo共有クライアントとmockの公開型を追加。\n共有Docs contractの型・HTTP query配置・決定的mockをPhoto編集workspaceへ公開するre-export。\n変更理由: Photo共有クライアントとmockの公開型を追加。\n共有Docs contractの型・HTTP query配置・決定的mockをPhoto編集workspaceへ公開するre-export。\n共有Docs contractの型・HTTP query配置・決定的mockをPhoto編集workspaceへ公開するre-export。\n変更理由: Photo共有クライアントとmockの公開型を追加。"
     },
     {
       "path": "packages/photo-editing/src/cloud-sharing-contract.test.ts",
@@ -9318,6 +9339,21 @@
       "path": "packages/photo-editing/src/editor/browser-photo-editing-filmstrip.test.tsx",
       "sha256": "b593231648719b6e3557f36fb11ba2555612d234c5694cca0ef9cdc381862b26",
       "origin": "公開repoで新規作成（#54）: フィルムストリップの合成テスト（予約済み .test ドメインの URL と架空の写真名だけを使う）。\n変更理由: PR #59 の main 競合解消と切替拒否時のフォーカス復元"
+    },
+    {
+      "path": "apps/camera/src/use-guarded-cloud-binding.test.tsx",
+      "sha256": "f44c49759d2a27e170fbca29f689806d53a2e2694750cf15268ffb8f8c3c6565",
+      "origin": "PR #64の公開クライアント回帰テストとして独立作成。所有者変更の保存成功・失敗と再試行を合成bindingで検証する。"
+    },
+    {
+      "path": "apps/camera/src/use-guarded-cloud-binding.ts",
+      "sha256": "c9f114015adec7bd382cb97746f8d3ce4e1360b0ae3d29ad86d616e70368b933",
+      "origin": "PR #64の公開クライアントとして独立作成。cloudBindingの所有者変更を編集保存ガードの後に反映する。非公開コード・認証情報・写真データを含まない。"
+    },
+    {
+      "path": "packages/photo-editing/src/editor/use-browser-photo-leave-guards.test.tsx",
+      "sha256": "cffbc0ad407489d7309fb4b72ab4ebb833d3b6d5200553d3decbb0c47bbe0228",
+      "origin": "PR #64の公開クライアント回帰テストとして独立作成。写真コピー時の編集session保持を検証する。"
     },
     {
       "path": "apps/camera/scripts/e2e/progressive-open.js",
