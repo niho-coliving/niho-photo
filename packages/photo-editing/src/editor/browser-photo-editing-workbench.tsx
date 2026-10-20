@@ -165,6 +165,17 @@ export type BrowserPhotoPrepareForInsertResult =
   | { ok: true }
   | { ok: false; reason: "unresolved-draft" | "draft-check-failed" | "save-failed" };
 
+/** この Mac の選択中の 1 枚を、trusted host が管理する個人クラウドへ明示的にコピーする口。 */
+export type BrowserPhotoCopyToCloudBinding = {
+  /** React から渡すのは不透明な写真 ID だけ。upload・冪等性・再開は実装側に閉じる。 */
+  copyLocalPhoto(
+    photoId: string,
+    options: { signal: AbortSignal; onProgress: (fraction: number | null) => void },
+  ): Promise<{ cloudPhotoId?: string | null }>;
+  /** コピー結果にクラウド写真 ID があるときだけ、成功後の明示操作から呼ぶ。 */
+  onOpenCloudPhoto(photoId: string): void;
+};
+
 /**
  * ブラウザ版の写真編集（移行元設計 → 移行元設計、移行時の設計文書・モック
  * `idea/mock/photo-editing-browser-lightroom-v1.html`）。Lightroom 型の語彙と構造にし、操作は「写真を追加」「書き出す
@@ -265,6 +276,8 @@ export function BrowserPhotoEditingWorkbench(props: {
   treeHidden?: boolean;
   /** PC の左の木の底に出す 1 行（NIHO photo の「版」） */
   treeFooter?: ReactNode;
+  /** 個人クラウドへのコピー口。省略時はコピー操作を一切表示しない。 */
+  copyToCloud?: BrowserPhotoCopyToCloudBinding;
 }) {
   const queryClient = useQueryClient();
   // 写真の出どころ（接続口 PhotoLibrary。web は拠点のクラウドの写真置き場、NIHO camera はこの Mac のフォルダ。移行元設計）
@@ -348,6 +361,7 @@ export function BrowserPhotoEditingWorkbench(props: {
   viewModeRef.current = viewMode;
   const [operation, setOperation] = useState<BrowserPhotoOperation | null>(null);
   const operationRef = useRef<BrowserPhotoOperationKind | null>(null);
+  const copyRunRef = useRef<{ controller: AbortController } | null>(null);
   const saveGenerationRef = useRef(0);
   const [status, setStatus] = useState<FooterStatus | null>(null);
   const [exportSheetOpen, setExportSheetOpen] = useState(false);
@@ -688,7 +702,7 @@ export function BrowserPhotoEditingWorkbench(props: {
   const unloadGuarded =
     operation !== null || adding !== null || add.macBusy || open.dirty || develop.saveState !== "idle" || cutout.saving;
   const guarded = unloadGuarded || opened?.mode === "wasm";
-  useBrowserPhotoLeaveGuards({
+  const confirmRouteLeave = useBrowserPhotoLeaveGuards({
     unloadGuarded,
     guarded,
     dirty: open.dirty,
@@ -702,6 +716,7 @@ export function BrowserPhotoEditingWorkbench(props: {
     active: props.active,
     openCloudPhotoId: props.openCloudPhotoId,
   });
+  useEffect(() => () => copyRunRef.current?.controller.abort(), []);
   const cutoutActive = cutout.active && loupeOpened !== null;
   // 背景除去と切り抜き・回転は同時に使わない: 背景除去のある写真（幾何が恒等で重ねている）は切り抜きに入らず、「切り抜き」の
   // 場所に理由だけを出す（`cropBlockedKey`。写真を替えたら・ほかの道具を選んだら消す）
@@ -1399,13 +1414,15 @@ export function BrowserPhotoEditingWorkbench(props: {
     ? describePhotoCloudAddProgress(adding)
     : add.macBusy
       ? "この Mac の写真を追加中…"
-      : operation?.kind === "export"
-        ? (operation.progressText ?? `${operation.fileName} を書き出し中…`)
-        : operation?.kind === "bulk"
-          ? (operation.progressText ?? null)
-          : operation?.kind === "delete" && operation.deleting
-            ? PHOTO_CLOUD_DELETING_NOTICE
-            : null;
+      : operation?.kind === "copy"
+        ? (operation.progressText ?? "クラウドにコピー中…")
+        : operation?.kind === "export"
+          ? (operation.progressText ?? `${operation.fileName} を書き出し中…`)
+          : operation?.kind === "bulk"
+            ? (operation.progressText ?? null)
+            : operation?.kind === "delete" && operation.deleting
+              ? PHOTO_CLOUD_DELETING_NOTICE
+              : null;
   const recoveryControl = develop.draftRecovery.selectedDraft
     ? {
         count: develop.draftRecovery.count,
@@ -2000,6 +2017,67 @@ export function BrowserPhotoEditingWorkbench(props: {
               batchBusy ||
               operation !== null,
             onClick: () => setCloudShareSheetOpen(true),
+          } : undefined}
+          copyToCloudAction={props.copyToCloud && library.place === "local" && selectedItem && !selectedItem.adding && selection.count <= 1 ? {
+            disabled: operation !== null || batchBusy || staleReloading || draftRecoveryPending,
+            onClick: () => {
+              if (copyRunRef.current || operationRef.current || !selectedItem || !props.copyToCloud) return;
+              const binding = props.copyToCloud;
+              const photoId = selectedItem.photo.id;
+              const fileName = selectedItem.photo.fileName;
+              const controller = new AbortController();
+              copyRunRef.current = { controller };
+              void confirmRouteLeave().then(async (canLeave) => {
+                if (!canLeave || controller.signal.aborted || !mountedRef.current) return;
+                operationRef.current = "copy";
+                setOperation({ kind: "copy", fileName, deleting: false });
+                try {
+                  const result = await binding.copyLocalPhoto(photoId, {
+                    signal: controller.signal,
+                    onProgress: (fraction) => {
+                      if (
+                        controller.signal.aborted ||
+                        !mountedRef.current ||
+                        copyRunRef.current?.controller !== controller ||
+                        operationRef.current !== "copy"
+                      ) return;
+                      const percent = fraction === null || !Number.isFinite(fraction)
+                        ? null
+                        : Math.round(Math.min(1, Math.max(0, fraction)) * 100);
+                      setOperation({
+                        kind: "copy",
+                        fileName,
+                        deleting: false,
+                        progressText: percent === null ? "クラウドにコピー中…" : `クラウドにコピー中… ${percent}%`,
+                      });
+                    },
+                  });
+                  if (controller.signal.aborted || !mountedRef.current) return;
+                  const cloudPhotoId = result.cloudPhotoId;
+                  setStatus({
+                    kind: "notice",
+                    text: "クラウドにコピーしました。",
+                    ...(cloudPhotoId
+                      ? { action: { label: "クラウドで開く", onClick: () => binding.onOpenCloudPhoto(cloudPhotoId) } }
+                      : {}),
+                  });
+                } catch {
+                  if (!controller.signal.aborted && mountedRef.current) {
+                    setStatus({ kind: "error", text: "クラウドにコピーできませんでした。もう一度お試しください。" });
+                  }
+                } finally {
+                  if (copyRunRef.current?.controller === controller) copyRunRef.current = null;
+                  if (operationRef.current === "copy") operationRef.current = null;
+                  if (mountedRef.current) setOperation((current) => current?.kind === "copy" ? null : current);
+                }
+              }).catch(() => {
+                if (!controller.signal.aborted && mountedRef.current) {
+                  setStatus({ kind: "error", text: "クラウドへコピーする前の保存を完了できませんでした。" });
+                }
+              }).finally(() => {
+                if (operationRef.current !== "copy" && copyRunRef.current?.controller === controller) copyRunRef.current = null;
+              });
+            },
           } : undefined}
           showCompare={editable}
           // 切り抜き・背景除去の間は補正前を見せない（押せない表示）

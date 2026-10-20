@@ -752,11 +752,12 @@
         "path": "packages/photo-editing/src/editor/browser-photo-editing-footer.tsx",
         "sha256": "448c53cf1da0a5f3b41e1d507d2ac5d618a39c0b300571ad95a670bdba86bca0"
       },
-      "outputSha256": "0a36c44436185190ea8f72371ca6c70438ae939c4340bfe0f42861600ac665fb",
+      "outputSha256": "a20c8ba79f0bddbf404ee10a6d2662e7009ae2e14963cb177e2711bb8cea9041",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
-        "信頼済みhost接続時だけ共有操作を表示する任意のボタンを追加。"
+        "信頼済みhost接続時だけ共有操作を表示する任意のボタンを追加。",
+        "個人クラウドの明示binding、保存先切替、単一写真コピーと公開境界を追加。"
       ]
     },
     {
@@ -850,10 +851,11 @@
         "path": "packages/photo-editing/src/editor/browser-photo-editing-model.ts",
         "sha256": "98c0a3ee8ff431c0f6f0b63a9666b1e5f723e75c5b9e2d33f17199f40f69c41d"
       },
-      "outputSha256": "a591b853a8171497d4d6452d4aa40c8d49269781fd504f2f6d2d8369ccb01a4b",
+      "outputSha256": "35a89f41955703002bc15c9c848d5b563d85ee3f8bccb0702abbae55d0964df6",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
-        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。"
+        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
+        "個人クラウドの明示binding、保存先切替、単一写真コピーと公開境界を追加。"
       ]
     },
     {
@@ -968,14 +970,17 @@
         "path": "packages/photo-editing/src/editor/browser-photo-editing-workbench.tsx",
         "sha256": "f655136ae0c985d793822ca8bef1668dba26ffd4bb8f13d2ba3d6c2ccb13ceb6"
       },
-      "outputSha256": "5bbb199fde5394dfca7195ac8aa4b2b0eebe48107c92cd566d80833f178f66ca",
+      "outputSha256": "42f0292523773787e4c1372d584a7aad119f6f93c93db8aae43b7510acb0bedc",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
         "任意の個別写真ソース契約と選んだ写真のUI、復元、取消、再試行、失敗時参照保持を追加",
         "クラウド共有UIを任意の信頼済みhost接続口へ限定し、Cameraのlocal-only境界を維持。",
         "Issue #50のMac画面配置・表示色・パネル・版位置の変更。",
-        "クラウド共有接続とIssue #50のMacレイアウトを統合。"
+        "クラウド共有接続とIssue #50のMacレイアウトを統合。",
+        "個人クラウドの明示binding、保存先切替、単一写真コピーと公開境界を追加。",
+        "コピー進捗の競合と不正値を閉じ、完了後の遅延通知を無視。",
+        "公開編集面の個人クラウドコピー操作を更新"
       ]
     },
     {
@@ -1358,10 +1363,11 @@
         "path": "packages/photo-editing/src/editor/use-browser-photo-add.ts",
         "sha256": "13f9a4fc8d664358e9dddd1adc8681841cb8ad5e79f74edbcd8bff07f5adb6b9"
       },
-      "outputSha256": "606f485ab1236fe7e764a92c050c49896d4d8018ce5a7c64686b14f987602720",
+      "outputSha256": "a354965a31056fb5f016d54a9fbb64c9a238c584a40b43d92b0b38357910da2b",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
-        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。"
+        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
+        "個人クラウドの明示binding、保存先切替、単一写真コピーと公開境界を追加。"
       ]
     },
     {
@@ -1523,12 +1529,13 @@
         "path": "packages/photo-editing/src/editor/use-browser-photo-folders.ts",
         "sha256": "69941494097660785d1ce690c32ce4518598ec6e90baf626a92099c43d4caa34"
       },
-      "outputSha256": "a63207c8c7e85a5cd2fd9cdc0331a3c3817612bc88af4fe8a6328251c1e3f4bf",
+      "outputSha256": "42d35e39fa435b2ef889c9bbf93042895605f7b1d8b7ed3edac7439921540f18",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "行末空白と余分な末尾空行を整理。",
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
-        "任意の個別写真ソース契約と選んだ写真のUI、復元、取消、再試行、失敗時参照保持を追加"
+        "任意の個別写真ソース契約と選んだ写真のUI、復元、取消、再試行、失敗時参照保持を追加",
+        "個人クラウドの明示binding、保存先切替、単一写真コピーと公開境界を追加。"
       ]
     },
     {
@@ -1554,8 +1561,10 @@
         "path": "packages/photo-editing/src/editor/use-browser-photo-leave-guards.ts",
         "sha256": "3080836ffb0f730bc94303f4b561ed3c2a553512746b3ced1ef3b2e06780adf5"
       },
-      "outputSha256": "3080836ffb0f730bc94303f4b561ed3c2a553512746b3ced1ef3b2e06780adf5",
-      "modifications": []
+      "outputSha256": "fad8f6a6bba5973fa2b3dde559484c002fa43226a53d20b2ae9b56e586bcadec",
+      "modifications": [
+        "個人クラウドの明示binding、保存先切替、単一写真コピーと公開境界を追加。"
+      ]
     },
     {
       "path": "packages/photo-editing/src/editor/use-browser-photo-open.ts",
@@ -2047,11 +2056,13 @@
         "path": "packages/photo-editing/src/photo-editing-query-keys.ts",
         "sha256": "b0873ce957f9eca6dd2451b13e87d38e52e28d08ab5fbc5c31c6ebf6e94c0248"
       },
-      "outputSha256": "c6838c5d0dfef6308f8baa02069d379783a53a6573003c95cea059bcd14bc06a",
+      "outputSha256": "aeeba9917099875bd9bc82a1442520a2ec6d4bb67bc1e5bdbdea24410260783f",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
-        "任意の個別写真ソース契約と選んだ写真のUI、復元、取消、再試行、失敗時参照保持を追加"
+        "任意の個別写真ソース契約と選んだ写真のUI、復元、取消、再試行、失敗時参照保持を追加",
+        "個人クラウドの明示binding、保存先切替、単一写真コピーと公開境界を追加。",
+        "個人クラウドnamespaceと写真ソース境界の説明を明確化。"
       ]
     },
     {
@@ -3567,11 +3578,14 @@
         "path": "apps/camera/src/App.test.tsx",
         "sha256": "a6e473f6f16afb180c6be04a32b8a2560bfc69c30f8f077300156bcd291ddb98"
       },
-      "outputSha256": "12364bbdd9e72e08a43fa79784a46e5c4a26e2c0de32c099bf9ac8a8bf26b3d6",
+      "outputSha256": "06a401ccdc367d534c475052f470e6f1cdf0850ee372ca6743e0c6bf16194346",
       "modifications": [
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
         "複合空状態の写真追加アクションに期待値を更新。 / 選択写真専用commandをApp test fixtureにも追加。",
-        "Issue #50のMac画面配置・表示色・パネル・版位置の変更。"
+        "Issue #50のMac画面配置・表示色・パネル・版位置の変更。",
+        "個人クラウドの明示binding、保存先切替、単一写真コピーと公開境界を追加。",
+        "保存先切替UIのアクセシビリティ検証を更新",
+        "コピー中の保存先切替拒否テストを更新"
       ]
     },
     {
@@ -3582,11 +3596,14 @@
         "path": "apps/camera/src/App.tsx",
         "sha256": "ca49b85f8269569ef243f5b0164751b3347c1cc268f906ce53dd984aa470c19e"
       },
-      "outputSha256": "4c5c054e907f7485f9a057326792045c216b409d0848f4f347bfcd9df14f6140",
+      "outputSha256": "de327bf1d9e8a2d270c6cf6ae1f6235d711b721f14c3228570b65ba1a483cba3",
       "modifications": [
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
         "Issue #3のpublic OAuth/PKCE、ローカル専用UI、安全契約と公開依存を新規接続。実issuer・署名検証器が未契約のため本番接続は無効。",
-        "Issue #50のMac画面配置・表示色・パネル・版位置の変更。"
+        "Issue #50のMac画面配置・表示色・パネル・版位置の変更。",
+        "個人クラウドの明示binding、保存先切替、単一写真コピーと公開境界を追加。",
+        "個人クラウドnamespaceと写真ソース境界の説明を明確化。",
+        "保存先切替を常時表示しクラウド削除を停止"
       ]
     },
     {

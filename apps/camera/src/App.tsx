@@ -1,10 +1,18 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { PanelLeft, X } from "lucide-react";
 import icon from "../src-tauri/icons/128x128.png";
 
-import { BrowserPhotoEditingWorkbench } from "niho-photo-editing/editor/browser-photo-editing-workbench";
-import { PhotoLibraryProvider } from "niho-photo-editing/library/photo-library-context";
+import {
+  BrowserPhotoEditingWorkbench,
+  type BrowserPhotoCopyToCloudBinding,
+} from "niho-photo-editing/editor/browser-photo-editing-workbench";
+import type { PhotoEditingLeaveGuard } from "niho-photo-editing/editor/browser-photo-editing-model";
+import type { PhotoLibrary } from "niho-photo-editing/library/photo-library";
+import {
+  PhotoLibraryProvider,
+  type PhotoEditingHost,
+} from "niho-photo-editing/library/photo-library-context";
 import { readLocalStorageItemSafely, removeLocalStorageItemSafely, writeLocalStorageItemSafely } from "niho-ui/local-storage-safe";
 import { AppDialogHost } from "niho-ui/components/app-dialog-host";
 
@@ -19,19 +27,72 @@ import { createLocalPhotoLibrary } from "./local-library/local-photo-library";
 
 /** 初回の案内（旧 NIHO camera の補正は引き継がない）を閉じたことを、この端末に覚える鍵。 */
 export const PHOTO_BENCH_NOTICE_DISMISSED_KEY = "niho-camera:photo-bench-notice-dismissed";
-/** 左のパネル（この Mac のフォルダの木）を隠していることを、この端末に覚える鍵（値は "1"）。 */
+/** 左のパネル（写真の場所の木）を隠していることを、この端末に覚える鍵（値は "1"）。保存先切替は常に表示する。 */
 export const PHOTO_TREE_HIDDEN_KEY = "niho-camera:photo-tree-hidden";
 export const PHOTO_BENCH_NOTICE_TEXT =
   "旧 NIHO camera（Photo Bench）で保存した補正は引き継がれません。写真はそのまま開いて直せます。";
 
-type AppProps = {
+/**
+ * Trusted host が private integration から注入する、本人のクラウド写真の接続口。
+ * upload、冪等性、再開、資格情報は `copyLocalPhoto` の実装に閉じ、React へは渡さない。
+ */
+export type PersonalCloudPhotoBinding = {
+  library: PhotoLibrary;
+  host: PhotoEditingHost;
+  actorId: string;
+  copyLocalPhoto: BrowserPhotoCopyToCloudBinding["copyLocalPhoto"];
+};
+
+export type AppProps = {
   /** native のコマンド（テストで差し替える。既定は Tauri の invoke） */
   commands?: CameraCommands;
   /** テストで差し替える（既定は native の camera_app_info）。 */
   loadAppInfo?: () => Promise<CameraAppInfo | null>;
   /** テストで差し替える（既定は native の自動更新の状態。camera_update_status と update-staged の event）。 */
   watchUpdate?: WatchUpdate;
+  /** Trusted host が明示的に渡したときだけ、個人クラウドの UI と操作を有効にする。 */
+  cloudBinding?: PersonalCloudPhotoBinding;
 };
+
+type PhotoSource = "local" | "cloud";
+
+function usableCloudBinding(binding: PersonalCloudPhotoBinding | undefined): binding is PersonalCloudPhotoBinding {
+  return Boolean(binding && binding.actorId.trim() && binding.library.place === "cloud");
+}
+
+function personalPhotoScope(actorId: string, source: PhotoSource): string {
+  return `personal-user:${encodeURIComponent(actorId)}:${source}`;
+}
+
+function PhotoSourceTabs(props: {
+  source: PhotoSource;
+  switching: boolean;
+  onSelect: (source: PhotoSource) => void;
+}) {
+  return (
+    <div role="group" aria-label="写真の保存先" className="mb-2 grid grid-cols-2 gap-1 rounded-xl bg-niho-pale/60 p-1">
+      {([
+        ["cloud", "クラウド"],
+        ["local", "この Mac"],
+      ] as const).map(([source, label]) => (
+        <button
+          key={source}
+          type="button"
+          aria-pressed={props.source === source}
+          disabled={props.switching}
+          onClick={() => props.onSelect(source)}
+          className={`min-h-9 rounded-lg px-2 text-xs font-bold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-niho-accent-ink disabled:cursor-wait ${
+            props.source === source
+              ? "bg-white text-niho-accent-ink shadow-sm"
+              : "text-niho-text-sub hover:bg-white/70 hover:text-niho-text"
+          }`}
+        >
+          {label}
+        </button>
+      ))}
+    </div>
+  );
+}
 
 let defaultCommands: CameraCommands | null = null;
 function cameraCommands(): CameraCommands {
@@ -91,20 +152,68 @@ function useTreeHidden() {
 
 /**
  * NIHO photo の画面（spec「画面」）。共通の編集面（packages/photo-editing の `BrowserPhotoEditingWorkbench`）を、この Mac の
- * `PhotoLibrary`（native のフォルダ・写真・現像）と同梱の wasm で動かす。左にフォルダ、中央に写真、右に補正（どれも編集面の部品）。
+ * `PhotoLibrary`（native のフォルダ・写真・現像）と同梱の wasm で動かす。trusted host が個人クラウドを注入したときだけ、同じ面を
+ * 本人のクラウド `PhotoLibrary` へ切り替える。左に場所、中央に写真、右に補正（どれも編集面の部品）。
  * 窓のタイトルバーにアイコンと名前を一度だけ表示し、その下の帯は左端の「左のパネル」（木の表示 / 非表示）と表示中の場所（編集面のパンくず）に使う。
  * 編集面は窓の底まで使い（`appearance="fill"`）、版は左の木の底の目立たない 1 行。自動更新で新しい版を入れたときだけ、編集面の上に 1 行の案内
  * （niho-photo#50）。
  */
-export function App({ commands, loadAppInfo = readAppInfo, watchUpdate }: AppProps) {
+export function App({ commands, loadAppInfo = readAppInfo, watchUpdate, cloudBinding }: AppProps) {
   const native = commands ?? cameraCommands();
-  const library = useMemo(() => createLocalPhotoLibrary(native), [native]);
-  const host = useMemo(() => createLocalPhotoEditingHost(native), [native]);
-  const cutout = useMemo(() => createLocalPhotoCutoutHost(native, library.withStablePhoto), [library, native]);
+  const localLibrary = useMemo(() => createLocalPhotoLibrary(native), [native]);
+  const localHost = useMemo(() => createLocalPhotoEditingHost(native), [native]);
+  const cutout = useMemo(() => createLocalPhotoCutoutHost(native, localLibrary.withStablePhoto), [localLibrary, native]);
+  const cloud = usableCloudBinding(cloudBinding) ? cloudBinding : null;
+  const [source, setSource] = useState<PhotoSource>("local");
+  const [sourceSwitching, setSourceSwitching] = useState(false);
+  const [openCloudPhotoId, setOpenCloudPhotoId] = useState<string | null>(null);
+  const leaveGuardRef = useRef<PhotoEditingLeaveGuard | null>(null);
+  const sourceSwitchRef = useRef(false);
   const [queryClient] = useState(createQueryClient);
   const [appInfo, setAppInfo] = useState<CameraAppInfo | null>(null);
   const notice = usePhotoBenchNotice(native);
   const tree = useTreeHidden();
+
+  useEffect(() => {
+    if (!cloud && source === "cloud") setSource("local");
+  }, [cloud, source]);
+
+  const registerRouteLeaveGuard = useCallback((guard: PhotoEditingLeaveGuard | null) => {
+    leaveGuardRef.current = guard;
+  }, []);
+  const selectSource = useCallback(async (next: PhotoSource, cloudPhotoId: string | null = null) => {
+    if (!cloud || next === source || sourceSwitchRef.current) return;
+    sourceSwitchRef.current = true;
+    setSourceSwitching(true);
+    try {
+      const canLeave = await (leaveGuardRef.current?.() ?? Promise.resolve(true));
+      if (!canLeave) return;
+      setOpenCloudPhotoId(next === "cloud" ? cloudPhotoId : null);
+      setSource(next);
+    } finally {
+      sourceSwitchRef.current = false;
+      setSourceSwitching(false);
+    }
+  }, [cloud, source]);
+
+  const activeSource: PhotoSource = cloud ? source : "local";
+  const library = activeSource === "cloud" && cloud ? cloud.library : localLibrary;
+  const host = activeSource === "cloud" && cloud ? cloud.host : localHost;
+  const sourceKey = cloud ? personalPhotoScope(cloud.actorId, activeSource) : "local";
+  const actorId = cloud ? cloud.actorId : "local";
+  const copyToCloud = useMemo<BrowserPhotoCopyToCloudBinding | undefined>(() => cloud ? {
+    copyLocalPhoto: cloud.copyLocalPhoto,
+    onOpenCloudPhoto: (photoId) => {
+      void selectSource("cloud", photoId);
+    },
+  } : undefined, [cloud, selectSource]);
+  const sourceTabs = cloud ? (
+    <PhotoSourceTabs
+      source={activeSource}
+      switching={sourceSwitching}
+      onSelect={(next) => void selectSource(next)}
+    />
+  ) : undefined;
 
   useEffect(() => {
     let active = true;
@@ -162,21 +271,26 @@ export function App({ commands, loadAppInfo = readAppInfo, watchUpdate }: AppPro
                 </button>
               </div>
             ) : null}
+            {sourceTabs}
           </div>
-          <PhotoLibraryProvider library={library} host={host}>
+          <PhotoLibraryProvider key={sourceKey} library={library} host={host}>
             <BrowserPhotoEditingWorkbench
-              spotId="local"
-              actorId="local"
+              key={sourceKey}
+              spotId={sourceKey}
+              actorId={actorId}
               canEdit
               cloudOriginalsAllowed={false}
               active
-              openCloudPhotoId={null}
-              onOpenCloudPhotoHandled={() => undefined}
+              openCloudPhotoId={activeSource === "cloud" ? openCloudPhotoId : null}
+              onOpenCloudPhotoHandled={() => setOpenCloudPhotoId(null)}
+              registerRouteLeaveGuard={cloud ? registerRouteLeaveGuard : undefined}
+              // 個人クラウドの削除・退会purge APIはまだ非公開側で未実装なので、接続後も削除を止める。
               disableCloudDelete
-              cutout={cutout}
+              cutout={activeSource === "local" ? cutout : undefined}
               appearance="fill"
               treeHidden={tree.hidden}
               treeFooter={appInfo ? <span>版 {appInfo.appVersion}</span> : null}
+              copyToCloud={activeSource === "local" ? copyToCloud : undefined}
             />
           </PhotoLibraryProvider>
         </main>

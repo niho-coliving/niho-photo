@@ -510,9 +510,11 @@ export function useBrowserPhotoAdd(params: {
           ? { kind: "reject", reason: PHOTO_DROP_DELETING_REASON }
           : operation?.kind === "bulk"
             ? { kind: "reject", reason: PHOTO_DROP_BULK_REASON }
-            : macBusy
-              ? { kind: "reject", reason: MAC_PHOTOS_ADDING_DROP_REASON }
-              : { kind: "accept", queued: adding !== null };
+            : operation?.kind === "copy"
+              ? { kind: "reject", reason: "クラウドへのコピーが終わってから追加できます" }
+              : macBusy
+                ? { kind: "reject", reason: MAC_PHOTOS_ADDING_DROP_REASON }
+                : { kind: "accept", queued: adding !== null };
   const fileDrop = usePhotoFileDropZone({ enabled: params.active, zone: dropZone, onDropFiles: addDroppedPhotos });
 
   return {

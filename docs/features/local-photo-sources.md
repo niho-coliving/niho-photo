@@ -64,3 +64,13 @@ Macアプリの権限 `allow-camera-library` は、次の7コマンドだけを�
 | 外部メディア | 参照先消失時に一覧から外し、戻れば再表示するfilesystem testまで | SD/USBの取り外し中の画面、再接続、補正保持を署名済みappで未確認 |
 
 公式配布工程で、上表の未確認項目に加え、参照を外した後も元ファイルと補正が残ることを確認します。RAW現像エンジンの実RW2受入は公開CIのdevelop-engine scopeで常時実行し、OSのRAW対応機種全体の保証とは分けます。
+
+## 個人クラウドとの接続境界
+
+公開版の `App` は、trusted host が `cloudBinding` を明示的に注入した場合だけ「クラウド / この Mac」の切り替えと「クラウドにコピー」を表示します。保存先切り替えは編集面の上部に常に表示し、左の場所パネルを隠しても利用できます。binding は本人のクラウド `PhotoLibrary`、`PhotoEditingHost`、`actorId`、`copyLocalPhoto` から成ります。binding が無い、`actorId` が空、または library の `place` が `cloud` でない場合は従来のローカル専用画面のままで、クラウド操作を表示しません。公開版単体の本番接続は無効です。
+
+どちらの保存先も同じ `BrowserPhotoEditingWorkbench` を使います。切り替え時は provider と workbench を作り直し、query と端末内の補正下書きは `personal-user:<actorId>:local|cloud` の本人用 namespace で分けます。この値は従来の prop 名が `spotId` の共有編集面へ渡しますが、拠点 ID や認可証明として扱いません。クラウド側には camera の背景除去 host を渡しません。
+
+コピーは、この Mac で選んだ 1 枚に対する利用者の明示操作だけで、元ファイルをこの Mac から移動・削除しません。React が binding へ渡す写真の情報は不透明な `photoId` のみで、path、bytes、token は渡しません。切り替えとコピー開始は共通の route leave guard を通り、補正の保存または破棄確認が完了できない場合は進みません。コピー中は進捗を表示して二重実行を止め、失敗を成功として扱いません。成功結果に `cloudPhotoId` がある場合だけ「クラウドで開く」を表示します。ログインやアカウント状態の変化からコピーを自動開始しません。本人の写真削除と退会 purge は private API で未実装のため、公開UIからのクラウド削除も無効です。
+
+実ファイルの upload、idempotency key、通信中断後の resume、認証・認可、容量制限は private integration の `copyLocalPhoto` 実装の責務です。公開 React 層へこれらの資格情報や転送データを追加しません。個人クラウドの共有リンクは別機能であり、この binding は共有 UI を有効にしません。

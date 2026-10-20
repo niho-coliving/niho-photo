@@ -174,7 +174,7 @@ export type BrowserPhotoOperation = {
 };
 
 /** 止めている操作の種類（`operationRef` に入れる）。 */
-export type BrowserPhotoOperationKind = "export" | "delete" | "bulk";
+export type BrowserPhotoOperationKind = "export" | "delete" | "bulk" | "copy";
 
 export type BrowserViewMode = "grid" | "loupe";
 

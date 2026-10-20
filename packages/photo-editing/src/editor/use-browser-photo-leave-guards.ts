@@ -143,4 +143,6 @@ export function useBrowserPhotoLeaveGuards(params: {
     };
     // 画面の切り替え（タブを戻した・URL の依頼が来た）でも登録し直す
   }, [confirmRouteLeave, guarded, surfaceActive, openCloudPhotoId]);
+
+  return confirmRouteLeave;
 }
