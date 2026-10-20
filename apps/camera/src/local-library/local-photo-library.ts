@@ -611,7 +611,17 @@ export function createLocalPhotoLibrary(commands: CameraCommands, options: Local
         // 同梱の sidecar が使えない（入れ直すまで直らない）
         if (error.code === "engineUnavailable") return { kind: "baseUnavailable", message: error.message };
         // この写真では作れない（macOS の RAW 現像が対応していない機種・壊れた写真など）
-        if (["unsupportedCamera", "decodeFailed", "unsupportedSource", "restorationUnavailable"].includes(error.code)) {
+        if (
+          [
+            "unsupportedCamera",
+            "decodeFailed",
+            "unsupportedSource",
+            "restorationUnavailable",
+            "formatMismatch",
+            "downloadRequired",
+            "unsupportedFormat",
+          ].includes(error.code)
+        ) {
           return { kind: "incompatible", message: error.message };
         }
         // 時間切れ・一時的な失敗は「再試行」で作り直す（retryWorkingCopy は待ちに戻さず、編集面が ensureWorkingCopy を呼び直す）
