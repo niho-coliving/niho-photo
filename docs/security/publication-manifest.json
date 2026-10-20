@@ -377,8 +377,10 @@
         "path": "packages/photo-editing/src/develop-engine/develop-geometry.test.ts",
         "sha256": "cf9d90f6ac01857db07966a7fc123e34028aea69ab8ffcb2b2fa287c0da3c073"
       },
-      "outputSha256": "cf9d90f6ac01857db07966a7fc123e34028aea69ab8ffcb2b2fa287c0da3c073",
-      "modifications": []
+      "outputSha256": "40c8b0ca507ace567949714c2358e5af5111e1f84b19fe5ecd9f7b24c1158c78",
+      "modifications": [
+        "PR #61 の切り抜きUI・完了/取消操作と回帰検証を公開repoで実装。"
+      ]
     },
     {
       "path": "packages/photo-editing/src/develop-engine/develop-geometry.ts",
@@ -388,10 +390,11 @@
         "path": "packages/photo-editing/src/develop-engine/develop-geometry.ts",
         "sha256": "ccb700dcbc95759de670ce6dae1ea52deeb57fe06b533cdda4101192b38339f5"
       },
-      "outputSha256": "45d44e5ea938718cd53c94e9604719d98eac5d8366fde3b9707561312711aecf",
+      "outputSha256": "d5b4391bf5da154190bb2075c283e9fd9c579065455ee81f0576c66c7d08ba68",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
-        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。"
+        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
+        "PR #61 の切り抜きUI・完了/取消操作と回帰検証を公開repoで実装。"
       ]
     },
     {
@@ -1025,7 +1028,7 @@
         "path": "packages/photo-editing/src/editor/browser-photo-editing-workbench.tsx",
         "sha256": "f655136ae0c985d793822ca8bef1668dba26ffd4bb8f13d2ba3d6c2ccb13ceb6"
       },
-      "outputSha256": "faefe1d738e64181d26406a42b686393d983e471078d1a95e693217bc51af111",
+      "outputSha256": "1c3664de09490c65a982117dd30cffbb288fa2ce635417f0b74e4db445e8c7ca",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
@@ -1035,6 +1038,8 @@
         "クラウド共有接続とIssue #50のMacレイアウトを統合。",
         "niho-photo#51 L2: 右端の道具の帯と補正パネルの並び（見出し行・自動 / 白黒のチップ・プリセットの行・面の切り替え）。",
         "niho-photo#35のクラウド共有UIと#51の右端道具帯を統合する。",
+        "PR #61 の切り抜きUI・完了/取消操作と回帰検証を公開repoで実装。",
+        "PR #61 の切り抜き画面と共有UIの統合",
         "Issue #30 Oklch色ミキサーとengine 10/11対応を反映",
         "非同期picker結果の写真・設定・操作世代照合を共通化",
         "picker snapshotのphoto keyを非nullへ型安全に固定",
@@ -1068,10 +1073,11 @@
         "path": "packages/photo-editing/src/editor/photo-editing-adjustment-controls-f1.test.tsx",
         "sha256": "31c60f83f5622ae4d2ea25b4a7bb8a584309c44d50508b2f47294613d555b7d2"
       },
-      "outputSha256": "44ef134015d4861687ffd2af7aa689ca4c8b2f5e2dc937dac5af7c08e03c51e5",
+      "outputSha256": "5bef1ab9d7751cd13c469c66d1a281a1c406d384a16ec507d8351f46ccb2a9f8",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
-        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。"
+        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
+        "公開repoでの機能変更（#55）: スライダーを Lightroom の見た目（細い線・白い丸・色温度 / 色かぶり補正の帯・変更ありの太字）にした。"
       ]
     },
     {
@@ -1107,12 +1113,13 @@
         "path": "packages/photo-editing/src/editor/photo-editing-adjustment-controls.tsx",
         "sha256": "f8950078f7342eb7a6c6f6dfb026828a94f33b8355427d1485ce18a6cbb73773"
       },
-      "outputSha256": "b53af13c502469311e9dff9a6798f6b19fec6f10438dec216014445eab336a3d",
+      "outputSha256": "5fbe75b93ce59738a9ccc8678351cdf998ee7c62ba66610c29fdcdc70307a102",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
         "niho-photo#51 L2: 右端の道具の帯と補正パネルの並び（見出し行・自動 / 白黒のチップ・プリセットの行・面の切り替え）。",
-        "niho-photo#51の補正パネル変更を#35統合後のコントロールへ反映する。"
+        "niho-photo#51の補正パネル変更を#35統合後のコントロールへ反映する。",
+        "公開repoでの機能変更（#55）: スライダーを Lightroom の見た目（細い線・白い丸・色温度 / 色かぶり補正の帯・変更ありの太字）にした。"
       ]
     },
     {
@@ -1190,10 +1197,11 @@
         "path": "packages/photo-editing/src/editor/photo-editing-crop-tools.test.tsx",
         "sha256": "936965e961fe0f92eaadf6241f4297085f1cdd13b2e83359c749a9ec381512b9"
       },
-      "outputSha256": "38f174c18e77258750681852107fb7a6dcd477077b7073244de612e67b8dac4c",
+      "outputSha256": "0a2bf987580eab39618007a80eca3ad9423e90de2da9cc4706508e889d46e445",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
-        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。"
+        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
+        "PR #61 の切り抜きUI・完了/取消操作と回帰検証を公開repoで実装。"
       ]
     },
     {
@@ -1204,10 +1212,11 @@
         "path": "packages/photo-editing/src/editor/photo-editing-crop-tools.tsx",
         "sha256": "7a261c902f9b1e7b98d171a7744ca4c9fb44c5df64dc6e2ef78d8b0833f72f22"
       },
-      "outputSha256": "449698e0c70278aae6b7dbdab0a3d35b8bd2f44d660271459214d7872afbeaf1",
+      "outputSha256": "ab429fec770d7424b709d8b33b66718b5e7947a32813a7524509d5660170ad50",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
-        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。"
+        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
+        "PR #61 の切り抜きUI・完了/取消操作と回帰検証を公開repoで実装。"
       ]
     },
     {
@@ -1330,10 +1339,11 @@
         "path": "packages/photo-editing/src/editor/photo-editing-menu.tsx",
         "sha256": "e04c7c1d87b4558386139c966b9cce53e5abd07da5173c52d73c4a4940939d95"
       },
-      "outputSha256": "4b28c9ef184c10a5d5f6833b645b89c86033a16a22dc74c188fda9ea9deeb9a4",
+      "outputSha256": "4cd6fd6b916ff388670d58bd7f1335cdd9723c19908250e9702539a475650d7c",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
-        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。"
+        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
+        "PR #61 の切り抜きUI・完了/取消操作と回帰検証を公開repoで実装。"
       ]
     },
     {
@@ -1416,10 +1426,11 @@
         "path": "packages/photo-editing/src/editor/photo-editing-slider.tsx",
         "sha256": "af79b8b767d17781a3371b87d40c6214eaac5e45a06709964252103f1ee9dfd4"
       },
-      "outputSha256": "faeec15e2357af28a00524ec5c735c4c925f4ecabdf908ad1b8ed4faef42b1ff",
+      "outputSha256": "e9ea9e7cab07c969db5f34ce062779a898d7345dbffd4d3e59c98f0492ae07dc",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
-        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。"
+        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
+        "公開repoでの機能変更（#55）: スライダーを Lightroom の見た目（細い線・白い丸・色温度 / 色かぶり補正の帯・変更ありの太字）にした。"
       ]
     },
     {
@@ -1472,10 +1483,11 @@
         "path": "packages/photo-editing/src/editor/use-browser-photo-crop.ts",
         "sha256": "42a650250b0a21968956fb2f055e87c59b6706e3730c2ef037c5775241e0a7df"
       },
-      "outputSha256": "cb2b3817f6ae1b0a97ab0f0d6069c3a39e2e874d32f21ccb18fee9e2a3f94651",
+      "outputSha256": "e7f2d361d816d82959da403de9560d9eb6a00a0b2d801ac4df52e6c06d50b534",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
-        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。"
+        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
+        "PR #61 の切り抜きUI・完了/取消操作と回帰検証を公開repoで実装。"
       ]
     },
     {
@@ -1542,8 +1554,10 @@
         "path": "packages/photo-editing/src/editor/use-browser-photo-editing-keys.test.ts",
         "sha256": "9a3c9ab4818e0e9f3bb3c00f9dd720fee808dae707c3bff1e0eaabcf1f2787c1"
       },
-      "outputSha256": "9a3c9ab4818e0e9f3bb3c00f9dd720fee808dae707c3bff1e0eaabcf1f2787c1",
-      "modifications": []
+      "outputSha256": "1e878e95e6c808ed02fc32b00e5c495b19c2981552436c4543e4d48e047ebef5",
+      "modifications": [
+        "PR #61 の切り抜きUI・完了/取消操作と回帰検証を公開repoで実装。"
+      ]
     },
     {
       "path": "packages/photo-editing/src/editor/use-browser-photo-editing-keys.ts",
@@ -1553,10 +1567,11 @@
         "path": "packages/photo-editing/src/editor/use-browser-photo-editing-keys.ts",
         "sha256": "869fc1769c085f4affe0fb260ad2cc9c0df21bd16c3e893ce65f015da29ce2fa"
       },
-      "outputSha256": "9f26284e76a7e12bc1cc07f0b4fce88f2bf5aea1e5a66e038ed6f9bcabed0538",
+      "outputSha256": "18c0778c7cb43595659a93319d8b180adfdb2e99e7a9993c137df107ba730b34",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
-        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。"
+        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
+        "PR #61 の切り抜きUI・完了/取消操作と回帰検証を公開repoで実装。"
       ]
     },
     {
@@ -1969,13 +1984,14 @@
         "path": "packages/photo-editing/src/photo-editing-copy.ts",
         "sha256": "1208d4124dca26c951d73f6f84c560879e69beddfb9a16426e1a9dcc9fd30c27"
       },
-      "outputSha256": "884b89f9762ac23accd3e499e28695ce4733f4557caf300ea3ce852776e4c788",
+      "outputSha256": "22bc227b84ce981617f7e3782f4f5c65bd47cc615756efe692210e7417c0d249",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
         "任意の個別写真ソース契約と選んだ写真のUI、復元、取消、再試行、失敗時参照保持を追加",
         "niho-photo#51 L2: 右端の道具の帯と補正パネルの並び（見出し行・自動 / 白黒のチップ・プリセットの行・面の切り替え）。",
         "niho-photo#35と#51の統合後に公開用の画面文言契約を更新する。",
+        "PR #61 の切り抜きUI・完了/取消操作と回帰検証を公開repoで実装。",
         "Issue #30 Oklch色ミキサーとengine 10/11対応を反映"
       ]
     },
@@ -1987,10 +2003,11 @@
         "path": "packages/photo-editing/src/photo-editing-crop.test.ts",
         "sha256": "1e8e683320ba0b21fce4d182957525eed17ad691bbf9e29f824f2746aeed6194"
       },
-      "outputSha256": "b3bf8acad58f74e2558001a384aaa748149234c1da019f584743a47c8f0b946a",
+      "outputSha256": "94c625c6aa62bacd0b6f7aa251ca0a3ed9425b2498bb50d2ce44ae4031a644d4",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
-        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。"
+        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
+        "PR #61 の切り抜きUI・完了/取消操作と回帰検証を公開repoで実装。"
       ]
     },
     {
@@ -2001,10 +2018,11 @@
         "path": "packages/photo-editing/src/photo-editing-crop.ts",
         "sha256": "133816741c792873822ec61dd3b5b2472767ff8490ec5736c6adf5b3ed50728e"
       },
-      "outputSha256": "782719e35186ef22417c7cdf8293affe55f61546802a32b569fc5f6765595592",
+      "outputSha256": "44dae7c9b671373b61c361a96cc722c7424a14b391c329cd2f14d2962d995be7",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
-        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。"
+        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
+        "PR #61 の切り抜きUI・完了/取消操作と回帰検証を公開repoで実装。"
       ]
     },
     {
@@ -9030,7 +9048,7 @@
     {
       "path": "packages/photo-editing/src/cloud-sharing-contract.ts",
       "sha256": "b18550a154dac36fd9f1ed9f347e03a62dd850b8f2dab6f630f9250e78f6f35b",
-      "origin": "共有Docs contractの型・HTTP query配置・決定的mockをPhoto編集workspaceへ公開するre-export。\n変更理由: Photo共有クライアントとmockの公開型を追加。"
+      "origin": "共有Docs contractの型・HTTP query配置・決定的mockをPhoto編集workspaceへ公開するre-export。\n変更理由: Photo共有クライアントとmockの公開型を追加。\n共有Docs contractの型・HTTP query配置・決定的mockをPhoto編集workspaceへ公開するre-export。\n共有Docs contractの型・HTTP query配置・決定的mockをPhoto編集workspaceへ公開するre-export。\n変更理由: Photo共有クライアントとmockの公開型を追加。"
     },
     {
       "path": "packages/photo-editing/src/cloud-sharing-contract.test.ts",
@@ -9161,6 +9179,11 @@
       "path": "packages/develop-engine/tools/colorcheck/tests/test_teacher_render_cache.py",
       "sha256": "a692f09a376b34cedf40a6278b9bb45f12e84ee8c43ee19c15bed786947dc6a9",
       "origin": "PR #33の教師render再利用を防ぐため独立作成した公開CI unittest。subprocessをstubし合成bytesだけを使い、実写真・第三者資産を含まない。"
+    },
+    {
+      "path": "packages/photo-editing/src/editor/use-browser-photo-crop.test.tsx",
+      "sha256": "4d44380672bf1fc4cc1a558eb227dce0f03d7d19c28b388f1e14e8314e7f979d",
+      "origin": "公開repoで新規作成（#52）。所有する実画像・外部fixtureを使わず、切り抜き完了・取消の状態遷移を合成データで検証。"
     },
     {
       "path": "docs/color-mixer.md",

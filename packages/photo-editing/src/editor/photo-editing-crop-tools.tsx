@@ -1,12 +1,22 @@
 "use client";
 
 import { useId } from "react";
-import { ArrowRightLeft, FlipHorizontal2, RotateCw } from "lucide-react";
+import {
+  ArrowRightLeft,
+  ChevronDown,
+  FlipHorizontal2,
+  RotateCcw,
+  RotateCw,
+  TrianglesCenterlineDashedHorizontal,
+  TrianglesCenterlineDashedVertical,
+} from "lucide-react";
 
 import {
   developFrameSize,
   flipGeometryHorizontal,
+  flipGeometryVertical,
   rotateGeometryClockwise,
+  rotateGeometryCounterClockwise,
   setGeometryAngle,
   setGeometryAspect,
   swapDevelopAspect,
@@ -17,8 +27,16 @@ import {
   PHOTO_EDITING_CROP_ANGLE_LABEL,
   PHOTO_EDITING_CROP_ASPECT_SWAP_LABEL,
   PHOTO_EDITING_CROP_ASPECT_TITLE,
+  PHOTO_EDITING_CROP_CANCEL_KEY_HINT,
+  PHOTO_EDITING_CROP_CANCEL_LABEL,
+  PHOTO_EDITING_CROP_DONE_KEY_HINT,
+  PHOTO_EDITING_CROP_DONE_LABEL,
   PHOTO_EDITING_CROP_FLIP_LABEL,
+  PHOTO_EDITING_CROP_FLIP_VERTICAL_LABEL,
   PHOTO_EDITING_CROP_ROTATE_LABEL,
+  PHOTO_EDITING_CROP_ROTATE_LEFT_LABEL,
+  PHOTO_EDITING_CROP_ROTATE_RIGHT_LABEL,
+  PHOTO_EDITING_CROP_TRANSFORM_TITLE,
   PHOTO_EDITING_RESET_LABEL,
   photoEditingCropExportLimitText,
 } from "../photo-editing-copy";
@@ -28,35 +46,33 @@ import {
   PHOTO_EDITING_CROP_ANGLE_STEP,
   PHOTO_EDITING_CROP_ASPECTS,
   canSwapCropAspect,
+  cropAspectLabel,
   cropAspectOf,
   formatCropAngle,
   isCropAspectSelected,
 } from "../photo-editing-crop";
 import { cn } from "niho-ui/cn";
 
+import { PHOTO_EDITING_PRIMARY_BUTTON_CLASS_NAME } from "./photo-editing-button-classes";
+import { PhotoEditingMenu, type PhotoEditingMenuItem } from "./photo-editing-menu";
 import { PhotoEditingSlider, type PhotoEditingSliderPhase } from "./photo-editing-slider";
 import { PhotoEditingRuler } from "./photo-editing-ruler";
 
 const FOCUS_RING_CLASS_NAME = "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-niho-accent-ink";
-const CHIP_CLASS_NAME = cn(
-  "inline-flex min-h-11 items-center rounded-full border px-3 text-sub font-bold transition disabled:cursor-not-allowed disabled:opacity-50",
-  FOCUS_RING_CLASS_NAME,
-);
-const ACTION_BUTTON_CLASS_NAME = cn(
-  "inline-flex min-h-11 items-center justify-center gap-1.5 rounded-full border border-niho-border px-3 text-sub font-bold text-niho-text transition enabled:hover:bg-niho-pale/60 disabled:cursor-not-allowed disabled:opacity-50",
-  FOCUS_RING_CLASS_NAME,
-);
 
 /**
- * 切り抜きの道具（NIHO Photo 段 1 F3b 移行元設計）: 縦横比のチップと「縦横の入れ替え」・角度補正のスライダー・「90° 回転」
- * 「左右の反転」・書き出しの大きさの 1 行。右パネルに依存しない独立の部品で、ブラウザの面の右パネルとスマホの編集面
- * （F6c 移行元設計）が同じものを使う。
+ * 切り抜きの道具（NIHO Photo 段 1 F3b 移行元設計）。右パネルに依存しない独立の部品で、ブラウザの面の右パネルとスマホの編集面
+ * （F6c 移行元設計。`mobile`）が同じものを使う。
  *
- * - 押すたびに新しい幾何を `onCommit` に渡す（取り消しの 1 単位。保存と履歴は呼ぶ側）。「完了」のボタンは置かない
+ * - PC（Lightroom の並び。#52）: 縦横比の行（今の比率の名前 ▾ のメニューと、右端に「縦横の入れ替え」）→ 角度補正のスライダー →
+ *   「反転と回転」の 4 つの icon（左に 90° 回転・右に 90° 回転・左右の反転・上下の反転）→ 書き出しの大きさの 1 行 →［完了］
+ *   ［キャンセル］（`onDone` / `onCancel` を渡したときだけ。Enter / Esc は面のキーで同じものを呼ぶ）
+ * - スマホ: 縦横比のチップ・入れ替え・90° 回転・左右の反転・「初期化」の帯と、角度補正の目盛り
+ * - 押すたびに新しい幾何を `onCommit` に渡す（取り消しの 1 単位。保存と履歴は呼ぶ側）
  * - 角度補正は、つまみを動かしている間は手元の角度だけを `onLiveAngleChange` に知らせ（枠の部品が写真を回してグリッドを出す）、
  *   離したら `setGeometryAngle` の結果を確定する。ダブルクリックで 0、値は直接入力できる
- * - 入れ替えた比率（`5:4`・`originalSwapped`）のときは元のチップを選ばれた表示にし、そのチップを押すと今の向きのまま最大の
- *   箱に置き直す
+ * - 入れ替えた比率（`5:4`・`originalSwapped`）のときは元の比率を選んでいる表示にし、それを選ぶと今の向きのまま最大の箱に
+ *   置き直す
  */
 export function PhotoEditingCropTools(props: {
   /** 確定している幾何 */
@@ -74,9 +90,15 @@ export function PhotoEditingCropTools(props: {
   mobile?: boolean;
   bandClassName?: string;
   onReset?: () => void;
+  /** PC の［完了］（補正へ戻る。幾何は押すたびに確定済み） */
+  onDone?: () => void;
+  /** PC の［キャンセル］（入ったときの幾何に戻して補正へ戻る） */
+  onCancel?: () => void;
 }) {
   const { geometry, source, disabled } = props;
   const headingId = useId();
+  const aspectValueId = useId();
+  const transformId = useId();
   const angleId = useId();
   const frame = developFrameSize(source, geometry.rotate);
   const aspect = cropAspectOf(geometry);
@@ -186,12 +208,47 @@ export function PhotoEditingCropTools(props: {
     );
   }
 
+  const aspectItems: PhotoEditingMenuItem[] = PHOTO_EDITING_CROP_ASPECTS.map((chip) => {
+    const selected = isCropAspectSelected(aspect, chip.aspect);
+    return {
+      key: chip.aspect,
+      label: chip.label,
+      checked: selected,
+      // 選んでいる比率は、今の向き（入れ替えた比率）のまま置き直す
+      onSelect: () => props.onCommit(setGeometryAspect(geometry, selected ? aspect : chip.aspect, frame)),
+    };
+  });
+  // 反転の icon は形の名前で選ぶ（lucide 1.60 の `FlipHorizontal2` は横の中心線と上下の三角 = 上下の反転の形）
+  const transforms = [
+    { label: PHOTO_EDITING_CROP_ROTATE_LEFT_LABEL, icon: RotateCcw, next: rotateGeometryCounterClockwise },
+    { label: PHOTO_EDITING_CROP_ROTATE_RIGHT_LABEL, icon: RotateCw, next: rotateGeometryClockwise },
+    { label: PHOTO_EDITING_CROP_FLIP_LABEL, icon: TrianglesCenterlineDashedVertical, next: flipGeometryHorizontal },
+    { label: PHOTO_EDITING_CROP_FLIP_VERTICAL_LABEL, icon: TrianglesCenterlineDashedHorizontal, next: flipGeometryVertical },
+  ];
+
   return (
     <div className="pt-1">
-      <div className="flex min-h-11 items-center justify-between gap-2">
-        <h4 id={headingId} className="text-xs font-bold text-niho-text-muted">
+      <div className="flex h-9 items-center gap-2">
+        <span id={headingId} className="shrink-0 text-xs font-bold text-niho-text-muted">
           {PHOTO_EDITING_CROP_ASPECT_TITLE}
-        </h4>
+        </span>
+        <PhotoEditingMenu items={aspectItems} variant="browser">
+          <button
+            type="button"
+            aria-haspopup="menu"
+            aria-labelledby={`${headingId} ${aspectValueId}`}
+            disabled={disabled}
+            className={cn(
+              "inline-flex h-7 min-w-0 items-center gap-1 rounded-md px-1.5 text-xs font-bold text-niho-text transition enabled:hover:bg-niho-pale/60 disabled:cursor-not-allowed disabled:opacity-50",
+              FOCUS_RING_CLASS_NAME,
+            )}
+          >
+            <span id={aspectValueId} className="truncate">
+              {cropAspectLabel(aspect)}
+            </span>
+            <ChevronDown className="h-3.5 w-3.5 shrink-0 text-niho-text-muted" aria-hidden />
+          </button>
+        </PhotoEditingMenu>
         <button
           type="button"
           aria-label={PHOTO_EDITING_CROP_ASPECT_SWAP_LABEL}
@@ -199,37 +256,14 @@ export function PhotoEditingCropTools(props: {
           disabled={disabled || !canSwapCropAspect(aspect)}
           onClick={() => props.onCommit(setGeometryAspect(geometry, swapDevelopAspect(aspect), frame))}
           className={cn(
-            "-mr-2 flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-niho-text-sub transition enabled:hover:bg-niho-pale/60 disabled:cursor-not-allowed disabled:opacity-40",
+            "-mr-1 ml-auto flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-niho-text-sub transition enabled:hover:bg-niho-pale/60 enabled:hover:text-niho-text disabled:cursor-not-allowed disabled:opacity-40",
             FOCUS_RING_CLASS_NAME,
           )}
         >
-          <ArrowRightLeft className="h-[18px] w-[18px]" aria-hidden />
+          <ArrowRightLeft className="h-4 w-4" aria-hidden />
         </button>
       </div>
-      <div role="group" aria-labelledby={headingId} className="flex flex-wrap gap-1.5">
-        {PHOTO_EDITING_CROP_ASPECTS.map((chip) => {
-          const selected = isCropAspectSelected(aspect, chip.aspect);
-          return (
-            <button
-              key={chip.aspect}
-              type="button"
-              aria-pressed={selected}
-              disabled={disabled}
-              // 選ばれているチップは、今の向き（入れ替えた比率）のまま置き直す
-              onClick={() => props.onCommit(setGeometryAspect(geometry, selected ? aspect : chip.aspect, frame))}
-              className={cn(
-                CHIP_CLASS_NAME,
-                selected
-                  ? "border-transparent bg-niho-accent-soft text-niho-accent-ink"
-                  : "border-niho-border text-niho-text enabled:hover:bg-niho-pale/60",
-              )}
-            >
-              {chip.label}
-            </button>
-          );
-        })}
-      </div>
-      <div className="mt-4">
+      <div className="mt-2">
         <PhotoEditingSlider
           id={angleId}
           label={PHOTO_EDITING_CROP_ANGLE_LABEL}
@@ -243,28 +277,73 @@ export function PhotoEditingCropTools(props: {
           onReset={() => commitAngle(0)}
         />
       </div>
-      <div className="mt-4 grid grid-cols-2 gap-2">
-        <button
-          type="button"
-          disabled={disabled}
-          onClick={() => props.onCommit(rotateGeometryClockwise(geometry, source))}
-          className={ACTION_BUTTON_CLASS_NAME}
-        >
-          <RotateCw className="h-4 w-4 shrink-0" aria-hidden />
-          {PHOTO_EDITING_CROP_ROTATE_LABEL}
-        </button>
-        <button
-          type="button"
-          disabled={disabled}
-          onClick={() => props.onCommit(flipGeometryHorizontal(geometry, source))}
-          className={ACTION_BUTTON_CLASS_NAME}
-        >
-          <FlipHorizontal2 className="h-4 w-4 shrink-0" aria-hidden />
-          {PHOTO_EDITING_CROP_FLIP_LABEL}
-        </button>
+      <h4 id={transformId} className="mt-4 text-xs font-bold text-niho-text-muted">
+        {PHOTO_EDITING_CROP_TRANSFORM_TITLE}
+      </h4>
+      <div role="group" aria-labelledby={transformId} className="mt-2 flex gap-1.5">
+        {transforms.map((transform) => {
+          const Icon = transform.icon;
+          return (
+            <button
+              key={transform.label}
+              type="button"
+              aria-label={transform.label}
+              title={transform.label}
+              disabled={disabled}
+              onClick={() => props.onCommit(transform.next(geometry, source))}
+              className={cn(
+                "flex h-9 w-11 items-center justify-center rounded-lg border border-niho-border bg-white text-niho-text-sub transition enabled:hover:bg-niho-pale/60 enabled:hover:text-niho-text disabled:cursor-not-allowed disabled:opacity-50",
+                FOCUS_RING_CLASS_NAME,
+              )}
+            >
+              <Icon className="h-4 w-4" aria-hidden />
+            </button>
+          );
+        })}
       </div>
       {props.exportLongEdge !== null ? (
         <p className="mt-3 text-xs leading-relaxed text-niho-text-sub">{photoEditingCropExportLimitText(props.exportLongEdge)}</p>
+      ) : null}
+      {props.onDone || props.onCancel ? (
+        <div className="mt-4 flex flex-col gap-1.5">
+          {props.onDone ? (
+            <button
+              type="button"
+              aria-keyshortcuts="Enter"
+              disabled={disabled}
+              onClick={props.onDone}
+              className={cn(PHOTO_EDITING_PRIMARY_BUTTON_CLASS_NAME, "h-9 w-full justify-center rounded-lg")}
+            >
+              {PHOTO_EDITING_CROP_DONE_LABEL}
+              <span aria-hidden className="text-xs opacity-75">
+                {PHOTO_EDITING_CROP_DONE_KEY_HINT}
+              </span>
+            </button>
+          ) : null}
+          {props.onCancel ? (
+            <button
+              type="button"
+              aria-keyshortcuts="Escape"
+              disabled={disabled}
+              onClick={props.onCancel}
+              onKeyDown={(event) => {
+                // この上の Enter は［キャンセル］を押す（面の Enter =［完了］に渡さない）
+                if (event.key !== "Enter" || event.nativeEvent.isComposing) return;
+                event.preventDefault();
+                props.onCancel?.();
+              }}
+              className={cn(
+                "inline-flex h-9 w-full items-center justify-center gap-2 rounded-lg text-sub font-bold text-niho-text-sub transition enabled:hover:bg-niho-pale/60 enabled:hover:text-niho-text disabled:cursor-not-allowed disabled:opacity-50",
+                FOCUS_RING_CLASS_NAME,
+              )}
+            >
+              {PHOTO_EDITING_CROP_CANCEL_LABEL}
+              <span aria-hidden className="text-xs text-niho-text-muted">
+                {PHOTO_EDITING_CROP_CANCEL_KEY_HINT}
+              </span>
+            </button>
+          ) : null}
+        </div>
       ) : null}
     </div>
   );

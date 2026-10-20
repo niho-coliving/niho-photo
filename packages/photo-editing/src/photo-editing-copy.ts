@@ -408,6 +408,17 @@ export const PHOTO_EDITING_CROP_ANGLE_LABEL = "角度補正";
 export const PHOTO_EDITING_CROP_ROTATE_LABEL = "90° 回転";
 export const PHOTO_EDITING_CROP_FLIP_LABEL = "左右の反転";
 
+/** PC の切り抜きの道具（Lightroom の並び）: 「反転と回転」の 4 つの icon と、下の［完了］［キャンセル］（Enter / Esc）。 */
+export const PHOTO_EDITING_CROP_TRANSFORM_TITLE = "反転と回転";
+export const PHOTO_EDITING_CROP_ROTATE_LEFT_LABEL = "左に 90° 回転";
+export const PHOTO_EDITING_CROP_ROTATE_RIGHT_LABEL = "右に 90° 回転";
+export const PHOTO_EDITING_CROP_FLIP_VERTICAL_LABEL = "上下の反転";
+export const PHOTO_EDITING_CROP_DONE_LABEL = "完了";
+export const PHOTO_EDITING_CROP_CANCEL_LABEL = "キャンセル";
+/** ボタンの右に薄く添えるキーの印（読み上げは `aria-keyshortcuts`） */
+export const PHOTO_EDITING_CROP_DONE_KEY_HINT = "⏎";
+export const PHOTO_EDITING_CROP_CANCEL_KEY_HINT = "esc";
+
 /** 写真の上の切り抜きの枠と、そのつまみ（角 4・辺 4。枠がまっすぐ立って見える向きで）の読み上げ名。 */
 export const PHOTO_EDITING_CROP_FRAME_LABEL = "切り抜きの枠";
 export const PHOTO_EDITING_CROP_HANDLE_LABELS = {
