@@ -3,6 +3,7 @@ export const actionPins = new Map([
   ["actions/checkout", "11bd71901bbe5b1630ceea73d27597364c9af683"],
   ["actions/setup-node", "49933ea5288caeca8642d1e84afbd3f7d6820020"],
   ["actions/dependency-review-action", "3c4e3dcb1aa7874d2c16be7d79418e9b7efd6261"],
+  ["swift-actions/setup-swift", "7ca6abe6b3b0e8b5421b88be48feee39cbf52c6a"],
 ]);
 export function workflowFailures(workflow) {
   const failures = [];

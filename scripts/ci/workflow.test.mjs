@@ -4,6 +4,13 @@ import { readFile } from "node:fs/promises";
 import { workflowFailures } from "./workflow-lib.mjs";
 const workflow = JSON.parse(await readFile(new URL("../../.github/workflows/public-ci.yml", import.meta.url), "utf8"));
 test("公開workflowの権限、runner、pin、aggregate契約", () => assert.deepEqual(workflowFailures(workflow), []));
+const swiftPackage = await readFile(new URL("../../packages/develop-engine/tools/apple-raw-linear/Package.swift", import.meta.url), "utf8");
+const swiftToolsVersion = swiftPackage.match(/^\/\/ swift-tools-version: (\d+\.\d+)/m)?.[1];
+test("現像Swift packageはtools versionと同じ固定toolchainで実行する", () => {
+  const setup = workflow.jobs.native.steps.find((step) => step.uses?.startsWith("swift-actions/setup-swift@"));
+  assert.equal(setup?.if, "matrix.scope == 'develop-engine'");
+  assert.equal(setup?.with?.["swift-version"], swiftToolsVersion);
+});
 for (const [name, mutate] of [
   ["tag Action", (w) => { w.jobs.plan.steps[0].uses = "actions/checkout@v4"; }],
   ["unverified Action commit", (w) => { w.jobs.plan.steps[0].uses = `actions/checkout@${"a".repeat(40)}`; }],

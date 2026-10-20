@@ -197,6 +197,13 @@
           }
         },
         {
+          "uses": "swift-actions/setup-swift@7ca6abe6b3b0e8b5421b88be48feee39cbf52c6a",
+          "if": "matrix.scope == 'develop-engine'",
+          "with": {
+            "swift-version": "6.0"
+          }
+        },
+        {
           "run": "npm ci --ignore-scripts --no-audit --no-fund"
         },
         {
