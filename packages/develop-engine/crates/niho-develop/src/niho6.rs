@@ -31,11 +31,14 @@ pub const ANALYSIS_LONG_EDGE: usize = 750;
 pub const LEGACY_SHARE: f64 = 0.5;
 
 /// Engines that use the frozen `niho-6` formula on raster sources. `niho-8`
-/// changes cube entry precision only; it deliberately reuses this response.
+/// changes cube entry precision and `niho-10` adds hue-stable saturation;
+/// both deliberately reuse this response.
 pub fn uses_raster_formula(settings: &DevelopSettings) -> bool {
     matches!(
         settings.engine.as_str(),
-        crate::settings::ENGINE_NIHO_6 | crate::settings::ENGINE_NIHO_8
+        crate::settings::ENGINE_NIHO_6
+            | crate::settings::ENGINE_NIHO_8
+            | crate::settings::ENGINE_NIHO_10
     )
 }
 

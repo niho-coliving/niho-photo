@@ -1,10 +1,12 @@
 import {
   DEVELOP_SETTINGS_ENGINE,
   NIHO2_DEVELOP_SETTINGS_ENGINE,
+  NIHO6_DEVELOP_SETTINGS_ENGINE,
   NIHO4_DEVELOP_SETTINGS_ENGINE,
   NIHO4_DEVELOP_SETTINGS_LOOK,
   NIHO7_DEVELOP_SETTINGS_ENGINE,
   NIHO7_DEVELOP_SETTINGS_LOOK,
+  NIHO11_DEVELOP_SETTINGS_ENGINE,
   SIGNED_DEVELOP_SETTINGS_ENGINE,
   SIGNED_DEVELOP_SETTINGS_LOOK,
   isEditableDevelopSettings,
@@ -300,8 +302,8 @@ export function markDevelopSettingsDraftConflicted(identity: DevelopSettingsDraf
 /**
  * 未保存の補正（draft の `settings`）を今開いている写真へ戻せるか。draft が直せる形で、土台の版（`base`）が今の入力の版と、数式・
  * ルックが今の編集内容と同じときだけ戻す（違う土台・数式で作った補正を読み替えない）。ただし保存したことの無い写真で、新規編集の
- * 既定を niho-2 → niho-6 に変える前に作った draft（draft が niho-2・今が niho-6。土台とルックは同じ）は、draft の niho-2 のまま戻す。
- * 同様に、対応校正 signed RAW の既定を niho-4/3 → niho-7 に変える前の正しい旧pairも、未保存かつ同じ土台に限って旧pairのまま戻す
+ * 既定を niho-2 / niho-6 → niho-10 に変える前に作った draft（土台とルックは同じ）は、draft の旧数式のまま戻す。
+ * 同様に、対応校正 signed RAW の既定を niho-4/3/7 → niho-11 に変える前の正しい旧pairも、未保存かつ同じ土台に限って旧pairのまま戻す
  * （既定が変わっただけで未保存の補正を失わない。移行元設計、移行元設計）。
  */
 export function canRestoreDevelopSettingsDraft(params: {
@@ -321,9 +323,10 @@ export function canRestoreDevelopSettingsDraft(params: {
   const draftLook = Object.hasOwn(draftSettings, "look") ? draftSettings.look : undefined;
   const legacySignedDefaultDraft =
     !params.hasSavedSettings &&
-    currentSettings.engine === NIHO7_DEVELOP_SETTINGS_ENGINE &&
+    currentSettings.engine === NIHO11_DEVELOP_SETTINGS_ENGINE &&
     currentLook === NIHO7_DEVELOP_SETTINGS_LOOK &&
-    ((draftSettings.engine === NIHO4_DEVELOP_SETTINGS_ENGINE && draftLook === NIHO4_DEVELOP_SETTINGS_LOOK) ||
+    ((draftSettings.engine === NIHO7_DEVELOP_SETTINGS_ENGINE && draftLook === NIHO7_DEVELOP_SETTINGS_LOOK) ||
+      (draftSettings.engine === NIHO4_DEVELOP_SETTINGS_ENGINE && draftLook === NIHO4_DEVELOP_SETTINGS_LOOK) ||
       (draftSettings.engine === SIGNED_DEVELOP_SETTINGS_ENGINE && draftLook === SIGNED_DEVELOP_SETTINGS_LOOK));
   // 既定の切替前に作った未保存 signed RAW draft は、旧数式・旧ルックの対を保ったまま戻す。
   if (draftLook !== currentLook && !legacySignedDefaultDraft) return false;
@@ -331,7 +334,7 @@ export function canRestoreDevelopSettingsDraft(params: {
   return (
     legacySignedDefaultDraft ||
     (!params.hasSavedSettings &&
-      draftSettings.engine === NIHO2_DEVELOP_SETTINGS_ENGINE &&
+      (draftSettings.engine === NIHO2_DEVELOP_SETTINGS_ENGINE || draftSettings.engine === NIHO6_DEVELOP_SETTINGS_ENGINE) &&
       currentSettings.engine === DEVELOP_SETTINGS_ENGINE)
   );
 }

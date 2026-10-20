@@ -31,8 +31,9 @@ use crate::convert::{
 };
 use crate::settings::{
     num, CalibrationSettings, ColorGradingSettings, CurveChannel, CurvePoint, DevelopSettings,
-    HslAdjustment, HslBand, ToneCurve, VignetteStyle, ENGINE_NIHO_2, ENGINE_NIHO_3, ENGINE_NIHO_4,
-    ENGINE_NIHO_5, ENGINE_NIHO_6, ENGINE_NIHO_7, ENGINE_NIHO_8, GRAIN_SEED_MAX,
+    HslAdjustment, HslBand, ToneCurve, VignetteStyle, ENGINE_NIHO_10, ENGINE_NIHO_11,
+    ENGINE_NIHO_2, ENGINE_NIHO_3, ENGINE_NIHO_4, ENGINE_NIHO_5, ENGINE_NIHO_6, ENGINE_NIHO_7,
+    ENGINE_NIHO_8, GRAIN_SEED_MAX,
 };
 use quick_xml::events::Event;
 use quick_xml::Reader;
@@ -118,6 +119,9 @@ pub struct XmpDocument {
     pub sequences: BTreeMap<String, Vec<CurvePoint>>,
     /// `crs:Name` (`x-default`, else the first alternative).
     pub name: Option<String>,
+    /// Adobe's private `crs:PointColors` payload was present in an attribute,
+    /// element, or nested description. NIHO never guesses its encoding.
+    pub point_colors: bool,
 }
 
 const CURVE_MAP: [(&str, CurveChannel); 4] = [
@@ -168,6 +172,9 @@ pub fn parse(text: &str) -> Result<XmpDocument, XmpError> {
             Event::Start(ref e) | Event::Empty(ref e) => {
                 let is_empty = matches!(event, Event::Empty(_));
                 let qualified = String::from_utf8_lossy(e.name().as_ref()).into_owned();
+                if qualified == "crs:PointColors" {
+                    doc.point_colors = true;
+                }
                 let mut attributes: Vec<(String, String)> = Vec::new();
                 for attribute in e.attributes() {
                     let attribute =
@@ -178,6 +185,9 @@ pub fn parse(text: &str) -> Result<XmpDocument, XmpError> {
                         .map_err(|err| XmpError::InvalidXml(err.to_string()))?
                         .into_owned();
                     attributes.push((key, value));
+                }
+                if attributes.iter().any(|(key, _)| key == "crs:PointColors") {
+                    doc.point_colors = true;
                 }
                 // --- start ---
                 let parent = stack.last().cloned();
@@ -1681,7 +1691,7 @@ impl XmpDocument {
                         )
                 } else if matches!(
                     effective_settings.engine.as_str(),
-                    ENGINE_NIHO_4 | ENGINE_NIHO_5 | ENGINE_NIHO_7
+                    ENGINE_NIHO_4 | ENGINE_NIHO_5 | ENGINE_NIHO_7 | ENGINE_NIHO_11
                 ) {
                     (
                         Level::Unsupported,
@@ -1783,6 +1793,15 @@ impl XmpDocument {
                 note: "DNG スプライン＋RGBTone 色相保持（sRGB 符号化空間）".into(),
             });
         }
+        if self.point_colors && !items.iter().any(|item| item.property == "PointColors") {
+            items.push(CompatibilityItem {
+                property: "PointColors".into(),
+                value: "present".into(),
+                level: Level::Unsupported,
+                photo_bench_level: Level::Unsupported,
+                note: "Adobe の非公開形式なので読み書き・推測変換をしない".into(),
+            });
+        }
         items
     }
 }
@@ -1816,7 +1835,8 @@ pub fn preset_settings(
     base: Option<&DevelopSettings>,
 ) -> Result<PresetResult, XmpError> {
     let doc = parse(xmp)?;
-    if doc.properties.is_empty() && doc.sequences.values().all(|p| p.len() < 2) {
+    if doc.properties.is_empty() && doc.sequences.values().all(|p| p.len() < 2) && !doc.point_colors
+    {
         return Err(XmpError::NoSettings);
     }
     let base_pb = match base {
@@ -1845,12 +1865,17 @@ pub fn preset_settings(
                     | ENGINE_NIHO_5
                     | ENGINE_NIHO_6
                     | ENGINE_NIHO_7
+                    | ENGINE_NIHO_10
+                    | ENGINE_NIHO_11
                     | ENGINE_NIHO_8
             )
         {
             settings.engine = b.engine.clone();
         }
         copy_effects(b, &mut settings);
+        // Adobe XMP has no public representation for NIHO's independently
+        // authored OKLCH points. Applying a preset must never erase them.
+        settings.color_points = b.color_points.clone();
     }
     // NIHO effects are not in Photo Bench's `EditSettings`, so they do not go
     // through the converter (`CONVERTER_VERSION` is unchanged): the base's
@@ -1859,7 +1884,7 @@ pub fn preset_settings(
     doc.apply_effects(&mut settings);
     if matches!(
         settings.engine.as_str(),
-        ENGINE_NIHO_3 | ENGINE_NIHO_4 | ENGINE_NIHO_5 | ENGINE_NIHO_7
+        ENGINE_NIHO_3 | ENGINE_NIHO_4 | ENGINE_NIHO_5 | ENGINE_NIHO_7 | ENGINE_NIHO_11
     ) {
         let inherited = base.cloned().unwrap_or_else(DevelopSettings::neutral);
         settings.color_noise_reduction = doc

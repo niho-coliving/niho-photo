@@ -3,10 +3,11 @@
 //! Every constant is transcribed verbatim. Linear ProPhoto in and out.
 
 use crate::color::{
-    mat_vec, srgb_decode, srgb_encode, Mat3, IDENTITY, PP_LUMA, PROPHOTO_TO_SRGB, SRGB_TO_PROPHOTO,
+    linear_srgb_to_oklab, mat_vec, mat_vec_f32, srgb_decode, srgb_encode, Mat3, IDENTITY, PP_LUMA,
+    PROPHOTO_TO_SRGB, PROPHOTO_TO_SRGB_F32, SRGB_TO_PROPHOTO,
 };
 use crate::settings::{
-    CalibrationSettings, ColorGradingSettings, DevelopSettings, HslAdjustment, HslBand,
+    CalibrationSettings, ColorGradingSettings, ColorPoint, DevelopSettings, HslAdjustment, HslBand,
 };
 use crate::tone_ops::Rgb;
 
@@ -27,6 +28,129 @@ fn clamp01(v: Rgb) -> Rgb {
         v[1].clamp(0.0, 1.0),
         v[2].clamp(0.0, 1.0),
     ]
+}
+
+#[inline]
+fn linear_srgb_to_oklab_f64(rgb: Rgb) -> Rgb {
+    let l = 0.412_221_470_8 * rgb[0] + 0.536_332_536_3 * rgb[1] + 0.051_445_992_9 * rgb[2];
+    let m = 0.211_903_498_2 * rgb[0] + 0.680_699_545_1 * rgb[1] + 0.107_396_956_6 * rgb[2];
+    let s = 0.088_302_461_9 * rgb[0] + 0.281_718_837_6 * rgb[1] + 0.629_978_700_5 * rgb[2];
+    let (l_, m_, s_) = (libm::cbrt(l), libm::cbrt(m), libm::cbrt(s));
+    [
+        0.210_454_255_3 * l_ + 0.793_617_785 * m_ - 0.004_072_046_8 * s_,
+        1.977_998_495_1 * l_ - 2.428_592_205 * m_ + 0.450_593_709_9 * s_,
+        0.025_904_037_1 * l_ + 0.782_771_766_2 * m_ - 0.808_675_766 * s_,
+    ]
+}
+
+#[inline]
+fn oklab_to_linear_srgb_f64(lab: Rgb) -> Rgb {
+    let l_ = lab[0] + 0.396_337_777_4 * lab[1] + 0.215_803_757_3 * lab[2];
+    let m_ = lab[0] - 0.105_561_345_8 * lab[1] - 0.063_854_172_8 * lab[2];
+    let s_ = lab[0] - 0.089_484_177_5 * lab[1] - 1.291_485_548 * lab[2];
+    let (l, m, s) = (l_ * l_ * l_, m_ * m_ * m_, s_ * s_ * s_);
+    [
+        4.076_741_662_1 * l - 3.307_711_591_3 * m + 0.230_969_929_2 * s,
+        -1.268_438_004_6 * l + 2.609_757_401_1 * m - 0.341_319_396_5 * s,
+        -0.004_196_086_3 * l - 0.703_418_614_7 * m + 1.707_614_701 * s,
+    ]
+}
+
+#[inline]
+fn oklab_to_oklch(lab: Rgb) -> Rgb {
+    let chroma = libm::hypot(lab[1], lab[2]);
+    let hue = if chroma <= 1e-12 {
+        0.0
+    } else {
+        pymod(
+            libm::atan2(lab[2], lab[1]) * 180.0 / core::f64::consts::PI,
+            360.0,
+        )
+    };
+    [lab[0], chroma, hue]
+}
+
+/// Converts an extended linear ProPhoto value to Oklch without clipping.
+/// Invalid/HDR samples outside the persisted target contract are rejected by
+/// [`crate::Session::sample_color`] instead of being silently clamped.
+pub fn prophoto_to_oklch(value: Rgb) -> Rgb {
+    oklab_to_oklch(linear_srgb_to_oklab_f64(mat_vec(&PROPHOTO_TO_SRGB, value)))
+}
+
+/// Compact coordinates kept by the session's active-point plane. The f64
+/// conversion above remains the reference. Cache generation uses the
+/// existing signed f32 OKLab kernel (including its bounded cube-root table),
+/// and one output-sized plane stays bounded on wasm.
+pub(crate) fn cached_prophoto_to_oklch(value: [f32; 3]) -> [f32; 3] {
+    let lab = linear_srgb_to_oklab(mat_vec_f32(&PROPHOTO_TO_SRGB_F32, value));
+    let chroma = libm::sqrtf(lab[1] * lab[1] + lab[2] * lab[2]);
+    // Hue becomes numerically sensitive near gray; pay for the f64
+    // reference once when constructing the plane, never on warm drags.
+    if chroma < 0.001 {
+        let mut lch = prophoto_to_oklch(value.map(f64::from)).map(|v| v as f32);
+        if lch[2] >= 360.0 {
+            lch[2] = 0.0;
+        }
+        return lch;
+    }
+    let hue = if chroma <= 1e-12 {
+        0.0
+    } else {
+        (libm::atan2f(lab[2], lab[1]) * 180.0 / core::f32::consts::PI).rem_euclid(360.0)
+    };
+    [lab[0], chroma, if hue >= 360.0 { 0.0 } else { hue }]
+}
+
+#[inline]
+fn oklch_to_oklab(lch: Rgb) -> Rgb {
+    let hue = lch[2] * core::f64::consts::PI / 180.0;
+    [lch[0], lch[1] * libm::cos(hue), lch[1] * libm::sin(hue)]
+}
+
+/// Keep the output lightness and chroma while restoring the OKLab hue of the
+/// same color with only the authored HSL hue / luminance changes. Extended
+/// gamut values deliberately remain unclipped. Close to neutral gray the hue
+/// is undefined, so the rotation fades continuously to zero.
+fn restore_saturation_hue(output: Rgb, reference: Rgb) -> Rgb {
+    if !output.iter().chain(reference.iter()).all(|v| v.is_finite()) {
+        return output;
+    }
+    let output_lab = linear_srgb_to_oklab_f64(mat_vec(&PROPHOTO_TO_SRGB, output));
+    let reference_lab = linear_srgb_to_oklab_f64(mat_vec(&PROPHOTO_TO_SRGB, reference));
+    if !output_lab
+        .iter()
+        .chain(reference_lab.iter())
+        .all(|v| v.is_finite())
+    {
+        return output;
+    }
+    let output_chroma = libm::hypot(output_lab[1], output_lab[2]);
+    let reference_chroma = libm::hypot(reference_lab[1], reference_lab[2]);
+    let usable_chroma = output_chroma.min(reference_chroma);
+    if usable_chroma <= 1e-12 {
+        return output;
+    }
+    // A very narrow neutral-only transition avoids leaving partially
+    // corrected, visibly chromatic colors. At C >= 0.002 the intended hue is
+    // restored exactly; below it the residual is visually undefined.
+    let weight = smoothstep(usable_chroma / 0.002);
+    let output_hue = libm::atan2(output_lab[2], output_lab[1]);
+    let reference_hue = libm::atan2(reference_lab[2], reference_lab[1]);
+    let delta = wrap180((reference_hue - output_hue) * 180.0 / core::f64::consts::PI)
+        * core::f64::consts::PI
+        / 180.0;
+    let hue = output_hue + weight * delta;
+    let corrected_lab = [
+        output_lab[0],
+        output_chroma * libm::cos(hue),
+        output_chroma * libm::sin(hue),
+    ];
+    let corrected = mat_vec(&SRGB_TO_PROPHOTO, oklab_to_linear_srgb_f64(corrected_lab));
+    if corrected.iter().all(|v| v.is_finite()) {
+        corrected
+    } else {
+        output
+    }
 }
 
 /// Python's `%` for a positive modulus.
@@ -178,6 +302,77 @@ const HSL_CENTERS: [f64; 8] = [
 #[inline]
 fn wrap180(deg: f64) -> f64 {
     pymod(deg + 180.0, 360.0) - 180.0
+}
+
+#[inline]
+fn point_axis_weight(distance: f64, range: f64) -> f64 {
+    if !distance.is_finite() || !range.is_finite() || range <= 0.0 || distance >= range {
+        return 0.0;
+    }
+    smoothstep(1.0 - distance / range)
+}
+
+/// Applies all independent OKLCH selections from the same original Lab
+/// value. Overlaps are normalized only when their total weight exceeds one;
+/// no point observes another point's result, so authored order is irrelevant.
+/// Extended-gamut ProPhoto values are not clipped here; the existing output
+/// transform remains the sole gamut policy.
+fn color_points_from_oklch(value: Rgb, lch: Rgb, points: &[ColorPoint]) -> Rgb {
+    if points.iter().all(|point| point.delta.is_zero())
+        || !value.iter().chain(lch.iter()).all(|v| v.is_finite())
+    {
+        return value;
+    }
+    let mut total = 0.0;
+    let mut hue_delta = 0.0;
+    let mut chroma_delta = 0.0;
+    let mut lightness_delta = 0.0;
+    for point in points {
+        let hue_weight = if lch[1] <= 1e-6 || point.target.chroma <= 1e-6 {
+            1.0
+        } else {
+            point_axis_weight(wrap180(lch[2] - point.target.hue).abs(), point.range.hue)
+        };
+        let weight = hue_weight
+            * point_axis_weight((lch[1] - point.target.chroma).abs(), point.range.chroma)
+            * point_axis_weight(
+                (lch[0] - point.target.lightness).abs(),
+                point.range.lightness,
+            );
+        if weight == 0.0 {
+            continue;
+        }
+        total += weight;
+        hue_delta += weight * point.delta.hue;
+        chroma_delta += weight * (point.delta.chroma_scale - 1.0);
+        lightness_delta += weight * point.delta.lightness;
+    }
+    if total == 0.0 {
+        return value;
+    }
+    let normalize = 1.0 / total.max(1.0);
+    let output_lch = [
+        lch[0] + normalize * lightness_delta,
+        (lch[1] * (1.0 + normalize * chroma_delta)).max(0.0),
+        pymod(lch[2] + normalize * hue_delta, 360.0),
+    ];
+    let output = mat_vec(
+        &SRGB_TO_PROPHOTO,
+        oklab_to_linear_srgb_f64(oklch_to_oklab(output_lch)),
+    );
+    if output.iter().all(|v| v.is_finite()) {
+        output
+    } else {
+        value
+    }
+}
+
+pub fn color_points(value: Rgb, points: &[ColorPoint]) -> Rgb {
+    if points.iter().all(|point| point.delta.is_zero()) || !value.iter().all(|v| v.is_finite()) {
+        return value;
+    }
+    let lch = prophoto_to_oklch(value);
+    color_points_from_oklch(value, lch, points)
 }
 
 fn hsl_band_weight(hue_deg: f64, ordinal: usize) -> f64 {
@@ -793,6 +988,8 @@ pub struct PreparedColorOps {
     vibrance: f64,
     saturation: f64,
     hsl: Vec<(HslBand, HslAdjustment)>,
+    hsl_without_saturation: Vec<(HslBand, HslAdjustment)>,
+    color_points: Vec<ColorPoint>,
     /// `Some` in black & white.
     gray_mix: Option<[f64; 8]>,
     /// The values are past the ACR3 default curve (a RAW working copy).
@@ -804,6 +1001,8 @@ pub struct PreparedColorOps {
     /// `niho-6` on a JPEG / PNG (#18397): Vibrance is the frozen RAW response
     /// ([`crate::niho3::vibrance`]) without the RAW profile before it.
     raster_niho6: bool,
+    /// `niho-10` / `niho-11`: remove only saturation-induced OKLab hue drift.
+    hue_stable_saturation: bool,
 }
 
 impl PreparedColorOps {
@@ -824,6 +1023,21 @@ impl PreparedColorOps {
             vibrance: settings.vibrance,
             saturation: settings.saturation,
             hsl: settings.hsl.entries().to_vec(),
+            hsl_without_saturation: settings
+                .hsl
+                .entries()
+                .iter()
+                .map(|(band, adjustment)| {
+                    (
+                        *band,
+                        HslAdjustment {
+                            saturation: 0.0,
+                            ..*adjustment
+                        },
+                    )
+                })
+                .collect(),
+            color_points: settings.color_points.clone(),
             gray_mix: settings.grayscale.then_some(settings.gray_mixer.bands),
             grading: settings.color_grading.clone(),
             directions: GradeDirections::new(&settings.color_grading),
@@ -834,6 +1048,7 @@ impl PreparedColorOps {
                         | crate::settings::ENGINE_NIHO_4
                         | crate::settings::ENGINE_NIHO_5
                         | crate::settings::ENGINE_NIHO_7
+                        | crate::settings::ENGINE_NIHO_11
                 ),
             // #18397: `niho-6` JPEG / PNG takes the NIHO 4 HSL luminance too
             // (Lightroom's HSL luminance on a JPEG matches the RAW one, not
@@ -845,26 +1060,34 @@ impl PreparedColorOps {
                     crate::settings::ENGINE_NIHO_4
                         | crate::settings::ENGINE_NIHO_5
                         | crate::settings::ENGINE_NIHO_7
+                        | crate::settings::ENGINE_NIHO_11
                 ) | (
                     false,
-                    crate::settings::ENGINE_NIHO_6 | crate::settings::ENGINE_NIHO_8
+                    crate::settings::ENGINE_NIHO_6
+                        | crate::settings::ENGINE_NIHO_8
+                        | crate::settings::ENGINE_NIHO_10
                 )
             ),
             raster_niho6: !toned
                 && matches!(
                     settings.engine.as_str(),
-                    crate::settings::ENGINE_NIHO_6 | crate::settings::ENGINE_NIHO_8
+                    crate::settings::ENGINE_NIHO_6
+                        | crate::settings::ENGINE_NIHO_8
+                        | crate::settings::ENGINE_NIHO_10
                 ),
+            hue_stable_saturation: matches!(
+                settings.engine.as_str(),
+                crate::settings::ENGINE_NIHO_10 | crate::settings::ENGINE_NIHO_11
+            ),
         }
     }
 
-    pub fn apply(&self, value: Rgb) -> Rgb {
+    /// Stage Q immediately before independent color points and Color
+    /// Grading. The picker uses this exact operation so existing points,
+    /// grading, and the output transform cannot move the selected target.
+    pub fn apply_before_color_points(&self, value: Rgb) -> Rgb {
         if let Some(mix) = &self.gray_mix {
-            return color_grading_with(
-                gray_mix(value, mix, self.toned),
-                &self.grading,
-                &self.directions,
-            );
+            return gray_mix(value, mix, self.toned);
         }
         let mut v = if self.frozen_profile {
             // R236: evaluate the existing R218 9^3 encoded-sRGB LUT on the
@@ -885,9 +1108,55 @@ impl PreparedColorOps {
         } else {
             vibrance(value, self.vibrance)
         };
+        let saturation_is_active = self.saturation != 0.0
+            || self
+                .hsl
+                .iter()
+                .any(|(_, adjustment)| adjustment.saturation != 0.0);
+        let reference = (self.hue_stable_saturation && saturation_is_active)
+            .then(|| hsl_with_luminance(v, &self.hsl_without_saturation, self.niho4_luminance));
         v = saturation(v, self.saturation);
         v = hsl_with_luminance(v, &self.hsl, self.niho4_luminance);
-        color_grading_with(v, &self.grading, &self.directions)
+        if let Some(reference) = reference {
+            v = restore_saturation_hue(v, reference);
+        }
+        v
+    }
+
+    pub fn apply(&self, value: Rgb) -> Rgb {
+        self.apply_color_points_and_grading(self.apply_before_color_points(value))
+    }
+
+    /// The exact, per-pixel end of Stage Q. Keeping this out of the cube is
+    /// required for the smallest color-point ranges: a 64^3 grid can have no
+    /// node inside a one-degree / 0.001-wide selection.
+    pub(crate) fn apply_color_points_and_grading(&self, value: Rgb) -> Rgb {
+        // The independent mixer is last in the color mixer, after
+        // niho-10/11's hue stabilization and before Color Grading.
+        let value = if self.gray_mix.is_some() {
+            value
+        } else {
+            color_points(value, &self.color_points)
+        };
+        color_grading_with(value, &self.grading, &self.directions)
+    }
+
+    /// Active-point tail using the session plane's coordinates. The f64
+    /// implementation above remains the independent reference; the cached
+    /// coordinates eliminate cbrt/atan2 work while dragging without moving
+    /// the point operation into a cube.
+    pub(crate) fn apply_cached_color_points_and_grading(
+        &self,
+        value: [f32; 3],
+        lch: [f32; 3],
+    ) -> [f32; 3] {
+        let value = value.map(f64::from);
+        let value = if self.gray_mix.is_some() {
+            value
+        } else {
+            color_points_from_oklch(value, lch.map(f64::from), &self.color_points)
+        };
+        color_grading_with(value, &self.grading, &self.directions).map(|channel| channel as f32)
     }
 
     /// RAW-only split of the black & white operation. The mix is measured
@@ -909,6 +1178,15 @@ impl PreparedColorOps {
             self.apply(value)
         }
     }
+
+    /// RAW Stage Q through the point-selection input, after the B&W split.
+    pub(crate) fn apply_raw_before_color_points_after_pre_post(&self, value: Rgb) -> Rgb {
+        if self.gray_mix.is_some() {
+            value
+        } else {
+            self.apply_before_color_points(value)
+        }
+    }
 }
 
 pub fn needs_color_ops(settings: &DevelopSettings) -> bool {
@@ -918,6 +1196,7 @@ pub fn needs_color_ops(settings: &DevelopSettings) -> bool {
             | crate::settings::ENGINE_NIHO_4
             | crate::settings::ENGINE_NIHO_5
             | crate::settings::ENGINE_NIHO_7
+            | crate::settings::ENGINE_NIHO_11
     ) && !settings.grayscale)
         || settings.grayscale
         || settings.vibrance != 0.0
@@ -927,12 +1206,14 @@ pub fn needs_color_ops(settings: &DevelopSettings) -> bool {
             .entries()
             .iter()
             .any(|(_, a)| a.hue != 0.0 || a.saturation != 0.0 || a.luminance != 0.0)
+        || settings.has_active_color_points()
         || needs_color_grading(&settings.color_grading)
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::settings::{OklchDelta, OklchRange, OklchTarget};
     use crate::tone_ops::rgb_tone;
 
     const ORANGE: usize = 1;
@@ -1001,5 +1282,132 @@ mod tests {
         // same slider would darken it less.
         let naive = gray_mix(toned, &mix, false)[0];
         assert!(got < naive - 0.05, "{got} {naive}");
+    }
+
+    #[test]
+    fn cached_oklch_and_point_tail_track_the_f64_reference() {
+        let fixtures = [
+            [0.72_f32, 0.31, 0.12],
+            [0.300_001, 0.3, 0.299_999],
+            [-0.08, 0.45, 1.1],
+            [0.02, -0.01, 0.04],
+        ];
+        for value in fixtures {
+            let reference = prophoto_to_oklch(value.map(f64::from));
+            let cached = cached_prophoto_to_oklch(value).map(f64::from);
+            assert!((cached[0] - reference[0]).abs() <= 2e-6, "{value:?}");
+            assert!((cached[1] - reference[1]).abs() <= 2e-6, "{value:?}");
+            let hue_error = ((cached[2] - reference[2] + 180.0).rem_euclid(360.0) - 180.0).abs();
+            assert!(
+                reference[1] <= 1e-6 || hue_error <= 2e-3,
+                "{value:?}: {cached:?} {reference:?}"
+            );
+            assert!((0.0..360.0).contains(&cached[2]), "{cached:?}");
+        }
+
+        let target = prophoto_to_oklch(fixtures[0].map(f64::from));
+        let mut settings = DevelopSettings::neutral();
+        settings.color_points = vec![
+            ColorPoint {
+                id: "a".into(),
+                target: OklchTarget {
+                    lightness: target[0],
+                    chroma: target[1],
+                    hue: target[2],
+                },
+                range: OklchRange {
+                    hue: 25.0,
+                    chroma: 0.08,
+                    lightness: 0.15,
+                },
+                delta: OklchDelta {
+                    hue: 14.0,
+                    chroma_scale: 1.25,
+                    lightness: 0.03,
+                },
+            },
+            ColorPoint {
+                id: "b".into(),
+                target: OklchTarget {
+                    lightness: target[0],
+                    chroma: target[1],
+                    hue: target[2],
+                },
+                range: OklchRange {
+                    hue: 40.0,
+                    chroma: 0.12,
+                    lightness: 0.2,
+                },
+                delta: OklchDelta {
+                    hue: -6.0,
+                    chroma_scale: 0.9,
+                    lightness: -0.01,
+                },
+            },
+        ];
+        let prepared = PreparedColorOps::new(&settings);
+        for value in fixtures {
+            let value64 = value.map(f64::from);
+            let reference = prepared
+                .apply_color_points_and_grading(value64)
+                .map(|channel| channel as f32);
+            let cached = prepared
+                .apply_cached_color_points_and_grading(value, cached_prophoto_to_oklch(value));
+            for channel in 0..3 {
+                assert!(
+                    (cached[channel] - reference[channel]).abs() <= 3e-5,
+                    "{value:?}: {cached:?} {reference:?}"
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn cached_points_keep_negative_and_highlight_headroom_for_output() {
+        use crate::settings::{ColorPoint, OklchDelta, OklchRange, OklchTarget};
+        let value = [0.7_f32, 0.1, 0.05];
+        let target = prophoto_to_oklch(value.map(f64::from));
+        for delta in [
+            OklchDelta {
+                hue: 180.0,
+                chroma_scale: 3.0,
+                lightness: 0.0,
+            },
+            OklchDelta {
+                hue: 0.0,
+                chroma_scale: 1.0,
+                lightness: 0.6,
+            },
+        ] {
+            let mut settings = DevelopSettings::neutral();
+            settings.color_points = vec![ColorPoint {
+                id: "wide".into(),
+                target: OklchTarget {
+                    lightness: target[0],
+                    chroma: target[1],
+                    hue: target[2],
+                },
+                range: OklchRange {
+                    hue: 180.0,
+                    chroma: 5.0,
+                    lightness: 1.0,
+                },
+                delta,
+            }];
+            let prepared = PreparedColorOps::new(&settings);
+            let reference = prepared.apply_color_points_and_grading(value.map(f64::from));
+            assert!(
+                reference.iter().any(|value| *value < 0.0 || *value > 1.0),
+                "{reference:?}"
+            );
+            let cached = prepared
+                .apply_cached_color_points_and_grading(value, cached_prophoto_to_oklch(value));
+            for channel in 0..3 {
+                assert!(
+                    (f64::from(cached[channel]) - reference[channel]).abs() < 3e-5,
+                    "cached={cached:?}, reference={reference:?}"
+                );
+            }
+        }
     }
 }

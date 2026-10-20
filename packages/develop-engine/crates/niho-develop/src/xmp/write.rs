@@ -15,8 +15,8 @@ use super::{
 use crate::effects::GRAIN_DEFAULT_SEED;
 use crate::settings::{
     CurveChannel, DevelopSettings, HslBand, SettingsError, ToneCurve, WhiteBalanceMode,
-    ENGINE_NIHO_2, ENGINE_NIHO_3, ENGINE_NIHO_4, ENGINE_NIHO_5, ENGINE_NIHO_6, ENGINE_NIHO_7,
-    ENGINE_NIHO_8,
+    ENGINE_NIHO_10, ENGINE_NIHO_11, ENGINE_NIHO_2, ENGINE_NIHO_3, ENGINE_NIHO_4, ENGINE_NIHO_5,
+    ENGINE_NIHO_6, ENGINE_NIHO_7, ENGINE_NIHO_8,
 };
 use crate::tone_ops::normalized_points;
 use serde_json::{Map, Value};
@@ -346,6 +346,8 @@ pub fn settings_to_xmp(settings: &DevelopSettings, options: &XmpWriteOptions) ->
                         | ENGINE_NIHO_5
                         | ENGINE_NIHO_6
                         | ENGINE_NIHO_7
+                        | ENGINE_NIHO_10
+                        | ENGINE_NIHO_11
                         | ENGINE_NIHO_8
                 ) {
                     if settings.relative_temperature == 0.0 && settings.relative_tint == 0.0 {
@@ -399,7 +401,7 @@ pub fn settings_to_xmp(settings: &DevelopSettings, options: &XmpWriteOptions) ->
     // https://developer.adobe.com/xmp/docs/xmp-namespaces/crs/
     if matches!(
         settings.engine.as_str(),
-        ENGINE_NIHO_3 | ENGINE_NIHO_4 | ENGINE_NIHO_5 | ENGINE_NIHO_7
+        ENGINE_NIHO_3 | ENGINE_NIHO_4 | ENGINE_NIHO_5 | ENGINE_NIHO_7 | ENGINE_NIHO_11
     ) && on(XmpGroup::NoiseReduction)
     {
         for (key, value) in [
@@ -461,6 +463,11 @@ pub fn settings_to_xmp(settings: &DevelopSettings, options: &XmpWriteOptions) ->
     }
     if settings.legacy_settings.is_some() {
         not_written.push("legacySettings".into());
+    }
+    if !settings.color_points.is_empty() {
+        // Do not fabricate Adobe's private crs:PointColors representation.
+        // The API/UI surfaces `notWritten` to the person exporting.
+        not_written.push("colorPoints".into());
     }
 
     let monochrome = on(XmpGroup::BlackAndWhite) && settings.grayscale;

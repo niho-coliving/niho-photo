@@ -102,6 +102,8 @@ export function BrowserPhotoEditingAdjustments(props: {
   settings: PhotoEditingSettings;
   /** 見せる項目（省略時は基本の 13 項目。S1 の canvas は 5 項目、効果を描ける wasm の写真は効果の項目も入れて渡す） */
   visibleKeys?: ReadonlyArray<PhotoEditingControlKey>;
+  /** Oklch の独立した色ミキサー（対応する wasm の写真だけ）。 */
+  colorMixer?: ReactNode;
   /**
    * プリセットの部品（S1 の canvas の写真には渡さない）。補正の面では群の上の 1 行（`row`。押すと `onOpenPresets`）、プリセットの面
    * では一覧（`panel`）として、どちらか一方だけを描く
@@ -298,6 +300,7 @@ export function BrowserPhotoEditingAdjustments(props: {
             grayscaleToggle="hidden"
             onSettingsChange={props.onSettingsChange}
           />
+          {props.colorMixer}
         </>
       )}
       {!props.canEdit ? <p className="mt-3 text-xs text-niho-text-muted">{BROWSER_PHOTO_EDITING_READ_ONLY_TEXT}</p> : null}

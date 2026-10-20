@@ -64,6 +64,7 @@ export type DevelopPresetAsShotSource = {
 };
 
 export type DevelopFrame = { width: number; height: number; rgba: Uint8ClampedArray<ArrayBuffer> };
+export type DevelopSampledColor = { lightness: number; chroma: number; hue: number };
 
 /**
  * 描画の優先度。`drag`（つまみを動かしている間の速い描き方）と `final`（離した後の丁寧な 1 枚）は編集の 1 枠、`preview`（一覧の
@@ -101,6 +102,11 @@ export type DevelopEngine = {
   open: (bytes: ArrayBuffer, workingMaxDimension: number) => Promise<{ width: number; height: number }>;
   /** 持っている写真を描く。同じ枠の新しい要求に追い越されたら null */
   render: (settings: object, options: DevelopRenderOptions) => Promise<DevelopFrame | null>;
+  /** 描画座標の色ミキサー直前の Oklch。座標は表示フレームに対する 0〜1。 */
+  sampleColor: (
+    settings: object,
+    options: { maxDimension: number; x: number; y: number },
+  ) => Promise<DevelopSampledColor>;
   /** 別の bytes（オリジナルのコピー）から JPEG を描く。持っている写真は変えない */
   exportJpeg: (
     bytes: ArrayBuffer,
@@ -186,6 +192,8 @@ export type DevelopEngine = {
    * `v: 3` の設定を通すとき。初回に wasm を起こす。使えない・関数が無ければ false。throw しない）。false の wasm は `v: 3` の描画を断る
    */
   supportsEffects: () => Promise<boolean>;
+  /** 独立した色ミキサー（`developSettings` v4）を読んで描ける wasm か。 */
+  supportsColorPoints: () => Promise<boolean>;
   /**
    * JPEG / PNG の寸法（EXIF の向きを反映。ヘッダーだけ読む）。bytes は Worker へコピーで渡す（呼び出し側の ArrayBuffer はそのまま
    * 使える。`open` / `exportJpeg` は手放す）。wasm に無ければ reject
@@ -255,6 +263,7 @@ type Pending = {
     | "applyPreset"
     | "settingsToXmp"
     | "autoSettings"
+    | "sampleColor"
     | "warmAutoSettings"
     | "imageSize"
     | "rasterDecodeSize"
@@ -368,6 +377,7 @@ export function createDevelopEngine(options: CreateDevelopEngineOptions = {}): D
   let geometrySupported = false;
   // 効果（白黒・周辺光量補正・粒子）を描ける版の crate（`ready` の応答の版で分かる）
   let effectsSupported = false;
+  let colorPointsSupported = false;
   // プリセットの適用量・書き出し・見本の口が wasm にある（`ready` の応答で分かる）
   let presetAmountSupported = false;
   let settingsToXmpSupported = false;
@@ -484,6 +494,7 @@ export function createDevelopEngine(options: CreateDevelopEngineOptions = {}): D
       if (response.type === "ready") {
         geometrySupported = response.geometry === true;
         effectsSupported = response.effects === true;
+        colorPointsSupported = response.colorPoints === true;
         presetAmountSupported = response.presetAmount === true;
         settingsToXmpSupported = response.settingsToXmp === true;
         presetThumbnailsSupported = response.presetThumbnails === true;
@@ -616,6 +627,25 @@ export function createDevelopEngine(options: CreateDevelopEngineOptions = {}): D
 
     async supportsEffects() {
       return (await ready()) && effectsSupported;
+    },
+
+    async supportsColorPoints() {
+      return (await ready()) && colorPointsSupported;
+    },
+
+    async sampleColor(settings, options) {
+      const response = await request("sampleColor", (id) => ({
+        message: {
+          type: "sampleColor",
+          id,
+          settingsJson: JSON.stringify(settings),
+          maxDimension: options.maxDimension,
+          x: options.x,
+          y: options.y,
+        },
+      }));
+      if (response.type !== "sampledColor") throw new DevelopEngineError("develop engine returned no sampled color");
+      return { lightness: response.lightness, chroma: response.chroma, hue: response.hue };
     },
 
     async imageSize(bytes) {

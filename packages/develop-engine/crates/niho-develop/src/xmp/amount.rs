@@ -21,9 +21,9 @@
 use super::{preset_settings, EffectField, PresetResult, XmpError, EFFECT_KEYS, SCALAR_KEYS};
 use crate::decode::LightroomWhite;
 use crate::settings::{
-    ColorGradeBand, CurveChannel, CurvePoint, DevelopSettings, HslAdjustment, HslAdjustments,
-    HslBand, ToneCurve, WhiteBalance, WhiteBalanceMode, ABSOLUTE_TEMPERATURE_RANGE,
-    ABSOLUTE_TINT_RANGE, ENGINE_NIHO_2,
+    ColorGradeBand, ColorPoint, CurveChannel, CurvePoint, DevelopSettings, HslAdjustment,
+    HslAdjustments, HslBand, OklchDelta, OklchRange, OklchTarget, ToneCurve, WhiteBalance,
+    WhiteBalanceMode, ABSOLUTE_TEMPERATURE_RANGE, ABSOLUTE_TINT_RANGE, ENGINE_NIHO_2,
 };
 use crate::tone_ops::{normalized_points, DngSpline};
 
@@ -112,6 +112,7 @@ fn blend(
     g.highlight.hue = mix_hue(&bg.highlight, &fg.highlight, t);
     g.global.hue = mix_hue(&bg.global, &fg.global, t);
     r.hsl = mix_hsl(&base.hsl, &full.hsl, t);
+    r.color_points = mix_color_points(&base.color_points, &full.color_points, t);
     r.color_noise_reduction = mix_in(
         base.color_noise_reduction,
         full.color_noise_reduction,
@@ -194,6 +195,80 @@ fn mix_hsl(base: &HslAdjustments, full: &HslAdjustments, t: f64) -> HslAdjustmen
         };
         if !a.is_zero() || (b.is_some() && f.is_some()) {
             out.set(band, a);
+        }
+    }
+    out
+}
+
+fn mix_angle(b: f64, f: f64, t: f64) -> f64 {
+    let mut delta = (f - b).rem_euclid(360.0);
+    if delta > 180.0 {
+        delta -= 360.0;
+    }
+    (b + t * delta).rem_euclid(360.0)
+}
+
+/// NIHO points are not Adobe PointColors. XMP application currently keeps
+/// them, while this interpolation also defines the amount contract for a
+/// future NIHO-native preset carrier: match by id, move every numeric field
+/// linearly, and take the shortest arc for target hue.
+fn mix_color_points(base: &[ColorPoint], full: &[ColorPoint], t: f64) -> Vec<ColorPoint> {
+    let mut out = Vec::with_capacity(base.len().max(full.len()));
+    for point in full {
+        if let Some(before) = base.iter().find(|candidate| candidate.id == point.id) {
+            out.push(ColorPoint {
+                id: point.id.clone(),
+                target: OklchTarget {
+                    lightness: mix_in(
+                        before.target.lightness,
+                        point.target.lightness,
+                        t,
+                        (0.0, 1.0),
+                    ),
+                    chroma: mix_in(before.target.chroma, point.target.chroma, t, (0.0, 5.0)),
+                    hue: mix_angle(before.target.hue, point.target.hue, t),
+                },
+                range: OklchRange {
+                    hue: mix_in(before.range.hue, point.range.hue, t, (1.0, 180.0)),
+                    chroma: mix_in(before.range.chroma, point.range.chroma, t, (0.001, 5.0)),
+                    lightness: mix_in(
+                        before.range.lightness,
+                        point.range.lightness,
+                        t,
+                        (0.001, 1.0),
+                    ),
+                },
+                delta: OklchDelta {
+                    hue: mix_in(before.delta.hue, point.delta.hue, t, (-180.0, 180.0)),
+                    chroma_scale: mix_in(
+                        before.delta.chroma_scale,
+                        point.delta.chroma_scale,
+                        t,
+                        (0.0, 3.0),
+                    ),
+                    lightness: mix_in(
+                        before.delta.lightness,
+                        point.delta.lightness,
+                        t,
+                        (-1.0, 1.0),
+                    ),
+                },
+            });
+        } else if t > 0.0 {
+            let mut added = point.clone();
+            added.delta.hue = (t * point.delta.hue).clamp(-180.0, 180.0);
+            added.delta.chroma_scale = mix(1.0, point.delta.chroma_scale, t).clamp(0.0, 3.0);
+            added.delta.lightness = (t * point.delta.lightness).clamp(-1.0, 1.0);
+            out.push(added);
+        }
+    }
+    for point in base {
+        if !full.iter().any(|candidate| candidate.id == point.id) && t < 1.0 {
+            let mut removed = point.clone();
+            removed.delta.hue = mix(point.delta.hue, 0.0, t);
+            removed.delta.chroma_scale = mix(point.delta.chroma_scale, 1.0, t);
+            removed.delta.lightness = mix(point.delta.lightness, 0.0, t);
+            out.push(removed);
         }
     }
     out
@@ -356,4 +431,56 @@ fn mix_white_balance(
         },
         _ => *fw,
     };
+}
+
+#[cfg(test)]
+mod color_point_tests {
+    use super::*;
+
+    fn point(id: &str, hue: f64, delta_hue: f64) -> ColorPoint {
+        ColorPoint {
+            id: id.into(),
+            target: OklchTarget {
+                lightness: 0.7,
+                chroma: 0.1,
+                hue,
+            },
+            range: OklchRange {
+                hue: 20.0,
+                chroma: 0.05,
+                lightness: 0.1,
+            },
+            delta: OklchDelta {
+                hue: delta_hue,
+                chroma_scale: 1.5,
+                lightness: 0.1,
+            },
+        }
+    }
+
+    #[test]
+    fn color_points_amount_is_linear_and_target_hue_takes_short_arc() {
+        let mut base = vec![point("skin", 350.0, 0.0)];
+        base[0].delta.chroma_scale = 1.0;
+        base[0].delta.lightness = 0.0;
+        let full = vec![point("skin", 10.0, 20.0)];
+        assert_eq!(mix_color_points(&base, &full, 0.0), base);
+        assert_eq!(mix_color_points(&base, &full, 1.0), full);
+        let half = mix_color_points(&base, &full, 0.5);
+        assert_eq!(half[0].target.hue, 0.0);
+        assert_eq!(half[0].delta.hue, 10.0);
+        assert_eq!(half[0].delta.chroma_scale, 1.25);
+        assert_eq!(half[0].delta.lightness, 0.05);
+
+        let added = mix_color_points(&[], &[point("sky", 250.0, -10.0)], 0.5);
+        assert_eq!(added[0].delta.hue, -5.0);
+        assert_eq!(added[0].delta.chroma_scale, 1.25);
+        assert_eq!(added[0].delta.lightness, 0.05);
+
+        let removed = mix_color_points(&[point("skin", 50.0, 20.0)], &[], 0.5);
+        assert_eq!(removed[0].delta.hue, 10.0);
+        assert_eq!(removed[0].delta.chroma_scale, 1.25);
+        assert_eq!(removed[0].delta.lightness, 0.05);
+        assert!(mix_color_points(&[point("skin", 50.0, 20.0)], &[], 1.0).is_empty());
+    }
 }

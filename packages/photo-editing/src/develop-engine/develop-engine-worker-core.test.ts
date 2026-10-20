@@ -51,6 +51,9 @@ function fakeGlue(options: { memory?: WebAssembly.Memory; renderInMemory?: boole
       rgba[0] = interactive ? 1 : 2;
       return { width: 2, height: 1, rgba, approximations: [], settingsJson, maxDimension };
     }
+    sampleColor(_settingsJson: string, _maxDimension: number, x: number, y: number) {
+      return { lightness: 0.72 + x * 0.01, chroma: 0.08, hue: 50 + y };
+    }
     free() {
       this.freed();
     }
@@ -307,7 +310,7 @@ describe("createDevelopEngineWorkerHandler", () => {
     expect(autoLog).toHaveBeenCalledWith({ stage: "autoSettings", durationMs: 0, wasmMemoryBytes: 65_536, status: "ok" });
   });
 
-  it("wasm が効果のある設定（v: 3）を通せば ready に effects: true を付ける（起こしたときに 1 回だけ確かめる。E1b #17134）", async () => {
+  it("wasm が v: 3 の効果と v: 4 の色ポイントを通せば、それぞれの ready capability を付ける", async () => {
     const glue = fakeGlue();
     const validateSettings = vi.fn((_settingsJson: string) => "[]");
     const { handler, posted } = setup({ module: { ...glue.module, validateSettings } });
@@ -316,17 +319,40 @@ describe("createDevelopEngineWorkerHandler", () => {
     await handler({ type: "init", id: 2, manifestUrl: MANIFEST_URL });
 
     expect(posted.map((entry) => entry.message)).toEqual([
-      { type: "ready", id: 1, version: "0.2.0+test", effects: true },
-      { type: "ready", id: 2, version: "0.2.0+test", effects: true },
+      { type: "ready", id: 1, version: "0.2.0+test", effects: true, colorPoints: true },
+      { type: "ready", id: 2, version: "0.2.0+test", effects: true, colorPoints: true },
     ]);
-    // 確かめるのは起こしたときの 1 回。確かめる設定は、効果が 1 つだけ効いている最小の v: 3
-    expect(validateSettings).toHaveBeenCalledTimes(1);
+    // capability ごとに最小設定を 1 回ずつ確かめ、2 回目の init では繰り返さない。
+    expect(validateSettings).toHaveBeenCalledTimes(2);
     expect(JSON.parse(validateSettings.mock.calls[0]?.[0] ?? "null")).toEqual({
       v: 3,
       engine: "niho-1",
       look: "niho-interim-1",
       base: null,
       vignette: { amount: -1 },
+    });
+    expect(JSON.parse(validateSettings.mock.calls[1]?.[0] ?? "null")).toMatchObject({
+      v: 4,
+      engine: "niho-10",
+      look: "niho-standard-1",
+      base: null,
+      colorPoints: [{ id: "probe" }],
+    });
+  });
+
+  it("sampleColor は正規化座標を session に渡し、Stage Q の Oklch だけを返す", async () => {
+    const glue = fakeGlue();
+    const validateSettings = vi.fn(() => "[]");
+    const { handler, posted } = setup({ module: { ...glue.module, validateSettings } });
+    await handler({ type: "init", id: 1, manifestUrl: MANIFEST_URL });
+    await handler({ type: "open", id: 2, bytes: new ArrayBuffer(4), workingMaxDimension: 1280 });
+    await handler({ type: "sampleColor", id: 3, settingsJson: "{}", maxDimension: 1024, x: 0.25, y: 0.75 });
+    expect(posted.at(-1)?.message).toEqual({
+      type: "sampledColor",
+      id: 3,
+      lightness: 0.7224999999999999,
+      chroma: 0.08,
+      hue: 50.75,
     });
   });
 
@@ -351,7 +377,7 @@ describe("createDevelopEngineWorkerHandler", () => {
     }
   });
 
-  it("幾何の口と効果の両方があれば ready に geometry: true と effects: true の両方を付ける", async () => {
+  it("幾何の口と v3/v4 設定があれば ready に全 capability を付ける", async () => {
     const glue = fakeGlue();
     const { handler, posted } = setup({
       module: {
@@ -366,7 +392,14 @@ describe("createDevelopEngineWorkerHandler", () => {
 
     await handler({ type: "init", id: 1, manifestUrl: MANIFEST_URL });
 
-    expect(posted[0]?.message).toEqual({ type: "ready", id: 1, version: "0.2.0+test", geometry: true, effects: true });
+    expect(posted[0]?.message).toEqual({
+      type: "ready",
+      id: 1,
+      version: "0.2.0+test",
+      geometry: true,
+      effects: true,
+      colorPoints: true,
+    });
   });
 
   it("未初期化の open / render / exportJpeg / close は error", async () => {

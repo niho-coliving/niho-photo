@@ -17,6 +17,7 @@ import {
   ChevronLeft,
   Droplet,
   Grid2x2,
+  Pipette,
   Redo2,
   SquareSplitHorizontal,
   Sparkles,
@@ -103,8 +104,9 @@ import { usePhotoEditingZoom } from "./use-photo-editing-zoom";
 const PRESETS_TOOL_ID = "presets";
 const AUTO_TOOL_ID = "auto";
 const CROP_TOOL_ID = "crop";
+const COLOR_MIXER_TOOL_ID = "color-mixer";
 /** 道具の帯の道具（プリセット・自動・補正の群・切り抜き） */
-type MobileToolId = typeof PRESETS_TOOL_ID | typeof AUTO_TOOL_ID | typeof CROP_TOOL_ID | PhotoEditingAdjustmentGroupId;
+type MobileToolId = typeof PRESETS_TOOL_ID | typeof AUTO_TOOL_ID | typeof CROP_TOOL_ID | typeof COLOR_MIXER_TOOL_ID | PhotoEditingAdjustmentGroupId;
 
 const TOOL_ICONS: Record<MobileToolId, LucideIcon> = {
   presets: Grid2x2,
@@ -113,6 +115,7 @@ const TOOL_ICONS: Record<MobileToolId, LucideIcon> = {
   color: Droplet,
   effects: Aperture,
   crop: Crop,
+  "color-mixer": Pipette,
 };
 
 const BAND_CLASS_NAME = "shrink-0 border-t border-niho-border";
@@ -146,6 +149,9 @@ export function BrowserPhotoEditingMobileEditor(props: {
    * `useBrowserPhotoPresets`）
    */
   presets?: BrowserPhotoEditingMobilePresetsProps;
+  /** 対応する wasm の Oklch 色ミキサー。 */
+  colorMixer?: ReactNode;
+  colorPicking?: boolean;
   /** 段 2 の既存の自動補正（口のある wasm だけ）。 */
   auto?: { pressed: boolean; disabled: boolean; onToggle: () => void; onWarm?: () => void };
   /** 既存の切り抜き hook。available な写真だけ道具を出す。 */
@@ -223,10 +229,12 @@ export function BrowserPhotoEditingMobileEditor(props: {
   const presets = props.presets ?? null;
   const auto = props.auto ?? null;
   const crop = props.crop ?? null;
+  const colorMixer = props.colorMixer ?? null;
   const groups = useMemo(() => visiblePhotoEditingAdjustmentGroups(props.visibleKeys), [props.visibleKeys]);
   const presetsCurrent = presets !== null && (toolId === null || toolId === PRESETS_TOOL_ID);
   const autoCurrent = !presetsCurrent && auto !== null && toolId === AUTO_TOOL_ID;
   const cropCurrent = !presetsCurrent && crop !== null && toolId === CROP_TOOL_ID;
+  const colorMixerCurrent = !presetsCurrent && colorMixer !== null && toolId === COLOR_MIXER_TOOL_ID;
   // 「自動」の道具に入った時点で結果の計算を始める（ボタンを押すまでの間に終える。押して 300ms 以内に画を変える）
   const onAutoWarmRef = useRef(auto?.onWarm);
   onAutoWarmRef.current = auto?.onWarm;
@@ -234,11 +242,12 @@ export function BrowserPhotoEditingMobileEditor(props: {
   useEffect(() => {
     if (autoWarmable) onAutoWarmRef.current?.();
   }, [autoWarmable, auto?.pressed]);
-  const group = presetsCurrent || autoCurrent || cropCurrent ? null : (groups.find((candidate) => candidate.id === toolId) ?? groups[0] ?? null);
+  const group = presetsCurrent || autoCurrent || cropCurrent || colorMixerCurrent ? null : (groups.find((candidate) => candidate.id === toolId) ?? groups[0] ?? null);
   // 道具の帯（プリセットは先頭）
   const tools: { id: MobileToolId; title: string }[] = groups.map((candidate) => ({ id: candidate.id, title: candidate.title }));
   if (presets) tools.unshift({ id: PRESETS_TOOL_ID, title: PHOTO_EDITING_MOBILE_PRESETS_LABEL });
   if (auto) tools.splice(presets ? 1 : 0, 0, { id: AUTO_TOOL_ID, title: "自動" });
+  if (colorMixer) tools.push({ id: COLOR_MIXER_TOOL_ID, title: "色ミキサー" });
   if (crop) tools.push({ id: CROP_TOOL_ID, title: "切り抜き" });
   const currentToolId: MobileToolId | null = presetsCurrent
     ? PRESETS_TOOL_ID
@@ -246,6 +255,8 @@ export function BrowserPhotoEditingMobileEditor(props: {
       ? AUTO_TOOL_ID
       : cropCurrent
         ? CROP_TOOL_ID
+        : colorMixerCurrent
+          ? COLOR_MIXER_TOOL_ID
         : (group?.id ?? null);
   const control = group
     ? (group.controls.find((candidate) => candidate.key === itemByTool[group.id]) ?? group.controls[0] ?? null)
@@ -338,7 +349,7 @@ export function BrowserPhotoEditingMobileEditor(props: {
   // 写真の面の指の操作（長押しで補正前・ピンチ / ダブルタップで拡大・拡大中のドラッグで送る）
   const zoom = usePhotoEditingZoom({
     photoKey,
-    enabled: !cropCurrent,
+    enabled: !cropCurrent && props.colorPicking !== true,
     holdEnabled: compareEnabled,
     onHoldChange: setCompareOriginal,
   });
@@ -563,6 +574,8 @@ export function BrowserPhotoEditingMobileEditor(props: {
         ) : (
           <div className={cn(BAND_CLASS_NAME, "h-[7.5rem]")} aria-busy="true" />
         )
+      ) : colorMixerCurrent && colorMixer ? (
+        <div className={cn(BAND_CLASS_NAME, "max-h-[17rem] overflow-y-auto")}>{colorMixer}</div>
       ) : group && slider ? (
         <div className={BAND_CLASS_NAME}>
           {/* 段 A: 今の道具の項目のチップ（横に送れる帯） */}

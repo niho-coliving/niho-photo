@@ -1,6 +1,6 @@
 use niho_develop::decode::{encode_signed_working_copy, encode_working_copy};
 use niho_develop::settings::{
-    ENGINE_NIHO_5, ENGINE_NIHO_7, LOOK_NIHO_STANDARD_4, LOOK_NIHO_STANDARD_5,
+    ENGINE_NIHO_11, ENGINE_NIHO_5, ENGINE_NIHO_7, LOOK_NIHO_STANDARD_4, LOOK_NIHO_STANDARD_5,
 };
 use niho_develop::{
     encode, parse_settings, render, render_camera_linear, xmp, AsShotWhite, CameraLinearWorkMeta,
@@ -85,6 +85,35 @@ fn h0_is_identical_to_published_niho5_for_all_known_cameras() {
         assert_eq!(
             session.render(&niho5_h0, 0, Quality::Final).unwrap().rgba,
             session.render(&niho7_h0, 0, Quality::Final).unwrap().rgba,
+            "{camera}"
+        );
+    }
+}
+
+#[test]
+fn niho11_keeps_niho7_neutral_tone_and_raw_response_pixels() {
+    let source = image(80, 60);
+    let (png, encoding) = encode_signed_working_copy(&source).unwrap();
+    for camera in [PANASONIC, SONY_ZV, SONY_FX30] {
+        let meta = metadata(camera, Some(encoding.ceiling()));
+        let mut niho7 = niho7(-60.0);
+        niho7.shadows = 45.0;
+        niho7.blacks = 25.0;
+        niho7.vibrance = 20.0;
+        niho7.hsl.set(
+            niho_develop::settings::HslBand::Yellow,
+            niho_develop::settings::HslAdjustment {
+                hue: 20.0,
+                luminance: 25.0,
+                ..Default::default()
+            },
+        );
+        let mut niho11 = niho7.clone();
+        niho11.engine = ENGINE_NIHO_11.into();
+        let mut session = Session::open_working_copy(&png, &meta, Filter::Lanczos3).unwrap();
+        assert_eq!(
+            session.render(&niho7, 0, Quality::Final).unwrap().rgba,
+            session.render(&niho11, 0, Quality::Final).unwrap().rgba,
             "{camera}"
         );
     }
