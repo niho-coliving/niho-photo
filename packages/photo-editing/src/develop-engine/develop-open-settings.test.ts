@@ -73,7 +73,7 @@ describe("resolveDevelopOpenSettings", () => {
     expect(resolveDevelopOpenSettings({ cloudPhoto: cloudPhoto(signed), baseVersion: base })).toEqual({ kind: "baseMismatch" });
   });
 
-  it("対応校正signed RAWの未保存設定はniho-7/standard-5で開き、保存済みniho-4は昇格させない", () => {
+  it("対応校正signed RAWの未保存設定はniho-11/standard-5で開き、保存済みniho-4/niho-7は昇格させない", () => {
     const base = "raw-apple.d8.p3.e4.cal-sony-ilme-fx30-apple-v4.lens-apple";
     const workMeta = {
       kind: "raw",
@@ -82,7 +82,7 @@ describe("resolveDevelopOpenSettings", () => {
     };
     expect(resolveDevelopOpenSettings({ cloudPhoto: cloudPhoto(), baseVersion: base, workMeta })).toMatchObject({
       kind: "settings",
-      baseSettings: { engine: "niho-7", look: "niho-standard-5", base },
+      baseSettings: { engine: "niho-11", look: "niho-standard-5", base },
       settingsSource: "none",
     });
     const saved = {
@@ -137,7 +137,7 @@ describe("resolveDevelopOpenSettings", () => {
     ).toEqual({ kind: "newer" });
     expect(
       resolveDevelopOpenSettings({
-        cloudPhoto: cloudPhoto({ ...SAVED_DEVELOP, developSettings: { v: 4, engine: "niho-1" } as unknown as DevelopSettings }),
+        cloudPhoto: cloudPhoto({ ...SAVED_DEVELOP, developSettings: { v: 5, engine: "niho-1" } as unknown as DevelopSettings }),
         baseVersion: null,
       }),
     ).toEqual({ kind: "newer" });

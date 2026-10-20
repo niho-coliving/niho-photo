@@ -44,3 +44,32 @@ export function useBrowserPhotoEffectsSupport(params: {
 
   return supported === true;
 }
+
+/** v4 の色ミキサーを描ける wasm と確認できた写真だけに操作を出す。 */
+export function useBrowserPhotoColorPointsSupport(params: {
+  mountedRef: MutableRefObject<boolean>;
+  engineRef: MutableRefObject<DevelopEngine | null>;
+  photoKey: string | null;
+}): boolean {
+  const { mountedRef, engineRef, photoKey } = params;
+  const [supported, setSupported] = useState<boolean | null>(null);
+  const wanted = photoKey !== null;
+  useEffect(() => {
+    if (!wanted || supported !== null) return;
+    const engine = engineRef.current;
+    if (!engine) return;
+    let cancelled = false;
+    engine.supportsColorPoints().then(
+      (value) => {
+        if (!cancelled && mountedRef.current) setSupported(value === true);
+      },
+      () => {
+        if (!cancelled && mountedRef.current) setSupported(false);
+      },
+    );
+    return () => {
+      cancelled = true;
+    };
+  }, [engineRef, mountedRef, photoKey, supported, wanted]);
+  return supported === true;
+}

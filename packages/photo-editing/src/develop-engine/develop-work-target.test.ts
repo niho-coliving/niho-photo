@@ -69,7 +69,7 @@ describe("isDevelopWorkTarget（サーバーの isPhotoCloudWorkApplicable と�
     expect(isDevelopWorkTarget(photo("jpg", 2 * MiB, true, onWorkingCopy))).toBe(true);
     expect(isDevelopWorkTarget(photo("jpeg", 12 * MiB, true, onWorkingCopy))).toBe(true);
     // 補正が新しい版の NIHO のもの（形が読めなくても）でも、base が文字列なら作業コピー
-    const newer = { v: 2, engine: "niho-9", base: "raster.x" } as unknown as DevelopSettings;
+    const newer = { v: 2, engine: "niho99", base: "raster.x" } as unknown as DevelopSettings;
     expect(isDevelopWorkTarget(photo("jpg", 2 * MiB, true, newer))).toBe(true);
   });
 

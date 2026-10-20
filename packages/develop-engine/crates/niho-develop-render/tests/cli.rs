@@ -483,7 +483,7 @@ fn failures_are_one_json_line_with_a_fixed_exit_code() {
     let with = |name: &str, body: &str| dir.write(name, body);
     let no_v = with("no-v.json", r#"{"engine":"niho-1"}"#);
     let no_engine = with("no-engine.json", r#"{"v":1}"#);
-    let v4 = with("v4.json", r#"{"v":4,"engine":"niho-1"}"#);
+    let v5 = with("v5.json", r#"{"v":5,"engine":"niho-1"}"#);
     // A turned crop whose corners do not make a rectangle on this photo.
     let crop = with(
         "crop.json",
@@ -493,7 +493,7 @@ fn failures_are_one_json_line_with_a_fixed_exit_code() {
         "crop-v1.json",
         r#"{"v":1,"engine":"niho-1","geometry":{"rotate":90}}"#,
     );
-    let look = with("look.json", r#"{"v":1,"engine":"niho-1","look":"niho-9"}"#);
+    let look = with("look.json", r#"{"v":1,"engine":"niho-1","look":"niho-11"}"#);
     let range = with("range.json", r#"{"v":1,"engine":"niho-1","exposure":99}"#);
     let types = with("types.json", r#"{"v":1,"engine":"niho-1","exposure":"1"}"#);
     let not_json = with("not-json.json", "{");
@@ -623,7 +623,7 @@ fn failures_are_one_json_line_with_a_fixed_exit_code() {
             "unsupported_settings",
             2,
         ),
-        ("v 4", raster(&v4, &jpeg, &out), "unsupported_settings", 2),
+        ("v 5", raster(&v5, &jpeg, &out), "unsupported_settings", 2),
         (
             "turned crop that is not a rectangle",
             raster(&crop, &jpeg, &out),
@@ -740,7 +740,7 @@ fn failures_are_one_json_line_with_a_fixed_exit_code() {
     kept.extend([
         no_v.as_path(),
         no_engine.as_path(),
-        v4.as_path(),
+        v5.as_path(),
         crop.as_path(),
         crop_v1.as_path(),
         look.as_path(),
@@ -761,7 +761,7 @@ fn version_and_help() {
         "niho-develop-render {}",
         niho_develop::CRATE_VERSION
     )));
-    assert!(version.stdout.contains("engine niho-8"));
+    assert!(version.stdout.contains("engine niho-11"));
     let help = run(&["--help"]);
     assert_eq!(help.code, 0);
     assert!(help.stdout.contains("Exit codes"));
@@ -778,6 +778,8 @@ fn settings_loader_accepts_all_formula_versions_and_rejects_unknown() {
         ("niho-6", "niho-standard-1"),
         ("niho-7", "niho-standard-5"),
         ("niho-8", "niho-standard-1"),
+        ("niho-10", "niho-standard-1"),
+        ("niho-11", "niho-standard-5"),
     ] {
         let settings = niho_develop_render::load_settings(&format!(
             r#"{{"v":1,"engine":"{engine}","look":"{look}"}}"#
@@ -786,12 +788,22 @@ fn settings_loader_accepts_all_formula_versions_and_rejects_unknown() {
         assert_eq!(settings.engine, engine);
     }
     let error = niho_develop_render::load_settings(
-        r#"{"v":1,"engine":"niho-999","look":"niho-standard-5"}"#,
+        r#"{"v":1,"engine":"niho-10","look":"niho-standard-5"}"#,
     )
     .unwrap_err();
+    assert_eq!(error.code, niho_develop_render::ErrorCode::InvalidSettings);
+    let unsupported_engine =
+        niho_develop_render::load_settings(r#"{"v":1,"engine":"niho-9","look":"niho-standard-5"}"#)
+            .unwrap_err();
     assert_eq!(
-        error.code,
+        unsupported_engine.code,
         niho_develop_render::ErrorCode::UnsupportedSettings
     );
-    assert!(error.message.contains("niho-1 through niho-8"));
+    assert!(unsupported_engine
+        .message
+        .contains("niho-1 through niho-8, niho-10, and niho-11"));
+    let missing_engine = niho_develop_render::load_settings(r#"{"v":1}"#).unwrap_err();
+    assert!(missing_engine
+        .message
+        .contains("niho-1 through niho-8, niho-10, and niho-11"));
 }
