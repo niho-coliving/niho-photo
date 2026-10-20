@@ -60,3 +60,15 @@ node packages/develop-engine/tools/color-review-wasm-bench.cjs /tmp/niho8-wasm/n
 [Studio/Node/wasm SIMD計測](fixtures/color/review-2026-10-20/wasm-performance.json)は合成1024×768・同一設定で、niho-8の編集中5フレームの最大65.2ms、初回drag後の確定描画448.9ms、解析込み最初のInteractive966.0msだった。継続編集100ms・確定1秒の目安はこの環境では維持したが、初回解析は100ms内に収まらない（niho-6も1148.3ms）。各engineは同一processで6→8の順に測るため、cold値を公平な速度比較や実ブラウザ全般の保証には使わない。
 
 既存niho-6のFinalと候補niho-8のFinal/Interactive固定画素テストはnative/wasm両方で一致した。candidateでも保存されたengineの意味は固定する。今後WBや暗所H/Sの式を採用する場合は別engineとして追加し、niho-8の画素を後から変えない。
+
+
+[調整用57場面のLightroom比較](fixtures/color/review-2026-10-20/teacher-development.json)（33＋24場面、白紙2枚除外、2048px描画→1500px・blur2・平坦画素）は次のとおり。既存教師の開発比較であり独立評価ではない。
+
+| 設定 | niho-6 mean ΔE00 | niho-8 mean ΔE00 | niho-6 p99最大 | niho-8 p99最大 |
+| --- | ---: | ---: | ---: | ---: |
+| 中立 | 0.2598 | 0.2598 | 2.2148 | 2.2148 |
+| bluesky2 | 2.1695 | 2.1547 | 9.8817 | 10.0290 |
+| pastel | 2.7767 | 2.7842 | 9.4509 | 9.5818 |
+| colorful | 2.5641 | 2.5364 | 13.6257 | 13.6261 |
+
+228組（中立57＋preset171）のうちmean悪化64組、p99悪化75組。最大増加はmean0.3190、p99 0.1525。presetのp99>8は24/171のままだが、「全組で差が不変または改善」という厳密な条件は満たしていない。RAWの外部reference/goldenもこの比較では実証していないため、#29のDoD完了・製品既定への昇格とは扱わない。

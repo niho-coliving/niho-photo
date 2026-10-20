@@ -52,3 +52,17 @@ WB測定は、順応したlinear ProPhotoをlinear sRGBへ戻しclipと8bit符�
 調整用の既存教師データは `tools/color-review-teachers.py --repo <checkout> --work <private-directory>` で比較する。private-directory の `data/teachers` と `data/teachers2` に従来のmanifest・inputs・lr-exportを置く。出力先がrepository内なら拒否し、sealed manifestも拒否する。niho-6/8は全教師のneutral＋3 presetを比較し、原理式Bは各cohortのISO最小・中央値・最大というmetadataだけの部分集合で開発時の失敗を調べる。白紙除外は従来の90%以上clip条件のまま。Bの部分集合の平均を全教師平均と比較せず、同じscene/variantの対で差を確認する。
 
 全入力hash・scene名・画像は非公開出力内に残す。公開するのは `teacher-summary-sanitized.json` の匿名集計、exact commit、renderer hash、測定手順だけである。このツールは独立評価を実行せず、既存164条件・夜24・独立20やRAWの最終gateを完了扱いにしない。
+
+
+## 2026-10-20の候補B開発比較
+
+[匿名数値](fixtures/color/review-2026-10-20/teacher-development.json)は教師cohortごとのISO最小・中央値・最大というmetadataだけで決めた6場面（24条件）を現行niho-6と対で比較したもの。独立評価の画像は0枚。
+
+| 候補B・6場面 | mean ΔE00 | p99最大 |
+| --- | ---: | ---: |
+| 中立 | 0.3390 | 1.6171 |
+| bluesky2 | 2.5425 | 10.3584 |
+| pastel | 3.1935 | 8.6451 |
+| colorful | 3.2966 | 12.5389 |
+
+preset mean≤3・p99≤8のgateに未達。同じscene/variantのniho-6比でも最大mean悪化1.4369・p99悪化2.9563があるため、この未校正の原理式を採用しない。教師上で振幅/shift・残差を校正するか、owner側の追加教師案Aを比較する必要がある。ここで止めたのは独立評価を何度も開いて合わせ込むことを避けるためで、独立評価を通過したという意味ではない。
