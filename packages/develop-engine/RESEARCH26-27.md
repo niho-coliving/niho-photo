@@ -41,7 +41,7 @@ private-reference owner は長辺1500、blur 2、flat pixel の同じ評価で n
 
 未完了の外部依存は次のとおり。
 
-- private Lightroom A/B reference の owner 実行
+- 開発教師上での振幅/shift・残差の校正、および案Aを選ぶ場合のownerによる追加教師の撮影・書き出し
 - frozen candidate を開く前の manifest/hash 記録
 - candidate 凍結後、一度だけの独立 holdout 評価
 - preset 3本と WB を含む gate 判定
@@ -65,4 +65,4 @@ WB測定は、順応したlinear ProPhotoをlinear sRGBへ戻しclipと8bit符�
 | pastel | 3.1935 | 8.6451 |
 | colorful | 3.2966 | 12.5389 |
 
-preset mean≤3・p99≤8のgateに未達。同じscene/variantのniho-6比でも最大mean悪化1.4369・p99悪化2.9563があるため、この未校正の原理式を採用しない。教師上で振幅/shift・残差を校正するか、owner側の追加教師案Aを比較する必要がある。ここで止めたのは独立評価を何度も開いて合わせ込むことを避けるためで、独立評価を通過したという意味ではない。
+preset mean≤3・p99≤8のgateに未達。同じscene/variantのniho-6比でも最大mean悪化1.4369・p99悪化2.9563があるため、この未校正の原理式を採用しない。教師上で振幅/shift・残差を校正するか、owner側の追加教師案Aを比較する必要がある。これは独立評価の前段階での未達判定であり、教師上で次候補を作り直す段階である。独立評価には進めていない。
