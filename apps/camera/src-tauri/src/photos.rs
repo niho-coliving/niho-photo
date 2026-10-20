@@ -1,0 +1,442 @@
+//! この Mac の `PhotoLibrary` のうち、写真を開く・閉じる・補正を保存する（spec `niho-camera-app.md`「接続口 PhotoLibrary」の
+//! `open`・`saveDevelopSettings`、「データ（この Mac）」）。
+//!
+//! - 開いた写真は `photoId`（不透明な ID）で持つ。キーは写真の中身の SHA-256（`packages/desktop-photo` の `content_digest`）で、
+//!   名前を変えても・別のフォルダへ動かしても、同じ写真なら同じ補正が付いてくる。
+//! - 補正は `~/Library/Application Support/life.niho.camera/edits/<SHA-256>.json`（crate の `SavedSettingsStore`。版
+//!   `revision`・写真の名前・大きさ・更新時刻つき）。NIHO photo では補正が利用者のデータそのものなので、古さ・件数では消さない。
+//! - 現像（`develop.rs`）はここを `DevelopPhotos` として読む。Photo Bench は持たない（ラスタの作業コピーは `apple-raw-linear raster`）。
+
+use crate::error::{invalid_request, parse_request, run_blocking, CameraError};
+use crate::library::library;
+use niho_desktop_photo::common::{code, new_opaque_id, PageError};
+use niho_desktop_photo::develop::{DevelopPhotos, OpenPhoto};
+use niho_desktop_photo::library::{is_valid_id, iso8601_utc, photo_kind, LISTED_PHOTO_NOT_FOUND_MESSAGE};
+use niho_desktop_photo::saved_settings::{
+  content_digest, epoch_ms, ContentDigest, RecordSource, SaveRevision, SavedRecord, SavedSettingsStore, StoreLimits,
+  MAX_SAVED_SETTINGS_BYTES,
+};
+use serde::Deserialize;
+use serde_json::{json, Value};
+use std::collections::{HashMap, HashSet, VecDeque};
+use std::path::{Path, PathBuf};
+use std::sync::{Arc, Mutex, MutexGuard};
+use std::time::{Duration, SystemTime, UNIX_EPOCH};
+use tauri::Manager;
+
+/// 一度に開ける写真の数（一覧で選んだ写真をまとめて開く・書き出す）。
+pub const MAX_PHOTOS_PER_OPEN: usize = 50;
+/// 開いたままにしておく写真の数。超えたら古く開いたものから閉じる（`photoId` は使えなくなり、開き直す）。
+pub const MAX_OPEN_PHOTOS: usize = 1_000;
+/// 補正の置き場（`<app data>/edits`）。
+pub const EDITS_DIR_NAME: &str = "edits";
+
+const PHOTO_UNREADABLE_MESSAGE: &str = "写真を読めませんでした。ファイルを確かめてください。";
+const SAVE_FAILED_MESSAGE: &str = "補正を保存できませんでした。";
+
+/// 補正の置き場の上限: 消さない（古さ・件数で消すと利用者の補正が無くなる）。途中で落ちた一時ファイルの掃除は 1 日ごと。
+pub fn edits_limits() -> StoreLimits {
+  StoreLimits {
+    max_entries: usize::MAX,
+    max_age: Duration::MAX,
+    sweep_interval: Duration::from_secs(24 * 60 * 60),
+  }
+}
+
+/// 開いた写真（パス・中身は画面へ渡さない）。
+#[derive(Debug, Clone)]
+pub struct OpenedPhoto {
+  pub entry_id: String,
+  pub path: PathBuf,
+  pub file_name: String,
+  pub digest: ContentDigest,
+  pub modified_at_ms: Option<u64>,
+}
+
+#[derive(Default)]
+struct Opened {
+  photos: HashMap<String, OpenedPhoto>,
+  order: VecDeque<String>,
+}
+
+/// 一覧の写真を開かずに「補正済み」を見分ける索引の鍵（名前・大きさ・一覧の `modifiedAt` と同じ形の更新時刻）。中身の SHA-256 を
+/// 読まずに済むよう、保存した補正の記録の `fileName`・`sizeBytes`・`modifiedAtMs` から作る。名前も見るのは、SD カード（更新時刻が
+/// 2 秒刻み）の連写の非圧縮 RAW のように、大きさと更新時刻が同じ別の写真があるため。名前を変えた写真は開くまで印が付かない
+/// （開けば中身の SHA-256 で補正が付いてくる）。
+type EditedKey = (String, u64, String);
+
+fn edited_key(file_name: &str, size_bytes: u64, modified_at_ms: u64) -> EditedKey {
+  (
+    file_name.to_string(),
+    size_bytes,
+    iso8601_utc(UNIX_EPOCH + Duration::from_millis(modified_at_ms)),
+  )
+}
+
+/// 開いた写真と補正の置き場（アプリに 1 つ）。
+pub struct CameraPhotos {
+  opened: Mutex<Opened>,
+  edits: Option<SavedSettingsStore>,
+  /// {@link EditedKey} の索引（最初に一覧を出すときに記録から作り、保存のたびに足す）
+  edited: Mutex<Option<HashSet<EditedKey>>>,
+}
+
+impl CameraPhotos {
+  pub fn new(edits: Option<SavedSettingsStore>) -> Self {
+    Self {
+      opened: Mutex::new(Opened::default()),
+      edits,
+      edited: Mutex::new(None),
+    }
+  }
+
+  fn edited_lock(&self) -> MutexGuard<'_, Option<HashSet<EditedKey>>> {
+    self.edited.lock().unwrap_or_else(|poison| poison.into_inner())
+  }
+
+  /// 一覧の木（`{ folderId, …, children, photos }` か `{ folders, photos }`）の写真に `hasEdits` を付ける（spec「接続口
+  /// PhotoLibrary」の `list` の `hasEdits`）。保存した補正の記録の大きさと更新時刻で見分ける。
+  pub fn annotate_has_edits(&self, value: &mut Value) {
+    let mut edited = self.edited_lock();
+    let index = edited.get_or_insert_with(|| {
+      self
+        .edits
+        .as_ref()
+        .map(SavedSettingsStore::records)
+        .unwrap_or_default()
+        .into_iter()
+        .filter_map(|record| {
+          Some(edited_key(
+            &record.file_name,
+            record.size_bytes?,
+            record.modified_at_ms?,
+          ))
+        })
+        .collect()
+    });
+    annotate(value, index);
+  }
+
+  fn lock(&self) -> MutexGuard<'_, Opened> {
+    self.opened.lock().unwrap_or_else(|poison| poison.into_inner())
+  }
+
+  /// 写真を開く（中身の SHA-256 を読む）。ふつうのファイルでない・読めないときは Err。
+  pub fn open(&self, entry_id: &str, path: &Path) -> Result<(String, OpenedPhoto), CameraError> {
+    let unreadable = || CameraError::new(code::NOT_FOUND, PHOTO_UNREADABLE_MESSAGE);
+    let metadata = std::fs::metadata(path).map_err(|_| unreadable())?;
+    let digest = content_digest(path).map_err(|_| unreadable())?;
+    let photo = OpenedPhoto {
+      entry_id: entry_id.to_string(),
+      path: path.to_path_buf(),
+      file_name: path
+        .file_name()
+        .map(|name| name.to_string_lossy().into_owned())
+        .unwrap_or_default(),
+      digest,
+      modified_at_ms: metadata.modified().ok().map(epoch_ms),
+    };
+    let photo_id = new_opaque_id("photo");
+    let mut opened = self.lock();
+    opened.photos.insert(photo_id.clone(), photo.clone());
+    opened.order.push_back(photo_id.clone());
+    while opened.order.len() > MAX_OPEN_PHOTOS {
+      if let Some(oldest) = opened.order.pop_front() {
+        opened.photos.remove(&oldest);
+      }
+    }
+    Ok((photo_id, photo))
+  }
+
+  pub fn close(&self, photo_ids: &[String]) {
+    let mut opened = self.lock();
+    for photo_id in photo_ids {
+      opened.photos.remove(photo_id);
+    }
+    opened.order.retain(|photo_id| !photo_ids.contains(photo_id));
+  }
+
+  pub fn get(&self, photo_id: &str) -> Option<OpenedPhoto> {
+    self.lock().photos.get(photo_id).cloned()
+  }
+
+  /// 開いた後も元ファイルが同じ中身かを SHA-256 で確かめて返す。背景除去のようにパスを native の道具へ渡す直前・直後に使い、
+  /// Finder などで置き換わった写真へ古いマスクや結果を保存しない。
+  pub fn verified(&self, photo_id: &str) -> Result<OpenedPhoto, CameraError> {
+    let unreadable = || CameraError::from(PageError::new(code::NOT_FOUND, LISTED_PHOTO_NOT_FOUND_MESSAGE));
+    let photo = self.get(photo_id).ok_or_else(unreadable)?;
+    let current = content_digest(&photo.path).map_err(|_| unreadable())?;
+    if current != photo.digest {
+      return Err(unreadable());
+    }
+    Ok(photo)
+  }
+
+  /// `destination` が開いている写真の元ファイルか（同じファイル = 同じ装置・inode。大文字小文字の違う名前・別名のリンクも同じ
+  /// ファイルとみなす）。まだ無いファイルは false。保存・書き出しで原本を書き換えないために使う（spec 決まりごと 9）。
+  pub fn is_open_original(&self, destination: &Path) -> bool {
+    use std::os::unix::fs::MetadataExt;
+    let Ok(target) = std::fs::metadata(destination) else {
+      return false;
+    };
+    let paths: Vec<PathBuf> = self.lock().photos.values().map(|photo| photo.path.clone()).collect();
+    paths.iter().any(|path| {
+      std::fs::metadata(path).is_ok_and(|original| original.dev() == target.dev() && original.ino() == target.ino())
+    })
+  }
+
+  /// 保存した補正（無い・読めないときは None）。
+  pub fn saved(&self, key: &str) -> Option<SavedRecord> {
+    self.edits.as_ref()?.load_record(key)
+  }
+
+  /// 補正を版つきで保存する（{@link SavedSettingsStore::save_revision}）。新しい版を返す。
+  pub fn save(
+    &self,
+    photo_id: &str,
+    settings: &Value,
+    expected_revision: u64,
+    now: SystemTime,
+  ) -> Result<u64, CameraError> {
+    let photo = self
+      .get(photo_id)
+      .ok_or_else(|| CameraError::from(PageError::new(code::NOT_FOUND, LISTED_PHOTO_NOT_FOUND_MESSAGE)))?;
+    let store = self
+      .edits
+      .as_ref()
+      .ok_or_else(|| CameraError::new(code::INTERNAL, SAVE_FAILED_MESSAGE))?;
+    let source = RecordSource {
+      file_name: &photo.file_name,
+      size_bytes: photo.digest.size_bytes,
+      modified_at_ms: photo.modified_at_ms,
+    };
+    match store.save_revision(&photo.digest.key, &source, settings, expected_revision, now) {
+      Ok(SaveRevision::Saved { revision, .. }) => {
+        if let (Some(index), Some(modified_at_ms)) = (self.edited_lock().as_mut(), photo.modified_at_ms) {
+          index.insert(edited_key(&photo.file_name, photo.digest.size_bytes, modified_at_ms));
+        }
+        Ok(revision)
+      }
+      Ok(SaveRevision::Conflict { current }) => Err(CameraError::revision_conflict(current)),
+      Err(_) => Err(CameraError::new(code::INTERNAL, SAVE_FAILED_MESSAGE)),
+    }
+  }
+}
+
+impl DevelopPhotos for CameraPhotos {
+  fn open_photo(&self, photo_id: &str) -> Option<OpenPhoto> {
+    self.get(photo_id).map(|photo| OpenPhoto {
+      path: photo.path,
+      file_name: photo.file_name,
+      digest: photo.digest,
+    })
+  }
+
+  fn has_saved_settings(&self, photo_id: &str) -> bool {
+    match (self.get(photo_id), self.edits.as_ref()) {
+      (Some(photo), Some(store)) => store.contains_record(&photo.digest.key),
+      // 写真・保存先の状態が分からないときは「保存あり」（crate の約束）
+      _ => true,
+    }
+  }
+}
+
+fn annotate(value: &mut Value, index: &HashSet<EditedKey>) {
+  let Some(object) = value.as_object_mut() else { return };
+  if let Some(Value::Array(photos)) = object.get_mut("photos") {
+    for photo in photos.iter_mut() {
+      let key = (|| {
+        Some((
+          photo.get("fileName")?.as_str()?.to_string(),
+          photo.get("sizeBytes")?.as_u64()?,
+          photo.get("modifiedAt")?.as_str()?.to_string(),
+        ))
+      })();
+      if let Some(entry) = photo.as_object_mut() {
+        entry.insert("hasEdits".into(), json!(key.is_some_and(|key| index.contains(&key))));
+      }
+    }
+  }
+  for list in ["children", "folders"] {
+    if let Some(Value::Array(folders)) = object.get_mut(list) {
+      folders.iter_mut().for_each(|folder| annotate(folder, index));
+    }
+  }
+}
+
+pub struct PhotosState(pub Arc<CameraPhotos>);
+
+pub fn install(app: &tauri::AppHandle) {
+  let edits = app
+    .path()
+    .app_data_dir()
+    .ok()
+    .map(|dir| SavedSettingsStore::new(dir.join(EDITS_DIR_NAME), edits_limits()));
+  app.manage(PhotosState(Arc::new(CameraPhotos::new(edits))));
+}
+
+pub fn photos(app: &tauri::AppHandle) -> Result<Arc<CameraPhotos>, CameraError> {
+  app
+    .try_state::<PhotosState>()
+    .map(|state| state.0.clone())
+    .ok_or_else(crate::error::internal)
+}
+
+/// 写真の形式（画面の道具と文言の出し分け用）: `raw`・`jpeg`・`png`・`heic`・`tiff`。写真の拡張子でなければ None。
+pub fn photo_format(file_name: &str) -> Option<&'static str> {
+  if photo_kind(file_name)? == "raw" {
+    return Some("raw");
+  }
+  let extension = file_name.rsplit_once('.')?.1.to_lowercase();
+  match extension.as_str() {
+    "jpg" | "jpeg" => Some("jpeg"),
+    "png" => Some("png"),
+    "heic" | "heif" => Some("heic"),
+    "tif" | "tiff" => Some("tiff"),
+    _ => None,
+  }
+}
+
+pub fn check_photo_id(photo_id: &str) -> Result<(), CameraError> {
+  if is_valid_id(photo_id) {
+    Ok(())
+  } else {
+    Err(PageError::new(code::NOT_FOUND, LISTED_PHOTO_NOT_FOUND_MESSAGE).into())
+  }
+}
+
+// ---------------------------------------------------------------------------
+// 引数
+
+/// `camera_photo_open` の引数（1〜50 個の `entryId`）。
+#[derive(Debug, Clone, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct OpenRequest {
+  pub entry_ids: Vec<String>,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct CloseRequest {
+  pub photo_ids: Vec<String>,
+}
+
+/// `camera_photo_save_settings` の引数。`expectedRevision` は画面が知っている版（保存したことが無ければ 0）。
+#[derive(Debug, Clone, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct SaveSettingsRequest {
+  pub photo_id: String,
+  pub develop_settings: Value,
+  pub expected_revision: u64,
+}
+
+pub fn validate_open_request(request: &OpenRequest) -> Result<(), CameraError> {
+  if request.entry_ids.is_empty() || request.entry_ids.len() > MAX_PHOTOS_PER_OPEN {
+    return Err(invalid_request());
+  }
+  Ok(())
+}
+
+pub fn validate_save_settings_request(request: &SaveSettingsRequest) -> Result<(), CameraError> {
+  check_photo_id(&request.photo_id)?;
+  let size = serde_json::to_vec(&request.develop_settings)
+    .map(|bytes| bytes.len())
+    .unwrap_or(usize::MAX);
+  if !request.develop_settings.is_object() || size > MAX_SAVED_SETTINGS_BYTES {
+    return Err(invalid_request());
+  }
+  Ok(())
+}
+
+/// 開いた写真を画面へ返す形（`saved` は保存した補正。無ければ null）。`contentSha256` は中身の SHA-256（16 進の小文字 64 文字。
+/// 補正の置き場の鍵と同じ。接続口 `PhotoLibrary` の `contentSha256`）、`modifiedAt` はファイルの更新日時（一覧の `modifiedAt` と
+/// 同じ形。読めなければ null）。
+pub fn opened_json(photo_id: &str, photo: &OpenedPhoto, saved: Option<SavedRecord>, native_export: bool) -> Value {
+  json!({
+    "photoId": photo_id,
+    "entryId": photo.entry_id,
+    "fileName": photo.file_name,
+    "format": photo_format(&photo.file_name),
+    "sizeBytes": photo.digest.size_bytes,
+    "contentSha256": photo.digest.key,
+    "modifiedAt": photo.modified_at_ms.map(|ms| iso8601_utc(UNIX_EPOCH + Duration::from_millis(ms))),
+    "nativeExport": native_export,
+    "saved": saved.map(|record| json!({
+      "developSettings": record.settings,
+      "revision": record.revision,
+      "updatedAtMs": record.updated_at_ms,
+    })),
+  })
+}
+
+// ---------------------------------------------------------------------------
+// コマンド
+
+/// 一覧で選んだ写真を開く（`{ photos, failed }`）。`photos` は開いた順、`failed` は開けなかった `entryId` と code・文。
+#[tauri::command]
+pub async fn camera_photo_open(app: tauri::AppHandle, request: Option<Value>) -> Result<Value, CameraError> {
+  let request: OpenRequest = parse_request(request)?;
+  validate_open_request(&request)?;
+  let library = library(&app)?;
+  let photos = photos(&app)?;
+  let develop = crate::develop::develop(&app).ok();
+  run_blocking(move || {
+    let mut opened = Vec::new();
+    let mut failed = Vec::new();
+    for listed in library.listed_photos(request.entry_ids) {
+      let result = listed
+        .path
+        .ok_or_else(|| PageError::new(code::NOT_FOUND, LISTED_PHOTO_NOT_FOUND_MESSAGE).into())
+        .and_then(|path| photos.open(&listed.entry_id, &path));
+      match result {
+        Ok((photo_id, photo)) => {
+          let native_export = develop
+            .as_ref()
+            .is_some_and(|develop| crate::develop::can_export(develop, &photo.file_name));
+          opened.push(opened_json(
+            &photo_id,
+            &photo,
+            photos.saved(&photo.digest.key),
+            native_export,
+          ));
+        }
+        Err(err) => failed.push(json!({ "entryId": listed.entry_id, "code": err.code, "message": err.message })),
+      }
+    }
+    Ok(json!({ "photos": opened, "failed": failed }))
+  })
+  .await
+}
+
+/// 開いた写真を閉じる（`{}`。知らない `photoId` は黙って飛ばす）。
+#[tauri::command]
+pub async fn camera_photo_close(app: tauri::AppHandle, request: Option<Value>) -> Result<Value, CameraError> {
+  let request: CloseRequest = parse_request(request)?;
+  if request.photo_ids.len() > MAX_OPEN_PHOTOS {
+    return Err(invalid_request());
+  }
+  photos(&app)?.close(&request.photo_ids);
+  Ok(json!({}))
+}
+
+/// 補正を保存する（`{ revision }`）。画面が知っている版と違えば `revisionConflict`（`currentRevision` に今の版）。
+#[tauri::command]
+pub async fn camera_photo_save_settings(app: tauri::AppHandle, request: Option<Value>) -> Result<Value, CameraError> {
+  let request: SaveSettingsRequest = parse_request(request)?;
+  validate_save_settings_request(&request)?;
+  let photos = photos(&app)?;
+  run_blocking(move || {
+    let revision = photos.save(
+      &request.photo_id,
+      &request.develop_settings,
+      request.expected_revision,
+      SystemTime::now(),
+    )?;
+    Ok(json!({ "revision": revision }))
+  })
+  .await
+}
+
+#[cfg(test)]
+#[path = "photos_tests.rs"]
+mod tests;

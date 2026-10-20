@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 1,
+  "$comment": "apps/camera に同梱する現像の sidecar（apple-raw-linear・niho-develop-render）と校正の登録表の固定。NIHO Desktop の lock（apps/desktop/develop-sidecars.lock.json）と同じ公開済みのソースを指す。エンジンの公開 PR で packages/develop-engine/scripts/release-engine.mjs release が NIHO Desktop の lock と一緒に更新し、その app の版を上げる（ops/runbooks/develop-engine-release.md）。",
+  "appleRawLinear": {
+    "version": "0.5.2"
+  },
+  "nihoDevelopRender": {
+    "version": "0.16.0"
+  },
+  "calibration": {
+    "registry": "apple-registry.json",
+    "files": {
+      "apple-registry.json": "573c32f9d2d90fb14b64c2747ee5dbba46388a7891f5d14738533faef285ec4b",
+      "apple-signed-registry.json": "6cd3b8bd9305c373dc285c9d53100601f71376b3eb65e9148581b5f8196c9319",
+      "generic/apple-v1.json": "daa1cf56ab6ccfbdcf403c451bf1dfa992bd8b10b564e2ee30d8da6d97646369",
+      "panasonic-dc-s5/apple-v2.json": "19a0b544394c5434c0fa352fed47502d68634263a971cafb36eacfa372e97cad",
+      "panasonic-dc-s5/apple-v3.json": "db092014cafa7a641c544626e909ef2341b2d3753743566887daa45edc79d2c9",
+      "panasonic-dc-s5/apple-v4.json": "8ddd1c425c710727c155ea2ba83e99516fbf7010c39e66aeb3f98964ea663c20",
+      "sony-ilme-fx30/apple-v1.json": "404d2b641ee7bc282ba58bafa85138ac11c50aace5f3766dac3a881582c38516",
+      "sony-ilme-fx30/apple-v2.json": "c55273e39515a83dcba5ff217fde4cb5cc496a9f802805ecf21507dd604a2646",
+      "sony-zv-e10m2/apple-v2.json": "87167dd34e27895d10d4f36a0b51f8c14088f168177693b5d783af5b62e55223",
+      "sony-zv-e10m2/apple-v3.json": "de10e39ca524cd26c31614a4a404b0713ab696a8b034a64ef2778fff00d16cf0"
+    }
+  },
+  "sources": {
+    "fingerprint": "7825e0151c307ffef7d33379b97801d8cfd0062e16cbaca4151267fb0ea1b092",
+    "fileCount": 95
+  },
+  "nihoCameraCutout": {
+    "version": "0.2.0",
+    "sources": {
+      "fingerprint": "02f3f680e76c8c552668aaf0bda3d776c55e56a7eb51c9b8e67ce817e966e2ae",
+      "fileCount": 10
+    }
+  }
+}

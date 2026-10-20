@@ -1,0 +1,44 @@
+[[permission]]
+identifier = "allow-camera-app-info"
+description = "Allows the bundled NIHO photo UI to read the app's own version (for the about line and support). No input is accepted."
+commands.allow = ["camera_app_info"]
+
+[[permission]]
+identifier = "allow-camera-library"
+description = "Allows the bundled NIHO photo UI to add a folder chosen with the native folder picker, list it again, list the remembered folders that exist now (missing ones are skipped, not forgotten), and take a remembered folder off the list without touching its photos (thumbnails come from the niho-thumb URI scheme, not a command). Hidden files, packages and symlinks are skipped. Folder and photo paths never leave the app; the page only sees opaque folder and entry IDs and file names."
+commands.allow = ["camera_library_add_folder", "camera_library_remembered", "camera_library_list_folder", "camera_library_forget_folder"]
+
+[[permission]]
+identifier = "allow-camera-photos"
+description = "Allows the bundled NIHO photo UI to open listed photos (reading their content SHA-256), close them, and save each photo's develop settings on this Mac with a revision check (Application Support/life.niho.camera/edits/<SHA-256>.json). Originals are never modified."
+commands.allow = ["camera_photo_open", "camera_photo_close", "camera_photo_save_settings"]
+
+[[permission]]
+identifier = "allow-camera-develop"
+description = "Allows the bundled NIHO photo UI to check the bundled apple-raw-linear / niho-develop-render sidecars, develop an open photo (a working copy cached in the app cache, handed over once per token) and export it at full size as JPEG through the native save dialog or into a folder chosen with the native folder picker (never overwriting, never the original). Only the capture date is written into exported JPEGs."
+commands.allow = ["camera_develop_status", "camera_develop_source", "camera_develop_source_bytes", "camera_export", "camera_choose_export_folder", "camera_export_to_folder"]
+
+[[permission]]
+identifier = "allow-camera-cutout"
+description = "Allows only the bundled NIHO photo UI to use the verified open photo ID for the bundled niho-camera-cutout sidecar: probe it, load/save that photo's SHA-256-bound recipe, detect/cancel, read only masks belonging to that photo, and export through the native save dialog. No path is accepted or returned."
+commands.allow = ["camera_cutout_status", "camera_cutout_load_recipe", "camera_cutout_save_recipe", "camera_cutout_detect", "camera_cutout_cancel", "camera_cutout_read_mask", "camera_cutout_export"]
+
+[[permission]]
+identifier = "allow-camera-presets"
+description = "Allows the bundled NIHO photo UI to list, create (from an imported Lightroom XMP or the current develop settings written as XMP), rename and delete the presets kept on this Mac (Application Support/life.niho.camera/presets/). The page passes the XMP text; no path is accepted. Writing an XMP file goes through allow-camera-save."
+commands.allow = ["camera_presets_list", "camera_presets_create", "camera_presets_rename", "camera_presets_delete"]
+
+[[permission]]
+identifier = "allow-camera-photo-bench-notice"
+description = "Allows the bundled NIHO photo UI to learn whether the former NIHO camera (Photo Bench) left saved edits on this Mac, to show a one-line notice that they are not carried over. Only a yes/no is returned; no file is read or passed."
+commands.allow = ["camera_photo_bench_edits"]
+
+[[permission]]
+identifier = "allow-camera-save"
+description = "Allows the bundled NIHO photo UI to save a file it rendered (JPEG, PNG or XMP, at most 256 MiB, sent as raw bytes with a plain file name and no path) to a place chosen with the native save dialog, and to copy an open photo's original file to a place chosen with the native save dialog. Never writes over an open photo's original; replacing another existing file is left to the save dialog's confirmation. Only the saved file name is returned."
+commands.allow = ["camera_save_file", "camera_export_original"]
+
+[[permission]]
+identifier = "allow-camera-updates"
+description = "Allows the bundled NIHO photo UI to read whether the startup update check downloaded a newer signed version (it applies on the next launch). The check runs natively at startup; the page cannot check, install or restart."
+commands.allow = ["camera_update_status"]

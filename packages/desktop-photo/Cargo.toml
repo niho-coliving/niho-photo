@@ -1,0 +1,29 @@
+[package]
+name = "niho_desktop_photo"
+version = "0.1.0"
+description = "Mac の写真の土台（sidecar・作業コピー・フォルダ・保存した補正）。NIHO Desktop と NIHO camera が使う"
+authors = ["NIHO"]
+license = "UNLICENSED"
+repository = "https://github.com/niho-coliving/niho-photo"
+edition = "2021"
+rust-version = "1.77.2"
+publish = false
+
+[lib]
+name = "niho_desktop_photo"
+path = "src/lib.rs"
+
+[features]
+# テストの道具（偽の sidecar・一時フォルダ・偽のサムネイル作り）を公開する。アプリの dev-dependencies だけが使う。
+test-support = []
+
+# 公開移植前の内部構成については docs/migration/mac-client.md を参照。
+[dependencies]
+serde_json = "1.0"
+sha2 = "0.10"
+libc = "0.2"
+
+# 写真の中身の SHA-256 を保存・キャッシュのキーにする。sha2 は最適化しないと約 20 倍遅いので、開発ビルドでも最適化する
+# （この crate を単独でテストするとき。アプリから使うときはアプリの Cargo.toml の profile が効く）。
+[profile.dev.package.sha2]
+opt-level = 3

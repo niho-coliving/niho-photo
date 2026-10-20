@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "syntheticFixtures": true,
+  "unsigned": true,
+  "cargoManifests": [
+    "src-tauri/Cargo.toml"
+  ],
+  "swiftPackages": []
+}

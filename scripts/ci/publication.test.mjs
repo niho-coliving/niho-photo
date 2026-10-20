@@ -47,7 +47,7 @@ test("監査済みソースは許可し、manifest hash更新だけでは出典�
 test("packages外の禁止パス、秘密ファイル、巨大fixtureも拒否する", async (t) => {
   const f = await fixture(t);
   for (const name of ["apps/api/index.ts", "docs/.env.production", "misc/ID_RSA", "misc/key.PEM", ".gitmodules", ".npmrc", ".gitleaksignore", "sample.DCP"]) await f.put(name, "synthetic forbidden input\n");
-  await f.put("docs/oversize.txt", Buffer.alloc(2097153, 65));
+  await f.put("docs/oversize.txt", Buffer.alloc(10485761, 65));
   const failures = await f.check();
   assert.equal(failures.filter((v) => v.startsWith("公開禁止パス")).length, 8);
   assert.ok(failures.some((v) => /サイズ超過/.test(v)));
@@ -142,7 +142,7 @@ test("manifest重複、欠落、path traversal、policyサイズ緩和を拒否�
   await rm(path.join(f.root, "packages/example/src/exposure.ts"));
   await rejected(f, /ファイル欠落/);
   const policy = JSON.parse(await readFile(path.join(f.root, "docs/security/publication-policy.json")));
-  policy.maxFileBytes = 2097153;
+  policy.maxFileBytes = 10485761;
   await f.json("docs/security/publication-policy.json", policy);
   await assert.rejects(f.check, /policy/);
 });

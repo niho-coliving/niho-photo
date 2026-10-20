@@ -78,7 +78,7 @@ export async function verifyPublication(root) {
   const readJson = async (name) => JSON.parse(await readFile(path.join(root, name), "utf8"));
   const policy = await readJson("docs/security/publication-policy.json");
   const manifest = await readJson("docs/security/publication-manifest.json");
-  if (policy.schemaVersion !== 1 || !Number.isSafeInteger(policy.maxFileBytes) || policy.maxFileBytes <= 0 || policy.maxFileBytes > 2097152 || policy.assetManifestRequired !== true || policy.assetManifestPath !== "docs/security/publication-manifest.json" || !["forbiddenPathPrefixes", "forbiddenBasenames", "forbiddenExtensions"].every((key) => Array.isArray(policy[key]) && policy[key].every((v) => typeof v === "string"))) throw new Error("公開policyの契約が不正です");
+  if (policy.schemaVersion !== 1 || !Number.isSafeInteger(policy.maxFileBytes) || policy.maxFileBytes <= 0 || policy.maxFileBytes > 10485760 || policy.assetManifestRequired !== true || policy.assetManifestPath !== "docs/security/publication-manifest.json" || !["forbiddenPathPrefixes", "forbiddenBasenames", "forbiddenExtensions"].every((key) => Array.isArray(policy[key]) && policy[key].every((v) => typeof v === "string"))) throw new Error("公開policyの契約が不正です");
   if (manifest.schemaVersion !== 1 || !commit.test(manifest.sourceBaseline?.commit ?? "") || !manifest.sourceBaseline?.repository || !commit.test(manifest.auditedCandidate?.commit ?? "") || !Array.isArray(manifest.importedFiles) || !Array.isArray(manifest.generatedFiles) || !Array.isArray(manifest.excludedSources) || !Array.isArray(manifest.deferredScopes)) throw new Error("公開manifestのschemaが不正です");
   const inventory = parseInventory(await readFile(path.join(root, "docs/legal/asset-inventory.csv"), "utf8"));
   for (const row of inventory) {

@@ -1,0 +1,7 @@
+node_modules/
+# vite build の出力（tauri.conf.json の frontendDist。.app に入る）
+/dist/
+# 段 2 の wasm（scripts/stage-develop-engine.mjs が公開物から写す。.app に入る）
+/public/develop-engine/
+# scripts/build-dmg.sh の出力（配布の dmg・.sha256・updater の .app.tar.gz と .sig。publish-dmg.sh が GitHub Release に上げる）
+/release/

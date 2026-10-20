@@ -1,0 +1,5 @@
+{
+  "$comment": "NIHO photo を公開する前に確かめる「main のコードが前提にするサーバーの設定」（#18759。NIHO docs の apps/docs/release-requirements.json と同じ形）。camera-release.yml の plan（apps/camera/scripts/ci-camera-release.sh）が公開すると決めたときだけ、apps/docs/scripts/release-requirements.mjs check が本番へ認証なしの GET で問い合わせる。今は本番の設定に頼る項目が無い（#18759）。アプリを本番の設定に頼る作りにする PR はここに項目を足す。probe の種類と判定は apps/docs/scripts/release-requirements.mjs の先頭。",
+  "app": "NIHO photo",
+  "requirements": []
+}

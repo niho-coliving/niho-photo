@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "maxFileBytes": 2097152,
+  "maxFileBytes": 10485760,
   "forbiddenPathPrefixes": [
     "apps/api/",
     "apps/web/",

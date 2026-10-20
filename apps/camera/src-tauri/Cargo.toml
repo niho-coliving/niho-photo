@@ -1,0 +1,57 @@
+[package]
+name = "niho_camera"
+version = "0.1.18"
+description = "NIHO photo: Mac-only offline photo editing app"
+authors = ["NIHO"]
+license = "UNLICENSED"
+repository = "https://github.com/niho-coliving/niho-photo"
+edition = "2021"
+rust-version = "1.85"
+publish = false
+
+[lib]
+name = "niho_camera_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[features]
+# 公式更新は #2 の配布契約完成後だけ明示的に有効化する。
+official-updates = []
+# 受入用の E2E（scripts/run-e2e.sh）。配布の build には入れない（既定は off）。ダイアログが環境変数の値を返し、画面に操作の script を
+# 流して結果をファイルへ書く（src/e2e.rs）。開発用の build（debug）でも同梱の dist/ を読むよう custom-protocol を入れる
+# （devUrl の vite を起動しない。本番と同じ CSP で確かめる）
+e2e = ["tauri/custom-protocol", "dep:block2"]
+
+[build-dependencies]
+tauri-build = { version = "2.6.2", features = [] }
+
+# 公開移植前の内部構成については docs/migration/mac-client.md を参照。
+[dependencies]
+chrono = { version = "0.4.45", default-features = false, features = ["std"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+tauri = { version = "2.11.2", features = [] }
+rfd = "0.15"
+# 自動更新（C5 #18393。NIHO Desktop・NIHO docs と同じ plugin。https://niho.life/camera/updater/latest.json を見て、署名を確かめて
+# 差し替える。src/updater.rs）
+tauri-plugin-updater = "2"
+# Mac の写真の土台（sidecar・作業コピー・フォルダ・保存した補正）。NIHO Desktop と同じ関数（spec「構成」）
+niho_desktop_photo = { path = "../../../packages/desktop-photo" }
+sha2 = "0.10"
+libc = "0.2"
+
+# 現像・書き出しの間 App Nap を止める（src/activity.rs。NSProcessInfo の activity）。E2E（src/e2e.rs）も使う。どちらも tauri が
+# 既に使っている版
+[target.'cfg(target_os = "macos")'.dependencies]
+objc2 = "0.6"
+objc2-foundation = { version = "0.3", default-features = false, features = ["std", "NSProcessInfo", "NSString"] }
+# E2E だけ: 画面の snapshot（WKWebView の takeSnapshotWithConfiguration:completionHandler: の completion）
+block2 = { version = "0.6", optional = true }
+
+[dev-dependencies]
+# 偽の sidecar・一時フォルダ（crate のテストの道具）
+niho_desktop_photo = { path = "../../../packages/desktop-photo", features = ["test-support"] }
+
+# 写真を開くときに中身の SHA-256 を読む（補正の置き場のキー）。sha2 は最適化しないと約 20 倍遅いので、開発ビルドでも最適化する
+# （NIHO Desktop と同じ）。
+[profile.dev.package.sha2]
+opt-level = 3
