@@ -39,3 +39,15 @@ cargo +1.98.1 test --locked \
 ```
 
 既存版の互換確認は `niho6`、`niho7`、`golden`、`golden_raw` を別に実行する。非公開 reference が無い環境では ignored golden の品質結果を作らない。
+
+
+wasmの性能確認は `tools/color-review-wasm-bench.cjs` を使う。固定1024×768の合成画像を生成し、同じ設定のniho-6/8についてcold/cached描画と編集中5フレームを記録する。Studio上のNode/wasm SIMDという実行環境を結果に明示し、ブラウザや利用端末の性能と同一視しない。
+
+```sh
+cargo +1.98.1 build --release --locked --target wasm32-unknown-unknown \
+  --config packages/develop-engine/.cargo/config.toml \
+  --manifest-path packages/develop-engine/Cargo.toml -p niho-develop-wasm
+wasm-bindgen --target nodejs --out-dir /tmp/niho8-wasm \
+  packages/develop-engine/target/wasm32-unknown-unknown/release/niho_develop_wasm.wasm
+node packages/develop-engine/tools/color-review-wasm-bench.cjs /tmp/niho8-wasm/niho_develop_wasm.js
+```

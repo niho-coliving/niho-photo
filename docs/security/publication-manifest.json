@@ -6078,9 +6078,10 @@
         "path": "packages/develop-engine/crates/niho-develop/tests/niho6_cross_target.rs",
         "sha256": "eba5bf799e46cf4c475d9d60d4a7092993dfbe766722b890f2f78e165a3f3da5"
       },
-      "outputSha256": "7e05c0579ed4c2d65ceaa8fdb2c00944458dcf9002b12267a532ade7adb71628",
+      "outputSha256": "44450dca1474be560e7d164cf8a7ad5d11e9a0f049c3c286f782b1ec0c13d047",
       "modifications": [
-        "新engine受入と未知版拒否の境界を更新し、既存wasm CIで候補のFinal/Interactive固定画素を検証する。"
+        "新engine受入と未知版拒否の境界を更新し、既存wasm CIで候補のFinal/Interactive固定画素を検証する。",
+        "実測に基づくWB節点別fit、旧版を維持する候補のnative/wasm固定hashと再現可能な性能計測を整備。"
       ]
     },
     {
@@ -8581,13 +8582,13 @@
     },
     {
       "path": "packages/develop-engine/NIHO8.md",
-      "sha256": "a57ea5b72df2d703262ad62b6df7d758dd454fe3e1a38111065324bb1774892c",
-      "origin": "公開Issue #26/#27/#29 のため公開済み数式・既存primitiveから独立実装した研究用コード・合成テスト・日本語手順。非公開の写真・参照画素・パス・履歴・第三者ソースを含まない。"
+      "sha256": "231f39846be1c49e428f4a608b5dff6aeeddc24984bd0f239b4ea6bada99e474",
+      "origin": "公開Issue #26/#27/#29 のため公開済み数式・既存primitiveから独立実装した研究用コード・合成テスト・日本語手順。非公開の写真・参照画素・パス・履歴・第三者ソースを含まない。\n変更理由: 実測に基づくWB節点別fit、旧版を維持する候補のnative/wasm固定hashと再現可能な性能計測を整備。"
     },
     {
       "path": "packages/develop-engine/RESEARCH26-27.md",
-      "sha256": "f1ab625ac0b06443b934980b97e912c5af624a446df5e67c76ee4ea048015df9",
-      "origin": "公開Issue #26/#27/#29 のため公開済み数式・既存primitiveから独立実装した研究用コード・合成テスト・日本語手順。非公開の写真・参照画素・パス・履歴・第三者ソースを含まない。\n変更理由: 暗所A/Bで現行niho-6を基準とし、H/S以外の色・黒レベル等を同じ数式で比較する。"
+      "sha256": "33f355cc92fa1d82715541c13e95feb38bac6781eb5d56af6fbb9e593989a7f5",
+      "origin": "公開Issue #26/#27/#29 のため公開済み数式・既存primitiveから独立実装した研究用コード・合成テスト・日本語手順。非公開の写真・参照画素・パス・履歴・第三者ソースを含まない。\n変更理由: 暗所A/Bで現行niho-6を基準とし、H/S以外の色・黒レベル等を同じ数式で比較する。\n変更理由: 実測に基づくWB節点別fit、旧版を維持する候補のnative/wasm固定hashと再現可能な性能計測を整備。"
     },
     {
       "path": "packages/develop-engine/crates/niho-develop/examples/analytic_hs_probe.rs",
@@ -8596,8 +8597,8 @@
     },
     {
       "path": "packages/develop-engine/crates/niho-develop/examples/linear_jpeg_wb_fit.rs",
-      "sha256": "d5f569147dbe43acf7b16c4451c43682e0f32146d2ecaf8ce4601bdad1da9c87",
-      "origin": "公開Issue #26/#27/#29 のため公開済み数式・既存primitiveから独立実装した研究用コード・合成テスト・日本語手順。非公開の写真・参照画素・パス・履歴・第三者ソースを含まない。"
+      "sha256": "50a2516485f6fcec6f2be0083026469be97bb8c5fc0c6608083896a707152a5f",
+      "origin": "公開Issue #26/#27/#29 のため公開済み数式・既存primitiveから独立実装した研究用コード・合成テスト・日本語手順。非公開の写真・参照画素・パス・履歴・第三者ソースを含まない。\n変更理由: 実測に基づくWB節点別fit、旧版を維持する候補のnative/wasm固定hashと再現可能な性能計測を整備。"
     },
     {
       "path": "packages/develop-engine/crates/niho-develop/examples/niho8_measure.rs",
@@ -8611,8 +8612,8 @@
     },
     {
       "path": "packages/develop-engine/crates/niho-develop/src/research/linear_jpeg_wb.rs",
-      "sha256": "3132cce397517ae59fee0953edb99c0a5a1ec4f5f2b77fbaec6abf03b85c6aac",
-      "origin": "公開Issue #26/#27/#29 のため公開済み数式・既存primitiveから独立実装した研究用コード・合成テスト・日本語手順。非公開の写真・参照画素・パス・履歴・第三者ソースを含まない。\n変更理由: 表示色評価で使用するProPhotoからsRGBへの行列importを補正。"
+      "sha256": "a4c4ce9c9ae2eb202bc5ba018055bcb1c5d02e9682abab6ff837fdd469f2f643",
+      "origin": "公開Issue #26/#27/#29 のため公開済み数式・既存primitiveから独立実装した研究用コード・合成テスト・日本語手順。非公開の写真・参照画素・パス・履歴・第三者ソースを含まない。\n変更理由: 表示色評価で使用するProPhotoからsRGBへの行列importを補正。\n変更理由: 実測に基づくWB節点別fit、旧版を維持する候補のnative/wasm固定hashと再現可能な性能計測を整備。"
     },
     {
       "path": "packages/develop-engine/crates/niho-develop/src/research/mod.rs",
@@ -8623,6 +8624,11 @@
       "path": "packages/develop-engine/crates/niho-develop/tests/niho8.rs",
       "sha256": "9783610b158502303471a645233537d33041c50b45e152aae929d60bdc470220",
       "origin": "公開Issue #26/#27/#29 のため公開済み数式・既存primitiveから独立実装した研究用コード・合成テスト・日本語手順。非公開の写真・参照画素・パス・履歴・第三者ソースを含まない。\n変更理由: 既存PresetResultのsettingsを介してengineとXMP保持を検証する。\n変更理由: 候補の一発描画・crop・drag release・旧版へ戻す精度cacheの一致を回帰検証。"
+    },
+    {
+      "path": "packages/develop-engine/tools/color-review-wasm-bench.cjs",
+      "sha256": "e4663199c62a7602aa3a134f4317f36355a639d7dca51a0bb83f82ac722a7286",
+      "origin": "公開Issue #29 のため独立作成した合成1024×768 PNGとNode/wasm性能計測。Node標準ライブラリのみ、非公開写真・参照画素・依存を含まない。"
     }
   ],
   "excludedSources": [

@@ -52,10 +52,10 @@ fn main() {
         "heldOutDuringFit": ["wb_cool", "wb_warm"],
         "mapping": {
             "baseKelvin": 5000.0,
-            "miredLinear": mapping.mired_linear,
-            "miredQuadratic": mapping.mired_quadratic,
-            "tintLinear": mapping.tint_linear,
-            "tintQuadratic": mapping.tint_quadratic
+            "temperatureSliderKnots": [-80.0,-30.0,0.0,30.0,80.0],
+            "miredDeltas": mapping.mired_deltas,
+            "tintSliderKnots": [-50.0,-20.0,0.0,20.0,50.0],
+            "tintValues": mapping.tint_values
         },
         "fitAxisMetrics": report(&wb::validate(mapping, &Variant::FIT_AXES)),
         "validationAllTen": report(&all),

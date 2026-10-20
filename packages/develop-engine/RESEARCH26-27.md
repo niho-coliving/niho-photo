@@ -6,7 +6,7 @@
 
 `research::linear_jpeg_wb` は input linear ProPhoto D50 上で Bradford XYZ adaptation を評価する。既存 `color.rs` の `xy_from_temperature`、`bradford_xyz`、ProPhoto D50 matrix を使い、production の `jpeg_wb` LUT は変更しない。Core Image `relative_wb` の `30 K / 0.5 tint` scale は使わない。
 
-fit が読むのは公開 `calibration/jpeg-incremental-wb-v1.bin` の axis 8 variant（temperature ±30/±80、tint ±20/±50）だけである。slider temperature は 5000 K 周りの mired の一次＋符号付き二次、tint は DNG tint の一次＋符号付き二次へ写し、4係数を固定 bounds `-2..2` の deterministic coordinate descent で求める。`wb_cool` / `wb_warm` の2 variant は optimizer から隠し、fit 凍結後の validation で初めて読む。
+fit が読むのは公開 `calibration/jpeg-incremental-wb-v1.bin` の axis 8 variant（temperature ±30/±80、tint ±20/±50）だけである。slider temperature は5000K周りのmired差、tintはDNG tintへ写し、測定済みの各非ゼロ節点を別々にfitする。mired差は−160..160、tintは−150..150の有限範囲でcoarse bracket＋golden-sectionを使い、節点間は線形補間する。ゼロは厳密な恒等とする。 `wb_cool` / `wb_warm` の2 variant は optimizer から隠し、fit 凍結後の validation で初めて読む。
 
 別 pass の validation は全10 variantについて 17³ node の measured chart に対する CIEDE2000 mean / p99 を JSON に出し、全 variant のそれぞれの mean `<= 0.5` を真偽値で示す。これは同じ公開 chart 内の calibration/validation であり、独立写真の Lightroom gate ではない。
 

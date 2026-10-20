@@ -101,73 +101,65 @@ impl Variant {
     }
 }
 
-/// Bounded mapping from a slider to DNG temperature/tint coordinates.
-/// Temperature is a signed mired delta around 5000 K. The second term lets
-/// the outer and inner knots have different slopes; the mapping is odd in mired.
+/// Piecewise mapping at the actual measured slider knots. Each non-zero
+/// knot is fitted independently; no symmetry between warm/cool is assumed.
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Mapping {
-    pub mired_linear: f64,
-    pub mired_quadratic: f64,
-    pub tint_linear: f64,
-    pub tint_quadratic: f64,
+    pub mired_deltas: [f64; 5],
+    pub tint_values: [f64; 5],
 }
 
 impl Default for Mapping {
     fn default() -> Self {
         Self {
-            mired_linear: 0.5,
-            mired_quadratic: 0.0,
-            tint_linear: 0.5,
-            tint_quadratic: 0.0,
+            mired_deltas: [80.0, 30.0, 0.0, -30.0, -80.0],
+            tint_values: [-50.0, -20.0, 0.0, 20.0, 50.0],
         }
     }
 }
 
-impl Mapping {
-    const BOUNDS: [(f64, f64); 4] = [(-2.0, 2.0); 4];
+fn interpolate(value: f64, knots: [f64; 5], mapped: [f64; 5]) -> f64 {
+    let value = crate::relative_wb::sanitized(value);
+    let segment = if value < knots[1] {
+        0
+    } else if value < 0.0 {
+        1
+    } else if value <= knots[3] {
+        2
+    } else {
+        3
+    };
+    let fraction = (value - knots[segment]) / (knots[segment + 1] - knots[segment]);
+    mapped[segment] + fraction * (mapped[segment + 1] - mapped[segment])
+}
 
+impl Mapping {
     pub fn coordinates(self, temperature: f64, tint: f64) -> (f64, f64) {
         let mired = 200.0
-            + self.mired_linear * temperature
-            + self.mired_quadratic * temperature * temperature.abs() / 100.0;
-        let effective_temperature =
-            (1_000_000.0 / mired.clamp(20.0, 500.0)).clamp(2000.0, 50_000.0);
-        let effective_tint = (self.tint_linear * tint
-            + self.tint_quadratic * tint * tint.abs() / 100.0)
+            + interpolate(
+                temperature,
+                [-80.0, -30.0, 0.0, 30.0, 80.0],
+                self.mired_deltas,
+            );
+        let kelvin = 1_000_000.0 / mired.clamp(20.0, 500.0);
+        let mapped_tint = interpolate(tint, [-50.0, -20.0, 0.0, 20.0, 50.0], self.tint_values)
             .clamp(-150.0, 150.0);
-        (effective_temperature, effective_tint)
+        (kelvin, mapped_tint)
     }
 
     pub fn matrix(self, temperature: f64, tint: f64) -> Mat3 {
         if temperature == 0.0 && tint == 0.0 {
             return crate::color::IDENTITY;
         }
-        let base = xy_from_temperature(5000.0, 0.0);
-        let (kelvin, mapped_tint) = self.coordinates(temperature, tint);
-        let effective = xy_from_temperature(kelvin, mapped_tint);
-        let adaptation = bradford_xyz(effective, base);
+        let (kelvin, tint) = self.coordinates(temperature, tint);
+        let adaptation = bradford_xyz(
+            xy_from_temperature(kelvin, tint),
+            xy_from_temperature(5000.0, 0.0),
+        );
         mat_mul(
             &XYZ_D50_TO_PROPHOTO,
             &mat_mul(&adaptation, &PROPHOTO_TO_XYZ_D50),
         )
-    }
-
-    fn values(self) -> [f64; 4] {
-        [
-            self.mired_linear,
-            self.mired_quadratic,
-            self.tint_linear,
-            self.tint_quadratic,
-        ]
-    }
-
-    fn from_values(values: [f64; 4]) -> Self {
-        Self {
-            mired_linear: values[0],
-            mired_quadratic: values[1],
-            tint_linear: values[2],
-            tint_quadratic: values[3],
-        }
     }
 }
 
@@ -319,42 +311,67 @@ fn errors(mapping: Mapping, variants: &[Variant]) -> Vec<(Variant, Vec<f64>)> {
         .collect()
 }
 
-fn objective(mapping: Mapping) -> f64 {
-    let values = errors(mapping, &Variant::FIT_AXES);
-    let (sum, count) = values
-        .iter()
-        .flat_map(|(_, values)| values)
-        .fold((0.0, 0usize), |(sum, count), value| {
-            (sum + value, count + 1)
-        });
-    sum / count as f64
-}
-
-/// Deterministic bounded coordinate descent. Only [`Variant::FIT_AXES`] is
-/// read by the objective; combination variants remain held out until
-/// [`validate`] is called.
+/// Fit only the eight independent axis knots. A deterministic coarse
+/// bracket followed by bounded golden-section refinement prevents the
+/// optimizer from stopping just because an initial step budget is exhausted.
 pub fn fit() -> Mapping {
-    let mut values = Mapping::default().values();
-    let mut steps = [0.5, 0.5, 0.5, 0.5];
-    let mut best = objective(Mapping::from_values(values));
-    for _ in 0..9 {
-        for index in 0..values.len() {
-            for direction in [-1.0, 1.0] {
-                let mut candidate = values;
-                candidate[index] = (candidate[index] + direction * steps[index])
-                    .clamp(Mapping::BOUNDS[index].0, Mapping::BOUNDS[index].1);
-                let score = objective(Mapping::from_values(candidate));
-                if score < best {
-                    values = candidate;
-                    best = score;
-                }
+    let mut mapping = Mapping::default();
+    for (index, variant) in Variant::FIT_AXES.into_iter().enumerate() {
+        let knot = [0, 1, 3, 4][index % 4];
+        let input: Vec<_> = (0..NODE_COUNT).map(|node| input_node(node).1).collect();
+        let reference: Vec<_> = (0..NODE_COUNT)
+            .map(|node| lab_d50(measured_node(variant, node)))
+            .collect();
+        let objective = |value: f64| {
+            let mut candidate = mapping;
+            if index < 4 {
+                candidate.mired_deltas[knot] = value;
+            } else {
+                candidate.tint_values[knot] = value;
+            }
+            let (temperature, tint) = variant.sliders();
+            let matrix = candidate.matrix(temperature, tint);
+            input
+                .iter()
+                .zip(&reference)
+                .map(|(input, reference)| {
+                    let adapted = mat_vec(&matrix, *input);
+                    let display = mat_vec(&PROPHOTO_TO_SRGB, adapted).map(|value| {
+                        let code =
+                            libm::round(crate::color::srgb_encode(value.clamp(0.0, 1.0)) * 255.0);
+                        srgb_decode(code / 255.0)
+                    });
+                    delta_e00(lab_d50(mat_vec(&SRGB_TO_PROPHOTO, display)), *reference)
+                })
+                .sum::<f64>()
+                / NODE_COUNT as f64
+        };
+        let bound = if index < 4 { 160.0 } else { 150.0 };
+        let samples = 24;
+        let step = 2.0 * bound / samples as f64;
+        let best = (0..=samples)
+            .map(|i| -bound + i as f64 * step)
+            .min_by(|a, b| objective(*a).total_cmp(&objective(*b)))
+            .unwrap();
+        let (mut low, mut high) = ((best - step).max(-bound), (best + step).min(bound));
+        let ratio = (libm::sqrt(5.0) - 1.0) / 2.0;
+        for _ in 0..24 {
+            let left = high - ratio * (high - low);
+            let right = low + ratio * (high - low);
+            if objective(left) <= objective(right) {
+                high = right;
+            } else {
+                low = left;
             }
         }
-        for step in &mut steps {
-            *step *= 0.5;
+        let value = (low + high) / 2.0;
+        if index < 4 {
+            mapping.mired_deltas[knot] = value;
+        } else {
+            mapping.tint_values[knot] = value;
         }
     }
-    Mapping::from_values(values)
+    mapping
 }
 
 fn percentile(sorted: &[f64], p: f64) -> f64 {

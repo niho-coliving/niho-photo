@@ -76,11 +76,8 @@ fn native_and_wasm_render_the_same_niho_8_bytes() {
     let drag = session
         .render(&settings, 0, niho_develop::Quality::Interactive)
         .unwrap();
-    println!(
-        "NIHO8_FNV_FINAL={} NIHO8_FNV_INTERACTIVE={}",
-        fnv1a64(&final_frame.rgba),
-        fnv1a64(&drag.rgba)
-    );
+    assert_eq!(fnv1a64(&final_frame.rgba), 12_699_997_617_581_930_905);
+    assert_eq!(fnv1a64(&drag.rgba), 15_324_851_065_599_780_084);
     assert_eq!((final_frame.width, final_frame.height), (160, 120));
     assert_eq!(
         session
