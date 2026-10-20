@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useId, useRef, useState, type ReactNode } from "react";
+import { useEffect, useId, useRef, useState, type PointerEvent, type ReactNode } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { ChevronDown, LayoutGrid, MoreHorizontal } from "lucide-react";
 
@@ -101,6 +101,11 @@ export type PhotoEditingPresetSaveCurrent = {
 
 const MORE_BUTTON_CLASS_NAME =
   "flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-niho-text-muted transition hover:bg-niho-pale/60 hover:text-niho-text-sub focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-niho-accent-ink disabled:cursor-not-allowed disabled:opacity-50";
+/** 升の右上に重ねる「⋯」（見本の上でも読めるよう白い丸に載せる）。 */
+const TILE_MORE_BUTTON_CLASS_NAME =
+  "h-7 w-7 bg-white/90 text-niho-text-sub shadow-sm hover:bg-white hover:text-niho-text";
+/** 升の見本（3:2・`object-cover`）。 */
+const TILE_THUMBNAIL_CLASS_NAME = "aspect-[3/2] h-auto w-full";
 
 /** 保存・名前の変更の失敗（同じ名前は入力の下、ほかは写真の出どころの理由か `fallback`）。 */
 function presetDialogFailure(
@@ -119,6 +124,8 @@ function MoreMenu(props: {
   items: PhotoEditingMenuItem[];
   /** メニューを開いた（項目から開くダイアログを閉じたら、この「⋯」へフォーカスを戻すために覚える） */
   onOpenMenu?: (trigger: HTMLButtonElement) => void;
+  /** 升の右上に重ねる小さな「⋯」 */
+  compact?: boolean;
 }) {
   return (
     <PhotoEditingMenu variant="browser" align="end" items={props.items}>
@@ -127,9 +134,9 @@ function MoreMenu(props: {
         aria-label={props.label}
         aria-haspopup="menu"
         onClick={(event) => props.onOpenMenu?.(event.currentTarget)}
-        className={MORE_BUTTON_CLASS_NAME}
+        className={cn(MORE_BUTTON_CLASS_NAME, props.compact ? TILE_MORE_BUTTON_CLASS_NAME : null)}
       >
-        <MoreHorizontal className="h-5 w-5" aria-hidden />
+        <MoreHorizontal className={props.compact ? "h-4 w-4" : "h-5 w-5"} aria-hidden />
       </button>
     </PhotoEditingMenu>
   );
@@ -142,24 +149,56 @@ type ImportOutcome =
   /** 色の表の確認で「やめる」（保存しない・失敗としても出さない） */
   | { kind: "cancelled" };
 
-function PresetRow(props: {
+type PresetItemProps = {
   name: string;
   applied: boolean;
   applying: boolean;
   disabled: boolean;
   /** 選ばれた表示のまま押せない行（「なし」。薄くしない） */
   locked?: boolean;
-  /** 行の左の見本（ブラウザ版で、見本を描ける wasm のときだけ。行の高さは 56px） */
+  /** 行の左の見本（ブラウザ版で、見本を描ける wasm のときだけ。行の高さは 56px）。升では上の見本 */
   thumbnail?: ReactNode;
   onApply: () => void;
-  /** 行の右の操作（拠点のプリセットの「⋯」） */
+  /** 行の右の操作（拠点のプリセットの「⋯」）。升では右上に重ねる */
   actions?: ReactNode;
   /** マウスを載せた・キーボードのフォーカスが来た（true）／離れた（false） */
   onPreviewChange?: (previewing: boolean) => void;
-}) {
-  const onPreviewChange = props.onPreviewChange;
+};
+
+/** 行・升のボタンに付ける仮の表示の口（マウスを載せた・キーボードのフォーカスが来た間だけ）。 */
+function usePresetPreviewHandlers(onPreviewChange: ((previewing: boolean) => void) | undefined) {
   // 押して来たフォーカス（マウス・タッチ）では仮の表示を起こさない（キーボードで来たフォーカスだけ）
   const pressedRef = useRef(false);
+  if (!onPreviewChange) return {};
+  return {
+    onPointerDown: () => {
+      pressedRef.current = true;
+    },
+    onPointerEnter: (event: PointerEvent<HTMLButtonElement>) => {
+      // タッチでは起こさない（押したら当たる）
+      if (event.pointerType === "mouse") onPreviewChange(true);
+    },
+    onPointerLeave: (event: PointerEvent<HTMLButtonElement>) => {
+      if (event.pointerType === "mouse") onPreviewChange(false);
+    },
+    onFocus: () => {
+      if (!pressedRef.current) onPreviewChange(true);
+    },
+    onBlur: () => {
+      pressedRef.current = false;
+      onPreviewChange(false);
+    },
+  };
+}
+
+function presetItemDisabledClassName(props: Pick<PresetItemProps, "locked" | "disabled">): string {
+  return props.locked === true && !props.disabled
+    ? "disabled:cursor-default"
+    : "disabled:cursor-not-allowed disabled:opacity-50";
+}
+
+function PresetRow(props: PresetItemProps) {
+  const previewHandlers = usePresetPreviewHandlers(props.onPreviewChange);
   return (
     <li className="flex items-center gap-1">
       <button
@@ -167,51 +206,13 @@ function PresetRow(props: {
         onClick={props.onApply}
         disabled={props.disabled || props.locked === true}
         aria-current={props.applied ? "true" : undefined}
-        onPointerDown={
-          onPreviewChange
-            ? () => {
-                pressedRef.current = true;
-              }
-            : undefined
-        }
-        onPointerEnter={
-          onPreviewChange
-            ? (event) => {
-                // タッチでは起こさない（押したら当たる）
-                if (event.pointerType === "mouse") onPreviewChange(true);
-              }
-            : undefined
-        }
-        onPointerLeave={
-          onPreviewChange
-            ? (event) => {
-                if (event.pointerType === "mouse") onPreviewChange(false);
-              }
-            : undefined
-        }
-        onFocus={
-          onPreviewChange
-            ? () => {
-                if (!pressedRef.current) onPreviewChange(true);
-              }
-            : undefined
-        }
-        onBlur={
-          onPreviewChange
-            ? () => {
-                pressedRef.current = false;
-                onPreviewChange(false);
-              }
-            : undefined
-        }
+        {...previewHandlers}
         className={cn(
           "flex min-w-0 flex-1 items-center justify-between gap-2 rounded-xl px-3 text-left text-sub font-bold transition",
           "min-h-11",
           props.thumbnail ? "min-h-14 gap-3 py-1 pl-1" : null,
           "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-niho-accent-ink",
-          props.locked === true && !props.disabled
-            ? "disabled:cursor-default"
-            : "disabled:cursor-not-allowed disabled:opacity-50",
+          presetItemDisabledClassName(props),
           props.applied ? "bg-niho-accent-soft text-niho-accent-ink" : "text-niho-text hover:bg-niho-pale/60",
         )}
       >
@@ -225,6 +226,45 @@ function PresetRow(props: {
 }
 
 /**
+ * 2 列の升の 1 つ（ブラウザ版の右パネルで、見本を描ける wasm のとき。L4 #53）。上に見本（3:2）、下に名前を 1 行で省略して置く。
+ * 当てている升は見本の ring と、名前の色・太さで見分ける（色だけに頼らない）。拠点のプリセットの「⋯」は右上に小さく重ねる。
+ */
+function PresetTile(props: PresetItemProps) {
+  const previewHandlers = usePresetPreviewHandlers(props.onPreviewChange);
+  return (
+    <li className="relative min-w-0">
+      <button
+        type="button"
+        onClick={props.onApply}
+        disabled={props.disabled || props.locked === true}
+        aria-current={props.applied ? "true" : undefined}
+        {...previewHandlers}
+        className={cn(
+          "flex w-full min-w-0 flex-col gap-1 rounded-xl p-1 text-left transition",
+          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-niho-accent-ink",
+          presetItemDisabledClassName(props),
+          props.applied ? null : "enabled:hover:bg-niho-pale/60",
+        )}
+      >
+        {props.thumbnail}
+        <span className="flex w-full min-w-0 items-center gap-1 px-0.5 pb-0.5">
+          <span
+            className={cn(
+              "min-w-0 flex-1 truncate text-xs",
+              props.applied ? "font-black text-niho-accent-ink" : "font-bold text-niho-text-sub",
+            )}
+          >
+            {props.name}
+          </span>
+          {props.applying ? <Spinner size="sm" /> : null}
+        </span>
+      </button>
+      {props.actions ? <div className="absolute right-2 top-2">{props.actions}</div> : null}
+    </li>
+  );
+}
+
+/**
  * 右の面の「プリセット」。同梱のもの（Photo Bench の 4 本。段 2 の wasm を使える画面は crate の 3 本。移行元設計 S7b）と拠点で
  * 取り込んだもの（API）を並べ、押すと選んでいる写真の今の設定に当てる。拠点のものは Lightroom のプリセット（.xmp・.dng）の
  * 取り込みと削除ができる。Lightroom 専用の色の表を使うプリセットは、取り込む前に確かめる。
@@ -233,6 +273,7 @@ function PresetRow(props: {
  * 「なし」、同梱のプリセットは日本語の名前、拠点のプリセットには小見出しを付け、取り込んだプリセットの使えない項目を 1 行で
  * 知らせる。見出しの右は「⋯」のメニュー（今の補正をプリセットに保存・Lightroom のプリセットを取り込む）、拠点のプリセットの行の
  * 右も「⋯」（名前を変更・削除）で、渡されれば行の左に見本（`thumbnails`）、一覧の下に適用量（`belowList`）を置く。
+ * `layout="grid"`（ブラウザ版・Mac アプリ。L4 #53）で見本があれば、一覧をサムネイルの升の 2 列にする（見本が無ければ行のまま）。
  */
 export function PhotoEditingPresetsPanel(props: {
   spotId: string;
@@ -263,6 +304,11 @@ export function PhotoEditingPresetsPanel(props: {
   onPreview?: (preset: PhotoEditingPresetTarget | null) => void;
   /** 行の左の見本（省くと見本の無い行） */
   thumbnails?: PhotoEditingPresetThumbnails;
+  /**
+   * 一覧の形（省くと行。NIHO Desktop の面は行のまま）。`grid` はサムネイルの升の 2 列で、見本（`thumbnails`）を渡したときだけ
+   * 升にする（描けない wasm では行のまま）
+   */
+  layout?: "rows" | "grid";
   /** 一覧の下に置くもの（「適用量」。節を閉じている間は出さない） */
   belowList?: ReactNode;
   /** 「今の補正をプリセットに保存」（省くとメニューの項目を押せない） */
@@ -512,25 +558,38 @@ export function PhotoEditingPresetsPanel(props: {
   const errorTextClassName = "text-niho-danger";
   const onPreview = props.onPreview;
   const thumbnails = props.thumbnails;
-  const thumbnailFor = (key: string, xmp: string | null) =>
-    thumbnails ? <PhotoEditingPresetThumbnail thumbnailKey={key} xmp={xmp} thumbnails={thumbnails} /> : undefined;
+  // 升の 2 列は見本を描けるときだけ（描けない wasm では今の行のまま）
+  const grid = props.layout === "grid" && thumbnails !== undefined;
+  const PresetItem = grid ? PresetTile : PresetRow;
+  const thumbnailFor = (key: string, xmp: string | null, applied: boolean) =>
+    thumbnails ? (
+      <PhotoEditingPresetThumbnail
+        thumbnailKey={key}
+        xmp={xmp}
+        thumbnails={thumbnails}
+        className={grid ? cn(TILE_THUMBNAIL_CLASS_NAME, applied ? "ring-2 ring-niho-accent-ink" : null) : undefined}
+      />
+    ) : undefined;
 
   const presetRow = (
     target: PhotoEditingPresetTarget,
     extras: { actions?: ReactNode } = {},
-  ) => (
-    <PresetRow
-      key={target.key}
-      name={target.name}
-      applied={props.appliedPresetKey === target.key}
-      applying={props.applyingPresetKey === target.key}
-      disabled={rowsDisabled}
-      thumbnail={thumbnailFor(target.key, target.xmp)}
-      onApply={() => props.onApply(target)}
-      actions={extras.actions}
-      onPreviewChange={onPreview ? (previewing) => onPreview(previewing ? target : null) : undefined}
-    />
-  );
+  ) => {
+    const applied = props.appliedPresetKey === target.key;
+    return (
+      <PresetItem
+        key={target.key}
+        name={target.name}
+        applied={applied}
+        applying={props.applyingPresetKey === target.key}
+        disabled={rowsDisabled}
+        thumbnail={thumbnailFor(target.key, target.xmp, applied)}
+        onApply={() => props.onApply(target)}
+        actions={extras.actions}
+        onPreviewChange={onPreview ? (previewing) => onPreview(previewing ? target : null) : undefined}
+      />
+    );
+  };
 
   const fileInput = props.canEdit ? (
     <input
@@ -624,16 +683,23 @@ export function PhotoEditingPresetsPanel(props: {
   );
 
   const skeletonRowClassName = thumbnails ? "h-14" : "h-11";
+  const skeletonItem = grid ? (
+    <li aria-hidden className="space-y-1 p-1">
+      <Skeleton className={cn(TILE_THUMBNAIL_CLASS_NAME, "rounded-lg")} />
+      <Skeleton className="h-4 w-2/3" />
+    </li>
+  ) : (
+    <li aria-hidden>
+      <Skeleton className={skeletonRowClassName} />
+    </li>
+  );
   const builtinSkeleton = builtinPresetsQuery.isPending ? (
     <>
-      <li aria-hidden>
-        <Skeleton className={skeletonRowClassName} />
-      </li>
-      <li aria-hidden>
-        <Skeleton className={skeletonRowClassName} />
-      </li>
+      {skeletonItem}
+      {skeletonItem}
     </>
   ) : null;
+  const listClassName = grid ? "grid grid-cols-2" : "space-y-0.5";
 
   const builtinError = builtinPresetsQuery.isError ? (
     <div className={cn("mt-1 text-xs leading-relaxed", errorTextClassName)} role="alert">
@@ -659,6 +725,7 @@ export function PhotoEditingPresetsPanel(props: {
                 <MoreMenu
                   label={photoEditingPresetRowActionsLabel(preset.name)}
                   onOpenMenu={rememberDialogTrigger}
+                  compact={grid}
                   items={[
                     {
                       key: "rename",
@@ -771,15 +838,15 @@ export function PhotoEditingPresetsPanel(props: {
         <div id={bodyId} hidden={!expanded} className="pb-1">
           {expanded ? (
             <>
-              <ul className="space-y-0.5">
+              <ul className={listClassName}>
                 {none ? (
-                  <PresetRow
+                  <PresetItem
                     name={PHOTO_EDITING_PRESET_NONE_LABEL}
                     applied={props.appliedPresetKey === null}
                     applying={false}
                     disabled={rowsDisabled}
                     locked={!none.canClear}
-                    thumbnail={thumbnailFor(PHOTO_EDITING_PRESET_NONE_THUMBNAIL_KEY, null)}
+                    thumbnail={thumbnailFor(PHOTO_EDITING_PRESET_NONE_THUMBNAIL_KEY, null, props.appliedPresetKey === null)}
                     onApply={none.onClear}
                   />
                 ) : null}
@@ -795,10 +862,13 @@ export function PhotoEditingPresetsPanel(props: {
               {builtinError}
               {spotPresets.length > 0 ? (
                 <>
-                  <h5 id={spotHeadingId} className="mt-2 px-3 pb-1 text-xs font-bold text-niho-text-muted">
+                  <h5
+                    id={spotHeadingId}
+                    className={cn("mt-2 pb-1 text-xs font-bold text-niho-text-muted", grid ? "px-1" : "px-3")}
+                  >
                     {PHOTO_EDITING_SPOT_PRESETS_TITLE}
                   </h5>
-                  <ul aria-labelledby={spotHeadingId} className="space-y-0.5">
+                  <ul aria-labelledby={spotHeadingId} className={listClassName}>
                     {spotRows}
                   </ul>
                 </>
