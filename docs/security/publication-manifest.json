@@ -3501,8 +3501,10 @@
         "path": "apps/camera/src-tauri/src/save.rs",
         "sha256": "9f5ecafc5bf8518c3aea303fabae2a5ede4a959129af6618705d4184119dde87"
       },
-      "outputSha256": "9f5ecafc5bf8518c3aea303fabae2a5ede4a959129af6618705d4184119dde87",
-      "modifications": []
+      "outputSha256": "31fe0ec6d77ddde3c991a03e47d643176fe621d18668a0e44f6f4aefbf0cc692",
+      "modifications": [
+        "共通photo validator導入後も、原本上書き防止テストが有効なJPEG fixtureを使う。"
+      ]
     },
     {
       "path": "apps/camera/src-tauri/src/thumbnail_scheme.rs",
