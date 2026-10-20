@@ -90,6 +90,18 @@ test("未承認binaryとテキスト画像も拒否し、公開可能台帳のex
   await rejected(f, /未登録資産/);
 });
 
+test("所有者作成の小さなRAW fixtureは由来とexact bytesの記録で公開できる", async (t) => {
+  const f = await fixture(t);
+  const name = "packages/example/fixtures/synthetic.rw2";
+  const bytes = Buffer.from([0x49, 0x49, 0x55, 0x00, 0, 0, 0, 0]);
+  await f.put(name, bytes);
+  f.manifest.generatedFiles.push({ path: name, sha256: digest(bytes), origin: "実写真と独立した手作りRW2ヘッダー。個人情報と埋込thumbnailは含まない。" });
+  await f.save();
+  await rejected(f, /公開許可未確認/);
+  await f.put("docs/legal/asset-inventory.csv", `${header}${candidate},${name},${digest(bytes)},${bytes.length},fixture,オーナーが独立作成した合成RAW,由来と不要metadataの不在を確認,独立再配布禁止,公開可能\n`);
+  assert.deepEqual(await f.check(), []);
+});
+
 test("要置換fixtureの元バイト列はrenameでも拒否し、独立合成JSONへ置換できる", async (t) => {
   const f = await fixture(t);
   const original = '{"sample":"unreviewed"}\n';
