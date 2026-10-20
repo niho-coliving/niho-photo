@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import { BrowserPhotoSourceError } from "niho-photo-editing/browser-photo-source";
 import { developEngineManifestPath } from "niho-photo-editing/develop-engine/develop-engine-manifest";
@@ -571,6 +571,22 @@ describe("working copies", () => {
     expect(nextDraft.generation).toBeGreaterThan(secondDraft.generation);
     await expect(fake.library.removeProvisionalDraft!("e-raw", sha("e-raw"), firstDraft.generation)).resolves.toBe(false);
     await expect(fake.library.loadProvisionalDraft!("e-raw", sha("e-raw"))).resolves.toMatchObject({ generation: nextDraft.generation });
+  });
+
+  it("abort直後の同じ写真の再選択はcancel済みjobを待たず、新しいnative要求を出す", async () => {
+    const finish: Array<(bytes: ArrayBuffer) => void> = [];
+    const fake = fakeNative({ interactivePreview: () => new Promise<ArrayBuffer>((resolve) => { finish.push(resolve); }) });
+    const abort = new AbortController();
+    const first = fake.library.loadInteractivePreview!("e-raw", { signal: abort.signal, maxDimension: 1600 });
+    await vi.waitFor(() => expect(finish).toHaveLength(1));
+    abort.abort();
+    const second = fake.library.loadInteractivePreview!("e-raw", { signal: signal(), maxDimension: 1600 });
+    await vi.waitFor(() => expect(finish).toHaveLength(2));
+    finish[1]!(JPEG_HEADER.slice().buffer);
+    await expect(second).resolves.toMatchObject({ width: 2000, height: 1500 });
+    finish[0]!(JPEG_HEADER.slice().buffer);
+    await expect(first).rejects.toMatchObject({ name: "AbortError" });
+    expect(commandsOf(fake.calls).filter((command) => command === "camera_photo_interactive_preview")).toHaveLength(2);
   });
 
   it("cancels the native provisional job when its last consumer switches photos", async () => {

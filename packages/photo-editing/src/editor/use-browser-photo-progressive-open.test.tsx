@@ -470,6 +470,65 @@ describe("useBrowserPhotoOpen progressive RAW integration", () => {
     expect(current.settings.base).toBe(BASE_VERSION);
   });
 
+  it("未解決のpreset適用は旧engineで確定してからcanonicalへ引き継ぐ", async () => {
+    const canonicalFrame = deferred<DevelopFrame | null>();
+    const presetResult = deferred<void>();
+    const provisional = createEngine({ marker: 1 });
+    vi.mocked(provisional.presetSettings).mockImplementation(async (_xmp, base) => {
+      await presetResult.promise;
+      return { converted: true, name: "明るい", unsupported: [], settings: { ...(base ?? neutralDevelopSettings()), contrast: 40 } };
+    });
+    const canonical = createEngine({ marker: 9, render: async (_settings, call) => call === 1 ? canonicalFrame.promise : frame(9) });
+    engineFactory.mockImplementationOnce(() => provisional).mockImplementationOnce(() => canonical);
+    const fixture = createLibrary(async () => readyWork());
+    const target = item("pending-preset");
+    await mount(fixture.library, [target]);
+    await run(() => { void current.openItem(target); });
+    await settleUntil(() => vi.mocked(canonical.render).mock.calls.length === 1, "canonical frame");
+    let applying: Promise<void> | undefined;
+    await run(() => { applying = current.presets.apply({ key: "builtin:bright", name: "明るい", xmp: "<xmp />" }); });
+    await run(() => canonicalFrame.resolve(frame(8)));
+    expect(current.opened?.input?.kind).toBe("provisional");
+    expect(provisional.dispose).not.toHaveBeenCalled();
+    await run(() => presetResult.resolve(undefined));
+    await run(async () => { await applying; });
+    await settleUntil(() => current.opened?.input?.kind === "workingCopy", "pending preset handoff");
+    expect(current.settings).toMatchObject({ base: BASE_VERSION, engine: "niho-7", contrast: 40 });
+    expect(current.presets.appliedPresetKey).toBe("builtin:bright");
+    expect(current.canUndo).toBe(true);
+  });
+
+  it.each(["drag", "commit"] as const)("未解決の適用量 %s もcanonical切替で捨てない", async (phase) => {
+    const canonicalFrame = deferred<DevelopFrame | null>();
+    const amountResult = deferred<void>();
+    const provisional = createEngine({ marker: 1 });
+    vi.mocked(provisional.applyPreset).mockImplementation(async (_xmp, base, amount) => {
+      await amountResult.promise;
+      return { converted: true, name: "明るい", unsupported: [], settings: { ...(base as DevelopSettings), contrast: Math.round(amount * 100) } };
+    });
+    const canonical = createEngine({ marker: 9, render: async (_settings, call) => call === 1 ? canonicalFrame.promise : frame(9) });
+    engineFactory.mockImplementationOnce(() => provisional).mockImplementationOnce(() => canonical);
+    const fixture = createLibrary(async () => readyWork());
+    const target = item(`pending-amount-${phase}`);
+    await mount(fixture.library, [target]);
+    await run(() => { void current.openItem(target); });
+    await settleUntil(() => vi.mocked(canonical.render).mock.calls.length === 1, "canonical frame");
+    await run(() => current.presets.apply({ key: "builtin:bright", name: "明るい", xmp: "<xmp />" }));
+    await run(() => current.presets.changeAmount(65, phase));
+    await run(() => canonicalFrame.resolve(frame(8)));
+    expect(current.opened?.input?.kind).toBe("provisional");
+    await run(() => amountResult.resolve(undefined));
+    await settleUntil(() => current.opened?.input?.kind === "workingCopy", "pending amount handoff");
+    const shown = vi.mocked(canonical.render).mock.calls.at(-1)?.[0] as DevelopSettings;
+    expect(shown).toMatchObject({ base: BASE_VERSION, contrast: 65 });
+    expect(current.presets).toMatchObject({ amount: 65, amountActive: phase === "drag", appliedPresetKey: "builtin:bright" });
+    if (phase === "drag") await run(() => current.presets.changeAmount(65, "commit"));
+    await settleUntil(() => current.presets.amountActive === false, "amount commit");
+    expect(current.settings).toMatchObject({ base: BASE_VERSION, contrast: 65 });
+    await run(() => current.undo());
+    expect(current.settings).toMatchObject({ base: BASE_VERSION, contrast: 40 });
+  });
+
   it("暫定previewを取得できないRAWも正規入力で開き、補正と通常保存を続ける", async () => {
     const canonical = createEngine({ marker: 9 });
     engineFactory.mockReturnValue(canonical);

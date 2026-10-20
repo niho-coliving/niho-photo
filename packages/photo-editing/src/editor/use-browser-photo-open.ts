@@ -802,6 +802,11 @@ export function useBrowserPhotoOpen(params: {
     let display = currentDisplay(source);
     // 描画中に操作が進んだら最新値で描き直す。swap前なのでprovisional frameはそのまま見える。
     for (;;) {
+      // metadataを替える前に、既に受け付けたpreset/量/hoverの結果を旧sessionへ反映する。
+      await presets.waitForPending();
+      if (!isCurrentProvisional()) { discardCandidate(); return false; }
+      source = edit.settingsRef.current;
+      display = currentDisplay(source);
       const rendered = await canonicalEngine
         .render(display.settings, { maxDimension: DEVELOP_PREVIEW_MAX_DIMENSION, interactive: false })
         .catch(() => null);
@@ -821,6 +826,8 @@ export function useBrowserPhotoOpen(params: {
         discardCandidate();
         return false;
       }
+      // flush中に新しい非同期preset入力が来たら、確定とdraft保存を待ってから描き直す。
+      if (presets.hasPending()) continue;
       // flush 待機中にも入力・crop・比較・preset preview は変わり得る。最後の await の後で画面の値を取り直す。
       const latest = edit.settingsRef.current;
       const latestDisplay = currentDisplay(latest);

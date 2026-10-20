@@ -132,6 +132,20 @@ export function useBrowserPhotoPresets(params: {
   /** `(プリセットの key, 土台の編集内容)` ごとの当てた結果（仮の表示の後に押したら、待たずに当たる） */
   const resultCacheRef = useRef(new Map<string, Promise<DevelopPresetResult>>());
 
+  // 切替中も利用者が始めた操作は旧engineで確定させる。見本生成はこの待機へ含めない。
+  const pendingWorkRef = useRef(new Set<Promise<unknown>>());
+  const trackPending = <T,>(work: Promise<T>): Promise<T> => {
+    const tracked: Promise<T> = work.finally(() => pendingWorkRef.current.delete(tracked));
+    pendingWorkRef.current.add(tracked);
+    return tracked;
+  };
+  const waitForPending = useCallback(async () => {
+    while (pendingWorkRef.current.size > 0) {
+      await Promise.allSettled([...pendingWorkRef.current]);
+    }
+  }, []);
+  const hasPending = () => pendingWorkRef.current.size > 0;
+
   const canApply = photoKey !== null && !disabled;
   const previewAllowed = canApply && !dragging && !amountActive && !compareOriginal && applyingPresetKey === null;
   const latestRef = useRef({ photoKey, canApply, previewAllowed, commitEdit });
@@ -205,7 +219,7 @@ export function useBrowserPhotoPresets(params: {
     setPreview({ photoKey: key, name: preset.name, settings: next, forSettingsKey: developSettingsKey(current) });
   };
   const showPreviewRef = useRef(showPreview);
-  showPreviewRef.current = showPreview;
+  showPreviewRef.current = (preset) => trackPending(showPreview(preset));
 
   /**
    * 行にマウスを載せた・キーボードのフォーカスが来た（離れたら null）。少し待ってから仮に見せ、離れたら少し待ってから今の
@@ -473,10 +487,10 @@ export function useBrowserPhotoPresets(params: {
     setAmountActive(true);
     if (phase === "drag") {
       amountWantedRef.current = { selection, amount };
-      void runAmountPreview();
+      void trackPending(runAmountPreview());
       return;
     }
-    void commitAmount(selection, amount);
+    void trackPending(commitAmount(selection, amount));
   };
 
   /** 取り込む前に、段 2 の wasm で読めて当てられるプリセットかを確かめる（読めなければ reject）。 */
@@ -548,7 +562,9 @@ export function useBrowserPhotoPresets(params: {
     applyError,
     /** 「なし」を押せる（選ばれているプリセットがある） */
     canClear: canApply && appliedPresetKey !== null,
-    apply,
+    apply: (preset: PhotoEditingPresetTarget) => trackPending(apply(preset)),
+    waitForPending,
+    hasPending,
     clear,
     reconcileSpotPresetKeys,
     rebaseSettings,

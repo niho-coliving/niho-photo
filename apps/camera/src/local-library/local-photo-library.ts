@@ -553,15 +553,19 @@ export function createLocalPhotoLibrary(commands: CameraCommands, options: Local
       pending = job;
       interactivePreviewJobs.set(key, job);
     }
+    const activeJob = pending;
     const consumer = Symbol();
-    pending.consumers.add(consumer);
+    activeJob.consumers.add(consumer);
     const onAbort = () => {
-      pending?.consumers.delete(consumer);
-      if (pending?.consumers.size === 0) void commands.cancelInteractivePreview(pending.requestId).catch(() => undefined);
+      activeJob.consumers.delete(consumer);
+      if (activeJob.consumers.size === 0) {
+        if (interactivePreviewJobs.get(key) === activeJob) interactivePreviewJobs.delete(key);
+        void commands.cancelInteractivePreview(activeJob.requestId).catch(() => undefined);
+      }
     };
     request.signal.addEventListener("abort", onAbort, { once: true });
     try {
-      const preview = await pending.promise;
+      const preview = await activeJob.promise;
       throwIfAborted(request.signal);
       return {
         photo: openedRow(photoId, handle),
@@ -571,7 +575,7 @@ export function createLocalPhotoLibrary(commands: CameraCommands, options: Local
       };
     } finally {
       request.signal.removeEventListener("abort", onAbort);
-      pending.consumers.delete(consumer);
+      activeJob.consumers.delete(consumer);
     }
   };
 
