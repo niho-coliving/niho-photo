@@ -107,7 +107,9 @@
         presetAt = performance.now();
         presetPaintMs = presetAt - presetInputAt;
         break;
-      } catch {}
+      } catch (error) {
+        if (error instanceof Error && error.message === "paint-not-presented") throw error;
+      }
     }
     if (presetAt === null) throw new Error("preset-frame-missing");
     observations.timeToEditableMs = exposureAt - t0;

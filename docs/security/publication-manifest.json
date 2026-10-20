@@ -8633,13 +8633,13 @@
     },
     {
       "path": "apps/camera/scripts/e2e/progressive-open.js",
-      "sha256": "db54c98900a0e88503ae40dda1a2f95aba1c721d67f96db4656130619b189c73",
-      "origin": "Issue #13のため独立作成した実UI検証probe。専用e2e bundleだけを操作し、実画像・元の名前・path・画像hashを公開出力しない。\n変更理由: 画像情報を含まないE2E待機段階traceを追加。"
+      "sha256": "e58df32fade6f1b5149d3898960652ab353226e7a0ec6d4ba99c62ae49987ee1",
+      "origin": "Issue #13のため独立作成した実UI検証probe。専用e2e bundleだけを操作し、実画像・元の名前・path・画像hashを公開出力しない。\n変更理由: 画像情報を含まないE2E待機段階traceを追加。\n変更理由: 画面未描画の失敗をpreset変化なしへ誤分類しない。"
     },
     {
       "path": "apps/camera/scripts/measure-progressive-open.mjs",
-      "sha256": "189ccf7b8e2a7fd02d2aaae5292fba8116f60cafd6463421036c2ca0be035f3e",
-      "origin": "Issue #13のため独立作成。外から渡した実RAW pathを出力せず、case label、cold/warm条件、許可した区間時間だけを集計する公開ハーネス。実画像・原本名・個人path・画像由来hashを出力しない。\n変更理由: 計測失敗時は非公開のprobe診断を保持して再現調査可能にする。"
+      "sha256": "f191c881f1ece2af58657977e91e484838da5541e11532de04f74a4745971f82",
+      "origin": "Issue #13のため独立作成。外から渡した実RAW pathを出力せず、case label、cold/warm条件、許可した区間時間だけを集計する公開ハーネス。実画像・原本名・個人path・画像由来hashを出力しない。\n変更理由: 計測失敗時は非公開のprobe診断を保持して再現調査可能にする。\n変更理由: 実paintの連続計測中だけmacOSのdisplay idle sleepを抑止し終了時に解除。"
     },
     {
       "path": "apps/camera/scripts/measure-progressive-open.test.mjs",
@@ -8673,8 +8673,8 @@
     },
     {
       "path": "docs/features/progressive-raw-open.md",
-      "sha256": "55fe0caf570efe299d7d1537938282cbe6333f4748ac5a309ed5803e9ec5ad2c",
-      "origin": "Issue #13のため公開SSOT上で独立作成。段階RAW openの契約と合成入力による統合検証。利用者画像・原本名・非公開ソース・認証情報を含まない。"
+      "sha256": "8265cc781075e19dd8aae7a827ed49778ef1397b4557ca4d974869f668756067",
+      "origin": "Issue #13のため公開SSOT上で独立作成。段階RAW openの契約と合成入力による統合検証。利用者画像・原本名・非公開ソース・認証情報を含まない。\n変更理由: 長時間実UI計測のdisplay awake条件と自動解除を明記。"
     },
     {
       "path": "packages/desktop-account/Cargo.lock",

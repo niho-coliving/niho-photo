@@ -126,6 +126,11 @@ function summarize(samples) {
 
 const options = parseArguments(process.argv.slice(2));
 const root = await mkdtemp(join(tmpdir(), "niho-progressive-open-"));
+// UIの実paintを測る間だけ画面を起こしておく。設定は変更せず、親process終了でも解除する。
+const awake = process.platform === "darwin"
+  ? spawn("/usr/bin/caffeinate", ["-d", "-i", "-u", "-t", "3600", "-w", String(process.pid)], { stdio: "ignore" })
+  : null;
+awake?.on("error", () => undefined);
 const measurements = [];
 let completed = false;
 try {
@@ -156,5 +161,6 @@ try {
   process.stdout.write(`${JSON.stringify({ schemaVersion: 1, measurements }, null, 2)}\n`);
   completed = true;
 } finally {
+  awake?.kill("SIGTERM");
   if (completed) await rm(root, { recursive: true, force: true });
 }
