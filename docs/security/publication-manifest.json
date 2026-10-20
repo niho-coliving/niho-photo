@@ -408,8 +408,10 @@
         "path": "apps/camera/src-tauri/src/e2e.rs",
         "sha256": "5edf45fa934cb76e4f913db8f92cdd00bfea0354ded643e64def1dfe7b91c355"
       },
-      "outputSha256": "5edf45fa934cb76e4f913db8f92cdd00bfea0354ded643e64def1dfe7b91c355",
-      "modifications": []
+      "outputSha256": "2a49d52b1eb9168e2c2b162135e9ea4e7af68a34e27ec0dca65054368acfd9e9",
+      "modifications": [
+        "実paint計測だけの明示foregroundモードを追加し、既定の受入窓と配布buildは維持。"
+      ]
     },
     {
       "path": "apps/camera/src-tauri/src/error.rs",
@@ -8652,8 +8654,8 @@
     },
     {
       "path": "apps/camera/scripts/probe-progressive-open.py",
-      "sha256": "ea58468ce4b059be4994d338b5bc938cf108758455446a6b26ab55e910a50e81",
-      "origin": "Issue #13のため独立作成した実UI検証probe。専用e2e bundleだけを操作し、実画像・元の名前・path・画像hashを公開出力しない。\n変更理由: UIの待機段階だけを非公開traceへ残す。\n変更理由: 専用native logから許可した区間の有限な時間だけをprobe集計へ渡す。"
+      "sha256": "5d3435a29ad05ef1c749b88d6bc22ff16dbe198f379948662f733312c046805d",
+      "origin": "Issue #13のため独立作成した実UI検証probe。専用e2e bundleだけを操作し、実画像・元の名前・path・画像hashを公開出力しない。\n変更理由: UIの待機段階だけを非公開traceへ残す。\n変更理由: 専用native logから許可した区間の有限な時間だけをprobe集計へ渡す。\n変更理由: probeごとに試験窓の表示と短いuser-active assertionを保持。"
     },
     {
       "path": "apps/camera/src-tauri/src/account.rs",
@@ -8677,8 +8679,8 @@
     },
     {
       "path": "docs/features/progressive-raw-open.md",
-      "sha256": "7262618fc50dfe75317eeea8cd04e6299c10a4813232c80bb976d26f1bc66a53",
-      "origin": "Issue #13のため公開SSOT上で独立作成。段階RAW openの契約と合成入力による統合検証。利用者画像・原本名・非公開ソース・認証情報を含まない。\n変更理由: 長時間実UI計測のdisplay awake条件と自動解除を明記。\n変更理由: fallbackの遅い回も性能集計へ含める条件を明記。\n変更理由: 未解決のpreset操作を確定してからengineを替える契約を明記。"
+      "sha256": "291c5cdfcb47655092e0feea71292139c75c6f8d6fe590ea82df6283ad37f497",
+      "origin": "Issue #13のため公開SSOT上で独立作成。段階RAW openの契約と合成入力による統合検証。利用者画像・原本名・非公開ソース・認証情報を含まない。\n変更理由: 長時間実UI計測のdisplay awake条件と自動解除を明記。\n変更理由: fallbackの遅い回も性能集計へ含める条件を明記。\n変更理由: 未解決のpreset操作を確定してからengineを替える契約を明記。\n変更理由: 無人の専用Macでforeground計測を行う条件を明記。"
     },
     {
       "path": "packages/desktop-account/Cargo.lock",

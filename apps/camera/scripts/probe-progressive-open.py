@@ -62,7 +62,7 @@ def main():
                if not key.startswith(("APPLE_", "TAURI_SIGNING_", "NIHO_FIREBASE_", "NIHO_ACCOUNT_", "NIHO_CAMERA_E2E_"))}
         env.update(NIHO_CAMERA_E2E_SCRIPT=str(script), NIHO_CAMERA_E2E_REPORT=str(report),
                    NIHO_CAMERA_E2E_TRACE=str(work / "trace.log"),
-                   NIHO_CAMERA_E2E_WINDOW="visible", NIHO_CAMERA_E2E_PICK_PHOTOS=str(source),
+                   NIHO_CAMERA_E2E_WINDOW="foreground", NIHO_CAMERA_E2E_PICK_PHOTOS=str(source),
                    NIHO_APPLE_RAW_LINEAR_PATH=runtime["apple"], NIHO_DEVELOP_RENDER_PATH=runtime["render"],
                    NIHO_DEVELOP_CALIBRATION_DIR=runtime["calibration"], NIHO_CAMERA_SIGNED_RAW="1")
         native_started_ms = int(time.time() * 1000)
@@ -122,7 +122,12 @@ try:
     lock_path = Path.home() / "Library/Caches/niho-photo-raw-benchmark-probe.lock"
     with lock_path.open("w") as lock:
         fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
-        main()
+        activity = subprocess.Popen(["/usr/bin/caffeinate", "-d", "-i", "-u", "-t", "90", "-w", str(os.getpid())],
+                                    stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        try:
+            main()
+        finally:
+            activity.terminate()
 except Exception:
     # 例外文字列には入力pathが入ることがある。公開stdout/stderrへ転送しない。
     print("progressive RAW UI probe failed", file=sys.stderr)

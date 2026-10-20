@@ -82,7 +82,7 @@ fn finish_snapshot<R: Runtime>(webview: &tauri::Webview<R>, name: &str, png: Res
 
 /// 窓を見せるか（既定は見せない）。
 fn window_visible() -> bool {
-  std::env::var("NIHO_CAMERA_E2E_WINDOW").is_ok_and(|value| value == "visible")
+  std::env::var("NIHO_CAMERA_E2E_WINDOW").is_ok_and(|value| matches!(value.as_str(), "visible" | "foreground"))
 }
 
 /// 窓の設定（見えない画面の WebContent を止めない・既定では窓を見せない）。
@@ -90,6 +90,11 @@ pub fn configure<R: Runtime>(context: &mut tauri::Context<R>) {
   let visible = window_visible();
   for window in &mut context.config_mut().app.windows {
     window.background_throttling = Some(BackgroundThrottlingPolicy::Disabled);
+    // 実paintの連続測定だけ明示opt-in。通常のvisible/hidden受入と配布buildには適用しない。
+    if std::env::var("NIHO_CAMERA_E2E_WINDOW").is_ok_and(|value| value == "foreground") {
+      window.always_on_top = true;
+      window.focus = true;
+    }
     if !visible {
       window.visible = false;
       window.focus = false;
