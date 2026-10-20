@@ -8658,8 +8658,8 @@
     },
     {
       "path": "packages/develop-engine/public-ci.json",
-      "sha256": "17a245167152e5b9dd358b067beec364144ed1fd4493796b626cbb9af340039d",
-      "origin": "#9で独立作成。所有測定対・metadataを除いた所有RAW/参照画像、検証tool、公開build/test契約または第三者license全文。詳細はdocs/migration/raw-engine.mdと資産台帳に記録。\n変更理由: Issue #5親レビューに従い形式検査・エラー保持・実decoder公開CI回帰を補強。"
+      "sha256": "037b44592b92776d7de822c5d90c376a3d1d27092ed1b4749434155b64eda8cb",
+      "origin": "#9で独立作成。所有測定対・metadataを除いた所有RAW/参照画像、検証tool、公開build/test契約または第三者license全文。詳細はdocs/migration/raw-engine.mdと資産台帳に記録。\n変更理由: Issue #5親レビューに従い形式検査・エラー保持・実decoder公開CI回帰を補強。\n変更理由: Swift regressionをmacOS 26専用jobへ分離し、macOS 14のnative scopeはRust/WASM検査だけにする。"
     },
     {
       "path": "packages/develop-engine/tools/asset-audit/sanitize_rw2.py",

@@ -15,6 +15,7 @@ test("文書変更でもpublicationはworkflow側で常時実行、package実行
   assert.deepEqual(selected(["packages/ui/src/cn.ts"]), ["photo-editing", "camera", "desktop-photo", "desktop-account"]);
   assert.deepEqual(selected(["packages/niho-cloud-contract/src/v1.ts"]), ["photo-editing"]);
   assert.deepEqual(selected(["packages/develop-engine/core.rs"]), ["camera", "desktop-photo", "develop-engine"]);
+  assert.equal(selectScopes(["packages/develop-engine/core.rs"], all).find((s) => s.scope === "develop-engine").swift, true);
   assert.deepEqual(selected(["apps/camera/src-tauri/main.rs"]), ["camera"]);
   assert.deepEqual(selected(["packages/desktop-account/login.ts"]), ["camera", "desktop-photo", "desktop-account"]);
   for (const name of [".github/workflows/public-ci.yml", "scripts/ci/scopes.mjs", "package-lock.json", "docs/security/publication-manifest.json"]) assert.equal(selected([name]).length, 5);
@@ -75,14 +76,18 @@ test("desktop-accountはTSとRustの両方を検査する", async (t) => {
 });
 
 test("aggregateは想定外skip、失敗、取消を拒否する", () => {
-  const needs = Object.fromEntries(["plan", "publication", "secrets", "dependencies", "photo-editing", "native"].map((name) => [name, { result: "success" }]));
-  needs.plan.outputs = { "photo-editing": "true", "has-native": "true" };
+  const needs = Object.fromEntries(["plan", "publication", "secrets", "dependencies", "photo-editing", "native", "swift"].map((name) => [name, { result: "success" }]));
+  needs.plan.outputs = { "photo-editing": "true", "has-native": "true", "has-swift": "true" };
   const script = fileURLToPath(new URL("./aggregate.mjs", import.meta.url));
   const run = () => spawnSync(process.execPath, [script], { env: { ...process.env, GITHUB_EVENT_NAME: "pull_request", CI_NEEDS: JSON.stringify(needs) }, encoding: "utf8" }).status;
   assert.equal(run(), 0);
   for (const result of ["skipped", "failure", "cancelled"]) { needs.native.result = result; assert.equal(run(), 1); }
   needs.native.result = "skipped";
   needs.plan.outputs["has-native"] = "false";
+  needs.swift.result = "failure";
+  assert.equal(run(), 1);
+  needs.swift.result = "skipped";
+  needs.plan.outputs["has-swift"] = "false";
   assert.equal(run(), 0);
 });
 
@@ -93,5 +98,5 @@ test("現像の公開CIは固定toolchain・実RAW・fit再生成・WASM parity�
   assert.ok(commands.some(([command,args]) => command === "python3" && args.includes("packages/develop-engine/tools/independent-profile/check.py")));
   assert.ok(commands.some(([command,args]) => command === "cargo" && args.includes("build") && args.includes("wasm32-unknown-unknown")));
   assert.ok(commands.some(([command,args]) => command === "cargo" && args.includes("test") && args.includes("niho7_cross_target")));
-  assert.ok(commands.some(([command,args]) => command === "swift" && args.includes("packages/develop-engine/tools/apple-raw-linear")));
+  assert.equal(commands.some(([command]) => command === "swift"), false, "SwiftはmacOS 26の専用jobで実行する");
 });
