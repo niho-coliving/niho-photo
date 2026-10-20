@@ -13,6 +13,7 @@ import { neutralDevelopSettings, type DevelopSettings } from "./develop-engine/d
 import {
   canSwapCropAspect,
   cropArrowDirection,
+  cropAspectLabel,
   cropAspectOf,
   cropExportLimitLongEdge,
   cropFrameDevelopSettings,
@@ -47,6 +48,14 @@ describe("縦横比のチップ", () => {
     expect(isCropAspectSelected("4:5", "4:5")).toBe(true);
     expect(isCropAspectSelected("4:5", "3:4")).toBe(false);
     expect(isCropAspectSelected("free", "original")).toBe(false);
+  });
+
+  it("メニューのボタンの名前は今の向きの比率（入れ替えた元の比率は「元の比率」）", () => {
+    expect(cropAspectLabel("original")).toBe("元の比率");
+    expect(cropAspectLabel("originalSwapped")).toBe("元の比率");
+    expect(cropAspectLabel("free")).toBe("自由");
+    expect(cropAspectLabel("4:5")).toBe("4:5");
+    expect(cropAspectLabel("5:4")).toBe("5:4");
   });
 
   it("「自由」と「1:1」は縦横を入れ替えられない", () => {

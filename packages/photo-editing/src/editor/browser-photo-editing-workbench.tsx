@@ -867,6 +867,9 @@ export function BrowserPhotoEditingWorkbench(props: {
     gridRef.current?.revealKey(targetKey, { focus: true });
   };
 
+  // 1 枚の編集のキー（`useBrowserPhotoEditingKeys`）を聞いている（PC で補正を開けている。書き出しのシート・操作中は聞かない）
+  const editingKeysEnabled = props.active && wide && !controlsDisabled && !exportSheetOpen;
+
   // Esc（シート → 1 枚 → 一覧の選択）・Enter・← →・⌫ / Delete・G / E。設定サブタブで隠している間は効かせない
   usePhotoEditingShortcuts({
     rootRef,
@@ -895,6 +898,9 @@ export function BrowserPhotoEditingWorkbench(props: {
           void openItem(selectedItem);
           return;
         case "escape":
+          // PC で 1 枚の編集のキーを聞いている間の切り抜きの Esc は［キャンセル］（`useBrowserPhotoEditingKeys` の
+          // `onCropCancel` が入ったときの幾何に戻して「補正」へ戻す。ここでは扱わない）
+          if (viewModeRef.current === "loupe" && cropping && editingKeysEnabled) return;
           event.preventDefault();
           // 切り抜き・背景除去の間は「補正」に戻る（もう一度で一覧へ。一覧では選択をすべて解く）
           if (viewModeRef.current === "loupe" && cropping) crop.leave();
@@ -946,10 +952,10 @@ export function BrowserPhotoEditingWorkbench(props: {
   // 開いている間・操作中・設定サブタブで隠している間は効かせない）。R で「補正 / 切り抜き」を切り替える（切り抜きの間は補正前を
   // 見せない）
   // 背景除去の間（C4 移行元設計）は ⌘Z / ⇧⌘Z が背景除去の履歴に効き、補正前・コピー / 貼り付けは効かない。R は「切り抜き」と「補正」を
-  // 行き来する（背景除去の間に押すと「切り抜き」へ）
+  // 行き来する（背景除去の間に押すと「切り抜き」へ）。切り抜きの間は Enter =［完了］・Esc =［キャンセル］（#52）
   useBrowserPhotoEditingKeys({
     rootRef,
-    enabled: props.active && wide && !controlsDisabled && !exportSheetOpen,
+    enabled: editingKeysEnabled,
     clipboardEnabled:
       props.active &&
       wide &&
@@ -971,6 +977,9 @@ export function BrowserPhotoEditingWorkbench(props: {
         ? () => chooseTool(toolValue === "crop" ? "adjust" : "crop")
         : crop.toggle
       : null,
+    // 切り抜きの間の Enter =［完了］・Esc =［キャンセル］（#52）
+    onCropDone: cropping ? crop.leave : null,
+    onCropCancel: cropping ? crop.cancel : null,
   });
 
   // 写真を足す操作（見出しの「＋」と空状態の主ボタンで同じ）。ブラウザはファイル選択。NIHO Desktop の口（K2 移行元設計）があれば、
@@ -1971,6 +1980,8 @@ export function BrowserPhotoEditingWorkbench(props: {
                   exportLongEdge={crop.exportLongEdge}
                   onLiveAngleChange={crop.setLiveAngle}
                   onCommit={crop.commit}
+                  onDone={crop.leave}
+                  onCancel={crop.cancel}
                 />
               ) : cropBlocked ? (
                 <p className="pt-1 text-xs leading-relaxed text-niho-text-sub">{PHOTO_EDITING_CROP_BLOCKED_BY_CUTOUT_TEXT}</p>
