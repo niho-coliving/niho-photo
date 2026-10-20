@@ -31,6 +31,23 @@ describe("resolveBrowserPhotoEditingKey", () => {
     expect(resolveBrowserPhotoEditingKey(keyEvent({ key: "x", metaKey: true, shiftKey: true }), { typing: false })).toBeNull();
   });
 
+  it("Enter は切り抜きの［完了］、Esc は［キャンセル］（⇧Enter・修飾キーつきは扱わない）", () => {
+    expect(resolveBrowserPhotoEditingKey(keyEvent({ key: "Enter" }), { typing: false })).toBe("cropDone");
+    expect(resolveBrowserPhotoEditingKey(keyEvent({ key: "Escape" }), { typing: false })).toBe("cropCancel");
+    expect(resolveBrowserPhotoEditingKey(keyEvent({ key: "Enter", shiftKey: true }), { typing: false })).toBeNull();
+    expect(resolveBrowserPhotoEditingKey(keyEvent({ key: "Enter", metaKey: true }), { typing: false })).toBeNull();
+    expect(resolveBrowserPhotoEditingKey(keyEvent({ key: "Enter", altKey: true }), { typing: false })).toBeNull();
+    expect(resolveBrowserPhotoEditingKey(keyEvent({ key: "Escape", ctrlKey: true }), { typing: false })).toBeNull();
+    // 文字を打つ欄（角度の値の入力など）・IME の変換中・ほかが扱った Enter / Esc は扱わない
+    expect(resolveBrowserPhotoEditingKey(keyEvent({ key: "Enter" }), { typing: true })).toBeNull();
+    expect(resolveBrowserPhotoEditingKey(keyEvent({ key: "Enter", isComposing: true }), { typing: false })).toBeNull();
+    expect(resolveBrowserPhotoEditingKey(keyEvent({ key: "Escape", defaultPrevented: true }), { typing: false })).toBeNull();
+    // R はこれまでどおり（⌥R は扱わない）
+    expect(resolveBrowserPhotoEditingKey(keyEvent({ key: "r" }), { typing: false })).toBe("tool");
+    expect(resolveBrowserPhotoEditingKey(keyEvent({ key: "R", shiftKey: true }), { typing: false })).toBe("tool");
+    expect(resolveBrowserPhotoEditingKey(keyEvent({ key: "r", altKey: true }), { typing: false })).toBeNull();
+  });
+
   it("\\ と ¥ は補正前。文字を打つ欄・IME の変換中・ほかが扱ったキーは扱わない", () => {
     expect(resolveBrowserPhotoEditingKey(keyEvent({ key: "\\" }), { typing: false })).toBe("compare");
     expect(resolveBrowserPhotoEditingKey(keyEvent({ key: "¥" }), { typing: false })).toBe("compare");
