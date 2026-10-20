@@ -26,7 +26,11 @@ NIHO photo のローカルライブラリは、フォルダと個別に選んだ
 
 ## 永続化と失敗
 
-ネイティブpickerは複数選択で、共有の `PHOTO_FILE_EXTENSIONS` だけを候補にします。選んだパスはcanonicalizeし、隠しファイル、無いファイル、通常ファイルでないもの、対象外形式を除きます。有効な写真が一部あればそれだけを残します。選択があったのに全て無効なら、パスを含まない日本語のエラーを返します。
+ネイティブpickerは複数選択で、`packages/desktop-photo/src/capabilities.rs` の能力レジストリから生成した `PHOTO_FILE_EXTENSIONS` だけを候補にします。フォルダ走査の候補とpickerの候補は同じレジストリを使い、大文字・小文字を区別しません。選んだパスはcanonicalizeし、隠しファイル、無いファイル、通常ファイルでないもの、対象外形式を除きます。有効な写真が一部あればそれだけを残します。選択があったのに全て無効なら、パスを含まない日本語のエラーを返します。
+
+一覧走査では全写真をdecodeせず、拡張子とファイルmetadataだけを読みます。写真をopen、thumbnail、metadata読取、原寸renderに使うときは、同じvalidatorが拡張子、magic bytes、対応段階を確認します。macOS ImageIOが実データのUTTypeを返したラスタは申告拡張子とも照合します。JPEG/PNG/HEIC/HEIF/TIFFを装った別形式、RW2を装った別形式、空・短すぎる入力は、処理段階が分かる日本語の失敗になります。未知のRAWをTIFFとして推測しません。
+
+iCloud DriveやFinder連携の同期ストレージで未ダウンロードを示すフラグがあるファイルは、読み始めず `downloadRequired` を返します。読取開始時に同期providerが待機・timeoutを返した場合も同じ扱いにし、Finderでダウンロードしてから再試行するよう案内します。`formatMismatch`、`downloadRequired`、`unsupportedFormat` を含むnativeの `code` と `message` はTS adapterで置き換えず画面へ渡し、パス・ファイル名・個体metadataはログへ残しません。
 
 参照は既存の `RememberedStore` に保存し、既定で最大2,000件です。保存失敗時も、上限内の参照をその起動中に保持し、次の一覧読み直しで失いません。一度の選択で上限を超えた場合も追加APIは有効な写真をすべて返し、後から再表示する参照だけを上限まで残します。元メディアが消えた場合はセッション・保存済みのどちらからも一覧に出しません。
 
@@ -50,4 +54,13 @@ Macアプリの権限 `allow-camera-library` は、次の7コマンドだけを�
 
 `e2e` featureのビルドだけは `NIHO_CAMERA_E2E_PICK_PHOTOS` を読み、`std::env::split_paths` で複数のネイティブパスに分けます。変数が無い場合はcancelとして扱います。通常の製品ビルドには環境変数を読む分岐自体がコンパイルされません。
 
-実機のネイティブpicker、署名済みDMG、実メディアの一連操作はCIだけでは受け入れ完了になりません。公式配布工程で、複数選択、cancel、対象外を混ぜた選択、再起動後の復元、外部メディア取り外し、参照を外した後も元ファイルと補正が残ることを確認します。RAW現像エンジンの導入・受け入れは別の移行範囲です。
+2026-10-20時点の受入状況は次のとおりです。CIで通る合成入力をprovider実機の完了証拠へ読み替えません。
+
+| 経路 | 現状 | 残る制約・実機確認 |
+| --- | --- | --- |
+| ローカル通常ファイル | 公開macOS CIでメモリ生成したPNG/JPEG/TIFF/HEICをフォルダ追加・個別写真追加の両方からImageIOで検査 | native pickerの複数選択、cancel、対象外混在は署名済みappで未確認 |
+| iCloud Drive | dataless/offline flagとtimeoutを `downloadRequired` へ変換する実装、段階別code/messageのunit testまで | 未取得表示、Finderでのダウンロード、再試行復帰を実アカウントで未確認 |
+| Google Drive for desktop | 同期providerに依存しないtimeout/error契約まで | provider固有のplaceholder属性、未取得からの復帰、再起動後の参照復元を実機で未確認 |
+| 外部メディア | 参照先消失時に一覧から外し、戻れば再表示するfilesystem testまで | SD/USBの取り外し中の画面、再接続、補正保持を署名済みappで未確認 |
+
+公式配布工程で、上表の未確認項目に加え、参照を外した後も元ファイルと補正が残ることを確認します。RAW現像エンジンの実RW2受入は公開CIのdevelop-engine scopeで常時実行し、OSのRAW対応機種全体の保証とは分けます。

@@ -338,10 +338,33 @@ final class RasterTests: XCTestCase {
         assertClose(pixel(try pixels(outURL, in: sRGB), 20, 15), expected, tolerance: 3)
     }
 
+    func testPNGJPEGAndTIFFRunThroughTheirActualImageIOTypes() throws {
+        let image = try makeImage(width: 32, height: 24, space: sRGB) { x, y in
+            [Double(x) / 31, Double(y) / 23, 0.35]
+        }
+        let formats: [(UTType, String)] = [(.png, "PnG"), (.jpeg, "JpEg"), (.tiff, "TiFf")]
+
+        for (type, extensionCase) in formats {
+            let input = try write(image, type: type, name: "source-\(type.identifier).\(extensionCase)")
+            let source = try XCTUnwrap(CGImageSourceCreateWithURL(input as CFURL, nil))
+            XCTAssertEqual(CGImageSourceGetType(source) as String?, type.identifier)
+
+            let output = directory.appendingPathComponent("working-\(extensionCase).jpg")
+            let json = try run(RasterOptions(input: input.path, out: output.path))
+            XCTAssertEqual(json["width"] as? Int, 32)
+            XCTAssertEqual(json["height"] as? Int, 24)
+            XCTAssertEqual(json["orientationApplied"] as? Bool, false)
+            try assertICCOnlyJPEG(output, icc: false)
+            let expected = pixel(try pixels(input, in: sRGB), 16, 12)
+            assertClose(pixel(try pixels(output, in: sRGB), 16, 12), expected, tolerance: 5, type.identifier)
+        }
+    }
+
     func testHEICKeepsItsICCAndIsUpright() throws {
         let types = CGImageDestinationCopyTypeIdentifiers() as? [String] ?? []
         guard types.contains(UTType.heic.identifier) else {
-            throw XCTSkip("this Mac has no HEIC encoder")
+            XCTFail("unsupported capability: this CI Mac has no HEIC encoder")
+            return
         }
         let image = try makeImage(width: 96, height: 64, space: displayP3) { x, y in
             x < 12 && y < 12 ? [0.95, 0.1, 0.05] : [0.3, 0.5, 0.7]
@@ -349,6 +372,8 @@ final class RasterTests: XCTestCase {
         var metadata = privateMetadata
         metadata[kCGImagePropertyOrientation as String] = 6
         let input = try write(image, type: .heic, name: "photo.heic", properties: metadata)
+        let source = try XCTUnwrap(CGImageSourceCreateWithURL(input as CFURL, nil))
+        XCTAssertEqual(CGImageSourceGetType(source) as String?, UTType.heic.identifier)
         let sourceProperties = try properties(input)
         XCTAssertEqual(sourceProperties[kCGImagePropertyOrientation as String] as? Int, 6)
 

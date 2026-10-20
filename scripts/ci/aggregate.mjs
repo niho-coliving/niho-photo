@@ -7,6 +7,7 @@ try {
     dependencies: process.env.GITHUB_EVENT_NAME === "pull_request" ? "success" : "skipped",
     "photo-editing": needs.plan.outputs["photo-editing"] === "true" ? "success" : "skipped",
     native: needs.plan.outputs["has-native"] === "true" ? "success" : "skipped",
+    swift: needs.plan.outputs["has-swift"] === "true" ? "success" : "skipped",
   };
   const failed = Object.entries(expected).filter(([job, result]) => needs[job]?.result !== result);
   if (failed.length) throw new Error();
