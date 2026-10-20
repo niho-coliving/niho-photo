@@ -45,14 +45,24 @@ test("rejects path traversal, duplicate targets, and divergent contract bytes", 
 test("requires publication provenance to use the same Docs SHA and file mapping", () => {
   const manifest = { schemaVersion: 1, repository: "niho-coliving/niho-docs", commit, files: [{ source: "packages/niho-cloud-contract/src/v1.ts", target: "packages/niho-cloud-contract/src/v1.ts" }] };
   const publication = {
-    externalSources: [{ repository: "niho-docs", commit }],
+    externalSources: [{ repository: "niho-coliving/niho-docs", commit }],
     importedFiles: [{
       path: manifest.files[0].target,
-      source: { repository: "niho-docs", commit, path: manifest.files[0].source, sha256: "a".repeat(64) },
+      source: { repository: "niho-coliving/niho-docs", commit, path: manifest.files[0].source, sha256: "a".repeat(64) },
       outputSha256: "a".repeat(64),
     }],
   };
   assert.equal(validatePublicationSources(manifest, publication), true);
+  publication.externalSources.push({ repository: "attacker/repo", commit });
+  assert.throws(() => validatePublicationSources(manifest, publication));
+  publication.externalSources.pop();
+  publication.importedFiles.push({
+    path: "packages/niho-cloud-contract/src/extra.ts",
+    source: { repository: "niho-coliving/niho-docs", commit, path: "packages/niho-cloud-contract/src/extra.ts", sha256: "b".repeat(64) },
+    outputSha256: "b".repeat(64),
+  });
+  assert.throws(() => validatePublicationSources(manifest, publication));
+  publication.importedFiles.pop();
   publication.externalSources[0].commit = "b".repeat(40);
   assert.throws(() => validatePublicationSources(manifest, publication));
 });

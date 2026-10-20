@@ -29,14 +29,22 @@ export function validateSyncManifest(manifest) {
 
 export function validatePublicationSources(syncManifest, publicationManifest) {
   const external = publicationManifest?.externalSources;
-  if (!Array.isArray(external) || !external.some((item) => item.repository === "niho-docs" && item.commit === syncManifest.commit)) throw new Error("external source mismatch");
+  if (
+    !Array.isArray(external)
+    || external.length !== 1
+    || external[0]?.repository !== syncManifest.repository
+    || external[0]?.commit !== syncManifest.commit
+  ) throw new Error("external source mismatch");
   const importedFiles = publicationManifest.importedFiles;
   if (!Array.isArray(importedFiles)) throw new Error("import manifest missing");
+  const externalImports = importedFiles.filter((item) => item.source?.repository === syncManifest.repository);
+  if (externalImports.length !== syncManifest.files.length) throw new Error("external import set mismatch");
   for (const { source, target } of syncManifest.files) {
-    const entry = importedFiles.find((item) => item.path === target);
+    const matches = externalImports.filter((item) => item.path === target);
+    const entry = matches.length === 1 ? matches[0] : undefined;
     if (
       !entry
-      || entry.source?.repository !== "niho-docs"
+      || entry.source?.repository !== syncManifest.repository
       || entry.source?.commit !== syncManifest.commit
       || entry.source?.path !== source
       || !/^[a-f0-9]{64}$/.test(entry.source?.sha256 ?? "")
