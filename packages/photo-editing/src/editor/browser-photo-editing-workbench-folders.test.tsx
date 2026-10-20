@@ -35,8 +35,9 @@ import type {
 } from "../library/photo-library";
 import { PhotoLibraryProvider, type PhotoEditingHost } from "../library/photo-library-context";
 import { getPhotoEditingBreadcrumbSnapshot } from "../photo-editing-breadcrumb-store";
+import { createCloudMockClient } from "../cloud-sharing-contract";
 
-import { BrowserPhotoEditingWorkbench } from "./browser-photo-editing-workbench";
+import { BrowserPhotoEditingWorkbench, type BrowserPhotoCloudSharingBinding } from "./browser-photo-editing-workbench";
 import { browserPhotoLastFolderStorageKey } from "./use-browser-photo-folders";
 
 (globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
@@ -205,8 +206,10 @@ async function settle() {
 }
 
 type WorkbenchExtraProps = Partial<Parameters<typeof BrowserPhotoEditingWorkbench>[0]>;
+type WorkbenchRenderOptions = WorkbenchExtraProps | BrowserPhotoCloudSharingBinding;
 
-async function render(library: PhotoLibrary, extra: WorkbenchExtraProps = {}) {
+async function render(library: PhotoLibrary, options: WorkbenchRenderOptions = {}) {
+  const extra: WorkbenchExtraProps = "client" in options ? { cloudSharing: options } : options;
   await act(async () => {
     root.render(
       <QueryClientProvider client={client}>
@@ -642,5 +645,35 @@ describe("クラウドの写真の出どころ", () => {
     expect(query).toMatchObject({ hasOriginal: true });
     expect(query).not.toHaveProperty("folderId");
     expect(getPhotoEditingBreadcrumbSnapshot()?.map((item) => item.label)).toEqual(["クラウド", "写真"]);
+    // Optional trusted host binding が無い production boundary では共有能力を見せない。
+    expect(Array.from(container.querySelectorAll("button")).some((button) => button.textContent === "共有")).toBe(false);
+  });
+
+  it("trusted host binding を明示したときだけ、選んだクラウド写真に共有操作を出す", async () => {
+    const fake = fakeLibrary({ place: "cloud", cloudPhotos: [photo("c1", "CLOUD.JPG")] });
+    const cloudSharing: BrowserPhotoCloudSharingBinding = {
+      client: createCloudMockClient(),
+      access: "unavailable",
+      selectResource: () => ({
+        resourceType: "photo",
+        resourceId: "server-photo-c1",
+        ownerType: "user",
+        ownerId: "server-owner",
+        tenantId: "server-tenant",
+        workspaceId: null,
+      }),
+    };
+    await render(fake.library, cloudSharing);
+    await click(tile("CLOUD.JPG"));
+    const shareButton = Array.from(container.querySelectorAll<HTMLButtonElement>("button")).find(
+      (candidate) => candidate.textContent === "共有",
+    );
+    expect(shareButton?.disabled).toBe(true);
+
+    await render(fake.library, { ...cloudSharing, access: "available" });
+    const enabledShareButton = Array.from(container.querySelectorAll<HTMLButtonElement>("button")).find(
+      (candidate) => candidate.textContent === "共有",
+    );
+    expect(enabledShareButton?.disabled).toBe(false);
   });
 });
