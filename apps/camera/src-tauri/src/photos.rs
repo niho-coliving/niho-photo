@@ -22,7 +22,7 @@ use serde_json::{json, Value};
 use std::collections::{HashMap, HashSet, VecDeque};
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex, MutexGuard};
-use std::time::{Duration, SystemTime, UNIX_EPOCH};
+use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 use tauri::Manager;
 
 /// 一度に開ける写真の数（一覧で選んだ写真をまとめて開く・書き出す）。
@@ -123,14 +123,26 @@ impl CameraPhotos {
   }
 
   /// 写真を開く（中身の SHA-256 を読む）。ふつうのファイルでない・読めないときは Err。
+  #[cfg(test)]
   pub fn open(&self, entry_id: &str, path: &Path) -> Result<(String, OpenedPhoto), CameraError> {
+    self.open_measured(entry_id, path, |_| {})
+  }
+
+  fn open_measured(
+    &self,
+    entry_id: &str,
+    path: &Path,
+    hashed: impl FnOnce(Duration),
+  ) -> Result<(String, OpenedPhoto), CameraError> {
     let unreadable = || CameraError::new(code::NOT_FOUND, PHOTO_UNREADABLE_MESSAGE);
     let metadata = std::fs::metadata(path).map_err(|_| unreadable())?;
     if !metadata.is_file() {
       return Err(unreadable());
     }
     validate_photo(path, CapabilityStage::Decoder).map_err(CameraError::from)?;
+    let started = Instant::now();
     let digest = content_digest(path).map_err(|_| unreadable())?;
+    hashed(started.elapsed());
     let photo = OpenedPhoto {
       entry_id: entry_id.to_string(),
       path: path.to_path_buf(),
@@ -385,6 +397,7 @@ pub async fn camera_photo_open(app: tauri::AppHandle, request: Option<Value>) ->
   let library = library(&app)?;
   let photos = photos(&app)?;
   let develop = crate::develop::develop(&app).ok();
+  let log = crate::app_log::log_fn(&app);
   run_blocking(move || {
     let mut opened = Vec::new();
     let mut failed = Vec::new();
@@ -392,7 +405,14 @@ pub async fn camera_photo_open(app: tauri::AppHandle, request: Option<Value>) ->
       let result = listed
         .path
         .ok_or_else(|| PageError::new(code::NOT_FOUND, LISTED_PHOTO_NOT_FOUND_MESSAGE).into())
-        .and_then(|path| photos.open(&listed.entry_id, &path));
+        .and_then(|path| {
+          photos.open_measured(&listed.entry_id, &path, |elapsed| {
+            log(
+              "camera.photo_stage",
+              json!({ "stage": "nativeHash", "elapsedMs": elapsed.as_secs_f64() * 1000.0 }),
+            );
+          })
+        });
       match result {
         Ok((photo_id, photo)) => {
           let native_export = develop

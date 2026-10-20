@@ -77,6 +77,7 @@ const WORKING_COPY_UNREADABLE = "fetch_failed";
 const DEVELOP_STATUS_RETRY_MS = 400;
 const DEVELOP_STATUS_ATTEMPTS = 3;
 const INTERACTIVE_PREVIEW_CACHE_LIMIT = 3;
+let provisionalDraftGeneration = 0;
 const PROVISIONAL_DRAFT_PREFIX = "niho-photo:provisional-draft:v1:";
 
 /** 何もできない値（読めるまで・読めなかったとき。fail closed）。 */
@@ -326,9 +327,10 @@ function writeProvisionalDraft(contentSha256: string, settings: DevelopSettings,
   const draft = {
     contentSha256,
     settings,
-    generation: (previous?.generation ?? 0) + 1,
+    generation: Math.max(previous?.generation ?? 0, provisionalDraftGeneration) + 1,
     updatedAt: now.toISOString(),
   } satisfies PhotoLibraryProvisionalDraft;
+  provisionalDraftGeneration = draft.generation;
   try {
     window.localStorage.setItem(provisionalDraftKey(contentSha256), JSON.stringify({ schemaVersion: 1, ...draft }));
   } catch {
@@ -508,7 +510,7 @@ export function createLocalPhotoLibrary(commands: CameraCommands, options: Local
     if (request.maxDimension < 1280 || request.maxDimension > 2048) {
       throw new CameraCommandError("invalidRequest", "写真を読み込み直してください。");
     }
-    const handle = await handleOf(photoId);
+    const handle = await reopen(photoId);
     throwIfAborted(request.signal);
     const key = `${handle.contentSha256}:${request.maxDimension}`;
     const cached = interactivePreviews.get(key);

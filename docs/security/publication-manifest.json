@@ -1568,13 +1568,17 @@
         "path": "packages/photo-editing/src/editor/use-browser-photo-open.ts",
         "sha256": "2755ea206c0fe9edc8df05ff40d78326310449cb9d509e75a291fdc3822a1d2e"
       },
-      "outputSha256": "f546ead7866d7f5e79614a77c641824b5bfc60e26e1d8c55496ea10287a71263",
+      "outputSha256": "46717eb5db1189319bb0524424086d8315c2f243e694408970027dbe0acb19db",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
         "Issue #13の段階表示、provisional draft、canonical handoffと書き出し境界を実装。",
         "Issue 13 progressive RAW open implementation",
-        "Issue 13 review fixes and preview deadline cancellation"
+        "Issue 13 review fixes and preview deadline cancellation",
+        "Issue 13 review: canonical handoff世代・表示設定・旧engine frame遮断を修正",
+        "Issue 13 Studio初回typecheckのnarrowing不備を修正",
+        "Issue 13 retry outcomeのstale判定位置を修正",
+        "Issue #13の段階RAW open、競合回帰、匿名の区間計測を追加。正規producerの数式と成果物は維持。"
       ]
     },
     {
@@ -3478,11 +3482,12 @@
         "path": "apps/camera/src-tauri/src/photos.rs",
         "sha256": "c4a821c9654687fc6f2ab7304d9d7e1b3d8baeb3b5245b12816408bb405b7090"
       },
-      "outputSha256": "5fa3e601d45944346312d1a61117f90c4e8c5ccc7e8f424318426b260408da75",
+      "outputSha256": "49d9f6d946eb852b0664ac852d4f3c7e76d188e1b49c78e029359384f7d57089",
       "modifications": [
         "Issue #5の共有入力能力レジストリ、段階別検証、公開回帰契約に合わせて更新。",
         "Issue #5親レビューに従い形式検査・エラー保持・実decoder公開CI回帰を補強。",
-        "存在しない写真は形式判定より先にnotFoundを返し、従来のエラー契約を保つ。"
+        "存在しない写真は形式判定より先にnotFoundを返し、従来のエラー契約を保つ。",
+        "Issue #13の段階RAW open、競合回帰、匿名の区間計測を追加。正規producerの数式と成果物は維持。"
       ]
     },
     {
@@ -3731,13 +3736,16 @@
         "path": "apps/camera/src/local-library/local-photo-library.test.ts",
         "sha256": "e86937a17a1b2655448cdcf9d43313df2d5b53c37ec16172b6eaa81371d4e1aa"
       },
-      "outputSha256": "63b36dae8011eceefe21fa2d3a7c75f0f3e0b49f134a6ba7428771b7eefa78aa",
+      "outputSha256": "322e4d09c0655a81379285fe0df6798faf53537f471d627cd208e65100adb22a",
       "modifications": [
         "個別写真の追加・件数・一覧・参照削除を不透明なentryIdの既存経路へ接続 / 選択写真取得の専用IPC経路をテスト。",
         "Issue #5親レビューに従い形式検査・エラー保持・実decoder公開CI回帰を補強。",
         "Issue #13の段階表示、provisional draft、canonical handoffと書き出し境界を実装。",
         "Issue 13 progressive RAW open implementation",
-        "Issue 13 review fixes and preview deadline cancellation"
+        "Issue 13 review fixes and preview deadline cancellation",
+        "Issue 13 native preview開始後abortの同期を明示してcancel回帰を安定化",
+        "Issue 13 cancel fixtureのresolver型をstrict typecheck対応",
+        "Issue #13の段階RAW open、競合回帰、匿名の区間計測を追加。正規producerの数式と成果物は維持。"
       ]
     },
     {
@@ -3748,13 +3756,14 @@
         "path": "apps/camera/src/local-library/local-photo-library.ts",
         "sha256": "bda72efc4c68731a2695be4906aedba55368d065dafbad6d577906ffa8441ed8"
       },
-      "outputSha256": "c77abde457cf94d843ff94aa6843add24e9e46e097b7dc9fe49b6531ba4e2437",
+      "outputSha256": "0618e70d86e31b301f1ea8ca539a4c7370b9e175154c62536eac76bf5d6910b4",
       "modifications": [
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
         "個別写真の追加・件数・一覧・参照削除を不透明なentryIdの既存経路へ接続 / 選択写真一覧でフォルダ再走査commandを呼ばない。",
         "Issue #5親レビューに従い形式検査・エラー保持・実decoder公開CI回帰を補強。",
         "Issue #13の段階表示、provisional draft、canonical handoffと書き出し境界を実装。",
-        "Issue 13 progressive RAW open implementation"
+        "Issue 13 progressive RAW open implementation",
+        "Issue #13の段階RAW open、競合回帰、匿名の区間計測を追加。正規producerの数式と成果物は維持。"
       ]
     },
     {
@@ -3902,11 +3911,12 @@
         "path": "packages/desktop-photo/src/develop.rs",
         "sha256": "7f13c1e41e82bf4bc91bef5e4a8b61f092ab0b986a6a95c5559c2246bb74d864"
       },
-      "outputSha256": "de1f89bbb2026173d478ec2b22e49efe3e2b6070ec992050c43ef74a5b829339",
+      "outputSha256": "11aca4bcd5ac586a064c26ab8848cd169b7f3a8d7e876f216f1eeaf058de732b",
       "modifications": [
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
         "Issue #5の共有入力能力レジストリ、段階別検証、公開回帰契約に合わせて更新。",
-        "Issue #5親レビューに従い形式検査・エラー保持・実decoder公開CI回帰を補強。"
+        "Issue #5親レビューに従い形式検査・エラー保持・実decoder公開CI回帰を補強。",
+        "Issue #13の段階RAW open、競合回帰、匿名の区間計測を追加。正規producerの数式と成果物は維持。"
       ]
     },
     {
@@ -3932,11 +3942,12 @@
         "path": "packages/desktop-photo/src/develop_tests.rs",
         "sha256": "1cc6592304eb32e255c6318bb07fe762c88a3da142125c8004be1bdd436958cc"
       },
-      "outputSha256": "1ba33339f2c505758b0f8291d97251e414cdb26b3605fd34852690a4a402560b",
+      "outputSha256": "f60e8c1ab07589da1a30d568cd543b71fd3432d03f118119c81b3eaf37c2ecfc",
       "modifications": [
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
         "private絶対path guardに合わせ、合成テスト用のpathを予約済み/test-data配下へ正規化。実装の挙動は変更しない。",
-        "公開現像workspace向けにLibRaw由来値と参照を除去。独立測定DCP・合成テスト・metadata正規化・公開契約と書式へ調整。"
+        "公開現像workspace向けにLibRaw由来値と参照を除去。独立測定DCP・合成テスト・metadata正規化・公開契約と書式へ調整。",
+        "Issue #13の段階RAW open、競合回帰、匿名の区間計測を追加。正規producerの数式と成果物は維持。"
       ]
     },
     {
@@ -8513,28 +8524,23 @@
   ],
   "generatedFiles": [
     {
-      "path": "packages/desktop-photo/src/capabilities.rs",
-      "sha256": "fa479ac2df91c88af6f68726dfb8a2d335c4f7b5ecd2f7613dc9a836bc49f963",
-      "origin": "Issue #5のため独立作成。公開仕様から拡張子・MIME・UTType・magic bytes・処理段階の能力レジストリと権利安全な合成signatureテストを実装。外部コード・画像・個体metadataを含まない。\n変更理由: Issue #5親レビューに従い形式検査・エラー保持・実decoder公開CI回帰を補強。\n変更理由: AVIFをHEICと誤認しない拡張子不一致回帰を追加。"
-    },
-    {
-      "path": "packages/photo-editing/src/fixtures/cutout-brush-parity.json",
-      "sha256": "13d6754635b45a621dda5322dff2fe68ecfcb99ed97db5f86c93b332f1e4f5b3",
-      "origin": "公開移植用に新規作成した5×5整数ランプ。中央行をeraseし中央の1画素をrestoreする手計算の期待値。外部画像・モデル・元fixtureのデータは含まない。"
-    },
-    {
       "path": "apps/camera/LICENSES.md",
       "sha256": "ed676fd284e8f05161dcf6c8d283f352aae9d3f8ddc2bad9aabd344cc271321d",
       "origin": "公開Macクライアント #7 のため新規作成。秘密なしunsignedビルド・公開CI・ライセンス・lint契約を明示。\n変更理由: Issue #3の公式NIHO app-connect v1契約へ適合。deep link・NIHO接続token/Firebase交換・FileSecretStore・取消と再起動を独立実装し、安全契約をv2へ改版。"
     },
     {
-      "path": "apps/camera/public-ci.json",
-      "sha256": "c4674751c6bc4a37ca2f90a9b9a205f18ecea9a94c423a7813ed082ed7d255ea",
-      "origin": "公開Macクライアント #7 のため新規作成。秘密なしunsignedビルド・公開CI・ライセンス・lint契約を明示。"
+      "path": "apps/camera/account-contract.json",
+      "sha256": "000cb019ddfa98e2ebca59c970d5b434e7497d59150f06b105e6b0e53124cb75",
+      "origin": "Issue #3のpublic client契約に従いNIHOが独立新規作成。実token・秘密鍵・個人情報・旧private認証実装を含まない。\n変更理由: Issue #3の公式NIHO app-connect v1契約へ適合。deep link・NIHO接続token/Firebase交換・FileSecretStore・取消と再起動を独立実装し、安全契約をv2へ改版。"
     },
     {
       "path": "apps/camera/eslint.config.mjs",
       "sha256": "4cb4e5e9316ddc238a9ed36bb8433f43837d26a32c7e5acb9c5107c72440171a",
+      "origin": "公開Macクライアント #7 のため新規作成。秘密なしunsignedビルド・公開CI・ライセンス・lint契約を明示。"
+    },
+    {
+      "path": "apps/camera/public-ci.json",
+      "sha256": "c4674751c6bc4a37ca2f90a9b9a205f18ecea9a94c423a7813ed082ed7d255ea",
       "origin": "公開Macクライアント #7 のため新規作成。秘密なしunsignedビルド・公開CI・ライセンス・lint契約を明示。"
     },
     {
@@ -8545,7 +8551,117 @@
     {
       "path": "apps/camera/scripts/measure-progressive-open.mjs",
       "sha256": "240cc81ba33d82387e7dbf6f7bf2f5d3e63edd5eb8bc509f34362a5e940ac083",
-      "origin": "Issue #13のため独立作成。外から渡した実RAW pathを出力せず、case label、cold/warm条件、許可した区間時間、canonical PNGとmetadataのhashだけを20回集計する公開ハーネス。実画像・原本名・個人pathを含まない。\n変更理由: Issue 13 progressive RAW open implementation"
+      "origin": "Issue #13のため独立作成。外から渡した実RAW pathを出力せず、case label、cold/warm条件、許可した区間時間だけを集計する公開ハーネス。実画像・原本名・個人path・画像由来hashを出力しない。"
+    },
+    {
+      "path": "apps/camera/src-tauri/src/account.rs",
+      "sha256": "d2a0f8c0adbe93de0d457f8ed52028262c645ff9b486bf1d2583c5783cc7772a",
+      "origin": "Issue #3のpublic client契約に従いNIHOが独立新規作成。実token・秘密鍵・個人情報・旧private認証実装を含まない。\n変更理由: Issue #3の公式NIHO app-connect v1契約へ適合。deep link・NIHO接続token/Firebase交換・FileSecretStore・取消と再起動を独立実装し、安全契約をv2へ改版。"
+    },
+    {
+      "path": "apps/camera/src/camera-account.test.tsx",
+      "sha256": "f2fdfe1a53cf5d73643c4f5c0f2c29e7a664a06df3a6c6e4066b27c3ec9a32fd",
+      "origin": "Issue #3のpublic client契約に従いNIHOが独立新規作成。実token・秘密鍵・個人情報・旧private認証実装を含まない。\n変更理由: 既存接続のofflineはrefresh再試行とlogoutを示し、重複browser loginを案内しないUXを検証。\n変更理由: 一時停止・期限切れ・保存先障害がUIで汎用オフライン文言に潰れないことを検証。\n変更理由: 失効後はrefresh資格が無いので、再接続ボタンを出さず新しいブラウザログインを案内する。"
+    },
+    {
+      "path": "apps/camera/src/camera-account.tsx",
+      "sha256": "3850d1a22d34bcd035e59bbe4f570e2bd088617806ee1aca45995d81c19edc2a",
+      "origin": "Issue #3のpublic client契約に従いNIHOが独立新規作成。実token・秘密鍵・個人情報・旧private認証実装を含まない。\n変更理由: Issue #3の公式NIHO app-connect v1契約へ適合。deep link・NIHO接続token/Firebase交換・FileSecretStore・取消と再起動を独立実装し、安全契約をv2へ改版。\n変更理由: 失効後はrefresh資格が無いので、再接続ボタンを出さず新しいブラウザログインを案内する。\n変更理由: cold start後のrestoreとOS deep linkでnative状態が非同期更新されても、設定済みUIが追従する。"
+    },
+    {
+      "path": "docs/contracts/native-account.md",
+      "sha256": "296e1bae560ef634a125d15517a8fa901afd465d55b3293ac1fedec8ac366a9f",
+      "origin": "Issue #3のpublic client契約に従いNIHOが独立新規作成。実token・秘密鍵・個人情報・旧private認証実装を含まない。\n変更理由: Issue #3の公式NIHO app-connect v1契約へ適合。deep link・NIHO接続token/Firebase交換・FileSecretStore・取消と再起動を独立実装し、安全契約をv2へ改版。"
+    },
+    {
+      "path": "docs/features/progressive-raw-open.md",
+      "sha256": "ee3afd37a13b924d32d30fa88fa0210bddcb8935305734905a6241d143f144af",
+      "origin": "Issue #13のため公開SSOT上で独立作成。段階RAW openの契約と合成入力による統合検証。利用者画像・原本名・非公開ソース・認証情報を含まない。"
+    },
+    {
+      "path": "packages/desktop-account/Cargo.lock",
+      "sha256": "6c5d55982d09cf316d4ddd7388784edd73f07deb49906db058e9ff1b1e176e3e",
+      "origin": "公開crates.io依存だけからCargoで解決したlock。署名・認証secretなし。開発専用mock HMAC依存を含む。\n変更理由: Issue #3の公式NIHO app-connect v1契約へ適合。deep link・NIHO接続token/Firebase交換・FileSecretStore・取消と再起動を独立実装し、安全契約をv2へ改版。"
+    },
+    {
+      "path": "packages/desktop-account/Cargo.toml",
+      "sha256": "47fcf82c0b2549f7894235ea340d895d88f934287bf96dd7d54a1823f7fc193d",
+      "origin": "Issue #3のpublic client契約に従いNIHOが独立新規作成。実token・秘密鍵・個人情報・旧private認証実装を含まない。\n変更理由: Issue #3の公式NIHO app-connect v1契約へ適合。deep link・NIHO接続token/Firebase交換・FileSecretStore・取消と再起動を独立実装し、安全契約をv2へ改版。\n変更理由: NIHO app-connectのJSON HTTPとprivate file storeに必要な公開依存だけを残し、末尾空行を整理。"
+    },
+    {
+      "path": "packages/desktop-account/LICENSES.md",
+      "sha256": "3c408d5890a1307e14130c6550b7bfbb1278745b3c1ebf95b81b34b4ee1bdee8",
+      "origin": "Issue #3のpublic client契約に従いNIHOが独立新規作成。実token・秘密鍵・個人情報・旧private認証実装を含まない。\n変更理由: Issue #3の公式NIHO app-connect v1契約へ適合。deep link・NIHO接続token/Firebase交換・FileSecretStore・取消と再起動を独立実装し、安全契約をv2へ改版。"
+    },
+    {
+      "path": "packages/desktop-account/README.md",
+      "sha256": "03a741115f0f9f06715def50fb3c15762d611d23d62f98260a1be72b9e0f27f6",
+      "origin": "Issue #3のpublic client契約に従いNIHOが独立新規作成。実token・秘密鍵・個人情報・旧private認証実装を含まない。\n変更理由: 取消はUI状態と保存を直ちに無効化し、送信済みHTTP workerは最大10秒で終了する境界を明記。\n変更理由: Issue #3の公式NIHO app-connect v1契約へ適合。deep link・NIHO接続token/Firebase交換・FileSecretStore・取消と再起動を独立実装し、安全契約をv2へ改版。\n変更理由: 公式公開keyの出典・release設定とsmokeの留保、logoutの接続DELETEの扱いを明記。"
+    },
+    {
+      "path": "packages/desktop-account/contract/native-account-v2.json",
+      "sha256": "38c5289fa6e981afcfed18d8e2e4b806f67b4477bd96b92470bc3594f55c6a4f",
+      "origin": "NIHO app-connectの公開wire contractと採用済み仕様に基づき独立新規作成。private server実装・実token・実個人情報を含まない。"
+    },
+    {
+      "path": "packages/desktop-account/public-ci.json",
+      "sha256": "c184b6a649bfe23ecc385da20816986ebce737235c02caca3c8d51f96bea3e10",
+      "origin": "Issue #3のpublic client契約に従いNIHOが独立新規作成。実token・秘密鍵・個人情報・旧private認証実装を含まない。"
+    },
+    {
+      "path": "packages/desktop-account/rustfmt.toml",
+      "sha256": "9682e0b5639ac5872a6c026bc1a14f8a83243392603cad683c382d0b0fab6734",
+      "origin": "Issue #3のpublic client契約に従いNIHOが独立新規作成。実token・秘密鍵・個人情報・旧private認証実装を含まない。"
+    },
+    {
+      "path": "packages/desktop-account/src/account.rs",
+      "sha256": "f1ab0cf17422c64799588cb04dd438241dc407326f37dddbd8bc0877b99e6834",
+      "origin": "Issue #3のpublic client契約に従いNIHOが独立新規作成。実token・秘密鍵・個人情報・旧private認証実装を含まない。\n変更理由: pending login の取消時に残存するOS資格情報を削除し、旧資格情報を含む取消テストを追加。\n変更理由: Issue #3の公式NIHO app-connect v1契約へ適合。deep link・NIHO接続token/Firebase交換・FileSecretStore・取消と再起動を独立実装し、安全契約をv2へ改版。\n変更理由: このMacのlogoutは取得済みID tokenで現在接続のDELETEも試み、ローカル資格削除と別世代の保持を守る。"
+    },
+    {
+      "path": "packages/desktop-account/src/connect.rs",
+      "sha256": "7867f0ab0a8955be7c4ec142855f8cc051ae4cf725e57af1f3b0e5f81860dc98",
+      "origin": "NIHO app-connectの公開wire contractと採用済み仕様に基づき独立新規作成。private server実装・実token・実個人情報を含まない。"
+    },
+    {
+      "path": "packages/desktop-account/src/lib.rs",
+      "sha256": "8fbfc4eb0eeb88bc4ffd18a3d6522914c234b68580cdc93a730162439b0adde5",
+      "origin": "Issue #3のpublic client契約に従いNIHOが独立新規作成。実token・秘密鍵・個人情報・旧private認証実装を含まない。\n変更理由: Issue #3の公式NIHO app-connect v1契約へ適合。deep link・NIHO接続token/Firebase交換・FileSecretStore・取消と再起動を独立実装し、安全契約をv2へ改版。"
+    },
+    {
+      "path": "packages/desktop-account/src/secret.rs",
+      "sha256": "9e95873c5c94a3e80b7b25207dbeadd1460c27ba0f39e49f556a423f22cfa71a",
+      "origin": "Issue #3のpublic client契約に従いNIHOが独立新規作成。実token・秘密鍵・個人情報・旧private認証実装を含まない。\n変更理由: Issue #3の公式NIHO app-connect v1契約へ適合。deep link・NIHO接続token/Firebase交換・FileSecretStore・取消と再起動を独立実装し、安全契約をv2へ改版。"
+    },
+    {
+      "path": "packages/desktop-account/src/tests.rs",
+      "sha256": "a9f4a4fb8fe939263391ec6deb63a02acf0b64bda6d9b41e25566a6582fc8a0c",
+      "origin": "Issue #3のpublic client契約に従いNIHOが独立新規作成。実token・秘密鍵・個人情報・旧private認証実装を含まない。\n変更理由: pending login の取消時に残存するOS資格情報を削除し、旧資格情報を含む取消テストを追加。\n変更理由: Issue #3の公式NIHO app-connect v1契約へ適合。deep link・NIHO接続token/Firebase交換・FileSecretStore・取消と再起動を独立実装し、安全契約をv2へ改版。\n変更理由: 接続資格を保存する前のexchange一時失敗は自動refreshせず、新しいstate/verifierのログインを必要とする否定テストを追加。\n変更理由: logoutが現在接続のDELETEを試み、接続資格を保存する前の一時失敗では新しいログインを要求することを検証。"
+    },
+    {
+      "path": "packages/desktop-account/ts/eslint.config.mjs",
+      "sha256": "ec83682759b98a3b045b910d021f3cae758b26b2732c6feb21d1fd311aca7a35",
+      "origin": "Issue #3のpublic client契約に従いNIHOが独立新規作成。実token・秘密鍵・個人情報・旧private認証実装を含まない。"
+    },
+    {
+      "path": "packages/desktop-account/ts/package.json",
+      "sha256": "b8e734f560dbf40e5b55aac4cee6eeb8810841e90195f84124b8332c792ecfe0",
+      "origin": "Issue #3のpublic client契約に従いNIHOが独立新規作成。実token・秘密鍵・個人情報・旧private認証実装を含まない。"
+    },
+    {
+      "path": "packages/desktop-account/ts/src/index.test.ts",
+      "sha256": "f8fec99a8caadfd7f7f2d55171ee662f3c8681ef3a315beda31412b8c6f78088",
+      "origin": "Issue #3のpublic client契約に従いNIHOが独立新規作成。実token・秘密鍵・個人情報・旧private認証実装を含まない。\n変更理由: Issue #3の公式NIHO app-connect v1契約へ適合。deep link・NIHO接続token/Firebase交換・FileSecretStore・取消と再起動を独立実装し、安全契約をv2へ改版。\n変更理由: offline/failedのphaseに関わらずPaused/Expired/Rejected/Storageの固定エラー文言を区別できることを検証。"
+    },
+    {
+      "path": "packages/desktop-account/ts/src/index.ts",
+      "sha256": "7414d865400a745d40b4d6c2f3b66f21a65db230142ade9f88bf443270b3aa08",
+      "origin": "Issue #3のpublic client契約に従いNIHOが独立新規作成。実token・秘密鍵・個人情報・旧private認証実装を含まない。\n変更理由: Issue #3の公式NIHO app-connect v1契約へ適合。deep link・NIHO接続token/Firebase交換・FileSecretStore・取消と再起動を独立実装し、安全契約をv2へ改版。"
+    },
+    {
+      "path": "packages/desktop-account/ts/tsconfig.json",
+      "sha256": "1a61ddb371120d3d2517d9e98af330698b6f8305cb7970393a0bfa81716be3c9",
+      "origin": "Issue #3のpublic client契約に従いNIHOが独立新規作成。実token・秘密鍵・個人情報・旧private認証実装を含まない。"
     },
     {
       "path": "packages/desktop-photo/LICENSES.md",
@@ -8561,6 +8677,11 @@
       "path": "packages/desktop-photo/rustfmt.toml",
       "sha256": "9682e0b5639ac5872a6c026bc1a14f8a83243392603cad683c382d0b0fab6734",
       "origin": "公開Macクライアント #7 のため新規作成。秘密なしunsignedビルド・公開CI・ライセンス・lint契約を明示。"
+    },
+    {
+      "path": "packages/desktop-photo/src/capabilities.rs",
+      "sha256": "fa479ac2df91c88af6f68726dfb8a2d335c4f7b5ecd2f7613dc9a836bc49f963",
+      "origin": "Issue #5のため独立作成。公開仕様から拡張子・MIME・UTType・magic bytes・処理段階の能力レジストリと権利安全な合成signatureテストを実装。外部コード・画像・個体metadataを含まない。\n変更理由: Issue #5親レビューに従い形式検査・エラー保持・実decoder公開CI回帰を補強。\n変更理由: AVIFをHEICと誤認しない拡張子不一致回帰を追加。"
     },
     {
       "path": "packages/develop-engine/LICENSES.md",
@@ -8658,114 +8779,19 @@
       "origin": "#9で独立作成。所有測定対・metadataを除いた所有RAW/参照画像、検証tool、公開build/test契約または第三者license全文。詳細はdocs/migration/raw-engine.mdと資産台帳に記録。\n変更理由: Dependency reviewで検出されたPillow 12.0.0の脆弱性を修正するため13.0.0へ更新。"
     },
     {
-      "path": "apps/camera/account-contract.json",
-      "sha256": "000cb019ddfa98e2ebca59c970d5b434e7497d59150f06b105e6b0e53124cb75",
-      "origin": "Issue #3のpublic client契約に従いNIHOが独立新規作成。実token・秘密鍵・個人情報・旧private認証実装を含まない。\n変更理由: Issue #3の公式NIHO app-connect v1契約へ適合。deep link・NIHO接続token/Firebase交換・FileSecretStore・取消と再起動を独立実装し、安全契約をv2へ改版。"
+      "path": "packages/photo-editing/src/editor/use-browser-photo-export-delete.test.tsx",
+      "sha256": "eec74bf3a8a0c520c8397dfa9927f96ceba6686ac23accfe930bcbf118a364b1",
+      "origin": "Issue #13のため独立作成。actual export hookと公開fixtureだけで、補正書き出しのcanonical待機とRAW original copyの非待機を検証。外部画像・非公開コード・個体metadataを含まない。"
     },
     {
-      "path": "apps/camera/src-tauri/src/account.rs",
-      "sha256": "d2a0f8c0adbe93de0d457f8ed52028262c645ff9b486bf1d2583c5783cc7772a",
-      "origin": "Issue #3のpublic client契約に従いNIHOが独立新規作成。実token・秘密鍵・個人情報・旧private認証実装を含まない。\n変更理由: Issue #3の公式NIHO app-connect v1契約へ適合。deep link・NIHO接続token/Firebase交換・FileSecretStore・取消と再起動を独立実装し、安全契約をv2へ改版。"
+      "path": "packages/photo-editing/src/editor/use-browser-photo-progressive-open.test.tsx",
+      "sha256": "86acd0f17e915bb4f033128e80453262216546f3778aace09c7f6d0e813344f0",
+      "origin": "Issue #13のため独立作成。actual React hooksと合成library/engine/frameだけで、provisional編集、canonical handoff、history、retry、abort、旧frame遮断を検証。外部画像・非公開コード・個体metadataを含まない。"
     },
     {
-      "path": "apps/camera/src/camera-account.test.tsx",
-      "sha256": "f2fdfe1a53cf5d73643c4f5c0f2c29e7a664a06df3a6c6e4066b27c3ec9a32fd",
-      "origin": "Issue #3のpublic client契約に従いNIHOが独立新規作成。実token・秘密鍵・個人情報・旧private認証実装を含まない。\n変更理由: 既存接続のofflineはrefresh再試行とlogoutを示し、重複browser loginを案内しないUXを検証。\n変更理由: 一時停止・期限切れ・保存先障害がUIで汎用オフライン文言に潰れないことを検証。\n変更理由: 失効後はrefresh資格が無いので、再接続ボタンを出さず新しいブラウザログインを案内する。"
-    },
-    {
-      "path": "apps/camera/src/camera-account.tsx",
-      "sha256": "3850d1a22d34bcd035e59bbe4f570e2bd088617806ee1aca45995d81c19edc2a",
-      "origin": "Issue #3のpublic client契約に従いNIHOが独立新規作成。実token・秘密鍵・個人情報・旧private認証実装を含まない。\n変更理由: Issue #3の公式NIHO app-connect v1契約へ適合。deep link・NIHO接続token/Firebase交換・FileSecretStore・取消と再起動を独立実装し、安全契約をv2へ改版。\n変更理由: 失効後はrefresh資格が無いので、再接続ボタンを出さず新しいブラウザログインを案内する。\n変更理由: cold start後のrestoreとOS deep linkでnative状態が非同期更新されても、設定済みUIが追従する。"
-    },
-    {
-      "path": "docs/contracts/native-account.md",
-      "sha256": "296e1bae560ef634a125d15517a8fa901afd465d55b3293ac1fedec8ac366a9f",
-      "origin": "Issue #3のpublic client契約に従いNIHOが独立新規作成。実token・秘密鍵・個人情報・旧private認証実装を含まない。\n変更理由: Issue #3の公式NIHO app-connect v1契約へ適合。deep link・NIHO接続token/Firebase交換・FileSecretStore・取消と再起動を独立実装し、安全契約をv2へ改版。"
-    },
-    {
-      "path": "packages/desktop-account/Cargo.lock",
-      "sha256": "6c5d55982d09cf316d4ddd7388784edd73f07deb49906db058e9ff1b1e176e3e",
-      "origin": "公開crates.io依存だけからCargoで解決したlock。署名・認証secretなし。開発専用mock HMAC依存を含む。\n変更理由: Issue #3の公式NIHO app-connect v1契約へ適合。deep link・NIHO接続token/Firebase交換・FileSecretStore・取消と再起動を独立実装し、安全契約をv2へ改版。"
-    },
-    {
-      "path": "packages/desktop-account/Cargo.toml",
-      "sha256": "47fcf82c0b2549f7894235ea340d895d88f934287bf96dd7d54a1823f7fc193d",
-      "origin": "Issue #3のpublic client契約に従いNIHOが独立新規作成。実token・秘密鍵・個人情報・旧private認証実装を含まない。\n変更理由: Issue #3の公式NIHO app-connect v1契約へ適合。deep link・NIHO接続token/Firebase交換・FileSecretStore・取消と再起動を独立実装し、安全契約をv2へ改版。\n変更理由: NIHO app-connectのJSON HTTPとprivate file storeに必要な公開依存だけを残し、末尾空行を整理。"
-    },
-    {
-      "path": "packages/desktop-account/LICENSES.md",
-      "sha256": "3c408d5890a1307e14130c6550b7bfbb1278745b3c1ebf95b81b34b4ee1bdee8",
-      "origin": "Issue #3のpublic client契約に従いNIHOが独立新規作成。実token・秘密鍵・個人情報・旧private認証実装を含まない。\n変更理由: Issue #3の公式NIHO app-connect v1契約へ適合。deep link・NIHO接続token/Firebase交換・FileSecretStore・取消と再起動を独立実装し、安全契約をv2へ改版。"
-    },
-    {
-      "path": "packages/desktop-account/README.md",
-      "sha256": "03a741115f0f9f06715def50fb3c15762d611d23d62f98260a1be72b9e0f27f6",
-      "origin": "Issue #3のpublic client契約に従いNIHOが独立新規作成。実token・秘密鍵・個人情報・旧private認証実装を含まない。\n変更理由: 取消はUI状態と保存を直ちに無効化し、送信済みHTTP workerは最大10秒で終了する境界を明記。\n変更理由: Issue #3の公式NIHO app-connect v1契約へ適合。deep link・NIHO接続token/Firebase交換・FileSecretStore・取消と再起動を独立実装し、安全契約をv2へ改版。\n変更理由: 公式公開keyの出典・release設定とsmokeの留保、logoutの接続DELETEの扱いを明記。"
-    },
-    {
-      "path": "packages/desktop-account/public-ci.json",
-      "sha256": "c184b6a649bfe23ecc385da20816986ebce737235c02caca3c8d51f96bea3e10",
-      "origin": "Issue #3のpublic client契約に従いNIHOが独立新規作成。実token・秘密鍵・個人情報・旧private認証実装を含まない。"
-    },
-    {
-      "path": "packages/desktop-account/rustfmt.toml",
-      "sha256": "9682e0b5639ac5872a6c026bc1a14f8a83243392603cad683c382d0b0fab6734",
-      "origin": "Issue #3のpublic client契約に従いNIHOが独立新規作成。実token・秘密鍵・個人情報・旧private認証実装を含まない。"
-    },
-    {
-      "path": "packages/desktop-account/src/account.rs",
-      "sha256": "f1ab0cf17422c64799588cb04dd438241dc407326f37dddbd8bc0877b99e6834",
-      "origin": "Issue #3のpublic client契約に従いNIHOが独立新規作成。実token・秘密鍵・個人情報・旧private認証実装を含まない。\n変更理由: pending login の取消時に残存するOS資格情報を削除し、旧資格情報を含む取消テストを追加。\n変更理由: Issue #3の公式NIHO app-connect v1契約へ適合。deep link・NIHO接続token/Firebase交換・FileSecretStore・取消と再起動を独立実装し、安全契約をv2へ改版。\n変更理由: このMacのlogoutは取得済みID tokenで現在接続のDELETEも試み、ローカル資格削除と別世代の保持を守る。"
-    },
-    {
-      "path": "packages/desktop-account/src/lib.rs",
-      "sha256": "8fbfc4eb0eeb88bc4ffd18a3d6522914c234b68580cdc93a730162439b0adde5",
-      "origin": "Issue #3のpublic client契約に従いNIHOが独立新規作成。実token・秘密鍵・個人情報・旧private認証実装を含まない。\n変更理由: Issue #3の公式NIHO app-connect v1契約へ適合。deep link・NIHO接続token/Firebase交換・FileSecretStore・取消と再起動を独立実装し、安全契約をv2へ改版。"
-    },
-    {
-      "path": "packages/desktop-account/src/secret.rs",
-      "sha256": "9e95873c5c94a3e80b7b25207dbeadd1460c27ba0f39e49f556a423f22cfa71a",
-      "origin": "Issue #3のpublic client契約に従いNIHOが独立新規作成。実token・秘密鍵・個人情報・旧private認証実装を含まない。\n変更理由: Issue #3の公式NIHO app-connect v1契約へ適合。deep link・NIHO接続token/Firebase交換・FileSecretStore・取消と再起動を独立実装し、安全契約をv2へ改版。"
-    },
-    {
-      "path": "packages/desktop-account/src/tests.rs",
-      "sha256": "a9f4a4fb8fe939263391ec6deb63a02acf0b64bda6d9b41e25566a6582fc8a0c",
-      "origin": "Issue #3のpublic client契約に従いNIHOが独立新規作成。実token・秘密鍵・個人情報・旧private認証実装を含まない。\n変更理由: pending login の取消時に残存するOS資格情報を削除し、旧資格情報を含む取消テストを追加。\n変更理由: Issue #3の公式NIHO app-connect v1契約へ適合。deep link・NIHO接続token/Firebase交換・FileSecretStore・取消と再起動を独立実装し、安全契約をv2へ改版。\n変更理由: 接続資格を保存する前のexchange一時失敗は自動refreshせず、新しいstate/verifierのログインを必要とする否定テストを追加。\n変更理由: logoutが現在接続のDELETEを試み、接続資格を保存する前の一時失敗では新しいログインを要求することを検証。"
-    },
-    {
-      "path": "packages/desktop-account/ts/eslint.config.mjs",
-      "sha256": "ec83682759b98a3b045b910d021f3cae758b26b2732c6feb21d1fd311aca7a35",
-      "origin": "Issue #3のpublic client契約に従いNIHOが独立新規作成。実token・秘密鍵・個人情報・旧private認証実装を含まない。"
-    },
-    {
-      "path": "packages/desktop-account/ts/package.json",
-      "sha256": "b8e734f560dbf40e5b55aac4cee6eeb8810841e90195f84124b8332c792ecfe0",
-      "origin": "Issue #3のpublic client契約に従いNIHOが独立新規作成。実token・秘密鍵・個人情報・旧private認証実装を含まない。"
-    },
-    {
-      "path": "packages/desktop-account/ts/src/index.test.ts",
-      "sha256": "f8fec99a8caadfd7f7f2d55171ee662f3c8681ef3a315beda31412b8c6f78088",
-      "origin": "Issue #3のpublic client契約に従いNIHOが独立新規作成。実token・秘密鍵・個人情報・旧private認証実装を含まない。\n変更理由: Issue #3の公式NIHO app-connect v1契約へ適合。deep link・NIHO接続token/Firebase交換・FileSecretStore・取消と再起動を独立実装し、安全契約をv2へ改版。\n変更理由: offline/failedのphaseに関わらずPaused/Expired/Rejected/Storageの固定エラー文言を区別できることを検証。"
-    },
-    {
-      "path": "packages/desktop-account/ts/src/index.ts",
-      "sha256": "7414d865400a745d40b4d6c2f3b66f21a65db230142ade9f88bf443270b3aa08",
-      "origin": "Issue #3のpublic client契約に従いNIHOが独立新規作成。実token・秘密鍵・個人情報・旧private認証実装を含まない。\n変更理由: Issue #3の公式NIHO app-connect v1契約へ適合。deep link・NIHO接続token/Firebase交換・FileSecretStore・取消と再起動を独立実装し、安全契約をv2へ改版。"
-    },
-    {
-      "path": "packages/desktop-account/ts/tsconfig.json",
-      "sha256": "1a61ddb371120d3d2517d9e98af330698b6f8305cb7970393a0bfa81716be3c9",
-      "origin": "Issue #3のpublic client契約に従いNIHOが独立新規作成。実token・秘密鍵・個人情報・旧private認証実装を含まない。"
-    },
-    {
-      "path": "packages/desktop-account/contract/native-account-v2.json",
-      "sha256": "38c5289fa6e981afcfed18d8e2e4b806f67b4477bd96b92470bc3594f55c6a4f",
-      "origin": "NIHO app-connectの公開wire contractと採用済み仕様に基づき独立新規作成。private server実装・実token・実個人情報を含まない。"
-    },
-    {
-      "path": "packages/desktop-account/src/connect.rs",
-      "sha256": "7867f0ab0a8955be7c4ec142855f8cc051ae4cf725e57af1f3b0e5f81860dc98",
-      "origin": "NIHO app-connectの公開wire contractと採用済み仕様に基づき独立新規作成。private server実装・実token・実個人情報を含まない。"
+      "path": "packages/photo-editing/src/fixtures/cutout-brush-parity.json",
+      "sha256": "13d6754635b45a621dda5322dff2fe68ecfcb99ed97db5f86c93b332f1e4f5b3",
+      "origin": "公開移植用に新規作成した5×5整数ランプ。中央行をeraseし中央の1画素をrestoreする手計算の期待値。外部画像・モデル・元fixtureのデータは含まない。"
     }
   ],
   "excludedSources": [

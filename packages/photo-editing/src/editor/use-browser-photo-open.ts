@@ -271,6 +271,8 @@ export function useBrowserPhotoOpen(params: {
     autoResetRef.current?.();
   };
   const previewSettings = presets.previewSettings;
+  const previewSettingsRef = useRef(previewSettings);
+  previewSettingsRef.current = previewSettings;
   // 適用量を動かしている間の仮の表示は速い描き方（行に載せている間の仮の表示は丁寧に）
   const previewInteractive = presets.previewInteractive;
   // 補正のコピー / 貼り付け（F5a-2 移行元設計）も、wasm で開いた写真を 1 枚で見ている間だけ
@@ -349,6 +351,14 @@ export function useBrowserPhotoOpen(params: {
     openedRef.current = next;
     setOpened(next);
   }, [allItemsRef]);
+  const recordProxyReady = useCallback((key: string) => {
+    const timeline = timelineRef.current;
+    if (timeline?.key !== key || !photoDevelopDiagnosticsEnabled()) return;
+    console.info("[photo-develop-ui-perf]", {
+      stage: "proxyReady",
+      elapsedMs: Math.max(0, performance.now() - timeline.selectedAt),
+    });
+  }, []);
   // S1 の canvas だけが「書き出していない補正」を持つ（wasm は自動保存するので破棄の確認を出さない）
   const dirty = opened?.mode !== "wasm" && settingsKey !== savedSettingsKey;
   const compareOriginalRef = useRef(compareOriginal);
@@ -358,7 +368,7 @@ export function useBrowserPhotoOpen(params: {
   const editingAllowedRef = useRef(editingAllowed);
   editingAllowedRef.current = editingAllowed;
   /** 描いた順（古い描画の結果で新しい画を上書きしない） */
-  const paintOrderRef = useRef({ requested: 0, painted: 0 });
+  const paintOrderRef = useRef({ generation: 0, requested: 0, painted: 0 });
   /** 開いた時点の Final 画と設定。古い補正後プレビューを直すアップロードはこの画から行う。 */
   const initialFrameRef = useRef<{ key: string; settingsJson: string; session: NonNullable<OpenResult["session"]> } | null>(null);
   /** 切り抜きの道具の間に描いた枠全体の画（同じ設定なら描き直さない。切り抜きを動かしても設定は変わらない） */
@@ -424,7 +434,9 @@ export function useBrowserPhotoOpen(params: {
     const key = activeOpened.key;
     const timelineGeneration = timelineRef.current?.generation ?? null;
     const order = paintOrderRef.current;
+    const paintGeneration = order.generation;
     const paint = (target: HTMLCanvasElement, frame: DevelopFrame, final: boolean, raw = false) => {
+      if (engineRef.current !== engine || order.generation !== paintGeneration) return;
       paintDevelopFrame(target, frame);
       const postProcess = framePostProcessRef?.current ?? null;
       if (postProcess) {
@@ -441,7 +453,8 @@ export function useBrowserPhotoOpen(params: {
     };
     const failInitial = (sequence: number) => {
       const current = openedRef.current;
-      if (sequence !== order.requested || current?.key !== key || !current.previewPending) return;
+      if (engineRef.current !== engine || order.generation !== paintGeneration ||
+          sequence !== order.requested || current?.key !== key || !current.previewPending) return;
       const session = developSessionRef.current;
       initialFrameRef.current = null;
       const next: OpenedSource = { ...current, mode: null, lockedReason: DEVELOP_ENGINE_UNAVAILABLE_LOCKED_MESSAGE, previewPending: false };
@@ -476,6 +489,7 @@ export function useBrowserPhotoOpen(params: {
         .render(frameSettings, { maxDimension: DEVELOP_PREVIEW_MAX_DIMENSION, interactive: false })
         .then((frame) => {
           if (!frame) return;
+          if (engineRef.current !== engine || order.generation !== paintGeneration) return;
           if (openedRef.current?.key !== key || !cropActiveRef.current) return;
           if (sequence !== order.requested || !canvasRef.current) return;
           order.painted = sequence;
@@ -500,6 +514,7 @@ export function useBrowserPhotoOpen(params: {
         .render(beforeSettings, { maxDimension: DEVELOP_PREVIEW_MAX_DIMENSION, interactive: false })
         .then((frame) => {
           if (!frame) return;
+          if (engineRef.current !== engine || order.generation !== paintGeneration) return;
           if (openedRef.current?.key !== key) return;
           beforeFrameRef.current = { key, settingsJson: beforeJson, frame };
           if (!compareOriginalRef.current || cropActiveRef.current) return;
@@ -535,6 +550,7 @@ export function useBrowserPhotoOpen(params: {
       .render(shownSettings, { maxDimension: DEVELOP_PREVIEW_MAX_DIMENSION, interactive })
       .then((frame) => {
         if (!frame) return;
+        if (engineRef.current !== engine || order.generation !== paintGeneration) return;
         if (!interactive && !previewing) uploadInitial(settingsJson, frame);
         if (openedRef.current?.key !== key || compareOriginalRef.current || cropActiveRef.current) return;
         if (sequence !== order.requested || !canvasRef.current) return;
@@ -544,7 +560,8 @@ export function useBrowserPhotoOpen(params: {
         paint(paintedCanvas, frame, !interactive && !previewing);
         if (renderRequestedAt !== null) {
           requestAnimationFrame(() => requestAnimationFrame(() => {
-            if (openedRef.current?.key !== key || order.requested !== sequence || viewModeRef.current !== "loupe" ||
+            if (engineRef.current !== engine || order.generation !== paintGeneration ||
+              openedRef.current?.key !== key || order.requested !== sequence || viewModeRef.current !== "loupe" ||
               canvasRef.current !== paintedCanvas || !paintedCanvas.isConnected ||
               paintedCanvas.getClientRects().length === 0 || getComputedStyle(paintedCanvas).visibility === "hidden") return;
             console.info("[photo-develop-ui-perf]", {
@@ -738,8 +755,36 @@ export function useBrowserPhotoOpen(params: {
       discardCandidate();
       return false;
     }
-    let source = edit.settingsRef.current;
-    let rebound = rebindDevelopSettings(source, result.settings);
+    const provisionalContentSha256 = provisional.input.contentSha256;
+    const isCurrentProvisional = () => {
+      const current = openedRef.current;
+      return !isStale() && current?.key === item.key && current.input?.kind === "provisional" &&
+        developSessionRef.current === provisionalSession;
+    };
+    type HandoffDisplay = {
+      kind: "settings" | "preview" | "compare" | "crop";
+      settings: DevelopSettings;
+    };
+    const currentDisplay = (source: DevelopSettings): HandoffDisplay => {
+      if (cropActiveRef.current) {
+        return {
+          kind: "crop",
+          settings: rebindDevelopSettings(cropFrameDevelopSettings(source), result.settings),
+        };
+      }
+      if (compareOriginalRef.current) {
+        const rebound = rebindDevelopSettings(source, result.settings);
+        return {
+          kind: "compare",
+          settings: resetDevelopSettingsColors(rebound, developBaseVersion(result.opened.input)),
+        };
+      }
+      const preview = previewSettingsRef.current;
+      return {
+        kind: preview ? "preview" : "settings",
+        settings: rebindDevelopSettings(preview ?? source, result.settings),
+      };
+    };
     let frame: DevelopFrame;
     let flushedDraft: PhotoLibraryProvisionalDraft | null;
     try {
@@ -748,17 +793,22 @@ export function useBrowserPhotoOpen(params: {
       discardCandidate();
       return false;
     }
+    if (!isCurrentProvisional()) {
+      discardCandidate();
+      return false;
+    }
+    let source = edit.settingsRef.current;
+    let display = currentDisplay(source);
     // 描画中に操作が進んだら最新値で描き直す。swap前なのでprovisional frameはそのまま見える。
     for (;;) {
       const rendered = await canonicalEngine
-        .render(rebound, { maxDimension: DEVELOP_PREVIEW_MAX_DIMENSION, interactive: false })
+        .render(display.settings, { maxDimension: DEVELOP_PREVIEW_MAX_DIMENSION, interactive: false })
         .catch(() => null);
-      if (!rendered || isStale() || openedRef.current !== provisional) {
+      if (!rendered || !isCurrentProvisional()) {
         discardCandidate();
         return false;
       }
       frame = rendered;
-      const latest = edit.settingsRef.current;
       let latestDraft: PhotoLibraryProvisionalDraft | null;
       try {
         latestDraft = await provisionalSession.provisionalDraft?.flush() ?? flushedDraft;
@@ -766,21 +816,57 @@ export function useBrowserPhotoOpen(params: {
         discardCandidate();
         return false;
       }
-      if (sameDevelopSettings(latest, source)) {
+      if (!isCurrentProvisional()) {
+        discardCandidate();
+        return false;
+      }
+      // flush 待機中にも入力・crop・比較・preset preview は変わり得る。最後の await の後で画面の値を取り直す。
+      const latest = edit.settingsRef.current;
+      const latestDisplay = currentDisplay(latest);
+      if (sameDevelopSettings(latest, source) && latestDisplay.kind === display.kind &&
+          sameDevelopSettings(latestDisplay.settings, display.settings)) {
         flushedDraft = latestDraft;
         break;
       }
       source = latest;
-      rebound = rebindDevelopSettings(latest, result.settings);
+      display = latestDisplay;
       flushedDraft = latestDraft;
     }
+    // ここから swap までは await を置かない。上の一致確認と別の画を組み合わせない。
     const oldEngine = engineRef.current;
+    const paintOrder = paintOrderRef.current;
+    paintOrder.generation += 1;
+    paintOrder.requested += 1;
+    paintOrder.painted = paintOrder.requested;
     engineRef.current = canonicalEngine;
     const nextSettings = rebaseSettings((value) => rebindDevelopSettings(value, result.settings));
     presets.rebaseSettings((value) => rebindDevelopSettings(value, result.settings));
-    frameCacheRef.current = { key: item.key, settingsJson: JSON.stringify(nextSettings), frame };
+    frameCacheRef.current = null;
     beforeFrameRef.current = null;
-    if (canvasRef.current) paintDevelopFrame(canvasRef.current, frame);
+    cropFrameCacheRef.current = null;
+    lastPaintRef.current = null;
+    if (display.kind === "settings") {
+      frameCacheRef.current = { key: item.key, settingsJson: JSON.stringify(nextSettings), frame };
+    } else if (display.kind === "compare") {
+      beforeFrameRef.current = { key: item.key, settingsJson: JSON.stringify(display.settings), frame };
+    } else if (display.kind === "crop") {
+      cropFrameCacheRef.current = {
+        key: item.key,
+        settingsJson: JSON.stringify(display.settings),
+        epoch: workingEpoch,
+        frame,
+      };
+    }
+    const target = canvasRef.current;
+    if (target) {
+      paintDevelopFrame(target, frame);
+      const raw = display.kind === "crop" || display.kind === "compare";
+      const postProcess = framePostProcessRef?.current ?? null;
+      if (postProcess) {
+        if (!raw) postProcess(target);
+        lastPaintRef.current = { key: item.key, target, frame, raw };
+      }
+    }
     const nextOpened: OpenedSource = {
       ...result.opened,
       previewPending: false,
@@ -796,7 +882,7 @@ export function useBrowserPhotoOpen(params: {
           result.session.spotId,
           result.session.photoId,
           result.session.photo.developRevision,
-          provisional.input.contentSha256,
+          provisionalContentSha256,
           flushedDraft?.generation,
         )
       : null;
@@ -805,7 +891,7 @@ export function useBrowserPhotoOpen(params: {
       result.session.saver?.schedule(nextSettings);
     } else if (flushedDraft && library.removeProvisionalDraft) {
       void library
-        .removeProvisionalDraft(item.photo.id, provisional.input.contentSha256, flushedDraft.generation)
+        .removeProvisionalDraft(item.photo.id, provisionalContentSha256, flushedDraft.generation)
         .catch(() => undefined);
     }
     oldEngine?.dispose();
@@ -819,7 +905,7 @@ export function useBrowserPhotoOpen(params: {
       });
     }
     return true;
-  }, [beforeFrameRef, canvasRef, createSaver, developSessionRef, edit.settingsRef, engineRef, frameCacheRef, latestAccessRef, library, presets, rebaseSettings, startSession]);
+  }, [beforeFrameRef, canvasRef, createSaver, developSessionRef, edit.settingsRef, engineRef, frameCacheRef, framePostProcessRef, latestAccessRef, library, presets, rebaseSettings, startSession, workingEpoch]);
 
   /** 作業コピーを待っている写真の状態を変える（その写真を開いたまま待っているときだけ）。 */
   const setWorkWait = useCallback((key: string, work: WorkWait) => {
@@ -1010,13 +1096,7 @@ export function useBrowserPhotoOpen(params: {
                   if (frame && !isStale()) {
                     provisionalReady = true;
                     commitProvisional(item, preview, projected, frame, draft ?? null);
-                    const timeline = timelineRef.current;
-                    if (timeline?.key === item.key && photoDevelopDiagnosticsEnabled()) {
-                      console.info("[photo-develop-ui-perf]", {
-                        stage: "proxyReady",
-                        elapsedMs: Math.max(0, performance.now() - timeline.selectedAt),
-                      });
-                    }
+                    recordProxyReady(item.key);
                   }
                 }
               }
@@ -1116,6 +1196,7 @@ export function useBrowserPhotoOpen(params: {
       mountedRef,
       operationRef,
       readyDevelopEngine,
+      recordProxyReady,
       releaseOpened,
       setExportSheetOpen,
       setSelectedKey,
@@ -1179,7 +1260,7 @@ export function useBrowserPhotoOpen(params: {
       }
       const context = { ...openFlowRef.current.context, rememberOpenedFrame: () => undefined };
       const outcome = await resolveWorkOutcome(context, item, work, canonicalEngine, abort.signal, isStale);
-      if (isStale()) {
+      if (outcome === "stale" || isStale()) {
         canonicalEngine.dispose();
         canonicalEngine = null;
         return;

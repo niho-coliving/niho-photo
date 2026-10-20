@@ -560,26 +560,36 @@ describe("working copies", () => {
     await expect(fake.library.loadProvisionalDraft!("e-raw", sha("e-raw"))).resolves.toMatchObject({
       contentSha256: sha("e-raw"),
       settings,
-      generation: 1,
+      generation: firstDraft.generation,
     });
     const secondDraft = await fake.library.saveProvisionalDraft!("e-raw", sha("e-raw"), { ...settings, exposure: 0.5 });
     await expect(fake.library.removeProvisionalDraft!("e-raw", sha("e-raw"), firstDraft.generation)).resolves.toBe(false);
     await expect(fake.library.removeProvisionalDraft!("e-raw", sha("e-raw"), secondDraft.generation)).resolves.toBe(true);
     await expect(fake.library.loadProvisionalDraft!("e-raw", sha("e-raw"))).resolves.toBeNull();
+    // A deleted draft must not reuse an old save acknowledgement's generation (ABA).
+    const nextDraft = await fake.library.saveProvisionalDraft!("e-raw", sha("e-raw"), settings);
+    expect(nextDraft.generation).toBeGreaterThan(secondDraft.generation);
+    await expect(fake.library.removeProvisionalDraft!("e-raw", sha("e-raw"), firstDraft.generation)).resolves.toBe(false);
+    await expect(fake.library.loadProvisionalDraft!("e-raw", sha("e-raw"))).resolves.toMatchObject({ generation: nextDraft.generation });
   });
 
   it("cancels the native provisional job when its last consumer switches photos", async () => {
-    let finish: ((bytes: ArrayBuffer) => void) | null = null;
+    let finish: (bytes: ArrayBuffer) => void = () => undefined;
+    let started: () => void = () => undefined;
+    const previewStarted = new Promise<void>((resolve) => {
+      started = resolve;
+    });
     const fake = fakeNative({
       interactivePreview: () => new Promise<ArrayBuffer>((resolve) => {
         finish = resolve;
+        started();
       }),
     });
     const abort = new AbortController();
     const pending = fake.library.loadInteractivePreview!("e-raw", { signal: abort.signal, maxDimension: 1600 });
-    await Promise.resolve();
+    await previewStarted;
     abort.abort();
-    finish?.(JPEG_HEADER.slice().buffer);
+    finish(JPEG_HEADER.slice().buffer);
     await expect(pending).rejects.toMatchObject({ name: "AbortError" });
     expect(commandsOf(fake.calls)).toContain("camera_photo_cancel_interactive_preview");
   });
