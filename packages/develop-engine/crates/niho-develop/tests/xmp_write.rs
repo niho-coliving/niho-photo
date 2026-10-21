@@ -54,10 +54,6 @@ fn everything() -> DevelopSettings {
         if key.xmp == "Exposure2012" || key.xmp == "CurveRefineSaturation" {
             continue; // 1.37 above; 100 is the only rendered refinement
         }
-        // Midtone / global luminance are retained but not rendered.
-        if matches!(key.xmp, "ColorGradeMidtoneLum" | "ColorGradeGlobalLum") {
-            continue;
-        }
         let v = lo + (hi - lo) * ((i * 37 % 89) as f64 + 5.0) / 100.0;
         *key.field.value_mut(&mut s) = if key.field.is_integer_slider() || key.range.1 == 359.0 {
             v.round()
@@ -604,6 +600,42 @@ fn color_grading_wheels_use_lightrooms_split_toning_keys() {
     assert_eq!(doc.properties["SplitToningShadowSaturation"], "12");
     assert_eq!(doc.properties["ColorGradeShadowLum"], "-5");
     assert!(!doc.properties.contains_key("ColorGradeShadowHue"));
+}
+
+/// niho-photo#39: the midtone / global luminance render, so a preset writes
+/// them like every other key of its group (0 included, the way Lightroom
+/// saves a preset) and they read back without an "unsupported" report.
+#[test]
+fn midtone_and_global_luminance_are_written_and_read_back() {
+    let options = XmpWriteOptions {
+        groups: vec![XmpGroup::ColorGrading],
+        ..all_groups()
+    };
+    let mut s = DevelopSettings::neutral();
+    s.color_grading.midtone = ColorGradeBand {
+        hue: 40.0,
+        saturation: 20.0,
+        luminance: 35.0,
+    };
+    s.color_grading.global.luminance = -12.0;
+    let out = xmp::settings_to_xmp(&s, &options);
+    let doc = xmp::parse(&out.xmp).unwrap();
+    assert_eq!(doc.properties["ColorGradeMidtoneLum"], "+35");
+    assert_eq!(doc.properties["ColorGradeGlobalLum"], "-12");
+    let back = read(&out.xmp);
+    assert!(back.converted, "{:?}", back.convert_issues);
+    assert!(back.unsupported.is_empty(), "{:?}", back.unsupported);
+    assert_eq!(back.settings.color_grading, s.color_grading);
+    // 0 is written too: applying the preset resets a photo's luminance.
+    let zero = xmp::settings_to_xmp(&DevelopSettings::neutral(), &options);
+    let zero_doc = xmp::parse(&zero.xmp).unwrap();
+    assert_eq!(zero_doc.properties["ColorGradeMidtoneLum"], "0");
+    assert_eq!(zero_doc.properties["ColorGradeGlobalLum"], "0");
+    let reset = xmp::preset_settings(&zero.xmp, Some(&s)).unwrap();
+    assert!(reset.converted, "{:?}", reset.convert_issues);
+    assert_eq!(reset.settings.color_grading.midtone.luminance, 0.0);
+    assert_eq!(reset.settings.color_grading.global.luminance, 0.0);
+    assert!(reset.unsupported.is_empty(), "{:?}", reset.unsupported);
 }
 
 #[test]

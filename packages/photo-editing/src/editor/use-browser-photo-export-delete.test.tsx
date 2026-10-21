@@ -5,14 +5,14 @@ import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { DevelopEngine } from "../develop-engine/develop-engine-client";
-import { neutralDevelopSettings } from "../develop-engine/develop-settings";
+import { neutralDevelopSettings, type DevelopSettings } from "../develop-engine/develop-settings";
 import type { PhotoLibrary, PhotoLibraryCapabilities, PhotoLibraryPhoto } from "../library/photo-library";
 import {
   PhotoLibraryProvider,
   type PhotoEditingHost,
 } from "../library/photo-library-context";
 
-import type { BrowserItem, DevelopSession, OpenedSource } from "./browser-photo-editing-model";
+import type { BrowserItem, DevelopSession, FooterStatus, OpenedSource } from "./browser-photo-editing-model";
 import {
   useBrowserPhotoExportAndDelete,
   type BrowserPhotoExportResult,
@@ -121,6 +121,10 @@ let pendingEdits: { hasPending: () => boolean; waitForPending: ReturnType<typeof
 let engine: DevelopEngine;
 let downloadOriginal: ReturnType<typeof vi.fn>;
 let saveFile = vi.fn<PhotoEditingHost["saveFile"]>();
+let capabilitiesForTest: PhotoLibraryCapabilities;
+let settingsRefForTest: { current: DevelopSettings };
+let statusForTest: ReturnType<typeof vi.fn<(status: FooterStatus | null) => void>>;
+let nativeExport: ReturnType<typeof vi.fn>;
 
 function Harness() {
   const mountedRef = useRef(true);
@@ -134,6 +138,7 @@ function Harness() {
   const openedRef = useRef<OpenedSource | null>(provisionalOpened());
   openedRefForTest = openedRef;
   const settingsRef = useRef(neutralDevelopSettings("raw-apple.d1.p1.e1"));
+  settingsRefForTest = settingsRef;
   const openingKeyRef = useRef<string | null>(null);
   const controller = useBrowserPhotoExportAndDelete({
     spotId: "spot",
@@ -148,7 +153,7 @@ function Harness() {
     viewModeRef,
     setViewMode: vi.fn(),
     setExportSheetOpen: vi.fn(),
-    setStatus: vi.fn(),
+    setStatus: statusForTest,
     removeCloudPhotos: vi.fn(),
     develop: {
       engineRef,
@@ -171,7 +176,7 @@ function Harness() {
       setSelectedKey: vi.fn(),
       removeAddedPhoto: vi.fn(),
     },
-    capabilities: CAPABILITIES,
+    capabilities: capabilitiesForTest,
   });
   runExport = controller.runExport;
   return null;
@@ -181,6 +186,9 @@ beforeEach(async () => {
   (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
   vi.useFakeTimers();
   pendingEdits = { hasPending: () => false, waitForPending: vi.fn(async () => undefined) };
+  capabilitiesForTest = { ...CAPABILITIES };
+  statusForTest = vi.fn<(status: FooterStatus | null) => void>();
+  nativeExport = vi.fn(async () => ({ saved: true, fileName: "raw.jpg" }));
   engine = {
     exportWorkingCopyJpeg: vi.fn(async () => new Uint8Array([1, 2, 3])),
     exportJpeg: vi.fn(async () => new Uint8Array([1, 2, 3])),
@@ -191,6 +199,7 @@ beforeEach(async () => {
   downloadOriginal = vi.fn(async () => ({ blob: new Blob([new Uint8Array([7])]), fileName: "raw.rw2" }));
   const library = {
     downloadOriginal,
+    exportNative: nativeExport,
     errors: {
       describe: (_error: unknown, fallback: string) => fallback,
       describeStorageError: () => null,
@@ -224,6 +233,24 @@ afterEach(async () => {
 });
 
 describe("useBrowserPhotoExportAndDelete canonical guard integration", () => {
+  it("中間調・全体の輝度を原寸 native renderer に渡さない", async () => {
+    capabilitiesForTest = { ...CAPABILITIES, nativeExport: true };
+    settingsRefForTest.current = {
+      ...neutralDevelopSettings("raw-apple.d1.p1.e1"),
+      colorGrading: { global: { luminance: 20 } },
+    };
+    let result: BrowserPhotoExportResult | undefined;
+    await act(async () => {
+      result = await runExport("jpeg", { size: "full", jpegRoute: "native" });
+    });
+    expect(result).toBe("failed");
+    expect(nativeExport).not.toHaveBeenCalled();
+    expect(statusForTest).toHaveBeenCalledWith({
+      kind: "error",
+      text: "中間調・全体の輝度を使っている写真は、原寸で書き出せません。",
+    });
+  });
+
   it("受け付けたプリセットを確定してから編集をロックし、同時の重複exportを抑える", async () => {
     let finish!: () => void;
     pendingEdits.hasPending = () => true;

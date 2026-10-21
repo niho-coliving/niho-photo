@@ -185,6 +185,32 @@ fn amounts_above_one_extrapolate_and_stop_at_the_ranges() {
     assert!(s.validate().is_empty(), "{:?}", s.validate());
 }
 
+/// niho-photo#39: the midtone / global luminance (rendered since then) move
+/// with the amount like the other numbers, and stop at -100..100.
+#[test]
+fn midtone_and_global_luminance_follow_the_amount() {
+    let mut base = edited_base();
+    base.color_grading.midtone.luminance = 10.0;
+    let text = preset(
+        r#"crs:ColorGradeMidtoneLum="+50" crs:ColorGradeGlobalLum="-80""#,
+        "",
+    );
+    for (amount, midtone, global) in [
+        (0.0, 10.0, 0.0),
+        (0.5, 30.0, -40.0),
+        (1.0, 50.0, -80.0),
+        (1.5, 70.0, -100.0),
+    ] {
+        let r = xmp::apply_preset(&text, &base, amount, None).unwrap();
+        let g = &r.settings.color_grading;
+        assert!(close(g.midtone.luminance, midtone), "{amount}: {g:?}");
+        assert!(close(g.global.luminance, global), "{amount}: {g:?}");
+        assert!(r.converted, "{amount}: {:?}", r.convert_issues);
+        assert!(r.unsupported.is_empty(), "{amount}: {:?}", r.unsupported);
+        assert!(r.settings.validate().is_empty(), "{amount}");
+    }
+}
+
 #[test]
 fn invalid_amounts_are_rejected() {
     let base = DevelopSettings::neutral();

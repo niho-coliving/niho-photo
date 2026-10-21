@@ -17,8 +17,9 @@ use crate::settings::{
 };
 use serde_json::{Map, Value};
 
-/// Converter version: bump when a rule changes.
-pub const CONVERTER_VERSION: &str = "photo-bench-edit-settings-to-develop-v3";
+/// Converter version: bump when a rule changes (v4: non-zero midtone /
+/// global color grading luminance converts instead of staying legacy).
+pub const CONVERTER_VERSION: &str = "photo-bench-edit-settings-to-develop-v4";
 
 /// One reason a key did not convert (or a note about how it converted).
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -609,13 +610,8 @@ fn convert_color_grading(value: &Value) -> Result<ColorGradingSettings, ConvertI
                 "must be within -100..100",
             ));
         }
-        if matches!(name, "midtone" | "global") && b.luminance != 0.0 {
-            return Err(ConvertIssue::new(
-                &format!("colorGrading.{name}.luminance"),
-                "unsupported",
-                "midtone and global luminance are retained by Photo Bench but not rendered",
-            ));
-        }
+        // Midtone / global luminance convert like the others: NIHO renders
+        // them (niho-photo#39; Photo Bench keeps them only).
     }
     if !(0.0..=100.0).contains(&g.blending) {
         return Err(ConvertIssue::new(
@@ -822,17 +818,26 @@ mod tests {
     }
 
     #[test]
-    fn nonzero_midtone_and_global_luminance_are_preserved_as_legacy() {
+    fn nonzero_midtone_and_global_luminance_convert() {
         for band in ["midtone", "global"] {
+            let out = convert_edit_settings(
+                &json!({"colorGrading": {band: {"hue": 30.0, "saturation": 10.0, "luminance": 20.0}}}),
+                None,
+            );
+            assert!(out.ok, "{band}: {:?}", out.issues);
+            assert!(out.settings.legacy_settings.is_none(), "{band}");
+            let g = &out.settings.color_grading;
+            let b = if band == "midtone" {
+                g.midtone
+            } else {
+                g.global
+            };
+            assert_eq!((b.hue, b.saturation, b.luminance), (30.0, 10.0, 20.0));
+            // Out of range stays an issue.
             let out =
-                convert_edit_settings(&json!({"colorGrading": {band: {"luminance": 20.0}}}), None);
+                convert_edit_settings(&json!({"colorGrading": {band: {"luminance": 120.0}}}), None);
             assert!(!out.ok, "{band}");
-            assert!(out
-                .settings
-                .legacy_settings
-                .unwrap()
-                .contains_key("colorGrading"));
-            assert_eq!(out.issues[0].code, "unsupported");
+            assert_eq!(out.issues[0].code, "outOfRange");
         }
     }
 

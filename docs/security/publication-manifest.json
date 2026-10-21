@@ -207,14 +207,16 @@
         "path": "packages/photo-editing/src/browser-photo-export.test.ts",
         "sha256": "60c3cd32192302e933a8941375069b4a4625309e054716b8417fbe6752cf87b5"
       },
-      "outputSha256": "c7b58918b2db9c182655d03bb5aaf6ba364e7a8d9d36d3068185ddbc668d2c94",
+      "outputSha256": "12e854f88dd547461d3dae96b8551e5ee9d3b4b8987348570754168ec4d8dd11",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
         "Issue #28で既知になったengine番号を未知版fixtureから除外。",
         "新しい色相保持エンジンと新旧バイナリの能力境界・数値回帰を整合。",
         "PR #62 で追加したniho-10対応に合わせ未知の将来engineを使う回帰検証へ更新",
-        "PR #62 のniho-10対応に合わせ未知の将来engineで回帰検証"
+        "PR #62 のniho-10対応に合わせ未知の将来engineで回帰検証",
+        "原寸native書き出しの輝度互換性ガードと色相ホイール操作を修正。",
+        "PR #80 のカラーグレーディングを最新HSL UIと統合。"
       ]
     },
     {
@@ -225,10 +227,12 @@
         "path": "packages/photo-editing/src/browser-photo-export.ts",
         "sha256": "866f98dfe091c3ac0eec072666e6be07b7df11c85687a22b5c11ebb4941bf4d5"
       },
-      "outputSha256": "cdeb622c4dfc3da2e6eb5b25c1500c8c99fd3381fed6002c49ac2544aec49407",
+      "outputSha256": "84a4b79f68ffd8caaa0a5093d780ce49e1cd9b82587eaea75355c54a058afa09",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
-        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。"
+        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
+        "原寸native書き出しの輝度互換性ガードと色相ホイール操作を修正。",
+        "PR #80 のカラーグレーディングを最新HSL UIと統合。"
       ]
     },
     {
@@ -314,7 +318,9 @@
         "Issue #32 v5 detailを読むcrate 0.19.0を読む",
         "Issue #32 detail v6 を、先行する masks v5 と #72 の histogram/Jキー契約に同期する。",
         "部分補正（マスク）#66: 画面が読むcrateの版を0.19.0へ上げる",
-        "PR #81 のマスク描画を最新mainの変更と統合。"
+        "PR #81 のマスク描画を最新mainの変更と統合。",
+        "niho-photo#39 画面が読む crate 版を 0.19.0 に上げた。",
+        "PR #80 のカラーグレーディングを最新HSL UIと統合。"
       ]
     },
     {
@@ -924,7 +930,7 @@
         "path": "packages/photo-editing/src/editor/browser-photo-editing-mobile-editor.tsx",
         "sha256": "cf0ebc1e3a23b7a2e8ecea7538cc6f2d9880cbf4e181d79db61f26dc293c3d1a"
       },
-      "outputSha256": "56de76699f12f1fb1bb690ced766b29f4e06429a731c4a6e4b97a23327d37d8e",
+      "outputSha256": "e33e90579a1d6b2b219588652ed61f55a730c874323efb8c431d714f063f9c9d",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
@@ -936,7 +942,9 @@
         "niho-photo#41 の比較UIを #72 のヒストグラム・Jキー契約と併存するようmainへ積み直した。",
         "niho-photo#38 道具の帯にカラーミキサー（HSL）を足し、ポイントカラーへ改名。道具が多い幅では帯を横に送る。",
         "PR #79 のHSL mixerを最新tone curveとinfo UIへ統合。",
-        "PR #79のHSL mixerを最新mainから取り込み、公開出力ハッシュを更新。"
+        "PR #79のHSL mixerを最新mainから取り込み、公開出力ハッシュを更新。",
+        "niho-photo#39 スマホの編集の層にカラーグレーディングの道具を足した。",
+        "PR #80 のカラーグレーディングを最新HSL UIと統合。"
       ]
     },
     {
@@ -1129,7 +1137,7 @@
         "path": "packages/photo-editing/src/editor/browser-photo-editing-workbench.tsx",
         "sha256": "f655136ae0c985d793822ca8bef1668dba26ffd4bb8f13d2ba3d6c2ccb13ceb6"
       },
-      "outputSha256": "1324f749a29f6bb4291127e9a522e2b3b871a033b6e4a6244ced52b6f2124426",
+      "outputSha256": "6988795238f36f1c33ac4ba0e07845946ab9297bf78c963ac5403c924370233c",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
@@ -1182,7 +1190,10 @@
         "niho-photo#38 PC のカラーの群の下にカラーミキサーの節、スマホの層にカラーミキサーの道具を置く。Oklch の文言をポイントカラーへ改名。",
         "PR #79 のHSL mixerを最新tone curveとinfo UIへ統合。",
         "PR #79のHSL mixerを最新mainから取り込み、公開出力ハッシュを更新。",
-        "squash済みPR #77のmainをマスク描画へ同期する。"
+        "squash済みPR #77のmainをマスク描画へ同期する。",
+        "niho-photo#39 カラーミキサーの節の後ろにカラーグレーディングの節と、スマホの道具を渡した。",
+        "原寸native書き出しの輝度互換性ガードと色相ホイール操作を修正。",
+        "PR #80 のカラーグレーディングを最新HSL UIと統合。"
       ]
     },
     {
@@ -1761,14 +1772,16 @@
         "path": "packages/photo-editing/src/editor/use-browser-photo-export-delete.ts",
         "sha256": "c1c209ddbe8cc049adb5c06c323c0f96e316cb28a8302293ca0f531f88d00592"
       },
-      "outputSha256": "519d47c3ca67e82ddf69b33c42793faa43f6cdc83c5a58c9696d6b1b249a54fb",
+      "outputSha256": "c9e7cfe8a5110a6c7b433044abcacb0a803c82d4304f871c120c809fdf40efc1",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
         "Issue #13の段階表示、provisional draft、canonical handoffと書き出し境界を実装。",
         "Issue 13 progressive RAW open implementation",
         "Issue 13 canonical export waiting status",
-        "未完了プリセットを編集ロック前に確定して補正と重複書き出しを保護する"
+        "未完了プリセットを編集ロック前に確定して補正と重複書き出しを保護する",
+        "原寸native書き出しの輝度互換性ガードと色相ホイール操作を修正。",
+        "PR #80 のカラーグレーディングを最新HSL UIと統合。"
       ]
     },
     {
@@ -2187,7 +2200,7 @@
         "path": "packages/photo-editing/src/photo-editing-copy.ts",
         "sha256": "1208d4124dca26c951d73f6f84c560879e69beddfb9a16426e1a9dcc9fd30c27"
       },
-      "outputSha256": "ee68e9aa11cd32e5e50c4f85b7e0aa4b2393e3d50b349af398f3cc522f08d40b",
+      "outputSha256": "6fb5428a267eda2d137f8d984e562e5e43bd91062cf2b67959bbd10a354e27d3",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
@@ -2217,7 +2230,10 @@
         "PR #79のプリセット保存対象外表示を実UIの項目名に揃える。",
         "PR #79のHSL mixerを最新mainから取り込み、公開出力ハッシュを更新。",
         "squash済みPR #77のmainをマスク描画へ同期する。",
-        "部分補正（マスク）#69: 読めなかったマスクの種類の日本語の名前を足す"
+        "部分補正（マスク）#69: 読めなかったマスクの種類の日本語の名前を足す",
+        "niho-photo#39 カラーグレーディングの文言を足し、使えない項目からカラーグレーディングの輝度を外した。",
+        "原寸native書き出しの輝度互換性ガードと色相ホイール操作を修正。",
+        "PR #80 のカラーグレーディングを最新HSL UIと統合。"
       ]
     },
     {
@@ -2723,7 +2739,7 @@
         "path": "packages/photo-editing/src/photo-preset-xmp-support.test.ts",
         "sha256": "9dc9314d099eee0f638329346395101c9bd22a540fb0163935a530ececa99a6d"
       },
-      "outputSha256": "3efd181663c7413398d47f9de1322c5421f048a1e11a08fa8c9683d0d9a9c661",
+      "outputSha256": "6ce6e87aa274e8d0e442982aee465f8e349dee91a4697874a9096dad7816cf4f",
       "modifications": [
         "Issue #30 Oklch色ミキサーとengine 10/11対応を反映",
         "Issue #32 シャープ・ノイズ軽減はapproximateになり細かな項目だけを知らせることを検証する",
@@ -2731,7 +2747,9 @@
         "niho-photo#38 PointColors の使えない項目の名前を「Lightroom のポイントカラー」に改めたことに期待値を合わせる。",
         "PR #79 のHSL mixerを最新tone curveとinfo UIへ統合。",
         "PR #79のHSL mixerを最新mainから取り込み、公開出力ハッシュを更新。",
-        "部分補正（マスク）#69: 読めなかったマスクの知らせと局所補正の一覧の値の除外を検証する"
+        "部分補正（マスク）#69: 読めなかったマスクの知らせと局所補正の一覧の値の除外を検証する",
+        "niho-photo#39 使えない項目の表からカラーグレーディングの輝度を外した test に直した。",
+        "PR #80 のカラーグレーディングを最新HSL UIと統合。"
       ]
     },
     {
@@ -2742,14 +2760,16 @@
         "path": "packages/photo-editing/src/photo-preset-xmp-support.ts",
         "sha256": "af143f7fb0e786764ed6959aa7e32a1567e88aff4f71f7f53e7d11bd066fda57"
       },
-      "outputSha256": "06656b9b88a060eb1ec85deca111097eddfab62d48431c0aa33de2e9de55df8b",
+      "outputSha256": "0f499c9abc2689e31bdd099fa88cc721356642055eeb7d981a54406b8eac992e",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
         "Issue #30 Oklch色ミキサーとengine 10/11対応を反映",
         "Issue #32 シャープ・ノイズ軽減はapproximateになり細かな項目だけを知らせる",
         "Issue #32 detail v6 を、先行する masks v5 と #72 の histogram/Jキー契約に同期する。",
-        "部分補正（マスク）#69: 読めなかったマスクの項目を種類ごとの名前にまとめ、局所補正の一覧の値を根の値として読まない"
+        "部分補正（マスク）#69: 読めなかったマスクの項目を種類ごとの名前にまとめ、局所補正の一覧の値を根の値として読まない",
+        "niho-photo#39 中間調・全体の輝度を描けるようになったので、使えない項目の表から外した。",
+        "PR #80 のカラーグレーディングを最新HSL UIと統合。"
       ]
     },
     {
@@ -4738,7 +4758,9 @@
         "Issue #32 v5 detail追加に合わせてcrate版を0.19.0へ上げる",
         "Issue #32 detail v6 を、先行する masks v5 と #72 の histogram/Jキー契約に同期する。",
         "部分補正（マスク）#66: 現像workspaceを0.19.0へ更新し外部依存の固定版を維持",
-        "PR #81 のマスク描画を最新mainの変更と統合。"
+        "PR #81 のマスク描画を最新mainの変更と統合。",
+        "niho-photo#39 の crate 版 0.19.0 に合わせて workspace の 8 crate の版を更新した。",
+        "PR #80 のカラーグレーディングを最新HSL UIと統合。"
       ]
     },
     {
@@ -4756,7 +4778,9 @@
         "Issue #32 v5 detail追加に合わせてcrate版を0.19.0へ上げる",
         "Issue #32 detail v6 を、先行する masks v5 と #72 の histogram/Jキー契約に同期する。",
         "部分補正（マスク）#66: 現像workspaceの版を0.19.0へ上げる",
-        "PR #81 のマスク描画を最新mainの変更と統合。"
+        "PR #81 のマスク描画を最新mainの変更と統合。",
+        "niho-photo#39 で中間調・全体の輝度を描くため crate の版を 0.19.0 に上げた。",
+        "PR #80 のカラーグレーディングを最新HSL UIと統合。"
       ]
     },
     {
@@ -5844,7 +5868,7 @@
         "path": "packages/develop-engine/crates/niho-develop/src/color_ops.rs",
         "sha256": "cd0c61a609a12094f4f95b019c1671187e1d320b95c36b34da5c87dc7c3835d1"
       },
-      "outputSha256": "0e77f950ede48fa86a032a5cf3da7b09fdd1420bd1806cc92d054ee4167c842b",
+      "outputSha256": "49ec4c43c3599d34285c07238b7658090ce291786993b02e220c58949dc14a06",
       "modifications": [
         "公開Issue #26/#27/#29: 旧版を保つfloat cube候補、研究用WB/H-Sプローブ、合成検証と計測契約を追加。",
         "Issue #28の色相安定engine追加と互換回帰を反映。",
@@ -5853,7 +5877,9 @@
         "色ポイントを画素単位で適用する後段処理を分離",
         "Issue #30のactive-point画素cache向けf32 OKLCH kernelとf64参照比較を追加。",
         "点補正の選択plane cacheと精度・依存関係・headroom回帰を整備",
-        "灰色近傍の色相数値誤差をplane生成時だけf64参照で抑えて最小範囲の選択精度を守る"
+        "灰色近傍の色相数値誤差をplane生成時だけf64参照で抑えて最小範囲の選択精度を守る",
+        "niho-photo#39 カラーグレーディングの中間調・全体の輝度の近似式（未校正）と正規化の単体テストを追加。",
+        "PR #80 のカラーグレーディングを最新HSL UIと統合。"
       ]
     },
     {
@@ -5864,9 +5890,11 @@
         "path": "packages/develop-engine/crates/niho-develop/src/convert.rs",
         "sha256": "5d3c870deecd99a37a9c9b1da08438ac31b8869411f49c2cd7ffeb69cb68c576"
       },
-      "outputSha256": "cea562bf7ab5ce83405558ad17d22dcc1d2e710e9618091715c858e5aa8c65d8",
+      "outputSha256": "6369b6c87dff259019db85076399bfddb0d9bb30e6c52e07b7e05559b06c263f",
       "modifications": [
-        "部分補正（マスク）#65: EditSettings変換でmasksキーを除外する"
+        "部分補正（マスク）#65: EditSettings変換でmasksキーを除外する",
+        "niho-photo#39 中間調・全体の輝度を変換するよう規則を改め、変換器を v4 にした。",
+        "PR #80 のカラーグレーディングを最新HSL UIと統合。"
       ]
     },
     {
@@ -6137,7 +6165,7 @@
         "path": "packages/develop-engine/crates/niho-develop/src/pipeline.rs",
         "sha256": "d982d76cf1b5d34526f700e5edfcef00ae8647d22b845c0f7234ed340ba9d641"
       },
-      "outputSha256": "355104634b09cb9d6a3c0104f5ab63eec00a96d0ce93f3982ac2497f95415eed",
+      "outputSha256": "54fed1ee9b203e00561b7266d00daca701d4f256a0ae5a8dcc39bbc67ee8e541",
       "modifications": [
         "公開Issue #26/#27/#29: 旧版を保つfloat cube候補、研究用WB/H-Sプローブ、合成検証と計測契約を追加。",
         "Issue #28の色相安定engine追加と互換回帰を反映。",
@@ -6158,7 +6186,9 @@
         "Issue #32 detail v6 を、先行する masks v5 と #72 の histogram/Jキー契約に同期する。",
         "部分補正（マスク）#66: 同じ画像の層が全体の局所階調のpassを読めるようにする",
         "PR #81 のマスク描画を最新mainの変更と統合。",
-        "PR #76 detailとPR #81 maskを統合し、公開出力ハッシュを更新。"
+        "PR #76 detailとPR #81 maskを統合し、公開出力ハッシュを更新。",
+        "niho-photo#39 中間調・全体の輝度を色の補正（出力変換の判定）に数えるようにした。",
+        "PR #80 のカラーグレーディングを最新HSL UIと統合。"
       ]
     },
     {
@@ -6272,7 +6302,7 @@
         "path": "packages/develop-engine/crates/niho-develop/src/settings.rs",
         "sha256": "756a24a09d738b2341974d92d89b82f55b42eb6060b6e0c99ee4a532947a1b47"
       },
-      "outputSha256": "8fd40e813c8ac63de1e82ff78ec13733f764dc660eb46a814aff3feed398b711",
+      "outputSha256": "d41eb6f2156a0e13272ed9a1494f0c75fc42c98793a49263151308a4a5b8ed29",
       "modifications": [
         "公開Issue #26/#27/#29: 旧版を保つfloat cube候補、研究用WB/H-Sプローブ、合成検証と計測契約を追加。",
         "Issue #28の色相安定engine追加と互換回帰を反映。",
@@ -6282,7 +6312,9 @@
         "Issue #32 developSettings v5のdetail（シャープ・輝度/カラーNR）の形と検証を追加",
         "Issue #32 detail uses v6 because Issue #31 masks already owns v5; synchronize the Rust and TypeScript contract, probe, tests, and documentation.",
         "Issue #32 assigns settings v6 to detail; preserve mask v5 and reject unknown v7.",
-        "Issue #32 detail v6 を、先行する masks v5 と #72 の histogram/Jキー契約に同期する。"
+        "Issue #32 detail v6 を、先行する masks v5 と #72 の histogram/Jキー契約に同期する。",
+        "niho-photo#39 中間調・全体の輝度を is_neutral の判定に含めた。",
+        "PR #80 のカラーグレーディングを最新HSL UIと統合。"
       ]
     },
     {
@@ -6331,7 +6363,7 @@
         "path": "packages/develop-engine/crates/niho-develop/src/xmp.rs",
         "sha256": "be5ddce69eceafb334c173ee92af3614c044039b103903ad1dfef24758f1ec45"
       },
-      "outputSha256": "3626cc42b86bf917672b4af5b5b9e6c2c89378bcb5095f858d69127d94d85d35",
+      "outputSha256": "8aa89c71fd7a03a2e89c33061a4a238a32f134f0869b4a86a33d09de65858bd4",
       "modifications": [
         "公開Issue #26/#27/#29: 旧版を保つfloat cube候補、研究用WB/H-Sプローブ、合成検証と計測契約を追加。",
         "Issue #28の色相安定engine追加と互換回帰を反映。",
@@ -6341,7 +6373,10 @@
         "Issue #32 シャープ・ノイズ軽減のXMPをunsupportedからapproximateへ移しv5 detailへ読む",
         "Issue #32 detail uses v6 because Issue #31 masks already owns v5; synchronize the Rust and TypeScript contract, probe, tests, and documentation.",
         "Issue #32 detail v6 を、先行する masks v5 と #72 の histogram/Jキー契約に同期する。",
-        "部分補正（マスク）#69: 局所補正の一覧を要素の木として読み、入れ子の説明を Look.* に混ぜず、プリセットの結果に masks を足す"
+        "部分補正（マスク）#69: 局所補正の一覧を要素の木として読み、入れ子の説明を Look.* に混ぜず、プリセットの結果に masks を足す",
+        "niho-photo#39 ColorGradeMidtoneLum / GlobalLum を unsupported から外し、0 は exact・それ以外は approximate と報告する。",
+        "PR #80 のカラーグレーディングを最新HSL UIと統合。",
+        "PR #80: Color Grading XMP を解析するため、既存の未対応XMPテストの期待値を更新。"
       ]
     },
     {
@@ -6370,7 +6405,7 @@
         "path": "packages/develop-engine/crates/niho-develop/src/xmp/write.rs",
         "sha256": "f583b51766c756fe31b623949a8174abd304ff660a7793e332b3153faf2aa749"
       },
-      "outputSha256": "732374618897a3369f1195fb0e9bdc87346f359b26d0cdc64e910926bdaaf4b8",
+      "outputSha256": "47b0129dbdf0d42acedd134c12133f89ed51232bdbeabe99166b76780864053b",
       "modifications": [
         "公開Issue #26/#27/#29: 旧版を保つfloat cube候補、研究用WB/H-Sプローブ、合成検証と計測契約を追加。",
         "Issue #28の色相安定engine追加と互換回帰を反映。",
@@ -6380,7 +6415,9 @@
         "Issue #32 XMP書き出しにsharpening群と輝度NR・detailのカラーNRを追加",
         "cap inherited legacy color reduction when writing XMP",
         "Issue #32 detail uses v6 because Issue #31 masks already owns v5; synchronize the Rust and TypeScript contract, probe, tests, and documentation.",
-        "Issue #32 detail v6 を、先行する masks v5 と #72 の histogram/Jキー契約に同期する。"
+        "Issue #32 detail v6 を、先行する masks v5 と #72 の histogram/Jキー契約に同期する。",
+        "niho-photo#39 中間調・全体の輝度を 0 も含めてプリセットに書くようにした。",
+        "PR #80 のカラーグレーディングを最新HSL UIと統合。"
       ]
     },
     {
@@ -6836,11 +6873,13 @@
         "path": "packages/develop-engine/crates/niho-develop/tests/preset_amount.rs",
         "sha256": "97ecf2f9a119356b13f60a0eb0d33bfdd5fc93a2a22d1d4419dcedefa74bead3"
       },
-      "outputSha256": "07d6fa0855b2b04111156f71dfd03c95dbf49093a1ca44eaf9ade01a8bcccaae",
+      "outputSha256": "197d8913eb82aa52ad11a159297ad8bf8ea5fb8ae005db1319274a64b58cfff1",
       "modifications": [
         "Issue #32 プリセットのdetailで形の版が上がることを許容する",
         "Issue #32 detail uses v6 because Issue #31 masks already owns v5; synchronize the Rust and TypeScript contract, probe, tests, and documentation.",
-        "Issue #32 detail v6 を、先行する masks v5 と #72 の histogram/Jキー契約に同期する。"
+        "Issue #32 detail v6 を、先行する masks v5 と #72 の histogram/Jキー契約に同期する。",
+        "niho-photo#39 中間調・全体の輝度に適用量が掛かる test を追加。",
+        "PR #80 のカラーグレーディングを最新HSL UIと統合。"
       ]
     },
     {
@@ -6908,11 +6947,13 @@
         "path": "packages/develop-engine/crates/niho-develop/tests/xmp_presets.rs",
         "sha256": "423ce05a729e0968f3936e28924db3b09b2095cf879875beaa21bd17fdd2b72b"
       },
-      "outputSha256": "70730d52ae447e95778f6fba275d8cef5667ea16e92c85c1057f955c93e447cc",
+      "outputSha256": "f95f413713d55d17a32900d418275308b81413c268ace4e0e1a44d91e1aaaaac",
       "modifications": [
         "Issue #32 同梱プリセットのディテール項目を描画対象として検証する",
         "Issue #32 detail uses v6 because Issue #31 masks already owns v5; synchronize the Rust and TypeScript contract, probe, tests, and documentation.",
-        "Issue #32 detail v6 を、先行する masks v5 と #72 の histogram/Jキー契約に同期する。"
+        "Issue #32 detail v6 を、先行する masks v5 と #72 の histogram/Jキー契約に同期する。",
+        "niho-photo#39 NIHO が中間調・全体の輝度を描く前提に同梱プリセットの判定を合わせた。",
+        "PR #80 のカラーグレーディングを最新HSL UIと統合。"
       ]
     },
     {
@@ -6923,12 +6964,14 @@
         "path": "packages/develop-engine/crates/niho-develop/tests/xmp_write.rs",
         "sha256": "ed8beb33fdf73d50fd11850f3da66d1c5f95cf3157ceafa71a8f24760c597f10"
       },
-      "outputSha256": "a92a450c58d9a30094cbcb353fff5704c1b1d6dedc96c7cd21a0dbc1a1a593c0",
+      "outputSha256": "03ef1af899ad30bddc6f3377798464dd430d3be40c95b9de32a36c92303d72e8",
       "modifications": [
         "Issue #32 sharpening群とdetailのNR書き出し・往復を検証する",
         "cover the capped inherited legacy XMP value",
         "Issue #32 detail uses v6 because Issue #31 masks already owns v5; synchronize the Rust and TypeScript contract, probe, tests, and documentation.",
-        "Issue #32 detail v6 を、先行する masks v5 と #72 の histogram/Jキー契約に同期する。"
+        "Issue #32 detail v6 を、先行する masks v5 と #72 の histogram/Jキー契約に同期する。",
+        "niho-photo#39 中間調・全体の輝度の書き出しと読み戻しの test を追加した。",
+        "PR #80 のカラーグレーディングを最新HSL UIと統合。"
       ]
     },
     {
@@ -9702,8 +9745,8 @@
     },
     {
       "path": "packages/photo-editing/src/editor/use-browser-photo-export-delete.test.tsx",
-      "sha256": "ff003afd2eb27c8aaa3c0455755289ad2681b2feb983e0848a7e2416ffffbc78",
-      "origin": "Issue #13のため独立作成。actual export hookと公開fixtureだけで、補正書き出しのcanonical待機とRAW original copyの非待機を検証。外部画像・非公開コード・個体metadataを含まない。\n変更理由: 書出しhost境界のmockを実際の保存関数型に限定。\n変更理由: プリセット確定待機と重複書き出しおよびRAW原本非待機を実経路で検証する"
+      "sha256": "430e7c42bc3dfee5758db33a7462cf0f46f5018190f86c07004e4215c893500e",
+      "origin": "Issue #13のため独立作成。actual export hookと公開fixtureだけで、補正書き出しのcanonical待機とRAW original copyの非待機を検証。外部画像・非公開コード・個体metadataを含まない。\n変更理由: 書出しhost境界のmockを実際の保存関数型に限定。\n変更理由: プリセット確定待機と重複書き出しおよびRAW原本非待機を実経路で検証する\n変更理由: 原寸native書き出しの輝度互換性ガードと色相ホイール操作を修正。\n変更理由: PR #80 のカラーグレーディングを最新HSL UIと統合。"
     },
     {
       "path": "packages/photo-editing/src/editor/use-browser-photo-progressive-open.test.tsx",
@@ -10037,8 +10080,8 @@
     },
     {
       "path": "packages/photo-editing/src/photo-editing-advanced-sections-state.ts",
-      "sha256": "7cd43531502334202e06905617ad6a6f46abf0d334f457416d4ad07444d9d593",
-      "origin": "niho-photo#37 のため新規作成。右パネルの既定で閉じた節の開閉を端末に覚えるフック（開いた節の id の配列）。外部コード・実データを含まない。\n変更理由: niho-photo#38 既定で閉じた節に「カラーミキサー」（colorMixer）を追加。\n変更理由: PR #79 のHSL mixerを最新tone curveとinfo UIへ統合。\n変更理由: PR #79のHSL mixerを最新mainから取り込み、公開出力ハッシュを更新。"
+      "sha256": "6d052751e45f581ba60b2406a293a837611d872386aca5eaf15eac71f9cf9892",
+      "origin": "niho-photo#37 のため新規作成。右パネルの既定で閉じた節の開閉を端末に覚えるフック（開いた節の id の配列）。外部コード・実データを含まない。\n変更理由: niho-photo#38 既定で閉じた節に「カラーミキサー」（colorMixer）を追加。\n変更理由: PR #79 のHSL mixerを最新tone curveとinfo UIへ統合。\n変更理由: PR #79のHSL mixerを最新mainから取り込み、公開出力ハッシュを更新。\n変更理由: niho-photo#39 既定で閉じた節にカラーグレーディングの id を足した。\n変更理由: PR #80 のカラーグレーディングを最新HSL UIと統合。"
     },
     {
       "path": "packages/photo-editing/src/photo-editing-tone-curve.test.ts",
@@ -10139,6 +10182,46 @@
       "path": "packages/photo-editing/src/develop-engine/develop-preset-masks.test.ts",
       "sha256": "6502e5cc8cffcebf2355fec67676b8f22432edd97a76cf9ebd9bceb0c3412514",
       "origin": "Issue #69の公開仕様から新規作成した、回転・反転・切り抜き・角度補正でのマスクの写し方とプリセット結果の読み方の合成テスト。外部画像・非公開コード・個体metadataを含まない。"
+    },
+    {
+      "path": "docs/color-grading.md",
+      "sha256": "f880ef36e95f7b1688b3de155028b141c11e4dbecfd44ad919b5a030a39e3712",
+      "origin": "niho-photo#39 の公開仕様だけから新規作成したカラーグレーディング（中間調・全体の輝度の近似式と正規化、XMP・プリセット・画面の契約、合成画像での実測）の文書。非公開形式や私有データを含まない。"
+    },
+    {
+      "path": "packages/develop-engine/crates/niho-develop/tests/color_grading.rs",
+      "sha256": "5ee737be8994e20643e9c4620fb46728f3bcffbdab68475d9d4c75a7bb69307f",
+      "origin": "niho-photo#39 のため新規作成。中間調・全体の輝度が輝度の項だけを足すこと、合成の灰色の階調での単調性・端の保持、シャドウに青・ハイライトに橙が乗ることの test。合成の値・合成画像だけを使用。"
+    },
+    {
+      "path": "packages/photo-editing/src/photo-editing-color-grading.ts",
+      "sha256": "b38df31a176064637f100d8c0767a270e6ef528ef2cd4624e9e67cc01187b617",
+      "origin": "niho-photo#39 のため新規作成。developSettings.colorGrading（4 ゾーン × 色相・彩度・輝度とブレンド・バランス）の読み書きの純関数と、crate の grade_direction・PROPHOTO_TO_SRGB から移植した色相環の色。外部コード・実データを含まない。\n変更理由: 原寸native書き出しの輝度互換性ガードと色相ホイール操作を修正。"
+    },
+    {
+      "path": "packages/photo-editing/src/photo-editing-color-grading.test.ts",
+      "sha256": "47b8065ed050389b929e93cdcbadd34c6bf4f619a3602a823362ff80d358d3ef",
+      "origin": "niho-photo#39 のため新規作成。カラーグレーディングの読み書き・既定のときのキーの削除・色相環の色と、補正のコピー・貼り付け・取り消しの履歴・プリセットの既定の群に colorGrading が入ることの test。合成の値だけを使用。\n変更理由: 原寸native書き出しの輝度互換性ガードと色相ホイール操作を修正。"
+    },
+    {
+      "path": "packages/photo-editing/src/editor/photo-editing-color-wheel.tsx",
+      "sha256": "bbbcef9169676e07d021b61747a7c6ad23befe294b34f6270698b969705cfdd9",
+      "origin": "niho-photo#39 のため新規作成。ドラッグとキーで色相と彩度を動かすカラーグレーディングの色相環の部品。外部コード・実データを含まない。\n変更理由: 原寸native書き出しの輝度互換性ガードと色相ホイール操作を修正。\n変更理由: 原寸native書き出しの輝度互換性ガードと色相ホイール操作を修正。"
+    },
+    {
+      "path": "packages/photo-editing/src/editor/photo-editing-color-grading.tsx",
+      "sha256": "346920929aa496fd1d71e4f482bf4374690bce8d25db0f536d0f821ce9269ad0",
+      "origin": "niho-photo#39 のため新規作成。カラーミキサーの下の「カラーグレーディング」の節と、PC・スマホ共通の帯の 4 択・色相環・スライダーの部品。外部コード・実データを含まない。"
+    },
+    {
+      "path": "packages/photo-editing/src/editor/photo-editing-color-grading.test.tsx",
+      "sha256": "c23af6c9428803f273f7c0b7563b03aa0b155d5b18e809e6e393f3414db37b2a",
+      "origin": "niho-photo#39 のため新規作成。帯の 4 択・色相環のドラッグ / キー / ダブルクリック・スライダー・初期化・節の開閉と、カラーの下の並び（カラーミキサー → カラーグレーディング → ポイントカラー）の test。合成の値だけを使用。\n変更理由: 原寸native書き出しの輝度互換性ガードと色相ホイール操作を修正。"
+    },
+    {
+      "path": "packages/photo-editing/src/editor/browser-photo-editing-mobile-editor-color-grading.test.tsx",
+      "sha256": "93806337576c84fa8ec9e5d8b193416805e49503f3f3a1f3197f89497d33f768",
+      "origin": "niho-photo#39 のため新規作成。スマホの編集の層の道具の帯のカラーグレーディング（並び・段・値の書き込み・調整ありの点）の test。合成の値だけを使用。"
     }
   ],
   "excludedSources": [

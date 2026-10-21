@@ -1686,6 +1686,8 @@ impl XmpDocument {
                     .optional_number(k)
                     .is_some_and(|number| number.is_finite());
             let effect = effect_field(k);
+            let graded_luminance_model =
+                matches!(k, "ColorGradeMidtoneLum" | "ColorGradeGlobalLum");
             let (mut pb, mut level, mut note): (Level, Level, String) =
                 if k == "ToneCurveName2012" && self.sequences.is_empty() {
                     (
@@ -1769,12 +1771,19 @@ impl XmpDocument {
                         Level::Unsupported,
                         "-100..100 の範囲外なので適用しない".into(),
                     )
-                } else if matches!(k, "ColorGradeMidtoneLum" | "ColorGradeGlobalLum") {
-                    (
-                        Level::Unsupported,
-                        Level::Unsupported,
-                        "測定式が無いため値を保持するのみ".into(),
-                    )
+                } else if graded_luminance_model {
+                    // Photo Bench keeps the value only; NIHO renders it with an
+                    // approximation not calibrated against Lightroom yet
+                    // (niho-photo#39, `color_ops::LUM_MIDTONE` / `LUM_GLOBAL`).
+                    if swift_double(value) == Some(0.0) {
+                        (Level::Unsupported, Level::Exact, NOTE_EFFECT_NONE.into())
+                    } else {
+                        (
+                            Level::Unsupported,
+                            Level::Approximate,
+                            "NIHO の近似式（Lightroom の実測による校正は未実施）".into(),
+                        )
+                    }
                 } else if matches!(k, "Highlights2012" | "Shadows2012") {
                     (
                         Level::Exact,
@@ -1829,11 +1838,11 @@ impl XmpDocument {
                 level = Level::Unsupported;
                 note = "有限数として読めないため適用しない".into();
             }
-            // An effect in use is approximate already; its note still says
-            // the value was clamped.
+            // Effects, Detail values and graded luminance in use can already
+            // be approximate; their notes still say the value was clamped.
             let clampable = match effect {
                 Some(_) => matches!(level, Level::Exact | Level::Approximate),
-                None if detail::DETAIL_KEYS.contains(&k) => {
+                None if graded_luminance_model || detail::DETAIL_KEYS.contains(&k) => {
                     matches!(level, Level::Exact | Level::Approximate)
                 }
                 None => matches!(level, Level::Exact),
@@ -2256,8 +2265,10 @@ mod tests {
 </rdf:RDF></x:xmpmeta>"#;
         let result = preset_settings(xmp, None).unwrap();
         assert!(!result.converted);
-        let legacy = result.settings.legacy_settings.unwrap();
+        let legacy = result.settings.legacy_settings.as_ref().unwrap();
         assert!(legacy.contains_key("curveRefineSaturation"));
-        assert!(legacy.contains_key("colorGrading"));
+        assert!(!legacy.contains_key("colorGrading"));
+        assert_eq!(result.settings.color_grading.midtone.luminance, 20.0);
+        assert_eq!(result.settings.color_grading.global.luminance, -10.0);
     }
 }
