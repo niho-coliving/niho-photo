@@ -284,6 +284,8 @@ describe("capabilities", () => {
       nativeExport: true,
       nativeExportRaster: true,
       exportFolder: true,
+      // マスクの面（ブラシ）の置き場はアプリのコマンド（M4 #68）
+      maskSurfaces: true,
       cutout: true,
       multiSelect: true,
       info: true,

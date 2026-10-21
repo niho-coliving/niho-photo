@@ -14,6 +14,7 @@ import {
 import { describeBrowserPhotoSourceError, renderBrowserPhotoPreview } from "../browser-photo-source";
 import {
   createDevelopEngine,
+  DevelopMaskSurfaceError,
   photoDevelopDiagnosticsEnabled,
   type DevelopEngine,
   type DevelopFrame,
@@ -75,7 +76,9 @@ import {
   resolveWorkOutcome,
   type BrowserPhotoOpenFlowContext,
 } from "./browser-photo-editing-open-flow";
+import { renderDevelopWithoutUnreadableMasks } from "./browser-photo-mask-surface-render";
 import { readCropSource, useBrowserPhotoCrop } from "./use-browser-photo-crop";
+import type { PhotoEditingMaskSurfaceIssue } from "./use-browser-photo-masks";
 import type { BrowserPhotoDevelop } from "./use-browser-photo-develop";
 import { useBrowserPhotoDevelopReload } from "./use-browser-photo-develop-reload";
 import { useBrowserPhotoEditSettings } from "./use-browser-photo-edit-settings";
@@ -187,6 +190,8 @@ export function useBrowserPhotoOpen(params: {
     uploadOpenedEditedPreview,
     leaveEditing,
     createSaver,
+    maskSurfaceSource,
+    maskSurfacePhotoIdRef,
   } = params.develop;
   const { allItemsRef, place, setPlace, setSelectedKey, setDeepLinkedPhoto, clearFilter } = params.items;
 
@@ -431,6 +436,36 @@ export function useBrowserPhotoOpen(params: {
    * （{@link repaintLastFrame} が立てる）
    */
   const [forcedPaintKey, setForcedPaintKey] = useState<string | null>(null);
+  /**
+   * 描画が面を読めなかったマスク（M4 #68。マスクの面に理由を出す）と、読み直して描き直すための数。描けたら消す。描画は前の画のまま
+   * （開いた直後だけ、読めないマスクを当てない 1 枚を描く。`browser-photo-mask-surface-render.ts`）
+   */
+  const [maskSurfaceIssue, setMaskSurfaceIssue] = useState<PhotoEditingMaskSurfaceIssue | null>(null);
+  const [maskSurfaceRetry, setMaskSurfaceRetry] = useState(0);
+  const reportMaskSurfaceIssue = useCallback(
+    (photoKey: string, maskIds: readonly (string | null)[]) => {
+      if (!mountedRef.current) return;
+      const ids = maskIds.filter((id): id is string => id !== null);
+      setMaskSurfaceIssue((current) => {
+        const known = current?.photoKey === photoKey ? current.maskIds : [];
+        const added = ids.filter((id) => !known.includes(id));
+        if (current?.photoKey === photoKey && added.length === 0) return current;
+        return { photoKey, maskIds: [...known, ...added] };
+      });
+    },
+    [mountedRef],
+  );
+  const clearMaskSurfaceIssue = useCallback(
+    (photoKey: string) => {
+      if (mountedRef.current) setMaskSurfaceIssue((current) => (current?.photoKey === photoKey ? null : current));
+    },
+    [mountedRef],
+  );
+  const retryMaskSurfaces = useCallback(() => {
+    engineRef.current?.retryMaskSurfaces?.();
+    setMaskSurfaceIssue(null);
+    setMaskSurfaceRetry((count) => count + 1);
+  }, [engineRef]);
 
   const releaseOpened = useCallback(() => {
     openedRef.current?.decoded?.cleanup();
@@ -547,7 +582,11 @@ export function useBrowserPhotoOpen(params: {
           if (!dragging) cropFrameCacheRef.current = { key, settingsJson: frameJson, epoch: workingEpoch, frame };
           paint(canvasRef.current, frame, !dragging, true);
         })
-        .catch(() => failInitial(sequence));
+        .catch((error: unknown) => {
+          // 面を読めないマスク: 前の画のまま、マスクの面に理由を出す
+          if (error instanceof DevelopMaskSurfaceError) reportMaskSurfaceIssue(key, [error.maskId]);
+          else failInitial(sequence);
+        });
       return;
     }
     if (cropSettling) return;
@@ -636,6 +675,7 @@ export function useBrowserPhotoOpen(params: {
       .then((frame) => {
         if (!frame) return;
         if (engineRef.current !== engine || order.generation !== paintGeneration) return;
+        clearMaskSurfaceIssue(key);
         if (!interactive && !previewing) uploadInitial(settingsJson, frame);
         if (openedRef.current?.key !== key || compareOriginalRef.current || cropActiveRef.current || healActiveRef.current) return;
         if (sequence !== order.requested || !canvasRef.current) return;
@@ -656,7 +696,29 @@ export function useBrowserPhotoOpen(params: {
           }));
         }
       })
-      .catch(() => failInitial(sequence));
+      .catch((error: unknown) => {
+        if (!(error instanceof DevelopMaskSurfaceError)) {
+          failInitial(sequence);
+          return;
+        }
+        // 面を読めないマスク（M4 #68）: 黙って外して描かない。前の画のまま、マスクの面に理由を出す（読み直せる）
+        reportMaskSurfaceIssue(key, [error.maskId]);
+        const current = openedRef.current;
+        if (current?.key !== key || !current.previewPending) return;
+        // 開いた直後でまだ wasm の画が無い: 写真の編集を止めないよう、読めないマスクを当てない 1 枚を描く（覚えない・上げない）
+        void renderDevelopWithoutUnreadableMasks(engine, shownSettings, { maxDimension, interactive }, error).then(
+          ({ frame, maskIds }) => {
+            reportMaskSurfaceIssue(key, maskIds);
+            if (!frame) return;
+            if (engineRef.current !== engine || order.generation !== paintGeneration) return;
+            if (openedRef.current?.key !== key || compareOriginalRef.current || cropActiveRef.current) return;
+            if (sequence !== order.requested || !canvasRef.current) return;
+            order.painted = sequence;
+            paint(canvasRef.current, frame, true);
+          },
+          () => failInitial(sequence),
+        );
+      });
     // `canvasSurface`: canvas が付け替わったら描き直す（同じ設定の丁寧な画が残っていれば、それをそのまま描く）
   }, [
     beforeFrameRef,
@@ -688,6 +750,10 @@ export function useBrowserPhotoOpen(params: {
     uploadOpenedEditedPreview,
     viewMode,
     workingEpoch,
+    // 面を読めなかったマスクを読み直す（`retryMaskSurfaces`）
+    maskSurfaceRetry,
+    reportMaskSurfaceIssue,
+    clearMaskSurfaceIssue,
   ]);
 
   // 補正前と補正後を見比べる間（niho-photo#41）は、補正前の画を 2 枚目の canvas（`compareCanvas`）に描く。「補正前」（押している
@@ -951,16 +1017,26 @@ export function useBrowserPhotoOpen(params: {
     }
     let source = edit.settingsRef.current;
     let display = currentDisplay(source);
+    /** 面を読めないマスクを当てずに描いた画（その設定の画として覚えない） */
+    let surfaceFallback = false;
     // 描画中に操作が進んだら最新値で描き直す。swap前なのでprovisional frameはそのまま見える。
     for (;;) {
+      surfaceFallback = false;
       // metadataを替える前に、既に受け付けたpreset/量/hoverの結果を旧sessionへ反映する。
       await presets.waitForPending();
       if (!isCurrentProvisional()) { discardCandidate(); return false; }
       source = edit.settingsRef.current;
       display = currentDisplay(source);
-      const rendered = await canonicalEngine
-        .render(display.settings, { maxDimension: DEVELOP_PREVIEW_MAX_DIMENSION, interactive: false })
-        .catch(() => null);
+      const renderOptions = { maxDimension: DEVELOP_PREVIEW_MAX_DIMENSION, interactive: false };
+      const displayed = display.settings;
+      const rendered = await canonicalEngine.render(displayed, renderOptions).catch(async (error: unknown) => {
+        // 面を読めないマスク（M4 #68）: 高画質表示への切り替えは止めず、読めないマスクを当てない画にする（覚えない。理由を出す）
+        if (!(error instanceof DevelopMaskSurfaceError)) return null;
+        const fallback = await renderDevelopWithoutUnreadableMasks(canonicalEngine, displayed, renderOptions, error).catch(() => null);
+        if (fallback) reportMaskSurfaceIssue(item.key, fallback.maskIds);
+        surfaceFallback = fallback?.frame != null;
+        return fallback?.frame ?? null;
+      });
       if (!rendered || !isCurrentProvisional()) {
         discardCandidate();
         return false;
@@ -1004,7 +1080,9 @@ export function useBrowserPhotoOpen(params: {
     beforeFrameRef.current = null;
     cropFrameCacheRef.current = null;
     lastPaintRef.current = null;
-    if (display.kind === "settings") {
+    if (surfaceFallback) {
+      // 読めないマスクを当てずに描いた画は覚えない（面を読み直したら描き直す）
+    } else if (display.kind === "settings") {
       frameCacheRef.current = { key: item.key, settingsJson: JSON.stringify(nextSettings), frame };
     } else if (display.kind === "compare") {
       beforeFrameRef.current = { key: item.key, settingsJson: JSON.stringify(display.settings), frame };
@@ -1065,7 +1143,7 @@ export function useBrowserPhotoOpen(params: {
       });
     }
     return true;
-  }, [beforeFrameRef, canvasRef, createSaver, developSessionRef, edit.settingsRef, engineRef, frameCacheRef, framePostProcessRef, latestAccessRef, library, onFramePaintedRef, presets, rebaseSettings, startSession, workingEpoch]);
+  }, [beforeFrameRef, canvasRef, createSaver, developSessionRef, edit.settingsRef, engineRef, frameCacheRef, framePostProcessRef, latestAccessRef, library, onFramePaintedRef, presets, rebaseSettings, reportMaskSurfaceIssue, startSession, workingEpoch]);
 
   /** 作業コピーを待っている写真の状態を変える（その写真を開いたまま待っているときだけ）。 */
   const setWorkWait = useCallback((key: string, work: WorkWait) => {
@@ -1137,6 +1215,8 @@ export function useBrowserPhotoOpen(params: {
       const abort = new AbortController();
       loadAbortRef.current = abort;
       openingKeyRef.current = item.key;
+      // 面のマスク（M4 #68）の面は、session ができる前の仮の描画からこの写真の置き場で読む
+      maskSurfacePhotoIdRef.current = item.photo.id;
       setSelectedKey(item.key);
       setViewMode("loupe");
       setOpening(true);
@@ -1272,6 +1352,7 @@ export function useBrowserPhotoOpen(params: {
 
           const canonicalEngine = createDevelopEngine({
             manifestUrl: library.engineAssets.manifestUrl() ?? undefined,
+            maskSurfaces: maskSurfaceSource,
           });
           const canonicalReady = await canonicalEngine.ready();
           if (!canonicalReady || isStale()) {
@@ -1353,6 +1434,8 @@ export function useBrowserPhotoOpen(params: {
       handoffCanonical,
       library,
       loadSettings,
+      maskSurfacePhotoIdRef,
+      maskSurfaceSource,
       mountedRef,
       operationRef,
       readyDevelopEngine,
@@ -1382,6 +1465,7 @@ export function useBrowserPhotoOpen(params: {
     loadAbortRef.current?.abort();
     loadAbortRef.current = abort;
     openingKeyRef.current = item.key;
+    maskSurfacePhotoIdRef.current = item.photo.id;
     const pending: OpenedSource = { ...current, canonicalPending: true };
     openedRef.current = pending;
     setOpened(pending);
@@ -1402,7 +1486,10 @@ export function useBrowserPhotoOpen(params: {
     };
     let canonicalEngine: DevelopEngine | null = null;
     try {
-      canonicalEngine = createDevelopEngine({ manifestUrl: library.engineAssets.manifestUrl() ?? undefined });
+      canonicalEngine = createDevelopEngine({
+        manifestUrl: library.engineAssets.manifestUrl() ?? undefined,
+        maskSurfaces: maskSurfaceSource,
+      });
       if (!(await canonicalEngine.ready()) || isStale()) {
         canonicalEngine.dispose();
         canonicalEngine = null;
@@ -1441,7 +1528,7 @@ export function useBrowserPhotoOpen(params: {
       if (loadAbortRef.current === abort) loadAbortRef.current = null;
       if (openingKeyRef.current === item.key) openingKeyRef.current = null;
     }
-  }, [edit.settingsRef, handoffCanonical, library, operationRef, sourceContextFor]);
+  }, [edit.settingsRef, handoffCanonical, library, maskSurfacePhotoIdRef, maskSurfaceSource, operationRef, sourceContextFor]);
 
   /** 開いている写真を、今の開き直しの経路で開き直す（入力を落とし直して、今の行の補正で開く）。 */
   const reopen = (key: string) => {
@@ -1751,6 +1838,9 @@ export function useBrowserPhotoOpen(params: {
   return {
     opened,
     staleReloading,
+    /** 描画が面を読めなかったマスク（マスクの面の理由の 1 行。M4 #68） */
+    maskSurfaceIssue,
+    retryMaskSurfaces,
     openedRef,
     opening,
     openingKeyRef,
