@@ -503,20 +503,20 @@ impl Session {
                         )
                     },
                 );
-                let exposure = match (
+                let (analysis_white, exposure) = match (
                     quality,
                     self.niho6_reuse_while_dragging,
                     self.niho6_last_used.as_ref(),
                 ) {
-                    (Quality::Interactive, true, Some((_, analysis)))
+                    (Quality::Interactive, true, Some((white, analysis)))
                         if self.niho6_last_detail.as_ref() == Some(&detail_key) =>
                     {
-                        analysis.exposure_ev
+                        (*white, analysis.exposure_ev)
                     }
-                    _ => niho6::analysis_exposure(settings),
+                    _ => (self.source_white, niho6::analysis_exposure(settings)),
                 };
                 let (w, h) = target.map_or_else(|| self.source.size(), |t| (t.width, t.height));
-                niho6::preparation_key(w, h, settings, exposure)
+                self.niho6_master_key(w, h, settings, analysis_white, exposure)
             }
             RawEngine::Niho3 | RawEngine::Niho4 => {
                 let SessionSource::WorkingCopy { meta, .. } = self.source.as_ref() else {

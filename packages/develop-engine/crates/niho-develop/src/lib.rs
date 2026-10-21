@@ -1515,6 +1515,25 @@ impl Session {
         Ok(true)
     }
 
+    /// The `niho-6` prepared source key shared by the global frame and mask
+    /// layers. The source balance and the analysis balance can differ during
+    /// an Interactive white-balance drag.
+    fn niho6_master_key(
+        &self,
+        width: usize,
+        height: usize,
+        settings: &DevelopSettings,
+        analysis_white: Option<HeadWhiteBalance>,
+        exposure_ev: f64,
+    ) -> String {
+        format!(
+            "{}|source={}|analysis={}",
+            niho6::preparation_key(width, height, settings, exposure_ev),
+            HeadWhiteBalance::key(self.source_white),
+            HeadWhiteBalance::key(analysis_white),
+        )
+    }
+
     /// The `niho-6` master for these settings: the whole source (Final, a
     /// geometry) or its display-size reduction (unframed reduced
     /// Interactive frames) with the response applied, from the analysis of
@@ -1577,12 +1596,7 @@ impl Session {
         // The master is made from the current balanced source with the
         // analysis response. An analysis from the previous balance during a
         // drag must never stand in for a released frame.
-        let key = format!(
-            "{}|source={}|analysis={}",
-            niho6::preparation_key(w, h, settings, analysis.exposure_ev),
-            HeadWhiteBalance::key(self.source_white),
-            HeadWhiteBalance::key(analysis_white),
-        );
+        let key = self.niho6_master_key(w, h, settings, analysis_white, analysis.exposure_ev);
         if self
             .niho3
             .as_ref()
