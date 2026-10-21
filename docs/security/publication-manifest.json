@@ -4009,7 +4009,7 @@
         "path": "apps/camera/src-tauri/src/lib.rs",
         "sha256": "e6415b3d0633bb4753761b89f8860fffcfa9b67f95832ab971bd9b13eebaaffc"
       },
-      "outputSha256": "e9ae5f00b0bdf9870794cd95f4eb95727a46f1793db1ad0fbdd49fb1407413a1",
+      "outputSha256": "9b5edd17563f6e627c543e7cac62a02fe26cdfa8f6299e9744eed6a712997bfa",
       "modifications": [
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
         "共有形式フィルターを使う複数写真pickerと参照削除コマンドを同梱UIの権限内に追加 / 選択写真専用commandをinvoke handlerへ登録。",
@@ -4024,7 +4024,8 @@
         "PR #82: #74 squash merge後に版機能の変更をmainへ積み直し、最終ハッシュを反映。",
         "PR #98を#91マージ後の最新mainへ積み直し、選別保存中の二重操作ガードを保持。",
         "PR #98で選別フラグの保存経路とUIを更新する。",
-        "公式配布では検証可能なSDK専用asset sectionをTauri asset providerへ接続する"
+        "公式配布では検証可能なSDK専用asset sectionをTauri asset providerへ接続する",
+        "新規runtime asset moduleの宣言順をcargo fmtの規約へ合わせる"
       ]
     },
     {

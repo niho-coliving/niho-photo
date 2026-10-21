@@ -29,10 +29,10 @@ mod mask_surfaces;
 mod photo_bench;
 mod photos;
 mod presets;
-mod save;
-mod thumbnail_scheme;
 #[cfg(any(feature = "official-updates", test))]
 mod runtime_assets;
+mod save;
+mod thumbnail_scheme;
 mod updater;
 
 use serde::Serialize;

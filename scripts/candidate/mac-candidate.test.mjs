@@ -28,7 +28,7 @@ import {
   verifyCandidateDirectory,
   verifySdkProofDirectory,
 } from "./mac-candidate-lib.mjs";
-import { sourceSnapshot, assertExpectedWorkspaceChanges } from "./build-mac-candidate.mjs";
+import { sourceSnapshot, assertExpectedWorkspaceChanges, candidateSbomBytes } from "./build-mac-candidate.mjs";
 import { preparePublishedSdkProof } from "./prepare-published-sdk.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
@@ -484,4 +484,12 @@ test("binary string poolで公開configに定数が隣接しても完全一致�
   const key = `AIza${"A".repeat(35)}`;
   assert.doesNotThrow(() => assertCandidatePublicBytes(Buffer.from(`prefix${key}nextConstant`), key));
   assert.throws(() => assertCandidatePublicBytes(Buffer.from(`${key}nextConstant AIza${"B".repeat(35)}`), key), /許可されていない/u);
+});
+
+
+test("production builderと同じ入口で実lock inventoryをSBOM bytesへ直列化する", () => {
+  const sbom = JSON.parse(candidateSbomBytes(root, "a".repeat(40)).toString("utf8"));
+  assert.equal(sbom.bomFormat, "CycloneDX");
+  assert.equal(sbom.metadata.component.version, "a".repeat(40));
+  assert.ok(sbom.components.length > 0);
 });

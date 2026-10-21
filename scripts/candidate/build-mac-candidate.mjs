@@ -4,6 +4,7 @@ import { lstatSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, w
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { jsonBytes } from "../ci/release-evidence-lib.mjs";
 
 import {
   CandidateError,
@@ -134,6 +135,10 @@ function toolchain(workspace, env) {
   };
 }
 
+export function candidateSbomBytes(workspace, commit) {
+  return jsonBytes(createCandidateSbom(workspace, commit));
+}
+
 export function buildCandidate(values) {
   if (process.platform !== "darwin" || process.arch !== "arm64") throw new CandidateError("Mac candidate buildはApple Silicon macOS専用です");
   const repoRoot = path.resolve(values["--repo"] ?? defaultRepo);
@@ -191,7 +196,7 @@ export function buildCandidate(values) {
     const tarName = `${base}.app.tar.gz`, dmgName = `${base}.dmg`, sbomName = `${base}.cdx.json`;
     const tar = packAppTar(appPath, path.join(output, tarName));
     const dmg = packDmg(appPath, path.join(output, dmgName));
-    const sbomBytes = jsonBytes(createCandidateSbom(workspace, source.commit));
+    const sbomBytes = candidateSbomBytes(workspace, source.commit);
     writeFileSync(path.join(output, sbomName), sbomBytes, { flag: "wx", mode: 0o644 });
     const manifest = {
       schemaVersion: 1,
