@@ -1080,6 +1080,9 @@ export function BrowserPhotoEditingWorkbench(props: {
 
   // 1 枚の編集のキー（`useBrowserPhotoEditingKeys`）を聞いている（PC で補正を開けている。書き出しのシート・操作中は聞かない）
   const editingKeysEnabled = props.active && wide && !controlsDisabled && !exportSheetOpen;
+  // J は写真への表示切替だけなので、閲覧専用でも押せるヒストグラムのボタンと同じ条件で聞く。
+  const clippingKeysEnabled =
+    props.active && wide && !exportSheetOpen && histogramAvailable && !clipUnavailable && histogram.histogram !== null;
 
   // Esc（シート → 1 枚 → 一覧の選択）・Enter・← →・⌫ / Delete・G / E。設定サブタブで隠している間は効かせない
   usePhotoEditingShortcuts({
@@ -1167,6 +1170,7 @@ export function BrowserPhotoEditingWorkbench(props: {
   useBrowserPhotoEditingKeys({
     rootRef,
     enabled: editingKeysEnabled,
+    clippingEnabled: clippingKeysEnabled,
     clipboardEnabled:
       props.active &&
       wide &&
@@ -1843,10 +1847,11 @@ export function BrowserPhotoEditingWorkbench(props: {
       )}
       <div
         className={cn(
-          "grid grid-cols-1 grid-rows-[minmax(0,1fr)_auto] lg:grid-rows-[minmax(0,1fr)_3.5rem]",
+          "grid grid-cols-1 grid-rows-[minmax(0,1fr)_auto]",
           // web の写真編集タブは画面の高さから引いた固定の高さ。NIHO photo（fill）は親の flex に合わせて窓の底まで
           props.appearance === "fill" ? "min-h-0 flex-1" : "min-h-[520px] lg:h-[calc(100dvh-12rem)] lg:min-h-[620px]",
-          // 右パネルがあるときは、その右に道具の帯（niho-photo#51）
+          // 右パネルがあるときは、その右に道具の帯（niho-photo#51）。PC の幅では左の木・右パネル・道具の帯が 2 段（面と下段）を
+          // 貫き、下段は中央の列の下だけ（niho-photo#49）
           props.treeHidden
             ? showAdjustments
               ? "lg:grid-cols-[minmax(0,1fr)_15.5rem_2.75rem]"
@@ -2286,6 +2291,7 @@ export function BrowserPhotoEditingWorkbench(props: {
                       support={presetSupport}
                       variant={view.variant}
                       onOpenPanel={view.onOpenPanel}
+                      actionsSlot={view.actionsSlot}
                     />
                   )
                 : undefined
@@ -2358,6 +2364,8 @@ export function BrowserPhotoEditingWorkbench(props: {
         {showAdjustments && !mobileEditorItem ? <BrowserPhotoEditingToolRail items={toolRailItems} /> : null}
 
         <BrowserPhotoEditingFooter
+          // 中央の列の下だけ（左の木・右パネル・道具の帯は 2 段を貫いて窓の底まで。Lightroom とモックの並び。niho-photo#49）
+          className={props.treeHidden ? "lg:col-span-1 lg:col-start-1" : "lg:col-span-1 lg:col-start-2"}
           viewMode={viewMode}
           canOpenLoupe={selectedItem !== null && !selectedItem.adding && !selection.selecting && !batchBusy && operation === null}
           onShowGrid={showGrid}

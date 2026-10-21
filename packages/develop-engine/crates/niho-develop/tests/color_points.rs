@@ -681,7 +681,7 @@ fn malformed_too_many_and_version_too_low_fail_closed() {
     let valid = r#"{"v":4,"engine":"niho-10","look":"niho-standard-1","colorPoints":[{"id":"p","target":{"lightness":0.7,"chroma":0.1,"hue":20},"range":{"hue":20,"chroma":0.1,"lightness":0.2},"delta":{"hue":10,"chromaScale":1,"lightness":0}}]}"#;
     assert!(parse_settings(valid).is_ok());
     assert!(parse_settings(&valid.replace("\"v\":4", "\"v\":3")).is_err());
-    assert!(parse_settings(&valid.replace("\"v\":4", "\"v\":5")).is_err());
+    assert!(parse_settings(&valid.replace("\"v\":4", "\"v\":6")).is_err());
     assert!(
         parse_settings(&valid.replace("\"range\":{\"hue\":20", "\"range\":{\"hue\":0")).is_err()
     );

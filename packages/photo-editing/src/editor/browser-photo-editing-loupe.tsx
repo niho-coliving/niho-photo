@@ -40,6 +40,12 @@ const LOUPE_BADGE_RIGHT_CLASS_NAME =
  * （`translate(…) scale(…)`）を書く（`usePhotoEditingZoom`。F6c 移行元設計）。変数が無い PC の面では none のまま。
  */
 const ZOOMABLE_CLASS_NAME = "origin-center [transform:var(--photo-editing-zoom,none)]";
+/**
+ * 1 枚の画（canvas・閲覧用の img）の最大の大きさ。PC の幅では面より 2rem 小さくし、写真のまわりに 1rem の余白を置く（縦位置の
+ * 写真を上の線とフィルムストリップに付けない。Lightroom とモックの並び。niho-photo#49）。背景除去の層（`absolute inset-0`）の中でも
+ * 効くよう、面の padding ではなく画の側で決める。切り抜きの間は切り抜きの面が自分の余白を持つ
+ */
+const LOUPE_FIT_CLASS_NAME = "max-h-full max-w-full object-contain lg:max-h-[calc(100%-2rem)] lg:max-w-[calc(100%-2rem)]";
 
 /**
  * 背景を透明にした写真の後ろの市松模様（背景除去。C4 移行元設計）。白と、本文の色を薄く混ぜた灰の 16px 角（色は globals.css の
@@ -208,7 +214,7 @@ export function BrowserPhotoEditingLoupe(props: {
           <canvas
             ref={sideCompare.beforeCanvasRef}
             aria-label={`${opened.fileName} の${PHOTO_EDITING_COMPARE_ORIGINAL_LABEL}`}
-            className={cn("max-h-full max-w-full object-contain", ZOOMABLE_CLASS_NAME)}
+            className={cn(LOUPE_FIT_CLASS_NAME, ZOOMABLE_CLASS_NAME)}
           />
         ) : null}
         {drawn ? (
@@ -230,7 +236,7 @@ export function BrowserPhotoEditingLoupe(props: {
               : `${opened.fileName} のプレビュー`
         }
         {...pickerEvents}
-        className={cn("max-h-full max-w-full object-contain", ZOOMABLE_CLASS_NAME, colorPicker?.active && "cursor-crosshair outline-none ring-2 ring-niho-accent-ink", opened.previewPending && "absolute inset-0 h-full w-full invisible")}
+        className={cn(LOUPE_FIT_CLASS_NAME, ZOOMABLE_CLASS_NAME, colorPicker?.active && "cursor-crosshair outline-none ring-2 ring-niho-accent-ink", opened.previewPending && "absolute inset-0 h-full w-full invisible")}
         style={cutout?.transparent ? CUTOUT_CHECKERBOARD_STYLE : undefined}
       />
     ) : null;
@@ -337,7 +343,7 @@ export function BrowserPhotoEditingLoupe(props: {
           onLoad={(event) => props.onPreviewLoaded?.(opened.key, props.previewGeneration ?? null, event.currentTarget)}
           onError={(event) => props.onPreviewFailed?.(opened.key, event.currentTarget)}
           alt={props.previewAccurate ? `${opened.fileName} の補正後プレビュー` : opened.previewPending ? `${opened.fileName} の仮のプレビュー（調整はまだ反映されていません）` : `${opened.fileName} の閲覧用プレビュー`}
-          className={cn("max-h-full max-w-full object-contain", ZOOMABLE_CLASS_NAME, (opened.work || opened.previewPending) && "h-[1280px] w-[1280px]")}
+          className={cn(LOUPE_FIT_CLASS_NAME, ZOOMABLE_CLASS_NAME, (opened.work || opened.previewPending) && "h-[1280px] w-[1280px]")}
         />
       ) : null}
       {openedVisible && opened?.previewPending && !props.previewAccurate ? (

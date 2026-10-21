@@ -64,6 +64,10 @@ function photoZoomArea(surface: HTMLElement, point?: PhotoZoomPoint): HTMLElemen
   return panes[0] ?? surface;
 }
 
+function photoZoomPanes(surface: HTMLElement): HTMLElement[] {
+  return Array.from(surface.querySelectorAll<HTMLElement>("[data-photo-zoom-pane]"));
+}
+
 /**
  * 面の中の canvas（無ければ img）から、今の寸法を読む。`offsetWidth` / `offsetHeight` は transform の影響を受けない。
  * 画がまだ無い・大きさが 0 なら null（拡大しない）。`point` は指の位置（並べている間に、指の下の半分の面を測る）。
@@ -201,7 +205,7 @@ export function usePhotoEditingZoom(options: {
     surfaceRef.current?.style.removeProperty(ZOOM_VARIABLE);
   }, [photoKey]);
 
-  // 面の大きさが変わったら（向きを変えた・状態の 1 行が出た）、ずれを収め直す。画が無くなっていたら全体表示へ
+  // 面の大きさや比較paneの集合が変わったら、今の拡大位置を新しい bounds に収め直す。画が無くなっていたら全体表示へ
   useEffect(() => {
     const surface = surfaceRef.current;
     if (!surface) return;
@@ -211,13 +215,32 @@ export function usePhotoEditingZoom(options: {
       const measure = measurePhotoSurface(surface);
       applyZoom(measure ? clampZoom(current, measure) : PHOTO_ZOOM_FIT);
     };
+    let panes = photoZoomPanes(surface);
+    const paneObserver = typeof MutationObserver === "undefined" ? null : new MutationObserver(() => {
+      const nextPanes = photoZoomPanes(surface);
+      if (nextPanes.length === panes.length && nextPanes.every((pane, index) => pane === panes[index])) return;
+      panes = nextPanes;
+      reclamp();
+    });
+    paneObserver?.observe(surface, {
+      attributes: true,
+      attributeFilter: ["data-photo-zoom-pane"],
+      childList: true,
+      subtree: true,
+    });
     if (typeof ResizeObserver === "undefined") {
       window.addEventListener("resize", reclamp);
-      return () => window.removeEventListener("resize", reclamp);
+      return () => {
+        window.removeEventListener("resize", reclamp);
+        paneObserver?.disconnect();
+      };
     }
     const observer = new ResizeObserver(reclamp);
     observer.observe(surface);
-    return () => observer.disconnect();
+    return () => {
+      observer.disconnect();
+      paneObserver?.disconnect();
+    };
   }, [applyZoom]);
 
   const measure = (point: PhotoZoomPoint): PhotoSurfaceMeasure | null => {

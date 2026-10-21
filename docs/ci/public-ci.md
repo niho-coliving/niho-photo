@@ -85,3 +85,8 @@ PRの公開CI実行、dependency graph更新、外部forkでの初回承認か�
 ## 現像workspaceの検査
 
 `develop-engine` scopeは実RW2の監査を宣言したpublic-ci.jsonを持つ。macOS 14で固定Rust 1.98.1のnative fmt/clippy/testを実行し、実RW2のdecoder情報・元画素golden・独立DCP描画を常時検査する。desktop-photo scopeは同じ公開RW2がcapability registryのRW2 signatureを通ることを検査するが、それだけを実decode成功とは数えない。Python標準ライブラリでfit→spec/reportを再生成し、Rustでspec→DCP bytesを再生成する。wasm32 buildとwasm-bindgen 0.2.129のtest runnerでNIHO6/7・camera-linear codecの共通テストも実行する。`tools/apple-raw-linear` のSwift packageは独立したmacOS 26 jobで実行し、macOS 26 SDKのCore Image APIを使って、合成PNG/JPEG/TIFF/HEICをImageIOで実decodeし `RasterCommand.run` のmetadata・画素・出力sanitizeを検査する。HEIC encoderが無いrunnerはskipで対応済みとせず、unsupported capabilityとして失敗を明示する。生のowner原本や私有絶対path、署名は不要。合成ラスタの検査はApple RAWの全機種対応やprovider別の実機動作まで実証済みとは扱わない。
+
+
+## 公開検証成果物
+
+main pushのcamera検証後にrelease modeのad-hoc app、CycloneDX SBOM、exact SHA/hash manifestを生成し、認証済みActions artifactとして30日保管する。Actions artifact名にfull commit SHA・run ID・attemptを含めて再実行時の衝突を防ぎ、upload後にartifact IDとSHA-256 digestをjob summaryへ記録する。文書だけのmain pushもcameraを実行する。PRやfork側のmain pushでは生成・uploadしない。既存のrequired aggregateはこのstepの失敗もnative jobの失敗として扱う。[固定SHA取り込み契約](../releases/public-artifact-contract.md) に範囲、schema、guard、private側の採用・rollback入力を定義する。公開mergeから署名・公証・本番配布は起動しない。
