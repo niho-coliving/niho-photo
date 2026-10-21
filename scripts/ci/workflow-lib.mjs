@@ -27,6 +27,8 @@ export function workflowFailures(workflow) {
     "retry-on-snapshot-warnings-timeout": 120,
   };
   if (dependencyReview.length !== 1 || JSON.stringify(dependencyReview[0].with) !== JSON.stringify(reviewInputs)) fail("依存レビューの検査範囲・例外は監査済み設定に固定する");
+  const sdkTests = workflow.jobs?.["photo-editing"]?.steps?.filter((step) => step.run === "npm run sdk:test") ?? [];
+  if (sdkTests.length !== 1 || sdkTests[0]["continue-on-error"]) fail("SDK packageとrepo外consumer smokeの検証が必要");
   const evidenceCondition = "matrix.scope == 'camera' && github.event_name == 'push' && github.ref == 'refs/heads/main' && github.repository == 'niho-coliving/niho-photo'";
   const evidence = workflow.jobs?.native?.steps?.filter((step) => step.id === "release-evidence") ?? [];
   const uploads = Object.entries(workflow.jobs ?? {}).flatMap(([job, value]) => (value.steps ?? []).filter((step) => step.uses?.startsWith("actions/upload-artifact@")).map((step) => ({ job, step })));

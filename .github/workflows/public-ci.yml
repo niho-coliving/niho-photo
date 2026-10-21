@@ -163,6 +163,9 @@
         },
         {
           "run": "node scripts/ci/run-scope.mjs photo-editing"
+        },
+        {
+          "run": "npm run sdk:test"
         }
       ]
     },
