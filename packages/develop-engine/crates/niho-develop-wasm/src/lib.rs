@@ -233,12 +233,29 @@ pub fn neutral_settings() -> String {
 
 #[cfg(test)]
 mod tests {
-    use super::neutral_settings;
+    use super::{neutral_settings, validate_settings};
 
     #[test]
     fn neutral_settings_initializer_uses_standard_look() {
         let settings: serde_json::Value = serde_json::from_str(&neutral_settings()).unwrap();
         assert_eq!(settings["look"], "niho-standard-1");
+    }
+
+    /// `validateSettings` reads `masks` like the crate does (v 5, strict keys).
+    #[test]
+    fn validate_settings_accepts_and_rejects_masks() {
+        let mask = r#"{"id":"m1","kind":"linear","zero":{"x":0.5,"y":0.2},"full":{"x":0.5,"y":0.5},"adjust":{"exposure":-0.7}}"#;
+        let issues = |v: u32, mask: &str| -> Vec<serde_json::Value> {
+            let text = format!(
+                r#"{{"v":{v},"engine":"niho-10","look":"niho-standard-1","base":null,"masks":[{mask}]}}"#
+            );
+            serde_json::from_str(&validate_settings(&text)).unwrap()
+        };
+        assert!(issues(5, mask).is_empty());
+        assert_eq!(issues(4, mask)[0]["code"], "versionTooLow");
+        assert_eq!(issues(6, mask)[0]["code"], "unsupportedVersion");
+        let unknown = mask.replace(r#""adjust""#, r#""opacity":1,"adjust""#);
+        assert_eq!(issues(5, &unknown)[0]["code"], "unknownMaskKey");
     }
 }
 

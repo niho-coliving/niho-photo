@@ -1,6 +1,6 @@
 "use client";
 
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { MoreHorizontal, Redo2, Undo2, WandSparkles } from "lucide-react";
 
 import type { PhotoEditingSettings } from "../photo-editing-types";
@@ -57,10 +57,10 @@ const TEXT_ACTION_BUTTON_CLASS_NAME = "min-h-11 px-2 text-xs font-bold text-niho
 const QUICK_CHIP_CLASS_NAME =
   "inline-flex h-7 items-center gap-1 rounded-lg border border-niho-border px-3 text-xs font-bold text-niho-text-sub transition enabled:hover:bg-niho-pale/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-niho-accent-ink aria-pressed:border-transparent aria-pressed:bg-niho-accent-soft aria-pressed:text-niho-accent-ink disabled:cursor-not-allowed disabled:opacity-40";
 const ASIDE_CLASS_NAME =
-  "hidden min-h-0 overflow-y-auto border-l border-niho-border bg-[var(--photo-editing-surface,white)] px-3 py-2 lg:block";
+  "hidden min-h-0 overflow-y-auto border-l border-niho-border bg-[var(--photo-editing-surface,white)] px-3 py-2 lg:row-span-2 lg:block";
 /** ヒストグラムを置くときは、上の余白をヒストグラムの枠（sticky）の中に持たせる（下だけ py-2 と同じ） */
 const ASIDE_WITH_HISTOGRAM_CLASS_NAME =
-  "hidden min-h-0 overflow-y-auto border-l border-niho-border bg-[var(--photo-editing-surface,white)] px-3 pb-2 lg:block";
+  "hidden min-h-0 overflow-y-auto border-l border-niho-border bg-[var(--photo-editing-surface,white)] px-3 pb-2 lg:row-span-2 lg:block";
 /** 見出し行の名前（道具の名前。「補正」の間はプリセットの面なら「プリセット」） */
 const TOOL_LABELS: Readonly<Record<BrowserPhotoTool, string>> = {
   adjust: PHOTO_EDITING_TOOL_ADJUST_LABEL,
@@ -72,7 +72,9 @@ const TOOL_LABELS: Readonly<Record<BrowserPhotoTool, string>> = {
  * 右端の道具の帯（niho-photo#51）で変わった点（下の説明より優先する）: 道具の切り替え（補正 / 切り抜き / 背景除去のピル）は右パネルに
  * 置かず、右端の帯（`BrowserPhotoEditingToolRail`。並べるのは呼ぶ側）で右パネルを丸ごと入れ替える。一番上は見出し行（左に今の面の
  * 名前、右に ↶ ↷ ⋯ と「初期化」）。「補正」の面は 見出し行 → 自動 / 白黒のチップ → プリセットの行 → ライト / カラー / 効果、
- * 「プリセット」の面は 見出し行 → プリセットの一覧。白黒は群の中に描かず、チップで切り替える。
+ * 「プリセット」の面は 見出し行 → プリセットの一覧。白黒は群の中に描かず、チップで切り替える。プリセットの面の見出し行の ⋯ は
+ * プリセットのメニュー（今の補正を保存・取り込み。一覧の部品が `actionsSlot` へ描く）で、補正のコピー / 貼り付けの ⋯ は出さない
+ * （⋯ を 2 つ並べない。niho-photo#49）。
  *
  * ヒストグラム（niho-photo#36。`histogram` を渡したときだけ）は、どの道具・面のときも見出し行の上、パネルの一番上に置く
  * （パネルを送っても上端に残す）。
@@ -135,7 +137,12 @@ export function BrowserPhotoEditingAdjustments(props: {
    * プリセットの部品（S1 の canvas の写真には渡さない）。補正の面では群の上の 1 行（`row`。押すと `onOpenPresets`）、プリセットの面
    * では一覧（`panel`）として、どちらか一方だけを描く
    */
-  presets?: (view: { variant: BrowserPhotoPresetsVariant; onOpenPanel?: () => void }) => ReactNode;
+  presets?: (view: {
+    variant: BrowserPhotoPresetsVariant;
+    onOpenPanel?: () => void;
+    /** `panel` の ⋯（プリセットのメニュー）を描く場所（見出し行の右。描けるようになるまで null） */
+    actionsSlot?: HTMLElement | null;
+  }) => ReactNode;
   /** 今の道具（右端の帯で選ぶ。省略時は補正） */
   tool?: BrowserPhotoTool;
   /** 道具が「補正」の間に出す面（省略時は補正の面。プリセットの部品が無い写真は補正の面だけ） */
@@ -160,6 +167,8 @@ export function BrowserPhotoEditingAdjustments(props: {
 }) {
   const work = props.work;
   const workText = work ? workWaitText(work, props.raw) : null;
+  // プリセットの面の見出し行で、プリセットのメニュー（⋯）を受け取る場所
+  const [presetActionsSlot, setPresetActionsSlot] = useState<HTMLDivElement | null>(null);
   const tool = props.tool ?? "adjust";
   const cropping = tool === "crop" && props.cropTools !== undefined;
   const cutting = tool === "cutout" && props.cutoutTools !== undefined;
@@ -270,7 +279,9 @@ export function BrowserPhotoEditingAdjustments(props: {
           >
             <Redo2 className="h-[18px] w-[18px]" aria-hidden />
           </button>
-          {props.clipboard ? (
+          {showPresetsPanel ? (
+            <div ref={setPresetActionsSlot} className="flex shrink-0 items-center" />
+          ) : props.clipboard ? (
             <PhotoEditingMenu
               items={[
                 {
@@ -349,7 +360,7 @@ export function BrowserPhotoEditingAdjustments(props: {
       ) : cutting ? (
         props.cutoutTools
       ) : showPresetsPanel ? (
-        presets?.({ variant: "panel" })
+        presets?.({ variant: "panel", actionsSlot: presetActionsSlot })
       ) : (
         <>
           {quickRow}

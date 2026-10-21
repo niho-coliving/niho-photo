@@ -207,6 +207,20 @@ describe("PhotoEditingToneCurve", () => {
     expect(valueText()).toBe("入力 50 / 出力 80");
   });
 
+  it("ドラッグ中にカーブを閉じても変更を commit する", async () => {
+    await render({ initial: { toneCurves: [{ channel: "rgb", points: lifted() }] } });
+    await pointer("pointerdown", at(0.5, 0.6));
+    await pointer("pointermove", at(0.6, 0.8));
+    await act(async () => root.render(null));
+
+    expect(changes.map((change) => change.phase)).toEqual(["drag", "commit"]);
+    expect(curvePoints(changes[changes.length - 1].settings, "rgb")).toEqual([
+      { x: 0, y: 0 },
+      { x: 0.6, y: 0.8 },
+      { x: 1, y: 1 },
+    ]);
+  });
+
   it("点は選んだチャンネルの 1 本にだけ足す（ほかのチャンネルの曲線はそのまま）", async () => {
     const rgb = { channel: "rgb", points: lifted() };
     await render({ initial: { toneCurves: [rgb] } });

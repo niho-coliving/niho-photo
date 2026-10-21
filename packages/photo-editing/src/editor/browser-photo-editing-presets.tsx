@@ -70,6 +70,8 @@ export function BrowserPhotoEditingPresets(props: {
   variant: BrowserPhotoPresetsVariant;
   /** `row` の今のプリセット名・一覧のボタンを押した（プリセットの面を開く） */
   onOpenPanel?: () => void;
+  /** `panel` の ⋯ を描く場所（右パネルの見出し行。`PhotoEditingPresetsPanel` の `actionsSlot`） */
+  actionsSlot?: HTMLElement | null;
 }) {
   const { presets, settings, engineRef, support } = props;
   const amountSliderId = useId();
@@ -141,6 +143,7 @@ export function BrowserPhotoEditingPresets(props: {
       onSpotPresetKeysChange={presets.reconcileSpotPresetKeys}
       variant={props.variant}
       onOpenPanel={props.onOpenPanel}
+      actionsSlot={props.actionsSlot}
     />
   );
 }

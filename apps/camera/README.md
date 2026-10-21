@@ -8,7 +8,7 @@ npm run dev --workspace apps/camera
 npm run build:unsigned --workspace apps/camera
 ```
 
-unsigned入口はdebugの `.app` をad-hoc署名し、認証キー・Apple署名証明書・更新署名秘密鍵を要求しません。出力は `apps/camera/src-tauri/target/debug/bundle/macos/NIHO photo.app`。通常の `build` はTauriの開発者向け入口で、公式配布工程は #2 で定義します。
+unsigned入口はdebugの `.app` をad-hoc署名し、認証キー・Apple署名証明書・更新署名秘密鍵を要求しません。出力は `apps/camera/src-tauri/target/debug/bundle/macos/NIHO photo.app`。通常の `build` はTauriの開発者向け入口です。公開CIのrelease mode検証app・SBOMと、非公開側の固定SHA取り込みは [公開成果物契約](../../docs/releases/public-artifact-contract.md) に従います。
 
 ```sh
 npm run typecheck --workspace apps/camera
@@ -30,6 +30,6 @@ cargo test --locked --manifest-path packages/desktop-photo/Cargo.toml
 | `camera_library_forget_folder` | フォルダ参照だけを外す |
 | `camera_library_forget_photos` | 個別写真の参照をすべて外す |
 
-アカウントは公式NIHO app-connect/PKCE共通パッケージを使います。公開Firebase Web API keyをbuild設定に与えた場合は外部ブラウザとniho-camera deep linkで接続し、未設定の公開CI・開発buildはローカル専用です。クラウド共有は有効表示しません。認証状態は編集の利用条件にしません。[安全契約](../../docs/contracts/native-account.md) を参照してください。クラウド共有は #8。自動更新クライアントと公開鍵はコードに含みますが既定で無効です。公式release権限、署名、公証、SBOM、更新有効化は #2 の範囲です。
+アカウントは公式NIHO app-connect/PKCE共通パッケージを使います。公開Firebase Web API keyをbuild設定に与えた場合は外部ブラウザとniho-camera deep linkで接続し、未設定の公開CI・開発buildはローカル専用です。クラウド共有は有効表示しません。認証状態は編集の利用条件にしません。[安全契約](../../docs/contracts/native-account.md) を参照してください。クラウド共有は #8。自動更新クライアントと公開鍵はコードに含みますが既定で無効です。公開検証appとSBOMは [公開成果物契約](../../docs/releases/public-artifact-contract.md) に従います。公式release権限、署名、公証、更新有効化は非公開側で扱います。
 
 アプリ名と既存 `camera` パス・端末内データの互換方針は [移植計画](../../docs/migration/mac-client.md) を参照してください。

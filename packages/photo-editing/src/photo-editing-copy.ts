@@ -444,6 +444,7 @@ export function photoEditingPresetNotWrittenError(fields: readonly string[]): st
     relativeTint: "相対の色かぶり補正",
     legacySettings: "未対応の補正",
     colorPoints: PHOTO_EDITING_POINT_COLOR_TITLE,
+    masks: "部分補正（マスク）",
   };
   const names = Array.from(new Set(fields.map((field) => labels[field] ?? "未対応の補正")));
   return `プリセットに保存できない補正があります（${names.join("・")}）。対象の補正を外してから、もう一度保存してください。`;

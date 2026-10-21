@@ -96,7 +96,7 @@ type HslMixerProps = {
 };
 
 function ResetButton(props: HslMixerProps) {
-  const canReset = !props.disabled && hasPhotoEditingHslEdits(props.settings);
+  const canReset = !props.disabled && props.settings.grayscale !== true && hasPhotoEditingHslEdits(props.settings);
   const onSettingsChange = props.onSettingsChange;
   return (
     <button
@@ -179,7 +179,7 @@ export function PhotoEditingHslMixer(props: HslMixerProps & { reset?: boolean })
                 step={PHOTO_EDITING_HSL_STEP}
                 value={value}
                 valueText={formatSignedInteger(value)}
-                disabled={disabled}
+                disabled={disabled || settings.grayscale === true}
                 onChange={(next, phase) => onSettingsChange((current) => writePhotoEditingHsl(current, band, axis, next), phase)}
                 onReset={() => onSettingsChange((current) => writePhotoEditingHsl(current, band, axis, 0), "commit")}
                 changed={value !== 0}

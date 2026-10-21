@@ -67,14 +67,16 @@ export function resolveBrowserPhotoEditingKey(
 }
 
 /**
- * `enabled` は補正操作全般、`clipboardEnabled` はコピー / 貼り付け用キーを聞く条件（閲覧のみのコピーを含む）。どちらも無効なら
- * listener を外す。補正操作をやめたとき、補正前を見せていれば戻す。
+ * `enabled` は補正操作全般、`clipboardEnabled` はコピー / 貼り付け用キー、`clippingEnabled` は J キーを聞く条件（閲覧のみの表示切替を含む）。
+ * どれも無効なら listener を外す。補正操作をやめたとき、補正前を見せていれば戻す。
  */
 export function useBrowserPhotoEditingKeys(options: {
   rootRef: RefObject<HTMLElement | null>;
   enabled: boolean;
   /** コピー / 貼り付け用キーは閲覧のみでもコピーできるため編集操作とは別に有効化する */
   clipboardEnabled?: boolean;
+  /** 写真への表示切替である J は、閲覧専用でもヒストグラム操作と同じ条件で有効化できる */
+  clippingEnabled?: boolean;
   onUndo: () => void;
   onRedo: () => void;
   /** 補正をコピー / 貼り付け（F5a-2 移行元設計。写せない・当てられないときは呼ばれた側が何もしない） */
@@ -93,14 +95,14 @@ export function useBrowserPhotoEditingKeys(options: {
   onCropDone?: (() => void) | null;
   onCropCancel?: (() => void) | null;
 }): void {
-  const { rootRef, enabled, clipboardEnabled = false } = options;
+  const { rootRef, enabled, clipboardEnabled = false, clippingEnabled = enabled } = options;
   const callbacksRef = useRef(options);
   useEffect(() => {
     callbacksRef.current = options;
   });
 
   useEffect(() => {
-    if (!enabled && !clipboardEnabled) return;
+    if (!enabled && !clipboardEnabled && !clippingEnabled) return;
     let comparing = false;
     const release = () => {
       if (!comparing) return;
@@ -120,6 +122,14 @@ export function useBrowserPhotoEditingKeys(options: {
         else callbacksRef.current.onPaste();
         return;
       }
+      if (key === "clip") {
+        if (!(callbacksRef.current.clippingEnabled ?? callbacksRef.current.enabled)) return;
+        const toggleClipping = callbacksRef.current.onToggleClipping;
+        if (!toggleClipping) return;
+        event.preventDefault();
+        if (!event.repeat) toggleClipping();
+        return;
+      }
       if (!callbacksRef.current.enabled) return;
       if (key === "tool") {
         const toggleTool = callbacksRef.current.onToggleTool;
@@ -128,13 +138,8 @@ export function useBrowserPhotoEditingKeys(options: {
         if (!event.repeat) toggleTool();
         return;
       }
-      if (key === "clip") {
-        const toggleClipping = callbacksRef.current.onToggleClipping;
-        if (!toggleClipping) return;
-        event.preventDefault();
-        if (!event.repeat) toggleClipping();
-        return;
-      }
+      // J キーは閲覧専用でもヒストグラムの印を使えるよう `enabled` の前で扱う。
+      // 比較の Y / Shift+Y は、編集操作が有効なときだけ扱う。
       if (key === "compareSide" || key === "compareSplit") {
         const toggleCompareView = callbacksRef.current.onToggleCompareView;
         if (!toggleCompareView) return;
@@ -173,5 +178,5 @@ export function useBrowserPhotoEditingKeys(options: {
       window.removeEventListener("blur", release);
       release();
     };
-  }, [enabled, clipboardEnabled, rootRef]);
+  }, [enabled, clipboardEnabled, clippingEnabled, rootRef]);
 }

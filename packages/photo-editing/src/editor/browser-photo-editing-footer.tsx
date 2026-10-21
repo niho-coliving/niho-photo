@@ -252,10 +252,12 @@ export function BrowserPhotoEditingFooter(props: {
   /** シートで選んだ形式と大きさ（原寸は NIHO Desktop の口があるときだけ。K2-3a 移行元設計） */
   onExport: (format: BrowserPhotoExportFormat, size: BrowserPhotoExportSizeOption) => void;
   onCloseExportSheet: () => void;
+  /** 置く列（PC の幅。狭い幅は全幅）。Lightroom と同じく中央の列の下だけに置き、左右のパネルは窓の底まで伸ばす（niho-photo#49） */
+  className?: string;
 }) {
   const setCompareOriginal = props.onCompareOriginalChange;
   return (
-    <footer className="col-span-full flex min-h-14 items-center gap-2 border-t border-niho-border px-2 max-[479px]:flex-wrap lg:px-3">
+    <footer className={cn("col-span-full flex min-h-14 items-center gap-2 border-t border-niho-border px-2 max-[479px]:flex-wrap lg:px-3 lg:max-xl:flex-wrap lg:max-xl:gap-y-1 lg:max-xl:py-1", props.className)}>
       <div role="group" aria-label="表示" className="flex shrink-0 items-center gap-0.5">
         <button
           type="button"

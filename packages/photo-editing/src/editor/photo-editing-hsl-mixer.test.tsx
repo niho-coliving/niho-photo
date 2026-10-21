@@ -214,6 +214,23 @@ describe("PhotoEditingHslMixer", () => {
     expect(changes).toEqual([]);
   });
 
+  it("白黒の間は HSL スライダーと「初期化」を押せない", async () => {
+    await render({
+      initial: {
+        ...neutralDevelopSettings(null),
+        grayscale: true,
+        hsl: ["blue", { hue: 12, saturation: -50, luminance: 20 }],
+      },
+      reset: true,
+    });
+    expect(sliders().every((input) => input.disabled)).toBe(true);
+    expect(resetButton().disabled).toBe(true);
+    await click(axisButton("彩度"));
+    await click(resetButton());
+    expect(changes).toEqual([]);
+    expect(slider("青").value).toBe("-50");
+  });
+
   it("`reset` を渡した面（スマホの道具）は、切り替えの右に「初期化」を置く。全部 0 なら押せない", async () => {
     await render({ initial: neutralDevelopSettings(null), reset: true });
     expect(resetButton().disabled).toBe(true);

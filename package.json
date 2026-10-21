@@ -16,7 +16,8 @@
     "format:check": "node scripts/check-format.mjs",
     "verify:publication": "node scripts/verify-publication.mjs",
     "verify": "npm run test:ci && npm run verify:publication && npm run format:check && npm run typecheck && npm test && npm run lint",
-    "test:ci": "node --test scripts/ci/*.test.mjs"
+    "test:ci": "node --test scripts/ci/*.test.mjs",
+    "release:evidence": "node scripts/ci/release-evidence.mjs"
   },
   "engines": {
     "node": "24.x"
