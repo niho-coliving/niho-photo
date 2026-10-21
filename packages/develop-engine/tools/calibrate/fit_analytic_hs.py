@@ -739,7 +739,8 @@ def preset_oracle(args) -> None:
     if path.exists():
         try:
             cached = json.loads(path.read_text())
-            if cached.get("fingerprint") == fingerprint and isinstance(cached.get("rows"), dict):
+            if (cached.get("fingerprint") == fingerprint and cached.get("fev") == args.fev
+                    and isinstance(cached.get("rows"), dict)):
                 done = cached["rows"]
         except (AttributeError, OSError, TypeError, json.JSONDecodeError):
             pass
@@ -759,7 +760,7 @@ def preset_oracle(args) -> None:
         done[str(j)] = {"items": items, "single": single.tolist(),
                         "oracle": server.eval(constant_candidate(best), items).tolist(), "theta": best.tolist()}
         temporary = path.with_suffix(".tmp")
-        temporary.write_text(json.dumps({"fingerprint": fingerprint, "rows": done}))
+        temporary.write_text(json.dumps({"fingerprint": fingerprint, "fev": args.fev, "rows": done}))
         temporary.replace(path)
         print(f"preset-oracle {j + 1}/{len(plan_doc['scenes'])}", flush=True)
     server.close()
@@ -773,7 +774,10 @@ def preset_oracle(args) -> None:
                    if group == "all" or plan_doc["scenes"][plan_doc["items"][i]["scene"]]["subset"] == group]
             summary[key][group] = {"n": len(sel), "mean": round(float(rows[sel, 0].mean()), 3),
                                    "p99Over8": int((rows[sel, 1] > 8).sum())}
-    (args.work / "runs" / "preset-oracle-summary.json").write_text(json.dumps(summary, indent=1))
+    summary_path = args.work / "runs" / "preset-oracle-summary.json"
+    temporary = summary_path.with_suffix(".tmp")
+    temporary.write_text(json.dumps({"fingerprint": fingerprint, "summary": summary}, indent=1))
+    temporary.replace(summary_path)
     print(json.dumps(summary, indent=1))
 
 
@@ -1031,10 +1035,24 @@ def publish_c(args) -> None:
     }
     diagnostic = args.work / "runs" / "preset-oracle-summary.json"
     if args.family == "C" and diagnostic.exists():
-        result["presetContextDiagnostic"] = {
-            "meaning": "surrogate, presets: 'single' = each photo's single-operation targets applied to its presets; 'oracle' = per-photo constants fitted on the photo's own 3 presets (in-sample upper bound)",
-            "summary": json.loads(diagnostic.read_text()),
-        }
+        try:
+            diagnostic_doc = json.loads(diagnostic.read_text())
+            cache_path = args.work / "runs" / "preset-oracle.json"
+            cache = json.loads(cache_path.read_text())
+            fingerprint = preset_oracle_fingerprint(
+                args.work / "plan.json", args.work / "runs" / "photo-targets.json",
+                args.work / "server-config.json", binaries(args.repo)["calibrate"], cache["fev"])
+            cache_rows = cache["rows"]
+            expected_scenes = {str(i) for i in range(len(plan_doc["scenes"]))}
+            if (cache.get("fingerprint") == fingerprint and diagnostic_doc.get("fingerprint") == fingerprint
+                    and isinstance(diagnostic_doc.get("summary"), dict)
+                    and isinstance(cache_rows, dict) and set(cache_rows) == expected_scenes):
+                result["presetContextDiagnostic"] = {
+                    "meaning": "surrogate, presets: 'single' = each photo's single-operation targets applied to its presets; 'oracle' = per-photo constants fitted on the photo's own 3 presets (in-sample upper bound)",
+                    "summary": diagnostic_doc["summary"],
+                }
+        except (KeyError, OSError, TypeError, ValueError, json.JSONDecodeError):
+            pass
     for name in ("b1OutOfFold", "cOutOfFold"):
         if result[name] is not None:
             result[name] = {g: {v: t[v].get("candidateOutOfFold") for v in t} for g, t in result[name].items()}
