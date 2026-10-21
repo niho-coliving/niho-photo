@@ -183,7 +183,7 @@ function AdjustmentSwitch(props: {
  * 色温度・色かぶり補正の線の薄い色の帯（Lightroom と同じ。L6 #55）。色温度は 青 → 黄、色かぶり補正は 緑 → 赤紫。真ん中は線の色に
  * 近い中間の色にして、帯の端だけ色を見せる。
  */
-const WHITE_BALANCE_TRACK_CLASS_NAMES: Record<"temperature" | "tint", string> = {
+export const WHITE_BALANCE_TRACK_CLASS_NAMES: Record<"temperature" | "tint", string> = {
   temperature:
     "[&::-webkit-slider-runnable-track]:bg-[linear-gradient(90deg,#9CBBF0,#E4E0D8_50%,#F0C978)] [&::-moz-range-track]:bg-[linear-gradient(90deg,#9CBBF0,#E4E0D8_50%,#F0C978)]",
   tint: "[&::-webkit-slider-runnable-track]:bg-[linear-gradient(90deg,#A9D59A,#E4E0D8_50%,#EBA6DB)] [&::-moz-range-track]:bg-[linear-gradient(90deg,#A9D59A,#E4E0D8_50%,#EBA6DB)]",
