@@ -101,8 +101,11 @@ function requiredSourcePaths(engineRoot) {
     "crates/niho-develop-render/src/main.rs",
     "tools/apple-raw-linear/Package.swift",
     "tools/apple-raw-linear/Sources/apple-raw-linear/main.swift",
+    "tools/apple-raw-linear/Tests/apple-raw-linearTests/WorkingCopyTests.swift",
+    "tools/apple-raw-linear/Tests/apple-raw-linearTests/Fixtures/calibration-illuminants.json",
     "tools/niho-camera-cutout/Package.swift",
     "tools/niho-camera-cutout/Sources/NihoCameraCutoutCLI/main.swift",
+    "tools/niho-camera-cutout/Tests/NihoCameraCutoutTests/CLITests.swift",
   ].map((relative) => path.join(engineRoot, ...relative.split("/")));
 }
 

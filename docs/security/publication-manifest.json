@@ -10161,8 +10161,8 @@
     },
     {
       "path": "packages/develop-engine/build-macos-native.mjs",
-      "sha256": "f6290d375d02d521aebcc51254478594b84a49220ff095415e1015f5560c80d0",
-      "origin": "Issue #113のSDK native build closure用に公開sourceだけから独立作成。固定Rust/lock/target、隔離環境、3 native toolのversion・system dylib・calibration registry/hash検査を実装し、signing key・credential・private sourceを含まない。\n変更理由: native helperの実装レビューで不要importとindentを整理。\n変更理由: 独立native builderでSDK sourceとtool lockを事前照合し、既定Rust toolchainの保存先を隔離HOMEから独立して保持。\n変更理由: macOSの別名一時pathから実行してもnative CLIが起動するよう実pathでentrypointを照合。"
+      "sha256": "153df04a586bdb03686d7ab9749175aa80173a248c3561e27f21dc2c2b7baaf3",
+      "origin": "Issue #113のSDK native build closure用に公開sourceだけから独立作成。固定Rust/lock/target、隔離環境、3 native toolのversion・system dylib・calibration registry/hash検査を実装し、signing key・credential・private sourceを含まない。\n変更理由: native helperの実装レビューで不要importとindentを整理。\n変更理由: 独立native builderでSDK sourceとtool lockを事前照合し、既定Rust toolchainの保存先を隔離HOMEから独立して保持。\n変更理由: macOSの別名一時pathから実行してもnative CLIが起動するよう実pathでentrypointを照合。\n変更理由: Swift packageの製品buildでも解決されるtest targetとfixtureをSDK source closureに含める"
     },
     {
       "path": "scripts/ci/scopes.mjs",

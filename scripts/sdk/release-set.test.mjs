@@ -241,8 +241,14 @@ test("clean Git object から決定的 tarball を作り repo 外 consumer で T
         "package/engine/calibration/panasonic-dc-s5/apple-v1.json",
         "package/engine/calibration/panasonic-dc-s5/apple-v2.json",
         "package/engine/tools/apple-raw-linear/Package.swift",
+        "package/engine/tools/apple-raw-linear/Tests/apple-raw-linearTests/WorkingCopyTests.swift",
+        "package/engine/tools/apple-raw-linear/Tests/apple-raw-linearTests/Fixtures/calibration-illuminants.json",
         "package/engine/tools/niho-camera-cutout/Package.swift",
+        "package/engine/tools/niho-camera-cutout/Tests/NihoCameraCutoutTests/CLITests.swift",
       ]) assert.match(entries, new RegExp(required.replaceAll(".", "\\.")));
+      const extracted = temp("niho-photo-sdk-native-closure-");
+      execFileSync("tar", ["-xzf", path.join(first, item.file), "-C", extracted]);
+      validateNativeSourceClosure(path.join(extracted, "package/engine"));
     }
     if (item.id === "develop-engine-runtime") {
       const packageJson = JSON.parse(execFileSync("tar", ["-xOzf", path.join(first, item.file), "package/package.json"], { encoding: "utf8" }));

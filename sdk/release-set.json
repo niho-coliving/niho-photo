@@ -85,8 +85,10 @@
         "crates/niho-develop/presets/**",
         "tools/apple-raw-linear/Package.swift",
         "tools/apple-raw-linear/Sources/**",
+        "tools/apple-raw-linear/Tests/**",
         "tools/niho-camera-cutout/Package.swift",
-        "tools/niho-camera-cutout/Sources/**"
+        "tools/niho-camera-cutout/Sources/**",
+        "tools/niho-camera-cutout/Tests/**"
       ],
       "exclude": []
     }
