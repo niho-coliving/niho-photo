@@ -10211,8 +10211,8 @@
     },
     {
       "path": "packages/develop-engine/crates/niho-develop/examples/mask_timing.rs",
-      "sha256": "31b407c3b2e993b597b5a85eb8e9faede8cd28a6368747356823354761d1a482",
-      "origin": "Issue #66の公開仕様と合成画像だけから新規作成した、部分補正の層の描画のnative計測の道具。実写真・非公開コード・私有参照出力を含まない。"
+      "sha256": "61af1a94aefef1c80dcc1afc3c5d122c6eeb9af30d4a4904b6ecfbd23beeb0b1",
+      "origin": "Issue #66の公開仕様と合成画像だけから新規作成した、部分補正の層の描画のnative計測の道具。実写真・非公開コード・私有参照出力を含まない。\n変更理由: 計測の example に drag の長辺の引数（--drag）を足す。#67 の 640px の実測用。\n変更理由: 計測の example に drag の長辺の引数（--drag）を足す。#67 の 640px の実測用。"
     },
     {
       "path": "packages/develop-engine/tools/mask-wasm-bench.mjs",

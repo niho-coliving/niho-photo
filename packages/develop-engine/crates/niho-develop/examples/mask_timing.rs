@@ -1,7 +1,9 @@
 //! Timings of the layered mask render (`docs/local-adjustments.md` "性能の目安と
 //! 測り方", #66) on synthetic photos, as the editor drives a Session:
 //!
-//! `cargo run --release --example mask_timing [-- --dump <dir>] [--source raster|raw|all] [--trials 3]`
+//! `cargo run --release --example mask_timing [-- --dump <dir>] [--source raster|raw|all] [--trials 3] [--drag <px>]`
+//! (`--drag` is the long edge of the Interactive frames, default 1280 = `UI`; the editor draws 640 while a mask is
+//! active, `developInteractiveMaxDimension`.)
 //!
 //! For 0..=3 masks and three kinds of local delta (cube stages only; an
 //! exposure that changes the master's input; the local pass's Texture /
@@ -173,6 +175,7 @@ fn scenario(
     source: &str,
     count: usize,
     delta: (&str, &str, f64),
+    drag: usize,
 ) -> [f64; 6] {
     let (kind, key, value) = delta;
     let base = global(source);
@@ -199,14 +202,16 @@ fn scenario(
         }
     };
     let t = Instant::now();
-    session.render(&moved(1), UI, Quality::Interactive).unwrap();
+    session
+        .render(&moved(1), drag, Quality::Interactive)
+        .unwrap();
     let drag_first = ms(t);
     let drag_mask = median(
         (2..2 + DRAG_FRAMES)
             .map(|i| {
                 let s = moved(i);
                 let t = Instant::now();
-                session.render(&s, UI, Quality::Interactive).unwrap();
+                session.render(&s, drag, Quality::Interactive).unwrap();
                 ms(t)
             })
             .collect(),
@@ -221,7 +226,7 @@ fn scenario(
             .map(|i| {
                 let s = at(1.0 + DRAG_FRAMES as f64, contrast + i as f64);
                 let t = Instant::now();
-                session.render(&s, UI, Quality::Interactive).unwrap();
+                session.render(&s, drag, Quality::Interactive).unwrap();
                 ms(t)
             })
             .collect(),
@@ -242,10 +247,11 @@ fn measure(
     count: usize,
     delta: (&str, &str, f64),
     trials: usize,
+    drag: usize,
 ) {
     let mut best = [f64::INFINITY; 6];
     for _ in 0..trials {
-        let t = scenario(open, source, count, delta);
+        let t = scenario(open, source, count, delta, drag);
         for (b, v) in best.iter_mut().zip(t) {
             *b = b.min(v);
         }
@@ -254,7 +260,7 @@ fn measure(
     println!(
         "{}",
         json!({
-            "source": source, "masks": count, "delta": delta.0, "trials": trials,
+            "source": source, "masks": count, "delta": delta.0, "trials": trials, "dragPx": drag,
             "firstMs": first, "dragFirstMs": drag_first, "dragMaskMs": drag_mask,
             "dragGlobalMs": drag_global, "releaseMs": release, "fullMs": full
         })
@@ -280,6 +286,7 @@ fn main() {
     }
     let only = flag("--source").unwrap_or_else(|| "all".into());
     let trials: usize = flag("--trials").map_or(3, |t| t.parse().unwrap());
+    let drag: usize = flag("--drag").map_or(UI, |t| t.parse().unwrap());
     let open_raster = || Session::open_raster(&png, 0, Filter::Lanczos3).unwrap();
     let open_raw = || Session::open_working_copy(&raw_png, &raw_meta, Filter::Lanczos3).unwrap();
     let sources: [(&str, &dyn Fn() -> Session); 2] = [("raster", &open_raster), ("raw", &open_raw)];
@@ -292,7 +299,7 @@ fn main() {
                 if count == 0 && delta.0 != "cube" {
                     continue;
                 }
-                measure(open, source, count, delta, trials);
+                measure(open, source, count, delta, trials, drag);
             }
         }
     }
