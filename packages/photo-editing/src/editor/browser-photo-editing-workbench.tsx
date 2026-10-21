@@ -122,6 +122,7 @@ import {
   BROWSER_CANVAS_ADJUSTMENT_KEYS,
   FAVORITE_FAILED_TEXT,
   browserAdjustmentKeys,
+  browserMobileAdjustmentKeys,
   browserPhotoTileUrl,
   cloudKey,
   detailControlsAvailable,
@@ -2356,7 +2357,7 @@ export function BrowserPhotoEditingWorkbench(props: {
               ) : undefined
             }
             colorPicking={colorPicking}
-            visibleKeys={canvasOnly ? BROWSER_CANVAS_ADJUSTMENT_KEYS : undefined}
+            visibleKeys={canvasOnly ? BROWSER_CANVAS_ADJUSTMENT_KEYS : browserMobileAdjustmentKeys({ detail: detailSupported })}
             presets={
               // PC の右パネルと同じ: S1 の canvas（段 2 を使えない）の写真には出さない。閲覧のみ・操作の途中は押せない
               canvasOnly
