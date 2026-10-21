@@ -205,6 +205,7 @@ import { useBrowserPhotoHealKeys } from "./use-browser-photo-heal";
 import { useBrowserPhotoHistogram, type PhotoEditingFrameSink } from "./use-browser-photo-histogram";
 import { useBrowserPhotoItems, useBrowserPhotoListView } from "./use-browser-photo-items";
 import { useBrowserPhotoLeaveGuards } from "./use-browser-photo-leave-guards";
+import { photoEditingMaskExportBlocked, useBrowserPhotoMasks, useBrowserPhotoMasksSupport } from "./use-browser-photo-masks";
 import { useBrowserPhotoOpen } from "./use-browser-photo-open";
 import { useBrowserPhotoSelection } from "./use-browser-photo-selection";
 import { useBrowserPhotoPresetSupport } from "./use-browser-photo-preset-support";
@@ -591,6 +592,8 @@ export function BrowserPhotoEditingWorkbench(props: {
     photoKey: wasmPhotoKey,
   });
   const detailSupported = detailWasmSupported && detailControlsAvailable(opened?.input);
+  // 部分補正（マスク。M3 #67）を描ける wasm か（同じく1回だけ確認）。
+  const masksSupport = useBrowserPhotoMasksSupport({ mountedRef, engineRef: develop.engineRef, photoKey: wasmPhotoKey });
   // レンズ補正（v: 9。niho-photo#45）を描ける wasm か（同じく 1 回確かめる）。右パネルの「レンズ」の節を出す
   const lensSupported = useBrowserPhotoLensSupport({
     mountedRef,
@@ -856,6 +859,30 @@ export function BrowserPhotoEditingWorkbench(props: {
   }, [crop, cropping, cutoutBlocksCrop, wasmPhotoKey]);
   // 修復の道具（niho-photo#44）を開いている（1 枚で見ている wasm の写真）
   const healing = heal.active && loupeOpened !== null;
+  // マスクの道具（部分補正。M3 #67。PC の面で、切り抜き・背景除去・修復とは同時に使わない）
+  const maskTool = useBrowserPhotoMasks({
+    mountedRef,
+    engineRef: develop.engineRef,
+    developSessionRef: develop.developSessionRef,
+    wide,
+    photoKey: wasmPhotoKey,
+    support: masksSupport,
+    exportBlocked: photoEditingMaskExportBlocked(capabilities),
+    otherToolActive: cropping || cutoutActive || healing,
+    disabled: controlsDisabled,
+    settings,
+    settingsRef: open.settingsRef,
+    changeSettings: open.changeSettings,
+    commitEdit: open.commitEdit,
+    // ブラシ（M4 #68）は面を保存できる写真の出どころだけ。面を読めなかったマスクは描画の失敗から知らせる
+    saveMaskSurface:
+      capabilities.maskSurfaces === true && library.saveMaskSurface
+        ? (photoId: string, png: Uint8Array) => library.saveMaskSurface!(photoId, png)
+        : null,
+    surfaceIssue: open.maskSurfaceIssue,
+    onRetrySurfaces: open.retryMaskSurfaces,
+  });
+
   /** 右パネルの今の道具（理由だけを出している「切り抜き」も「切り抜き」） */
   const toolValue: BrowserPhotoTool = cropping
     ? "crop"

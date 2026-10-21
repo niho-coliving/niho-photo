@@ -1,4 +1,4 @@
-import type { DevelopEngine } from "./develop-engine-client";
+import type { DevelopEngine, DevelopExportOptions } from "./develop-engine-client";
 import {
   hasSavedDevelopSettings,
   isNeutralDevelopSettings,
@@ -94,13 +94,14 @@ export function openDevelopWorkingCopy(
 /**
  * 入力を JPEG に描く（持っている写真は変えない）。Worker への要求は最初の await より前に出す（呼び出し側が、この後すぐに写真や
  * Worker を手放しても描き終える）。16bit PNG の作業コピーは `exportWorkingCopyJpeg`、オリジナルと JPEG の作業コピー（K5 移行元設計）は
- * `exportJpeg` で描く（補正の `base` は呼び出し側が作業コピーの版にしてある）。
+ * `exportJpeg` で描く（補正の `base` は呼び出し側が作業コピーの版にしてある）。描かれる面のマスク（M4 #68）があれば、engine は面を
+ * `options.maskSurfaces`（省略 = engine が覚えた面と開いている写真の読み口）から読んでから出す（書き出しとしては先に数える）。
  */
 export function exportDevelopJpeg(
   engine: DevelopEngine,
   input: DevelopRenderInput,
   settings: DevelopSettings,
-  options: { maxDimension: number; quality: number },
+  options: DevelopExportOptions,
 ): Promise<Uint8Array<ArrayBuffer>> {
   return input.kind === "workingCopy" && input.encoding === "png16"
     ? engine.exportWorkingCopyJpeg(input.bytes, input.metaJson, settings, options)

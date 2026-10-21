@@ -55,6 +55,13 @@ import { parseDevelopEngineManifest } from "./develop-engine-manifest";
  *   あれば `ready` に `masks: { kinds, max, maskPlane }` を付ける（`validateSettings` は M1 の wasm〔読めるが描かない〕でも通るので
  *   使わない。口の無い古い glue・読めない応答は付けない＝描けない）。`maskPlane` は開いている写真の 1 枚のマスクの面（重ね表示用。
  *   `{ width, height, data }`、data は transfer）で、通常の要求と同じ列で順に処理する（描画を取り消さない）
+ * - 面（ブラシ・被写体・空のマスク。`docs/local-adjustments.md`「面の受け渡し」。M4 #68）: glue の `capabilities()` が `surfaces` を
+ *   返し、`encodeMaskSurface`・`maskSurfaceId`・`Developer.setMaskSurface` / `dropMaskSurface` / `exportJpeg` が揃っているときだけ
+ *   `masks.surfaces: true`（揃わない glue は面の種類を描けない扱いにして `kinds` から外す）。`setMaskSurface` は開いている写真の
+ *   `Developer` へ面を渡し（形の違う面は `maskSurfaceInvalid`）、渡した PNG を覚えて見本用の session へも渡す（見本の session は
+ *   面を持たずに始まる）。`dropMaskSurface` は両方から手放す。写真を手放すと面も手放す。`encodeMaskSurface` は面の値（`width·height`
+ *   byte）を 8bit グレーの PNG と id（sha256）にする。`exportJpeg` / `exportWorkingCopyJpeg` に `surfaces` が付いていれば、
+ *   一時的な `Developer`（JPEG / PNG は一発の書き出しと同じ作業サイズ）に面を渡して描く（一発の描画は面を持たない）
  */
 
 export type DevelopEngineWorkerRequest =
@@ -65,13 +72,19 @@ export type DevelopEngineWorkerRequest =
   | { type: "maskPlane"; id: number; settingsJson: string; maskId: string; maxDimension: number }
 /** Upright の推定（`mode`: 1 自動・2 水平・3 垂直・4 フル） */
   | { type: "estimateUpright"; id: number; settingsJson: string; mode: number }
-  | {
+/** 開いている写真の `Developer` へ面を渡す（`png` は transfer） */
+  | { type: "setMaskSurface"; id: number; surfaceId: string; png: ArrayBuffer }
+  | { type: "dropMaskSurface"; id: number; surfaceId: string }
+  /** 面の値（`width·height` byte）を PNG と id にする（`data` は transfer） */
+  | { type: "encodeMaskSurface"; id: number; width: number; height: number; data: ArrayBuffer }  | {
       type: "exportJpeg";
       id: number;
       bytes: ArrayBuffer;
       settingsJson: string;
       maxDimension: number;
       quality: number;
+      /** 描かれる面のマスクの面（あれば一時的な `Developer` で描く） */
+      surfaces?: DevelopMaskSurfacePng[];
     }
   | { type: "openWorkingCopy"; id: number; png: ArrayBuffer; metaJson: string }
   | {
@@ -82,6 +95,7 @@ export type DevelopEngineWorkerRequest =
       settingsJson: string;
       maxDimension: number;
       quality: number;
+      surfaces?: DevelopMaskSurfacePng[];
     }
   | { type: "close"; id: number }
   | { type: "convertEditSettings"; id: number; editSettingsJson: string; baseVersion?: string | null }
@@ -160,13 +174,18 @@ export type DevelopEngineWorkerFeatures = {
 
 /** wasm が描ける部分補正（`capabilities().masks`）。 */
 export type DevelopMaskCapabilities = {
-  /** 描ける種類（今の M2 は `linear` `radial`） */
+  /** 描ける種類（M2 は `linear` `radial`、M4 は `brush` `subject` `sky` も） */
   kinds: string[];
   /** 最大の枚数 */
   max: number;
   /** `Developer.maskPlane`（重ね表示の面）がある */
   maskPlane: boolean;
+  /** 面（ブラシ・被写体・空）を受け渡せる（`setMaskSurface` など。M4。省略 = 受け渡せない） */
+  surfaces?: boolean;
 };
+
+/** 書き出しに添える 1 枚の面（id と PNG）。 */
+export type DevelopMaskSurfacePng = { id: string; png: ArrayBuffer };
 
 export type DevelopEngineWorkerResponse =
   | { type: "perf"; id: 0; record: DevelopEnginePerfRecord }
@@ -193,7 +212,10 @@ export type DevelopEngineWorkerResponse =
   | { type: "maskPlane"; id: number; width: number; height: number; data: ArrayBuffer }
 /** `estimateUpright` の結果（JSON のまま） */
   | { type: "upright"; id: number; resultJson: string }
-  | { type: "error"; id: number; message: string };
+| { type: "maskSurfaceSet"; id: number }
+  | { type: "maskSurfaceDropped"; id: number; dropped: boolean }
+  /** `encodeMaskSurface` の PNG と id（sha256） */
+  | { type: "maskSurfaceEncoded"; id: number; surfaceId: string; png: ArrayBuffer }  | { type: "error"; id: number; message: string };
 
 export type DevelopEngineWorkerDeps = {
   fetch: (url: string, init?: RequestInit) => Promise<Response>;
@@ -233,7 +255,14 @@ type DevelopDeveloper = {
   maskPlane?: (settingsJson: string, maskId: string, maxDimension: number) => unknown;
   /** Upright: 今の設定の枠で推定した遠近の JSON（crate 0.23.0 から。無い glue もある） */
   estimateUpright?: (settingsJson: string, mode: number) => unknown;
-};
+/** 面の受け渡し（M4 の glue から。無い glue もある） */
+  setMaskSurface?: (surfaceId: string, png: Uint8Array) => unknown;
+  dropMaskSurface?: (surfaceId: string) => unknown;
+  /** その Developer の面と層で描いた final の JPEG（M4 の glue から） */
+  exportJpeg?: (settingsJson: string, maxDimension: number, quality: number) => unknown;};
+
+/** 一発の書き出しが JPEG / PNG の原本を読む作業サイズの上限（crate の `DEFAULT_DECODE_CAP`）。 */
+const ONE_SHOT_DECODE_CAP = 4096;
 
 /** 見本用の session の長辺（見本 1 枚は、これを行の大きさに縮めて描く）。 */
 const PRESET_THUMBNAIL_SESSION_MAX_DIMENSION = 256;
@@ -284,7 +313,12 @@ type DevelopGlue = {
   maskPlane: boolean;
   /** `Developer.prototype.estimateUpright` がある（無い glue では Upright のボタンを出さない） */
   upright: boolean;
-};
+/** `encodeMaskSurface(width, height, data)`（面の PNG。無い glue では面を作れない） */
+  encodeMaskSurface: ((width: number, height: number, data: Uint8Array) => unknown) | null;
+  /** `maskSurfaceId(png)`（面の id = sha256） */
+  maskSurfaceId: ((png: Uint8Array) => unknown) | null;
+  /** `Developer.prototype` の `setMaskSurface`・`dropMaskSurface`・`exportJpeg` が揃っている */
+  surfaces: boolean;};
 
 /** 幾何（切り抜き・回転。F3 移行元設計）の口。 */
 type DevelopGeometryGlue = {
@@ -347,7 +381,11 @@ function readGlue(module: unknown): DevelopGlue | null {
 const estimateUpright: unknown = isRecord(developerPrototype)
     ? Reflect.get(developerPrototype, "estimateUpright")
     : undefined;
-  const geometry: DevelopGeometryGlue | null =
+// 面の受け渡しの口（無い glue でも、線形・円形は描ける）
+  const { encodeMaskSurface, maskSurfaceId } = module;
+  const surfaceMethods = ["setMaskSurface", "dropMaskSurface", "exportJpeg"].every(
+    (name) => isRecord(developerPrototype) && typeof Reflect.get(developerPrototype, name) === "function",
+  );  const geometry: DevelopGeometryGlue | null =
     typeof imageSize === "function" &&
     typeof rasterDecodeSize === "function" &&
     typeof geometryOutputSize === "function" &&
@@ -382,8 +420,13 @@ const estimateUpright: unknown = isRecord(developerPrototype)
     capabilities: typeof capabilities === "function" ? (capabilities as () => unknown) : null,
     maskPlane: typeof maskPlane === "function",
     upright: typeof estimateUpright === "function",
-  };
+encodeMaskSurface: typeof encodeMaskSurface === "function" ? (encodeMaskSurface as DevelopGlue["encodeMaskSurface"]) : null,
+    maskSurfaceId: typeof maskSurfaceId === "function" ? (maskSurfaceId as DevelopGlue["maskSurfaceId"]) : null,
+    surfaces: surfaceMethods,  };
 }
+
+/** 面（ブラシ・被写体・空）の種類。面の口の揃わない glue では描けない扱いにする。 */
+const SURFACE_MASK_KINDS = ["brush", "subject", "sky"];
 
 /** crate の `MAX_LOCAL_MASKS`（契約の上限。glue がこれより大きい値を返しても上限で止める）。 */
 const MAX_MASKS_CONTRACT = 8;
@@ -401,16 +444,26 @@ function readMaskCapabilities(glue: DevelopGlue): DevelopMaskCapabilities | null
     return null;
   }
   if (!isRecord(parsed) || !isRecord(parsed.masks)) return null;
-  const { kinds, max, maskPlane } = parsed.masks;
+  const { kinds, max, maskPlane, surfaces } = parsed.masks;
   if (!Array.isArray(kinds) || !isPositiveInteger(max)) return null;
   const known = ["linear", "radial", "brush", "subject", "sky"];
-  const readKinds = [...new Set(kinds.filter((kind): kind is string => typeof kind === "string" && known.includes(kind)))];
+  // 面の受け渡しは、応答と glue の口（作る・id・Developer の受け渡しと書き出し）が揃っているときだけ
+  const surfacesReady = surfaces === true && glue.surfaces && glue.encodeMaskSurface !== null && glue.maskSurfaceId !== null;
+  const readKinds = [
+    ...new Set(
+      kinds.filter(
+        (kind): kind is string =>
+          typeof kind === "string" && known.includes(kind) && (surfacesReady || !SURFACE_MASK_KINDS.includes(kind)),
+      ),
+    ),
+  ];
   if (readKinds.length === 0) return null;
   return {
     kinds: readKinds,
     max: Math.min(max, MAX_MASKS_CONTRACT),
     // 面の口は、応答と Developer の両方にあるときだけ
     maskPlane: maskPlane === true && glue.maskPlane,
+    ...(surfacesReady ? { surfaces: true } : {}),
   };
 }
 
@@ -674,6 +727,9 @@ export function createDevelopEngineWorkerHandler(
   let developer: DevelopDeveloper | null = null;
   // 開いている写真の見本用の session（初めて見本を描くときに作る。写真を手放すと一緒に手放す）
   let thumbnailSession: DevelopDeveloper | null = null;
+  // 開いている写真の `Developer` に渡した面の PNG（見本用の session にも渡すため。写真を手放すと捨てる）と、見本用の session に渡した面
+  const heldSurfaces = new Map<string, Uint8Array>();
+  const thumbnailSurfaces = new Set<string>();
   let currentAnalysisKey: string | null = null;
   let chain: Promise<void> = Promise.resolve();
   let warmAuto: Extract<DevelopEngineWorkerRequest, { type: "warmAutoSettings" }> | null = null;
@@ -768,6 +824,7 @@ export function createDevelopEngineWorkerHandler(
   const releaseThumbnailSession = () => {
     const current = thumbnailSession;
     thumbnailSession = null;
+    thumbnailSurfaces.clear();
     freeQuietly(current);
   };
 
@@ -775,8 +832,30 @@ export function createDevelopEngineWorkerHandler(
     const current = developer;
     developer = null;
     releaseThumbnailSession();
+    heldSurfaces.clear();
     currentAnalysisKey = null;
     freeQuietly(current);
+  };
+
+  /** 見本用の session の面を、開いている写真の `Developer` に渡した面とそろえる（口の無い glue では何もしない）。 */
+  const syncThumbnailSurfaces = (session: DevelopDeveloper) => {
+    if (typeof session.setMaskSurface !== "function") return;
+    for (const surfaceId of [...thumbnailSurfaces]) {
+      if (heldSurfaces.has(surfaceId)) continue;
+      thumbnailSurfaces.delete(surfaceId);
+      session.dropMaskSurface?.(surfaceId);
+    }
+    for (const [surfaceId, png] of heldSurfaces) {
+      if (thumbnailSurfaces.has(surfaceId)) continue;
+      session.setMaskSurface(surfaceId, png);
+      thumbnailSurfaces.add(surfaceId);
+    }
+  };
+
+  /** 書き出しに添えた面を一時的な `Developer` に渡す（口の無い glue は error）。 */
+  const setExportSurfaces = (target: DevelopDeveloper, surfaces: readonly DevelopMaskSurfacePng[]) => {
+    if (typeof target.setMaskSurface !== "function") throw new Error("develop engine cannot take mask surfaces");
+    for (const surface of surfaces) target.setMaskSurface(surface.id, new Uint8Array(surface.png));
   };
 
   const postReady = (id: number) => {
@@ -869,9 +948,11 @@ export function createDevelopEngineWorkerHandler(
     metaJson: string,
     settingsJson: string,
     maxDimension: number,
+    surfaces: readonly DevelopMaskSurfacePng[] = [],
   ): { width: number; height: number; rgba: ArrayBuffer } => {
     const working = openWorkingCopy(png, metaJson);
     try {
+      if (surfaces.length > 0) setExportSurfaces(working, surfaces);
       const frame = readFrame(working.render(settingsJson, maxDimension, false));
       return { width: frame.width, height: frame.height, rgba: transferableBuffer(frame.rgba, wasmMemory()) };
     } finally {
@@ -970,8 +1051,72 @@ export function createDevelopEngineWorkerHandler(
           deps.post({ type: "upright", id, resultJson });
           return;
         }
+case "setMaskSurface": {
+          requireGlue();
+          const opened = developer;
+          if (!opened) throw new Error("no photo is open");
+          if (!masks?.surfaces || typeof opened.setMaskSurface !== "function") {
+            throw new Error("develop engine cannot take mask surfaces");
+          }
+          const png = new Uint8Array(message.png);
+          opened.setMaskSurface(message.surfaceId, png);
+          heldSurfaces.set(message.surfaceId, png);
+          deps.post({ type: "maskSurfaceSet", id });
+          return;
+        }
+        case "dropMaskSurface": {
+          requireGlue();
+          heldSurfaces.delete(message.surfaceId);
+          if (thumbnailSurfaces.delete(message.surfaceId)) thumbnailSession?.dropMaskSurface?.(message.surfaceId);
+          const dropped = developer?.dropMaskSurface?.(message.surfaceId) === true;
+          deps.post({ type: "maskSurfaceDropped", id, dropped });
+          return;
+        }
+        case "encodeMaskSurface": {
+          const loaded = requireGlue();
+          if (!masks?.surfaces || !loaded.encodeMaskSurface || !loaded.maskSurfaceId) {
+            throw new Error("develop engine cannot encode mask surfaces");
+          }
+          const encoded = loaded.encodeMaskSurface(message.width, message.height, new Uint8Array(message.data));
+          if (!(encoded instanceof Uint8Array) || encoded.byteLength === 0) throw new Error("develop engine returned no mask surface");
+          const surfaceId = loaded.maskSurfaceId(encoded);
+          if (typeof surfaceId !== "string" || !/^[0-9a-f]{64}$/.test(surfaceId)) {
+            throw new Error("develop engine returned an invalid mask surface id");
+          }
+          const png = transferableBuffer(encoded, wasmMemory());
+          deps.post({ type: "maskSurfaceEncoded", id, surfaceId, png }, [png]);          return;
+        }
         case "exportJpeg": {
           const loaded = requireGlue();
+          if (message.surfaces && message.surfaces.length > 0) {
+            // 一発の書き出しは面を持たないので、同じ作業サイズの一時的な Developer に面を渡して描く（持っている写真は変えない）
+            const input = new Uint8Array(message.bytes);
+            let decodeSize = message.maxDimension;
+            if (loaded.geometry) {
+              const size = readSize(loaded.geometry.imageSize(input));
+              const value = loaded.geometry.rasterDecodeSize(
+                message.settingsJson,
+                size.width,
+                size.height,
+                message.maxDimension,
+                ONE_SHOT_DECODE_CAP,
+              );
+              if (!isPositiveInteger(value)) throw new Error("develop engine returned an invalid decode size");
+              decodeSize = value;
+            }
+            const temporary = new loaded.Developer(input, decodeSize);
+            try {
+              setExportSurfaces(temporary, message.surfaces);
+              if (typeof temporary.exportJpeg !== "function") throw new Error("develop engine cannot export mask surfaces");
+              const jpeg = temporary.exportJpeg(message.settingsJson, message.maxDimension, message.quality);
+              if (!(jpeg instanceof Uint8Array) || jpeg.byteLength === 0) throw new Error("develop engine returned no JPEG");
+              const bytes = transferableBuffer(jpeg, wasmMemory());
+              deps.post({ type: "jpeg", id, bytes }, [bytes]);
+            } finally {
+              freeQuietly(temporary);
+            }
+            return;
+          }
           const jpeg = loaded.exportJpeg(
             new Uint8Array(message.bytes),
             message.settingsJson,
@@ -989,6 +1134,7 @@ export function createDevelopEngineWorkerHandler(
             message.metaJson,
             message.settingsJson,
             message.maxDimension,
+            message.surfaces,
           );
           let jpeg: ArrayBuffer | null = null;
           try {
@@ -1093,6 +1239,8 @@ export function createDevelopEngineWorkerHandler(
             const opened = developer;
             if (!opened || typeof opened.thumbnail !== "function") throw new Error("no photo is open");
             if (!thumbnailSession) thumbnailSession = opened.thumbnail(PRESET_THUMBNAIL_SESSION_MAX_DIMENSION);
+            // 見本の session は面を持たずに始まる: 開いている写真に渡した面をそろえる（面のマスクも見本に描く）
+            syncThumbnailSurfaces(thumbnailSession);
             const frame = readFrame(thumbnailSession.render(message.settingsJson, message.maxDimension, false));
             return { frame, rgba: transferableBuffer(frame.rgba, wasmMemory()) };
           });
