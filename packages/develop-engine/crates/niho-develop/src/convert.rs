@@ -653,6 +653,7 @@ pub fn to_edit_settings_value(s: &DevelopSettings) -> Value {
         "grayMixer",
         "vignette",
         "grain",
+        "masks",
     ] {
         o.remove(key);
     }

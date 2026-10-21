@@ -1,0 +1,761 @@
+{
+  "valid": [
+    {
+      "name": "linear",
+      "settings": {"v": 5, "engine": "niho-10", "look": "niho-standard-1", "base": null, "masks": [{"id": "mask-a1", "kind": "linear", "zero": {"x": 0.5, "y": 0.2}, "full": {"x": 0.5, "y": 0.5}, "adjust": {"exposure": -0.7, "highlights": -30}}]},
+      "canonical": [{"id": "mask-a1", "kind": "linear", "zero": {"x": 0.5, "y": 0.2}, "full": {"x": 0.5, "y": 0.5}, "adjust": {"exposure": -0.7, "highlights": -30}}]
+    },
+    {
+      "name": "radial with invert",
+      "settings": {"v": 5, "engine": "niho-10", "look": "niho-standard-1", "base": null, "masks": [{"id": "mask-b2", "kind": "radial", "invert": true, "center": {"x": 0.5, "y": 0.45}, "radius": {"x": 0.3, "y": 0.2}, "angle": 15, "feather": 50, "adjust": {"exposure": 0.4, "saturation": 10}}]},
+      "canonical": [{"id": "mask-b2", "kind": "radial", "invert": true, "center": {"x": 0.5, "y": 0.45}, "radius": {"x": 0.3, "y": 0.2}, "angle": 15, "feather": 50, "adjust": {"exposure": 0.4, "saturation": 10}}]
+    },
+    {
+      "name": "brush",
+      "settings": {"v": 5, "engine": "niho-10", "look": "niho-standard-1", "base": null, "masks": [{"id": "mask-c3", "kind": "brush", "surface": {"id": "581330ad3733d6a236b1b47262d4672df1653fe514e38cd287aa540c9edf806b", "width": 1024, "height": 683}, "adjust": {"shadows": 25}}]},
+      "canonical": [{"id": "mask-c3", "kind": "brush", "surface": {"id": "581330ad3733d6a236b1b47262d4672df1653fe514e38cd287aa540c9edf806b", "width": 1024, "height": 683}, "adjust": {"shadows": 25}}]
+    },
+    {
+      "name": "subject",
+      "settings": {"v": 5, "engine": "niho-10", "look": "niho-standard-1", "base": null, "masks": [{"id": "subject_1", "kind": "subject", "surface": {"id": "c1baa186cc6f024bcb708bc03e01524e07bad30adfc6ace195105e1a98ef9507", "width": 512, "height": 512}, "adjust": {"exposure": 0.3}}]},
+      "canonical": [{"id": "subject_1", "kind": "subject", "surface": {"id": "c1baa186cc6f024bcb708bc03e01524e07bad30adfc6ace195105e1a98ef9507", "width": 512, "height": 512}, "adjust": {"exposure": 0.3}}]
+    },
+    {
+      "name": "sky",
+      "settings": {"v": 5, "engine": "niho-10", "look": "niho-standard-1", "base": null, "masks": [{"id": "Sky-1", "kind": "sky", "surface": {"id": "69ee09ebbc09ff3c755e167b317d29cfe8f2743677f8f295cf3061e46392c299", "width": 4096, "height": 1}, "adjust": {"dehaze": 20, "vibrance": -10}}]},
+      "canonical": [{"id": "Sky-1", "kind": "sky", "surface": {"id": "69ee09ebbc09ff3c755e167b317d29cfe8f2743677f8f295cf3061e46392c299", "width": 4096, "height": 1}, "adjust": {"dehaze": 20, "vibrance": -10}}]
+    },
+    {
+      "name": "disabled mask is kept",
+      "settings": {"v": 5, "engine": "niho-10", "look": "niho-standard-1", "base": null, "masks": [{"id": "off", "kind": "linear", "enabled": false, "zero": {"x": 0.5, "y": 0.2}, "full": {"x": 0.5, "y": 0.5}, "adjust": {"exposure": -0.7}}]},
+      "canonical": [{"id": "off", "kind": "linear", "enabled": false, "zero": {"x": 0.5, "y": 0.2}, "full": {"x": 0.5, "y": 0.5}, "adjust": {"exposure": -0.7}}]
+    },
+    {
+      "name": "disabled and inverted",
+      "settings": {"v": 5, "engine": "niho-10", "look": "niho-standard-1", "base": null, "masks": [{"id": "off-inv", "kind": "radial", "enabled": false, "invert": true, "center": {"x": 0.5, "y": 0.45}, "radius": {"x": 0.3, "y": 0.2}, "angle": 15, "feather": 50, "adjust": {"saturation": 10}}]},
+      "canonical": [{"id": "off-inv", "kind": "radial", "enabled": false, "invert": true, "center": {"x": 0.5, "y": 0.45}, "radius": {"x": 0.3, "y": 0.2}, "angle": 15, "feather": 50, "adjust": {"saturation": 10}}]
+    },
+    {
+      "name": "explicit default flags are omitted in canonical",
+      "settings": {"v": 5, "engine": "niho-10", "look": "niho-standard-1", "base": null, "masks": [{"id": "flags", "kind": "linear", "enabled": true, "invert": false, "zero": {"x": 0.5, "y": 0.2}, "full": {"x": 0.5, "y": 0.5}, "adjust": {"exposure": -0.7}}]},
+      "canonical": [{"id": "flags", "kind": "linear", "zero": {"x": 0.5, "y": 0.2}, "full": {"x": 0.5, "y": 0.5}, "adjust": {"exposure": -0.7}}]
+    },
+    {
+      "name": "key order and zero items are normalized",
+      "settings": {"v": 5, "engine": "niho-10", "look": "niho-standard-1", "base": null, "masks": [{"adjust": {"texture": 12.5, "exposure": 0, "contrast": 0, "clarity": 0}, "full": {"y": 0.9, "x": 0.1}, "zero": {"y": 0.1, "x": 0.1}, "invert": true, "kind": "linear", "id": "shuffled"}]},
+      "canonical": [{"id": "shuffled", "kind": "linear", "invert": true, "zero": {"x": 0.1, "y": 0.1}, "full": {"x": 0.1, "y": 0.9}, "adjust": {"texture": 12.5}}]
+    },
+    {
+      "name": "empty adjust",
+      "settings": {"v": 5, "engine": "niho-10", "look": "niho-standard-1", "base": null, "masks": [{"id": "empty-adjust", "kind": "linear", "zero": {"x": 0.5, "y": 0.2}, "full": {"x": 0.5, "y": 0.5}, "adjust": {}}, {"id": "empty-sky", "kind": "sky", "surface": {"id": "29314dcbb5e73c233e84f96c6b38faad339528a0d67baf239e6827070098ff04", "width": 1024, "height": 683}, "adjust": {}}, {"id": "empty-rad", "kind": "radial", "center": {"x": 0.5, "y": 0.45}, "radius": {"x": 0.3, "y": 0.2}, "angle": 15, "feather": 50, "adjust": {}}]},
+      "canonical": [{"id": "empty-adjust", "kind": "linear", "zero": {"x": 0.5, "y": 0.2}, "full": {"x": 0.5, "y": 0.5}, "adjust": {}}, {"id": "empty-sky", "kind": "sky", "surface": {"id": "29314dcbb5e73c233e84f96c6b38faad339528a0d67baf239e6827070098ff04", "width": 1024, "height": 683}, "adjust": {}}, {"id": "empty-rad", "kind": "radial", "center": {"x": 0.5, "y": 0.45}, "radius": {"x": 0.3, "y": 0.2}, "angle": 15, "feather": 50, "adjust": {}}]
+    },
+    {
+      "name": "hsl delta in object and array forms",
+      "settings": {"v": 5, "engine": "niho-10", "look": "niho-standard-1", "base": null, "masks": [{"id": "hsl-object", "kind": "linear", "zero": {"x": 0.5, "y": 0.2}, "full": {"x": 0.5, "y": 0.5}, "adjust": {"hsl": {"blue": {"luminance": -20}, "red": {"hue": 10, "saturation": 0}}}}, {"id": "hsl-array", "kind": "linear", "zero": {"x": 0.2, "y": 0.2}, "full": {"x": 0.2, "y": 0.8}, "adjust": {"hsl": ["green", {"saturation": 15, "hue": -5}, "orange", {"hue": 0, "saturation": 0, "luminance": 0}]}}]},
+      "canonical": [{"id": "hsl-object", "kind": "linear", "zero": {"x": 0.5, "y": 0.2}, "full": {"x": 0.5, "y": 0.5}, "adjust": {"hsl": ["red", {"hue": 10}, "blue", {"luminance": -20}]}}, {"id": "hsl-array", "kind": "linear", "zero": {"x": 0.2, "y": 0.2}, "full": {"x": 0.2, "y": 0.8}, "adjust": {"hsl": ["green", {"hue": -5, "saturation": 15}]}}]
+    },
+    {
+      "name": "all-zero hsl is dropped",
+      "settings": {"v": 5, "engine": "niho-10", "look": "niho-standard-1", "base": null, "masks": [{"id": "hsl-zero", "kind": "linear", "zero": {"x": 0.5, "y": 0.2}, "full": {"x": 0.5, "y": 0.5}, "adjust": {"exposure": 1, "hsl": {"red": {"hue": 0}}}}]},
+      "canonical": [{"id": "hsl-zero", "kind": "linear", "zero": {"x": 0.5, "y": 0.2}, "full": {"x": 0.5, "y": 0.5}, "adjust": {"exposure": 1}}]
+    },
+    {
+      "name": "adjust upper and lower edges",
+      "settings": {"v": 5, "engine": "niho-10", "look": "niho-standard-1", "base": null, "masks": [{"id": "edge-hi", "kind": "linear", "zero": {"x": 0.5, "y": 0.2}, "full": {"x": 0.5, "y": 0.5}, "adjust": {"exposure": 5, "contrast": 100, "highlights": 100, "shadows": 100, "whites": 100, "blacks": 100, "texture": 100, "clarity": 100, "dehaze": 100, "vibrance": 100, "saturation": 100, "relativeTemperature": 100, "relativeTint": 100, "hsl": {"red": {"hue": 100, "saturation": 100, "luminance": 100}}}}, {"id": "edge-lo", "kind": "linear", "zero": {"x": 0.1, "y": 0.1}, "full": {"x": 0.9, "y": 0.9}, "adjust": {"exposure": -5, "contrast": -100, "highlights": -100, "shadows": -100, "whites": -100, "blacks": -100, "texture": -100, "clarity": -100, "dehaze": -100, "vibrance": -100, "saturation": -100, "relativeTemperature": -100, "relativeTint": -100, "hsl": {"magenta": {"hue": -100, "saturation": -100, "luminance": -100}}}}]},
+      "canonical": [{"id": "edge-hi", "kind": "linear", "zero": {"x": 0.5, "y": 0.2}, "full": {"x": 0.5, "y": 0.5}, "adjust": {"exposure": 5, "contrast": 100, "highlights": 100, "shadows": 100, "whites": 100, "blacks": 100, "texture": 100, "clarity": 100, "dehaze": 100, "vibrance": 100, "saturation": 100, "relativeTemperature": 100, "relativeTint": 100, "hsl": ["red", {"hue": 100, "saturation": 100, "luminance": 100}]}}, {"id": "edge-lo", "kind": "linear", "zero": {"x": 0.1, "y": 0.1}, "full": {"x": 0.9, "y": 0.9}, "adjust": {"exposure": -5, "contrast": -100, "highlights": -100, "shadows": -100, "whites": -100, "blacks": -100, "texture": -100, "clarity": -100, "dehaze": -100, "vibrance": -100, "saturation": -100, "relativeTemperature": -100, "relativeTint": -100, "hsl": ["magenta", {"hue": -100, "saturation": -100, "luminance": -100}]}}]
+    },
+    {
+      "name": "shape edges",
+      "settings": {"v": 5, "engine": "niho-10", "look": "niho-standard-1", "base": null, "masks": [{"id": "lin-out", "kind": "linear", "zero": {"x": -1, "y": -1}, "full": {"x": 2, "y": 2}, "adjust": {"exposure": -0.7}}, {"id": "lin-close", "kind": "linear", "zero": {"x": 0.5, "y": 0.5}, "full": {"x": 0.5, "y": 0.6}, "adjust": {"exposure": -0.7}}, {"id": "rad-min", "kind": "radial", "center": {"x": 0, "y": 0}, "radius": {"x": 0.005, "y": 0.005}, "angle": -180, "feather": 0, "adjust": {"saturation": 10}}, {"id": "rad-max", "kind": "radial", "center": {"x": 1, "y": 1}, "radius": {"x": 1.5, "y": 1.5}, "angle": 180, "feather": 100, "adjust": {"saturation": 10}}]},
+      "canonical": [{"id": "lin-out", "kind": "linear", "zero": {"x": -1, "y": -1}, "full": {"x": 2, "y": 2}, "adjust": {"exposure": -0.7}}, {"id": "lin-close", "kind": "linear", "zero": {"x": 0.5, "y": 0.5}, "full": {"x": 0.5, "y": 0.6}, "adjust": {"exposure": -0.7}}, {"id": "rad-min", "kind": "radial", "center": {"x": 0, "y": 0}, "radius": {"x": 0.005, "y": 0.005}, "angle": -180, "feather": 0, "adjust": {"saturation": 10}}, {"id": "rad-max", "kind": "radial", "center": {"x": 1, "y": 1}, "radius": {"x": 1.5, "y": 1.5}, "angle": 180, "feather": 100, "adjust": {"saturation": 10}}]
+    },
+    {
+      "name": "8 masks are the most",
+      "settings": {"v": 5, "engine": "niho-10", "look": "niho-standard-1", "base": null, "masks": [{"id": "m0", "kind": "linear", "zero": {"x": 0, "y": 0.1}, "full": {"x": 0, "y": 0.9}, "adjust": {"exposure": -0.7}}, {"id": "m1", "kind": "linear", "zero": {"x": 0.1, "y": 0.1}, "full": {"x": 0.1, "y": 0.9}, "adjust": {"exposure": -0.7}}, {"id": "m2", "kind": "linear", "zero": {"x": 0.2, "y": 0.1}, "full": {"x": 0.2, "y": 0.9}, "adjust": {"exposure": -0.7}}, {"id": "m3", "kind": "linear", "zero": {"x": 0.3, "y": 0.1}, "full": {"x": 0.3, "y": 0.9}, "adjust": {"exposure": -0.7}}, {"id": "m4", "kind": "linear", "zero": {"x": 0.4, "y": 0.1}, "full": {"x": 0.4, "y": 0.9}, "adjust": {"exposure": -0.7}}, {"id": "m5", "kind": "linear", "zero": {"x": 0.5, "y": 0.1}, "full": {"x": 0.5, "y": 0.9}, "adjust": {"exposure": -0.7}}, {"id": "m6", "kind": "linear", "zero": {"x": 0.6, "y": 0.1}, "full": {"x": 0.6, "y": 0.9}, "adjust": {"exposure": -0.7}}, {"id": "m7", "kind": "linear", "zero": {"x": 0.7, "y": 0.1}, "full": {"x": 0.7, "y": 0.9}, "adjust": {"exposure": -0.7}}]},
+      "canonical": [{"id": "m0", "kind": "linear", "zero": {"x": 0, "y": 0.1}, "full": {"x": 0, "y": 0.9}, "adjust": {"exposure": -0.7}}, {"id": "m1", "kind": "linear", "zero": {"x": 0.1, "y": 0.1}, "full": {"x": 0.1, "y": 0.9}, "adjust": {"exposure": -0.7}}, {"id": "m2", "kind": "linear", "zero": {"x": 0.2, "y": 0.1}, "full": {"x": 0.2, "y": 0.9}, "adjust": {"exposure": -0.7}}, {"id": "m3", "kind": "linear", "zero": {"x": 0.3, "y": 0.1}, "full": {"x": 0.3, "y": 0.9}, "adjust": {"exposure": -0.7}}, {"id": "m4", "kind": "linear", "zero": {"x": 0.4, "y": 0.1}, "full": {"x": 0.4, "y": 0.9}, "adjust": {"exposure": -0.7}}, {"id": "m5", "kind": "linear", "zero": {"x": 0.5, "y": 0.1}, "full": {"x": 0.5, "y": 0.9}, "adjust": {"exposure": -0.7}}, {"id": "m6", "kind": "linear", "zero": {"x": 0.6, "y": 0.1}, "full": {"x": 0.6, "y": 0.9}, "adjust": {"exposure": -0.7}}, {"id": "m7", "kind": "linear", "zero": {"x": 0.7, "y": 0.1}, "full": {"x": 0.7, "y": 0.9}, "adjust": {"exposure": -0.7}}]
+    },
+    {
+      "name": "ids differ by case",
+      "settings": {"v": 5, "engine": "niho-10", "look": "niho-standard-1", "base": null, "masks": [{"id": "Mask", "kind": "linear", "zero": {"x": 0.5, "y": 0.2}, "full": {"x": 0.5, "y": 0.5}, "adjust": {"exposure": -0.7}}, {"id": "mask", "kind": "linear", "zero": {"x": 0.3, "y": 0.3}, "full": {"x": 0.3, "y": 0.7}, "adjust": {"exposure": -0.7}}]},
+      "canonical": [{"id": "Mask", "kind": "linear", "zero": {"x": 0.5, "y": 0.2}, "full": {"x": 0.5, "y": 0.5}, "adjust": {"exposure": -0.7}}, {"id": "mask", "kind": "linear", "zero": {"x": 0.3, "y": 0.3}, "full": {"x": 0.3, "y": 0.7}, "adjust": {"exposure": -0.7}}]
+    },
+    {
+      "name": "relative white balance delta with relative mode",
+      "settings": {"v": 5, "engine": "niho-10", "look": "niho-standard-1", "base": null, "masks": [{"id": "wb-rel", "kind": "linear", "zero": {"x": 0.5, "y": 0.2}, "full": {"x": 0.5, "y": 0.5}, "adjust": {"relativeTemperature": 20, "relativeTint": -10}}], "whiteBalance": {"mode": "relative"}, "relativeTemperature": 5},
+      "canonical": [{"id": "wb-rel", "kind": "linear", "zero": {"x": 0.5, "y": 0.2}, "full": {"x": 0.5, "y": 0.5}, "adjust": {"relativeTemperature": 20, "relativeTint": -10}}]
+    },
+    {
+      "name": "relative white balance delta with as-shot mode",
+      "settings": {"v": 5, "engine": "niho-10", "look": "niho-standard-1", "base": null, "masks": [{"id": "wb-shot", "kind": "linear", "zero": {"x": 0.5, "y": 0.2}, "full": {"x": 0.5, "y": 0.5}, "adjust": {"relativeTemperature": 20}}], "whiteBalance": {"mode": "asShot"}},
+      "canonical": [{"id": "wb-shot", "kind": "linear", "zero": {"x": 0.5, "y": 0.2}, "full": {"x": 0.5, "y": 0.5}, "adjust": {"relativeTemperature": 20}}]
+    },
+    {
+      "name": "absolute mode with no relative delta",
+      "settings": {"v": 5, "engine": "niho-10", "look": "niho-standard-1", "base": null, "masks": [{"id": "wb-abs", "kind": "linear", "zero": {"x": 0.5, "y": 0.2}, "full": {"x": 0.5, "y": 0.5}, "adjust": {"exposure": 0.2, "relativeTemperature": 0}}], "whiteBalance": {"mode": "absolute", "temperature": 5500, "tint": 0}},
+      "canonical": [{"id": "wb-abs", "kind": "linear", "zero": {"x": 0.5, "y": 0.2}, "full": {"x": 0.5, "y": 0.5}, "adjust": {"exposure": 0.2}}]
+    },
+    {
+      "name": "empty masks array is the same as none",
+      "settings": {"v": 4, "engine": "niho-10", "look": "niho-standard-1", "base": null, "masks": []},
+      "canonical": []
+    }
+  ],
+  "invalid": [
+    {
+      "name": "masks is an object",
+      "settings": {"v": 5, "engine": "niho-10", "look": "niho-standard-1", "base": null, "masks": {}},
+      "code": "invalidType"
+    },
+    {
+      "name": "masks is null",
+      "settings": {"v": 5, "engine": "niho-10", "look": "niho-standard-1", "base": null, "masks": null},
+      "code": "invalidType"
+    },
+    {
+      "name": "masks is a string",
+      "settings": {"v": 5, "engine": "niho-10", "look": "niho-standard-1", "base": null, "masks": "linear"},
+      "code": "invalidType"
+    },
+    {
+      "name": "a mask is a string",
+      "settings": {"v": 5, "engine": "niho-10", "look": "niho-standard-1", "base": null, "masks": ["linear"]},
+      "code": "invalidType"
+    },
+    {
+      "name": "a mask is null",
+      "settings": {"v": 5, "engine": "niho-10", "look": "niho-standard-1", "base": null, "masks": [null]},
+      "code": "invalidType"
+    },
+    {
+      "name": "9 masks",
+      "settings": {"v": 5, "engine": "niho-10", "look": "niho-standard-1", "base": null, "masks": [{"id": "m0", "kind": "linear", "zero": {"x": 0, "y": 0.1}, "full": {"x": 0, "y": 0.9}, "adjust": {"exposure": -0.7}}, {"id": "m1", "kind": "linear", "zero": {"x": 0.1, "y": 0.1}, "full": {"x": 0.1, "y": 0.9}, "adjust": {"exposure": -0.7}}, {"id": "m2", "kind": "linear", "zero": {"x": 0.2, "y": 0.1}, "full": {"x": 0.2, "y": 0.9}, "adjust": {"exposure": -0.7}}, {"id": "m3", "kind": "linear", "zero": {"x": 0.3, "y": 0.1}, "full": {"x": 0.3, "y": 0.9}, "adjust": {"exposure": -0.7}}, {"id": "m4", "kind": "linear", "zero": {"x": 0.4, "y": 0.1}, "full": {"x": 0.4, "y": 0.9}, "adjust": {"exposure": -0.7}}, {"id": "m5", "kind": "linear", "zero": {"x": 0.5, "y": 0.1}, "full": {"x": 0.5, "y": 0.9}, "adjust": {"exposure": -0.7}}, {"id": "m6", "kind": "linear", "zero": {"x": 0.6, "y": 0.1}, "full": {"x": 0.6, "y": 0.9}, "adjust": {"exposure": -0.7}}, {"id": "m7", "kind": "linear", "zero": {"x": 0.7, "y": 0.1}, "full": {"x": 0.7, "y": 0.9}, "adjust": {"exposure": -0.7}}, {"id": "m8", "kind": "linear", "zero": {"x": 0.8, "y": 0.1}, "full": {"x": 0.8, "y": 0.9}, "adjust": {"exposure": -0.7}}]},
+      "code": "tooManyMasks"
+    },
+    {
+      "name": "duplicate id",
+      "settings": {"v": 5, "engine": "niho-10", "look": "niho-standard-1", "base": null, "masks": [{"id": "same", "kind": "linear", "zero": {"x": 0.5, "y": 0.2}, "full": {"x": 0.5, "y": 0.5}, "adjust": {"exposure": -0.7}}, {"id": "same", "kind": "radial", "center": {"x": 0.5, "y": 0.45}, "radius": {"x": 0.3, "y": 0.2}, "angle": 15, "feather": 50, "adjust": {"saturation": 10}}]},
+      "code": "duplicateMaskId"
+    },
+    {
+      "name": "empty id",
+      "settings": {"v": 5, "engine": "niho-10", "look": "niho-standard-1", "base": null, "masks": [{"id": "", "kind": "linear", "zero": {"x": 0.5, "y": 0.2}, "full": {"x": 0.5, "y": 0.5}, "adjust": {"exposure": -0.7}}]},
+      "code": "invalidMaskId"
+    },
+    {
+      "name": "id with a space",
+      "settings": {"v": 5, "engine": "niho-10", "look": "niho-standard-1", "base": null, "masks": [{"id": "a b", "kind": "linear", "zero": {"x": 0.5, "y": 0.2}, "full": {"x": 0.5, "y": 0.5}, "adjust": {"exposure": -0.7}}]},
+      "code": "invalidMaskId"
+    },
+    {
+      "name": "id with a dot",
+      "settings": {"v": 5, "engine": "niho-10", "look": "niho-standard-1", "base": null, "masks": [{"id": "mask.a", "kind": "linear", "zero": {"x": 0.5, "y": 0.2}, "full": {"x": 0.5, "y": 0.5}, "adjust": {"exposure": -0.7}}]},
+      "code": "invalidMaskId"
+    },
+    {
+      "name": "id with a non-ASCII letter",
+      "settings": {"v": 5, "engine": "niho-10", "look": "niho-standard-1", "base": null, "masks": [{"id": "マスク", "kind": "linear", "zero": {"x": 0.5, "y": 0.2}, "full": {"x": 0.5, "y": 0.5}, "adjust": {"exposure": -0.7}}]},
+      "code": "invalidMaskId"
+    },
+    {
+      "name": "id of 65 bytes",
+      "settings": {"v": 5, "engine": "niho-10", "look": "niho-standard-1", "base": null, "masks": [{"id": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "kind": "linear", "zero": {"x": 0.5, "y": 0.2}, "full": {"x": 0.5, "y": 0.5}, "adjust": {"exposure": -0.7}}]},
+      "code": "invalidMaskId"
+    },
+    {
+      "name": "id is a number",
+      "settings": {"v": 5, "engine": "niho-10", "look": "niho-standard-1", "base": null, "masks": [{"id": 1, "kind": "linear", "zero": {"x": 0.5, "y": 0.2}, "full": {"x": 0.5, "y": 0.5}, "adjust": {"exposure": -0.7}}]},
+      "code": "invalidType"
+    },
+    {
+      "name": "unknown key on the mask",
+      "settings": {"v": 5, "engine": "niho-10", "look": "niho-standard-1", "base": null, "masks": [{"id": "lin-1", "kind": "linear", "zero": {"x": 0.5, "y": 0.2}, "full": {"x": 0.5, "y": 0.5}, "adjust": {"exposure": -0.7}, "opacity": 1}]},
+      "code": "unknownMaskKey"
+    },
+    {
+      "name": "unknown key in adjust",
+      "settings": {"v": 5, "engine": "niho-10", "look": "niho-standard-1", "base": null, "masks": [{"id": "lin-1", "kind": "linear", "zero": {"x": 0.5, "y": 0.2}, "full": {"x": 0.5, "y": 0.5}, "adjust": {"sharpness": 10}}]},
+      "code": "unknownMaskKey"
+    },
+    {
+      "name": "global-only key in adjust",
+      "settings": {"v": 5, "engine": "niho-10", "look": "niho-standard-1", "base": null, "masks": [{"id": "lin-1", "kind": "linear", "zero": {"x": 0.5, "y": 0.2}, "full": {"x": 0.5, "y": 0.5}, "adjust": {"toneCurves": []}}]},
+      "code": "unknownMaskKey"
+    },
+    {
+      "name": "unknown key in a point",
+      "settings": {"v": 5, "engine": "niho-10", "look": "niho-standard-1", "base": null, "masks": [{"id": "lin-1", "kind": "linear", "zero": {"x": 0.5, "y": 0.2, "z": 1}, "full": {"x": 0.5, "y": 0.5}, "adjust": {"exposure": -0.7}}]},
+      "code": "unknownMaskKey"
+    },
+    {
+      "name": "unknown key in radius",
+      "settings": {"v": 5, "engine": "niho-10", "look": "niho-standard-1", "base": null, "masks": [{"id": "rad-1", "kind": "radial", "center": {"x": 0.5, "y": 0.45}, "radius": {"x": 0.3, "y": 0.2, "z": 1}, "angle": 15, "feather": 50, "adjust": {"saturation": 10}}]},
+      "code": "unknownMaskKey"
+    },
+    {
+      "name": "unknown key in surface",
+      "settings": {"v": 5, "engine": "niho-10", "look": "niho-standard-1", "base": null, "masks": [{"id": "srf-1", "kind": "brush", "surface": {"id": "a2794cff8da2ff41a982b1d85c7a0c6cb9ff5eaa550a87d021805e3116ddcf9b", "width": 1024, "height": 683, "format": "png"}, "adjust": {"shadows": 25}}]},
+      "code": "unknownMaskKey"
+    },
+    {
+      "name": "unknown key in hsl",
+      "settings": {"v": 5, "engine": "niho-10", "look": "niho-standard-1", "base": null, "masks": [{"id": "lin-1", "kind": "linear", "zero": {"x": 0.5, "y": 0.2}, "full": {"x": 0.5, "y": 0.5}, "adjust": {"hsl": {"red": {"hue": 1, "alpha": 2}}}}]},
+      "code": "unknownMaskKey"
+    },
+    {
+      "name": "unknown hsl band",
+      "settings": {"v": 5, "engine": "niho-10", "look": "niho-standard-1", "base": null, "masks": [{"id": "lin-1", "kind": "linear", "zero": {"x": 0.5, "y": 0.2}, "full": {"x": 0.5, "y": 0.5}, "adjust": {"hsl": {"pink": {"hue": 1}}}}]},
+      "code": "invalidValue"
+    },
+    {
+      "name": "duplicate hsl band",
+      "settings": {"v": 5, "engine": "niho-10", "look": "niho-standard-1", "base": null, "masks": [{"id": "lin-1", "kind": "linear", "zero": {"x": 0.5, "y": 0.2}, "full": {"x": 0.5, "y": 0.5}, "adjust": {"hsl": ["red", {"hue": 1}, "red", {"hue": 2}]}}]},
+      "code": "duplicateBand"
+    },
+    {
+      "name": "hsl array of odd length",
+      "settings": {"v": 5, "engine": "niho-10", "look": "niho-standard-1", "base": null, "masks": [{"id": "lin-1", "kind": "linear", "zero": {"x": 0.5, "y": 0.2}, "full": {"x": 0.5, "y": 0.5}, "adjust": {"hsl": ["red"]}}]},
+      "code": "invalidType"
+    },
+    {
+      "name": "hsl is a number",
+      "settings": {"v": 5, "engine": "niho-10", "look": "niho-standard-1", "base": null, "masks": [{"id": "lin-1", "kind": "linear", "zero": {"x": 0.5, "y": 0.2}, "full": {"x": 0.5, "y": 0.5}, "adjust": {"hsl": 5}}]},
+      "code": "invalidType"
+    },
+    {
+      "name": "hsl band value is not a number",
+      "settings": {"v": 5, "engine": "niho-10", "look": "niho-standard-1", "base": null, "masks": [{"id": "lin-1", "kind": "linear", "zero": {"x": 0.5, "y": 0.2}, "full": {"x": 0.5, "y": 0.5}, "adjust": {"hsl": {"red": {"hue": "1"}}}}]},
+      "code": "invalidType"
+    },
+    {
+      "name": "adjust is an array",
+      "settings": {"v": 5, "engine": "niho-10", "look": "niho-standard-1", "base": null, "masks": [{"id": "lin-1", "kind": "linear", "zero": {"x": 0.5, "y": 0.2}, "full": {"x": 0.5, "y": 0.5}, "adjust": []}]},
+      "code": "invalidType"
+    },
+    {
+      "name": "linear with radial keys",
+      "settings": {"v": 5, "engine": "niho-10", "look": "niho-standard-1", "base": null, "masks": [{"id": "lin-1", "kind": "linear", "zero": {"x": 0.5, "y": 0.2}, "full": {"x": 0.5, "y": 0.5}, "adjust": {"exposure": -0.7}, "center": {"x": 0.5, "y": 0.5}}]},
+      "code": "unknownMaskKey"
+    },
+    {
+      "name": "radial with linear keys",
+      "settings": {"v": 5, "engine": "niho-10", "look": "niho-standard-1", "base": null, "masks": [{"id": "rad-1", "kind": "radial", "center": {"x": 0.5, "y": 0.45}, "radius": {"x": 0.3, "y": 0.2}, "angle": 15, "feather": 50, "adjust": {"saturation": 10}, "zero": {"x": 0.1, "y": 0.1}}]},
+      "code": "unknownMaskKey"
+    },
+    {
+      "name": "brush with linear keys",
+      "settings": {"v": 5, "engine": "niho-10", "look": "niho-standard-1", "base": null, "masks": [{"id": "srf-1", "kind": "brush", "surface": {"id": "a2794cff8da2ff41a982b1d85c7a0c6cb9ff5eaa550a87d021805e3116ddcf9b", "width": 1024, "height": 683}, "adjust": {"shadows": 25}, "zero": {"x": 0.1, "y": 0.1}}]},
+      "code": "unknownMaskKey"
+    },
+    {
+      "name": "sky with radial keys",
+      "settings": {"v": 5, "engine": "niho-10", "look": "niho-standard-1", "base": null, "masks": [{"id": "srf-1", "kind": "sky", "surface": {"id": "a2794cff8da2ff41a982b1d85c7a0c6cb9ff5eaa550a87d021805e3116ddcf9b", "width": 1024, "height": 683}, "adjust": {"shadows": 25}, "feather": 10}]},
+      "code": "unknownMaskKey"
+    },
+    {
+      "name": "linear with a surface",
+      "settings": {"v": 5, "engine": "niho-10", "look": "niho-standard-1", "base": null, "masks": [{"id": "lin-1", "kind": "linear", "zero": {"x": 0.5, "y": 0.2}, "full": {"x": 0.5, "y": 0.5}, "adjust": {"exposure": -0.7}, "surface": {"id": "2d711642b726b04401627ca9fbac32f5c8530fb1903cc4db02258717921a4881", "width": 1, "height": 1}}]},
+      "code": "unknownMaskKey"
+    },
+    {
+      "name": "linear missing full",
+      "settings": {"v": 5, "engine": "niho-10", "look": "niho-standard-1", "base": null, "masks": [{"id": "lin-1", "kind": "linear", "zero": {"x": 0.5, "y": 0.2}, "adjust": {"exposure": -0.7}}]},
+      "code": "invalidMask"
+    },
+    {
+      "name": "linear missing zero",
+      "settings": {"v": 5, "engine": "niho-10", "look": "niho-standard-1", "base": null, "masks": [{"id": "lin-1", "kind": "linear", "full": {"x": 0.5, "y": 0.5}, "adjust": {"exposure": -0.7}}]},
+      "code": "invalidMask"
+    },
+    {
+      "name": "radial missing feather",
+      "settings": {"v": 5, "engine": "niho-10", "look": "niho-standard-1", "base": null, "masks": [{"id": "rad-1", "kind": "radial", "center": {"x": 0.5, "y": 0.45}, "radius": {"x": 0.3, "y": 0.2}, "angle": 15, "adjust": {"saturation": 10}}]},
+      "code": "invalidMask"
+    },
+    {
+      "name": "radial missing radius",
+      "settings": {"v": 5, "engine": "niho-10", "look": "niho-standard-1", "base": null, "masks": [{"id": "rad-1", "kind": "radial", "center": {"x": 0.5, "y": 0.45}, "angle": 15, "feather": 50, "adjust": {"saturation": 10}}]},
+      "code": "invalidMask"
+    },
+    {
+      "name": "radial missing angle",
+      "settings": {"v": 5, "engine": "niho-10", "look": "niho-standard-1", "base": null, "masks": [{"id": "rad-1", "kind": "radial", "center": {"x": 0.5, "y": 0.45}, "radius": {"x": 0.3, "y": 0.2}, "feather": 50, "adjust": {"saturation": 10}}]},
+      "code": "invalidMask"
+    },
+    {
+      "name": "radial missing center",
+      "settings": {"v": 5, "engine": "niho-10", "look": "niho-standard-1", "base": null, "masks": [{"id": "rad-1", "kind": "radial", "radius": {"x": 0.3, "y": 0.2}, "angle": 15, "feather": 50, "adjust": {"saturation": 10}}]},
+      "code": "invalidMask"
+    },
+    {
+      "name": "brush missing surface",
+      "settings": {"v": 5, "engine": "niho-10", "look": "niho-standard-1", "base": null, "masks": [{"id": "srf-1", "kind": "brush", "adjust": {"shadows": 25}}]},
+      "code": "invalidMask"
+    },
+    {
+      "name": "surface missing width",
+      "settings": {"v": 5, "engine": "niho-10", "look": "niho-standard-1", "base": null, "masks": [{"id": "srf-1", "kind": "brush", "surface": {"id": "a2794cff8da2ff41a982b1d85c7a0c6cb9ff5eaa550a87d021805e3116ddcf9b", "height": 683}, "adjust": {"shadows": 25}}]},
+      "code": "invalidMask"
+    },
+    {
+      "name": "surface missing id",
+      "settings": {"v": 5, "engine": "niho-10", "look": "niho-standard-1", "base": null, "masks": [{"id": "srf-1", "kind": "brush", "surface": {"width": 1024, "height": 683}, "adjust": {"shadows": 25}}]},
+      "code": "invalidMask"
+    },
+    {
+      "name": "point missing y",
+      "settings": {"v": 5, "engine": "niho-10", "look": "niho-standard-1", "base": null, "masks": [{"id": "lin-1", "kind": "linear", "zero": {"x": 0.5}, "full": {"x": 0.5, "y": 0.5}, "adjust": {"exposure": -0.7}}]},
+      "code": "invalidMask"
+    },
+    {
+      "name": "radius missing x",
+      "settings": {"v": 5, "engine": "niho-10", "look": "niho-standard-1", "base": null, "masks": [{"id": "rad-1", "kind": "radial", "center": {"x": 0.5, "y": 0.45}, "radius": {"y": 0.2}, "angle": 15, "feather": 50, "adjust": {"saturation": 10}}]},
+      "code": "invalidMask"
+    },
+    {
+      "name": "mask missing adjust",
+      "settings": {"v": 5, "engine": "niho-10", "look": "niho-standard-1", "base": null, "masks": [{"id": "lin-1", "kind": "linear", "zero": {"x": 0.5, "y": 0.2}, "full": {"x": 0.5, "y": 0.5}}]},
+      "code": "invalidMask"
+    },
+    {
+      "name": "mask missing id",
+      "settings": {"v": 5, "engine": "niho-10", "look": "niho-standard-1", "base": null, "masks": [{"kind": "linear", "zero": {"x": 0.5, "y": 0.2}, "full": {"x": 0.5, "y": 0.5}, "adjust": {"exposure": -0.7}}]},
+      "code": "invalidMask"
+    },
+    {
+      "name": "mask missing kind",
+      "settings": {"v": 5, "engine": "niho-10", "look": "niho-standard-1", "base": null, "masks": [{"id": "lin-1", "zero": {"x": 0.5, "y": 0.2}, "full": {"x": 0.5, "y": 0.5}, "adjust": {"exposure": -0.7}}]},
+      "code": "invalidMask"
+    },
+    {
+      "name": "unknown kind",
+      "settings": {"v": 5, "engine": "niho-10", "look": "niho-standard-1", "base": null, "masks": [{"id": "lin-1", "kind": "gradient", "zero": {"x": 0.5, "y": 0.2}, "full": {"x": 0.5, "y": 0.5}, "adjust": {"exposure": -0.7}}]},
+      "code": "invalidMask"
+    },
+    {
+      "name": "kind is a number",
+      "settings": {"v": 5, "engine": "niho-10", "look": "niho-standard-1", "base": null, "masks": [{"id": "lin-1", "kind": 1, "zero": {"x": 0.5, "y": 0.2}, "full": {"x": 0.5, "y": 0.5}, "adjust": {"exposure": -0.7}}]},
+      "code": "invalidType"
+    },
+    {
+      "name": "number given as a string (adjust)",
+      "settings": {"v": 5, "engine": "niho-10", "look": "niho-standard-1", "base": null, "masks": [{"id": "lin-1", "kind": "linear", "zero": {"x": 0.5, "y": 0.2}, "full": {"x": 0.5, "y": 0.5}, "adjust": {"exposure": "1"}}]},
+      "code": "invalidType"
+    },
+    {
+      "name": "number given as a string (point)",
+      "settings": {"v": 5, "engine": "niho-10", "look": "niho-standard-1", "base": null, "masks": [{"id": "lin-1", "kind": "linear", "zero": {"x": "0.5", "y": 0.2}, "full": {"x": 0.5, "y": 0.5}, "adjust": {"exposure": -0.7}}]},
+      "code": "invalidType"
+    },
+    {
+      "name": "number given as null",
+      "settings": {"v": 5, "engine": "niho-10", "look": "niho-standard-1", "base": null, "masks": [{"id": "rad-1", "kind": "radial", "center": {"x": 0.5, "y": 0.45}, "radius": {"x": 0.3, "y": 0.2}, "angle": null, "feather": 50, "adjust": {"saturation": 10}}]},
+      "code": "invalidType"
+    },
+    {
+      "name": "number given as a boolean",
+      "settings": {"v": 5, "engine": "niho-10", "look": "niho-standard-1", "base": null, "masks": [{"id": "rad-1", "kind": "radial", "center": {"x": 0.5, "y": 0.45}, "radius": {"x": 0.3, "y": 0.2}, "angle": 15, "feather": true, "adjust": {"saturation": 10}}]},
+      "code": "invalidType"
+    },
+    {
+      "name": "enabled is a string",
+      "settings": {"v": 5, "engine": "niho-10", "look": "niho-standard-1", "base": null, "masks": [{"id": "lin-1", "kind": "linear", "zero": {"x": 0.5, "y": 0.2}, "full": {"x": 0.5, "y": 0.5}, "adjust": {"exposure": -0.7}, "enabled": "yes"}]},
+      "code": "invalidType"
+    },
+    {
+      "name": "invert is a number",
+      "settings": {"v": 5, "engine": "niho-10", "look": "niho-standard-1", "base": null, "masks": [{"id": "lin-1", "kind": "linear", "zero": {"x": 0.5, "y": 0.2}, "full": {"x": 0.5, "y": 0.5}, "adjust": {"exposure": -0.7}, "invert": 1}]},
+      "code": "invalidType"
+    },
+    {
+      "name": "exposure above the range",
+      "settings": {"v": 5, "engine": "niho-10", "look": "niho-standard-1", "base": null, "masks": [{"id": "lin-1", "kind": "linear", "zero": {"x": 0.5, "y": 0.2}, "full": {"x": 0.5, "y": 0.5}, "adjust": {"exposure": 5.5}}]},
+      "code": "maskOutOfRange"
+    },
+    {
+      "name": "exposure below the range",
+      "settings": {"v": 5, "engine": "niho-10", "look": "niho-standard-1", "base": null, "masks": [{"id": "lin-1", "kind": "linear", "zero": {"x": 0.5, "y": 0.2}, "full": {"x": 0.5, "y": 0.5}, "adjust": {"exposure": -5.5}}]},
+      "code": "maskOutOfRange"
+    },
+    {
+      "name": "contrast above the range",
+      "settings": {"v": 5, "engine": "niho-10", "look": "niho-standard-1", "base": null, "masks": [{"id": "lin-1", "kind": "linear", "zero": {"x": 0.5, "y": 0.2}, "full": {"x": 0.5, "y": 0.5}, "adjust": {"contrast": 100.5}}]},
+      "code": "maskOutOfRange"
+    },
+    {
+      "name": "contrast below the range",
+      "settings": {"v": 5, "engine": "niho-10", "look": "niho-standard-1", "base": null, "masks": [{"id": "lin-1", "kind": "linear", "zero": {"x": 0.5, "y": 0.2}, "full": {"x": 0.5, "y": 0.5}, "adjust": {"contrast": -100.5}}]},
+      "code": "maskOutOfRange"
+    },
+    {
+      "name": "highlights above the range",
+      "settings": {"v": 5, "engine": "niho-10", "look": "niho-standard-1", "base": null, "masks": [{"id": "lin-1", "kind": "linear", "zero": {"x": 0.5, "y": 0.2}, "full": {"x": 0.5, "y": 0.5}, "adjust": {"highlights": 100.5}}]},
+      "code": "maskOutOfRange"
+    },
+    {
+      "name": "highlights below the range",
+      "settings": {"v": 5, "engine": "niho-10", "look": "niho-standard-1", "base": null, "masks": [{"id": "lin-1", "kind": "linear", "zero": {"x": 0.5, "y": 0.2}, "full": {"x": 0.5, "y": 0.5}, "adjust": {"highlights": -100.5}}]},
+      "code": "maskOutOfRange"
+    },
+    {
+      "name": "shadows above the range",
+      "settings": {"v": 5, "engine": "niho-10", "look": "niho-standard-1", "base": null, "masks": [{"id": "lin-1", "kind": "linear", "zero": {"x": 0.5, "y": 0.2}, "full": {"x": 0.5, "y": 0.5}, "adjust": {"shadows": 100.5}}]},
+      "code": "maskOutOfRange"
+    },
+    {
+      "name": "shadows below the range",
+      "settings": {"v": 5, "engine": "niho-10", "look": "niho-standard-1", "base": null, "masks": [{"id": "lin-1", "kind": "linear", "zero": {"x": 0.5, "y": 0.2}, "full": {"x": 0.5, "y": 0.5}, "adjust": {"shadows": -100.5}}]},
+      "code": "maskOutOfRange"
+    },
+    {
+      "name": "whites above the range",
+      "settings": {"v": 5, "engine": "niho-10", "look": "niho-standard-1", "base": null, "masks": [{"id": "lin-1", "kind": "linear", "zero": {"x": 0.5, "y": 0.2}, "full": {"x": 0.5, "y": 0.5}, "adjust": {"whites": 100.5}}]},
+      "code": "maskOutOfRange"
+    },
+    {
+      "name": "whites below the range",
+      "settings": {"v": 5, "engine": "niho-10", "look": "niho-standard-1", "base": null, "masks": [{"id": "lin-1", "kind": "linear", "zero": {"x": 0.5, "y": 0.2}, "full": {"x": 0.5, "y": 0.5}, "adjust": {"whites": -100.5}}]},
+      "code": "maskOutOfRange"
+    },
+    {
+      "name": "blacks above the range",
+      "settings": {"v": 5, "engine": "niho-10", "look": "niho-standard-1", "base": null, "masks": [{"id": "lin-1", "kind": "linear", "zero": {"x": 0.5, "y": 0.2}, "full": {"x": 0.5, "y": 0.5}, "adjust": {"blacks": 100.5}}]},
+      "code": "maskOutOfRange"
+    },
+    {
+      "name": "blacks below the range",
+      "settings": {"v": 5, "engine": "niho-10", "look": "niho-standard-1", "base": null, "masks": [{"id": "lin-1", "kind": "linear", "zero": {"x": 0.5, "y": 0.2}, "full": {"x": 0.5, "y": 0.5}, "adjust": {"blacks": -100.5}}]},
+      "code": "maskOutOfRange"
+    },
+    {
+      "name": "texture above the range",
+      "settings": {"v": 5, "engine": "niho-10", "look": "niho-standard-1", "base": null, "masks": [{"id": "lin-1", "kind": "linear", "zero": {"x": 0.5, "y": 0.2}, "full": {"x": 0.5, "y": 0.5}, "adjust": {"texture": 100.5}}]},
+      "code": "maskOutOfRange"
+    },
+    {
+      "name": "texture below the range",
+      "settings": {"v": 5, "engine": "niho-10", "look": "niho-standard-1", "base": null, "masks": [{"id": "lin-1", "kind": "linear", "zero": {"x": 0.5, "y": 0.2}, "full": {"x": 0.5, "y": 0.5}, "adjust": {"texture": -100.5}}]},
+      "code": "maskOutOfRange"
+    },
+    {
+      "name": "clarity above the range",
+      "settings": {"v": 5, "engine": "niho-10", "look": "niho-standard-1", "base": null, "masks": [{"id": "lin-1", "kind": "linear", "zero": {"x": 0.5, "y": 0.2}, "full": {"x": 0.5, "y": 0.5}, "adjust": {"clarity": 100.5}}]},
+      "code": "maskOutOfRange"
+    },
+    {
+      "name": "clarity below the range",
+      "settings": {"v": 5, "engine": "niho-10", "look": "niho-standard-1", "base": null, "masks": [{"id": "lin-1", "kind": "linear", "zero": {"x": 0.5, "y": 0.2}, "full": {"x": 0.5, "y": 0.5}, "adjust": {"clarity": -100.5}}]},
+      "code": "maskOutOfRange"
+    },
+    {
+      "name": "dehaze above the range",
+      "settings": {"v": 5, "engine": "niho-10", "look": "niho-standard-1", "base": null, "masks": [{"id": "lin-1", "kind": "linear", "zero": {"x": 0.5, "y": 0.2}, "full": {"x": 0.5, "y": 0.5}, "adjust": {"dehaze": 100.5}}]},
+      "code": "maskOutOfRange"
+    },
+    {
+      "name": "dehaze below the range",
+      "settings": {"v": 5, "engine": "niho-10", "look": "niho-standard-1", "base": null, "masks": [{"id": "lin-1", "kind": "linear", "zero": {"x": 0.5, "y": 0.2}, "full": {"x": 0.5, "y": 0.5}, "adjust": {"dehaze": -100.5}}]},
+      "code": "maskOutOfRange"
+    },
+    {
+      "name": "vibrance above the range",
+      "settings": {"v": 5, "engine": "niho-10", "look": "niho-standard-1", "base": null, "masks": [{"id": "lin-1", "kind": "linear", "zero": {"x": 0.5, "y": 0.2}, "full": {"x": 0.5, "y": 0.5}, "adjust": {"vibrance": 100.5}}]},
+      "code": "maskOutOfRange"
+    },
+    {
+      "name": "vibrance below the range",
+      "settings": {"v": 5, "engine": "niho-10", "look": "niho-standard-1", "base": null, "masks": [{"id": "lin-1", "kind": "linear", "zero": {"x": 0.5, "y": 0.2}, "full": {"x": 0.5, "y": 0.5}, "adjust": {"vibrance": -100.5}}]},
+      "code": "maskOutOfRange"
+    },
+    {
+      "name": "saturation above the range",
+      "settings": {"v": 5, "engine": "niho-10", "look": "niho-standard-1", "base": null, "masks": [{"id": "lin-1", "kind": "linear", "zero": {"x": 0.5, "y": 0.2}, "full": {"x": 0.5, "y": 0.5}, "adjust": {"saturation": 100.5}}]},
+      "code": "maskOutOfRange"
+    },
+    {
+      "name": "saturation below the range",
+      "settings": {"v": 5, "engine": "niho-10", "look": "niho-standard-1", "base": null, "masks": [{"id": "lin-1", "kind": "linear", "zero": {"x": 0.5, "y": 0.2}, "full": {"x": 0.5, "y": 0.5}, "adjust": {"saturation": -100.5}}]},
+      "code": "maskOutOfRange"
+    },
+    {
+      "name": "relativeTemperature above the range",
+      "settings": {"v": 5, "engine": "niho-10", "look": "niho-standard-1", "base": null, "masks": [{"id": "lin-1", "kind": "linear", "zero": {"x": 0.5, "y": 0.2}, "full": {"x": 0.5, "y": 0.5}, "adjust": {"relativeTemperature": 100.5}}]},
+      "code": "maskOutOfRange"
+    },
+    {
+      "name": "relativeTemperature below the range",
+      "settings": {"v": 5, "engine": "niho-10", "look": "niho-standard-1", "base": null, "masks": [{"id": "lin-1", "kind": "linear", "zero": {"x": 0.5, "y": 0.2}, "full": {"x": 0.5, "y": 0.5}, "adjust": {"relativeTemperature": -100.5}}]},
+      "code": "maskOutOfRange"
+    },
+    {
+      "name": "relativeTint above the range",
+      "settings": {"v": 5, "engine": "niho-10", "look": "niho-standard-1", "base": null, "masks": [{"id": "lin-1", "kind": "linear", "zero": {"x": 0.5, "y": 0.2}, "full": {"x": 0.5, "y": 0.5}, "adjust": {"relativeTint": 100.5}}]},
+      "code": "maskOutOfRange"
+    },
+    {
+      "name": "relativeTint below the range",
+      "settings": {"v": 5, "engine": "niho-10", "look": "niho-standard-1", "base": null, "masks": [{"id": "lin-1", "kind": "linear", "zero": {"x": 0.5, "y": 0.2}, "full": {"x": 0.5, "y": 0.5}, "adjust": {"relativeTint": -100.5}}]},
+      "code": "maskOutOfRange"
+    },
+    {
+      "name": "hsl hue above the range",
+      "settings": {"v": 5, "engine": "niho-10", "look": "niho-standard-1", "base": null, "masks": [{"id": "lin-1", "kind": "linear", "zero": {"x": 0.5, "y": 0.2}, "full": {"x": 0.5, "y": 0.5}, "adjust": {"hsl": {"red": {"hue": 100.5}}}}]},
+      "code": "maskOutOfRange"
+    },
+    {
+      "name": "hsl hue below the range",
+      "settings": {"v": 5, "engine": "niho-10", "look": "niho-standard-1", "base": null, "masks": [{"id": "lin-1", "kind": "linear", "zero": {"x": 0.5, "y": 0.2}, "full": {"x": 0.5, "y": 0.5}, "adjust": {"hsl": {"red": {"hue": -100.5}}}}]},
+      "code": "maskOutOfRange"
+    },
+    {
+      "name": "hsl saturation above the range",
+      "settings": {"v": 5, "engine": "niho-10", "look": "niho-standard-1", "base": null, "masks": [{"id": "lin-1", "kind": "linear", "zero": {"x": 0.5, "y": 0.2}, "full": {"x": 0.5, "y": 0.5}, "adjust": {"hsl": {"red": {"saturation": 100.5}}}}]},
+      "code": "maskOutOfRange"
+    },
+    {
+      "name": "hsl saturation below the range",
+      "settings": {"v": 5, "engine": "niho-10", "look": "niho-standard-1", "base": null, "masks": [{"id": "lin-1", "kind": "linear", "zero": {"x": 0.5, "y": 0.2}, "full": {"x": 0.5, "y": 0.5}, "adjust": {"hsl": {"red": {"saturation": -100.5}}}}]},
+      "code": "maskOutOfRange"
+    },
+    {
+      "name": "hsl luminance above the range",
+      "settings": {"v": 5, "engine": "niho-10", "look": "niho-standard-1", "base": null, "masks": [{"id": "lin-1", "kind": "linear", "zero": {"x": 0.5, "y": 0.2}, "full": {"x": 0.5, "y": 0.5}, "adjust": {"hsl": {"red": {"luminance": 100.5}}}}]},
+      "code": "maskOutOfRange"
+    },
+    {
+      "name": "hsl luminance below the range",
+      "settings": {"v": 5, "engine": "niho-10", "look": "niho-standard-1", "base": null, "masks": [{"id": "lin-1", "kind": "linear", "zero": {"x": 0.5, "y": 0.2}, "full": {"x": 0.5, "y": 0.5}, "adjust": {"hsl": {"red": {"luminance": -100.5}}}}]},
+      "code": "maskOutOfRange"
+    },
+    {
+      "name": "linear zero.x below the range",
+      "settings": {"v": 5, "engine": "niho-10", "look": "niho-standard-1", "base": null, "masks": [{"id": "lin-1", "kind": "linear", "zero": {"x": -1.1, "y": 0.2}, "full": {"x": 0.5, "y": 0.5}, "adjust": {"exposure": -0.7}}]},
+      "code": "maskOutOfRange"
+    },
+    {
+      "name": "linear zero.x above the range",
+      "settings": {"v": 5, "engine": "niho-10", "look": "niho-standard-1", "base": null, "masks": [{"id": "lin-1", "kind": "linear", "zero": {"x": 2.1, "y": 0.2}, "full": {"x": 0.5, "y": 0.5}, "adjust": {"exposure": -0.7}}]},
+      "code": "maskOutOfRange"
+    },
+    {
+      "name": "linear zero.y below the range",
+      "settings": {"v": 5, "engine": "niho-10", "look": "niho-standard-1", "base": null, "masks": [{"id": "lin-1", "kind": "linear", "zero": {"x": 0.5, "y": -1.1}, "full": {"x": 0.5, "y": 0.5}, "adjust": {"exposure": -0.7}}]},
+      "code": "maskOutOfRange"
+    },
+    {
+      "name": "linear zero.y above the range",
+      "settings": {"v": 5, "engine": "niho-10", "look": "niho-standard-1", "base": null, "masks": [{"id": "lin-1", "kind": "linear", "zero": {"x": 0.5, "y": 2.1}, "full": {"x": 0.5, "y": 0.5}, "adjust": {"exposure": -0.7}}]},
+      "code": "maskOutOfRange"
+    },
+    {
+      "name": "linear full.x below the range",
+      "settings": {"v": 5, "engine": "niho-10", "look": "niho-standard-1", "base": null, "masks": [{"id": "lin-1", "kind": "linear", "zero": {"x": 0.5, "y": 0.2}, "full": {"x": -1.1, "y": 0.5}, "adjust": {"exposure": -0.7}}]},
+      "code": "maskOutOfRange"
+    },
+    {
+      "name": "linear full.x above the range",
+      "settings": {"v": 5, "engine": "niho-10", "look": "niho-standard-1", "base": null, "masks": [{"id": "lin-1", "kind": "linear", "zero": {"x": 0.5, "y": 0.2}, "full": {"x": 2.1, "y": 0.5}, "adjust": {"exposure": -0.7}}]},
+      "code": "maskOutOfRange"
+    },
+    {
+      "name": "linear full.y below the range",
+      "settings": {"v": 5, "engine": "niho-10", "look": "niho-standard-1", "base": null, "masks": [{"id": "lin-1", "kind": "linear", "zero": {"x": 0.5, "y": 0.2}, "full": {"x": 0.5, "y": -1.1}, "adjust": {"exposure": -0.7}}]},
+      "code": "maskOutOfRange"
+    },
+    {
+      "name": "linear full.y above the range",
+      "settings": {"v": 5, "engine": "niho-10", "look": "niho-standard-1", "base": null, "masks": [{"id": "lin-1", "kind": "linear", "zero": {"x": 0.5, "y": 0.2}, "full": {"x": 0.5, "y": 2.1}, "adjust": {"exposure": -0.7}}]},
+      "code": "maskOutOfRange"
+    },
+    {
+      "name": "linear zero equals full",
+      "settings": {"v": 5, "engine": "niho-10", "look": "niho-standard-1", "base": null, "masks": [{"id": "lin-1", "kind": "linear", "zero": {"x": 0.5, "y": 0.5}, "full": {"x": 0.5, "y": 0.5}, "adjust": {"exposure": -0.7}}]},
+      "code": "maskOutOfRange"
+    },
+    {
+      "name": "linear points 0.0005 apart",
+      "settings": {"v": 5, "engine": "niho-10", "look": "niho-standard-1", "base": null, "masks": [{"id": "lin-1", "kind": "linear", "zero": {"x": 0.5, "y": 0.5}, "full": {"x": 0.5, "y": 0.5005}, "adjust": {"exposure": -0.7}}]},
+      "code": "maskOutOfRange"
+    },
+    {
+      "name": "linear points close along a diagonal",
+      "settings": {"v": 5, "engine": "niho-10", "look": "niho-standard-1", "base": null, "masks": [{"id": "lin-1", "kind": "linear", "zero": {"x": 0.5, "y": 0.5}, "full": {"x": 0.50049, "y": 0.50049}, "adjust": {"exposure": -0.7}}]},
+      "code": "maskOutOfRange"
+    },
+    {
+      "name": "radial center.x above 1",
+      "settings": {"v": 5, "engine": "niho-10", "look": "niho-standard-1", "base": null, "masks": [{"id": "rad-1", "kind": "radial", "center": {"x": 1.1, "y": 0.45}, "radius": {"x": 0.3, "y": 0.2}, "angle": 15, "feather": 50, "adjust": {"saturation": 10}}]},
+      "code": "maskOutOfRange"
+    },
+    {
+      "name": "radial center.x below 0",
+      "settings": {"v": 5, "engine": "niho-10", "look": "niho-standard-1", "base": null, "masks": [{"id": "rad-1", "kind": "radial", "center": {"x": -0.1, "y": 0.45}, "radius": {"x": 0.3, "y": 0.2}, "angle": 15, "feather": 50, "adjust": {"saturation": 10}}]},
+      "code": "maskOutOfRange"
+    },
+    {
+      "name": "radial radius.x below 0.005",
+      "settings": {"v": 5, "engine": "niho-10", "look": "niho-standard-1", "base": null, "masks": [{"id": "rad-1", "kind": "radial", "center": {"x": 0.5, "y": 0.45}, "radius": {"x": 0.004, "y": 0.2}, "angle": 15, "feather": 50, "adjust": {"saturation": 10}}]},
+      "code": "maskOutOfRange"
+    },
+    {
+      "name": "radial radius.x zero",
+      "settings": {"v": 5, "engine": "niho-10", "look": "niho-standard-1", "base": null, "masks": [{"id": "rad-1", "kind": "radial", "center": {"x": 0.5, "y": 0.45}, "radius": {"x": 0, "y": 0.2}, "angle": 15, "feather": 50, "adjust": {"saturation": 10}}]},
+      "code": "maskOutOfRange"
+    },
+    {
+      "name": "radial radius.x above 1.5",
+      "settings": {"v": 5, "engine": "niho-10", "look": "niho-standard-1", "base": null, "masks": [{"id": "rad-1", "kind": "radial", "center": {"x": 0.5, "y": 0.45}, "radius": {"x": 1.6, "y": 0.2}, "angle": 15, "feather": 50, "adjust": {"saturation": 10}}]},
+      "code": "maskOutOfRange"
+    },
+    {
+      "name": "radial center.y above 1",
+      "settings": {"v": 5, "engine": "niho-10", "look": "niho-standard-1", "base": null, "masks": [{"id": "rad-1", "kind": "radial", "center": {"x": 0.5, "y": 1.1}, "radius": {"x": 0.3, "y": 0.2}, "angle": 15, "feather": 50, "adjust": {"saturation": 10}}]},
+      "code": "maskOutOfRange"
+    },
+    {
+      "name": "radial center.y below 0",
+      "settings": {"v": 5, "engine": "niho-10", "look": "niho-standard-1", "base": null, "masks": [{"id": "rad-1", "kind": "radial", "center": {"x": 0.5, "y": -0.1}, "radius": {"x": 0.3, "y": 0.2}, "angle": 15, "feather": 50, "adjust": {"saturation": 10}}]},
+      "code": "maskOutOfRange"
+    },
+    {
+      "name": "radial radius.y below 0.005",
+      "settings": {"v": 5, "engine": "niho-10", "look": "niho-standard-1", "base": null, "masks": [{"id": "rad-1", "kind": "radial", "center": {"x": 0.5, "y": 0.45}, "radius": {"x": 0.3, "y": 0.004}, "angle": 15, "feather": 50, "adjust": {"saturation": 10}}]},
+      "code": "maskOutOfRange"
+    },
+    {
+      "name": "radial radius.y zero",
+      "settings": {"v": 5, "engine": "niho-10", "look": "niho-standard-1", "base": null, "masks": [{"id": "rad-1", "kind": "radial", "center": {"x": 0.5, "y": 0.45}, "radius": {"x": 0.3, "y": 0}, "angle": 15, "feather": 50, "adjust": {"saturation": 10}}]},
+      "code": "maskOutOfRange"
+    },
+    {
+      "name": "radial radius.y above 1.5",
+      "settings": {"v": 5, "engine": "niho-10", "look": "niho-standard-1", "base": null, "masks": [{"id": "rad-1", "kind": "radial", "center": {"x": 0.5, "y": 0.45}, "radius": {"x": 0.3, "y": 1.6}, "angle": 15, "feather": 50, "adjust": {"saturation": 10}}]},
+      "code": "maskOutOfRange"
+    },
+    {
+      "name": "radial angle above 180",
+      "settings": {"v": 5, "engine": "niho-10", "look": "niho-standard-1", "base": null, "masks": [{"id": "rad-1", "kind": "radial", "center": {"x": 0.5, "y": 0.45}, "radius": {"x": 0.3, "y": 0.2}, "angle": 181, "feather": 50, "adjust": {"saturation": 10}}]},
+      "code": "maskOutOfRange"
+    },
+    {
+      "name": "radial angle below -180",
+      "settings": {"v": 5, "engine": "niho-10", "look": "niho-standard-1", "base": null, "masks": [{"id": "rad-1", "kind": "radial", "center": {"x": 0.5, "y": 0.45}, "radius": {"x": 0.3, "y": 0.2}, "angle": -181, "feather": 50, "adjust": {"saturation": 10}}]},
+      "code": "maskOutOfRange"
+    },
+    {
+      "name": "radial feather above 100",
+      "settings": {"v": 5, "engine": "niho-10", "look": "niho-standard-1", "base": null, "masks": [{"id": "rad-1", "kind": "radial", "center": {"x": 0.5, "y": 0.45}, "radius": {"x": 0.3, "y": 0.2}, "angle": 15, "feather": 101, "adjust": {"saturation": 10}}]},
+      "code": "maskOutOfRange"
+    },
+    {
+      "name": "radial feather below 0",
+      "settings": {"v": 5, "engine": "niho-10", "look": "niho-standard-1", "base": null, "masks": [{"id": "rad-1", "kind": "radial", "center": {"x": 0.5, "y": 0.45}, "radius": {"x": 0.3, "y": 0.2}, "angle": 15, "feather": -1, "adjust": {"saturation": 10}}]},
+      "code": "maskOutOfRange"
+    },
+    {
+      "name": "surface id is too short",
+      "settings": {"v": 5, "engine": "niho-10", "look": "niho-standard-1", "base": null, "masks": [{"id": "srf-1", "kind": "brush", "surface": {"id": "34b36454cab2e7842c389f7d88ecb7df279e3918cbac07970d4cde496e70f4c", "width": 1024, "height": 683}, "adjust": {"shadows": 25}}]},
+      "code": "invalidMaskSurface"
+    },
+    {
+      "name": "surface id is too long",
+      "settings": {"v": 5, "engine": "niho-10", "look": "niho-standard-1", "base": null, "masks": [{"id": "srf-1", "kind": "brush", "surface": {"id": "34b36454cab2e7842c389f7d88ecb7df279e3918cbac07970d4cde496e70f4c80", "width": 1024, "height": 683}, "adjust": {"shadows": 25}}]},
+      "code": "invalidMaskSurface"
+    },
+    {
+      "name": "surface id has uppercase hex",
+      "settings": {"v": 5, "engine": "niho-10", "look": "niho-standard-1", "base": null, "masks": [{"id": "srf-1", "kind": "brush", "surface": {"id": "34B36454CAB2E7842C389F7D88ECB7DF279E3918CBAC07970D4CDE496E70F4C8", "width": 1024, "height": 683}, "adjust": {"shadows": 25}}]},
+      "code": "invalidMaskSurface"
+    },
+    {
+      "name": "surface id has a non-hex letter",
+      "settings": {"v": 5, "engine": "niho-10", "look": "niho-standard-1", "base": null, "masks": [{"id": "srf-1", "kind": "brush", "surface": {"id": "g4b36454cab2e7842c389f7d88ecb7df279e3918cbac07970d4cde496e70f4c8", "width": 1024, "height": 683}, "adjust": {"shadows": 25}}]},
+      "code": "invalidMaskSurface"
+    },
+    {
+      "name": "surface id is empty",
+      "settings": {"v": 5, "engine": "niho-10", "look": "niho-standard-1", "base": null, "masks": [{"id": "srf-1", "kind": "brush", "surface": {"id": "", "width": 1024, "height": 683}, "adjust": {"shadows": 25}}]},
+      "code": "invalidMaskSurface"
+    },
+    {
+      "name": "surface id is a number",
+      "settings": {"v": 5, "engine": "niho-10", "look": "niho-standard-1", "base": null, "masks": [{"id": "srf-1", "kind": "brush", "surface": {"id": 1, "width": 1024, "height": 683}, "adjust": {"shadows": 25}}]},
+      "code": "invalidType"
+    },
+    {
+      "name": "surface width 0",
+      "settings": {"v": 5, "engine": "niho-10", "look": "niho-standard-1", "base": null, "masks": [{"id": "srf-1", "kind": "brush", "surface": {"id": "a2794cff8da2ff41a982b1d85c7a0c6cb9ff5eaa550a87d021805e3116ddcf9b", "width": 0, "height": 683}, "adjust": {"shadows": 25}}]},
+      "code": "maskOutOfRange"
+    },
+    {
+      "name": "surface width 4097",
+      "settings": {"v": 5, "engine": "niho-10", "look": "niho-standard-1", "base": null, "masks": [{"id": "srf-1", "kind": "brush", "surface": {"id": "a2794cff8da2ff41a982b1d85c7a0c6cb9ff5eaa550a87d021805e3116ddcf9b", "width": 4097, "height": 683}, "adjust": {"shadows": 25}}]},
+      "code": "maskOutOfRange"
+    },
+    {
+      "name": "surface height 0",
+      "settings": {"v": 5, "engine": "niho-10", "look": "niho-standard-1", "base": null, "masks": [{"id": "srf-1", "kind": "brush", "surface": {"id": "a2794cff8da2ff41a982b1d85c7a0c6cb9ff5eaa550a87d021805e3116ddcf9b", "width": 1024, "height": 0}, "adjust": {"shadows": 25}}]},
+      "code": "maskOutOfRange"
+    },
+    {
+      "name": "surface height 4097",
+      "settings": {"v": 5, "engine": "niho-10", "look": "niho-standard-1", "base": null, "masks": [{"id": "srf-1", "kind": "brush", "surface": {"id": "a2794cff8da2ff41a982b1d85c7a0c6cb9ff5eaa550a87d021805e3116ddcf9b", "width": 1024, "height": 4097}, "adjust": {"shadows": 25}}]},
+      "code": "maskOutOfRange"
+    },
+    {
+      "name": "surface width is negative",
+      "settings": {"v": 5, "engine": "niho-10", "look": "niho-standard-1", "base": null, "masks": [{"id": "srf-1", "kind": "brush", "surface": {"id": "a2794cff8da2ff41a982b1d85c7a0c6cb9ff5eaa550a87d021805e3116ddcf9b", "width": -1, "height": 683}, "adjust": {"shadows": 25}}]},
+      "code": "maskOutOfRange"
+    },
+    {
+      "name": "surface width is not an integer",
+      "settings": {"v": 5, "engine": "niho-10", "look": "niho-standard-1", "base": null, "masks": [{"id": "srf-1", "kind": "brush", "surface": {"id": "a2794cff8da2ff41a982b1d85c7a0c6cb9ff5eaa550a87d021805e3116ddcf9b", "width": 10.5, "height": 683}, "adjust": {"shadows": 25}}]},
+      "code": "invalidMaskSurface"
+    },
+    {
+      "name": "subject surface width 0",
+      "settings": {"v": 5, "engine": "niho-10", "look": "niho-standard-1", "base": null, "masks": [{"id": "srf-1", "kind": "subject", "surface": {"id": "a2794cff8da2ff41a982b1d85c7a0c6cb9ff5eaa550a87d021805e3116ddcf9b", "width": 0, "height": 683}, "adjust": {"shadows": 25}}]},
+      "code": "maskOutOfRange"
+    },
+    {
+      "name": "sky surface id uppercase",
+      "settings": {"v": 5, "engine": "niho-10", "look": "niho-standard-1", "base": null, "masks": [{"id": "srf-1", "kind": "sky", "surface": {"id": "34B36454CAB2E7842C389F7D88ECB7DF279E3918CBAC07970D4CDE496E70F4C8", "width": 1024, "height": 683}, "adjust": {"shadows": 25}}]},
+      "code": "invalidMaskSurface"
+    },
+    {
+      "name": "v 4 with masks",
+      "settings": {"v": 4, "engine": "niho-10", "look": "niho-standard-1", "base": null, "masks": [{"id": "lin-1", "kind": "linear", "zero": {"x": 0.5, "y": 0.2}, "full": {"x": 0.5, "y": 0.5}, "adjust": {"exposure": -0.7}}]},
+      "code": "versionTooLow"
+    },
+    {
+      "name": "v 3 with masks",
+      "settings": {"v": 3, "engine": "niho-10", "look": "niho-standard-1", "base": null, "masks": [{"id": "lin-1", "kind": "linear", "zero": {"x": 0.5, "y": 0.2}, "full": {"x": 0.5, "y": 0.5}, "adjust": {"exposure": -0.7}}]},
+      "code": "versionTooLow"
+    },
+    {
+      "name": "v 1 with a disabled mask",
+      "settings": {"v": 1, "engine": "niho-10", "look": "niho-standard-1", "base": null, "masks": [{"id": "lin-1", "kind": "linear", "enabled": false, "zero": {"x": 0.5, "y": 0.2}, "full": {"x": 0.5, "y": 0.5}, "adjust": {"exposure": -0.7}}]},
+      "code": "versionTooLow"
+    },
+    {
+      "name": "v 6 is newer",
+      "settings": {"v": 6, "engine": "niho-10", "look": "niho-standard-1", "base": null, "masks": [{"id": "lin-1", "kind": "linear", "zero": {"x": 0.5, "y": 0.2}, "full": {"x": 0.5, "y": 0.5}, "adjust": {"exposure": -0.7}}]},
+      "code": "unsupportedVersion"
+    },
+    {
+      "name": "relative temperature delta in absolute mode",
+      "settings": {"v": 5, "engine": "niho-10", "look": "niho-standard-1", "base": null, "masks": [{"id": "lin-1", "kind": "linear", "zero": {"x": 0.5, "y": 0.2}, "full": {"x": 0.5, "y": 0.5}, "adjust": {"relativeTemperature": 10}}], "whiteBalance": {"mode": "absolute", "temperature": 5500, "tint": 0}},
+      "code": "localWhiteBalance"
+    },
+    {
+      "name": "relative tint delta in absolute mode",
+      "settings": {"v": 5, "engine": "niho-10", "look": "niho-standard-1", "base": null, "masks": [{"id": "lin-1", "kind": "linear", "zero": {"x": 0.5, "y": 0.2}, "full": {"x": 0.5, "y": 0.5}, "adjust": {"relativeTint": -10}}], "whiteBalance": {"mode": "absolute", "temperature": 5500, "tint": 0}},
+      "code": "localWhiteBalance"
+    },
+    {
+      "name": "relative delta in absolute mode even when the mask is disabled",
+      "settings": {"v": 5, "engine": "niho-10", "look": "niho-standard-1", "base": null, "masks": [{"id": "srf-1", "kind": "sky", "enabled": false, "surface": {"id": "a2794cff8da2ff41a982b1d85c7a0c6cb9ff5eaa550a87d021805e3116ddcf9b", "width": 1024, "height": 683}, "adjust": {"relativeTint": 5}}], "whiteBalance": {"mode": "absolute", "temperature": 5500, "tint": 0}},
+      "code": "localWhiteBalance"
+    }
+  ]
+}

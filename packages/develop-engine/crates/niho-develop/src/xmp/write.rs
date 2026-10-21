@@ -469,6 +469,11 @@ pub fn settings_to_xmp(settings: &DevelopSettings, options: &XmpWriteOptions) ->
         // The API/UI surfaces `notWritten` to the person exporting.
         not_written.push("colorPoints".into());
     }
+    if !settings.masks.is_empty() {
+        // Local masks have no preset representation here (Lightroom's
+        // MaskGroupBasedCorrections are read in M6, #69, never written).
+        not_written.push("masks".into());
+    }
 
     let monochrome = on(XmpGroup::BlackAndWhite) && settings.grayscale;
     let uuid = options
