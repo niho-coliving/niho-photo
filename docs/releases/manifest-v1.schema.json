@@ -1,0 +1,231 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/niho-coliving/niho-photo/blob/main/docs/releases/manifest-v1.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "repository",
+    "commit",
+    "tree",
+    "platform",
+    "workflowRun",
+    "build",
+    "tools",
+    "locks",
+    "contracts",
+    "artifact",
+    "sbom"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "repository": {
+      "const": "niho-coliving/niho-photo"
+    },
+    "commit": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{40}$"
+    },
+    "tree": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{40}$"
+    },
+    "platform": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "os",
+        "arch"
+      ],
+      "properties": {
+        "os": {
+          "const": "macos"
+        },
+        "arch": {
+          "enum": [
+            "arm64",
+            "x64"
+          ]
+        }
+      }
+    },
+    "workflowRun": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "attempt"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[1-9][0-9]*$"
+        },
+        "attempt": {
+          "type": "string",
+          "pattern": "^[1-9][0-9]*$"
+        }
+      }
+    },
+    "build": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mode",
+        "signing",
+        "updaterArtifacts",
+        "officialUpdates",
+        "checkedFiles"
+      ],
+      "properties": {
+        "mode": {
+          "const": "release"
+        },
+        "signing": {
+          "const": "ad-hoc"
+        },
+        "updaterArtifacts": {
+          "const": false
+        },
+        "officialUpdates": {
+          "const": false
+        },
+        "checkedFiles": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "tools": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "node",
+        "npm",
+        "rustc",
+        "cargo",
+        "xcode",
+        "tauri"
+      ],
+      "properties": {
+        "node": {
+          "type": "string",
+          "minLength": 1
+        },
+        "npm": {
+          "type": "string",
+          "minLength": 1
+        },
+        "rustc": {
+          "type": "string",
+          "minLength": 1
+        },
+        "cargo": {
+          "type": "string",
+          "minLength": 1
+        },
+        "xcode": {
+          "type": "string",
+          "minLength": 1
+        },
+        "tauri": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "locks": {
+      "type": "array",
+      "minItems": 5,
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/$defs/source"
+      }
+    },
+    "contracts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "accountVersion",
+        "cloudVersion",
+        "cloudPackageVersion",
+        "docsSourceCommit",
+        "files"
+      ],
+      "properties": {
+        "accountVersion": {
+          "const": 2
+        },
+        "cloudVersion": {
+          "const": 1
+        },
+        "cloudPackageVersion": {
+          "const": "1.0.0"
+        },
+        "docsSourceCommit": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{40}$"
+        },
+        "files": {
+          "type": "array",
+          "minItems": 4,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/source"
+          }
+        }
+      }
+    },
+    "artifact": {
+      "$ref": "#/$defs/file"
+    },
+    "sbom": {
+      "$ref": "#/$defs/file"
+    }
+  },
+  "$defs": {
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "sha256"
+      ],
+      "properties": {
+        "path": {
+          "type": "string",
+          "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))[A-Za-z0-9._/-]+$"
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      }
+    },
+    "file": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "sha256",
+        "bytes"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]+$"
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "bytes": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    }
+  }
+}

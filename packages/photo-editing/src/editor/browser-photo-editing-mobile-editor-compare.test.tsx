@@ -7,7 +7,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { neutralDevelopSettings } from "../develop-engine/develop-settings";
 
 import { BrowserPhotoEditingMobileEditor } from "./browser-photo-editing-mobile-editor";
-import { measurePhotoSurface } from "./use-photo-editing-zoom";
+import { measurePhotoSurface, usePhotoEditingZoom } from "./use-photo-editing-zoom";
 
 /**
  * スマホの 1 枚の編集の層の「比較」（niho-photo#41）。写真の面の右上の切り替えで補正前と補正後を上下に並べ、並べている間は
@@ -182,5 +182,104 @@ describe("measurePhotoSurface（並べている間の拡大の測り方）", () 
     });
     expect(measurePhotoSurface(surface, { x: 200, y: 100 })).toMatchObject({ areaHeight: 300, centerY: 150 });
     expect(measurePhotoSurface(surface)).toMatchObject({ areaHeight: 300, centerY: 150 });
+  });
+});
+
+describe("usePhotoEditingZoom（比較pane変更時の再clamp）", () => {
+  function setBox(element: HTMLElement, box: { left: number; top: number; width: number; height: number }) {
+    Object.defineProperty(element, "clientWidth", { configurable: true, value: box.width });
+    Object.defineProperty(element, "clientHeight", { configurable: true, value: box.height });
+    Object.defineProperty(element, "offsetWidth", { configurable: true, value: box.width });
+    Object.defineProperty(element, "offsetHeight", { configurable: true, value: box.height });
+    element.getBoundingClientRect = () =>
+      ({
+        ...box,
+        x: box.left,
+        y: box.top,
+        right: box.left + box.width,
+        bottom: box.top + box.height,
+        toJSON: () => box,
+      }) as DOMRect;
+  }
+
+  function ZoomHarness(props: { compare: boolean }) {
+    const zoom = usePhotoEditingZoom({ photoKey: "portrait", holdEnabled: false, onHoldChange: () => undefined });
+    const surfaceRef = (surface: HTMLDivElement | null) => {
+      zoom.surfaceRef.current = surface;
+      if (surface) setBox(surface, { left: 0, top: 0, width: 400, height: 600 });
+    };
+    const canvasRef = (height: number) => (canvas: HTMLCanvasElement | null) => {
+      if (!canvas) return;
+      canvas.width = 900;
+      canvas.height = 1200;
+      setBox(canvas, { left: 0, top: 0, width: 400, height });
+    };
+    const paneRef = (top: number) => (pane: HTMLDivElement | null) => {
+      if (pane) setBox(pane, { left: 0, top, width: 400, height: 300 });
+    };
+    const handlers = {
+      onPointerDown: zoom.onPointerDown,
+      onPointerMove: zoom.onPointerMove,
+      onPointerUp: zoom.onPointerUp,
+      onPointerCancel: zoom.onPointerCancel,
+    };
+    return (
+      <div ref={surfaceRef} data-testid="zoom-surface" {...handlers}>
+        {props.compare ? (
+          <>
+            <div ref={paneRef(0)} data-photo-zoom-pane=""><canvas ref={canvasRef(300)} /></div>
+            <div ref={paneRef(300)} data-photo-zoom-pane=""><canvas ref={canvasRef(300)} /></div>
+          </>
+        ) : (
+          <canvas ref={canvasRef(600)} />
+        )}
+      </div>
+    );
+  }
+
+  async function renderZoom(compare: boolean) {
+    await act(async () => root.render(<ZoomHarness compare={compare} />));
+  }
+
+  async function pointer(type: string, x: number, y: number) {
+    const surface = zoomSurface();
+    await act(async () => {
+      surface.dispatchEvent(
+        new PointerEvent(type, { bubbles: true, cancelable: true, pointerId: 1, isPrimary: true, clientX: x, clientY: y }),
+      );
+    });
+  }
+
+  function zoomSurface(): HTMLElement {
+    const surface = container.querySelector<HTMLElement>('[data-testid="zoom-surface"]');
+    if (!surface) throw new Error("zoom surface not found");
+    return surface;
+  }
+
+  async function flushPaneObserver() {
+    await act(async () => new Promise<void>((resolve) => window.setTimeout(resolve, 0)));
+  }
+
+  it("上下paneの追加・削除後に、写真の拡大位置をその面へ収め直す", async () => {
+    await renderZoom(false);
+    await pointer("pointerdown", 200, 300);
+    await pointer("pointerup", 200, 300);
+    await pointer("pointerdown", 200, 300);
+    await pointer("pointerup", 200, 300);
+    await pointer("pointerdown", 200, 200);
+    await pointer("pointermove", 220, 220);
+    await pointer("pointermove", 220, 1020);
+    await pointer("pointerup", 220, 1020);
+    expect(zoomSurface().style.getPropertyValue("--photo-editing-zoom")).toContain("300px");
+
+    await renderZoom(true);
+    await flushPaneObserver();
+    expect(zoomSurface().style.getPropertyValue("--photo-editing-zoom")).toContain("187.5px");
+
+    await renderZoom(false);
+    await flushPaneObserver();
+    expect(zoomSurface().querySelectorAll("[data-photo-zoom-pane]")).toHaveLength(0);
+    expect(measurePhotoSurface(zoomSurface())?.areaHeight).toBe(600);
+    expect(zoomSurface().style.getPropertyValue("--photo-editing-zoom")).toContain("187.5px");
   });
 });
