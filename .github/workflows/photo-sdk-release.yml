@@ -115,7 +115,9 @@
       "timeout-minutes": 10,
       "permissions": {
         "actions": "read",
-        "contents": "write"
+        "contents": "write",
+        "id-token": "write",
+        "attestations": "write"
       },
       "steps": [
         {
@@ -155,6 +157,15 @@
             "SDK_RECEIPT_FILE": "${{ runner.temp }}/photo-sdk-artifact-receipt.json"
           },
           "run": "node scripts/sdk/verify-release-artifact.mjs --directory \"$SDK_ARTIFACT_DIR\" --expected-source \"$SDK_SOURCE_SHA\" --expected-manifest-sha256 \"$SDK_MANIFEST_SHA256\" --receipt \"$SDK_RECEIPT_FILE\" --artifact-id \"$SDK_ARTIFACT_ID\" --artifact-digest \"$SDK_ARTIFACT_DIGEST\" --artifact-name \"$SDK_ARTIFACT_NAME\" --run-id \"$SDK_RUN_ID\" --run-attempt \"$SDK_RUN_ATTEMPT\""
+        },
+        {
+          "name": "SDK manifestを公式workflow identityへ署名する",
+          "id": "attest",
+          "uses": "actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6",
+          "with": {
+            "subject-path": "${{ runner.temp }}/photo-sdk-download/niho-photo-sdk-${{ needs.build.outputs.version }}-${{ needs.build.outputs.source-sha }}.json",
+            "create-storage-record": false
+          }
         },
         {
           "name": "新規tagとGitHub Releaseを作成",

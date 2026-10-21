@@ -78,3 +78,5 @@ HOME/Cargo/target/tempとpath remapを使います。生成した3 binaryは実�
 `otool -L` が `/usr/lib` / `/System` 以外を参照しないこと、両registryを
 `apple-raw-linear registry` で読めること、calibration hashがcamera lockと一致することを検査します。
 このhelperを実行するのは信頼されたcandidate buildだけです。署名工程はSDK内scriptを実行しません。
+
+SDK publisherは検証済みmanifestにGitHub artifact attestationを付け、workflow path・main ref・tooling SHA・run/attemptを署名付きcertificateへ結び付けます。後段はmanifestの自己申告run IDだけを信用せず、Sigstore bundleをGitHub CLIで検証します。既存updater秘密鍵は公開側へ渡しません。

@@ -112,3 +112,5 @@ appを起動せず、`photo-candidate-v<app version>-<app SHA先頭12桁>` の�
 tagはCASで先に確保し、release作成途中で失敗しても削除・再利用しません。その版は消費済みとして、rollbackまたは再実行は
 **より高い新しいapp version**を指定します。前のsourceへ戻す場合も、保存済みの前source SHAと承認済みSDK hashを入力し、
 高い新versionで新しいcandidateを作ります。既存tag/assetsの上書きやclobberは行いません。
+
+公式publisherは検証済みcandidate manifestを `actions/attest` でattestします。SDK manifestにもSDK専用workflowのattestationがあり、後段は両方の実digest・公式workflow・main ref・tooling SHA・certificate内run/attemptを暗号学的に照合します。公開のSigstore署名用短命identityを使い、private updater秘密鍵や新しいPATは不要です。

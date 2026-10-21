@@ -1,4 +1,5 @@
 const pins = new Map([
+  ["actions/attest", "1e69f48acb82d1966a394da916b4c1698aa569d6"],
   ["actions/checkout", "11bd71901bbe5b1630ceea73d27597364c9af683"],
   ["actions/setup-node", "49933ea5288caeca8642d1e84afbd3f7d6820020"],
   ["actions/upload-artifact", "cf430e030ddbb5b0abf93d22962f4752f3646cd9"],
@@ -19,12 +20,12 @@ export function photoSdkWorkflowFailures(workflow) {
   const input = workflow.on?.workflow_dispatch?.inputs?.source_sha;
   if (Object.keys(workflow.on?.workflow_dispatch?.inputs ?? {}).join(",") !== "source_sha" || input?.required !== true || input?.type !== "string") fail("SDK dispatchはfull source SHA入力が必須");
   if (workflow.concurrency?.["cancel-in-progress"] !== false || typeof workflow.concurrency?.group !== "string") fail("SDK release concurrencyが不正");
-  if (/\$\{\{[^}]*\b(?:secrets|vars)\b[^}]*\}\}|pull_request_target|\bid-token\b/u.test(serialized)) fail("SDK workflowへsecret/特権eventを追加できません");
+  if (/\$\{\{[^}]*\b(?:secrets|vars)\b[^}]*\}\}|pull_request_target/u.test(serialized)) fail("SDK workflowへsecret/特権eventを追加できません");
   if (Object.keys(workflow.jobs ?? {}).sort().join(",") !== "build,publish") fail("SDK workflow job集合が不正");
   const build = workflow.jobs?.build;
   const publish = workflow.jobs?.publish;
   if (build?.["runs-on"] !== "ubuntu-24.04" || build?.permissions || build?.environment || build?.["timeout-minutes"] !== 60) fail("SDK buildはGitHub hosted/read-only jobに固定");
-  if (publish?.["runs-on"] !== "ubuntu-24.04" || JSON.stringify(publish?.needs) !== JSON.stringify(["build"]) || publish?.if !== publishCondition || publish?.["timeout-minutes"] !== 10 || JSON.stringify(publish?.permissions) !== JSON.stringify({ actions: "read", contents: "write" }) || publish?.environment) fail("SDK publishのrunner/条件/最小権限が不正");
+  if (publish?.["runs-on"] !== "ubuntu-24.04" || JSON.stringify(publish?.needs) !== JSON.stringify(["build"]) || publish?.if !== publishCondition || publish?.["timeout-minutes"] !== 10 || JSON.stringify(publish?.permissions) !== JSON.stringify({ actions: "read", contents: "write", "id-token": "write", attestations: "write" }) || publish?.environment) fail("SDK publishのrunner/条件/最小権限が不正");
   const expectedOutputs = {
     "artifact-id": "${{ steps.upload.outputs.artifact-id }}",
     "artifact-digest": "${{ steps.upload.outputs.artifact-digest }}",
@@ -64,5 +65,8 @@ export function photoSdkWorkflowFailures(workflow) {
   if (verify?.run !== publishVerifyCommand || verify?.env?.SDK_MANIFEST_SHA256 !== "${{ needs.build.outputs.manifest-sha256 }}" || verify?.env?.SDK_ARTIFACT_DIGEST !== "${{ needs.build.outputs.artifact-digest }}") fail("publishはmanifest hashと輸送receiptをmain verifierで照合する必要があります");
   const releaseStep = publish?.steps?.find((step) => step.name === "新規tagとGitHub Releaseを作成");
   if (!releaseStep?.run?.includes("gh api --method POST") || !releaseStep.run.includes("refs/tags/$tag") || !releaseStep.run.includes("gh release create") || !releaseStep.run.includes("--verify-tag") || !releaseStep.run.includes("--latest=false") || !releaseStep.run.includes('release_core="${SDK_VERSION%%+*}"') || !releaseStep.run.includes("release_flags+=(--prerelease)") || !releaseStep.run.includes("$SDK_RECEIPT_FILE") || /(?:--clobber|--force|release upload)/u.test(releaseStep?.run ?? "") || releaseStep?.env?.GH_TOKEN !== "${{ github.token }}") fail("SDK releaseはlatestを変更せず新規tagと検証済みassetだけを公開する必要があります");
+  const attest = publish?.steps?.find((step) => step.id === "attest");
+  const expectedAttest = {"subject-path": "${{ runner.temp }}/photo-sdk-download/niho-photo-sdk-${{ needs.build.outputs.version }}-${{ needs.build.outputs.source-sha }}.json", "create-storage-record": false};
+  if (attest?.uses !== "actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6" || JSON.stringify(attest?.with) !== JSON.stringify(expectedAttest) || publish.steps.indexOf(attest) <= publish.steps.indexOf(verify) || publish.steps.indexOf(attest) >= publish.steps.length - 1) fail("公開manifestの公式workflow attestationが不足しています");
   return [...new Set(failures)];
 }

@@ -1,4 +1,5 @@
 const pins = new Map([
+  ["actions/attest", "1e69f48acb82d1966a394da916b4c1698aa569d6"],
   ["actions/checkout", "11bd71901bbe5b1630ceea73d27597364c9af683"],
   ["actions/setup-node", "49933ea5288caeca8642d1e84afbd3f7d6820020"],
   ["actions/upload-artifact", "cf430e030ddbb5b0abf93d22962f4752f3646cd9"],
@@ -20,11 +21,11 @@ export function photoCandidateWorkflowFailures(workflow) {
   if (workflow.concurrency?.["cancel-in-progress"] !== false || typeof workflow.concurrency?.group !== "string") fail("candidate release concurrencyが不正");
   const publicVariable = "${{ vars.NIHO_PHOTO_PUBLIC_FIREBASE_WEB_API_KEY }}";
   const withoutPublicVariable = serialized.replaceAll(publicVariable, "PUBLIC_FIREBASE_VARIABLE");
-  if (/\$\{\{[^}]*\b(?:secrets|vars)\b[^}]*\}\}|pull_request_target|\bid-token\b/u.test(withoutPublicVariable) || serialized.split(publicVariable).length !== 2) fail("candidate workflowのvariable例外は公開Firebase Web config 1箇所だけ");
+  if (/\$\{\{[^}]*\b(?:secrets|vars)\b[^}]*\}\}|pull_request_target/u.test(withoutPublicVariable) || serialized.split(publicVariable).length !== 2) fail("candidate workflowのvariable例外は公開Firebase Web config 1箇所だけ");
   if (Object.keys(workflow.jobs ?? {}).sort().join(",") !== "build,publish") fail("candidate workflow job集合が不正");
   const build = workflow.jobs?.build, publish = workflow.jobs?.publish;
   if (build?.["runs-on"] !== "macos-26" || build?.["timeout-minutes"] !== 90 || build?.permissions || build?.environment) fail("candidate builderはmacOS 26/read-only/90分に固定");
-  if (publish?.["runs-on"] !== "ubuntu-24.04" || publish?.["timeout-minutes"] !== 10 || JSON.stringify(publish?.needs) !== JSON.stringify(["build"]) || publish?.if !== candidatePublishCondition || JSON.stringify(publish?.permissions) !== JSON.stringify({ actions: "read", contents: "write" }) || publish?.environment) fail("candidate publisherのrunner/条件/最小権限が不正");
+  if (publish?.["runs-on"] !== "ubuntu-24.04" || publish?.["timeout-minutes"] !== 10 || JSON.stringify(publish?.needs) !== JSON.stringify(["build"]) || publish?.if !== candidatePublishCondition || JSON.stringify(publish?.permissions) !== JSON.stringify({ actions: "read", contents: "write", "id-token": "write", attestations: "write" }) || publish?.environment) fail("candidate publisherのrunner/条件/最小権限が不正");
   const expectedOutputs = {
     "app-source-sha": "${{ steps.source.outputs.app-source-sha }}",
     "app-version": "${{ steps.source.outputs.app-version }}",
@@ -77,5 +78,8 @@ export function photoCandidateWorkflowFailures(workflow) {
   const release = publish?.steps?.find((step) => step.name === "新規CAS tagとcandidate prereleaseを作成");
   for (const token of ["gh api --method POST", "refs/tags/$tag", "photo-candidate-v$APP_VERSION-${APP_SOURCE_SHA:0:12}", "gh release create", "--verify-tag", "--prerelease", "--latest=false", "*.dmg", "*.app.tar.gz", "*.cdx.json", "*.candidate.json", "niho-photo-sdk-*.json", "photo-candidate-artifact-receipt.json", "photo-candidate-provenance.json"]) if (!release?.run?.includes(token)) fail("candidate prereleaseのCAS/assets契約が不足しています");
   if (/(?:--clobber|--force|release upload|git push|git tag -f|refs\/tags\/camera-v)/u.test(release?.run ?? "") || release?.env?.GH_TOKEN !== "${{ github.token }}") fail("candidate releaseの上書き/private camera-v変更は禁止です");
+  const attest = publish?.steps?.find((step) => step.id === "attest");
+  const expectedAttest = {"subject-path": "${{ runner.temp }}/photo-candidate-download/candidate/${{ needs.build.outputs.candidate-manifest-file }}", "create-storage-record": false};
+  if (attest?.uses !== "actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6" || JSON.stringify(attest?.with) !== JSON.stringify(expectedAttest) || publish.steps.indexOf(attest) <= publish.steps.indexOf(verify) || publish.steps.indexOf(attest) >= publish.steps.length - 1) fail("公開manifestの公式workflow attestationが不足しています");
   return [...new Set(failures)];
 }
