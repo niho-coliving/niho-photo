@@ -166,9 +166,9 @@ fn the_five_kinds_have_their_shape_and_masks_stay_out_of_extra() {
 
 #[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
 #[cfg_attr(not(target_arch = "wasm32"), test)]
-fn version_seven_is_read_and_eight_is_not() {
+fn version_eight_is_read_and_nine_is_not() {
     assert_eq!(MASKS_SETTINGS_VERSION, 5);
-    assert_eq!(MAX_SETTINGS_VERSION, 7);
+    assert_eq!(MAX_SETTINGS_VERSION, 8);
     assert_eq!(
         DevelopSettings::from_json(r#"{"v":5}"#).unwrap().v,
         5,
@@ -184,9 +184,14 @@ fn version_seven_is_read_and_eight_is_not() {
         7,
         "v 7 is readable for perspective settings"
     );
-    let error = DevelopSettings::from_json(r#"{"v":8}"#).unwrap_err();
+    assert_eq!(
+        DevelopSettings::from_json(r#"{"v":8}"#).unwrap().v,
+        8,
+        "v 8 is readable for heal settings"
+    );
+    let error = DevelopSettings::from_json(r#"{"v":9}"#).unwrap_err();
     assert_eq!(error.code, "unsupportedVersion");
-    assert!(error.message.contains("v = 7"), "{}", error.message);
+    assert!(error.message.contains("v = 8"), "{}", error.message);
 }
 
 #[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]

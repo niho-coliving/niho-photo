@@ -47,6 +47,13 @@ describe("isNeutralPhotoEditingSettings", () => {
     expect(isNeutralPhotoEditingSettings({ look: { name: "Adobe Vivid" } })).toBe(false);
   });
 
+  it("修復の印（heal。niho-photo#44）は空なら neutral、1 つでもあれば画を変える", () => {
+    expect(isNeutralPhotoEditingSettings({ heal: [] })).toBe(true);
+    expect(isNeutralPhotoEditingSettings({ heal: null })).toBe(true);
+    expect(isNeutralPhotoEditingSettings({ heal: [{ id: "a", mode: "remove", radius: 0.02, feather: 0, points: [[0.5, 0.5]] }] })).toBe(false);
+    expect(isNeutralPhotoEditingSettings({ heal: "x" })).toBe(false);
+  });
+
   it("分からないキー・分からない形の値があれば neutral とみなさない（安全側）", () => {
     expect(isNeutralPhotoEditingSettings({ sharpening: 0 })).toBe(false);
     expect(isNeutralPhotoEditingSettings({ exposure: "0" })).toBe(false);

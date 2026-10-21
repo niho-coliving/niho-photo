@@ -2064,6 +2064,8 @@ pub fn preset_settings(
         settings.color_points = b.color_points.clone();
         // Local masks are the photo's own edit as well (never in a preset).
         settings.masks = b.masks.clone();
+        // Heal marks belong to the photo (niho-photo#44), like its geometry.
+        settings.heal = b.heal.clone();
     }
     // NIHO effects are not in Photo Bench's `EditSettings`, so they do not go
     // through the converter (`CONVERTER_VERSION` is unchanged): the base's

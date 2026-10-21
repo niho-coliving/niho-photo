@@ -73,6 +73,11 @@ function isIdentityToneCurves(value: unknown): boolean {
   });
 }
 
+/** 修復の印（`heal`。niho-photo#44）が無い（空の配列・null）なら neutral。印が 1 つでもあれば画を変える。 */
+function isEmptyHeal(value: unknown): boolean {
+  return value === null || value === undefined || (Array.isArray(value) && value.length === 0);
+}
+
 /** 撮影時のまま（`{ mode: "asShot" }`）なら neutral。 */
 function isAsShotWhiteBalance(value: unknown): boolean {
   if (value === null || value === undefined) return true;
@@ -89,6 +94,7 @@ export function isNeutralPhotoEditingSettings(settings: unknown): boolean {
     if (key === "whiteBalance") return isAsShotWhiteBalance(value);
     if (key === "toneCurves" || key === "toneCurve") return isIdentityToneCurves(value);
     if (key === "look") return value === null || value === undefined;
+    if (key === "heal") return isEmptyHeal(value);
     return false;
   });
 }

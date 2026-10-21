@@ -310,7 +310,7 @@ describe("createDevelopEngineWorkerHandler", () => {
     expect(autoLog).toHaveBeenCalledWith({ stage: "autoSettings", durationMs: 0, wasmMemoryBytes: 65_536, status: "ok" });
   });
 
-  it("wasm が v: 3 の効果・v: 4 の色ポイント・v: 6 のディテールを通せば、それぞれの ready capability を付ける", async () => {
+  it("wasm が v: 3・4・6・8 を通せば effects・color points・detail・heal capability を付ける", async () => {
     const glue = fakeGlue();
     const validateSettings = vi.fn((_settingsJson: string) => "[]");
     const { handler, posted } = setup({ module: { ...glue.module, validateSettings } });
@@ -319,11 +319,11 @@ describe("createDevelopEngineWorkerHandler", () => {
     await handler({ type: "init", id: 2, manifestUrl: MANIFEST_URL });
 
     expect(posted.map((entry) => entry.message)).toEqual([
-      { type: "ready", id: 1, version: "0.2.0+test", effects: true, colorPoints: true, detail: true },
-      { type: "ready", id: 2, version: "0.2.0+test", effects: true, colorPoints: true, detail: true },
+      { type: "ready", id: 1, version: "0.2.0+test", effects: true, colorPoints: true, detail: true, heal: true },
+      { type: "ready", id: 2, version: "0.2.0+test", effects: true, colorPoints: true, detail: true, heal: true },
     ]);
     // capability ごとに最小設定を 1 回ずつ確かめ、2 回目の init では繰り返さない。
-    expect(validateSettings).toHaveBeenCalledTimes(3);
+    expect(validateSettings).toHaveBeenCalledTimes(4);
     expect(JSON.parse(validateSettings.mock.calls[0]?.[0] ?? "null")).toEqual({
       v: 3,
       engine: "niho-1",
@@ -345,16 +345,38 @@ describe("createDevelopEngineWorkerHandler", () => {
       base: null,
       detail: { sharpening: { amount: 10, radius: 1, detail: 25, masking: 0 }, luminanceNoiseReduction: 0 },
     });
+    expect(JSON.parse(validateSettings.mock.calls[3]?.[0] ?? "null")).toEqual({
+      v: 8,
+      engine: "niho-10",
+      look: "niho-standard-1",
+      base: null,
+      heal: [{ id: "probe", mode: "remove", radius: 0.02, feather: 0.5, points: [[0.5, 0.5]] }],
+    });
   });
 
-  it("v: 6 のディテールを断る wasm（古い crate）には detail の capability を付けない", async () => {
+  it("v: 6 を断る wasm には detail を付けず、v: 8 の heal capability は判定する", async () => {
     const glue = fakeGlue();
     const validateSettings = vi.fn((settingsJson: string) =>
       JSON.parse(settingsJson).v === 6 ? JSON.stringify([{ path: "v", code: "unsupportedVersion" }]) : "[]",
     );
     const { handler, posted } = setup({ module: { ...glue.module, validateSettings } });
     await handler({ type: "init", id: 1, manifestUrl: MANIFEST_URL });
-    expect(posted[0]?.message).toEqual({ type: "ready", id: 1, version: "0.2.0+test", effects: true, colorPoints: true });
+    expect(posted[0]?.message).toEqual({
+      type: "ready", id: 1, version: "0.2.0+test", effects: true, colorPoints: true, heal: true,
+    });
+  });
+
+  it("v: 8 を断る wasm には heal を付けない", async () => {
+    const glue = fakeGlue();
+    const unsupportedVersion = JSON.stringify([{ code: "unsupportedVersion", message: "only v = 1, v = 2, v = 3, v = 4, v = 5, v = 6, and v = 7 are supported", path: "v" }]);
+    const { handler, posted } = setup({
+      module: {
+        ...glue.module,
+        validateSettings: (settingsJson: string) => (JSON.parse(settingsJson).v === 8 ? unsupportedVersion : "[]"),
+      },
+    });
+    await handler({ type: "init", id: 1, manifestUrl: MANIFEST_URL });
+    expect(posted[0]?.message).toEqual({ type: "ready", id: 1, version: "0.2.0+test", effects: true, colorPoints: true, detail: true });
   });
 
   it("sampleColor は正規化座標を session に渡し、Stage Q の Oklch だけを返す", async () => {
@@ -419,6 +441,7 @@ describe("createDevelopEngineWorkerHandler", () => {
       colorPoints: true,
       detail: true,
       perspective: true,
+      heal: true,
     });
     // 遠近（niho-photo#46）は小さな v: 7 の設定で確かめる
     expect(JSON.parse(validateSettings.mock.calls[3]?.[0] ?? "null")).toEqual({
@@ -440,7 +463,8 @@ describe("createDevelopEngineWorkerHandler", () => {
         rasterDecodeSize: () => 1280,
         geometryOutputSize: () => ({ width: 1280, height: 853 }),
         beforeSettings: (settingsJson: string) => settingsJson,
-        validateSettings: (settingsJson: string) => (JSON.parse(settingsJson).v === 7 ? unsupportedVersion : "[]"),
+        // v: 7 を知らない wasm は v: 8 も知らない
+        validateSettings: (settingsJson: string) => (JSON.parse(settingsJson).v >= 7 ? unsupportedVersion : "[]"),
       },
     });
 

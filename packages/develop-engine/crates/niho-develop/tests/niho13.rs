@@ -131,7 +131,7 @@ fn is_the_latest_reader_capability_without_changing_constructor_defaults() {
         ENGINE_NIHO_13
     );
     assert_eq!(niho_develop::ENGINE_VERSION, ENGINE_NIHO_13);
-    assert_eq!(niho_develop::CRATE_VERSION, "0.23.0");
+    assert_eq!(niho_develop::CRATE_VERSION, "0.24.0");
     assert_eq!(DevelopSettings::neutral().engine, "niho-1");
     assert_eq!(DevelopSettings::new_edit().engine, "niho-1");
     assert!(parse_settings(r#"{"v":1,"engine":"niho-13","look":"niho-standard-5"}"#).is_err());

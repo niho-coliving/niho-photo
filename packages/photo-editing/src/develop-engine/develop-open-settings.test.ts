@@ -173,7 +173,7 @@ describe("resolveDevelopOpenSettings", () => {
     ).toEqual({ kind: "newer" });
     expect(
       resolveDevelopOpenSettings({
-        cloudPhoto: cloudPhoto({ ...SAVED_DEVELOP, developSettings: { v: 8, engine: "niho-1" } as unknown as DevelopSettings }),
+        cloudPhoto: cloudPhoto({ ...SAVED_DEVELOP, developSettings: { v: 9, engine: "niho-1" } as unknown as DevelopSettings }),
         baseVersion: null,
       }),
     ).toEqual({ kind: "newer" });
@@ -185,7 +185,7 @@ describe("resolveDevelopOpenSettings", () => {
     });
   });
 
-  it("v5 は部分補正（マスク）を読めるので開く。形の壊れたマスク・v5 未満のマスクは newer（閲覧だけ）", () => {
+  it("マスクのある v5・修復のある v8 は開き、形の壊れたマスク・v5 未満・未知版は newer（閲覧だけ）", () => {
     const mask = { id: "m1", kind: "linear", zero: { x: 0.5, y: 0.2 }, full: { x: 0.5, y: 0.5 }, adjust: { exposure: -0.7 } };
     const open = (developSettings: unknown) =>
       resolveDevelopOpenSettings({
@@ -197,7 +197,8 @@ describe("resolveDevelopOpenSettings", () => {
     expect(open({ v: 5, engine: "niho-10", look: "niho-standard-1", base: null })).toMatchObject({ kind: "settings" });
     expect(open({ ...saved, v: 4 })).toEqual({ kind: "newer" });
     expect(open({ ...saved, masks: [{ ...mask, opacity: 1 }] })).toEqual({ kind: "newer" });
-    expect(open({ ...saved, v: 8 })).toEqual({ kind: "newer" });
+    expect(open({ ...saved, v: 8 })).toMatchObject({ kind: "settings" });
+    expect(open({ ...saved, v: 9 })).toEqual({ kind: "newer" });
   });
 
   it("切り抜き・回転のある developSettings（v2）は、幾何を扱える面では開き、扱えない面（NIHO Desktop）では newer（#17138）", () => {
