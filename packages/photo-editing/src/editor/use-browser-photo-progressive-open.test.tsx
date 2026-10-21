@@ -303,6 +303,8 @@ let container: HTMLDivElement;
 let root: Root;
 let current: BrowserPhotoOpen;
 let currentViewMode: BrowserViewMode;
+/** 補正前と補正後を見比べる 2 枚目の canvas を置く / 外す（niho-photo#41） */
+let setHarnessCompare: (compare: boolean) => void = () => undefined;
 
 function Harness(props: { library: PhotoLibrary; items: BrowserItem[] }) {
   const mountedRef = useRef(true);
@@ -315,6 +317,9 @@ function Harness(props: { library: PhotoLibrary; items: BrowserItem[] }) {
   const framePaintedRef = useRef<((key: string, frame: DevelopFrame) => void) | null>(framePainted);
   const [viewMode, setViewMode] = useState<BrowserViewMode>("grid");
   const [place, setPlace] = useState<BrowserCloudPlace>("photos");
+  const [compare, setCompare] = useState(false);
+  const [compareCanvas, setCompareCanvas] = useState<HTMLCanvasElement | null>(null);
+  setHarnessCompare = setCompare;
   currentViewMode = viewMode;
   const queryClientRef = useRef(new QueryClient());
   const develop = useBrowserPhotoDevelop({
@@ -357,8 +362,14 @@ function Harness(props: { library: PhotoLibrary; items: BrowserItem[] }) {
     saveGenerationRef,
     setStatus: vi.fn(),
     onFramePaintedRef: framePaintedRef,
+    compareCanvas,
   });
-  return <canvas ref={canvasRef} />;
+  return (
+    <>
+      <canvas ref={canvasRef} />
+      {compare ? <canvas data-testid="compare-before" ref={setCompareCanvas} /> : null}
+    </>
+  );
 }
 
 async function mount(library: PhotoLibrary, items: BrowserItem[]) {
@@ -591,6 +602,91 @@ describe("useBrowserPhotoOpen progressive RAW integration", () => {
     const comparing = framePainted.mock.calls.at(-1);
     expect(comparing?.[0]).toBe(target.key);
     expect(comparing?.[1]).toBe(paintFrame.mock.calls.at(-1)?.[1]);
+  });
+
+  it("比較の間は補正前の画を 2 枚目の canvas に 1 回だけ描き、色を動かしても描き直さない。ヒストグラムの口には渡さない（niho-photo#41）", async () => {
+    const canonical = createEngine({ marker: 9 });
+    // 補正前（background の描画）は 5、補正後は 9 の画
+    vi.mocked(canonical.render).mockImplementation(async (_settings, options) => frame(options.priority === "background" ? 5 : 9));
+    engineFactory.mockReturnValue(canonical);
+    const fixture = createLibrary(async () => readyWork());
+    vi.mocked(fixture.library.loadInteractivePreview!).mockRejectedValue(new Error("preview unavailable"));
+    const target = item("compare-view");
+    await mount(fixture.library, [target]);
+    await run(() => current.openItem(target));
+    expect(current.opened?.input?.kind).toBe("workingCopy");
+    await run(() => current.changeSettings((settings) => ({ ...settings, exposure: 0.4 }), "commit"));
+
+    const beforeRenders = () =>
+      vi.mocked(canonical.render).mock.calls.filter(([, options]) => options.priority === "background");
+    const compareCanvas = () => container.querySelector<HTMLCanvasElement>('[data-testid="compare-before"]');
+    const beforePaints = () => paintFrame.mock.calls.filter(([canvas]) => canvas === compareCanvas());
+    expect(beforeRenders()).toHaveLength(0);
+
+    await run(() => setHarnessCompare(true));
+    await settleUntil(() => beforePaints().length === 1, "before painted");
+    expect(beforeRenders()).toHaveLength(1);
+    // 切り抜いた枠のまま色だけ補正前（露光は 0）。編集の描画の「次」を取り合わない優先度
+    expect(beforeRenders()[0]?.[0]).toMatchObject({ base: BASE_VERSION, exposure: 0 });
+    expect(beforeRenders()[0]?.[1]).toMatchObject({ interactive: false, priority: "background" });
+    expect((beforePaints()[0]?.[1] as DevelopFrame).rgba[0]).toBe(5);
+    // 補正後の canvas には補正前を描かない
+    expect(paintFrame.mock.calls.some(([canvas, painted]) => canvas !== compareCanvas() && (painted as DevelopFrame).rgba[0] === 5)).toBe(false);
+
+    // 比較の間に補正を動かすと補正後の側だけが変わる（補正前は描き直さない）
+    await run(() => current.changeSettings((settings) => ({ ...settings, exposure: 0.6 }), "drag"));
+    await run(() => current.changeSettings((settings) => ({ ...settings, exposure: 0.7, contrast: 12 }), "commit"));
+    await settleUntil(
+      () => vi.mocked(canonical.render).mock.calls.some(([settings]) => (settings as DevelopSettings).contrast === 12),
+      "after rendered",
+    );
+    await act(async () => Promise.resolve());
+    expect(beforeRenders()).toHaveLength(1);
+    expect(beforePaints()).toHaveLength(1);
+    // ヒストグラムの口に渡すのは補正後の画だけ
+    expect(framePainted.mock.calls.length).toBeGreaterThan(0);
+    expect(framePainted.mock.calls.some(([, painted]) => (painted as DevelopFrame).rgba[0] === 5)).toBe(false);
+
+    // 閉じて開き直しても、同じ補正前の画（覚えている画）を描くだけ
+    await run(() => setHarnessCompare(false));
+    await run(() => setHarnessCompare(true));
+    await settleUntil(() => beforePaints().length === 1, "before repainted");
+    expect(beforeRenders()).toHaveLength(1);
+  });
+
+  it("比較の間に段階 open の canonical へ替わったら、補正前の画も canonical で描き直す（niho-photo#41）", async () => {
+    const firstCanonical = deferred<DevelopFrame | null>();
+    const provisional = createEngine({ marker: 1 });
+    vi.mocked(provisional.render).mockImplementation(async (_settings, options) => frame(options.priority === "background" ? 2 : 1));
+    const canonical = createEngine({ marker: 9 });
+    let canonicalCalls = 0;
+    vi.mocked(canonical.render).mockImplementation(async (_settings, options) => {
+      canonicalCalls += 1;
+      if (canonicalCalls === 1) return firstCanonical.promise;
+      return frame(options.priority === "background" ? 8 : 9);
+    });
+    engineFactory.mockImplementationOnce(() => provisional).mockImplementationOnce(() => canonical);
+    const fixture = createLibrary(async () => readyWork());
+    const target = item("compare-handoff");
+    await mount(fixture.library, [target]);
+    await run(() => {
+      void current.openItem(target);
+    });
+    await settleUntil(() => current.opened?.input?.kind === "provisional", "provisional open");
+    const compareCanvas = () => container.querySelector<HTMLCanvasElement>('[data-testid="compare-before"]');
+    const lastBeforePaint = () => paintFrame.mock.calls.filter(([canvas]) => canvas === compareCanvas()).at(-1);
+
+    await run(() => setHarnessCompare(true));
+    await settleUntil(() => lastBeforePaint() !== undefined, "provisional before painted");
+    expect((lastBeforePaint()?.[1] as DevelopFrame).rgba[0]).toBe(2);
+    expect(vi.mocked(provisional.render).mock.calls.at(-1)?.[1]).toMatchObject({ interactive: true, priority: "background" });
+
+    await run(() => firstCanonical.resolve(frame(7)));
+    await settleUntil(() => current.opened?.input?.kind === "workingCopy", "canonical handoff");
+    await settleUntil(() => (lastBeforePaint()?.[1] as DevelopFrame | undefined)?.rgba[0] === 8, "canonical before painted");
+    const canonicalBefore = vi.mocked(canonical.render).mock.calls.find(([, options]) => options.priority === "background");
+    expect(canonicalBefore?.[0]).toMatchObject({ base: BASE_VERSION });
+    expect(framePainted.mock.calls.some(([, painted]) => [2, 8].includes((painted as DevelopFrame).rgba[0] ?? 0))).toBe(false);
   });
 
   it("暫定previewを取得できないRAWも正規入力で開き、補正と通常保存を続ける", async () => {

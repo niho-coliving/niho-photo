@@ -13,6 +13,7 @@ import { Spinner } from "niho-ui/components/spinner";
 import type { DevelopGeometry, DevelopSize } from "../develop-engine/develop-geometry";
 import type { CutoutPoint } from "../photo-cutout";
 import {
+  PHOTO_EDITING_COMPARE_AFTER_LABEL,
   PHOTO_EDITING_COMPARE_ORIGINAL_LABEL,
   photoEditingPresetPreviewLabel,
 } from "../photo-editing-copy";
@@ -22,6 +23,7 @@ import type { PhotoEditingClipMask } from "../photo-editing-histogram";
 import { DEVELOP_PREVIEW_MAX_DIMENSION, type OpenedSource } from "./browser-photo-editing-model";
 import { BrowserPhotoFavoriteButton, type BrowserPhotoFavoriteControl } from "./browser-photo-editing-favorite-button";
 import { PhotoEditingClipOverlay } from "./photo-editing-clip-overlay";
+import { PhotoEditingCompareSplit } from "./photo-editing-compare-split";
 import { PhotoEditingCropOverlay } from "./photo-editing-crop-overlay";
 import { PhotoEditingCutoutBrushOverlay } from "./photo-editing-cutout-brush-overlay";
 import { canvasNormalizedPoint } from "./photo-editing-color-mixer";
@@ -29,6 +31,9 @@ import { canvasNormalizedPoint } from "./photo-editing-color-mixer";
 /** 写真の左上の札（「補正前」・プリセットの仮の表示）。 */
 const LOUPE_BADGE_CLASS_NAME =
   "pointer-events-none absolute left-3 top-3 rounded-full bg-niho-text/70 px-2.5 py-1 text-xs font-bold leading-none text-niho-surface lg:left-4 lg:top-4";
+/** 写真の右上の札（分割の比較の「補正後」。niho-photo#41）。 */
+const LOUPE_BADGE_RIGHT_CLASS_NAME =
+  "pointer-events-none absolute right-3 top-3 rounded-full bg-niho-text/70 px-2.5 py-1 text-xs font-bold leading-none text-niho-surface lg:right-4 lg:top-4";
 
 /**
  * 画（canvas・閲覧用の img）の拡大。スマホの 1 枚の編集の層が、写真の面に CSS 変数 `--photo-editing-zoom`
@@ -64,6 +69,11 @@ const CUTOUT_CHECKERBOARD_STYLE: CSSProperties = {
  *
  * NIHO camera が背景除去の口を渡した面（`cutout`。C4 移行元設計。PC の面だけ）は、canvas をブラシの部品の中に置く（道具を開いて
  * いない間も同じ入れ物のまま。canvas を置き直さない）。背景を透明にした写真は、canvas の地に市松模様を敷く。
+ *
+ * 補正前と補正後を見比べる間（`compare`。niho-photo#41）も、補正後の canvas は同じ場所に置いたまま（置き直さない）。並べる
+ * （`side`）は、この面を半分（右 / 下）にし、残りの半分（左 / 上）に補正前の canvas の面を足す。どちらの画も同じ縦横比・中央寄せ
+ * で、拡大（スマホの層）も同じ値を読むので揃う。分割（`split`）は、補正後の canvas に補正前の canvas を重ねて境界から左だけ見せる。
+ * クリップ領域の印は補正後の側にだけ掛かる。`compare` が無い間の DOM は今までと同じ。
  */
 export function BrowserPhotoEditingLoupe(props: {
   opened: OpenedSource | null;
@@ -104,6 +114,18 @@ export function BrowserPhotoEditingLoupe(props: {
    * 渡さない・null の間は何も重ねない。切り抜きの道具の間は重ねない
    */
   clipOverlay?: { mask: PhotoEditingClipMask; shadows: boolean; highlights: boolean } | null;
+  /**
+   * 補正前と補正後を見比べる（niho-photo#41）。渡さない・null の間は今までどおり。`direction` は並べる向き（`row` = 左右、
+   * `column` = 上下）。補正前の画は面の hook が `beforeCanvasRef` の canvas に描く。切り抜きの道具の間は使わない
+   */
+  compare?: {
+    mode: "side" | "split";
+    direction: "row" | "column";
+    beforeCanvasRef: (canvas: HTMLCanvasElement | null) => void;
+    /** 分割の境界の位置（写真の幅に対する左からの %） */
+    split: number;
+    onSplitChange: (split: number) => void;
+  } | null;
   canvasRef: MutableRefObject<HTMLCanvasElement | null>;
   colorPicker?: {
     active: boolean;
@@ -135,6 +157,10 @@ export function BrowserPhotoEditingLoupe(props: {
   const drawn = openedVisible && opened !== null && (Boolean(opened.decoded) || opened.mode === "wasm");
   const crop = props.crop ?? null;
   const cutout = props.cutout ?? null;
+  // 見比べる（niho-photo#41）。切り抜きの道具の間・写真が無い間は使わない
+  const compare = opened && !crop ? (props.compare ?? null) : null;
+  const sideCompare = compare?.mode === "side" ? compare : null;
+  const splitCompare = compare?.mode === "split" ? compare : null;
   const colorPicker = props.colorPicker;
   useEffect(() => {
     if (colorPicker?.active) props.canvasRef.current?.focus({ preventScroll: true });
@@ -173,20 +199,61 @@ export function BrowserPhotoEditingLoupe(props: {
         },
       }
     : {};
+  // 並べる（niho-photo#41）: 補正前の面（左 / 上の半分）。補正後の面（下の section）と同じ地・同じ中央寄せ・同じ拡大
+  const beforePane =
+    sideCompare && opened ? (
+      <div
+        data-testid="photo-compare-before"
+        data-photo-zoom-pane=""
+        className={cn(
+          "absolute flex items-center justify-center overflow-hidden bg-[var(--photo-editing-surface,white)]",
+          sideCompare.direction === "row" ? "inset-y-0 left-0 w-1/2" : "inset-x-0 top-0 h-1/2",
+        )}
+      >
+        {drawn ? (
+          <canvas
+            ref={sideCompare.beforeCanvasRef}
+            aria-label={`${opened.fileName} の${PHOTO_EDITING_COMPARE_ORIGINAL_LABEL}`}
+            className={cn(LOUPE_FIT_CLASS_NAME, ZOOMABLE_CLASS_NAME)}
+          />
+        ) : null}
+        {drawn ? (
+          <span aria-hidden data-testid="photo-compare-before-badge" className={LOUPE_BADGE_CLASS_NAME}>
+            {PHOTO_EDITING_COMPARE_ORIGINAL_LABEL}
+          </span>
+        ) : null}
+      </div>
+    ) : null;
   const canvas =
     opened && !crop ? (
       <canvas
         ref={props.canvasRef}
-        aria-label={props.compareOriginal ? `${opened.fileName} の補正前` : `${opened.fileName} のプレビュー`}
+        aria-label={
+          props.compareOriginal
+            ? `${opened.fileName} の補正前`
+            : compare
+              ? `${opened.fileName} の${PHOTO_EDITING_COMPARE_AFTER_LABEL}`
+              : `${opened.fileName} のプレビュー`
+        }
         {...pickerEvents}
         className={cn(LOUPE_FIT_CLASS_NAME, ZOOMABLE_CLASS_NAME, colorPicker?.active && "cursor-crosshair outline-none ring-2 ring-niho-accent-ink", opened.previewPending && "absolute inset-0 h-full w-full invisible")}
         style={cutout?.transparent ? CUTOUT_CHECKERBOARD_STYLE : undefined}
       />
     ) : null;
-  return (
+  // 並べる間は、この面が補正後の半分（右 / 下）。拡大した画をもう片方へはみ出させない
+  const section = (
     <section
       aria-label="写真プレビュー"
-      className={cn("absolute inset-0 flex items-center justify-center bg-[var(--photo-editing-surface,white)]", props.unclipped ? null : "overflow-hidden")}
+      data-photo-zoom-pane={sideCompare ? "" : undefined}
+      className={cn(
+        "absolute inset-0 flex items-center justify-center bg-[var(--photo-editing-surface,white)]",
+        props.unclipped && !sideCompare ? null : "overflow-hidden",
+        sideCompare
+          ? sideCompare.direction === "row"
+            ? "left-1/2 border-l border-niho-border"
+            : "top-1/2 border-t border-niho-border"
+          : null,
+      )}
     >
       {opening && !openedVisible ? <Spinner size="lg" label="写真を読み込み中" /> : null}
       {drawn && opened && crop ? (
@@ -232,14 +299,40 @@ export function BrowserPhotoEditingLoupe(props: {
           highlights={props.clipOverlay.highlights}
         />
       ) : null}
+      {drawn && opened && !opened.previewPending && splitCompare ? (
+        // 分割（niho-photo#41）: 補正後の canvas とクリップ領域の印の上に補正前を重ね、札は左上 = 補正前・右上 = 補正後
+        <>
+          <PhotoEditingCompareSplit
+            targetRef={props.canvasRef}
+            beforeCanvasRef={splitCompare.beforeCanvasRef}
+            beforeLabel={`${opened.fileName} の${PHOTO_EDITING_COMPARE_ORIGINAL_LABEL}`}
+            position={splitCompare.split}
+            onPositionChange={splitCompare.onSplitChange}
+          />
+          <span aria-hidden data-testid="photo-compare-before-badge" className={LOUPE_BADGE_CLASS_NAME}>
+            {PHOTO_EDITING_COMPARE_ORIGINAL_LABEL}
+          </span>
+          <span aria-hidden data-testid="photo-compare-after-badge" className={LOUPE_BADGE_RIGHT_CLASS_NAME}>
+            {props.presetPreviewName !== null
+              ? photoEditingPresetPreviewLabel(props.presetPreviewName)
+              : PHOTO_EDITING_COMPARE_AFTER_LABEL}
+          </span>
+        </>
+      ) : null}
       {drawn && !opened?.previewPending && props.compareOriginal ? (
         <span aria-hidden data-testid="photo-compare-original-badge" className={LOUPE_BADGE_CLASS_NAME}>
           {PHOTO_EDITING_COMPARE_ORIGINAL_LABEL}
         </span>
       ) : null}
-      {drawn && !opened?.previewPending && !props.compareOriginal && props.presetPreviewName !== null ? (
+      {drawn && !opened?.previewPending && !props.compareOriginal && !splitCompare && props.presetPreviewName !== null ? (
         <span aria-hidden data-testid="photo-preset-preview-badge" className={LOUPE_BADGE_CLASS_NAME}>
           {photoEditingPresetPreviewLabel(props.presetPreviewName)}
+        </span>
+      ) : null}
+      {drawn && !opened?.previewPending && sideCompare && props.presetPreviewName === null ? (
+        // 並べる（niho-photo#41）: 補正後の半分の左上の札（プリセットを仮に見せている間は、その札が代わる）
+        <span aria-hidden data-testid="photo-compare-after-badge" className={LOUPE_BADGE_CLASS_NAME}>
+          {PHOTO_EDITING_COMPARE_AFTER_LABEL}
         </span>
       ) : null}
       {openedVisible && opened && !opened.decoded && (opened.mode !== "wasm" || opened.previewPending) && opened.viewUrl ? (
@@ -290,5 +383,12 @@ export function BrowserPhotoEditingLoupe(props: {
         </div>
       ) : null}
     </section>
+  );
+  // 補正前の面は section の前に置く（section は常に同じ位置のまま。比較を開け閉めしても補正後の canvas を置き直さない）
+  return (
+    <>
+      {beforePane}
+      {section}
+    </>
   );
 }
