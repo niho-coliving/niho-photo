@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { cn } from "niho-ui/cn";
 
 import { photoEditingValueEditLabel, photoEditingValueInputLabel } from "../photo-editing-copy";
@@ -111,6 +111,8 @@ export function PhotoEditingSlider(props: {
   changed?: boolean;
   /** 線の背景に足す class（色温度・色かぶり補正の薄い色の帯。`::-webkit-slider-runnable-track` と `::-moz-range-track` に書く） */
   trackClassName?: string;
+  /** 名前の前に置く飾り（カラーミキサーの色の丸。読み上げない要素を渡す。名前は `label` のまま） */
+  labelPrefix?: ReactNode;
 }) {
   const inputRef = useRef<HTMLInputElement | null>(null);
   const valueButtonRef = useRef<HTMLButtonElement | null>(null);
@@ -207,7 +209,8 @@ export function PhotoEditingSlider(props: {
   return (
     <div>
       <div className="flex h-5 items-center justify-between gap-2">
-        <label htmlFor={props.id} className="text-xs font-bold text-niho-text-sub">
+        <label htmlFor={props.id} className={cn("text-xs font-bold text-niho-text-sub", props.labelPrefix ? "flex items-center gap-1.5" : null)}>
+          {props.labelPrefix}
           {props.label}
         </label>
         {draft !== null ? (
