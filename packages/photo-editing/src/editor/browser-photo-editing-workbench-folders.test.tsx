@@ -692,6 +692,24 @@ describe("NIHO photo の窓いっぱいの見た目（appearance・treeHidden・
     // 一覧はそのまま読めている
     expect(tile("IMG_0001.JPG")).toBeDefined();
   });
+
+  it("PC の幅では下段を中央の列の下だけに置き、左の木は 2 段を貫いて窓の底まで伸ばす（Lightroom の並び。niho-photo#49）", async () => {
+    const fake = fakeLibrary({ tree: [TRAVEL], photos: { f1: [photo("p1", "IMG_0001.JPG")] } });
+    await render(fake.library, { appearance: "fill", treeFooter: <span>版 1.2.3</span> });
+    const footer = () => container.querySelector("footer");
+    // 狭い幅は全幅のまま
+    expect(footer()?.className).toContain("col-span-full");
+    expect(footer()?.className).toContain("lg:col-span-1");
+    expect(footer()?.className).toContain("lg:col-start-2");
+    expect(footer()?.className).toContain("lg:max-xl:flex-wrap");
+    expect(container.querySelector('section[aria-label="ブラウザ写真編集"] .grid')?.className).toContain(
+      "grid-rows-[minmax(0,1fr)_auto]",
+    );
+    expect(tree().className).toContain("lg:row-span-2");
+
+    await remount(fake.library, { appearance: "fill", treeHidden: true });
+    expect(footer()?.className).toContain("lg:col-start-1");
+  });
 });
 
 describe("右端の道具の帯（niho-photo#51）", () => {
@@ -718,6 +736,10 @@ describe("右端の道具の帯（niho-photo#51）", () => {
     if (!rail) throw new Error("tool rail not found");
     // 右パネルの直後の兄弟（grid の 4 列目）
     expect(rail.previousElementSibling?.matches('aside[aria-label="補正"]')).toBe(true);
+    // 右パネルと帯は 2 段（面と下段）を貫いて窓の底まで、下段は中央の列の下だけ（niho-photo#49）
+    expect(rail.className).toContain("lg:row-span-2");
+    expect(rail.previousElementSibling?.className).toContain("lg:row-span-2");
+    expect(container.querySelector("footer")?.className).toContain("lg:col-start-2");
     // 切り抜き・背景除去を使えない写真は、プリセットと補正だけ
     expect(Array.from(rail.querySelectorAll("button")).map((button) => button.getAttribute("aria-label"))).toEqual([
       "プリセット",

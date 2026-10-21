@@ -211,7 +211,7 @@ export function BrowserPhotoEditingTree(props: PlaceProps) {
   const visible = visibleBrowserPhotoPlaces(props.place, props.counts);
   const albums = props.albums ?? [];
   return (
-    <aside aria-label="写真の場所" className="hidden min-h-0 flex-col overflow-y-auto border-r border-niho-border bg-[var(--photo-editing-surface,white)] p-3 lg:flex">
+    <aside aria-label="写真の場所" className="hidden min-h-0 flex-col overflow-y-auto border-r border-niho-border bg-[var(--photo-editing-surface,white)] p-3 lg:row-span-2 lg:flex">
       <div className="mb-1 flex min-h-11 items-center justify-between gap-2 px-1">
         <h3 className="text-sub font-bold text-niho-text">写真</h3>
         {showsAddButton(props.place) ? props.addButton : null}
