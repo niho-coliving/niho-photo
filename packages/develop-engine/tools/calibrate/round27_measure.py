@@ -1,21 +1,35 @@
 #!/usr/bin/env python3
 """Compare JPEG white balance placements against the round27 Lightroom exports (#27).
 
-  python3 round27_measure.py --round <round27-dir> --repo <checkout> --engine niho-10 \
-      --out <private-work-dir> [--summary <public-summary.json>]
+  python3 round27_measure.py --round <round27-dir> --repo <checkout> --engine niho-13 \
+      [--tail-engine niho-12] --out <private-work-dir> [--summary <public-summary.json>]
 
 For every white balance × edit variant of `make_lr_round27.py`:
 
-- tail: NIHO renders the chart with the relative white balance where the
-  engine applies it today (the measured delta LUT on the encoded output).
-- head: the same measured delta LUT is applied to the encoded input first
-  (float, written as a 16-bit PNG), then NIHO renders the other edits with the
-  white balance zeroed. This is the placement Lightroom's processing order
-  suggests, using the same measurement, so the single-WB accuracy is unchanged.
+- tail: NIHO renders the chart with `--tail-engine` (default `--engine`) and
+  the relative white balance where that engine applies it (`niho-2` .. `niho-12`:
+  the measured delta LUT on the encoded output).
+- head (the prototype): the same measured delta LUT is applied to the encoded
+  input first (float, written as a 16-bit PNG), then NIHO renders the other
+  edits with `--engine` and the white balance zeroed. This is the placement
+  Lightroom's processing order suggests, using the same measurement, so the
+  single-WB accuracy is unchanged.
+- engine: NIHO renders the chart with `--engine` and the white balance in its
+  settings (its own placement; `niho-13` applies the measured delta to the
+  source itself). With `--engine` equal to `--tail-engine` it is `tail`.
+  `engineVsHead` is the CIEDE2000 between the engine and the prototype
+  patches (the engine should reproduce the prototype).
+
+`--head-source engine` builds the prototype's input from NIHO's own decode of
+the chart (a neutral `niho-12` render: bounded sRGB in, the same bytes out)
+instead of Pillow's, so `engineVsHead` isolates the white balance from the two
+JPEG decoders.
 
 Each 12 px patch is compared on its inner 6×6 pixels (CIEDE2000 on the mean
-sRGB of the patch). Patch interiors avoid JPEG and resampling edges. The
-summary contains only the synthetic chart's aggregate numbers.
+sRGB of the patch). Patch interiors avoid JPEG and resampling edges. Every
+column is also split into the chart's faces (a channel at 0 or 255, where the
+8-bit measurement clipped what lies beyond) and its interior. The summary
+contains only the synthetic chart's aggregate numbers.
 """
 from __future__ import annotations
 
@@ -142,6 +156,13 @@ def patch_means(rgb: np.ndarray, chart: dict) -> np.ndarray:
     return out
 
 
+def face_patches(count: int) -> np.ndarray:
+    """Patches with a channel at the chart's first or last level (0 / 255)."""
+    index = np.arange(count)
+    levels = np.stack([index // (17 * 17), (index // 17) % 17, index % 17], 1)
+    return ((levels == 0) | (levels == 16)).any(1)
+
+
 def render(binary: Path, settings: Path, source: Path, destination: Path) -> None:
     destination.parent.mkdir(parents=True, exist_ok=True)
     result = subprocess.run([str(binary), "render", "--settings", str(settings), "--out", str(destination),
@@ -162,20 +183,33 @@ def main() -> int:
     parser.add_argument("--round", type=Path, required=True)
     parser.add_argument("--repo", type=Path, required=True)
     parser.add_argument("--engine", required=True)
+    parser.add_argument("--tail-engine")
+    parser.add_argument("--head-source", choices=["pillow", "engine"], default="pillow")
     parser.add_argument("--out", type=Path, required=True)
     parser.add_argument("--summary", type=Path)
     args = parser.parse_args()
+    tail_engine = args.tail_engine or args.engine
     manifest = json.loads((args.round / "manifest.json").read_text(encoding="utf-8"))
     chart = manifest["chart"]
     engine_dir = args.repo / "packages/develop-engine"
     binary = engine_dir / "target/release/niho-develop-render"
     settings_dir = args.out / "settings" / args.engine
-    subprocess.run([str(engine_dir / "target/release/examples/round27_settings"), str(args.round / "manifest.json"),
-                    args.engine, str(settings_dir)], check=True)
+    tail_settings_dir = args.out / "settings" / tail_engine
+    for engine, directory in {args.engine: settings_dir, tail_engine: tail_settings_dir}.items():
+        subprocess.run([str(engine_dir / "target/release/examples/round27_settings"),
+                        str(args.round / "manifest.json"), engine, str(directory)], check=True)
     lut = load_lut(args.repo)
     base = args.round / "base-chart.jpg"
-    base_rgb = read_rgb(base)
+    if args.head_source == "engine":
+        neutral = args.out / "settings" / "neutral-niho-12.json"
+        neutral.write_text('{"v":1,"engine":"niho-12"}', encoding="utf-8")
+        decoded = args.out / "renders" / "base-niho-decode.png"
+        render(binary, neutral, base, decoded)
+        base_rgb = read_rgb(decoded)
+    else:
+        base_rgb = read_rgb(base)
     head_inputs: dict[tuple[float, float], Path] = {}
+    faces = face_patches(chart["count"])
     rows = []
     for entry in manifest["variants"]:
         variant = entry["variant"]
@@ -183,23 +217,36 @@ def main() -> int:
         key = (white["temperature"], white["tint"])
         if key not in head_inputs:
             encoded = apply_head(base_rgb, lut, *key)
-            path = args.out / "head-inputs" / f"t{key[0]:+g}_g{key[1]:+g}.png"
+            path = args.out / f"head-inputs-{args.head_source}" / f"t{key[0]:+g}_g{key[1]:+g}.png"
             path.parent.mkdir(parents=True, exist_ok=True)
             sixteen = np.round(encoded / 255.0 * 65535).astype(np.uint16)
             cv2.imwrite(str(path), sixteen[..., ::-1])
             head_inputs[key] = path
-        tail_png = args.out / "renders" / args.engine / "tail" / f"{variant}.png"
-        head_png = args.out / "renders" / args.engine / "head" / f"{variant}.png"
-        render(binary, settings_dir / f"{variant}.tail.json", base, tail_png)
+        tail_png = args.out / "renders" / tail_engine / "tail" / f"{variant}.png"
+        head_png = args.out / "renders" / args.engine / f"head-{args.head_source}" / f"{variant}.png"
+        engine_png = args.out / "renders" / args.engine / "engine" / f"{variant}.png"
+        render(binary, tail_settings_dir / f"{variant}.tail.json", base, tail_png)
         render(binary, settings_dir / f"{variant}.head.json", head_inputs[key], head_png)
+        if tail_engine == args.engine:
+            engine_png = tail_png
+        else:
+            render(binary, settings_dir / f"{variant}.tail.json", base, engine_png)
         reference = patch_means(read_rgb(args.round / "lr-export" / entry["file"]), chart)
         lab_ref = srgb_to_lab(reference)
+        lab_head = srgb_to_lab(patch_means(read_rgb(head_png), chart))
+        lab_engine = srgb_to_lab(patch_means(read_rgb(engine_png), chart))
         tail = ciede2000(lab_ref, srgb_to_lab(patch_means(read_rgb(tail_png), chart)))
-        head = ciede2000(lab_ref, srgb_to_lab(patch_means(read_rgb(head_png), chart)))
+        head = ciede2000(lab_ref, lab_head)
+        own = ciede2000(lab_ref, lab_engine)
+        versus = ciede2000(lab_head, lab_engine)
         rows.append({"variant": variant, "whiteBalance": entry["whiteBalance"], "edit": entry["edit"],
-                     "temperature": key[0], "tint": key[1], "tail": stats(tail), "head": stats(head)})
+                     "temperature": key[0], "tint": key[1], "tail": stats(tail), "head": stats(head),
+                     "engine": stats(own), "engineVsHead": stats(versus),
+                     "faces": {"tail": stats(tail[faces]), "engine": stats(own[faces])},
+                     "interior": {"tail": stats(tail[~faces]), "engine": stats(own[~faces])}})
         print(f"{variant:28s} tail {tail.mean():6.3f}/{np.percentile(tail, 99):6.3f}  "
-              f"head {head.mean():6.3f}/{np.percentile(head, 99):6.3f}", flush=True)
+              f"head {head.mean():6.3f}/{np.percentile(head, 99):6.3f}  "
+              f"engine {own.mean():6.3f}/{np.percentile(own, 99):6.3f}  vs head {versus.max():6.3f}", flush=True)
     by_edit = {}
     for row in rows:
         by_edit.setdefault(row["edit"], {})[row["whiteBalance"]] = row
@@ -212,27 +259,52 @@ def main() -> int:
             interaction.append({"edit": edit, "whiteBalance": wb,
                                 "tailMeanIncrease": round(row["tail"]["mean"] - alone["tail"]["mean"], 4),
                                 "headMeanIncrease": round(row["head"]["mean"] - alone["head"]["mean"], 4),
-                                "tailP99": row["tail"]["p99"], "headP99": row["head"]["p99"]})
+                                "engineMeanIncrease": round(row["engine"]["mean"] - alone["engine"]["mean"], 4),
+                                "tailP99": row["tail"]["p99"], "headP99": row["head"]["p99"],
+                                "engineP99": row["engine"]["p99"]})
     with_wb = [r for r in rows if r["whiteBalance"] != "w0"]
+
+    def group(selected: list[dict]) -> dict:
+        out = {"variants": len(selected)}
+        for column in ("tail", "head", "engine"):
+            out[f"{column}MeanOfMeans"] = round(float(np.mean([r[column]["mean"] for r in selected])), 4)
+            out[f"{column}P99Mean"] = round(float(np.mean([r[column]["p99"] for r in selected])), 4)
+            out[f"{column}P99Max"] = max(r[column]["p99"] for r in selected)
+        for column in ("head", "engine"):
+            out[f"{column}BetterMean"] = sum(r[column]["mean"] < r["tail"]["mean"] for r in selected)
+            out[f"{column}BetterP99"] = sum(r[column]["p99"] < r["tail"]["p99"] for r in selected)
+        out["engineWorseP99"] = [{"variant": r["variant"], "tailP99": r["tail"]["p99"], "engineP99": r["engine"]["p99"],
+                                  "facesP99": [r["faces"]["tail"]["p99"], r["faces"]["engine"]["p99"]],
+                                  "interiorP99": [r["interior"]["tail"]["p99"], r["interior"]["engine"]["p99"]]}
+                                 for r in selected if r["engine"]["p99"] > r["tail"]["p99"]]
+        out["engineBetterInteriorP99"] = sum(r["interior"]["engine"]["p99"] < r["interior"]["tail"]["p99"]
+                                             for r in selected)
+        return out
+
     summary = {
         "kind": "synthetic-chart-lightroom-round27",
         "engine": args.engine,
+        "tailEngine": tail_engine,
+        "headSource": args.head_source,
         "protocol": {"patch": chart["patch"], "inner": chart["patch"] - 2 * (chart["patch"] // 4),
-                     "metric": "CIEDE2000 of patch-mean sRGB", "patches": chart["count"]},
+                     "metric": "CIEDE2000 of patch-mean sRGB", "patches": chart["count"],
+                     "facePatches": int(faces.sum())},
         "rows": rows,
         "interaction": interaction,
-        "withWhiteBalance": {
-            "variants": len(with_wb),
-            "tailMeanOfMeans": round(float(np.mean([r["tail"]["mean"] for r in with_wb])), 4),
-            "headMeanOfMeans": round(float(np.mean([r["head"]["mean"] for r in with_wb])), 4),
-            "tailP99Max": max(r["tail"]["p99"] for r in with_wb),
-            "headP99Max": max(r["head"]["p99"] for r in with_wb),
-            "headBetterMean": sum(r["head"]["mean"] < r["tail"]["mean"] for r in with_wb),
-            "headBetterP99": sum(r["head"]["p99"] < r["tail"]["p99"] for r in with_wb),
+        "withWhiteBalance": group(with_wb),
+        "groups": {
+            "whiteBalanceAlone": group([r for r in with_wb if r["edit"] == "e0"]),
+            "whiteBalanceWithEdit": group([r for r in with_wb
+                                           if r["edit"] != "e0" and not r["edit"].startswith("preset_")]),
+            "presetWithWhiteBalance": group([r for r in with_wb if r["edit"].startswith("preset_")]),
+        },
+        "engineVsHead": {
+            "meanOfMeans": round(float(np.mean([r["engineVsHead"]["mean"] for r in rows])), 4),
+            "max": max(r["engineVsHead"]["max"] for r in rows),
         },
     }
     text = json.dumps(summary, ensure_ascii=False, indent=2) + "\n"
-    (args.out / f"round27-{args.engine}.json").write_text(text, encoding="utf-8")
+    (args.out / f"round27-{args.engine}-head-{args.head_source}.json").write_text(text, encoding="utf-8")
     if args.summary:
         args.summary.write_text(text, encoding="utf-8")
     print(json.dumps(summary["withWhiteBalance"], ensure_ascii=False))

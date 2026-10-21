@@ -31,9 +31,10 @@ pub const ANALYSIS_LONG_EDGE: usize = 750;
 pub const LEGACY_SHARE: f64 = 0.5;
 
 /// Engines that use the frozen `niho-6` formula on raster sources. `niho-8`
-/// changes cube entry precision, `niho-10` adds hue-stable saturation and
-/// `niho-12` is `niho-10` with float cubes; all deliberately reuse this
-/// response.
+/// changes cube entry precision, `niho-10` adds hue-stable saturation,
+/// `niho-12` is `niho-10` with float cubes and `niho-13` is `niho-12` with
+/// the relative white balance applied to the source (the analysis reads the
+/// balanced source); all deliberately reuse this response.
 pub fn uses_raster_formula(settings: &DevelopSettings) -> bool {
     matches!(
         settings.engine.as_str(),
@@ -41,6 +42,7 @@ pub fn uses_raster_formula(settings: &DevelopSettings) -> bool {
             | crate::settings::ENGINE_NIHO_8
             | crate::settings::ENGINE_NIHO_10
             | crate::settings::ENGINE_NIHO_12
+            | crate::settings::ENGINE_NIHO_13
     )
 }
 
@@ -232,6 +234,30 @@ pub fn apply(
     analysis: &Analysis,
     settings: &DevelopSettings,
 ) -> Result<LinearImage, PrepareError> {
+    apply_gains(
+        image,
+        space,
+        &response_gains(image.width, image.height, analysis, settings)?,
+    )
+}
+
+/// The per-pixel gains [`apply`] multiplies a `width x height` image by:
+/// the luminance gain `G` and the chroma gain `C` of the module docs. They
+/// depend on the analysis, the amounts and the size only, not on the pixels
+/// (a Session keeps them while `niho-13`'s white balance is dragged).
+pub struct ResponseGains {
+    width: usize,
+    height: usize,
+    gains: Vec<[f32; 2]>,
+}
+
+/// [`ResponseGains`] of `analysis` and the amounts of `settings`.
+pub fn response_gains(
+    width: usize,
+    height: usize,
+    analysis: &Analysis,
+    settings: &DevelopSettings,
+) -> Result<ResponseGains, PrepareError> {
     let maps = &analysis.maps;
     let (highlight, shadow) = niho6_response::gains(
         maps,
@@ -241,18 +267,40 @@ pub fn apply(
     .map_err(PrepareError::Response)?;
     let models = niho6_response::models().map_err(PrepareError::Response)?;
     let (alpha_h, alpha_s) = (models.highlight_chroma_alpha, models.shadow_chroma_alpha);
-    let (w, h) = (image.width, image.height);
     let share = (1.0 - LEGACY_SHARE) as f32;
     let highlight: Vec<f32> = highlight.iter().map(|g| g * share).collect();
     let shadow: Vec<f32> = shadow.iter().map(|g| g * share).collect();
-    let highlight = resize_plane_bilinear(&highlight, maps.width, maps.height, w, h);
-    let shadow = resize_plane_bilinear(&shadow, maps.width, maps.height, w, h);
+    let highlight = resize_plane_bilinear(&highlight, maps.width, maps.height, width, height);
+    let shadow = resize_plane_bilinear(&shadow, maps.width, maps.height, width, height);
+    let gains = highlight
+        .into_iter()
+        .zip(shadow)
+        .map(|(gh, gs)| {
+            [
+                libm::exp2f(gh + gs),
+                libm::exp2f(alpha_h * gh + alpha_s * gs),
+            ]
+        })
+        .collect();
+    Ok(ResponseGains {
+        width,
+        height,
+        gains,
+    })
+}
+
+/// `image` (in `space`, of the gains' size) with the response applied.
+pub fn apply_gains(
+    image: &LinearImage,
+    space: SourceSpace,
+    gains: &ResponseGains,
+) -> Result<LinearImage, PrepareError> {
+    let (w, h) = (image.width, image.height);
+    assert_eq!((w, h), (gains.width, gains.height), "gains of another size");
     let luma = luminance_weights(space);
     let mut data = image.data.clone();
-    for ((px, gh), gs) in data.chunks_exact_mut(3).zip(highlight).zip(shadow) {
+    for (px, [g, c]) in data.chunks_exact_mut(3).zip(gains.gains.iter().copied()) {
         let y = px[0] * luma[0] + px[1] * luma[1] + px[2] * luma[2];
-        let g = libm::exp2f(gh + gs);
-        let c = libm::exp2f(alpha_h * gh + alpha_s * gs);
         for v in px.iter_mut() {
             *v = *v * g + (*v - y) * (c - g);
         }
