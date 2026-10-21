@@ -49,12 +49,29 @@ type PhotoTap = { x: number; y: number; time: number };
 type PhotoSurfaceMeasure = PhotoZoomBounds & { centerX: number; centerY: number };
 
 /**
- * 面の中の canvas（無ければ img）から、今の寸法を読む。`offsetWidth` / `offsetHeight` は transform の影響を受けない。
- * 画がまだ無い・大きさが 0 なら null（拡大しない）。
+ * 測る面。補正前と補正後を並べている間（niho-photo#41）は、面の中に同じ大きさの半分の面（`data-photo-zoom-pane`）が 2 つあり、
+ * どちらの画も同じ拡大を読む（中央を軸に同じだけ動く）ので、指の下の半分の面（指が無い・外れていれば先頭の面）を測る。
  */
-function measurePhotoSurface(surface: HTMLElement): PhotoSurfaceMeasure | null {
-  const canvas = surface.querySelector("canvas");
-  const image = canvas ? null : surface.querySelector("img");
+function photoZoomArea(surface: HTMLElement, point?: PhotoZoomPoint): HTMLElement {
+  const panes = Array.from(surface.querySelectorAll<HTMLElement>("[data-photo-zoom-pane]"));
+  if (point) {
+    const hit = panes.find((pane) => {
+      const rect = pane.getBoundingClientRect();
+      return point.x >= rect.left && point.x <= rect.right && point.y >= rect.top && point.y <= rect.bottom;
+    });
+    if (hit) return hit;
+  }
+  return panes[0] ?? surface;
+}
+
+/**
+ * 面の中の canvas（無ければ img）から、今の寸法を読む。`offsetWidth` / `offsetHeight` は transform の影響を受けない。
+ * 画がまだ無い・大きさが 0 なら null（拡大しない）。`point` は指の位置（並べている間に、指の下の半分の面を測る）。
+ */
+export function measurePhotoSurface(surface: HTMLElement, point?: PhotoZoomPoint): PhotoSurfaceMeasure | null {
+  const area = photoZoomArea(surface, point);
+  const canvas = area.querySelector("canvas");
+  const image = canvas ? null : area.querySelector("img");
   const box = canvas ?? image;
   if (!box) return null;
   const intrinsicWidth = canvas ? canvas.width : image ? image.naturalWidth : 0;
@@ -66,10 +83,10 @@ function measurePhotoSurface(surface: HTMLElement): PhotoSurfaceMeasure | null {
     intrinsicHeight,
   });
   if (!(content.width > 0) || !(content.height > 0)) return null;
-  const rect = surface.getBoundingClientRect();
+  const rect = area.getBoundingClientRect();
   return {
-    areaWidth: surface.clientWidth,
-    areaHeight: surface.clientHeight,
+    areaWidth: area.clientWidth,
+    areaHeight: area.clientHeight,
     contentWidth: content.width,
     contentHeight: content.height,
     maxScale: resolveMaxZoomScale({ contentWidth: content.width, intrinsicWidth }),
@@ -203,9 +220,9 @@ export function usePhotoEditingZoom(options: {
     return () => observer.disconnect();
   }, [applyZoom]);
 
-  const measure = (): PhotoSurfaceMeasure | null => {
+  const measure = (point: PhotoZoomPoint): PhotoSurfaceMeasure | null => {
     const surface = surfaceRef.current;
-    return surface ? measurePhotoSurface(surface) : null;
+    return surface ? measurePhotoSurface(surface, point) : null;
   };
 
   const onPointerDown = (event: PointerEvent<HTMLDivElement>) => {
@@ -265,7 +282,7 @@ export function usePhotoEditingZoom(options: {
       const next = pinchSample(pointers);
       if (!next) return;
       pinchRef.current = next;
-      const bounds = measure();
+      const bounds = measure(next);
       if (!bounds || !(pinch.distance > 0) || !(next.distance > 0)) return;
       const current = zoomRef.current;
       const scale = Math.min(Math.max(current.scale * (next.distance / pinch.distance), 1), bounds.maxScale);
@@ -300,7 +317,7 @@ export function usePhotoEditingZoom(options: {
     press.lastY = event.clientY;
     const current = zoomRef.current;
     if (!isPhotoZoomed(current)) return;
-    const bounds = measure();
+    const bounds = measure({ x: event.clientX, y: event.clientY });
     if (!bounds) return;
     applyZoom(clampZoom({ scale: current.scale, x: current.x + dx, y: current.y + dy }, bounds));
   };
@@ -342,7 +359,7 @@ export function usePhotoEditingZoom(options: {
       return;
     }
     lastTapRef.current = null;
-    const bounds = measure();
+    const bounds = measure({ x: event.clientX, y: event.clientY });
     if (!bounds) return;
     const focal: PhotoZoomPoint = { x: event.clientX - bounds.centerX, y: event.clientY - bounds.centerY };
     applyZoom(clampZoom(toggleZoomAt(zoomRef.current, focal, bounds.maxScale), bounds));
