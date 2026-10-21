@@ -16,7 +16,7 @@ export type DevelopEditSettingsConversion = {
 /** crate に同梱したプリセット（`builtinPresets`）。 */
 export type DevelopBuiltinPreset = { id: string; name: string; xmp: string };
 
-/** 今の補正を XMP に書き出すときの群（crate の `XmpGroup`。既定は `exposure`・`whiteBalance`・`transform` を除く 11 群）。 */
+/** 今の補正を XMP に書き出すときの群（crate の `XmpGroup`。既定は `exposure`・`whiteBalance`・`transform` を除く 12 群）。 */
 export type DevelopXmpGroup =
   | "exposure"
   | "whiteBalance"
@@ -31,8 +31,12 @@ export type DevelopXmpGroup =
   | "grain"
   | "noiseReduction"
   | "sharpening"
-  | "transform";
-/** crate の既定の群（露光量・絶対のホワイトバランス・写真固有の変形を含めない）。 */
+  | "transform"
+  | "lens";
+/**
+ * crate の既定の群（露光量・絶対のホワイトバランス・写真固有の変形を含めない）。レンズ補正（手動の歪み・周辺光量・色収差の除去・
+ * フリンジ軽減。niho-photo#45）はレンズと撮影の特性なので入れる。
+ */
 export const DEVELOP_XMP_DEFAULT_GROUPS: readonly DevelopXmpGroup[] = [
   "tone",
   "presence",
@@ -45,6 +49,7 @@ export const DEVELOP_XMP_DEFAULT_GROUPS: readonly DevelopXmpGroup[] = [
   "grain",
   "noiseReduction",
   "sharpening",
+  "lens",
 ];
 
 /** 今の補正を書き出した Lightroom のプリセット（`notWritten` は書けなかった項目。相対の色温度・色かぶりなど）。 */
@@ -60,7 +65,7 @@ export type DevelopPresetResult = {
   settings: DevelopSettings;
   converted: boolean;
   /**
-   * 段 2 が再現しない XMP の項目（レンズ補正・色収差・知らない項目・ブラシや AI のマスクなど）。シャープ・ノイズ軽減は crate 0.19.0（Issue #32）から
+   * 段 2 が再現しない XMP の項目（作業コピーで切れないプロファイル補正・知らない項目・ブラシや AI のマスクなど）。シャープ・ノイズ軽減は crate 0.19.0（Issue #32）から
    * 近い式で描く（crate の `approximate`）ので、読めない値か既定でない細かな項目のときだけ入る
    */
   unsupported: string[];

@@ -170,7 +170,7 @@
         "path": "packages/photo-editing/src/browser-photo-export-render.test.ts",
         "sha256": "37f9b00d27256499f945ff515f75837c197b608a7c0c2de01be7d8bcbe96241c"
       },
-      "outputSha256": "4940e3ddb6842367efda25274d5abe54367658d055252f4ebf2003aed11a25ad",
+      "outputSha256": "7cd895187d482e9d8a6d1d37732f04b6e37abe51150eb0ce0602137acf42d0b3",
       "modifications": [
         "Issue #30 Oklch色ミキサーとengine 10/11対応を反映",
         "Issue 13 provisional export and rebind regression",
@@ -181,7 +181,8 @@
         "niho-photo#46 で engine の mock に supportsPerspective を足した。",
         "niho-photo#46 後半で engine の mock に supportsUpright と estimateUpright を足した。",
         "niho-photo#44 前半で DevelopEngine の supportsHeal を偽の engine に足した。",
-        "PR #96統合でcrate 0.24・v8対応"
+        "PR #96統合でcrate 0.24・v8対応",
+        "レンズ補正（手動の歪み・周辺光量・色収差・フリンジ）の追加に伴う変更。"
       ]
     },
     {
@@ -281,7 +282,7 @@
         "path": "packages/photo-editing/src/develop-engine/develop-engine-client.test.ts",
         "sha256": "ab57eb9cc53aee5fc1ca937830d4eb7c979bf9da92b32c220bdeab772e8db065"
       },
-      "outputSha256": "5c6e1e67408c03d263a107f055c762d450a675865f5bc90cb2cde185fdafbe95",
+      "outputSha256": "313d19982d5845eb564e79c525c3565109cc3d246bc278f8d31073cb863fcb43",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
@@ -297,7 +298,8 @@
         "niho-photo#46 の supportsPerspective の test を足した。",
         "niho-photo#46 後半の supportsUpright と estimateUpright の test を足した。",
         "niho-photo#44 前半で supportsHeal の test を足した。",
-        "PR #96統合でcrate 0.24・v8対応"
+        "PR #96統合でcrate 0.24・v8対応",
+        "レンズ補正（手動の歪み・周辺光量・色収差・フリンジ）の追加に伴う変更。"
       ]
     },
     {
@@ -308,7 +310,7 @@
         "path": "packages/photo-editing/src/develop-engine/develop-engine-client.ts",
         "sha256": "d734116dcc1e882d2e3debedb7d79fb892915571f6b59965886464cc933c022f"
       },
-      "outputSha256": "4575d8d3a620b71bcb9a1666f9c9d1cc6da6b76fb7e6fba4f796a322c804441c",
+      "outputSha256": "e8184ff1121f2ed4a57bb67c3af7abd92d212a2c52af911b01f4c3d1109d7ad2",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
@@ -324,7 +326,8 @@
         "niho-photo#46 で wasm が遠近（v7）を描けるかを返す supportsPerspective を足した。",
         "niho-photo#46 後半で Upright の推定（estimateUpright）と使えるかの確かめ（supportsUpright）を足した。",
         "niho-photo#44 前半で修復の印を描ける wasm か（supportsHeal）を足した。",
-        "PR #96統合でcrate 0.24・v8対応"
+        "PR #96統合でcrate 0.24・v8対応",
+        "レンズ補正（手動の歪み・周辺光量・色収差・フリンジ）の追加に伴う変更。"
       ]
     },
     {
@@ -335,7 +338,7 @@
         "path": "packages/photo-editing/src/develop-engine/develop-engine-manifest.ts",
         "sha256": "5df5cda8a061155a614d1e60a1c263e0764c83978708cfcc16959905387d5e4f"
       },
-      "outputSha256": "b40410b962ece16213e3bb9e93da7085a57b417505b2cb2bc4051065ec0b4173",
+      "outputSha256": "187ca24571d55d6b06a4aa4446280485362f758ce038d7ccc5f0fafe55f0440f",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
@@ -357,7 +360,8 @@
         "niho-photo#46 で画面が読む crate 版を 0.20.0 に上げた。",
         "niho-photo#46 後半で画面が読む crate 版を 0.21.0 に上げた。",
         "niho-photo#44 前半で画面が読む crate 版を 0.22.0 に上げた。",
-        "PR #96統合でcrate 0.24・v8対応"
+        "PR #96統合でcrate 0.24・v8対応",
+        "レンズ補正（手動の歪み・周辺光量・色収差・フリンジ）の追加に伴う変更。"
       ]
     },
     {
@@ -368,13 +372,14 @@
         "path": "packages/photo-editing/src/develop-engine/develop-engine-results.ts",
         "sha256": "a7c7d3189bbe4fe8e3086b124e72be62bc03b83dfe70709686df356a16244dc3"
       },
-      "outputSha256": "2cfc805fb026931ddc8a20015de1a9ea95f3dfa6070406930db60323508c930d",
+      "outputSha256": "c70ed639e314802ad6b82c383d7f51570bf2ff88cc4e8d2ad0d264e508c502cf",
       "modifications": [
         "Issue #32 XMPの群にsharpeningを足しunsupportedの説明を更新する",
         "Issue #32 detail v6 を、先行する masks v5 と #72 の histogram/Jキー契約に同期する。",
         "部分補正（マスク）#69: プリセットの結果の masks を M1 の読み方で厳密に読み、読めなければ知らせる",
         "PR #88 main rebase and perspective integration with develop engine 0.22.0",
-        "niho-photo#46 で XMP の群に transform を足した。"
+        "niho-photo#46 で XMP の群に transform を足した。",
+        "レンズ補正（手動の歪み・周辺光量・色収差・フリンジ）の追加に伴う変更。"
       ]
     },
     {
@@ -385,7 +390,7 @@
         "path": "packages/photo-editing/src/develop-engine/develop-engine-worker-core.test.ts",
         "sha256": "eb20b196dd11f240e0944d79d51244a1951536f264a1aa7c1fcb06180f86d26b"
       },
-      "outputSha256": "a3f0b5672325f6863dd6b7efc32391f20743fa4c41dff57653a7801da580b5e2",
+      "outputSha256": "55702a4f89d8fada45d940680d9c1c7093d0b4bc3a1b6b8901a6684a715a95d1",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
@@ -399,7 +404,8 @@
         "niho-photo#46 の遠近の能力の確かめ方の test を足した。",
         "niho-photo#46 後半の Upright の口と ready の upright の test を足した。",
         "niho-photo#44 前半で修復の能力プローブ（v8 の小さな設定と ready の heal）の test を足した。",
-        "PR #96統合でcrate 0.24・v8対応"
+        "PR #96統合でcrate 0.24・v8対応",
+        "レンズ補正（手動の歪み・周辺光量・色収差・フリンジ）の追加に伴う変更。"
       ]
     },
     {
@@ -410,7 +416,7 @@
         "path": "packages/photo-editing/src/develop-engine/develop-engine-worker-core.ts",
         "sha256": "460e15bb7865292233cc8baf9864ede3d31d47158aff084415364fa1495cb776"
       },
-      "outputSha256": "0aedd2d7ed42f58f6257eb8f5217ff0fc240ecb95adbc2b0a7b82dcb45255e56",
+      "outputSha256": "838883c80266a077e7cb9277042f5cce507cd0e4586ef8f08924e144c6092a6d",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
@@ -424,7 +430,8 @@
         "niho-photo#46 で小さな v7 の設定で遠近の能力を確かめるようにした。",
         "niho-photo#46 後半で Developer.estimateUpright を呼ぶ要求と ready の upright を足した。",
         "niho-photo#44 前半で v8 の修復の印を読める wasm を確かめる能力プローブと ready の heal を足した。",
-        "PR #96統合でcrate 0.24・v8対応"
+        "PR #96統合でcrate 0.24・v8対応",
+        "レンズ補正（手動の歪み・周辺光量・色収差・フリンジ）の追加に伴う変更。"
       ]
     },
     {
@@ -497,7 +504,7 @@
         "path": "packages/photo-editing/src/develop-engine/develop-open-settings.test.ts",
         "sha256": "21fe5f90f50903caae881358a3c73b81f782dc6fcb9a348c1413eff5c128f1d8"
       },
-      "outputSha256": "a49958ddf71d657ba585a668062e113ddf8528a962469b891a802bcfd9cc57f0",
+      "outputSha256": "d39d6eafead6684ee63817728c948529fd55db81b36955e293841d46f11e2e91",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
@@ -513,7 +520,8 @@
         "PR #74: #80 統合後に float-cube の変更を重ね、最終ハッシュを反映。",
         "PR #90: rasterの相対WBをniho-13へ移し、新規編集の既定とsettings/UI契約を同期。",
         "PR #88 rebase compatibility: perspective settings v7, future versions start at v8",
-        "修復設定 v8 を読めるようになったため、将来版の境界テストを v9 に更新"
+        "修復設定 v8 を読めるようになったため、将来版の境界テストを v9 に更新",
+        "レンズ補正（手動の歪み・周辺光量・色収差・フリンジ）の追加に伴う変更。"
       ]
     },
     {
@@ -634,7 +642,7 @@
         "path": "packages/photo-editing/src/develop-engine/develop-settings.test.ts",
         "sha256": "0ead17a941128da9f35266e10aec10dd9c1da7ea0afcd68b9e7cf5fcac3aab90"
       },
-      "outputSha256": "14a67167ee9a41366744fd7e3309d955cf7a290927babc06e81d5e8f7448a354",
+      "outputSha256": "610510de6e5ae302279860bf19fbb0e04270e127b872ecd131abbf1da91f1b4a",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
@@ -652,7 +660,8 @@
         "PR #88 main rebase and perspective integration with develop engine 0.22.0",
         "niho-photo#46 で設定版 v7 を既存の v5/v6 と併せて読めるようにし、必要版を満たさない遠近設定を拒む既存の契約検査を更新。",
         "niho-photo#44 前半で修復の印の版・読み取り・コピーと貼り付け・プリセット・自動・初期化・neutral・比較の test を足した。合成の値だけを使用。",
-        "PR #96統合でcrate 0.24・v8対応"
+        "PR #96統合でcrate 0.24・v8対応",
+        "レンズ補正（手動の歪み・周辺光量・色収差・フリンジ）の追加に伴う変更。"
       ]
     },
     {
@@ -663,7 +672,7 @@
         "path": "packages/photo-editing/src/develop-engine/develop-settings.ts",
         "sha256": "b32fdf32b5eafb093a9691d609ae4719a576e662507776e6c409ab0e4c98722a"
       },
-      "outputSha256": "9959a91117dd126636cf576c62120279abbfe6d2a0e471c26c1c5d5e16454019",
+      "outputSha256": "ff74a12fdbd17fb31022c284dcb76d9caacb298fcc7a9e080cf58446dad912f7",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
@@ -684,7 +693,8 @@
         "PR #88 main rebase and perspective integration with develop engine 0.22.0",
         "niho-photo#46 で遠近のある設定を v7 にし、プリセットの結果の変形を入れ、自動は幾何を保つようにした。",
         "niho-photo#44 前半で修復の印（heal）の形の版 8・読み取り・直せる判定・コピーと貼り付け・プリセット・初期化・neutral の規則を足した。",
-        "PR #96統合でcrate 0.24・v8対応"
+        "PR #96統合でcrate 0.24・v8対応",
+        "レンズ補正（手動の歪み・周辺光量・色収差・フリンジ）の追加に伴う変更。"
       ]
     },
     {
@@ -1315,9 +1325,10 @@
         "niho-photo#46 後半で切り抜きの道具に Upright のボタンの状態を渡した。",
         "PR #97の修復UIを#96の部分補正マスクUIと統合。",
         "PR #98を#91マージ後の最新mainへ積み直し、選別保存中の二重操作ガードを保持。",
-        "PR #98で選別フラグの保存経路とUIを更新する。"
+        "PR #98で選別フラグの保存経路とUIを更新する。",
+        "レンズ補正（手動の歪み・周辺光量・色収差・フリンジ）の追加に伴う変更。"
       ],
-      "outputSha256": "a0dde7ddfd50c1124e5aee949cc491809db84bfd2b9e77aedd18c6dd0098a0f5"
+      "outputSha256": "8c59c14d47b077ffae3b6c6ab4de648eae4c2dd7f2de9839546591242bdfab00"
     },
     {
       "path": "packages/photo-editing/src/editor/photo-editing-adjustment-controls-effects.test.tsx",
@@ -1891,14 +1902,15 @@
         "path": "packages/photo-editing/src/editor/use-browser-photo-effects.ts",
         "sha256": "b105c8d9e2469b4cb471ad0efcc89fecda00900c54bfa5a7e2ba57cb7dc1fb70"
       },
-      "outputSha256": "3632b06e99aa88ecd5d6d8a155a303a88a589c590910f8254206e0e596f0609b",
+      "outputSha256": "d44707d69567b4f1f2af23408b3517a6b11d6f6d47f251cd5f2ab87cc6142189",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
         "Issue #30 Oklch色ミキサーとengine 10/11対応を反映",
         "Issue #32 ディテールを描けるwasmかを確かめるhookを足す",
         "Issue #32 detail uses v6 because Issue #31 masks already owns v5; synchronize the Rust and TypeScript contract, probe, tests, and documentation.",
-        "Issue #32 detail v6 を、先行する masks v5 と #72 の histogram/Jキー契約に同期する。"
+        "Issue #32 detail v6 を、先行する masks v5 と #72 の histogram/Jキー契約に同期する。",
+        "レンズ補正（手動の歪み・周辺光量・色収差・フリンジ）の追加に伴う変更。"
       ]
     },
     {
@@ -2392,9 +2404,10 @@
         "niho-photo#46 後半で Upright のボタンと知らせの文言を足した。",
         "niho-photo#44の修復印をXMPに保存できない場合の利用者向け通知を追加。",
         "PR #98を#91マージ後の最新mainへ積み直し、選別保存中の二重操作ガードを保持。",
-        "PR #98で選別フラグの保存経路とUIを更新する。"
+        "PR #98で選別フラグの保存経路とUIを更新する。",
+        "レンズ補正（手動の歪み・周辺光量・色収差・フリンジ）の追加に伴う変更。"
       ],
-      "outputSha256": "1a98c04327b79b782f24b76b8ba7c3e1cf4c7062bdd68628ce7d51ed0d815dec"
+      "outputSha256": "959d89df9600ff4a317ecef11141eb07ae2f3fac3ccf286bbbd704b89d2e092e"
     },
     {
       "path": "packages/photo-editing/src/photo-editing-crop.test.ts",
@@ -2914,7 +2927,7 @@
         "path": "packages/photo-editing/src/photo-preset-xmp-support.test.ts",
         "sha256": "9dc9314d099eee0f638329346395101c9bd22a540fb0163935a530ececa99a6d"
       },
-      "outputSha256": "569a453c251fadb2b83a9b820348401afb00fa63fa59b320f2557d9a28342f5d",
+      "outputSha256": "8ed7a873bc8368d38cac2856ea2c256c56bde02179f04ce43c49cda83cb8805e",
       "modifications": [
         "Issue #30 Oklch色ミキサーとengine 10/11対応を反映",
         "Issue #32 シャープ・ノイズ軽減はapproximateになり細かな項目だけを知らせることを検証する",
@@ -2926,7 +2939,8 @@
         "niho-photo#39 使えない項目の表からカラーグレーディングの輝度を外した test に直した。",
         "PR #80 のカラーグレーディングを最新HSL UIと統合。",
         "PR #88 main rebase and perspective integration with develop engine 0.22.0",
-        "niho-photo#46 で変形が描けることと Upright の知らせの test にした。"
+        "niho-photo#46 で変形が描けることと Upright の知らせの test にした。",
+        "レンズ補正（手動の歪み・周辺光量・色収差・フリンジ）の追加に伴う変更。"
       ]
     },
     {
@@ -2937,7 +2951,7 @@
         "path": "packages/photo-editing/src/photo-preset-xmp-support.ts",
         "sha256": "af143f7fb0e786764ed6959aa7e32a1567e88aff4f71f7f53e7d11bd066fda57"
       },
-      "outputSha256": "f1763d5a0fc6d5d1e84695722e50f02fbc4f04dbd5ae5cf5ad3acb8ff4ae85db",
+      "outputSha256": "62fe8ab8cbb4c72517ff1047efcb508dd4c11651f6a9c8be0dfc58955c01869a",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
@@ -2948,7 +2962,8 @@
         "niho-photo#39 中間調・全体の輝度を描けるようになったので、使えない項目の表から外した。",
         "PR #80 のカラーグレーディングを最新HSL UIと統合。",
         "PR #88 main rebase and perspective integration with develop engine 0.22.0",
-        "niho-photo#46 で使えない項目の変形を Upright の自動計算だけにした。"
+        "niho-photo#46 で使えない項目の変形を Upright の自動計算だけにした。",
+        "レンズ補正（手動の歪み・周辺光量・色収差・フリンジ）の追加に伴う変更。"
       ]
     },
     {
@@ -4968,7 +4983,7 @@
         "path": "packages/develop-engine/Cargo.lock",
         "sha256": "e7caae6825c3c4c50d7d593c35d7163de7d311357b81558d1ad1a009cbfafadc"
       },
-      "outputSha256": "261893295b496f20acbc3dadbf8e2df5343b5a0bb1e9e81b4a85bcaa60803d5b",
+      "outputSha256": "502993749cb9a930b3fb3f974cdf066726a26512c07fd51792bfbdfd2d173ad5",
       "modifications": [
         "新しい色相保持エンジンと新旧バイナリの能力境界・数値回帰を整合。",
         "現像workspaceだけを0.17.0へ更新し外部依存の固定版を維持。",
@@ -4988,7 +5003,8 @@
         "niho-photo#46 の crate 版 0.20.0 に合わせて workspace の 8 crate の版を更新した。",
         "niho-photo#46 後半の crate 版 0.21.0 に合わせて workspace の 8 crate の版を更新した。",
         "niho-photo#44 前半の crate 版 0.22.0 に合わせて workspace の 8 crate の版を更新した。",
-        "PR #96統合でcrate 0.24・v8対応"
+        "PR #96統合でcrate 0.24・v8対応",
+        "レンズ補正（手動の歪み・周辺光量・色収差・フリンジ）の追加に伴う変更。"
       ]
     },
     {
@@ -4999,7 +5015,7 @@
         "path": "packages/develop-engine/Cargo.toml",
         "sha256": "274ef616c08b9ade52276b660ea12ce836bc08f97e67dedcf163f76114dd4ab0"
       },
-      "outputSha256": "b2d41a3cd4ef81441fcea6af9523a2a5099fb92e4f96661e0b3e75cf005810eb",
+      "outputSha256": "71f8586e4333a7770ff7592e5fcadb547644b43e26caeab1b03fe522afc718d7",
       "modifications": [
         "新しい色相保持エンジンと新旧バイナリの能力境界・数値回帰を整合。",
         "Issue #30 Oklch色ミキサーとengine 10/11対応を反映",
@@ -5017,7 +5033,8 @@
         "niho-photo#46 で遠近の射影変換を足すため crate の版を 0.20.0 に上げた。",
         "niho-photo#46 後半で Upright の推定を足すため crate の版を 0.21.0 に上げた。",
         "niho-photo#44 前半で修復（なぞって周囲から埋める）を足すため crate の版を 0.22.0 に上げた。",
-        "PR #96統合でcrate 0.24・v8対応"
+        "PR #96統合でcrate 0.24・v8対応",
+        "レンズ補正（手動の歪み・周辺光量・色収差・フリンジ）の追加に伴う変更。"
       ]
     },
     {
@@ -5804,7 +5821,7 @@
         "path": "packages/develop-engine/crates/niho-develop-wasm/src/lib.rs",
         "sha256": "bb2c416ce23b4e3ca3208f32736f22254ed82276b24fd7f49f1a022e4eb85fbd"
       },
-      "outputSha256": "d08d83a7676c1605de5e953cc8acee06024afbf5a765904cd9102dbde91a2103",
+      "outputSha256": "db880c89b687a6726603caba6d7804dda8c2efe4951d4040c63c6cf17339168b",
       "modifications": [
         "Issue #30 Oklch色ミキサーとengine 10/11対応を反映",
         "部分補正（マスク）#65: validateSettingsのマスク読み取り回帰テストを追加",
@@ -5819,7 +5836,8 @@
         "niho-photo#46 後半で Developer.estimateUpright（Upright の推定）を公開した。",
         "niho-photo#44 前半で修復の印（v8 の heal）を描画の設定として読むことを文書に足した。",
         "PR #96統合でcrate 0.24・v8対応",
-        "PR #96: v8 heal設定を受け入れ、v9のみ未対応とするwasm公開検証を更新。"
+        "PR #96: v8 heal設定を受け入れ、v9のみ未対応とするwasm公開検証を更新。",
+        "レンズ補正（手動の歪み・周辺光量・色収差・フリンジ）の追加に伴う変更。"
       ]
     },
     {
@@ -6226,12 +6244,13 @@
         "path": "packages/develop-engine/crates/niho-develop/src/frame.rs",
         "sha256": "750f09b6b181cb3a74947b55a1b8421c34e0fd47000cbc58f176a5b0bfec0228"
       },
-      "outputSha256": "b25e32010d64f1ab9cfe0cb9d7e13a77a47f18ff4a6ae7bdcecbf91c8e238d88",
+      "outputSha256": "e7dada6b0c38243f41166ab3ceb7bc1dfa5d627d4f87cc96994985b2c993f58c",
       "modifications": [
         "PR #88 main rebase and perspective integration with develop engine 0.22.0",
         "niho-photo#46 で遠近の逆写像を角度つきと同じ 1 回の Catmull-Rom に統合し、余白を埋める・事前縮小・窓のキー・読み込みの大きさに遠近を反映した。",
         "Issue #46: 遠近の拡大補正でも縮小前の解像度を保持する。",
-        "Issue #46: 遠近の拡大補正で追加された読込解像度を描画対象へ渡す契約を回帰検査。"
+        "Issue #46: 遠近の拡大補正で追加された読込解像度を描画対象へ渡す契約を回帰検査。",
+        "レンズ補正（手動の歪み・周辺光量・色収差・フリンジ）の追加に伴う変更。"
       ]
     },
     {
@@ -6280,7 +6299,7 @@
         "path": "packages/develop-engine/crates/niho-develop/src/lib.rs",
         "sha256": "1591d49effaa779c8e23ad6877508ccf336565eec8336d5b4e6faa3b5d3846b0"
       },
-      "outputSha256": "74993aaa2593fa29e2d9eec2e6fdaa7503364195acd3d5c30c73e46cfb1ed767",
+      "outputSha256": "c335db690848fc9eb14976112227b888d403e2987016641b429e6ccf0cda13e1",
       "modifications": [
         "公開Issue #26/#27/#29: 旧版を保つfloat cube候補、研究用WB/H-Sプローブ、合成検証と計測契約を追加。",
         "Issue #28の色相安定engine追加と互換回帰を反映。",
@@ -6312,7 +6331,8 @@
         "niho-photo#46 の perspective module を公開した。",
         "niho-photo#46 後半で Upright の推定の module を足した。",
         "niho-photo#44 前半で heal モジュールを宣言し、Session が修復した元の画から描く組み込み（直した写しの保持・計画の共有・単発の描画の修復）を足した。",
-        "PR #96統合でcrate 0.24・v8対応"
+        "PR #96統合でcrate 0.24・v8対応",
+        "レンズ補正（手動の歪み・周辺光量・色収差・フリンジ）の追加に伴う変更。"
       ]
     },
     {
@@ -6595,7 +6615,7 @@
         "path": "packages/develop-engine/crates/niho-develop/src/settings.rs",
         "sha256": "756a24a09d738b2341974d92d89b82f55b42eb6060b6e0c99ee4a532947a1b47"
       },
-      "outputSha256": "d55e1d59dc871722cad198955e2b3ec19e7ac63084ce3c08387285505d84c7ca",
+      "outputSha256": "027dbb117a36267f761b5228310ce42de656ee38ae20cabd763c112face4317a",
       "modifications": [
         "公開Issue #26/#27/#29: 旧版を保つfloat cube候補、研究用WB/H-Sプローブ、合成検証と計測契約を追加。",
         "Issue #28の色相安定engine追加と互換回帰を反映。",
@@ -6616,7 +6636,8 @@
         "niho-photo#46 で遠近のある設定を v7 とし、先行機能の v5/v6 と併せて読める設定版に追加。",
         "niho-photo#46 で遠近のある設定を v7 にし、読める版に 7 を足した（5・6 は読まない）。",
         "niho-photo#44 前半で修復の印（heal）の読み書きと検証、設定 v8 と required_version を足した。",
-        "PR #96統合でcrate 0.24・v8対応"
+        "PR #96統合でcrate 0.24・v8対応",
+        "レンズ補正（手動の歪み・周辺光量・色収差・フリンジ）の追加に伴う変更。"
       ]
     },
     {
@@ -6668,7 +6689,7 @@
         "path": "packages/develop-engine/crates/niho-develop/src/xmp.rs",
         "sha256": "be5ddce69eceafb334c173ee92af3614c044039b103903ad1dfef24758f1ec45"
       },
-      "outputSha256": "5b96079fbb1561f1b38c027d0dc54db4058c6c6192b8ae9bd333f7efa548a37c",
+      "outputSha256": "e45e970bb98188ded772f73a174c11e42650944fb989e1f467f27bdb8bd99a56",
       "modifications": [
         "公開Issue #26/#27/#29: 旧版を保つfloat cube候補、研究用WB/H-Sプローブ、合成検証と計測契約を追加。",
         "Issue #28の色相安定engine追加と互換回帰を反映。",
@@ -6690,7 +6711,8 @@
         "PR #88 main rebase and perspective integration with develop engine 0.22.0",
         "niho-photo#46 で XMP の Perspective* と CropConstrainToWarp を幾何に当て、Upright を保持のみとして知らせるようにした。",
         "niho-photo#44 前半でプリセットを当てても写真の修復の印を保つようにした。",
-        "PR #96統合でcrate 0.24・v8対応"
+        "PR #96統合でcrate 0.24・v8対応",
+        "レンズ補正（手動の歪み・周辺光量・色収差・フリンジ）の追加に伴う変更。"
       ]
     },
     {
@@ -6701,7 +6723,7 @@
         "path": "packages/develop-engine/crates/niho-develop/src/xmp/amount.rs",
         "sha256": "fc1efdb7f9d5476b9c58324b4e763298f0737d480b304b44529170d3bd31aa05"
       },
-      "outputSha256": "7d434687bbd264677c3c5dbf66de558db3f95cc09d43b779eb5baa848d4de1bc",
+      "outputSha256": "0c7a4b9c046ec550e972f380f86668ef069c664cbedf12f240dda3a27006ab30",
       "modifications": [
         "Issue #30 Oklch色ミキサーとengine 10/11対応を反映",
         "部分補正（マスク）#65: プリセット量の合成でもmasksを保つ",
@@ -6710,7 +6732,8 @@
         "Issue #32 detail v6 を、先行する masks v5 と #72 の histogram/Jキー契約に同期する。",
         "部分補正（マスク）#69: 適用量でプリセットのマスクの補正の差分を掛け、範囲で止める（0% はマスクなし）",
         "PR #88 main rebase and perspective integration with develop engine 0.22.0",
-        "niho-photo#46 でプリセットの適用量で遠近の 7 本を線形に動かすようにした。"
+        "niho-photo#46 でプリセットの適用量で遠近の 7 本を線形に動かすようにした。",
+        "レンズ補正（手動の歪み・周辺光量・色収差・フリンジ）の追加に伴う変更。"
       ]
     },
     {
@@ -6721,7 +6744,7 @@
         "path": "packages/develop-engine/crates/niho-develop/src/xmp/write.rs",
         "sha256": "f583b51766c756fe31b623949a8174abd304ff660a7793e332b3153faf2aa749"
       },
-      "outputSha256": "7fc5c42910a46ff91677c3d7c70933d25f6be9c1d7cbc82bd8c1641fcddeb14c",
+      "outputSha256": "31a9b4d24b5749875d696c3a4316054283f4ce06993a779bf8cfa3ff36bbbf50",
       "modifications": [
         "公開Issue #26/#27/#29: 旧版を保つfloat cube候補、研究用WB/H-Sプローブ、合成検証と計測契約を追加。",
         "Issue #28の色相安定engine追加と互換回帰を反映。",
@@ -6740,7 +6763,8 @@
         "PR #90: niho-13のWB先行適用とdetail連携cacheを#84後のmainへ統合。",
         "PR #88 main rebase and perspective integration with develop engine 0.22.0",
         "niho-photo#46 で XMP の書き出しに変形の群（transform）を足した。",
-        "niho-photo#44で修復印をXMPへ保存できない場合の通知を追加。"
+        "niho-photo#44で修復印をXMPへ保存できない場合の通知を追加。",
+        "レンズ補正（手動の歪み・周辺光量・色収差・フリンジ）の追加に伴う変更。"
       ]
     },
     {
@@ -7062,7 +7086,7 @@
         "path": "packages/develop-engine/crates/niho-develop/tests/niho3.rs",
         "sha256": "0c94cb91fceaaac75533a3f3eea4aa5e8a620aba17050ac3373682c52ea4e6f6"
       },
-      "outputSha256": "1a063351038192a3a5aae5be400f27737f5c01b3aaf3b175b25ae1be2ed4eeb9",
+      "outputSha256": "8799fcabc307aab752d2b0a8604a04035199b74cdcda68857e3fcebe454b1ab8",
       "modifications": [
         "Issue #28の色相安定engine追加と互換回帰を反映。",
         "新しい色相保持エンジンと新旧バイナリの能力境界・数値回帰を整合。",
@@ -7072,7 +7096,8 @@
         "Issue #32 detail v6 を、先行する masks v5 と #72 の histogram/Jキー契約に同期する。",
         "Issue #29: 未知engineの例をniho-13へ変え、niho-12のルック拒否を検証",
         "PR #74: #80 統合後に float-cube の変更を重ね、最終ハッシュを反映。",
-        "PR #90: niho-13のWB先行適用とdetail連携cacheを#84後のmainへ統合。"
+        "PR #90: niho-13のWB先行適用とdetail連携cacheを#84後のmainへ統合。",
+        "レンズ補正（手動の歪み・周辺光量・色収差・フリンジ）の追加に伴う変更。"
       ]
     },
     {
@@ -7276,7 +7301,7 @@
         "path": "packages/develop-engine/crates/niho-develop/tests/xmp_presets.rs",
         "sha256": "423ce05a729e0968f3936e28924db3b09b2095cf879875beaa21bd17fdd2b72b"
       },
-      "outputSha256": "428235c0479a47d09407b2e0e1481cbe06eeb8f2f47eb553b926e5bfe9fd5877",
+      "outputSha256": "39e552f2ee05e5e5ffbe498b5072ebe59a9fc9867995c06b65a0e2aaaa535b36",
       "modifications": [
         "Issue #32 同梱プリセットのディテール項目を描画対象として検証する",
         "Issue #32 detail uses v6 because Issue #31 masks already owns v5; synchronize the Rust and TypeScript contract, probe, tests, and documentation.",
@@ -7284,7 +7309,8 @@
         "niho-photo#39 NIHO が中間調・全体の輝度を描く前提に同梱プリセットの判定を合わせた。",
         "PR #80 のカラーグレーディングを最新HSL UIと統合。",
         "PR #88 main rebase and perspective integration with develop engine 0.22.0",
-        "niho-photo#46 で変形と切り抜きの制限を NIHO が描く項目として同梱プリセットの知らせの照合に足した。"
+        "niho-photo#46 で変形と切り抜きの制限を NIHO が描く項目として同梱プリセットの知らせの照合に足した。",
+        "レンズ補正（手動の歪み・周辺光量・色収差・フリンジ）の追加に伴う変更。"
       ]
     },
     {
@@ -7295,7 +7321,7 @@
         "path": "packages/develop-engine/crates/niho-develop/tests/xmp_write.rs",
         "sha256": "ed8beb33fdf73d50fd11850f3da66d1c5f95cf3157ceafa71a8f24760c597f10"
       },
-      "outputSha256": "d3524b876df9cc355b9edddb28ba74f2be6117fcbdde12318a0adfb44cb2f0dc",
+      "outputSha256": "04c28c79f6b5f7f306b8bfaf6b8baf70e24d96dc1e8ee2db44ed5a9dfa9dcc34",
       "modifications": [
         "Issue #32 sharpening群とdetailのNR書き出し・往復を検証する",
         "cover the capped inherited legacy XMP value",
@@ -7304,7 +7330,8 @@
         "niho-photo#39 中間調・全体の輝度の書き出しと読み戻しの test を追加した。",
         "PR #80 のカラーグレーディングを最新HSL UIと統合。",
         "PR #88 main rebase and perspective integration with develop engine 0.22.0",
-        "niho-photo#46 で XMP の群の一覧に transform を足した。"
+        "niho-photo#46 で XMP の群の一覧に transform を足した。",
+        "レンズ補正（手動の歪み・周辺光量・色収差・フリンジ）の追加に伴う変更。"
       ]
     },
     {
@@ -10020,8 +10047,8 @@
     },
     {
       "path": "packages/photo-editing/src/editor/photo-editing-color-mixer.test.tsx",
-      "sha256": "eb575876670ae549355e2bfb85f5a4d83ca7443c29e9dffb030cc151b69a529f",
-      "origin": "Issue #30の公開仕様だけから新規作成した色ミキサーschema・座標・320px UI・keyboard回帰。合成値だけを使用。\n変更理由: deferred pickerの写真切替回帰を追加\n変更理由: 描画精度・型・共有サンプル位置・キーボードの最終レビューを反映\n変更理由: 部分補正（マスク）#65: 未知版の確認をv6へ更新\n変更理由: Issue #32 v5を読む版に合わせ未知の版を6にする\n変更理由: Issue #32 detail uses v6 because Issue #31 masks already owns v5; synchronize the Rust and TypeScript contract, probe, tests, and documentation.\n変更理由: Issue #32 detail v6 を、先行する masks v5 と #72 の histogram/Jキー契約に同期する。\n変更理由: niho-photo#38 Oklch の補正の画面の名前を「ポイントカラー」に改めたことに期待値を合わせる。\n変更理由: PR #79 のHSL mixerを最新tone curveとinfo UIへ統合。\n変更理由: PR #79のHSL mixerを最新mainから取り込み、公開出力ハッシュを更新。\n変更理由: PR #88 main rebase and perspective integration with develop engine 0.22.0\n変更理由: 修復設定 v8 を読めるようになったため、将来版の境界テストを v9 に更新"
+      "sha256": "06cdc170cdf11112d211f5f54b15262eac042e6729276be8117e3ec09a516c69",
+      "origin": "Issue #30の公開仕様だけから新規作成した色ミキサーschema・座標・320px UI・keyboard回帰。合成値だけを使用。\n変更理由: deferred pickerの写真切替回帰を追加\n変更理由: 描画精度・型・共有サンプル位置・キーボードの最終レビューを反映\n変更理由: 部分補正（マスク）#65: 未知版の確認をv6へ更新\n変更理由: Issue #32 v5を読む版に合わせ未知の版を6にする\n変更理由: Issue #32 detail uses v6 because Issue #31 masks already owns v5; synchronize the Rust and TypeScript contract, probe, tests, and documentation.\n変更理由: Issue #32 detail v6 を、先行する masks v5 と #72 の histogram/Jキー契約に同期する。\n変更理由: niho-photo#38 Oklch の補正の画面の名前を「ポイントカラー」に改めたことに期待値を合わせる。\n変更理由: PR #79 のHSL mixerを最新tone curveとinfo UIへ統合。\n変更理由: PR #79のHSL mixerを最新mainから取り込み、公開出力ハッシュを更新。\n変更理由: PR #88 main rebase and perspective integration with develop engine 0.22.0\n変更理由: 修復設定 v8 を読めるようになったため、将来版の境界テストを v9 に更新\n変更理由: レンズ補正（手動の歪み・周辺光量・色収差・フリンジ）の追加に伴う変更。"
     },
     {
       "path": "packages/photo-editing/src/editor/photo-editing-color-mixer.tsx",
@@ -10085,8 +10112,8 @@
     },
     {
       "path": "packages/photo-editing/src/editor/use-browser-photo-progressive-open.test.tsx",
-      "sha256": "56ab8d5abbc69b7cfb34c0e23373ae7b491a9b1f3017024da14621018368e37e",
-      "origin": "Issue #13のため独立作成。actual React hooksと合成library/engine/frameだけで、provisional編集、canonical handoff、history、retry、abort、旧frame遮断を検証。外部画像・非公開コード・個体metadataを含まない。\n変更理由: 公開signed RAW契約に合う合成metadataで実hookの正規切替を検証。\n変更理由: preview取得失敗でも正規入力の実hookで補正を続けられる回帰を追加。\n変更理由: fallback後の補正を実際にflushし通常保存のbaseと値まで検証。\n変更理由: preset適用・量drag・量commitを未解決のままhandoffに重ねるfailure injectionを追加。\n変更理由: 非同期プリセットfixtureにも実契約のversionとengineを含め型検査する\n変更理由: 同一内容draftの再表示から正規base確定後の既存saverまで実hookで回帰検証する\n変更理由: draft復元テストでも一覧復帰の成功値を明示確認しact補助のvoid型契約に合わせる\n変更理由: Expect current niho-11 default in handoff tests\n変更理由: niho-photo#36 描いた画をヒストグラムへ渡すことを検証。\n変更理由: niho-photo#41 比較の間の補正前の描画（描き直さない・ヒストグラムへ渡さない・canonical差し替え）を検証。\n変更理由: niho-photo#41 の比較UIを #72 のヒストグラム・Jキー契約と併存するようmainへ積み直した。\n変更理由: PR #88 main rebase and perspective integration with develop engine 0.22.0\n変更理由: niho-photo#46 で engine の mock に supportsPerspective を足した。\n変更理由: PR #97積み直し後の現行develop engine能力stubに更新。"
+      "sha256": "754d521bd15d758f365926016345ed0e599d6f87939f2a298f72f8bebc8a2f89",
+      "origin": "Issue #13のため独立作成。actual React hooksと合成library/engine/frameだけで、provisional編集、canonical handoff、history、retry、abort、旧frame遮断を検証。外部画像・非公開コード・個体metadataを含まない。\n変更理由: 公開signed RAW契約に合う合成metadataで実hookの正規切替を検証。\n変更理由: preview取得失敗でも正規入力の実hookで補正を続けられる回帰を追加。\n変更理由: fallback後の補正を実際にflushし通常保存のbaseと値まで検証。\n変更理由: preset適用・量drag・量commitを未解決のままhandoffに重ねるfailure injectionを追加。\n変更理由: 非同期プリセットfixtureにも実契約のversionとengineを含め型検査する\n変更理由: 同一内容draftの再表示から正規base確定後の既存saverまで実hookで回帰検証する\n変更理由: draft復元テストでも一覧復帰の成功値を明示確認しact補助のvoid型契約に合わせる\n変更理由: Expect current niho-11 default in handoff tests\n変更理由: niho-photo#36 描いた画をヒストグラムへ渡すことを検証。\n変更理由: niho-photo#41 比較の間の補正前の描画（描き直さない・ヒストグラムへ渡さない・canonical差し替え）を検証。\n変更理由: niho-photo#41 の比較UIを #72 のヒストグラム・Jキー契約と併存するようmainへ積み直した。\n変更理由: PR #88 main rebase and perspective integration with develop engine 0.22.0\n変更理由: niho-photo#46 で engine の mock に supportsPerspective を足した。\n変更理由: PR #97積み直し後の現行develop engine能力stubに更新。\n変更理由: レンズ補正（手動の歪み・周辺光量・色収差・フリンジ）の追加に伴う変更。"
     },
     {
       "path": ".github/workflows/public-ci.yml",
@@ -10110,8 +10137,8 @@
     },
     {
       "path": "scripts/ci/scopes.test.mjs",
-      "sha256": "d0e64f7a68376bed7530e862e6970f035e039e912c5c6000f039dcdac8ed942f",
-      "origin": "Issue #2の公開成果物・SBOM・固定SHA取り込み契約のため独立作成。公開仕様と既存公開CIから生成器・schema・guard・検証・責務境界を定義し、外部コード・秘密・実ユーザーデータを含まない。\n変更理由: Issue #2の公開検証成果物・SBOM・固定SHA取り込み契約と秘密を持たないCI検査を追加。\n変更理由: Issue #2の実装検証で成果物名・輸送receipt・build設定を強化。\n変更理由: Issue #32 detail v6 を、先行する masks v5 と #72 の histogram/Jキー契約に同期する。\n変更理由: PR #81 のマスク描画を最新mainの変更と統合。\n変更理由: PR #76 detailとPR #81 maskを統合し、公開出力ハッシュを更新。\n変更理由: PR #88 main rebase and perspective integration with develop engine 0.22.0\n変更理由: Upright自動推定を作者更新後の遠近crate v0.23.0へ統合\n変更理由: PR #96統合でcrate 0.24・v8対応"
+      "sha256": "2d9511018e835007b09271061cca519257c440bc59d2729edda7cb0eeb9767ba",
+      "origin": "Issue #2の公開成果物・SBOM・固定SHA取り込み契約のため独立作成。公開仕様と既存公開CIから生成器・schema・guard・検証・責務境界を定義し、外部コード・秘密・実ユーザーデータを含まない。\n変更理由: Issue #2の公開検証成果物・SBOM・固定SHA取り込み契約と秘密を持たないCI検査を追加。\n変更理由: Issue #2の実装検証で成果物名・輸送receipt・build設定を強化。\n変更理由: Issue #32 detail v6 を、先行する masks v5 と #72 の histogram/Jキー契約に同期する。\n変更理由: PR #81 のマスク描画を最新mainの変更と統合。\n変更理由: PR #76 detailとPR #81 maskを統合し、公開出力ハッシュを更新。\n変更理由: PR #88 main rebase and perspective integration with develop engine 0.22.0\n変更理由: Upright自動推定を作者更新後の遠近crate v0.23.0へ統合\n変更理由: PR #96統合でcrate 0.24・v8対応\n変更理由: レンズ補正（手動の歪み・周辺光量・色収差・フリンジ）の追加に伴う変更。"
     },
     {
       "path": "scripts/ci/workflow-lib.mjs",
@@ -10175,13 +10202,13 @@
     },
     {
       "path": "packages/develop-engine/crates/niho-develop/tests/masks_settings.rs",
-      "sha256": "d993d1aa2a2471459cefd2153b4ad1a4cd95ca3f586b520f9ff6821e4b33dde3",
-      "origin": "Issue #65の公開仕様と合成fixtureだけから新規作成した、マスク設定の読み書き・版・互換・未描画時の安全な失敗のRust回帰。実写真・非公開コード・私有参照出力を含まない。\n変更理由: Issue #32 assigns settings v6 to detail; preserve mask v5 and reject unknown v7.\n変更理由: Issue #32 detail v6 を、先行する masks v5 と #72 の histogram/Jキー契約に同期する。\n変更理由: 部分補正（マスク）#66: M1の未描画の失敗を、すべての描画経路で描く回帰に置き換える\n変更理由: PR #81 のマスク描画を最新mainの変更と統合。\n変更理由: PR #76 detailとPR #81 maskを統合し、公開出力ハッシュを更新。\n変更理由: PR #88 rebase compatibility: perspective settings v7, future versions start at v8\n変更理由: 修復設定 v8 を読めるようになったため、Rustの未知版境界試験を v9 に更新\n変更理由: 修復設定 v8 を読めるようになったため、Rustの最大読取版期待値を更新"
+      "sha256": "9a8694d23237cd26e4ed9c1539998c0da0f080d78e3a7deb0770292306684ace",
+      "origin": "Issue #65の公開仕様と合成fixtureだけから新規作成した、マスク設定の読み書き・版・互換・未描画時の安全な失敗のRust回帰。実写真・非公開コード・私有参照出力を含まない。\n変更理由: Issue #32 assigns settings v6 to detail; preserve mask v5 and reject unknown v7.\n変更理由: Issue #32 detail v6 を、先行する masks v5 と #72 の histogram/Jキー契約に同期する。\n変更理由: 部分補正（マスク）#66: M1の未描画の失敗を、すべての描画経路で描く回帰に置き換える\n変更理由: PR #81 のマスク描画を最新mainの変更と統合。\n変更理由: PR #76 detailとPR #81 maskを統合し、公開出力ハッシュを更新。\n変更理由: PR #88 rebase compatibility: perspective settings v7, future versions start at v8\n変更理由: 修復設定 v8 を読めるようになったため、Rustの未知版境界試験を v9 に更新\n変更理由: 修復設定 v8 を読めるようになったため、Rustの最大読取版期待値を更新\n変更理由: レンズ補正（手動の歪み・周辺光量・色収差・フリンジ）の追加に伴う変更。"
     },
     {
       "path": "packages/develop-engine/crates/niho-develop/tests/fixtures/masks/settings-cases.json",
-      "sha256": "3a8ed913f476aa313e40a5d7f214b1f31a9d9aef2d2ed18312bf078d0f93935f",
-      "origin": "Issue #65の公開仕様から合成したマスク設定の正常・異常ケース（RustとTypeScriptで共有）。実写真・利用者データ・私有参照出力を含まない。\n変更理由: Issue #32 assigns settings v6 to detail; preserve mask v5 and reject unknown v7.\n変更理由: Issue #32 detail v6 を、先行する masks v5 と #72 の histogram/Jキー契約に同期する。\n変更理由: PR #88 rebase compatibility: perspective settings v7, future versions start at v8\n変更理由: 修復設定 v8 を読めるようになったため、未知版の共有fixtureを v9 に更新"
+      "sha256": "47a1b7e123df1492c6825c076e89db62c5f7fb9eaca31a03aae28ed452448826",
+      "origin": "Issue #65の公開仕様から合成したマスク設定の正常・異常ケース（RustとTypeScriptで共有）。実写真・利用者データ・私有参照出力を含まない。\n変更理由: Issue #32 assigns settings v6 to detail; preserve mask v5 and reject unknown v7.\n変更理由: Issue #32 detail v6 を、先行する masks v5 と #72 の histogram/Jキー契約に同期する。\n変更理由: PR #88 rebase compatibility: perspective settings v7, future versions start at v8\n変更理由: 修復設定 v8 を読めるようになったため、未知版の共有fixtureを v9 に更新\n変更理由: レンズ補正（手動の歪み・周辺光量・色収差・フリンジ）の追加に伴う変更。"
     },
     {
       "path": "packages/photo-editing/src/develop-engine/develop-masks.ts",
@@ -10190,8 +10217,8 @@
     },
     {
       "path": "packages/photo-editing/src/develop-engine/develop-masks.test.ts",
-      "sha256": "44de591fdabf038f020f2b6d59f2941b900f638021724f78a8d72ae0ddc84264",
-      "origin": "Issue #65の公開仕様と合成fixtureだけから新規作成した、マスク設定のRust共有fixture照合と設定関数の回帰。外部画像・非公開コード・個体metadataを含まない。\n変更理由: 線形マスクの最小距離保持と上限超過の拒否を検証する。\n変更理由: Issue #32 detail uses v6 because Issue #31 masks already owns v5; synchronize the Rust and TypeScript contract, probe, tests, and documentation.\n変更理由: Issue #32 detail v6 を、先行する masks v5 と #72 の histogram/Jキー契約に同期する。\n変更理由: PR #79のマスクと色ポイントの保存対象外表示テストを実UIの項目名に揃える。\n変更理由: PR #79のHSL mixerを最新mainから取り込み、公開出力ハッシュを更新。\n変更理由: PR #88 rebase compatibility: perspective settings v7, future versions start at v8\n変更理由: 修復設定 v8 を読めるようになったため、将来版の境界テストを v9 に更新"
+      "sha256": "6200e1266f56b7ab453ca45615802b63a3cc735d5efe8d4641394a365ada5aec",
+      "origin": "Issue #65の公開仕様と合成fixtureだけから新規作成した、マスク設定のRust共有fixture照合と設定関数の回帰。外部画像・非公開コード・個体metadataを含まない。\n変更理由: 線形マスクの最小距離保持と上限超過の拒否を検証する。\n変更理由: Issue #32 detail uses v6 because Issue #31 masks already owns v5; synchronize the Rust and TypeScript contract, probe, tests, and documentation.\n変更理由: Issue #32 detail v6 を、先行する masks v5 と #72 の histogram/Jキー契約に同期する。\n変更理由: PR #79のマスクと色ポイントの保存対象外表示テストを実UIの項目名に揃える。\n変更理由: PR #79のHSL mixerを最新mainから取り込み、公開出力ハッシュを更新。\n変更理由: PR #88 rebase compatibility: perspective settings v7, future versions start at v8\n変更理由: 修復設定 v8 を読めるようになったため、将来版の境界テストを v9 に更新\n変更理由: レンズ補正（手動の歪み・周辺光量・色収差・フリンジ）の追加に伴う変更。"
     },
     {
       "path": "packages/photo-editing/src/photo-editing-histogram.ts",
@@ -10395,8 +10422,8 @@
     },
     {
       "path": "packages/photo-editing/src/editor/photo-editing-advanced-section.test.tsx",
-      "sha256": "7fdd53fe84709c168048df2ec0586816f9798a5e0b1c6cec12a0d213878335fd",
-      "origin": "niho-photo#37 のため新規作成。既定で閉じた節の開閉と保存値の読み書きの test。合成の値だけを使用。"
+      "sha256": "1567f40c976cf0ad60bd497b747ce5f6c8b0987e5cf94534253865f483ad3d5a",
+      "origin": "niho-photo#37 のため新規作成。既定で閉じた節の開閉と保存値の読み書きの test。合成の値だけを使用。\n変更理由: レンズ補正（手動の歪み・周辺光量・色収差・フリンジ）の追加に伴う変更。"
     },
     {
       "path": "packages/photo-editing/src/editor/photo-editing-advanced-section.tsx",
@@ -10415,8 +10442,8 @@
     },
     {
       "path": "packages/photo-editing/src/photo-editing-advanced-sections-state.ts",
-      "sha256": "1168b776ae597f1e7a5d0f962bc255cf7b96599a14061f6a3708435925c6f39c",
-      "origin": "niho-photo#37 のため新規作成。右パネルの既定で閉じた節の開閉を端末に覚えるフック（開いた節の id の配列）。外部コード・実データを含まない。\n変更理由: niho-photo#38 既定で閉じた節に「カラーミキサー」（colorMixer）を追加。\n変更理由: PR #79 のHSL mixerを最新tone curveとinfo UIへ統合。\n変更理由: PR #79のHSL mixerを最新mainから取り込み、公開出力ハッシュを更新。\n変更理由: niho-photo#39 既定で閉じた節にカラーグレーディングの id を足した。\n変更理由: PR #80 のカラーグレーディングを最新HSL UIと統合。\n変更理由: PR #88 main rebase and perspective integration with develop engine 0.22.0\n変更理由: niho-photo#46 で既定で閉じた節に geometry を足した。"
+      "sha256": "870d28980bfa62193faf9183c0e435703c5868191371232f7a69bffc42ef00c0",
+      "origin": "niho-photo#37 のため新規作成。右パネルの既定で閉じた節の開閉を端末に覚えるフック（開いた節の id の配列）。外部コード・実データを含まない。\n変更理由: niho-photo#38 既定で閉じた節に「カラーミキサー」（colorMixer）を追加。\n変更理由: PR #79 のHSL mixerを最新tone curveとinfo UIへ統合。\n変更理由: PR #79のHSL mixerを最新mainから取り込み、公開出力ハッシュを更新。\n変更理由: niho-photo#39 既定で閉じた節にカラーグレーディングの id を足した。\n変更理由: PR #80 のカラーグレーディングを最新HSL UIと統合。\n変更理由: PR #88 main rebase and perspective integration with develop engine 0.22.0\n変更理由: niho-photo#46 で既定で閉じた節に geometry を足した。\n変更理由: レンズ補正（手動の歪み・周辺光量・色収差・フリンジ）の追加に伴う変更。"
     },
     {
       "path": "packages/photo-editing/src/photo-editing-tone-curve.test.ts",
@@ -10685,8 +10712,8 @@
     },
     {
       "path": "packages/develop-engine/crates/niho-develop/tests/niho13.rs",
-      "sha256": "6fa5c69124d1c4a58f30cb8f225b0a1bbde7900b89ff4483e1671020cf225421",
-      "origin": "公開Issue #27 のため公開済み数式・既存primitiveから独立実装したengine・合成テスト・計測コード・日本語手順。非公開の写真・参照画素・パス・履歴・第三者ソースを含まない。\n変更理由: Bump crate version for mask surface WASM\n変更理由: PR #88 main rebase and perspective integration with develop engine 0.22.0\n変更理由: Uprightを含むcrate v0.23.0への版上げを検査する期待値に更新\n変更理由: PR #96統合でcrate 0.24・v8対応"
+      "sha256": "a5082b41414063655a00b3d7cfd94f03d4d8e9c75e2ab3dcb5528439444652d4",
+      "origin": "公開Issue #27 のため公開済み数式・既存primitiveから独立実装したengine・合成テスト・計測コード・日本語手順。非公開の写真・参照画素・パス・履歴・第三者ソースを含まない。\n変更理由: Bump crate version for mask surface WASM\n変更理由: PR #88 main rebase and perspective integration with develop engine 0.22.0\n変更理由: Uprightを含むcrate v0.23.0への版上げを検査する期待値に更新\n変更理由: PR #96統合でcrate 0.24・v8対応\n変更理由: レンズ補正（手動の歪み・周辺光量・色収差・フリンジ）の追加に伴う変更。"
     },
     {
       "path": "packages/develop-engine/fixtures/color/review-2026-10-21/round27-analysis-before-wb.json",
@@ -10835,8 +10862,8 @@
     },
     {
       "path": "packages/develop-engine/crates/niho-develop/tests/geometry_perspective.rs",
-      "sha256": "b26a983ca0577ac1f21eba221b72601098e92f00efebbd00d70a3096ca8ef0ad",
-      "origin": "niho-photo#46 のため新規作成。合成画像で、逆写像どおりの再標本化・恒等の値での bit 一致・Session の描き直し・余白を埋める出力サイズ・native と wasm の hash 一致・XMP の読み書きと適用量を確かめる test。実写真・実 RAW を使わない。\n変更理由: niho-photo#44 前半で v8 が読める版になったため、未知の版の例を v9 に変えた。\n変更理由: PR #96統合でcrate 0.24・v8対応"
+      "sha256": "3b8a2f9512f4d2c843575e1ee8a78a8483ce2a557bcd1826950a7cb1c71d003e",
+      "origin": "niho-photo#46 のため新規作成。合成画像で、逆写像どおりの再標本化・恒等の値での bit 一致・Session の描き直し・余白を埋める出力サイズ・native と wasm の hash 一致・XMP の読み書きと適用量を確かめる test。実写真・実 RAW を使わない。\n変更理由: niho-photo#44 前半で v8 が読める版になったため、未知の版の例を v9 に変えた。\n変更理由: PR #96統合でcrate 0.24・v8対応\n変更理由: レンズ補正（手動の歪み・周辺光量・色収差・フリンジ）の追加に伴う変更。"
     },
     {
       "path": "packages/photo-editing/src/develop-engine/develop-perspective.ts",
@@ -10915,8 +10942,8 @@
     },
     {
       "path": "packages/develop-engine/crates/niho-develop/tests/heal.rs",
-      "sha256": "2671726eabaa97019ce8bbca3dfb53952ea58346fd2e369e4952b8e07923bd65",
-      "origin": "niho-photo#44 前半のため新規作成。合成の空と電線・縞と格子と煉瓦の壁・単色の背景・芝と看板で、消す・写す・縁・幾何との組み合わせ・Session のキャッシュ・作業コピー・設定・プリセット・native と wasm の一致を確かめる test。実写真・実 RAW を使わない。\n変更理由: PR #96統合でcrate 0.24・v8対応\n変更理由: niho-photo#44の修復印XMP未対応通知のRust回帰テストを更新。"
+      "sha256": "e53d1ebfd5cbb3059a101f951ea5315e6fd73c9fd529f834211642243e67afd0",
+      "origin": "niho-photo#44 前半のため新規作成。合成の空と電線・縞と格子と煉瓦の壁・単色の背景・芝と看板で、消す・写す・縁・幾何との組み合わせ・Session のキャッシュ・作業コピー・設定・プリセット・native と wasm の一致を確かめる test。実写真・実 RAW を使わない。\n変更理由: PR #96統合でcrate 0.24・v8対応\n変更理由: niho-photo#44の修復印XMP未対応通知のRust回帰テストを更新。\n変更理由: レンズ補正（手動の歪み・周辺光量・色収差・フリンジ）の追加に伴う変更。"
     },
     {
       "path": "packages/photo-editing/src/develop-engine/develop-heal.ts",
@@ -10940,8 +10967,8 @@
     },
     {
       "path": "packages/photo-editing/src/photo-editing-heal.ts",
-      "sha256": "ae53952858ee9e9bd2a0cf7813845a051e7dca9daa59547833158ee370e35fa0",
-      "origin": "niho-photo#44 後半のため新規作成。修復の道具の画面の純関数（幾何なしの表示の設定・補正前の設定・画面の点と印の座標・半径の画面の px・なぞる点の間引きと上限・大きさのダイヤル・写し元の既定と押し戻し・印の当たり判定）。外部コード・実データを含まない。"
+      "sha256": "d023fbbfc5ce1437eaab3710ba10e36a6a75ea1885bad2433616c025974f764d",
+      "origin": "niho-photo#44 後半のため新規作成。修復の道具の画面の純関数（幾何なしの表示の設定・補正前の設定・画面の点と印の座標・半径の画面の px・なぞる点の間引きと上限・大きさのダイヤル・写し元の既定と押し戻し・印の当たり判定）。外部コード・実データを含まない。\n変更理由: レンズ補正（手動の歪み・周辺光量・色収差・フリンジ）の追加に伴う変更。"
     },
     {
       "path": "packages/photo-editing/src/photo-editing-heal.test.ts",
@@ -10980,8 +11007,8 @@
     },
     {
       "path": "packages/photo-editing/src/editor/browser-photo-editing-workbench-heal.test.tsx",
-      "sha256": "00648959462eb50e321256fdd126d04374666738407a45d34cb3e08fb6eb976b",
-      "origin": "niho-photo#44 後半のため新規作成。編集面の修復の道具の結合の test（偽の写真の出どころ・偽の wasm・合成の JPEG のヘッダだけを使用）。\n変更理由: PR #97積み直し後の現行develop engine能力stubに更新。"
+      "sha256": "0182b0339186aa1d9f69073c6bd2647c54623dbdaed539726b892b7999a325a0",
+      "origin": "niho-photo#44 後半のため新規作成。編集面の修復の道具の結合の test（偽の写真の出どころ・偽の wasm・合成の JPEG のヘッダだけを使用）。\n変更理由: PR #97積み直し後の現行develop engine能力stubに更新。\n変更理由: レンズ補正（手動の歪み・周辺光量・色収差・フリンジ）の追加に伴う変更。"
     },
     {
       "path": "apps/camera/src-tauri/src/flags.rs",
@@ -11037,6 +11064,61 @@
       "path": "packages/photo-editing/src/use-photo-library-flags.ts",
       "sha256": "0edb7825942ad71034bbe317cb0adc90d26e07a6519ec5d34300049ed621715c",
       "origin": "niho-photo#47 のため新規作成。選別のフラグの付け外しの hook（読み込んだ一覧への楽観更新と失敗時の巻き戻し）。外部コードを含まない。\n変更理由: PR #98を#91マージ後の最新mainへ積み直し、選別保存中の二重操作ガードを保持。"
+    },
+    {
+      "path": "docs/lens-adjustments.md",
+      "sha256": "4830a541d946e4d44e6a13a095eac6edade9ef223137344521b7a6c5b4246902",
+      "origin": "niho-photo#45 のため新規作成。レンズ補正（手動の歪み・周辺光量、色収差・フリンジの除去。設定 v9）の仕様・式・検証結果の文書（合成画像の結果だけを記載）。"
+    },
+    {
+      "path": "packages/develop-engine/crates/niho-develop/src/lens.rs",
+      "sha256": "84d6cec365dc27ef1bbb08c1b66803d2c61de02436e0bb0845cffff90b559f96",
+      "origin": "niho-photo#45 のため新規作成。developSettings.lens の形・検証と、歪み・周辺光量の放射状の写像（NIHO の独自モデル）。"
+    },
+    {
+      "path": "packages/develop-engine/crates/niho-develop/src/lens/chromatic.rs",
+      "sha256": "1cf2393c13a90ef29172dd7423ce24d4bc0dcd255dc29a3b4e5e0cec6b80535b",
+      "origin": "niho-photo#45 のため新規作成。写真の縁から横方向の色収差（赤・青の倍率）を推定する独自の決定論的な処理。"
+    },
+    {
+      "path": "packages/develop-engine/crates/niho-develop/src/lens/fringe.rs",
+      "sha256": "7c5970fe7ff266c7497ce7d116d06a4a8ea710f911bea61f61c247930b1fc0fe",
+      "origin": "niho-photo#45 のため新規作成。強い縁の近くの紫・緑のフリンジを中立に寄せる独自の処理。"
+    },
+    {
+      "path": "packages/develop-engine/crates/niho-develop/src/xmp/lens.rs",
+      "sha256": "a1c307f4839b01461132d85eedca7fdbc38ec7f6261068a40c89c3e2b73ed120",
+      "origin": "niho-photo#45 のため新規作成。Lightroom のレンズ補正の XMP の項目と developSettings.lens の読み書き・互換の水準。"
+    },
+    {
+      "path": "packages/develop-engine/crates/niho-develop/tests/lens.rs",
+      "sha256": "04c2b2e631e157ec876a5c61f5e7bf672cb510ba48bed6e71a7f1f019cac3ad8",
+      "origin": "niho-photo#45 のため新規作成。レンズ補正の test（数式で作った合成画像だけを使用。実写真・実 RAW なし）。\n変更理由: PR #101を更新済み#97へ積み直し、レンズ補正をv9として統合。修復併用時の色収差推定は元画から行う。"
+    },
+    {
+      "path": "packages/photo-editing/src/develop-engine/develop-lens.ts",
+      "sha256": "4eec5f1b126139a81ea722e3c351139584b27c90d2796a23b4ca2b70ab3d3c60",
+      "origin": "niho-photo#45 のため新規作成。画面が読む developSettings.lens の形・版（crate の lens.rs と同じ規則）。"
+    },
+    {
+      "path": "packages/photo-editing/src/editor/photo-editing-lens.test.tsx",
+      "sha256": "c6fcf83f05f279b462bd2ff8324abeff9e190db68cadebd686f0a5440489ae48",
+      "origin": "niho-photo#45 のため新規作成。「レンズ」の節の test（合成の設定だけを使用）。"
+    },
+    {
+      "path": "packages/photo-editing/src/editor/photo-editing-lens.tsx",
+      "sha256": "bdda1ed0c6c9188e88673b44ea38b47441bc4d20d0b21c03dd23cda61a4535a2",
+      "origin": "niho-photo#45 のため新規作成。右パネルの効果の群の下の「レンズ」の節。"
+    },
+    {
+      "path": "packages/photo-editing/src/photo-editing-lens.test.ts",
+      "sha256": "9f506e3b5b0e4c1eecddb98c2a5b3cf1941727491f57d4597e9ab15a7f4b5007",
+      "origin": "niho-photo#45 のため新規作成。レンズ補正の形・読み書きの純関数の test（合成の設定だけを使用）。"
+    },
+    {
+      "path": "packages/photo-editing/src/photo-editing-lens.ts",
+      "sha256": "6c6578623778871609e435a7fa60cd3f3ecd8d014acef2f4c530a887c4aaa6d9",
+      "origin": "niho-photo#45 のため新規作成。右パネルの「レンズ」の節の読み書きの純関数と、作業コピーに焼き込まれたプロファイル補正の状態の読み取り。"
     }
   ],
   "excludedSources": [

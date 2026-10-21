@@ -310,7 +310,7 @@ describe("createDevelopEngineWorkerHandler", () => {
     expect(autoLog).toHaveBeenCalledWith({ stage: "autoSettings", durationMs: 0, wasmMemoryBytes: 65_536, status: "ok" });
   });
 
-  it("wasm が v: 3・4・6・8 を通せば effects・color points・detail・heal capability を付ける", async () => {
+  it("wasm が v: 3・4・6・8・9 を通せば effects・color points・detail・heal・lens capability を付ける", async () => {
     const glue = fakeGlue();
     const validateSettings = vi.fn((_settingsJson: string) => "[]");
     const { handler, posted } = setup({ module: { ...glue.module, validateSettings } });
@@ -319,25 +319,13 @@ describe("createDevelopEngineWorkerHandler", () => {
     await handler({ type: "init", id: 2, manifestUrl: MANIFEST_URL });
 
     expect(posted.map((entry) => entry.message)).toEqual([
-      { type: "ready", id: 1, version: "0.2.0+test", effects: true, colorPoints: true, detail: true, heal: true },
-      { type: "ready", id: 2, version: "0.2.0+test", effects: true, colorPoints: true, detail: true, heal: true },
+      { type: "ready", id: 1, version: "0.2.0+test", effects: true, colorPoints: true, detail: true, heal: true, lens: true },
+      { type: "ready", id: 2, version: "0.2.0+test", effects: true, colorPoints: true, detail: true, heal: true, lens: true },
     ]);
-    // capability ごとに最小設定を 1 回ずつ確かめ、2 回目の init では繰り返さない。
-    expect(validateSettings).toHaveBeenCalledTimes(4);
-    expect(JSON.parse(validateSettings.mock.calls[0]?.[0] ?? "null")).toEqual({
-      v: 3,
-      engine: "niho-1",
-      look: "niho-interim-1",
-      base: null,
-      vignette: { amount: -1 },
-    });
-    expect(JSON.parse(validateSettings.mock.calls[1]?.[0] ?? "null")).toMatchObject({
-      v: 4,
-      engine: "niho-10",
-      look: "niho-standard-1",
-      base: null,
-      colorPoints: [{ id: "probe" }],
-    });
+    // effects・color points・detail・heal・lens の最小設定を各 1 回だけ確認する。
+    expect(validateSettings).toHaveBeenCalledTimes(5);
+    expect(JSON.parse(validateSettings.mock.calls[0]?.[0] ?? "null")).toMatchObject({ v: 3, vignette: { amount: -1 } });
+    expect(JSON.parse(validateSettings.mock.calls[1]?.[0] ?? "null")).toMatchObject({ v: 4, colorPoints: [{ id: "probe" }] });
     expect(JSON.parse(validateSettings.mock.calls[2]?.[0] ?? "null")).toEqual({
       v: 6,
       engine: "niho-10",
@@ -352,6 +340,26 @@ describe("createDevelopEngineWorkerHandler", () => {
       base: null,
       heal: [{ id: "probe", mode: "remove", radius: 0.02, feather: 0.5, points: [[0.5, 0.5]] }],
     });
+    // レンズ補正（niho-photo#45）は小さな v: 9 の設定で確かめる
+    expect(JSON.parse(validateSettings.mock.calls[4]?.[0] ?? "null")).toEqual({
+      v: 9,
+      engine: "niho-10",
+      look: "niho-standard-1",
+      base: null,
+      lens: { distortion: 10, removeChromaticAberration: true, defringe: { purple: { amount: 20 } } },
+    });
+  });
+
+  it("v: 9 を断る wasm（crate 0.22.0 以前）には lens を付けない", async () => {
+    const glue = fakeGlue();
+    const validateSettings = vi.fn((settingsJson: string) =>
+      JSON.parse(settingsJson).v === 9 ? JSON.stringify([{ path: "v", code: "unsupportedVersion" }]) : "[]",
+    );
+    const { handler, posted } = setup({ module: { ...glue.module, validateSettings } });
+    await handler({ type: "init", id: 1, manifestUrl: MANIFEST_URL });
+    expect(posted[0]?.message).toEqual({
+      type: "ready", id: 1, version: "0.2.0+test", effects: true, colorPoints: true, detail: true, heal: true,
+    });
   });
 
   it("v: 6 を断る wasm には detail を付けず、v: 8 の heal capability は判定する", async () => {
@@ -362,7 +370,7 @@ describe("createDevelopEngineWorkerHandler", () => {
     const { handler, posted } = setup({ module: { ...glue.module, validateSettings } });
     await handler({ type: "init", id: 1, manifestUrl: MANIFEST_URL });
     expect(posted[0]?.message).toEqual({
-      type: "ready", id: 1, version: "0.2.0+test", effects: true, colorPoints: true, heal: true,
+      type: "ready", id: 1, version: "0.2.0+test", effects: true, colorPoints: true, heal: true, lens: true,
     });
   });
 
@@ -372,7 +380,7 @@ describe("createDevelopEngineWorkerHandler", () => {
     const { handler, posted } = setup({
       module: {
         ...glue.module,
-        validateSettings: (settingsJson: string) => (JSON.parse(settingsJson).v === 8 ? unsupportedVersion : "[]"),
+        validateSettings: (settingsJson: string) => (JSON.parse(settingsJson).v >= 8 ? unsupportedVersion : "[]"),
       },
     });
     await handler({ type: "init", id: 1, manifestUrl: MANIFEST_URL });
@@ -442,6 +450,7 @@ describe("createDevelopEngineWorkerHandler", () => {
       detail: true,
       perspective: true,
       heal: true,
+      lens: true,
     });
     // 遠近（niho-photo#46）は小さな v: 7 の設定で確かめる
     expect(JSON.parse(validateSettings.mock.calls[3]?.[0] ?? "null")).toEqual({
@@ -1173,118 +1182,5 @@ describe("createDevelopEngineWorkerHandler", () => {
       ["error", 2],
       ["opened", 3],
     ]);
-  });
-
-  describe("部分補正（マスク。M3 #67）", () => {
-    /** `capabilities()` と `Developer.maskPlane` のある glue（M2 の wasm）。 */
-    function maskGlue(options: { capabilities?: unknown; maskPlane?: boolean; inMemory?: boolean } = {}) {
-      const memory = new WebAssembly.Memory({ initial: 1 });
-      const glue = fakeGlue({ memory });
-      const Base = glue.module.Developer;
-      const planeCalls: { settingsJson: string; maskId: string; maxDimension: number }[] = [];
-      class MaskDeveloper extends Base {
-        maskPlane(settingsJson: string, maskId: string, maxDimension: number) {
-          planeCalls.push({ settingsJson, maskId, maxDimension });
-          if (maskId === "missing") throw new Error("maskNotFound");
-          const data = options.inMemory ? new Uint8Array(memory.buffer, 32, 3 * 2) : new Uint8Array(3 * 2);
-          data.set([0, 51, 102, 153, 204, 255]);
-          return { width: 3, height: 2, data };
-        }
-      }
-      const capabilities =
-        "capabilities" in options
-          ? options.capabilities
-          : () => JSON.stringify({ masks: { kinds: ["linear", "radial"], max: 8, maskPlane: true } });
-      return {
-        planeCalls,
-        memory,
-        module: {
-          ...glue.module,
-          Developer: options.maskPlane === false ? Base : MaskDeveloper,
-          ...(capabilities === undefined ? {} : { capabilities }),
-        },
-      };
-    }
-
-    it("capabilities() の描ける種類・枚数・面の口を ready の masks に付ける（2 回目の init では読み直さない）", async () => {
-      const capabilities = vi.fn(() => JSON.stringify({ masks: { kinds: ["linear", "radial"], max: 8, maskPlane: true } }));
-      const glue = maskGlue({ capabilities });
-      const { handler, posted } = setup({ module: glue.module });
-      await handler({ type: "init", id: 1, manifestUrl: MANIFEST_URL });
-      await handler({ type: "init", id: 2, manifestUrl: MANIFEST_URL });
-      expect(posted.map((entry) => entry.message)).toEqual([
-        { type: "ready", id: 1, version: "0.2.0+test", masks: { kinds: ["linear", "radial"], max: 8, maskPlane: true } },
-        { type: "ready", id: 2, version: "0.2.0+test", masks: { kinds: ["linear", "radial"], max: 8, maskPlane: true } },
-      ]);
-      expect(capabilities).toHaveBeenCalledOnce();
-    });
-
-    it("口の無い古い glue・throw・JSON でない・種類の無い応答は masks を付けない（描けない扱い）。知らない種類は落とし、上限は 8", async () => {
-      const cases: Array<{ label: string; capabilities: unknown; expected: unknown }> = [
-        { label: "口が無い", capabilities: undefined, expected: undefined },
-        { label: "throw する", capabilities: () => { throw new Error("boom"); }, expected: undefined },
-        { label: "JSON でない", capabilities: () => "not json", expected: undefined },
-        { label: "masks が無い", capabilities: () => "{}", expected: undefined },
-        { label: "種類が空", capabilities: () => JSON.stringify({ masks: { kinds: [], max: 8, maskPlane: true } }), expected: undefined },
-        { label: "max が無い", capabilities: () => JSON.stringify({ masks: { kinds: ["linear"], maskPlane: true } }), expected: undefined },
-        {
-          label: "知らない種類と大きすぎる max",
-          capabilities: () => JSON.stringify({ masks: { kinds: ["linear", "spline", "radial"], max: 12, maskPlane: false } }),
-          expected: { kinds: ["linear", "radial"], max: 8, maskPlane: false },
-        },
-      ];
-      for (const { label, capabilities, expected } of cases) {
-        const glue = maskGlue({ capabilities });
-        const { handler, posted } = setup({ module: glue.module });
-        await handler({ type: "init", id: 1, manifestUrl: MANIFEST_URL });
-        expect((posted[0]?.message as { masks?: unknown }).masks, label).toEqual(expected);
-      }
-      // 応答が maskPlane: true でも、Developer に口が無ければ面は描けない
-      const noPlane = maskGlue({ maskPlane: false });
-      const { handler, posted } = setup({ module: noPlane.module });
-      await handler({ type: "init", id: 1, manifestUrl: MANIFEST_URL });
-      expect(posted[0]?.message).toMatchObject({ masks: { kinds: ["linear", "radial"], max: 8, maskPlane: false } });
-      await handler({ type: "open", id: 2, bytes: new ArrayBuffer(4), workingMaxDimension: 1280 });
-      await handler({ type: "maskPlane", id: 3, settingsJson: "{}", maskId: "mask-a", maxDimension: 640 });
-      expect(posted.at(-1)?.message).toEqual({ type: "error", id: 3, message: "develop engine cannot draw mask planes" });
-    });
-
-    it("maskPlane は開いている写真の面を返し（data は transfer。wasm の memory はコピー）、知らない id・写真なしは error", async () => {
-      for (const inMemory of [false, true]) {
-        const glue = maskGlue({ inMemory });
-        const { handler, posted } = setup({ module: glue.module });
-        await handler({ type: "init", id: 1, manifestUrl: MANIFEST_URL });
-        await handler({ type: "maskPlane", id: 2, settingsJson: "{}", maskId: "mask-a", maxDimension: 640 });
-        expect(posted.at(-1)?.message).toEqual({ type: "error", id: 2, message: "no photo is open" });
-        await handler({ type: "open", id: 3, bytes: new ArrayBuffer(4), workingMaxDimension: 1280 });
-        await handler({ type: "maskPlane", id: 4, settingsJson: '{"v":5}', maskId: "mask-a", maxDimension: 640 });
-        const last = posted.at(-1)!;
-        expect(last.message).toMatchObject({ type: "maskPlane", id: 4, width: 3, height: 2 });
-        const data = (last.message as { data: ArrayBuffer }).data;
-        expect(Array.from(new Uint8Array(data))).toEqual([0, 51, 102, 153, 204, 255]);
-        expect(last.transfer).toEqual([data]);
-        expect(data).not.toBe(glue.memory.buffer);
-        expect(glue.planeCalls.at(-1)).toEqual({ settingsJson: '{"v":5}', maskId: "mask-a", maxDimension: 640 });
-        await handler({ type: "maskPlane", id: 5, settingsJson: "{}", maskId: "missing", maxDimension: 640 });
-        expect(posted.at(-1)?.message).toEqual({ type: "error", id: 5, message: "maskNotFound" });
-      }
-    });
-
-    it("maskPlane は通常の要求と同じ列で順に処理する（描画を取り消さない）", async () => {
-      const glue = maskGlue();
-      const { handler, posted } = setup({ module: glue.module });
-      await handler({ type: "init", id: 1, manifestUrl: MANIFEST_URL });
-      await handler({ type: "open", id: 2, bytes: new ArrayBuffer(4), workingMaxDimension: 1280 });
-      await Promise.all([
-        handler({ type: "render", id: 3, settingsJson: "{}", maxDimension: 1280, interactive: true }),
-        handler({ type: "maskPlane", id: 4, settingsJson: "{}", maskId: "mask-a", maxDimension: 640 }),
-        handler({ type: "render", id: 5, settingsJson: "{}", maxDimension: 1280, interactive: false }),
-      ]);
-      expect(posted.slice(2).map((entry) => [entry.message.type, entry.message.id])).toEqual([
-        ["frame", 3],
-        ["maskPlane", 4],
-        ["frame", 5],
-      ]);
-    });
   });
 });

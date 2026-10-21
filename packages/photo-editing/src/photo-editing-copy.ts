@@ -195,6 +195,33 @@ export function photoEditingColorGradingSlidersLabel(zoneLabel: string): string 
   return `${zoneLabel}の色と輝度`;
 }
 
+/**
+ * 効果の群の下の「レンズ」の節（niho-photo#45。手動の歪み・周辺光量と、色収差・フリンジの除去。PC の右パネルで wasm が描いている写真
+ * だけ）。既定は閉じる。見出しの横の「初期化」はレンズ補正の全部を既定に戻す（読み上げ名は「レンズ補正を初期化」）。プロファイル
+ * による補正は作らない（RAW の作業コピーが撮影データで適用済み。状態だけを読み取りで見せる）。
+ */
+export const PHOTO_EDITING_LENS_TITLE = "レンズ";
+export const PHOTO_EDITING_LENS_RESET_LABEL = "レンズ補正を初期化";
+export const PHOTO_EDITING_LENS_SLIDER_LABELS = {
+  distortion: "歪み",
+  vignetting: "周辺光量",
+  vignettingMidpoint: "中点",
+  defringePurple: "紫",
+  defringeGreen: "緑",
+} as const;
+export const PHOTO_EDITING_LENS_CHROMATIC_ABERRATION_LABEL = "色収差を除去";
+/** フリンジの 2 本（紫・緑）の上の小見出し。 */
+export const PHOTO_EDITING_LENS_DEFRINGE_HEADING = "フリンジ";
+/**
+ * 作業コピーに焼き込まれたプロファイル補正の状態（読み取り専用の 1 行。`_source.lensCorrection.mode`）。適用済みなら、手動の値は
+ * その上の微調整であることも添える。
+ */
+export const PHOTO_EDITING_LENS_PROFILE_TEXT = {
+  apple: "歪み補正: 撮影データのプロファイルで適用済み（Apple）。手動の値はその上の微調整です",
+  embedded: "歪み・周辺光量の補正: 撮影データのプロファイルで適用済み（埋め込み）。手動の値はその上の微調整です",
+  none: "歪み補正: なし（この機種のプロファイルはありません）",
+} as const;
+
 /** 効果の群名の横の ⓘ（押すと群の先頭に項目ごとの説明を出す）。 */
 export const PHOTO_EDITING_EFFECTS_INFO_LABEL = "効果の説明";
 export const PHOTO_EDITING_TEXTURE_DESCRIPTION = "細かな質感を強めたり、和らげたりします";
@@ -508,7 +535,6 @@ export const PHOTO_EDITING_PRESET_UNSUPPORTED_LABELS = {
   noiseReductionDetail: "ノイズ軽減のディテール・コントラスト",
   colorNoiseReduction: "カラーノイズの軽減",
   colorNoiseReductionDetail: "カラーノイズの軽減のディテール・滑らかさ",
-  chromaticAberration: "色収差の除去",
   defringe: "フリンジ軽減",
   lensCorrection: "レンズ補正",
   incrementalWhiteBalance: "色温度・色かぶり補正",

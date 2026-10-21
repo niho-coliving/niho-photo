@@ -256,6 +256,12 @@ export type DevelopEngine = {
    */
   supportsHeal: () => Promise<boolean>;
   /**
+   * レンズ補正（`developSettings` v9 の `lens`。niho-photo#45）を読んで描ける wasm か（Worker が起こした wasm が `validateSettings` で
+   * 小さな `v: 9` の設定を通すとき。crate 0.23.0 から。初回に wasm を起こす。使えなければ false。throw しない）。false の wasm は
+   * レンズ補正のある設定を描かない（`unsupportedVersion`）ので、画面は「レンズ」の節を出さない
+   */
+  supportsLens: () => Promise<boolean>;
+  /**
    * JPEG / PNG の寸法（EXIF の向きを反映。ヘッダーだけ読む）。bytes は Worker へコピーで渡す（呼び出し側の ArrayBuffer はそのまま
    * 使える。`open` / `exportJpeg` は手放す）。wasm に無ければ reject
    */
@@ -482,6 +488,8 @@ export function createDevelopEngine(options: CreateDevelopEngineOptions = {}): D
   let uprightSupported = false;
   // 修復の印（v8）を描ける wasm（`ready` の応答で分かる）
   let healSupported = false;
+  // レンズ補正（v9）を描ける wasm（`ready` の応答で分かる）
+  let lensSupported = false;
   // プリセットの適用量・書き出し・見本の口が wasm にある（`ready` の応答で分かる）
   let presetAmountSupported = false;
   let settingsToXmpSupported = false;
@@ -646,6 +654,7 @@ export function createDevelopEngine(options: CreateDevelopEngineOptions = {}): D
         perspectiveSupported = response.perspective === true;
         uprightSupported = response.upright === true;
         healSupported = response.heal === true;
+        lensSupported = response.lens === true;
         presetAmountSupported = response.presetAmount === true;
         settingsToXmpSupported = response.settingsToXmp === true;
         presetThumbnailsSupported = response.presetThumbnails === true;
@@ -840,6 +849,10 @@ export function createDevelopEngine(options: CreateDevelopEngineOptions = {}): D
 
     async supportsHeal() {
       return (await ready()) && healSupported;
+    },
+
+    async supportsLens() {
+      return (await ready()) && lensSupported;
     },
 
     async estimateUpright(settings, mode) {
