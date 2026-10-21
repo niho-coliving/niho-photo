@@ -5,8 +5,8 @@
 
 use niho_develop::effects::GRAIN_DEFAULT_SEED;
 use niho_develop::settings::{
-    ColorGradeBand, CurveChannel, CurvePoint, HslAdjustment, HslBand, ToneCurve, VignetteStyle,
-    WhiteBalance, WhiteBalanceMode,
+    ColorGradeBand, CurveChannel, CurvePoint, DetailSettings, HslAdjustment, HslBand,
+    SharpeningSettings, ToneCurve, VignetteStyle, WhiteBalance, WhiteBalanceMode,
 };
 use niho_develop::tone_ops::curves_are_identity;
 use niho_develop::xmp::{
@@ -106,6 +106,18 @@ fn everything() -> DevelopSettings {
     s.grain.size = 35.0;
     s.grain.roughness = 55.0;
     s.grain.seed = Some(20_260_930.0);
+    // v5 detail (Issue #32): Camera Raw stores these as integers except the
+    // radius, which has one decimal.
+    s.detail = Some(DetailSettings {
+        sharpening: SharpeningSettings {
+            amount: 65.0,
+            radius: 1.3,
+            detail: 40.0,
+            masking: 20.0,
+        },
+        luminance_noise_reduction: 30.0,
+        color_noise_reduction: Some(45.0),
+    });
     s.v = s.required_version();
     assert!(s.validate().is_empty(), "{:?}", s.validate());
     s
@@ -260,9 +272,42 @@ fn groups_decide_what_is_written() {
     for group in XmpGroup::ALL {
         let keys = written_keys(&s, &[group]);
         if group == XmpGroup::NoiseReduction {
-            assert!(keys.is_empty(), "legacy engine must not export CNR");
-            assert_eq!(XmpGroup::parse(group.as_str()), Some(group));
-            continue;
+            // A raster engine renders NR only through v5 detail.
+            assert_eq!(
+                keys,
+                BTreeSet::from(
+                    [
+                        "LuminanceSmoothing",
+                        "ColorNoiseReduction",
+                        "ColorNoiseReductionDetail",
+                        "ColorNoiseReductionSmoothness",
+                    ]
+                    .map(String::from)
+                )
+            );
+            let mut without_detail = s.clone();
+            without_detail.detail = None;
+            assert!(
+                written_keys(&without_detail, &[group]).is_empty(),
+                "legacy engine without detail must not export CNR"
+            );
+        }
+        if group == XmpGroup::Sharpening {
+            assert_eq!(
+                keys,
+                BTreeSet::from(
+                    [
+                        "Sharpness",
+                        "SharpenRadius",
+                        "SharpenDetail",
+                        "SharpenEdgeMasking"
+                    ]
+                    .map(String::from)
+                )
+            );
+            let mut without_detail = s.clone();
+            without_detail.detail = None;
+            assert!(written_keys(&without_detail, &[group]).is_empty());
         }
         assert!(!keys.is_empty(), "{group:?}");
         assert!(union.is_disjoint(&keys), "{group:?} overlaps");
@@ -536,7 +581,8 @@ fn options_are_read_from_json() {
             "blackAndWhite",
             "vignette",
             "grain",
-            "noiseReduction"
+            "noiseReduction",
+            "sharpening"
         ]
     );
 }

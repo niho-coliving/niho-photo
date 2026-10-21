@@ -505,13 +505,19 @@ mod tests {
     }
     #[test]
     fn detail_upper_range_reduces_flat_chroma_and_keeps_frozen_lower_range() {
+        // Sensor-like noise is independent per channel, so the log-luma
+        // guide carries noise too. A perfectly luma-flat chroma field would
+        // make every epsilon collapse to the same box mean (the guide has
+        // no variance), which cannot tell the extended range apart.
         let (w, h) = (48, 24);
         let mut seed = 71u32;
+        let mut next = || {
+            seed = seed.wrapping_mul(1_664_525).wrapping_add(1_013_904_223);
+            ((seed >> 8) as f32 / 16_777_215.0 - 0.5) * 0.12
+        };
         let mut source = Vec::with_capacity(w * h * 3);
         for _ in 0..w * h {
-            seed = seed.wrapping_mul(1_664_525).wrapping_add(1_013_904_223);
-            let noise = ((seed >> 8) as f32 / 16_777_215.0 - 0.5) * 0.24;
-            source.extend_from_slice(&[0.3 + noise, 0.3 - noise * LUMA[0] / LUMA[1], 0.3]);
+            source.extend_from_slice(&[0.3 + next(), 0.3 + next(), 0.3 + next()]);
         }
         for amount in [0.0, 12.5, 25.0, 37.0, 50.0] {
             assert_eq!(
@@ -527,11 +533,20 @@ mod tests {
                 .map(|p| (p[0] - p[1]).powi(2) + (p[2] - p[1]).powi(2))
                 .sum::<f32>()
         };
-        assert!(chroma_energy(&high) < chroma_energy(&low));
-        assert!(chroma_energy(&low) < chroma_energy(&source));
-        for pixel in high.chunks_exact(3) {
+        let (source_energy, low_energy, high_energy) = (
+            chroma_energy(&source),
+            chroma_energy(&low),
+            chroma_energy(&high),
+        );
+        assert!(
+            high_energy < low_energy * 0.9,
+            "100 must reduce more chroma than 50: {high_energy} vs {low_energy}"
+        );
+        assert!(low_energy < source_energy);
+        for (pixel, original) in high.chunks_exact(3).zip(source.chunks_exact(3)) {
             let y = pixel[0] * LUMA[0] + pixel[1] * LUMA[1] + pixel[2] * LUMA[2];
-            assert!((y - 0.3).abs() < 2e-5, "luma drift {y}");
+            let source_y = original[0] * LUMA[0] + original[1] * LUMA[1] + original[2] * LUMA[2];
+            assert!((y - source_y).abs() < 2e-5, "luma drift {y} vs {source_y}");
         }
     }
 }

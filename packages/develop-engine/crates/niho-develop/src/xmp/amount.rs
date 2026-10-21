@@ -12,6 +12,9 @@
 //! - Color grading hues take the short way around the wheel.
 //! - Switches (`grayscale`, `vignette.style`, `grain.seed`) are the
 //!   preset's above 0%.
+//! - Detail (sharpening, luminance / color NR) moves like the numbers, from
+//!   the photo's values (NIHO's defaults, and for color NR what the photo
+//!   renders today, when it has no `detail`).
 //! - An absolute white balance moves in mireds (1e6 / K) from the photo's
 //!   white (its own absolute white, else the as-shot white on Lightroom's
 //!   scale) and stops at the preset's (no extrapolation).
@@ -132,6 +135,9 @@ fn blend(
         t,
         (0.0, 100.0),
     );
+    // Detail (v5): each amount moves from the photo's value (NIHO's
+    // default, or the color NR it renders today, when it has no `detail`).
+    r.detail = super::detail::blend_detail(base, full, t, mix_in);
     for key in EFFECT_KEYS {
         let field = key.field;
         // Grayscale and the style have no range; the seed is a switch.

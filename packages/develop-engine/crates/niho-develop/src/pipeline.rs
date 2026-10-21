@@ -1431,6 +1431,83 @@ pub(crate) struct NoiseCache {
     stats: Option<LinearImage>,
 }
 
+/// Applies v5 source NR (color, then luminance) into `noise_cache`, or
+/// clears it when no NR is active. Geometry windows include a halo and use
+/// the whole-frame long edge, so their filter footprint matches an uncropped
+/// render; the statistics source is reduced at its own full-resolution scale.
+fn update_noise_cache(
+    source_img: &LinearImage,
+    framing: Option<&Framing<'_>>,
+    source_space: crate::detail::SourceSpace,
+    detail: Option<crate::settings::DetailSettings>,
+    quality: Quality,
+    noise_cache: &mut Option<NoiseCache>,
+) {
+    let source_long_edge = framing.map_or(source_img.width.max(source_img.height), |frame| {
+        frame.long_edge
+    });
+    let active_detail = detail.filter(|value| {
+        value.luminance_noise_reduction > 0.0
+            || value
+                .color_noise_reduction
+                .is_some_and(|amount| amount > 0.0)
+    });
+    let Some(value) = active_detail else {
+        *noise_cache = None;
+        return;
+    };
+    let frame_key = framing.map_or("", |frame| frame.key);
+    let output = framing.map(|frame| frame.output);
+    let key = format!(
+        "{:p}|{}x{}|{source_long_edge}|{frame_key}|{output:?}|{quality:?}|{source_space:?}|{}|{:?}",
+        source_img.data.as_ptr(),
+        source_img.width,
+        source_img.height,
+        value.luminance_noise_reduction,
+        value.color_noise_reduction,
+    );
+    if noise_cache.as_ref().is_some_and(|cache| cache.key == key) {
+        return;
+    }
+    let image = LinearImage {
+        width: source_img.width,
+        height: source_img.height,
+        data: crate::detail::reduce_noise(
+            &source_img.data,
+            source_img.width,
+            source_img.height,
+            source_long_edge,
+            source_space,
+            value,
+            value.color_noise_reduction,
+        )
+        .expect("validated decoded detail input"),
+    };
+    let stats = framing.map(|frame| LinearImage {
+        width: frame.stats_source.width,
+        height: frame.stats_source.height,
+        data: crate::detail::reduce_noise(
+            &frame.stats_source.data,
+            frame.stats_source.width,
+            frame.stats_source.height,
+            // Statistics read the full source before geometry. Its NR
+            // footprint belongs to that full-resolution source; the working
+            // window separately uses frame.long_edge.
+            frame.stats_source.width.max(frame.stats_source.height),
+            source_space,
+            value,
+            value.color_noise_reduction,
+        )
+        .expect("validated decoded detail statistics input"),
+    });
+    *noise_cache = Some(NoiseCache {
+        key,
+        source_ptr: source_img.data.as_ptr() as usize,
+        image,
+        stats,
+    });
+}
+
 /// Keeps only a local pass that may be reused by the next frame. A frame
 /// without spatial adjustments must release the old pass so a later drag
 /// recomputes adaptive statistics from its current settings.
@@ -1683,76 +1760,19 @@ fn render_linear(
     let s = raster_legacy.as_ref().unwrap_or(s);
     // v5 source NR precedes NIHO local tone processing. Raster color NR is
     // opt-in only: the legacy top-level field remains ignored on JPEG/PNG.
-    // Geometry windows include a halo and use the whole-frame long edge, so
-    // their filter footprint matches an uncropped render.
-    let detail = s.detail;
-    let source_long_edge = framing.map_or(source_img.width.max(source_img.height), |frame| {
-        frame.long_edge
-    });
     let source_space = if input.is_some() {
         crate::detail::SourceSpace::LinearProPhoto
     } else {
         crate::detail::SourceSpace::LinearSrgb
     };
-    let active_detail = detail.filter(|value| {
-        value.luminance_noise_reduction > 0.0
-            || value
-                .color_noise_reduction
-                .is_some_and(|amount| amount > 0.0)
-    });
-    if let Some(value) = active_detail {
-        let frame_key = framing.map_or("", |frame| frame.key);
-        let output = framing.map(|frame| frame.output);
-        let key = format!(
-            "{:p}|{}x{}|{source_long_edge}|{frame_key}|{output:?}|{quality:?}|{source_space:?}|{}|{:?}",
-            source_img.data.as_ptr(),
-            source_img.width,
-            source_img.height,
-            value.luminance_noise_reduction,
-            value.color_noise_reduction,
-        );
-        if noise_cache.as_ref().is_none_or(|cache| cache.key != key) {
-            let image = LinearImage {
-                width: source_img.width,
-                height: source_img.height,
-                data: crate::detail::reduce_noise(
-                    &source_img.data,
-                    source_img.width,
-                    source_img.height,
-                    source_long_edge,
-                    source_space,
-                    value,
-                    value.color_noise_reduction,
-                )
-                .expect("validated decoded raster detail input"),
-            };
-            let stats = framing.map(|frame| LinearImage {
-                width: frame.stats_source.width,
-                height: frame.stats_source.height,
-                data: crate::detail::reduce_noise(
-                    &frame.stats_source.data,
-                    frame.stats_source.width,
-                    frame.stats_source.height,
-                    // Statistics read the full source before geometry. Its
-                    // NR footprint belongs to that full-resolution source;
-                    // the working window separately uses frame.long_edge.
-                    frame.stats_source.width.max(frame.stats_source.height),
-                    source_space,
-                    value,
-                    value.color_noise_reduction,
-                )
-                .expect("validated decoded raster detail statistics input"),
-            });
-            *noise_cache = Some(NoiseCache {
-                key,
-                source_ptr: source_img.data.as_ptr() as usize,
-                image,
-                stats,
-            });
-        }
-    } else {
-        *noise_cache = None;
-    }
+    update_noise_cache(
+        source_img,
+        framing,
+        source_space,
+        s.detail,
+        quality,
+        noise_cache,
+    );
     let cached_noise = noise_cache.as_ref();
     let img = cached_noise.map_or(source_img, |cache| &cache.image);
     let reduced_framing = framing.map(|frame| Framing {
@@ -2468,9 +2488,36 @@ fn render_working_copy_with(
                 white_balance_table.as_deref(),
                 s,
             );
+            // Signed RAW engines reduce noise once while preparing their
+            // canonical master (niho3.rs / niho4.rs). A legacy unsigned RAW
+            // working copy (niho-1 / niho-2 / niho-8) has no such master, so
+            // its v5 NR runs here on the linear ProPhoto source, before white
+            // balance and exposure, with the same cache as raster sources.
+            let unsigned_legacy = !matches!(
+                s.engine.as_str(),
+                ENGINE_NIHO_3 | ENGINE_NIHO_4 | ENGINE_NIHO_5 | ENGINE_NIHO_7 | ENGINE_NIHO_11
+            );
+            if unsigned_legacy {
+                update_noise_cache(
+                    wc.image,
+                    framing,
+                    crate::detail::SourceSpace::LinearProPhoto,
+                    s.detail,
+                    quality,
+                    noise,
+                );
+            }
+            let cached_noise = noise.as_ref().filter(|_| unsigned_legacy);
+            let img = cached_noise.map_or(wc.image, |cache| &cache.image);
+            let reduced_framing = framing.map(|frame| Framing {
+                stats_source: cached_noise
+                    .and_then(|cache| cache.stats.as_ref())
+                    .unwrap_or(frame.stats_source),
+                ..*frame
+            });
             render_raw(
-                wc.image,
-                framing,
+                img,
+                reduced_framing.as_ref(),
                 *baseline_ev,
                 white_balance,
                 matches!(
