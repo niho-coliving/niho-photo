@@ -106,7 +106,8 @@ pub struct Rendered {
 /// transform for bounded sRGB rasters). Texture / Clarity / Dehaze and the
 /// absolute white balance are not part of it in Photo Bench either. NIHO's
 /// positive highlight-priority vignette also enables it because the linear
-/// gain can push bounded sRGB highlights above 1.0.
+/// gain can push bounded sRGB highlights above 1.0, and so do NIHO's
+/// midtone / global color grading luminance (niho-photo#39).
 pub fn has_active_color_edits(s: &DevelopSettings) -> bool {
     let tol = 1e-9;
     let relative_active = s.white_balance.mode == WhiteBalanceMode::Relative;
@@ -150,11 +151,15 @@ pub fn has_active_color_edits(s: &DevelopSettings) -> bool {
         g.shadow.luminance,
         g.midtone.hue,
         g.midtone.saturation,
+        // NIHO renders midtone / global luminance (Photo Bench keeps them
+        // only), so they are color edits like the shadow / highlight ones.
+        g.midtone.luminance,
         g.highlight.hue,
         g.highlight.saturation,
         g.highlight.luminance,
         g.global.hue,
         g.global.saturation,
+        g.global.luminance,
     ];
     // Black & white is a color edit (NIHO; the mix only acts with it).
     s.grayscale

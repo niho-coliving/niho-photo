@@ -33,6 +33,7 @@ import {
   type BrowserPhotoBatchExportTarget,
 } from "../browser-photo-batch-export";
 import { hasDevelopGeometry, isNeutralDevelopColors, type DevelopSettings } from "../develop-engine/develop-settings";
+import { hasPhotoEditingColorGradingNativeExportUnsupportedLuminance } from "../photo-editing-color-grading";
 import { isDevelopWorkTarget } from "../develop-engine/develop-work-target";
 import {
   isWorkPending,
@@ -159,6 +160,7 @@ import { PhotoEditingDropOverlay } from "./photo-editing-drop-overlay";
 import { PhotoEditingAddFolderEmptyState, PhotoEditingAddPhotosEmptyState } from "./photo-editing-empty-states";
 import { PhotoEditingGrid, countPhotoEditingGridColumns, type PhotoEditingGridItem } from "./photo-editing-grid";
 import { PhotoEditingHistogram } from "./photo-editing-histogram";
+import { PhotoEditingColorGrading, PhotoEditingColorGradingSection } from "./photo-editing-color-grading";
 import { PhotoEditingHslMixer, PhotoEditingHslMixerSection } from "./photo-editing-hsl-mixer";
 import { PhotoEditingMenu, type PhotoEditingMenuItem } from "./photo-editing-menu";
 import { PhotoEditingPresetsPanel } from "./photo-editing-presets-panel";
@@ -1349,6 +1351,11 @@ export function BrowserPhotoEditingWorkbench(props: {
     delete withoutFullSize.exportFullSize;
     return withoutFullSize;
   })();
+  const selectedExportSettings =
+    selectedItem && viewMode === "loupe" && opened?.key === selectedItem.key
+      ? open.settingsRef.current
+      : selectedItem?.photo.developSettings ?? {};
+  const nativeFullSizeUnsupported = hasPhotoEditingColorGradingNativeExportUnsupportedLuminance(selectedExportSettings);
   const exportChoices = selectedItem
     ? resolveBrowserPhotoExportChoices({
         photo: selectedItem.photo,
@@ -1359,6 +1366,7 @@ export function BrowserPhotoEditingWorkbench(props: {
         engineUsable: !develop.developUnavailable,
         // 原寸（K2-3a 移行元設計）は、原寸の書き出しに対応した NIHO Desktop の口があるときだけ（PC のシートに出す）
         desktopFullSize: capabilities.nativeExport || capabilities.nativeExportUpdateRequired,
+        nativeFullSizeUnsupported,
         // HEIC / HEIF・TIFF の原寸は、描ける口（NIHO camera）だけ
         desktopFullSizeRaster: capabilities.nativeExportRaster === true,
         // 背景除去（C4 移行元設計）: PNG を足し、原寸は camera の口があるときだけ
@@ -2154,6 +2162,18 @@ export function BrowserPhotoEditingWorkbench(props: {
                 <PhotoEditingHslMixer reset settings={settings} disabled={controlsDisabled} onSettingsChange={open.changeSettings} />
               ) : undefined
             }
+            // カラーグレーディング（niho-photo#39）: カラーミキサーと同じ写真だけ。段の中では色相環を少し小さくする
+            colorGrading={
+              wasmPhotoKey !== null && !canvasOnly ? (
+                <PhotoEditingColorGrading
+                  reset
+                  compact
+                  settings={settings}
+                  disabled={controlsDisabled}
+                  onSettingsChange={open.changeSettings}
+                />
+              ) : undefined
+            }
             colorPicking={colorPicking}
             visibleKeys={canvasOnly ? BROWSER_CANVAS_ADJUSTMENT_KEYS : undefined}
             presets={
@@ -2255,7 +2275,8 @@ export function BrowserPhotoEditingWorkbench(props: {
             colorMixer={colorMixer}
             // ライトの群の下の「カーブ」（niho-photo#37）とカラーの群の下の「カラーミキサー」（niho-photo#38）: ヒストグラムと同じく PC の
             // 右パネルで、段 2 の wasm が画を描いている写真だけ（S1 の canvas・スマホの層・閲覧の面には出さない）。カーブの背後の輝度は
-            // ヒストグラムの度数を使う（数え直さない）。ポイントカラー（`colorMixer`）はカラーミキサーの節の下に並ぶ
+            // ヒストグラムの度数を使う（数え直さない）。カラーミキサーの節の下に「カラーグレーディング」（niho-photo#39）を続け、
+            // ポイントカラー（`colorMixer`）はその下に並ぶ
             afterGroup={
               histogramAvailable
                 ? {
@@ -2268,11 +2289,18 @@ export function BrowserPhotoEditingWorkbench(props: {
                       />
                     ),
                     color: (
-                      <PhotoEditingHslMixerSection
-                        settings={settings}
-                        disabled={controlsDisabled}
-                        onSettingsChange={open.changeSettings}
-                      />
+                      <>
+                        <PhotoEditingHslMixerSection
+                          settings={settings}
+                          disabled={controlsDisabled}
+                          onSettingsChange={open.changeSettings}
+                        />
+                        <PhotoEditingColorGradingSection
+                          settings={settings}
+                          disabled={controlsDisabled}
+                          onSettingsChange={open.changeSettings}
+                        />
+                      </>
                     ),
                   }
                 : undefined

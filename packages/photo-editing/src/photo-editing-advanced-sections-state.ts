@@ -10,7 +10,7 @@ import { useCallback, useState } from "react";
  * 節を足すときは {@link PHOTO_EDITING_ADVANCED_SECTION_IDS} に id を足す（群の id〔`PhotoEditingAdjustmentGroupId`〕はスマホの道具の
  * アイコンにも効くので増やさない）。保存値の知らない id（新しい版で開いた節）は、書き戻すときも残す。
  */
-export const PHOTO_EDITING_ADVANCED_SECTION_IDS = ["curve", "colorMixer"] as const;
+export const PHOTO_EDITING_ADVANCED_SECTION_IDS = ["curve", "colorMixer", "colorGrading"] as const;
 
 export type PhotoEditingAdvancedSectionId = (typeof PHOTO_EDITING_ADVANCED_SECTION_IDS)[number];
 
