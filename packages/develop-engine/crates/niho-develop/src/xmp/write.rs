@@ -6,12 +6,10 @@
 //! reads back the written values (point curves on Lightroom's 0..255 grid).
 //! Every key of a written group is written, defaults included, the way
 //! Lightroom saves a preset: applying it sets those controls whatever the
-//! photo had (except the never-rendered midtone / global luminance at 0).
+//! photo had (the midtone / global luminance too since niho-photo#39
+//! renders them).
 
-use super::{
-    hsl_key, EffectField, EffectGroup, ScalarField, CURVE_MAP, EFFECT_KEYS, HSL_PREFIXES,
-    SCALAR_KEYS,
-};
+use super::{hsl_key, EffectField, EffectGroup, CURVE_MAP, EFFECT_KEYS, HSL_PREFIXES, SCALAR_KEYS};
 use crate::effects::GRAIN_DEFAULT_SEED;
 use crate::settings::{
     CurveChannel, DevelopSettings, HslBand, SettingsError, ToneCurve, WhiteBalanceMode,
@@ -380,16 +378,6 @@ pub fn settings_to_xmp(settings: &DevelopSettings, options: &XmpWriteOptions) ->
             continue;
         }
         let v = key.field.value(settings);
-        // Midtone / global luminance are kept but never rendered (the
-        // reader reports them unsupported whatever their value): written
-        // only when a photo carries one from Photo Bench.
-        let unrendered = matches!(
-            key.field,
-            ScalarField::MidtoneGradeLuminance | ScalarField::GlobalGradeLuminance
-        );
-        if unrendered && v == 0.0 {
-            continue;
-        }
         // Lightroom stores its ten basic sliders as integers.  A migrated or
         // API-created DevelopSettings can still contain a fractional value,
         // so round at the XMP boundary instead of emitting a value that the
