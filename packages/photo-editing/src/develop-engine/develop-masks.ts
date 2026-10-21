@@ -283,6 +283,44 @@ function canonicalPoint(point: DevelopMaskPoint): DevelopMaskPoint {
   return { x: round6(point.x), y: round6(point.y) };
 }
 
+function linearPointDistance(zero: DevelopMaskPoint, full: DevelopMaskPoint): number {
+  const dx = full.x - zero.x;
+  const dy = full.y - zero.y;
+  return Math.sqrt(dx * dx + dy * dy);
+}
+
+function canonicalLinearPoints(zero: DevelopMaskPoint, full: DevelopMaskPoint): { zero: DevelopMaskPoint; full: DevelopMaskPoint } {
+  const canonicalZero = canonicalPoint(zero);
+  const canonicalFull = canonicalPoint(full);
+  if (linearPointDistance(canonicalZero, canonicalFull) >= MIN_DEVELOP_MASK_LINEAR_DISTANCE) {
+    return { zero: canonicalZero, full: canonicalFull };
+  }
+
+  // Rounding both endpoints can shorten a valid minimum-length line. Add a few microunits along its major axis,
+  // moving either endpoint as needed to stay inside the documented point range.
+  const axis = Math.abs(full.x - zero.x) >= Math.abs(full.y - zero.y) ? "x" : "y";
+  const direction = Math.sign(full[axis] - zero[axis]);
+  for (let steps = 1; steps <= 4; steps += 1) {
+    const fullValue = round6(canonicalFull[axis] + direction * steps / 1e6);
+    if (fullValue >= -1 && fullValue <= 2) {
+      const candidateFull = { ...canonicalFull, [axis]: fullValue };
+      if (linearPointDistance(canonicalZero, candidateFull) >= MIN_DEVELOP_MASK_LINEAR_DISTANCE) {
+        return { zero: canonicalZero, full: candidateFull };
+      }
+    }
+
+    const zeroValue = round6(canonicalZero[axis] - direction * steps / 1e6);
+    if (zeroValue >= -1 && zeroValue <= 2) {
+      const candidateZero = { ...canonicalZero, [axis]: zeroValue };
+      if (linearPointDistance(candidateZero, canonicalFull) >= MIN_DEVELOP_MASK_LINEAR_DISTANCE) {
+        return { zero: candidateZero, full: canonicalFull };
+      }
+    }
+  }
+
+  throw new RangeError("linear develop mask points must be separated by at least 0.001");
+}
+
 function canonicalAdjust(adjust: DevelopMaskAdjust): Record<string, unknown> {
   const result: Record<string, unknown> = {};
   for (const { key } of DEVELOP_MASK_ADJUST_KEYS) {
@@ -313,8 +351,9 @@ export function canonicalDevelopMask(mask: DevelopMask): Record<string, unknown>
   if (!mask.enabled) result.enabled = false;
   if (mask.invert) result.invert = true;
   if (mask.kind === "linear") {
-    result.zero = canonicalPoint(mask.zero);
-    result.full = canonicalPoint(mask.full);
+    const points = canonicalLinearPoints(mask.zero, mask.full);
+    result.zero = points.zero;
+    result.full = points.full;
   } else if (mask.kind === "radial") {
     result.center = canonicalPoint(mask.center);
     result.radius = canonicalPoint(mask.radius);
@@ -332,6 +371,7 @@ export function canonicalDevelopMask(mask: DevelopMask): Record<string, unknown>
  * （マスクが 1 枚でもあれば 5）。
  */
 export function writeDevelopMasks(settings: DevelopSettings, masks: readonly DevelopMask[]): DevelopSettings {
+  if (masks.length > MAX_DEVELOP_MASKS) throw new RangeError(`at most ${MAX_DEVELOP_MASKS} develop masks are supported`);
   const { masks: _previous, ...rest } = settings;
   const next: Record<string, unknown> = masks.length > 0 ? { ...rest, masks: masks.map(canonicalDevelopMask) } : rest;
   return { ...next, v: developSettingsVersion(next), engine: settings.engine };

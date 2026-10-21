@@ -9520,13 +9520,13 @@
     },
     {
       "path": "packages/photo-editing/src/develop-engine/develop-masks.ts",
-      "sha256": "f5c77040a4a67f438ea4079de5c881c7b91f1ecff51d600e2ee137b86c7f12bf",
-      "origin": "Issue #65の公開仕様 docs/local-adjustments.md だけから新規作成した部分補正（マスク）の型・厳密な読み取り・正規形書き出しのTypeScript実装。外部画像・非公開コード・個体metadataを含まない。"
+      "sha256": "386b994ff3b6e4ff8a0f74bd3cc68fd214cdd29f91a20329d16e1a175eb1a628",
+      "origin": "Issue #65の公開仕様 docs/local-adjustments.md だけから新規作成した部分補正（マスク）の型・厳密な読み取り・正規形書き出しのTypeScript実装。外部画像・非公開コード・個体metadataを含まない。\n変更理由: 線形マスクの丸め後も最小距離を保ち、書き込み時に8枚上限を強制する。"
     },
     {
       "path": "packages/photo-editing/src/develop-engine/develop-masks.test.ts",
-      "sha256": "28384650609a4db1b4ee90438483932f639f8c8bb2c0b81d099ed8d76ab48ec8",
-      "origin": "Issue #65の公開仕様と合成fixtureだけから新規作成した、マスク設定のRust共有fixture照合と設定関数の回帰。外部画像・非公開コード・個体metadataを含まない。"
+      "sha256": "966a544db81900703ba8457334edf9d1748e4c8578145eb25cb3f2180df993c2",
+      "origin": "Issue #65の公開仕様と合成fixtureだけから新規作成した、マスク設定のRust共有fixture照合と設定関数の回帰。外部画像・非公開コード・個体metadataを含まない。\n変更理由: 線形マスクの最小距離保持と上限超過の拒否を検証する。"
     }
   ],
   "excludedSources": [

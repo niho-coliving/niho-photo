@@ -153,6 +153,15 @@ describe("parseDevelopMasks", () => {
     expect(parseDevelopMasks([linear({ zero: { x: 0.5, y: 0.5 }, full: { x: 0.502, y: 0.5 } })])).not.toBeNull();
   });
 
+  it("線形マスクを小数6桁へ正規化しても最小距離を保ち、設定を読み直せる", () => {
+    const mask = parsedOne(linear({ zero: { x: 0, y: 0 }, full: { x: 0.0007072, y: 0.0007072 } }));
+    const written = writeDevelopMasks(neutralDevelopSettings(null), [mask]);
+
+    expect(parseDevelopMasks(written.masks)).not.toBeNull();
+    expect(readDevelopSettings(written)).not.toBeNull();
+    expect(written.v).toBe(DEVELOP_MASKS_SETTINGS_VERSION);
+  });
+
   it("id は ASCII の英数字 _ - で 1〜64 byte、配列内で一意（大文字小文字は別）", () => {
     expect(parseDevelopMasks([linear({ id: "A_b-9" }), linear({ id: "a_b-9" })])).not.toBeNull();
     expect(parseDevelopMasks([linear({ id: "a".repeat(64) })])).not.toBeNull();
@@ -285,6 +294,11 @@ describe("書き出し（正規形）", () => {
     expect(writeDevelopMasks(written, []).v).toBe(1);
     // 入力は書き換えない
     expect(Object.hasOwn(base, "masks")).toBe(false);
+  });
+
+  it("writeDevelopMasks は対応上限を超えるマスクを拒否する", () => {
+    const masks = Array.from({ length: MAX_DEVELOP_MASKS + 1 }, (_, index) => parsedOne(linear({ id: `m${index}` })));
+    expect(() => writeDevelopMasks(neutralDevelopSettings(null), masks)).toThrow(RangeError);
   });
 
   it("無効なマスクも保ち、v 5 を要求する（編集は残す）", () => {
