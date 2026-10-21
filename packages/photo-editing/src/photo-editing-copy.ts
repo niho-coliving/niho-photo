@@ -88,6 +88,36 @@ export function photoEditingHistogramLabel(shadowRate: number, highlightRate: nu
   return `ヒストグラム。黒つぶれ ${photoEditingClipRateText(shadowRate)}、白飛び ${photoEditingClipRateText(highlightRate)}`;
 }
 
+/**
+ * ライトの群の下の「カーブ」の節（niho-photo#37。PC の右パネルで、wasm が描いている写真だけ）。既定は閉じる。見出しの横の「初期化」は
+ * 曲線だけを直線に戻す（右パネルの一番上の「初期化」と読み分けるため、読み上げ名は「カーブを初期化」）。
+ */
+export const PHOTO_EDITING_CURVE_TITLE = "カーブ";
+export const PHOTO_EDITING_CURVE_RESET_LABEL = "カーブを初期化";
+/** グラフ（点を足す・動かす面）と、チャンネルの切り替えの読み上げ名。 */
+export const PHOTO_EDITING_CURVE_GRAPH_LABEL = "トーンカーブ";
+export const PHOTO_EDITING_CURVE_CHANNELS_LABEL = "曲線のチャンネル";
+/** チャンネルの切り替え（見た目は短い名前、読み上げは曲線の名前）。 */
+export const PHOTO_EDITING_CURVE_CHANNEL_LABELS = {
+  rgb: { short: "RGB", name: "RGB 曲線" },
+  red: { short: "R", name: "赤の曲線" },
+  green: { short: "G", name: "緑の曲線" },
+  blue: { short: "B", name: "青の曲線" },
+} as const;
+/** 点を選んでいないときにグラフの下に出す案内。 */
+export const PHOTO_EDITING_CURVE_HINT = "グラフを押して点を足し、ドラッグで動かします。ダブルクリックで消します";
+/** 点のキー操作の説明（点の読み上げに添える）。 */
+export const PHOTO_EDITING_CURVE_KEYS_HELP =
+  "矢印キーで動かします（Shift で大きく）。Delete で消し、Enter で隣の点との間に点を足します。両端の点は消せません";
+/** 選んでいる点の入力と出力（0〜100）。 */
+export function photoEditingCurvePointValueText(input: number, output: number): string {
+  return `入力 ${input} / 出力 ${output}`;
+}
+/** 点の読み上げ名（例「RGB 曲線の点 2 / 入力 45 出力 52」）。 */
+export function photoEditingCurvePointLabel(curveName: string, order: number, input: number, output: number): string {
+  return `${curveName}の点 ${order} / 入力 ${input} 出力 ${output}`;
+}
+
 /** 効果の群名の横の ⓘ（押すと群の先頭に項目ごとの説明を出す）。 */
 export const PHOTO_EDITING_EFFECTS_INFO_LABEL = "効果の説明";
 export const PHOTO_EDITING_TEXTURE_DESCRIPTION = "細かな質感を強めたり、和らげたりします";

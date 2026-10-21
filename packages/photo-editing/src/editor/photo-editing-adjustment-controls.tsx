@@ -1,6 +1,6 @@
 "use client";
 
-import { useId, useState, type ReactNode } from "react";
+import { Fragment, useId, useState, type ReactNode } from "react";
 import { ChevronDown, Info } from "lucide-react";
 
 import type { PhotoEditingPhoto, PhotoEditingSettings } from "../photo-editing-types";
@@ -57,14 +57,17 @@ export { PhotoEditingSlider, type PhotoEditingSliderPhase } from "./photo-editin
  */
 export type PhotoEditingSettingsUpdate = (current: PhotoEditingSettings) => PhotoEditingSettings;
 
-const GROUP_ACCESSORY_BUTTON_CLASS_NAME =
+/** 群・節の見出しの横の文字のボタン（「撮影時に戻す」・カーブの「初期化」）。 */
+export const GROUP_ACCESSORY_BUTTON_CLASS_NAME =
   "min-h-11 rounded-full px-2.5 text-xs font-bold text-niho-text-sub transition hover:bg-niho-pale/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-niho-accent-ink";
 
 /**
  * 群の 1 つ。見出しは開閉のボタン（既定は開く。開閉は端末に覚える）。見出しの横のボタン（ⓘ・「撮影時に戻す」）は開閉の
  * ボタンの兄弟に置く（入れ子の操作を作らない）。ⓘ の説明は群の先頭に出す（閉じていても出す）。
+ *
+ * 群の間に差し込む「既定で閉じた節」（`PhotoEditingAdvancedSection`。カーブなど）も同じ見た目で使う（開閉と保存は呼ぶ側）。
  */
-function AdjustmentGroup(props: {
+export function AdjustmentGroup(props: {
   id: string;
   title: string;
   expanded: boolean;
@@ -354,6 +357,9 @@ export function resolvePhotoEditingControlSliders(props: {
  *
  * `lightAccessory` を渡した面だけ、ライトの群の見出しの横に置く（ブラウザ版の「自動」。F4b 移行元設計）。見出しの兄弟に置くので、群を
  * 閉じていても出る。省いた面（NIHO Desktop）は今のまま。
+ *
+ * `afterGroup` を渡した面だけ、その群の直後（次の群の前）に要素を差し込む（ブラウザ版の PC の「カーブ」の節。niho-photo#37。後続の
+ * 節も同じ口を使う）。群を出さない（見せる項目が無い）ときは差し込みも出さない。省いた面の DOM は今のまま。
  */
 export function PhotoEditingAdjustmentGroups(props: {
   /** 設定の値（Photo Bench の settings か developSettings）。無ければ 0（白は撮影時の値）で見せる */
@@ -372,6 +378,8 @@ export function PhotoEditingAdjustmentGroups(props: {
    * 群の中に描かない（ブラウザ版は補正の面の一番上のチップに置く。niho-photo#51）。どちらでも、白黒の間は自然な彩度・彩度を押せない
    */
   grayscaleToggle?: "group" | "hidden";
+  /** 群の直後に差し込む要素（群の id ごと。省略時は何も差し込まない） */
+  afterGroup?: Partial<Record<PhotoEditingAdjustmentGroupId, ReactNode>>;
   onSettingsChange: (update: PhotoEditingSettingsUpdate, phase: PhotoEditingSliderPhase) => void;
 }) {
   const ownIdPrefix = useId();
@@ -471,6 +479,7 @@ export function PhotoEditingAdjustmentGroups(props: {
           ? group.controls.filter((control) => control.kind !== "toggle")
           : group.controls;
         if (controls.length === 0) return null;
+        const after = props.afterGroup?.[group.id];
         const info = group.info;
         const infoItems = info
           ? controls.flatMap((control) => {
@@ -478,7 +487,7 @@ export function PhotoEditingAdjustmentGroups(props: {
               return text ? [{ label: controlLabel(control), text }] : [];
             })
           : [];
-        return (
+        const groupElement = (
           <AdjustmentGroup
             key={group.id}
             id={`${idPrefix}-group-${group.id}`}
@@ -501,6 +510,13 @@ export function PhotoEditingAdjustmentGroups(props: {
           >
             {controls.map(renderControl)}
           </AdjustmentGroup>
+        );
+        // 差し込みの有無で群の要素の種類が替わらないよう、いつも Fragment で包む（差し込みが現れる・消えるときに群を作り直さない）
+        return (
+          <Fragment key={group.id}>
+            {groupElement}
+            {after}
+          </Fragment>
         );
       })}
     </>

@@ -8,7 +8,7 @@ import {
   workWaitText,
   type WorkWait,
 } from "../develop-engine/develop-work-wait";
-import type { PhotoEditingControlKey } from "../photo-editing-adjustments";
+import type { PhotoEditingAdjustmentGroupId, PhotoEditingControlKey } from "../photo-editing-adjustments";
 import {
   BROWSER_PHOTO_EDITING_READ_ONLY_TEXT,
   PHOTO_EDITING_AUTO_LABEL,
@@ -117,6 +117,11 @@ export function BrowserPhotoEditingAdjustments(props: {
   visibleKeys?: ReadonlyArray<PhotoEditingControlKey>;
   /** Oklch の独立した色ミキサー（対応する wasm の写真だけ）。 */
   colorMixer?: ReactNode;
+  /**
+   * 補正の面で、群の直後に差し込む節（群の id ごと。`PhotoEditingAdjustmentGroups` の `afterGroup`）。ライトの群の下の「カーブ」
+   * （niho-photo#37。PC で wasm が描いている写真だけ渡す）など、既定で閉じた節を置く
+   */
+  afterGroup?: Partial<Record<PhotoEditingAdjustmentGroupId, ReactNode>>;
   /**
    * 一番上のヒストグラム（niho-photo#36。画を描ける wasm の写真だけ渡す）。道具・面〔補正 / プリセット / 切り抜き / 背景除去〕に
    * 依らず見出し行の上に出し、パネルを送っても上端に残す
@@ -340,6 +345,7 @@ export function BrowserPhotoEditingAdjustments(props: {
             visibleKeys={props.visibleKeys}
             // 白黒は一番上のチップで切り替える（群の中には描かない。白黒の間に彩度を押せなくするのは群のまま）
             grayscaleToggle="hidden"
+            afterGroup={props.afterGroup}
             onSettingsChange={props.onSettingsChange}
           />
           {props.colorMixer}
