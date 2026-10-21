@@ -22,9 +22,12 @@
 //! `developer.exportJpeg` / `exportPng` export through the Developer, with
 //! its surfaces (the one-shot `render` / `exportJpeg` / `exportPng` hold
 //! none and fail on an active surface mask with `maskSurfaceMissing`).
+//! `developer.estimateUpright(settingsJson,
+//! mode)` estimates Upright (the perspective that stands its lines upright).
 //! Everything runs single threaded (no SharedArrayBuffer, spec "段 2").
 
 use js_sys::{Object, Reflect, Uint8ClampedArray};
+use niho_develop::upright::UprightMode;
 use niho_develop::{
     convert, frame, pipeline, xmp, DevelopSettings, Filter, LightroomWhite, Quality, RenderOptions,
     Session, WorkingCopyMeta,
@@ -705,5 +708,26 @@ impl Developer {
         let settings = niho_develop::parse_settings(settings_json).map_err(js_error)?;
         let result = self.session.auto_settings(&settings).map_err(js_error)?;
         niho_develop::auto::write_changes(settings_json, &settings, &result).map_err(js_error)
+    }
+
+    /// Upright (niho-photo#46): the perspective that stands this photo's
+    /// lines upright, found on the frame of these settings' quarter turns
+    /// and flips (their straighten angle taken off). `mode`: 1 auto, 2
+    /// level, 3 vertical, 4 full. Returns `{ perspective: { vertical,
+    /// horizontal, rotate, aspect, scale, x, y }, mode, confidence, lines:
+    /// { vertical, horizontal }, reason? }` JSON (`reason` "noLines": the
+    /// identity, nothing to correct). The frames' kept state is left as it
+    /// was.
+    #[wasm_bindgen(js_name = estimateUpright)]
+    pub fn estimate_upright(&self, settings_json: &str, mode: u32) -> Result<String, JsError> {
+        let settings = niho_develop::parse_settings(settings_json).map_err(js_error)?;
+        let mode = UprightMode::from_number(mode).ok_or_else(|| {
+            JsError::new("mode must be 1 (auto), 2 (level), 3 (vertical) or 4 (full)")
+        })?;
+        Ok(self
+            .session
+            .estimate_upright(&settings, mode)
+            .to_value()
+            .to_string())
     }
 }

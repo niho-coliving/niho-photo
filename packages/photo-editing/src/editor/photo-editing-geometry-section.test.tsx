@@ -5,11 +5,13 @@ import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { DevelopGeometry, DevelopSize } from "../develop-engine/develop-geometry";
+import { developGeometryUpright } from "../develop-engine/develop-upright";
 import { PHOTO_EDITING_ADVANCED_SECTIONS_STORAGE_KEY } from "../photo-editing-advanced-sections-state";
 
 import { PhotoEditingCropTools } from "./photo-editing-crop-tools";
 import { formatGeometryValue } from "./photo-editing-geometry-section";
 import type { PhotoEditingSliderPhase } from "./photo-editing-slider";
+import type { PhotoEditingUprightControl } from "./photo-editing-upright-buttons";
 
 /**
  * 切り抜きの道具の「ジオメトリ」の節（niho-photo#46）。「反転と回転」の下に既定で閉じた節を置き、遠近の 7 本のスライダー（ドラッグの
@@ -33,7 +35,13 @@ let container: HTMLDivElement;
 let root: Root;
 let changes: { geometry: DevelopGeometry; phase: PhotoEditingSliderPhase }[];
 
-type HarnessProps = { initial: DevelopGeometry; perspective?: boolean; disabled?: boolean };
+type HarnessProps = {
+  initial: DevelopGeometry;
+  perspective?: boolean;
+  disabled?: boolean;
+  /** Upright のボタンを出す（押している値は幾何の `upright` から） */
+  upright?: Omit<PhotoEditingUprightControl, "pressed">;
+};
 
 /** 変更の通知を受けて幾何を持ち替える面（`update` は呼ばれた時点の最新に当てる）。 */
 function Harness(props: HarnessProps) {
@@ -57,6 +65,7 @@ function Harness(props: HarnessProps) {
         changes.push({ geometry: next, phase });
         setGeometry(next);
       }}
+      upright={props.upright ? { ...props.upright, pressed: developGeometryUpright(geometry) } : null}
     />
   );
 }
@@ -225,6 +234,87 @@ describe("切り抜きの道具の「ジオメトリ」の節", () => {
     await render({ initial: IDENTITY, disabled: true });
     expect(slider("水平方向").disabled).toBe(true);
     expect(constrainSwitch().disabled).toBe(true);
+  });
+});
+
+describe("節の先頭の Upright（niho-photo#46 後半）", () => {
+  const NAMES = [
+    "自動（傾きと遠近を自動で補正）",
+    "水平（傾きだけを水平に補正）",
+    "垂直（傾きと縦の遠近を補正）",
+    "フル（傾きと縦横の遠近をすべて補正）",
+  ];
+  const control = (overrides: Partial<Omit<PhotoEditingUprightControl, "pressed">> = {}) => ({
+    busy: false,
+    status: null,
+    run: vi.fn(),
+    ...overrides,
+  });
+
+  function uprightButtons(): HTMLButtonElement[] {
+    return Array.from(container.querySelectorAll<HTMLButtonElement>('[data-testid="photo-upright"] button'));
+  }
+
+  beforeEach(() => {
+    window.localStorage.setItem(PHOTO_EDITING_ADVANCED_SECTIONS_STORAGE_KEY, '["geometry"]');
+  });
+
+  it("スライダーの上に 4 つのボタン（読み上げ名は「名前（何を直すか）」・当たり 44px）を並べ、押している Upright を aria-pressed で示す", async () => {
+    const run = vi.fn();
+    await render({
+      initial: { ...IDENTITY, upright: 3, perspective: { vertical: -20, horizontal: 0, rotate: 1, aspect: 0, scale: 100, x: 0, y: 0 } },
+      upright: control({ run }),
+    });
+    const section = container.querySelector('[data-testid="photo-geometry-section"]');
+    const group = section?.querySelector('[role="group"]');
+    expect(group?.getAttribute("aria-busy")).toBe("false");
+    // 節の先頭（スライダーより前）
+    const first = section?.querySelector('[data-testid="photo-upright"], input[type="range"]');
+    expect(first?.getAttribute("data-testid")).toBe("photo-upright");
+    expect(uprightButtons().map((button) => button.getAttribute("aria-label"))).toEqual(NAMES);
+    expect(uprightButtons().map((button) => button.textContent)).toEqual(["自動", "水平", "垂直", "フル"]);
+    expect(uprightButtons().map((button) => button.getAttribute("aria-pressed"))).toEqual(["false", "false", "true", "false"]);
+    expect(uprightButtons().every((button) => button.className.includes("h-11"))).toBe(true);
+    await click(uprightButtons()[0]!);
+    expect(run).toHaveBeenCalledWith(1);
+  });
+
+  it("推定している間は 4 つとも押せない（aria-busy）", async () => {
+    await render({ initial: IDENTITY, upright: control({ busy: true }) });
+    expect(container.querySelector('[data-testid="photo-upright"] [role="group"]')?.getAttribute("aria-busy")).toBe("true");
+    expect(uprightButtons().every((button) => button.disabled)).toBe(true);
+  });
+
+  it("線が見つからなければ控えめな 1 行（role=status）、当てたときは読み上げだけ", async () => {
+    await render({ initial: IDENTITY, upright: control({ status: { kind: "notFound" } }) });
+    expect(container.querySelector('[data-testid="photo-upright"] [role="status"]')?.textContent).toBe(
+      "傾きを検出できませんでした",
+    );
+    act(() => root.unmount());
+    root = createRoot(container);
+    await render({ initial: { ...IDENTITY, upright: 3 }, upright: control({ status: { kind: "applied", mode: 3 } }) });
+    expect(container.querySelector('[data-testid="photo-upright"] [role="status"]')).toBeNull();
+    const live = container.querySelector('[data-testid="photo-upright"] [aria-live="polite"]');
+    expect(live?.textContent).toBe("Upright の「垂直」で補正しました");
+    expect(live?.className).toBe("sr-only");
+  });
+
+  it("Upright を推定できない wasm（upright を渡さない）ではボタンを出さない", async () => {
+    await render({ initial: IDENTITY });
+    expect(container.querySelector('[data-testid="photo-upright"]')).toBeNull();
+    expect(container.querySelector('[data-testid="photo-geometry-section"]')).not.toBeNull();
+  });
+
+  it("手でスライダーを動かすと、押している Upright のボタンが外れる（値はそこから続けて直す）", async () => {
+    const perspective = { vertical: -20, horizontal: 0, rotate: 1, aspect: 0, scale: 100, x: 0, y: 0 };
+    await render({ initial: { ...IDENTITY, upright: 1, perspective, constrain: true }, upright: control() });
+    expect(uprightButtons()[0]?.getAttribute("aria-pressed")).toBe("true");
+    await drag(slider("垂直方向"), [-24]);
+    const last = changes.at(-1)!.geometry;
+    expect(last.upright).toBeUndefined();
+    expect(last.perspective).toEqual({ ...perspective, vertical: -24 });
+    expect(last.constrain).toBe(true);
+    expect(uprightButtons().map((button) => button.getAttribute("aria-pressed"))).toEqual(["false", "false", "false", "false"]);
   });
 });
 

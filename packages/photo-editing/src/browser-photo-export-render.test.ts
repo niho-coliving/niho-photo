@@ -80,7 +80,13 @@ function fakeEngine(options: { source?: { width: number; height: number }; frame
     supportsEffects: vi.fn(async () => true),
     supportsColorPoints: vi.fn(async () => true),
     supportsDetail: vi.fn(async () => true),
-    supportsPerspective: vi.fn(async () => true),    imageSize: vi.fn(async () => source),
+    supportsPerspective: vi.fn(async () => true),
+    // Upright（niho-photo#46 後半。この export test では使わない）
+    supportsUpright: vi.fn(async () => false),
+    estimateUpright: vi.fn(async () => {
+      throw new Error("not used by exports");
+    }),
+    imageSize: vi.fn(async () => source),
     rasterDecodeSize: vi.fn(async () => 2048),
     geometryOutputSize: vi.fn(async () => frame),
     withCaptureExif: vi.fn(async (jpeg: Uint8Array<ArrayBuffer>) => withExifMark(jpeg)),

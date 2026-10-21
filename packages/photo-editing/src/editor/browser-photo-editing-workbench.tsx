@@ -2503,6 +2503,7 @@ export function BrowserPhotoEditingWorkbench(props: {
                   onCancel={crop.cancel}
                   perspective={crop.perspective}
                   onGeometryChange={crop.changeGeometry}
+                  upright={crop.upright}
                 />
               ) : cropBlocked ? (
                 <p className="pt-1 text-xs leading-relaxed text-niho-text-sub">{PHOTO_EDITING_CROP_BLOCKED_BY_CUTOUT_TEXT}</p>
