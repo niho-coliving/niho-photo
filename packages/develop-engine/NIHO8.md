@@ -1,6 +1,6 @@
 # niho-8 float cube 評価候補
 
-`niho-8` は Issue #29 の opt-in 評価候補であり、製品既定・新規編集・preset の既定ではない。crate の reader capability は保存済み `niho-8` を読めるが、`DevelopSettings::neutral()` と `new_edit()` は引き続き `niho-1` を作る。
+`niho-8` は Issue #29 の opt-in 評価候補であり、製品既定・新規編集・preset の既定ではない。crate の reader capability は保存済み `niho-8` を読めるが、`DevelopSettings::neutral()` と `new_edit()` は引き続き `niho-1` を作る。新規編集の既定に昇格したのは、raster の土台を `niho-10` に替えた [`niho-12`](NIHO12.md)（旧 RAW の経路は `niho-8` と同じ画素）である。`niho-8` の画素は変えない。
 
 ## 数式と入力境界
 

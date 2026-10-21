@@ -113,12 +113,15 @@ describe("presetDevelopSettings", () => {
     expect(presetDevelopSettings(base, { ...base, contrast: 12 }).engine).toBe("niho-1");
   });
 
-  it("niho-10・signed の写真は Rust と同じく niho-2 へ昇格させず、写真の数式のまま", () => {
+  it("niho-10・niho-12・signed の写真は Rust と同じく niho-2 へ昇格させず、写真の数式のまま", () => {
     const relative = { relativeTemperature: 20, relativeTint: -10, whiteBalance: { mode: "relative" } };
     const raster: DevelopSettings = neutralDevelopSettings();
-    expect(raster.engine).toBe("niho-10");
-    expect(presetDevelopSettings(raster, { ...raster, ...relative, engine: "niho-2" })).toMatchObject({ engine: "niho-10", ...relative });
-    expect(presetDevelopSettings(raster, { ...raster, contrast: 12 }).engine).toBe("niho-10");
+    expect(raster.engine).toBe("niho-12");
+    expect(presetDevelopSettings(raster, { ...raster, ...relative, engine: "niho-2" })).toMatchObject({ engine: "niho-12", ...relative });
+    expect(presetDevelopSettings(raster, { ...raster, contrast: 12 }).engine).toBe("niho-12");
+    const raster10: DevelopSettings = { ...raster, engine: "niho-10" };
+    expect(presetDevelopSettings(raster10, { ...raster10, ...relative, engine: "niho-2" })).toMatchObject({ engine: "niho-10", ...relative });
+    expect(presetDevelopSettings(raster10, { ...raster10, contrast: 12 }).engine).toBe("niho-10");
     const signed: DevelopSettings = { ...neutralDevelopSettings("raw-apple.d8.p3.e4.cal-signed"), engine: "niho-3", look: "niho-standard-2" };
     expect(presetDevelopSettings(signed, { ...signed, ...relative, engine: "niho-2" }).engine).toBe("niho-3");
     const signed7: DevelopSettings = { ...signed, engine: "niho-7", look: "niho-standard-5" };
@@ -129,9 +132,13 @@ describe("presetDevelopSettings", () => {
     });
     const signed9: DevelopSettings = { ...signed7, engine: "niho-11" };
     expect(presetDevelopSettings(signed9, { ...signed9, ...relative, engine: "niho-2" }).engine).toBe("niho-11");
-    // RAW の作業コピーの新規（niho-2）はそのまま
+    // unsigned RAW の作業コピーの新規（niho-12）・保存済みの niho-2 はそのまま
     const raw: DevelopSettings = neutralDevelopSettings("raw-apple.d8.p1.e1.cal-none");
-    expect(presetDevelopSettings(raw, { ...raw, ...relative }).engine).toBe("niho-2");
+    expect(raw.engine).toBe("niho-12");
+    expect(presetDevelopSettings(raw, { ...raw, ...relative }).engine).toBe("niho-12");
+    expect(presetDevelopSettings(raw, { ...raw, ...relative, engine: "niho-2" }).engine).toBe("niho-12");
+    const raw2: DevelopSettings = { ...raw, engine: "niho-2" };
+    expect(presetDevelopSettings(raw2, { ...raw2, ...relative }).engine).toBe("niho-2");
   });
 });
 
