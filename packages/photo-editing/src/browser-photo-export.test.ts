@@ -46,6 +46,7 @@ function choices(overrides: Partial<Omit<ExportInput, "photo">> & { photo?: Expo
     wide: overrides.wide ?? true,
     engineUsable: overrides.engineUsable ?? true,
     desktopFullSize: overrides.desktopFullSize,
+    nativeFullSizeUnsupported: overrides.nativeFullSizeUnsupported,
     ...(overrides.desktopFullSizeRaster ? { desktopFullSizeRaster: overrides.desktopFullSizeRaster } : {}),
     ...(overrides.cutout ? { cutout: overrides.cutout } : {}),
   });
@@ -426,6 +427,26 @@ describe("大きさの「原寸」（NIHO Desktop の口。K2-3a #17148）", () 
       "撮影日時を付けます。位置情報は付けません。",
     );
   });
+
+  it("中間調・全体の輝度を使う間は、保存済み・編集中どちらの原寸カードも押せない", () => {
+    expect(
+      choices({
+        desktopFullSize: true,
+        photo: photo({ developSettings: { v: 1, engine: "niho-1", colorGrading: { midtone: { luminance: 25 } } } }),
+      }).jpeg.fullSize,
+    ).toEqual({ enabled: false, detail: "原寸は中間調・全体の輝度に未対応です" });
+    expect(choices({ desktopFullSize: true, nativeFullSizeUnsupported: true }).jpeg.fullSize).toEqual({
+      enabled: false,
+      detail: "原寸は中間調・全体の輝度に未対応です",
+    });
+    // 中間調・全体以外のゾーンの輝度は native renderer で描ける。
+    expect(
+      choices({
+        desktopFullSize: true,
+        photo: photo({ developSettings: { v: 1, engine: "niho-1", colorGrading: { shadow: { luminance: 25 } } } }),
+      }).jpeg.fullSize,
+    ).toEqual(FULL);
+  });
 });
 
 describe("複数枚のフォルダへの書き出し（NIHO Desktop の口。K2-3b #17148）", () => {
@@ -503,6 +524,11 @@ describe("背景除去を反映した書き出し（NIHO camera。C4 #18392）",
     expect(effectiveBrowserPhotoExportSizeOption(result, "width1080")).toBe("width1080");
     expect(defaultBrowserPhotoExportFormat(result)).toBe("jpeg");
     expect(browserPhotoExportChoice(result, "png")).toEqual({ enabled: true, detail: "背景除去を反映" });
+  });
+
+  it("背景除去の原寸も中間調・全体の輝度が native 未対応なら押せない", () => {
+    const result = choices({ ...LOUPE, cutout: { ...TRANSPARENT, fullSize: true }, nativeFullSizeUnsupported: true });
+    expect(result.jpeg.fullSize).toEqual({ enabled: false, detail: "原寸は中間調・全体の輝度に未対応です" });
   });
 
   it("原寸は camera の口（fullSize）があるときだけ。NIHO Desktop の原寸は出さない", () => {

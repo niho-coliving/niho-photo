@@ -29,6 +29,8 @@ import { parseDevelopEngineManifest } from "./develop-engine-manifest";
  *   `effects: true` を付ける（crate の版の比較では、画面と wasm の公開が前後したときに食い違った。移行元設計）
  * - 色ミキサーは `v: 4` の `colorPoints` を読めるときだけ `ready` に `colorPoints: true` を付ける。公開版番号だけで推測せず、
  *   `validateSettings` に実際の最小設定を渡して確かめる
+ * - ディテール（シャープ・ノイズ軽減。Issue #32）も同じく、`v: 6` の `detail` を `validateSettings` が通すときだけ `ready` に
+ *   `detail: true` を付ける
  * - プリセットの適用量・書き出し・見本（F2a 移行元設計 の口。crate 0.5.0 から）: `applyPreset`（開いている写真の撮影時の白
  *   `asShotWhite()` を渡す）・`settingsToXmp`・`renderPresetThumbnail`（開いている写真の `thumbnail(256)` の別の session を初回に
  *   作って持ち、丁寧に〔final〕描く。親のengine/CNR設定が変わったら手放し、次回に現在の解析から作り直す。写真を手放すと一緒に手放す）。口が glue にあれば `ready` に `presetAmount` /
@@ -116,6 +118,8 @@ export type DevelopEngineWorkerFeatures = {
   effects?: true;
   /** wasm が独立した色ミキサーの設定（`v: 4`）を読める。 */
   colorPoints?: true;
+  /** wasm がディテール（シャープ・ノイズ軽減）の設定（`v: 6`）を読める（Issue #32）。 */
+  detail?: true;
   /** `applyPreset`（プリセットの適用量。F2a 移行元設計） */
   presetAmount?: true;
   /** `settingsToXmp`（今の補正をプリセットに書き出す） */
@@ -365,6 +369,26 @@ function acceptsColorPointSettings(validateSettings: DevelopGlue["validateSettin
   }
 }
 
+/** ディテールが 1 つだけ効いている小さな `v: 6` の設定（crate の `DETAIL_SETTINGS_VERSION` = 6）。 */
+const DETAIL_PROBE_SETTINGS_JSON = JSON.stringify({
+  v: 6,
+  engine: "niho-10",
+  look: "niho-standard-1",
+  base: null,
+  detail: { sharpening: { amount: 10, radius: 1, detail: 25, masking: 0 }, luminanceNoiseReduction: 0 },
+});
+
+/** 古い wasm・壊れた応答・throw は false（ディテールの項目を出さない）。 */
+function acceptsDetailSettings(validateSettings: DevelopGlue["validateSettings"]): boolean {
+  if (!validateSettings) return false;
+  try {
+    const issues: unknown = JSON.parse(String(validateSettings(DETAIL_PROBE_SETTINGS_JSON)));
+    return Array.isArray(issues) && issues.length === 0;
+  } catch {
+    return false;
+  }
+}
+
 /** glue にある口（`ready` に付ける）。 */
 function glueFeatures(glue: DevelopGlue): DevelopEngineWorkerFeatures {
   return {
@@ -466,7 +490,12 @@ function analysisSettingsKeyFromJson(settingsJson: string): string | null {
   const colorNoiseReduction = values.colorNoiseReduction ?? 0;
   if (typeof colorNoiseReduction !== "number" || !Number.isFinite(colorNoiseReduction)) return null;
   const engine = typeof values.engine === "string" ? values.engine : "";
-  return `${engine}:${colorNoiseReduction}`;
+  // v6 のノイズ軽減（Issue #32）も解析の元の画を変える（signed RAW の master・niho-6 の解析）
+  const detail = values.detail;
+  if (detail === undefined) return `${engine}:${colorNoiseReduction}`;
+  if (typeof detail !== "object" || detail === null || Array.isArray(detail)) return null;
+  const { luminanceNoiseReduction, colorNoiseReduction: detailColor } = detail as Record<string, unknown>;
+  return `${engine}:${colorNoiseReduction}:${String(luminanceNoiseReduction)}:${String(detailColor)}`;
 }
 
 export function createDevelopEngineWorkerHandler(
@@ -478,6 +507,7 @@ export function createDevelopEngineWorkerHandler(
   // 起こした wasm が効果のある設定（v: 3）を読めるか（起こしたときに 1 回だけ確かめる）
   let effects = false;
   let colorPoints = false;
+  let detail = false;
   let wasmMemory: () => ArrayBufferLike | null = () => null;
   let diagnostics = false;
   let unavailableReason: string | null = null;
@@ -597,6 +627,7 @@ export function createDevelopEngineWorkerHandler(
       ...(glue ? glueFeatures(glue) : {}),
       ...(effects ? { effects: true as const } : {}),
       ...(colorPoints ? { colorPoints: true as const } : {}),
+      ...(detail ? { detail: true as const } : {}),
     });
   };
 
@@ -632,6 +663,7 @@ export function createDevelopEngineWorkerHandler(
       version = typeof reported === "string" && reported ? reported : manifest.version;
       effects = acceptsEffectSettings(loaded.validateSettings);
       colorPoints = loaded.colorSampling && acceptsColorPointSettings(loaded.validateSettings);
+      detail = acceptsDetailSettings(loaded.validateSettings);
       postReady(id);
     } catch (error) {
       unavailableReason = errorMessage(error);

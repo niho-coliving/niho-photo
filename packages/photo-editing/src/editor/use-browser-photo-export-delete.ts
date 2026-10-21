@@ -60,12 +60,14 @@ import {
   readDevelopSettings,
   type DevelopSettings,
 } from "../develop-engine/develop-settings";
+import { hasPhotoEditingColorGradingNativeExportUnsupportedLuminance } from "../photo-editing-color-grading";
 import { workExportWaitingText } from "../develop-engine/develop-work-wait";
 import { cutoutFailureCode } from "../photo-cutout";
 import { isPhotoCloudSignedRecipeEligible } from "../photo-cloud-signed-eligibility";
 import {
   PHOTO_EDITING_EXPORT_ENGINE_UNAVAILABLE_TEXT,
   PHOTO_EDITING_EXPORT_FULL_SIZE_FAILED_TEXT,
+  PHOTO_EDITING_EXPORT_FULL_SIZE_COLOR_GRADING_UNSUPPORTED_FAILED_TEXT,
   PHOTO_EDITING_EXPORT_FULL_SIZE_UNSUPPORTED_SOURCE_FAILED_TEXT,
   PHOTO_EDITING_EXPORT_FULL_SIZE_UPDATE_TEXT,
   PHOTO_EDITING_EXPORT_NEWER_TEXT,
@@ -588,6 +590,10 @@ export function useBrowserPhotoExportAndDelete(params: {
       params.capabilities.nativeExport || params.capabilities.nativeExportUpdateRequired ? library.exportNative : undefined;
     const cutoutFullSize = cutout?.exportFullSize;
     if (rendersImage && (jpegRoute === "native") !== (options.size === "full")) return "skipped";
+    if (rendersImage && jpegRoute === "native" && hasPhotoEditingColorGradingNativeExportUnsupportedLuminance(settingsRef.current)) {
+      setStatus({ kind: "error", text: PHOTO_EDITING_EXPORT_FULL_SIZE_COLOR_GRADING_UNSUPPORTED_FAILED_TEXT });
+      return "failed";
+    }
     if (rendersImage && jpegRoute === "native" && !(cutout ? cutoutFullSize : exportNative)) return "skipped";
     // 背景除去は 1 枚で wasm で開いた写真の今の補正で描く（長辺 2048px / 幅 1080px は engine、原寸は camera の口）
     if (cutout && jpegRoute !== "engine" && jpegRoute !== "native") return "skipped";
@@ -974,6 +980,10 @@ export function useBrowserPhotoExportAndDelete(params: {
           }
           const item = itemsById.get(target.photoId);
           if (!item) throw new Error("選んだ写真を読み込めませんでした。");
+          const savedSettings = item.photo.developSettings;
+          if (savedSettings && hasPhotoEditingColorGradingNativeExportUnsupportedLuminance(savedSettings)) {
+            throw new Error(PHOTO_EDITING_EXPORT_FULL_SIZE_COLOR_GRADING_UNSUPPORTED_FAILED_TEXT);
+          }
           // HEIC / TIFF は Desktop が断る（`unsupportedSource`）ので、オリジナルを Desktop へ落とす前に同じ 1 行にする（描ける口は除く）
           if (!isDesktopFullSizeSource(item.photo, { raster: params.capabilities.nativeExportRaster === true })) {
             throw new Error(PHOTO_EDITING_EXPORT_FULL_SIZE_UNSUPPORTED_SOURCE_FAILED_TEXT);

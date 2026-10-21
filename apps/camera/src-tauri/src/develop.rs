@@ -339,7 +339,8 @@ fn stored_source_context(photos: &CameraPhotos, photo_id: &str) -> Option<Develo
 // ---------------------------------------------------------------------------
 // コマンド
 
-/// 現像が使えるか（`{ available, raster, fullSizeRaster }`。`fullSizeRaster` は HEIC / HEIF・TIFF も原寸で書き出せる）。起動時の
+/// 現像が使えるか（`{ available, raster, fullSizeRaster, masks }`。`fullSizeRaster` は HEIC / HEIF・TIFF も原寸で書き出せる、`masks` は
+/// 部分補正（`developSettings.masks`）のある設定を原寸で書き出せる（同梱の niho-develop-render が描ける版）。起動時の
 /// 確かめが終わるまで待ってから答える（確かめている間に false を返すと、画面は原寸の書き出し・作業コピーを出さないまま始まる）。
 /// 確かめは sidecar ごとに時間の上限がある。
 #[tauri::command]
@@ -351,6 +352,7 @@ pub async fn camera_develop_status(app: tauri::AppHandle) -> Result<Value, Camer
       "available": available,
       "raster": available && develop.is_raster_available_cached(),
       "fullSizeRaster": available && develop.is_full_size_raster_export_available_cached(),
+      "masks": available && develop.is_masks_export_available_cached(),
     }))
   })
   .await

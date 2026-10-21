@@ -40,7 +40,13 @@ fn settings_for(case: &Value) -> DevelopSettings {
         let preset = xmp::builtin_preset(id).expect("bundled preset");
         let result = xmp::preset_settings(preset.xmp, None).unwrap();
         assert!(result.converted);
-        return result.settings;
+        // Photo Bench never rendered the Detail panel; the bundled presets'
+        // Sharpness / color NR (v6 detail, Issue #32) are outside this color
+        // gate, which compares Photo Bench's own frames.
+        let mut settings = result.settings;
+        settings.detail = None;
+        settings.v = settings.required_version();
+        return settings;
     }
     let outcome = convert_edit_settings(&case["settings"], None);
     assert!(outcome.ok, "{:?}", outcome.issues);

@@ -166,7 +166,7 @@ describe("resolveDevelopOpenSettings", () => {
     ).toEqual({ kind: "newer" });
     expect(
       resolveDevelopOpenSettings({
-        cloudPhoto: cloudPhoto({ ...SAVED_DEVELOP, developSettings: { v: 6, engine: "niho-1" } as unknown as DevelopSettings }),
+        cloudPhoto: cloudPhoto({ ...SAVED_DEVELOP, developSettings: { v: 7, engine: "niho-1" } as unknown as DevelopSettings }),
         baseVersion: null,
       }),
     ).toEqual({ kind: "newer" });
@@ -190,7 +190,7 @@ describe("resolveDevelopOpenSettings", () => {
     expect(open({ v: 5, engine: "niho-10", look: "niho-standard-1", base: null })).toMatchObject({ kind: "settings" });
     expect(open({ ...saved, v: 4 })).toEqual({ kind: "newer" });
     expect(open({ ...saved, masks: [{ ...mask, opacity: 1 }] })).toEqual({ kind: "newer" });
-    expect(open({ ...saved, v: 6 })).toEqual({ kind: "newer" });
+    expect(open({ ...saved, v: 7 })).toEqual({ kind: "newer" });
   });
 
   it("切り抜き・回転のある developSettings（v2）は、幾何を扱える面では開き、扱えない面（NIHO Desktop）では newer（#17138）", () => {

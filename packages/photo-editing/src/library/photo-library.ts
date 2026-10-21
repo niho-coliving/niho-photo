@@ -244,6 +244,11 @@ export type PhotoLibraryCapabilities = {
    * PNG だけ）
    */
   nativeExportRaster?: boolean;
+  /**
+   * 原寸の書き出しで部分補正（`developSettings.masks`）のある設定も描ける（NIHO camera の同梱の niho-develop-render が描ける版。省略 =
+   * 描けない。画面の扱いは M3 #67）
+   */
+  nativeExportMasks?: boolean;
   /** 背景除去（C4） */
   cutout: boolean;
   favorites: boolean;

@@ -200,15 +200,25 @@ fn luminance_weights(space: SourceSpace) -> [f32; 3] {
 
 /// The cache key of an image prepared from a `width x height` source for
 /// `settings` with an analysis made at `analysis_exposure_ev` (only the
-/// amounts the response uses and that exposure change it).
+/// amounts the response uses, its preprocessed source, and that exposure
+/// change it).
 pub fn preparation_key(
     width: usize,
     height: usize,
     settings: &DevelopSettings,
     analysis_exposure_ev: f64,
 ) -> String {
+    let detail = settings.detail.map_or_else(
+        || "none".to_string(),
+        |detail| {
+            format!(
+                "{}|{:?}",
+                detail.luminance_noise_reduction, detail.color_noise_reduction
+            )
+        },
+    );
     format!(
-        "niho6|{width}x{height}|{}|{}|{analysis_exposure_ev}",
+        "niho6|{width}x{height}|{detail}|{}|{}|{analysis_exposure_ev}",
         settings.highlights.min(0.0),
         settings.shadows.max(0.0),
     )

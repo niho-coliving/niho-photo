@@ -33,6 +33,7 @@ import {
   type BrowserPhotoBatchExportTarget,
 } from "../browser-photo-batch-export";
 import { hasDevelopGeometry, isNeutralDevelopColors, type DevelopSettings } from "../develop-engine/develop-settings";
+import { hasPhotoEditingColorGradingNativeExportUnsupportedLuminance } from "../photo-editing-color-grading";
 import { isDevelopWorkTarget } from "../develop-engine/develop-work-target";
 import {
   isWorkPending,
@@ -116,10 +117,11 @@ import { BrowserPhotoMobileExportSheet } from "./browser-photo-editing-mobile-ex
 import {
   ADD_ACCEPT,
   BROWSER_CANVAS_ADJUSTMENT_KEYS,
-  BROWSER_EFFECTS_ADJUSTMENT_KEYS,
   FAVORITE_FAILED_TEXT,
+  browserAdjustmentKeys,
   browserPhotoTileUrl,
   cloudKey,
+  detailControlsAvailable,
   isBrowserItemInPlace,
   isWideWindow,
   type BrowserItem,
@@ -158,8 +160,11 @@ import { PhotoEditingDropOverlay } from "./photo-editing-drop-overlay";
 import { PhotoEditingAddFolderEmptyState, PhotoEditingAddPhotosEmptyState } from "./photo-editing-empty-states";
 import { PhotoEditingGrid, countPhotoEditingGridColumns, type PhotoEditingGridItem } from "./photo-editing-grid";
 import { PhotoEditingHistogram } from "./photo-editing-histogram";
+import { PhotoEditingColorGrading, PhotoEditingColorGradingSection } from "./photo-editing-color-grading";
+import { PhotoEditingHslMixer, PhotoEditingHslMixerSection } from "./photo-editing-hsl-mixer";
 import { PhotoEditingMenu, type PhotoEditingMenuItem } from "./photo-editing-menu";
 import { PhotoEditingPresetsPanel } from "./photo-editing-presets-panel";
+import { PhotoEditingToneCurveSection } from "./photo-editing-tone-curve";
 import { useBrowserPhotoAdd } from "./use-browser-photo-add";
 import { useBrowserPhotoAuto } from "./use-browser-photo-auto";
 import { useBrowserPhotoBulk } from "./use-browser-photo-bulk";
@@ -171,7 +176,11 @@ import {
 import { useBrowserPhotoCutout } from "./use-browser-photo-cutout";
 import { useBrowserPhotoDevelop } from "./use-browser-photo-develop";
 import { useBrowserPhotoEditingKeys } from "./use-browser-photo-editing-keys";
-import { useBrowserPhotoColorPointsSupport, useBrowserPhotoEffectsSupport } from "./use-browser-photo-effects";
+import {
+  useBrowserPhotoColorPointsSupport,
+  useBrowserPhotoDetailSupport,
+  useBrowserPhotoEffectsSupport,
+} from "./use-browser-photo-effects";
 import { useBrowserPhotoExportAndDelete } from "./use-browser-photo-export-delete";
 import { useBrowserPhotoFolders } from "./use-browser-photo-folders";
 import { useBrowserPhotoHistogram, type PhotoEditingFrameSink } from "./use-browser-photo-histogram";
@@ -548,6 +557,13 @@ export function BrowserPhotoEditingWorkbench(props: {
     engineRef: develop.engineRef,
     photoKey: wasmPhotoKey,
   });
+  // ディテール（シャープ・ノイズ軽減。v: 6。Issue #32）を描ける wasm か（同じく 1 回確かめる）。RAW を含む wasm の写真に出す
+  const detailWasmSupported = useBrowserPhotoDetailSupport({
+    mountedRef,
+    engineRef: develop.engineRef,
+    photoKey: wasmPhotoKey,
+  });
+  const detailSupported = detailWasmSupported && detailControlsAvailable(opened?.input);
   // プリセットの適用量・今の補正の保存・見本を出せる wasm か（同じく 1 回確かめて覚える。右パネルを閉じても行の形を変えない）
   const presetSupport = useBrowserPhotoPresetSupport({ mountedRef, engineRef: develop.engineRef, photoKey: wasmPhotoKey });
   const mobilePresetThumbnails = useBrowserPresetThumbnails({
@@ -845,9 +861,7 @@ export function BrowserPhotoEditingWorkbench(props: {
   const canvasOnly = loupeOpened ? loupeOpened.mode === "canvas" : develop.developUnavailable;
   const visibleAdjustmentKeys = canvasOnly
     ? BROWSER_CANVAS_ADJUSTMENT_KEYS
-    : effectsSupported
-      ? BROWSER_EFFECTS_ADJUSTMENT_KEYS
-      : undefined;
+    : browserAdjustmentKeys({ effects: effectsSupported, detail: detailSupported });
   // ヒストグラム（niho-photo#36）: PC の右パネルで、段 2 の wasm が画を描いている写真だけ（S1 の canvas・スマホの層・閲覧の
   // 面では出さず、数えない）。描いた画（補正前・プリセットの仮の表示を含む）の分布なので、補正前を押している間は補正前の分布になる。
   // 切り抜き / 背景除去の道具の間も分布は出すが、写真の上へ重ねる印は使えない（その道具の見た目に従う）
@@ -906,7 +920,7 @@ export function BrowserPhotoEditingWorkbench(props: {
     const settingsJson = JSON.stringify(settingsAtPick);
     try {
       const engine = await readyDevelopEngine();
-      if (!engine) throw new Error("色ミキサーを準備できませんでした。");
+      if (!engine) throw new Error("ポイントカラーを準備できませんでした。");
       const committed = await commitColorPickIfCurrent({
         sample: engine.sampleColor(settingsAtPick, {
           maxDimension: Math.max(canvas.width, canvas.height),
@@ -930,7 +944,7 @@ export function BrowserPhotoEditingWorkbench(props: {
       const message = error instanceof Error ? error.message : "";
       setColorPickError(
         message.includes("outside the color point target contract")
-          ? "この位置の色は色ミキサーで扱えません。別の色の部分を選んでください。"
+          ? "この位置の色はポイントカラーで扱えません。別の色の部分を選んでください。"
           : "写真の色を取得できませんでした。表示が整ってから、もう一度お試しください。",
       );
     } finally {
@@ -1337,6 +1351,11 @@ export function BrowserPhotoEditingWorkbench(props: {
     delete withoutFullSize.exportFullSize;
     return withoutFullSize;
   })();
+  const selectedExportSettings =
+    selectedItem && viewMode === "loupe" && opened?.key === selectedItem.key
+      ? open.settingsRef.current
+      : selectedItem?.photo.developSettings ?? {};
+  const nativeFullSizeUnsupported = hasPhotoEditingColorGradingNativeExportUnsupportedLuminance(selectedExportSettings);
   const exportChoices = selectedItem
     ? resolveBrowserPhotoExportChoices({
         photo: selectedItem.photo,
@@ -1347,6 +1366,7 @@ export function BrowserPhotoEditingWorkbench(props: {
         engineUsable: !develop.developUnavailable,
         // 原寸（K2-3a 移行元設計）は、原寸の書き出しに対応した NIHO Desktop の口があるときだけ（PC のシートに出す）
         desktopFullSize: capabilities.nativeExport || capabilities.nativeExportUpdateRequired,
+        nativeFullSizeUnsupported,
         // HEIC / HEIF・TIFF の原寸は、描ける口（NIHO camera）だけ
         desktopFullSizeRaster: capabilities.nativeExportRaster === true,
         // 背景除去（C4 移行元設計）: PNG を足し、原寸は camera の口があるときだけ
@@ -2136,6 +2156,24 @@ export function BrowserPhotoEditingWorkbench(props: {
             }
             settings={settings}
             colorMixer={colorMixer ? <div className="px-3 pb-2">{colorMixer}</div> : undefined}
+            // カラーミキサー（HSL。niho-photo#38）: 段 2 の wasm が画を描いている写真だけ（S1 の canvas には出さない）
+            hslMixer={
+              wasmPhotoKey !== null && !canvasOnly ? (
+                <PhotoEditingHslMixer reset settings={settings} disabled={controlsDisabled} onSettingsChange={open.changeSettings} />
+              ) : undefined
+            }
+            // カラーグレーディング（niho-photo#39）: カラーミキサーと同じ写真だけ。段の中では色相環を少し小さくする
+            colorGrading={
+              wasmPhotoKey !== null && !canvasOnly ? (
+                <PhotoEditingColorGrading
+                  reset
+                  compact
+                  settings={settings}
+                  disabled={controlsDisabled}
+                  onSettingsChange={open.changeSettings}
+                />
+              ) : undefined
+            }
             colorPicking={colorPicking}
             visibleKeys={canvasOnly ? BROWSER_CANVAS_ADJUSTMENT_KEYS : undefined}
             presets={
@@ -2235,6 +2273,38 @@ export function BrowserPhotoEditingWorkbench(props: {
             raw={loupeItem !== null && isBrowserCloudRawPhoto(loupeItem.photo)}
             settings={settings}
             colorMixer={colorMixer}
+            // ライトの群の下の「カーブ」（niho-photo#37）とカラーの群の下の「カラーミキサー」（niho-photo#38）: ヒストグラムと同じく PC の
+            // 右パネルで、段 2 の wasm が画を描いている写真だけ（S1 の canvas・スマホの層・閲覧の面には出さない）。カーブの背後の輝度は
+            // ヒストグラムの度数を使う（数え直さない）。カラーミキサーの節の下に「カラーグレーディング」（niho-photo#39）を続け、
+            // ポイントカラー（`colorMixer`）はその下に並ぶ
+            afterGroup={
+              histogramAvailable
+                ? {
+                    light: (
+                      <PhotoEditingToneCurveSection
+                        settings={settings}
+                        histogram={histogram.histogram}
+                        disabled={controlsDisabled}
+                        onSettingsChange={open.changeSettings}
+                      />
+                    ),
+                    color: (
+                      <>
+                        <PhotoEditingHslMixerSection
+                          settings={settings}
+                          disabled={controlsDisabled}
+                          onSettingsChange={open.changeSettings}
+                        />
+                        <PhotoEditingColorGradingSection
+                          settings={settings}
+                          disabled={controlsDisabled}
+                          onSettingsChange={open.changeSettings}
+                        />
+                      </>
+                    ),
+                  }
+                : undefined
+            }
             histogram={
               histogramAvailable ? (
                 <PhotoEditingHistogram

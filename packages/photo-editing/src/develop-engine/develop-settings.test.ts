@@ -21,6 +21,7 @@ import {
   newDevelopSettingsEngine,
   pasteDevelopSettings,
   readBrowserAdjustmentsFromDevelopSettings,
+  readDevelopDetail,
   readDevelopSettings,
   resetDevelopSettingsColors,
   signedWorkingCopyState,
@@ -76,6 +77,54 @@ describe("neutralDevelopSettings", () => {
     const { engine: _twelve, ...twelve } = neutralDevelopSettings(null);
     const { engine: _two, ...two } = neutralDevelopSettings(null, { raw: true });
     expect(twelve).toEqual(two);
+  });
+});
+
+describe("developSettings detail v6", () => {
+  const neutralDetail = {
+    sharpening: { amount: 0, radius: 1, detail: 25, masking: 0 },
+    luminanceNoiseReduction: 0,
+  };
+
+  it("存在だけでv6を要求し、zeroとcolor NRの明示zeroを厳格にroundtripする", () => {
+    expect(readDevelopDetail(neutralDetail)).toEqual(neutralDetail);
+    const settings = { ...neutralDevelopSettings(), v: 6 as const, detail: neutralDetail };
+    expect(readDevelopSettings(settings)).toEqual(settings);
+    expect(isEditableDevelopSettings(settings)).toBe(true);
+    expect(developSettingsVersion(settings)).toBe(6);
+    expect(isNeutralDevelopColors(settings)).toBe(true);
+    expect(isNeutralDevelopColors({ ...settings, detail: { ...neutralDetail, colorNoiseReduction: 0 } })).toBe(true);
+    expect(copyDevelopSettings(settings)).toHaveProperty("detail", neutralDetail);
+    expect(readDevelopSettings({ ...settings, v: 4 })).toBeNull();
+  });
+
+  it("空・partial・未知キー・非有限・範囲外を拒否する", () => {
+    for (const detail of [
+      {},
+      { sharpening: neutralDetail.sharpening },
+      { ...neutralDetail, future: 1 },
+      { ...neutralDetail, sharpening: { ...neutralDetail.sharpening, future: 1 } },
+      { ...neutralDetail, luminanceNoiseReduction: Number.NaN },
+      { ...neutralDetail, colorNoiseReduction: 101 },
+      { ...neutralDetail, sharpening: { ...neutralDetail.sharpening, radius: 0.49 } },
+    ]) {
+      expect(readDevelopDetail(detail)).toBeNull();
+      expect(readDevelopSettings({ ...neutralDevelopSettings(), v: 6, detail })).toBeNull();
+    }
+  });
+
+  it("active detailはneutralでなく、初期化で外し、貼り付けではcloneする", () => {
+    const active: DevelopSettings = {
+      ...neutralDevelopSettings(),
+      v: 6,
+      detail: { ...neutralDetail, sharpening: { ...neutralDetail.sharpening, amount: 40 } },
+    };
+    expect(isNeutralDevelopColors(active)).toBe(false);
+    expect(resetDevelopSettingsColors(active, null)).not.toHaveProperty("detail");
+    const pasted = pasteDevelopSettings(neutralDevelopSettings(), copyDevelopSettings(active));
+    expect(pasted.v).toBe(6);
+    expect(pasted.detail).toEqual(active.detail);
+    expect(pasted.detail).not.toBe(active.detail);
   });
 });
 
@@ -253,7 +302,7 @@ describe("developSettingsOnWorkingCopy（#16944）", () => {
 });
 
 describe("isEditableDevelopSettings", () => {
-  it("まだ無いか、v1〜v5 で既知の数式なら直せる（未知の版・必要版より低い値は直さない）", () => {
+  it("まだ無いか、v1〜v6 で既知の数式なら直せる（未知の版・必要版より低い値は直さない）", () => {
     expect(isEditableDevelopSettings(null)).toBe(true);
     expect(isEditableDevelopSettings(undefined)).toBe(true);
     expect(isEditableDevelopSettings({ v: 1, engine: "niho-1" })).toBe(true);
@@ -267,7 +316,8 @@ describe("isEditableDevelopSettings", () => {
     expect(isEditableDevelopSettings({ v: 3, engine: "niho-1", grayscale: true })).toBe(true);
     expect(isEditableDevelopSettings({ v: 4, engine: "niho-1", colorPoints: [] })).toBe(true);
     expect(isEditableDevelopSettings({ v: 5, engine: "niho-1" })).toBe(true);
-    expect(isEditableDevelopSettings({ v: 6, engine: "niho-1" })).toBe(false);
+    expect(isEditableDevelopSettings({ v: 6, engine: "niho-1" })).toBe(true);
+    expect(isEditableDevelopSettings({ v: 7, engine: "niho-1" })).toBe(false);
     expect(isEditableDevelopSettings({ v: 1, engine: "niho-1", geometry: CROP })).toBe(false);
     expect(isEditableDevelopSettings("niho-1")).toBe(false);
   });
@@ -319,13 +369,14 @@ describe("isEditableDevelopSettings", () => {
     expect(isEditableDevelopSettings({ v: 1, engine: "niho-1", look: 1 })).toBe(false);
   });
 
-  it("readDevelopSettings は v1〜v5 の形だけを読む（形の版はそのまま）", () => {
+  it("readDevelopSettings は v1〜v6 の形だけを読む（形の版はそのまま）", () => {
     expect(readDevelopSettings({ v: 1, engine: "niho-1", exposure: 1 })).toEqual({ v: 1, engine: "niho-1", exposure: 1 });
     expect(readDevelopSettings({ v: 2, engine: "niho-1", geometry: CROP })).toEqual({ v: 2, engine: "niho-1", geometry: CROP });
     expect(readDevelopSettings({ v: 3, engine: "niho-1", grayscale: true })).toEqual({ v: 3, engine: "niho-1", grayscale: true });
     expect(readDevelopSettings({ v: 4, engine: "niho-1", colorPoints: [] })).toEqual({ v: 4, engine: "niho-1", colorPoints: [] });
     expect(readDevelopSettings({ v: 5, engine: "niho-1" })).toEqual({ v: 5, engine: "niho-1" });
-    expect(readDevelopSettings({ v: 6, engine: "niho-1" })).toBeNull();
+    expect(readDevelopSettings({ v: 6, engine: "niho-1" })).toEqual({ v: 6, engine: "niho-1" });
+    expect(readDevelopSettings({ v: 7, engine: "niho-1" })).toBeNull();
     expect(readDevelopSettings({ v: 1 })).toBeNull();
     expect(readDevelopSettings(null)).toBeNull();
   });
@@ -665,7 +716,7 @@ describe("developSettingsToEditSettings（crate の to_edit_settings_value と�
     expect(
       developSettingsToEditSettings({ ...neutralDevelopSettings("raw-1"), legacySettings: { profile: "adobe" } }),
     ).toBeNull();
-    expect(developSettingsToEditSettings({ v: 6, engine: "niho-1" })).toBeNull();
+    expect(developSettingsToEditSettings({ v: 7, engine: "niho-1" })).toBeNull();
     expect(developSettingsToEditSettings({ ...neutralDevelopSettings(), v: 2, geometry: CROP })).toBeNull();
     expect(developSettingsToEditSettings({ v: 2, engine: "niho-1" })).toEqual({ whiteBalance: { mode: "asShot" } });
     expect(developSettingsToEditSettings(null)).toBeNull();

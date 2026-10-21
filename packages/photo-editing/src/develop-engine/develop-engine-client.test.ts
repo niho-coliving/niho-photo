@@ -530,7 +530,7 @@ describe("createDevelopEngine", () => {
     worker.respond({
       type: "ready",
       id: worker.lastRequest("init").id,
-      version: "niho-develop 0.18.0 (engine niho-11)",
+      version: "niho-develop 0.19.0 (engine niho-11)",
       colorPoints: true,
     });
 
@@ -540,6 +540,87 @@ describe("createDevelopEngine", () => {
 
     engine.dispose();
     expect(await engine.supportsColorPoints()).toBe(false);
+  });
+
+  it("ready に detail: true が付いた wasm だけディテールを公開する（Issue #32）", async () => {
+    const { engine } = await readyEngine({ features: { detail: true } });
+    expect(await engine.supportsDetail()).toBe(true);
+    const { engine: older } = await readyEngine({ features: { colorPoints: true } });
+    expect(await older.supportsDetail()).toBe(false);
+  });
+
+  it("ディテールの送り方（Issue #32・owner 判断 2026-10-21）: 作業コピーは drag 中だけ NR を計算し直さず、確定描画・見本・色取得・書き出しは今の値", async () => {
+    const { worker, engine } = await readyEngine({ features: { detail: true, colorPoints: true, presetThumbnails: true } });
+    const sentRender = () => (worker.lastRequest("render") as { settingsJson: string }).settingsJson;
+    const finishRender = async () => {
+      worker.respond(frameResponse(worker.lastRequest("render").id, 1));
+      await flushPromises();
+    };
+    const detail = { sharpening: { amount: 40, radius: 1, detail: 25, masking: 0 }, luminanceNoiseReduction: 20 };
+    const jpeg = { v: 6, engine: "niho-10", look: "niho-standard-1", detail };
+
+    // JPEG / PNG（open）は drag 中も今の値（NR を描く。シャープは crate が Final だけで当てる）
+    const opened = engine.open(new ArrayBuffer(4), 2560);
+    worker.respond({ type: "opened", id: worker.lastRequest("open").id, width: 4, height: 3 });
+    await opened;
+    void engine.render(jpeg, { maxDimension: 1280, interactive: true });
+    expect(JSON.parse(sentRender())).toEqual(jpeg);
+    await finishRender();
+
+    // 旧 RAW の作業コピー: drag 中は detail を外し、確定描画は今の値
+    const unsigned = { v: 6, engine: "niho-2", look: "niho-standard-1", detail };
+    const working = engine.openWorkingCopy(new ArrayBuffer(8), '{"kind":"raw"}');
+    worker.respond({ type: "opened", id: worker.lastRequest("openWorkingCopy").id, width: 2560, height: 1707 });
+    await working;
+    void engine.render(unsigned, { maxDimension: 1280, interactive: true });
+    expect(JSON.parse(sentRender())).toEqual({ v: 6, engine: "niho-2", look: "niho-standard-1" });
+    await finishRender();
+    void engine.render(unsigned, { maxDimension: 1280, interactive: false });
+    expect(JSON.parse(sentRender())).toEqual(unsigned);
+    await finishRender();
+
+    // signed RAW: drag 中は直前の確定描画の NR のまま（master を作り直さない）。確定描画は今の値
+    const signed = { v: 6, engine: "niho-11", look: "niho-standard-5", detail: { ...detail, colorNoiseReduction: 30 } };
+    void engine.render(signed, { maxDimension: 1280, interactive: false });
+    expect(JSON.parse(sentRender())).toEqual(signed);
+    await finishRender();
+    const dragging = { ...signed, contrast: 12, detail: { ...signed.detail, luminanceNoiseReduction: 70, colorNoiseReduction: 60 } };
+    void engine.render(dragging, { maxDimension: 1280, interactive: true });
+    expect(JSON.parse(sentRender())).toEqual({ ...dragging, detail: { ...dragging.detail, luminanceNoiseReduction: 20, colorNoiseReduction: 30 } });
+    await finishRender();
+    void engine.render(dragging, { maxDimension: 1280, interactive: false });
+    expect(JSON.parse(sentRender())).toEqual(dragging);
+    await finishRender();
+
+    // 色取得・見本・書き出しは確定描画と同じ今の値
+    void engine.sampleColor(dragging, { maxDimension: 1280, x: 0.5, y: 0.5 });
+    expect(JSON.parse((worker.lastRequest("sampleColor") as { settingsJson: string }).settingsJson)).toEqual(dragging);
+    void engine.renderPresetThumbnail(dragging, 96);
+    await flushPromises();
+    expect(JSON.parse((worker.lastRequest("renderPresetThumbnail") as { settingsJson: string }).settingsJson)).toEqual(dragging);
+    void engine.exportWorkingCopyJpeg(new ArrayBuffer(8), '{"kind":"raw"}', dragging, { maxDimension: 2048, quality: 90 });
+    expect(JSON.parse((worker.lastRequest("exportWorkingCopyJpeg") as { settingsJson: string }).settingsJson)).toEqual(dragging);
+  });
+
+  it("ディテールを使わない写真は、作業コピーでも drag 中・確定描画とも今までと同じ設定の JSON を送る（量の無い detail は外す）", async () => {
+    const { worker, engine } = await readyEngine({ features: { detail: true } });
+    const working = engine.openWorkingCopy(new ArrayBuffer(8), '{"kind":"raw"}');
+    worker.respond({ type: "opened", id: worker.lastRequest("openWorkingCopy").id, width: 2560, height: 1707 });
+    await working;
+    const plain = { v: 1, engine: "niho-11", look: "niho-standard-5", contrast: 10, colorNoiseReduction: 25 };
+    for (const interactive of [false, true, false]) {
+      void engine.render(plain, { maxDimension: 1280, interactive });
+      expect((worker.lastRequest("render") as { settingsJson: string }).settingsJson).toBe(JSON.stringify(plain));
+      worker.respond(frameResponse(worker.lastRequest("render").id, 1));
+      await flushPromises();
+    }
+    const inert = { ...plain, v: 6, detail: { sharpening: { amount: 0, radius: 2, detail: 25, masking: 0 }, luminanceNoiseReduction: 0 } };
+    for (const interactive of [false, true]) {
+      void engine.render(inert, { maxDimension: 1280, interactive });
+      expect((worker.lastRequest("render") as { settingsJson: string }).settingsJson).toBe(JSON.stringify({ ...plain, v: 6 }));
+      worker.respond(frameResponse(worker.lastRequest("render").id, 1));
+      await flushPromises();
+    }
   });
 
   it("sampleColor は設定・描画長辺・正規化座標を worker に渡す", async () => {

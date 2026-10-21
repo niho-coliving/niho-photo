@@ -1,0 +1,7784 @@
+{
+  "kind": "synthetic-detail-chart-errors-round32",
+  "tolerance": {
+    "rise10to90": 0.15,
+    "overshoot": 1.0,
+    "undershoot": 1.0,
+    "gain": 0.011,
+    "lumaStd": 0.15,
+    "chromaStd": 0.15
+  },
+  "summary": {
+    "rise10to90": {
+      "after": 0.381,
+      "before": 0.457
+    },
+    "overshoot": {
+      "after": 1.623,
+      "before": 8.556
+    },
+    "undershoot": {
+      "after": 0.85,
+      "before": 14.195
+    },
+    "gain": {
+      "after": 0.034,
+      "before": 0.122
+    },
+    "lumaStd": {
+      "after": 0.877,
+      "before": 4.929
+    },
+    "chromaStd": {
+      "after": 0.158,
+      "before": 0.784
+    }
+  },
+  "monotonicity": {
+    "mismatches": [
+      "amount: edge 100-156 rise10to90",
+      "amount: edge 120-136 rise10to90",
+      "radius: edge 64-192 undershoot",
+      "radius: edge 100-156 rise10to90",
+      "radius: edge 120-136 rise10to90",
+      "detail: edge 64-192 undershoot",
+      "detail: edge 100-156 rise10to90",
+      "detail: edge 120-136 rise10to90",
+      "masking: edge 64-192 undershoot"
+    ],
+    "families": {
+      "amount": {
+        "variants": [
+          "neutral",
+          "sharp_a40",
+          "sharp_a80",
+          "sharp_a150"
+        ],
+        "checks": [
+          {
+            "stat": "edge 64-192 rise10to90",
+            "lightroom": [
+              0.8,
+              0.623,
+              0.601,
+              0.599
+            ],
+            "after": [
+              0.8,
+              0.644,
+              0.602,
+              0.595
+            ],
+            "lightroomSteps": [
+              -1,
+              0,
+              0
+            ],
+            "afterSteps": [
+              -1,
+              0,
+              0
+            ],
+            "match": true
+          },
+          {
+            "stat": "edge 64-192 overshoot",
+            "lightroom": [
+              0.0,
+              25.559,
+              33.535,
+              33.935
+            ],
+            "after": [
+              0.0,
+              21.0,
+              32.0,
+              34.0
+            ],
+            "lightroomSteps": [
+              1,
+              1,
+              0
+            ],
+            "afterSteps": [
+              1,
+              1,
+              1
+            ],
+            "match": true
+          },
+          {
+            "stat": "edge 64-192 undershoot",
+            "lightroom": [
+              0.0,
+              10.794,
+              8.982,
+              11.482
+            ],
+            "after": [
+              0.0,
+              10.0,
+              10.0,
+              10.0
+            ],
+            "lightroomSteps": [
+              1,
+              -1,
+              1
+            ],
+            "afterSteps": [
+              1,
+              0,
+              0
+            ],
+            "match": true
+          },
+          {
+            "stat": "edge 100-156 rise10to90",
+            "lightroom": [
+              0.8,
+              0.49,
+              0.38,
+              2.377
+            ],
+            "after": [
+              0.8,
+              0.492,
+              0.4,
+              0.356
+            ],
+            "lightroomSteps": [
+              -1,
+              0,
+              1
+            ],
+            "afterSteps": [
+              -1,
+              0,
+              0
+            ],
+            "match": false
+          },
+          {
+            "stat": "edge 100-156 overshoot",
+            "lightroom": [
+              0.0,
+              16.2,
+              29.482,
+              35.541
+            ],
+            "after": [
+              0.0,
+              13.0,
+              26.0,
+              39.0
+            ],
+            "lightroomSteps": [
+              1,
+              1,
+              1
+            ],
+            "afterSteps": [
+              1,
+              1,
+              1
+            ],
+            "match": true
+          },
+          {
+            "stat": "edge 100-156 undershoot",
+            "lightroom": [
+              0.0,
+              19.218,
+              32.447,
+              34.729
+            ],
+            "after": [
+              0.0,
+              22.0,
+              30.0,
+              31.0
+            ],
+            "lightroomSteps": [
+              1,
+              1,
+              1
+            ],
+            "afterSteps": [
+              1,
+              1,
+              0
+            ],
+            "match": true
+          },
+          {
+            "stat": "edge 120-136 rise10to90",
+            "lightroom": [
+              0.8,
+              0.459,
+              0.292,
+              2.521
+            ],
+            "after": [
+              0.8,
+              0.474,
+              0.328,
+              0.206
+            ],
+            "lightroomSteps": [
+              -1,
+              -1,
+              1
+            ],
+            "afterSteps": [
+              -1,
+              0,
+              0
+            ],
+            "match": false
+          },
+          {
+            "stat": "edge 120-136 overshoot",
+            "lightroom": [
+              0.0,
+              5.871,
+              13.476,
+              24.853
+            ],
+            "after": [
+              0.0,
+              5.0,
+              10.0,
+              20.0
+            ],
+            "lightroomSteps": [
+              1,
+              1,
+              1
+            ],
+            "afterSteps": [
+              1,
+              1,
+              1
+            ],
+            "match": true
+          },
+          {
+            "stat": "edge 120-136 undershoot",
+            "lightroom": [
+              0.0,
+              6.0,
+              14.347,
+              24.965
+            ],
+            "after": [
+              0.0,
+              6.0,
+              13.0,
+              26.0
+            ],
+            "lightroomSteps": [
+              1,
+              1,
+              1
+            ],
+            "afterSteps": [
+              1,
+              1,
+              1
+            ],
+            "match": true
+          },
+          {
+            "stat": "grating p4 gain",
+            "lightroom": [
+              1.0,
+              1.3979,
+              1.5169,
+              1.5754
+            ],
+            "after": [
+              1.0,
+              1.4167,
+              1.5521,
+              1.5833
+            ],
+            "lightroomSteps": [
+              1,
+              1,
+              1
+            ],
+            "afterSteps": [
+              1,
+              1,
+              1
+            ],
+            "match": true
+          },
+          {
+            "stat": "grating p8 gain",
+            "lightroom": [
+              1.0,
+              1.1769,
+              1.3351,
+              1.4743
+            ],
+            "after": [
+              1.0,
+              1.2292,
+              1.3958,
+              1.5208
+            ],
+            "lightroomSteps": [
+              1,
+              1,
+              1
+            ],
+            "afterSteps": [
+              1,
+              1,
+              1
+            ],
+            "match": true
+          },
+          {
+            "stat": "grating p16 gain",
+            "lightroom": [
+              1.0,
+              1.0553,
+              1.1144,
+              1.2262
+            ],
+            "after": [
+              1.0,
+              1.0625,
+              1.1562,
+              1.2917
+            ],
+            "lightroomSteps": [
+              1,
+              1,
+              1
+            ],
+            "afterSteps": [
+              1,
+              1,
+              1
+            ],
+            "match": true
+          },
+          {
+            "stat": "grating p32 gain",
+            "lightroom": [
+              1.0,
+              1.0159,
+              1.0325,
+              1.0694
+            ],
+            "after": [
+              1.0,
+              1.0208,
+              1.0417,
+              1.0833
+            ],
+            "lightroomSteps": [
+              1,
+              1,
+              1
+            ],
+            "afterSteps": [
+              1,
+              1,
+              1
+            ],
+            "match": true
+          },
+          {
+            "stat": "patch 64/64/64 luma6 chroma0 lumaStd",
+            "lightroom": [
+              6.132,
+              10.088,
+              15.262,
+              22.479
+            ],
+            "after": [
+              6.074,
+              10.607,
+              14.324,
+              19.923
+            ],
+            "lightroomSteps": [
+              1,
+              1,
+              1
+            ],
+            "afterSteps": [
+              1,
+              1,
+              1
+            ],
+            "match": true
+          },
+          {
+            "stat": "patch 128/128/128 luma6 chroma0 lumaStd",
+            "lightroom": [
+              6.095,
+              10.816,
+              17.996,
+              26.793
+            ],
+            "after": [
+              6.046,
+              11.891,
+              18.678,
+              28.026
+            ],
+            "lightroomSteps": [
+              1,
+              1,
+              1
+            ],
+            "afterSteps": [
+              1,
+              1,
+              1
+            ],
+            "match": true
+          },
+          {
+            "stat": "patch 192/192/192 luma6 chroma0 lumaStd",
+            "lightroom": [
+              6.132,
+              10.821,
+              17.363,
+              24.996
+            ],
+            "after": [
+              6.078,
+              11.86,
+              18.382,
+              26.634
+            ],
+            "lightroomSteps": [
+              1,
+              1,
+              1
+            ],
+            "afterSteps": [
+              1,
+              1,
+              1
+            ],
+            "match": true
+          },
+          {
+            "stat": "patch 128/128/128 luma12 chroma0 lumaStd",
+            "lightroom": [
+              12.222,
+              21.057,
+              30.618,
+              38.821
+            ],
+            "after": [
+              12.188,
+              23.267,
+              32.465,
+              41.148
+            ],
+            "lightroomSteps": [
+              1,
+              1,
+              1
+            ],
+            "afterSteps": [
+              1,
+              1,
+              1
+            ],
+            "match": true
+          },
+          {
+            "stat": "patch 128/128/128 luma0 chroma8 lumaStd",
+            "lightroom": [
+              0.196,
+              1.852,
+              4.742,
+              12.808
+            ],
+            "after": [
+              0.189,
+              1.986,
+              4.447,
+              9.144
+            ],
+            "lightroomSteps": [
+              1,
+              1,
+              1
+            ],
+            "afterSteps": [
+              1,
+              1,
+              1
+            ],
+            "match": true
+          },
+          {
+            "stat": "patch 96/128/160 luma6 chroma8 lumaStd",
+            "lightroom": [
+              6.086,
+              10.845,
+              18.148,
+              26.831
+            ],
+            "after": [
+              6.031,
+              11.922,
+              18.8,
+              27.99
+            ],
+            "lightroomSteps": [
+              1,
+              1,
+              1
+            ],
+            "afterSteps": [
+              1,
+              1,
+              1
+            ],
+            "match": true
+          },
+          {
+            "stat": "patch 96/128/160 luma6 chroma8 chromaStd",
+            "lightroom": [
+              8.128,
+              8.239,
+              8.52,
+              9.067
+            ],
+            "after": [
+              8.062,
+              8.199,
+              8.479,
+              9.072
+            ],
+            "lightroomSteps": [
+              0,
+              1,
+              1
+            ],
+            "afterSteps": [
+              0,
+              1,
+              1
+            ],
+            "match": true
+          },
+          {
+            "stat": "patch 170/120/90 luma6 chroma8 lumaStd",
+            "lightroom": [
+              6.111,
+              10.767,
+              17.924,
+              26.649
+            ],
+            "after": [
+              6.054,
+              11.86,
+              18.702,
+              28.193
+            ],
+            "lightroomSteps": [
+              1,
+              1,
+              1
+            ],
+            "afterSteps": [
+              1,
+              1,
+              1
+            ],
+            "match": true
+          },
+          {
+            "stat": "patch 170/120/90 luma6 chroma8 chromaStd",
+            "lightroom": [
+              8.072,
+              8.177,
+              8.494,
+              9.157
+            ],
+            "after": [
+              8.009,
+              8.108,
+              8.395,
+              9.078
+            ],
+            "lightroomSteps": [
+              0,
+              1,
+              1
+            ],
+            "afterSteps": [
+              0,
+              1,
+              1
+            ],
+            "match": true
+          },
+          {
+            "stat": "patch 80/140/80 luma0 chroma12 lumaStd",
+            "lightroom": [
+              0.536,
+              4.197,
+              10.506,
+              19.002
+            ],
+            "after": [
+              0.371,
+              4.968,
+              10.843,
+              19.525
+            ],
+            "lightroomSteps": [
+              1,
+              1,
+              1
+            ],
+            "afterSteps": [
+              1,
+              1,
+              1
+            ],
+            "match": true
+          },
+          {
+            "stat": "patch 80/140/80 luma0 chroma12 chromaStd",
+            "lightroom": [
+              12.105,
+              12.566,
+              13.312,
+              14.259
+            ],
+            "after": [
+              12.046,
+              12.591,
+              13.273,
+              14.387
+            ],
+            "lightroomSteps": [
+              1,
+              1,
+              1
+            ],
+            "afterSteps": [
+              1,
+              1,
+              1
+            ],
+            "match": true
+          },
+          {
+            "stat": "patch 200/160/120 luma12 chroma12 lumaStd",
+            "lightroom": [
+              12.097,
+              20.515,
+              29.198,
+              36.604
+            ],
+            "after": [
+              12.066,
+              23.092,
+              32.347,
+              39.951
+            ],
+            "lightroomSteps": [
+              1,
+              1,
+              1
+            ],
+            "afterSteps": [
+              1,
+              1,
+              1
+            ],
+            "match": true
+          }
+        ]
+      },
+      "radius": {
+        "variants": [
+          "sharp_a80_r05",
+          "sharp_a80",
+          "sharp_a80_r20",
+          "sharp_a80_r30"
+        ],
+        "checks": [
+          {
+            "stat": "edge 64-192 overshoot",
+            "lightroom": [
+              28.047,
+              33.535,
+              30.9,
+              25.518
+            ],
+            "after": [
+              27.0,
+              32.0,
+              28.0,
+              24.0
+            ],
+            "lightroomSteps": [
+              1,
+              -1,
+              -1
+            ],
+            "afterSteps": [
+              1,
+              -1,
+              -1
+            ],
+            "match": true
+          },
+          {
+            "stat": "edge 64-192 undershoot",
+            "lightroom": [
+              9.153,
+              8.982,
+              12.035,
+              11.435
+            ],
+            "after": [
+              10.0,
+              10.0,
+              10.0,
+              10.0
+            ],
+            "lightroomSteps": [
+              0,
+              1,
+              0
+            ],
+            "afterSteps": [
+              0,
+              0,
+              0
+            ],
+            "match": false
+          },
+          {
+            "stat": "edge 100-156 rise10to90",
+            "lightroom": [
+              1.826,
+              0.38,
+              0.395,
+              0.446
+            ],
+            "after": [
+              0.435,
+              0.4,
+              0.427,
+              0.462
+            ],
+            "lightroomSteps": [
+              -1,
+              0,
+              0
+            ],
+            "afterSteps": [
+              0,
+              0,
+              0
+            ],
+            "match": false
+          },
+          {
+            "stat": "edge 100-156 overshoot",
+            "lightroom": [
+              25.376,
+              29.482,
+              27.324,
+              20.088
+            ],
+            "after": [
+              19.0,
+              26.0,
+              20.0,
+              16.0
+            ],
+            "lightroomSteps": [
+              1,
+              -1,
+              -1
+            ],
+            "afterSteps": [
+              1,
+              -1,
+              -1
+            ],
+            "match": true
+          },
+          {
+            "stat": "edge 100-156 undershoot",
+            "lightroom": [
+              27.824,
+              32.447,
+              30.112,
+              24.288
+            ],
+            "after": [
+              28.0,
+              30.0,
+              29.0,
+              25.0
+            ],
+            "lightroomSteps": [
+              1,
+              -1,
+              -1
+            ],
+            "afterSteps": [
+              1,
+              0,
+              -1
+            ],
+            "match": true
+          },
+          {
+            "stat": "edge 120-136 rise10to90",
+            "lightroom": [
+              1.837,
+              0.292,
+              0.329,
+              0.408
+            ],
+            "after": [
+              0.4,
+              0.328,
+              0.388,
+              0.441
+            ],
+            "lightroomSteps": [
+              -1,
+              0,
+              0
+            ],
+            "afterSteps": [
+              0,
+              0,
+              0
+            ],
+            "match": false
+          },
+          {
+            "stat": "edge 120-136 overshoot",
+            "lightroom": [
+              9.976,
+              13.476,
+              11.029,
+              7.488
+            ],
+            "after": [
+              7.0,
+              10.0,
+              8.0,
+              6.0
+            ],
+            "lightroomSteps": [
+              1,
+              -1,
+              -1
+            ],
+            "afterSteps": [
+              1,
+              -1,
+              -1
+            ],
+            "match": true
+          },
+          {
+            "stat": "edge 120-136 undershoot",
+            "lightroom": [
+              10.765,
+              14.347,
+              11.912,
+              7.918
+            ],
+            "after": [
+              9.0,
+              13.0,
+              9.0,
+              7.0
+            ],
+            "lightroomSteps": [
+              1,
+              -1,
+              -1
+            ],
+            "afterSteps": [
+              1,
+              -1,
+              -1
+            ],
+            "match": true
+          },
+          {
+            "stat": "grating p4 gain",
+            "lightroom": [
+              1.4796,
+              1.5169,
+              1.4951,
+              1.3939
+            ],
+            "after": [
+              1.4792,
+              1.5521,
+              1.5208,
+              1.4687
+            ],
+            "lightroomSteps": [
+              1,
+              -1,
+              -1
+            ],
+            "afterSteps": [
+              1,
+              -1,
+              -1
+            ],
+            "match": true
+          },
+          {
+            "stat": "grating p8 gain",
+            "lightroom": [
+              1.2364,
+              1.3351,
+              1.4149,
+              1.4097
+            ],
+            "after": [
+              1.2604,
+              1.3958,
+              1.4167,
+              1.4167
+            ],
+            "lightroomSteps": [
+              1,
+              1,
+              0
+            ],
+            "afterSteps": [
+              1,
+              1,
+              0
+            ],
+            "match": true
+          },
+          {
+            "stat": "grating p16 gain",
+            "lightroom": [
+              1.0755,
+              1.1144,
+              1.1708,
+              1.223
+            ],
+            "after": [
+              1.0833,
+              1.1562,
+              1.2083,
+              1.2396
+            ],
+            "lightroomSteps": [
+              1,
+              1,
+              1
+            ],
+            "afterSteps": [
+              1,
+              1,
+              1
+            ],
+            "match": true
+          },
+          {
+            "stat": "grating p32 gain",
+            "lightroom": [
+              1.0197,
+              1.0325,
+              1.0562,
+              1.0771
+            ],
+            "after": [
+              1.0208,
+              1.0417,
+              1.0625,
+              1.0729
+            ],
+            "lightroomSteps": [
+              1,
+              1,
+              1
+            ],
+            "afterSteps": [
+              1,
+              1,
+              0
+            ],
+            "match": true
+          },
+          {
+            "stat": "patch 64/64/64 luma6 chroma0 lumaStd",
+            "lightroom": [
+              14.488,
+              15.262,
+              12.266,
+              9.338
+            ],
+            "after": [
+              13.278,
+              14.324,
+              11.916,
+              10.586
+            ],
+            "lightroomSteps": [
+              1,
+              -1,
+              -1
+            ],
+            "afterSteps": [
+              1,
+              -1,
+              -1
+            ],
+            "match": true
+          },
+          {
+            "stat": "patch 128/128/128 luma6 chroma0 lumaStd",
+            "lightroom": [
+              16.918,
+              17.996,
+              13.739,
+              9.885
+            ],
+            "after": [
+              16.786,
+              18.678,
+              14.188,
+              11.863
+            ],
+            "lightroomSteps": [
+              1,
+              -1,
+              -1
+            ],
+            "afterSteps": [
+              1,
+              -1,
+              -1
+            ],
+            "match": true
+          },
+          {
+            "stat": "patch 192/192/192 luma6 chroma0 lumaStd",
+            "lightroom": [
+              16.327,
+              17.363,
+              13.58,
+              9.904
+            ],
+            "after": [
+              16.557,
+              18.382,
+              14.112,
+              11.843
+            ],
+            "lightroomSteps": [
+              1,
+              -1,
+              -1
+            ],
+            "afterSteps": [
+              1,
+              -1,
+              -1
+            ],
+            "match": true
+          },
+          {
+            "stat": "patch 128/128/128 luma12 chroma0 lumaStd",
+            "lightroom": [
+              29.075,
+              30.618,
+              25.492,
+              19.344
+            ],
+            "after": [
+              30.143,
+              32.465,
+              26.804,
+              23.244
+            ],
+            "lightroomSteps": [
+              1,
+              -1,
+              -1
+            ],
+            "afterSteps": [
+              1,
+              -1,
+              -1
+            ],
+            "match": true
+          },
+          {
+            "stat": "patch 128/128/128 luma0 chroma8 lumaStd",
+            "lightroom": [
+              4.352,
+              4.742,
+              2.887,
+              1.55
+            ],
+            "after": [
+              3.774,
+              4.447,
+              2.72,
+              1.93
+            ],
+            "lightroomSteps": [
+              1,
+              -1,
+              -1
+            ],
+            "afterSteps": [
+              1,
+              -1,
+              -1
+            ],
+            "match": true
+          },
+          {
+            "stat": "patch 96/128/160 luma6 chroma8 lumaStd",
+            "lightroom": [
+              17.055,
+              18.148,
+              13.816,
+              9.87
+            ],
+            "after": [
+              16.9,
+              18.8,
+              14.244,
+              11.869
+            ],
+            "lightroomSteps": [
+              1,
+              -1,
+              -1
+            ],
+            "afterSteps": [
+              1,
+              -1,
+              -1
+            ],
+            "match": true
+          },
+          {
+            "stat": "patch 96/128/160 luma6 chroma8 chromaStd",
+            "lightroom": [
+              8.474,
+              8.52,
+              8.334,
+              8.216
+            ],
+            "after": [
+              8.389,
+              8.479,
+              8.28,
+              8.2
+            ],
+            "lightroomSteps": [
+              0,
+              -1,
+              0
+            ],
+            "afterSteps": [
+              0,
+              -1,
+              0
+            ],
+            "match": true
+          },
+          {
+            "stat": "patch 170/120/90 luma6 chroma8 lumaStd",
+            "lightroom": [
+              16.852,
+              17.924,
+              13.634,
+              9.784
+            ],
+            "after": [
+              16.787,
+              18.702,
+              14.133,
+              11.801
+            ],
+            "lightroomSteps": [
+              1,
+              -1,
+              -1
+            ],
+            "afterSteps": [
+              1,
+              -1,
+              -1
+            ],
+            "match": true
+          },
+          {
+            "stat": "patch 170/120/90 luma6 chroma8 chromaStd",
+            "lightroom": [
+              8.454,
+              8.494,
+              8.279,
+              8.146
+            ],
+            "after": [
+              8.302,
+              8.395,
+              8.181,
+              8.105
+            ],
+            "lightroomSteps": [
+              0,
+              -1,
+              0
+            ],
+            "afterSteps": [
+              0,
+              -1,
+              0
+            ],
+            "match": true
+          },
+          {
+            "stat": "patch 80/140/80 luma0 chroma12 lumaStd",
+            "lightroom": [
+              9.722,
+              10.506,
+              6.62,
+              3.485
+            ],
+            "after": [
+              9.302,
+              10.843,
+              6.805,
+              4.824
+            ],
+            "lightroomSteps": [
+              1,
+              -1,
+              -1
+            ],
+            "afterSteps": [
+              1,
+              -1,
+              -1
+            ],
+            "match": true
+          },
+          {
+            "stat": "patch 80/140/80 luma0 chroma12 chromaStd",
+            "lightroom": [
+              13.162,
+              13.312,
+              12.861,
+              12.462
+            ],
+            "after": [
+              13.052,
+              13.273,
+              12.824,
+              12.598
+            ],
+            "lightroomSteps": [
+              0,
+              -1,
+              -1
+            ],
+            "afterSteps": [
+              1,
+              -1,
+              -1
+            ],
+            "match": true
+          },
+          {
+            "stat": "patch 200/160/120 luma12 chroma12 lumaStd",
+            "lightroom": [
+              27.764,
+              29.198,
+              24.515,
+              18.789
+            ],
+            "after": [
+              30.087,
+              32.347,
+              26.692,
+              23.024
+            ],
+            "lightroomSteps": [
+              1,
+              -1,
+              -1
+            ],
+            "afterSteps": [
+              1,
+              -1,
+              -1
+            ],
+            "match": true
+          }
+        ]
+      },
+      "detail": {
+        "variants": [
+          "sharp_a80_d0",
+          "sharp_a80",
+          "sharp_a80_d75",
+          "sharp_a80_d100"
+        ],
+        "checks": [
+          {
+            "stat": "edge 64-192 overshoot",
+            "lightroom": [
+              16.188,
+              33.535,
+              33.724,
+              33.918
+            ],
+            "after": [
+              10.0,
+              32.0,
+              34.0,
+              34.0
+            ],
+            "lightroomSteps": [
+              1,
+              0,
+              0
+            ],
+            "afterSteps": [
+              1,
+              1,
+              0
+            ],
+            "match": true
+          },
+          {
+            "stat": "edge 64-192 undershoot",
+            "lightroom": [
+              10.735,
+              8.982,
+              8.959,
+              8.947
+            ],
+            "after": [
+              10.0,
+              10.0,
+              10.0,
+              10.0
+            ],
+            "lightroomSteps": [
+              -1,
+              0,
+              0
+            ],
+            "afterSteps": [
+              0,
+              0,
+              0
+            ],
+            "match": false
+          },
+          {
+            "stat": "edge 100-156 rise10to90",
+            "lightroom": [
+              0.598,
+              0.38,
+              2.495,
+              2.777
+            ],
+            "after": [
+              0.622,
+              0.4,
+              0.356,
+              0.35
+            ],
+            "lightroomSteps": [
+              -1,
+              1,
+              1
+            ],
+            "afterSteps": [
+              -1,
+              0,
+              0
+            ],
+            "match": false
+          },
+          {
+            "stat": "edge 100-156 overshoot",
+            "lightroom": [
+              8.806,
+              29.482,
+              40.041,
+              43.482
+            ],
+            "after": [
+              6.0,
+              26.0,
+              39.0,
+              41.0
+            ],
+            "lightroomSteps": [
+              1,
+              1,
+              1
+            ],
+            "afterSteps": [
+              1,
+              1,
+              1
+            ],
+            "match": true
+          },
+          {
+            "stat": "edge 100-156 undershoot",
+            "lightroom": [
+              10.124,
+              32.447,
+              34.6,
+              34.141
+            ],
+            "after": [
+              10.0,
+              30.0,
+              31.0,
+              31.0
+            ],
+            "lightroomSteps": [
+              1,
+              1,
+              0
+            ],
+            "afterSteps": [
+              1,
+              0,
+              0
+            ],
+            "match": true
+          },
+          {
+            "stat": "edge 120-136 rise10to90",
+            "lightroom": [
+              0.584,
+              0.292,
+              2.475,
+              2.759
+            ],
+            "after": [
+              0.64,
+              0.328,
+              0.206,
+              0.183
+            ],
+            "lightroomSteps": [
+              -1,
+              1,
+              1
+            ],
+            "afterSteps": [
+              -1,
+              0,
+              0
+            ],
+            "match": false
+          },
+          {
+            "stat": "edge 120-136 overshoot",
+            "lightroom": [
+              2.918,
+              13.476,
+              23.835,
+              27.524
+            ],
+            "after": [
+              2.0,
+              10.0,
+              20.0,
+              24.0
+            ],
+            "lightroomSteps": [
+              1,
+              1,
+              1
+            ],
+            "afterSteps": [
+              1,
+              1,
+              1
+            ],
+            "match": true
+          },
+          {
+            "stat": "edge 120-136 undershoot",
+            "lightroom": [
+              2.988,
+              14.347,
+              26.106,
+              30.612
+            ],
+            "after": [
+              2.0,
+              13.0,
+              26.0,
+              30.0
+            ],
+            "lightroomSteps": [
+              1,
+              1,
+              1
+            ],
+            "afterSteps": [
+              1,
+              1,
+              1
+            ],
+            "match": true
+          },
+          {
+            "stat": "grating p4 gain",
+            "lightroom": [
+              1.2888,
+              1.5169,
+              1.5826,
+              1.5958
+            ],
+            "after": [
+              1.2708,
+              1.5521,
+              1.5833,
+              1.5833
+            ],
+            "lightroomSteps": [
+              1,
+              1,
+              1
+            ],
+            "afterSteps": [
+              1,
+              1,
+              0
+            ],
+            "match": true
+          },
+          {
+            "stat": "grating p8 gain",
+            "lightroom": [
+              1.1321,
+              1.3351,
+              1.4742,
+              1.4996
+            ],
+            "after": [
+              1.0938,
+              1.3958,
+              1.5208,
+              1.5521
+            ],
+            "lightroomSteps": [
+              1,
+              1,
+              1
+            ],
+            "afterSteps": [
+              1,
+              1,
+              1
+            ],
+            "match": true
+          },
+          {
+            "stat": "grating p16 gain",
+            "lightroom": [
+              1.0411,
+              1.1144,
+              1.1931,
+              1.21
+            ],
+            "after": [
+              1.0208,
+              1.1562,
+              1.2917,
+              1.3438
+            ],
+            "lightroomSteps": [
+              1,
+              1,
+              1
+            ],
+            "afterSteps": [
+              1,
+              1,
+              1
+            ],
+            "match": true
+          },
+          {
+            "stat": "grating p32 gain",
+            "lightroom": [
+              1.0121,
+              1.0325,
+              1.0503,
+              1.0529
+            ],
+            "after": [
+              1.0,
+              1.0417,
+              1.0833,
+              1.1042
+            ],
+            "lightroomSteps": [
+              1,
+              1,
+              0
+            ],
+            "afterSteps": [
+              1,
+              1,
+              1
+            ],
+            "match": true
+          },
+          {
+            "stat": "patch 64/64/64 luma6 chroma0 lumaStd",
+            "lightroom": [
+              8.368,
+              15.262,
+              22.654,
+              24.809
+            ],
+            "after": [
+              8.314,
+              14.324,
+              19.905,
+              21.918
+            ],
+            "lightroomSteps": [
+              1,
+              1,
+              1
+            ],
+            "afterSteps": [
+              1,
+              1,
+              1
+            ],
+            "match": true
+          },
+          {
+            "stat": "patch 128/128/128 luma6 chroma0 lumaStd",
+            "lightroom": [
+              8.674,
+              17.996,
+              30.738,
+              35.315
+            ],
+            "after": [
+              8.47,
+              18.678,
+              28.002,
+              30.764
+            ],
+            "lightroomSteps": [
+              1,
+              1,
+              1
+            ],
+            "afterSteps": [
+              1,
+              1,
+              1
+            ],
+            "match": true
+          },
+          {
+            "stat": "patch 192/192/192 luma6 chroma0 lumaStd",
+            "lightroom": [
+              8.718,
+              17.363,
+              28.493,
+              32.396
+            ],
+            "after": [
+              8.492,
+              18.382,
+              26.614,
+              28.809
+            ],
+            "lightroomSteps": [
+              1,
+              1,
+              1
+            ],
+            "afterSteps": [
+              1,
+              1,
+              1
+            ],
+            "match": true
+          },
+          {
+            "stat": "patch 128/128/128 luma12 chroma0 lumaStd",
+            "lightroom": [
+              17.213,
+              30.618,
+              44.023,
+              47.8
+            ],
+            "after": [
+              17.107,
+              32.465,
+              41.13,
+              43.147
+            ],
+            "lightroomSteps": [
+              1,
+              1,
+              1
+            ],
+            "afterSteps": [
+              1,
+              1,
+              1
+            ],
+            "match": true
+          },
+          {
+            "stat": "patch 128/128/128 luma0 chroma8 lumaStd",
+            "lightroom": [
+              1.19,
+              4.742,
+              11.402,
+              14.393
+            ],
+            "after": [
+              0.887,
+              4.447,
+              9.128,
+              11.05
+            ],
+            "lightroomSteps": [
+              1,
+              1,
+              1
+            ],
+            "afterSteps": [
+              1,
+              1,
+              1
+            ],
+            "match": true
+          },
+          {
+            "stat": "patch 96/128/160 luma6 chroma8 lumaStd",
+            "lightroom": [
+              8.656,
+              18.148,
+              31.002,
+              35.374
+            ],
+            "after": [
+              8.436,
+              18.8,
+              27.967,
+              30.625
+            ],
+            "lightroomSteps": [
+              1,
+              1,
+              1
+            ],
+            "afterSteps": [
+              1,
+              1,
+              1
+            ],
+            "match": true
+          },
+          {
+            "stat": "patch 96/128/160 luma6 chroma8 chromaStd",
+            "lightroom": [
+              8.184,
+              8.52,
+              9.319,
+              9.659
+            ],
+            "after": [
+              8.108,
+              8.479,
+              9.07,
+              9.283
+            ],
+            "lightroomSteps": [
+              1,
+              1,
+              1
+            ],
+            "afterSteps": [
+              1,
+              1,
+              1
+            ],
+            "match": true
+          },
+          {
+            "stat": "patch 170/120/90 luma6 chroma8 lumaStd",
+            "lightroom": [
+              8.644,
+              17.924,
+              30.62,
+              35.206
+            ],
+            "after": [
+              8.446,
+              18.702,
+              28.169,
+              30.97
+            ],
+            "lightroomSteps": [
+              1,
+              1,
+              1
+            ],
+            "afterSteps": [
+              1,
+              1,
+              1
+            ],
+            "match": true
+          },
+          {
+            "stat": "patch 170/120/90 luma6 chroma8 chromaStd",
+            "lightroom": [
+              8.12,
+              8.494,
+              9.479,
+              9.919
+            ],
+            "after": [
+              8.035,
+              8.395,
+              9.075,
+              9.332
+            ],
+            "lightroomSteps": [
+              1,
+              1,
+              1
+            ],
+            "afterSteps": [
+              1,
+              1,
+              1
+            ],
+            "match": true
+          },
+          {
+            "stat": "patch 80/140/80 luma0 chroma12 lumaStd",
+            "lightroom": [
+              2.563,
+              10.506,
+              21.966,
+              26.216
+            ],
+            "after": [
+              2.121,
+              10.843,
+              19.501,
+              22.157
+            ],
+            "lightroomSteps": [
+              1,
+              1,
+              1
+            ],
+            "afterSteps": [
+              1,
+              1,
+              1
+            ],
+            "match": true
+          },
+          {
+            "stat": "patch 80/140/80 luma0 chroma12 chromaStd",
+            "lightroom": [
+              12.354,
+              13.312,
+              14.744,
+              15.293
+            ],
+            "after": [
+              12.274,
+              13.273,
+              14.383,
+              14.76
+            ],
+            "lightroomSteps": [
+              1,
+              1,
+              1
+            ],
+            "afterSteps": [
+              1,
+              1,
+              1
+            ],
+            "match": true
+          },
+          {
+            "stat": "patch 200/160/120 luma12 chroma12 lumaStd",
+            "lightroom": [
+              16.861,
+              29.198,
+              41.125,
+              44.798
+            ],
+            "after": [
+              16.855,
+              32.347,
+              39.936,
+              41.477
+            ],
+            "lightroomSteps": [
+              1,
+              1,
+              1
+            ],
+            "afterSteps": [
+              1,
+              1,
+              1
+            ],
+            "match": true
+          }
+        ]
+      },
+      "masking": {
+        "variants": [
+          "sharp_a80",
+          "sharp_a80_m50",
+          "sharp_a80_m90"
+        ],
+        "checks": [
+          {
+            "stat": "edge 64-192 overshoot",
+            "lightroom": [
+              33.535,
+              32.641,
+              28.959
+            ],
+            "after": [
+              32.0,
+              32.0,
+              29.0
+            ],
+            "lightroomSteps": [
+              0,
+              -1
+            ],
+            "afterSteps": [
+              0,
+              -1
+            ],
+            "match": true
+          },
+          {
+            "stat": "edge 64-192 undershoot",
+            "lightroom": [
+              8.982,
+              8.818,
+              7.771
+            ],
+            "after": [
+              10.0,
+              10.0,
+              10.0
+            ],
+            "lightroomSteps": [
+              0,
+              -1
+            ],
+            "afterSteps": [
+              0,
+              0
+            ],
+            "match": false
+          },
+          {
+            "stat": "edge 100-156 overshoot",
+            "lightroom": [
+              29.482,
+              27.276,
+              17.582
+            ],
+            "after": [
+              26.0,
+              24.0,
+              11.0
+            ],
+            "lightroomSteps": [
+              -1,
+              -1
+            ],
+            "afterSteps": [
+              -1,
+              -1
+            ],
+            "match": true
+          },
+          {
+            "stat": "edge 100-156 undershoot",
+            "lightroom": [
+              32.447,
+              29.971,
+              18.571
+            ],
+            "after": [
+              30.0,
+              30.0,
+              19.0
+            ],
+            "lightroomSteps": [
+              -1,
+              -1
+            ],
+            "afterSteps": [
+              0,
+              -1
+            ],
+            "match": true
+          },
+          {
+            "stat": "edge 120-136 rise10to90",
+            "lightroom": [
+              0.292,
+              0.383,
+              0.711
+            ],
+            "after": [
+              0.328,
+              0.457,
+              0.753
+            ],
+            "lightroomSteps": [
+              0,
+              1
+            ],
+            "afterSteps": [
+              0,
+              1
+            ],
+            "match": true
+          },
+          {
+            "stat": "edge 120-136 overshoot",
+            "lightroom": [
+              13.476,
+              8.5,
+              1.0
+            ],
+            "after": [
+              10.0,
+              5.0,
+              0.0
+            ],
+            "lightroomSteps": [
+              -1,
+              -1
+            ],
+            "afterSteps": [
+              -1,
+              -1
+            ],
+            "match": true
+          },
+          {
+            "stat": "edge 120-136 undershoot",
+            "lightroom": [
+              14.347,
+              8.947,
+              1.0
+            ],
+            "after": [
+              13.0,
+              7.0,
+              1.0
+            ],
+            "lightroomSteps": [
+              -1,
+              -1
+            ],
+            "afterSteps": [
+              -1,
+              -1
+            ],
+            "match": true
+          },
+          {
+            "stat": "grating p4 gain",
+            "lightroom": [
+              1.5169,
+              1.3751,
+              1.0579
+            ],
+            "after": [
+              1.5521,
+              1.4687,
+              1.0938
+            ],
+            "lightroomSteps": [
+              -1,
+              -1
+            ],
+            "afterSteps": [
+              -1,
+              -1
+            ],
+            "match": true
+          },
+          {
+            "stat": "grating p8 gain",
+            "lightroom": [
+              1.3351,
+              1.3134,
+              1.1975
+            ],
+            "after": [
+              1.3958,
+              1.3854,
+              1.1875
+            ],
+            "lightroomSteps": [
+              -1,
+              -1
+            ],
+            "afterSteps": [
+              0,
+              -1
+            ],
+            "match": true
+          },
+          {
+            "stat": "grating p16 gain",
+            "lightroom": [
+              1.1144,
+              1.085,
+              1.0349
+            ],
+            "after": [
+              1.1562,
+              1.1146,
+              1.0208
+            ],
+            "lightroomSteps": [
+              -1,
+              -1
+            ],
+            "afterSteps": [
+              -1,
+              -1
+            ],
+            "match": true
+          },
+          {
+            "stat": "grating p32 gain",
+            "lightroom": [
+              1.0325,
+              1.0115,
+              1.001
+            ],
+            "after": [
+              1.0417,
+              1.0,
+              1.0
+            ],
+            "lightroomSteps": [
+              -1,
+              0
+            ],
+            "afterSteps": [
+              -1,
+              0
+            ],
+            "match": true
+          },
+          {
+            "stat": "patch 64/64/64 luma6 chroma0 lumaStd",
+            "lightroom": [
+              15.262,
+              6.818,
+              6.134
+            ],
+            "after": [
+              14.324,
+              6.699,
+              6.074
+            ],
+            "lightroomSteps": [
+              -1,
+              -1
+            ],
+            "afterSteps": [
+              -1,
+              -1
+            ],
+            "match": true
+          },
+          {
+            "stat": "patch 128/128/128 luma6 chroma0 lumaStd",
+            "lightroom": [
+              17.996,
+              7.511,
+              6.109
+            ],
+            "after": [
+              18.678,
+              6.84,
+              6.046
+            ],
+            "lightroomSteps": [
+              -1,
+              -1
+            ],
+            "afterSteps": [
+              -1,
+              -1
+            ],
+            "match": true
+          },
+          {
+            "stat": "patch 192/192/192 luma6 chroma0 lumaStd",
+            "lightroom": [
+              17.363,
+              7.861,
+              6.161
+            ],
+            "after": [
+              18.382,
+              6.99,
+              6.078
+            ],
+            "lightroomSteps": [
+              -1,
+              -1
+            ],
+            "afterSteps": [
+              -1,
+              -1
+            ],
+            "match": true
+          },
+          {
+            "stat": "patch 128/128/128 luma12 chroma0 lumaStd",
+            "lightroom": [
+              30.618,
+              19.269,
+              12.569
+            ],
+            "after": [
+              32.465,
+              17.574,
+              12.405
+            ],
+            "lightroomSteps": [
+              -1,
+              -1
+            ],
+            "afterSteps": [
+              -1,
+              -1
+            ],
+            "match": true
+          },
+          {
+            "stat": "patch 128/128/128 luma0 chroma8 lumaStd",
+            "lightroom": [
+              4.742,
+              0.226,
+              0.196
+            ],
+            "after": [
+              4.447,
+              0.189,
+              0.189
+            ],
+            "lightroomSteps": [
+              -1,
+              0
+            ],
+            "afterSteps": [
+              -1,
+              0
+            ],
+            "match": true
+          },
+          {
+            "stat": "patch 96/128/160 luma6 chroma8 lumaStd",
+            "lightroom": [
+              18.148,
+              7.617,
+              6.106
+            ],
+            "after": [
+              18.8,
+              6.89,
+              6.031
+            ],
+            "lightroomSteps": [
+              -1,
+              -1
+            ],
+            "afterSteps": [
+              -1,
+              -1
+            ],
+            "match": true
+          },
+          {
+            "stat": "patch 96/128/160 luma6 chroma8 chromaStd",
+            "lightroom": [
+              8.52,
+              8.159,
+              8.127
+            ],
+            "after": [
+              8.479,
+              8.078,
+              8.062
+            ],
+            "lightroomSteps": [
+              -1,
+              0
+            ],
+            "afterSteps": [
+              -1,
+              0
+            ],
+            "match": true
+          },
+          {
+            "stat": "patch 170/120/90 luma6 chroma8 lumaStd",
+            "lightroom": [
+              17.924,
+              7.496,
+              6.125
+            ],
+            "after": [
+              18.702,
+              6.817,
+              6.054
+            ],
+            "lightroomSteps": [
+              -1,
+              -1
+            ],
+            "afterSteps": [
+              -1,
+              -1
+            ],
+            "match": true
+          },
+          {
+            "stat": "patch 170/120/90 luma6 chroma8 chromaStd",
+            "lightroom": [
+              8.494,
+              8.099,
+              8.072
+            ],
+            "after": [
+              8.395,
+              8.018,
+              8.009
+            ],
+            "lightroomSteps": [
+              -1,
+              0
+            ],
+            "afterSteps": [
+              -1,
+              0
+            ],
+            "match": true
+          },
+          {
+            "stat": "patch 80/140/80 luma0 chroma12 lumaStd",
+            "lightroom": [
+              10.506,
+              1.386,
+              0.546
+            ],
+            "after": [
+              10.843,
+              0.728,
+              0.371
+            ],
+            "lightroomSteps": [
+              -1,
+              -1
+            ],
+            "afterSteps": [
+              -1,
+              -1
+            ],
+            "match": true
+          },
+          {
+            "stat": "patch 80/140/80 luma0 chroma12 chromaStd",
+            "lightroom": [
+              13.312,
+              12.203,
+              12.107
+            ],
+            "after": [
+              13.273,
+              12.12,
+              12.046
+            ],
+            "lightroomSteps": [
+              -1,
+              0
+            ],
+            "afterSteps": [
+              -1,
+              0
+            ],
+            "match": true
+          },
+          {
+            "stat": "patch 200/160/120 luma12 chroma12 lumaStd",
+            "lightroom": [
+              29.198,
+              19.287,
+              12.497
+            ],
+            "after": [
+              32.347,
+              17.627,
+              12.3
+            ],
+            "lightroomSteps": [
+              -1,
+              -1
+            ],
+            "afterSteps": [
+              -1,
+              -1
+            ],
+            "match": true
+          }
+        ]
+      },
+      "luminanceSmoothing": {
+        "variants": [
+          "neutral",
+          "lnr_25",
+          "lnr_50",
+          "lnr_75",
+          "lnr_100"
+        ],
+        "checks": [
+          {
+            "stat": "edge 120-136 rise10to90",
+            "lightroom": [
+              0.8,
+              2.974,
+              4.066,
+              4.905,
+              5.937
+            ],
+            "after": [
+              0.8,
+              1.8,
+              3.8,
+              6.8,
+              7.8
+            ],
+            "lightroomSteps": [
+              1,
+              1,
+              1,
+              1
+            ],
+            "afterSteps": [
+              1,
+              1,
+              1,
+              1
+            ],
+            "match": true
+          },
+          {
+            "stat": "grating p4 gain",
+            "lightroom": [
+              1.0,
+              0.9438,
+              0.9249,
+              0.9046,
+              0.885
+            ],
+            "after": [
+              1.0,
+              0.9792,
+              0.9792,
+              0.9687,
+              0.9583
+            ],
+            "lightroomSteps": [
+              -1,
+              -1,
+              -1,
+              -1
+            ],
+            "afterSteps": [
+              -1,
+              0,
+              0,
+              0
+            ],
+            "match": true
+          },
+          {
+            "stat": "grating p8 gain",
+            "lightroom": [
+              1.0,
+              0.9711,
+              0.961,
+              0.9502,
+              0.9398
+            ],
+            "after": [
+              1.0,
+              0.9271,
+              0.8958,
+              0.8646,
+              0.8333
+            ],
+            "lightroomSteps": [
+              -1,
+              0,
+              0,
+              0
+            ],
+            "afterSteps": [
+              -1,
+              -1,
+              -1,
+              -1
+            ],
+            "match": true
+          },
+          {
+            "stat": "grating p16 gain",
+            "lightroom": [
+              1.0,
+              0.9758,
+              0.9666,
+              0.9567,
+              0.9456
+            ],
+            "after": [
+              1.0,
+              0.9167,
+              0.8854,
+              0.875,
+              0.8646
+            ],
+            "lightroomSteps": [
+              -1,
+              0,
+              0,
+              -1
+            ],
+            "afterSteps": [
+              -1,
+              -1,
+              0,
+              0
+            ],
+            "match": true
+          },
+          {
+            "stat": "grating p32 gain",
+            "lightroom": [
+              1.0,
+              0.9754,
+              0.9645,
+              0.9542,
+              0.9419
+            ],
+            "after": [
+              1.0,
+              0.9375,
+              0.9062,
+              0.8854,
+              0.875
+            ],
+            "lightroomSteps": [
+              -1,
+              0,
+              0,
+              -1
+            ],
+            "afterSteps": [
+              -1,
+              -1,
+              -1,
+              0
+            ],
+            "match": true
+          },
+          {
+            "stat": "patch 64/64/64 luma6 chroma0 lumaStd",
+            "lightroom": [
+              6.132,
+              3.233,
+              2.233,
+              1.257,
+              0.152
+            ],
+            "after": [
+              6.074,
+              3.54,
+              2.191,
+              1.121,
+              0.413
+            ],
+            "lightroomSteps": [
+              -1,
+              -1,
+              -1,
+              -1
+            ],
+            "afterSteps": [
+              -1,
+              -1,
+              -1,
+              -1
+            ],
+            "match": true
+          },
+          {
+            "stat": "patch 128/128/128 luma6 chroma0 lumaStd",
+            "lightroom": [
+              6.095,
+              3.231,
+              2.239,
+              1.253,
+              0.156
+            ],
+            "after": [
+              6.046,
+              3.527,
+              2.185,
+              1.123,
+              0.427
+            ],
+            "lightroomSteps": [
+              -1,
+              -1,
+              -1,
+              -1
+            ],
+            "afterSteps": [
+              -1,
+              -1,
+              -1,
+              -1
+            ],
+            "match": true
+          },
+          {
+            "stat": "patch 192/192/192 luma6 chroma0 lumaStd",
+            "lightroom": [
+              6.132,
+              3.642,
+              2.834,
+              2.073,
+              1.462
+            ],
+            "after": [
+              6.078,
+              3.561,
+              2.218,
+              1.152,
+              0.493
+            ],
+            "lightroomSteps": [
+              -1,
+              -1,
+              -1,
+              -1
+            ],
+            "afterSteps": [
+              -1,
+              -1,
+              -1,
+              -1
+            ],
+            "match": true
+          },
+          {
+            "stat": "patch 128/128/128 luma12 chroma0 lumaStd",
+            "lightroom": [
+              12.222,
+              7.664,
+              6.184,
+              4.757,
+              3.563
+            ],
+            "after": [
+              12.188,
+              8.253,
+              6.118,
+              4.605,
+              3.737
+            ],
+            "lightroomSteps": [
+              -1,
+              -1,
+              -1,
+              -1
+            ],
+            "afterSteps": [
+              -1,
+              -1,
+              -1,
+              -1
+            ],
+            "match": true
+          },
+          {
+            "stat": "patch 128/128/128 luma0 chroma8 lumaStd",
+            "lightroom": [
+              0.196,
+              0.885,
+              1.083,
+              1.291,
+              1.503
+            ],
+            "after": [
+              0.189,
+              0.881,
+              1.309,
+              1.667,
+              1.985
+            ],
+            "lightroomSteps": [
+              1,
+              1,
+              1,
+              1
+            ],
+            "afterSteps": [
+              1,
+              1,
+              1,
+              1
+            ],
+            "match": true
+          },
+          {
+            "stat": "patch 96/128/160 luma6 chroma8 lumaStd",
+            "lightroom": [
+              6.086,
+              3.265,
+              2.581,
+              2.321,
+              2.675
+            ],
+            "after": [
+              6.031,
+              3.711,
+              2.788,
+              2.469,
+              2.649
+            ],
+            "lightroomSteps": [
+              -1,
+              -1,
+              -1,
+              1
+            ],
+            "afterSteps": [
+              -1,
+              -1,
+              -1,
+              1
+            ],
+            "match": true
+          },
+          {
+            "stat": "patch 96/128/160 luma6 chroma8 chromaStd",
+            "lightroom": [
+              8.128,
+              8.312,
+              8.388,
+              8.472,
+              8.569
+            ],
+            "after": [
+              8.062,
+              8.076,
+              8.085,
+              8.093,
+              8.099
+            ],
+            "lightroomSteps": [
+              1,
+              0,
+              0,
+              0
+            ],
+            "afterSteps": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "match": true
+          },
+          {
+            "stat": "patch 170/120/90 luma6 chroma8 lumaStd",
+            "lightroom": [
+              6.111,
+              3.222,
+              2.25,
+              1.312,
+              0.699
+            ],
+            "after": [
+              6.054,
+              3.616,
+              2.391,
+              1.576,
+              1.301
+            ],
+            "lightroomSteps": [
+              -1,
+              -1,
+              -1,
+              -1
+            ],
+            "afterSteps": [
+              -1,
+              -1,
+              -1,
+              -1
+            ],
+            "match": true
+          },
+          {
+            "stat": "patch 80/140/80 luma0 chroma12 lumaStd",
+            "lightroom": [
+              0.536,
+              2.321,
+              3.048,
+              3.794,
+              4.559
+            ],
+            "after": [
+              0.371,
+              2.395,
+              3.663,
+              4.706,
+              5.626
+            ],
+            "lightroomSteps": [
+              1,
+              1,
+              1,
+              1
+            ],
+            "afterSteps": [
+              1,
+              1,
+              1,
+              1
+            ],
+            "match": true
+          },
+          {
+            "stat": "patch 80/140/80 luma0 chroma12 chromaStd",
+            "lightroom": [
+              12.105,
+              12.376,
+              12.488,
+              12.595,
+              12.69
+            ],
+            "after": [
+              12.046,
+              12.127,
+              12.169,
+              12.204,
+              12.236
+            ],
+            "lightroomSteps": [
+              1,
+              0,
+              0,
+              0
+            ],
+            "afterSteps": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "match": true
+          },
+          {
+            "stat": "patch 200/160/120 luma12 chroma12 lumaStd",
+            "lightroom": [
+              12.097,
+              8.231,
+              7.017,
+              5.867,
+              4.88
+            ],
+            "after": [
+              12.066,
+              8.486,
+              6.582,
+              5.303,
+              4.612
+            ],
+            "lightroomSteps": [
+              -1,
+              -1,
+              -1,
+              -1
+            ],
+            "afterSteps": [
+              -1,
+              -1,
+              -1,
+              -1
+            ],
+            "match": true
+          }
+        ]
+      },
+      "colorNoiseReduction": {
+        "variants": [
+          "neutral",
+          "cnr_25",
+          "cnr_50",
+          "cnr_100"
+        ],
+        "checks": [
+          {
+            "stat": "patch 128/128/128 luma0 chroma8 lumaStd",
+            "lightroom": [
+              0.196,
+              1.498,
+              1.502,
+              1.501
+            ],
+            "after": [
+              0.189,
+              1.692,
+              1.692,
+              1.692
+            ],
+            "lightroomSteps": [
+              1,
+              0,
+              0
+            ],
+            "afterSteps": [
+              1,
+              0,
+              0
+            ],
+            "match": true
+          },
+          {
+            "stat": "patch 128/128/128 luma0 chroma8 chromaStd",
+            "lightroom": [
+              8.128,
+              2.516,
+              2.512,
+              2.514
+            ],
+            "after": [
+              8.065,
+              2.547,
+              2.547,
+              2.547
+            ],
+            "lightroomSteps": [
+              -1,
+              0,
+              0
+            ],
+            "afterSteps": [
+              -1,
+              0,
+              0
+            ],
+            "match": true
+          },
+          {
+            "stat": "patch 96/128/160 luma6 chroma8 lumaStd",
+            "lightroom": [
+              6.086,
+              6.847,
+              6.855,
+              6.859
+            ],
+            "after": [
+              6.031,
+              6.243,
+              6.243,
+              6.243
+            ],
+            "lightroomSteps": [
+              1,
+              0,
+              0
+            ],
+            "afterSteps": [
+              1,
+              0,
+              0
+            ],
+            "match": true
+          },
+          {
+            "stat": "patch 96/128/160 luma6 chroma8 chromaStd",
+            "lightroom": [
+              8.128,
+              2.75,
+              2.737,
+              2.737
+            ],
+            "after": [
+              8.062,
+              2.681,
+              2.681,
+              2.681
+            ],
+            "lightroomSteps": [
+              -1,
+              0,
+              0
+            ],
+            "afterSteps": [
+              -1,
+              0,
+              0
+            ],
+            "match": true
+          },
+          {
+            "stat": "patch 170/120/90 luma6 chroma8 chromaStd",
+            "lightroom": [
+              8.072,
+              2.569,
+              2.555,
+              2.556
+            ],
+            "after": [
+              8.009,
+              2.676,
+              2.676,
+              2.676
+            ],
+            "lightroomSteps": [
+              -1,
+              0,
+              0
+            ],
+            "afterSteps": [
+              -1,
+              0,
+              0
+            ],
+            "match": true
+          },
+          {
+            "stat": "patch 80/140/80 luma0 chroma12 lumaStd",
+            "lightroom": [
+              0.536,
+              4.043,
+              4.051,
+              4.053
+            ],
+            "after": [
+              0.371,
+              4.29,
+              4.29,
+              4.29
+            ],
+            "lightroomSteps": [
+              1,
+              0,
+              0
+            ],
+            "afterSteps": [
+              1,
+              0,
+              0
+            ],
+            "match": true
+          },
+          {
+            "stat": "patch 80/140/80 luma0 chroma12 chromaStd",
+            "lightroom": [
+              12.105,
+              3.949,
+              3.904,
+              3.897
+            ],
+            "after": [
+              12.046,
+              3.974,
+              3.974,
+              3.974
+            ],
+            "lightroomSteps": [
+              -1,
+              0,
+              0
+            ],
+            "afterSteps": [
+              -1,
+              0,
+              0
+            ],
+            "match": true
+          },
+          {
+            "stat": "patch 200/160/120 luma12 chroma12 chromaStd",
+            "lightroom": [
+              12.079,
+              4.717,
+              4.61,
+              4.613
+            ],
+            "after": [
+              12.033,
+              4.038,
+              4.038,
+              4.038
+            ],
+            "lightroomSteps": [
+              -1,
+              0,
+              0
+            ],
+            "afterSteps": [
+              -1,
+              0,
+              0
+            ],
+            "match": true
+          }
+        ]
+      }
+    }
+  },
+  "variants": {
+    "neutral": {
+      "settings": {
+        "Sharpness": "0",
+        "SharpenRadius": "+1.0",
+        "SharpenDetail": "25",
+        "SharpenEdgeMasking": "0",
+        "LuminanceSmoothing": "0",
+        "ColorNoiseReduction": "0"
+      },
+      "rows": [
+        {
+          "stat": "edge 64-192 rise10to90",
+          "lightroom": 0.8,
+          "after": 0.8,
+          "afterError": 0.0,
+          "before": 0.8,
+          "beforeError": 0.0
+        },
+        {
+          "stat": "edge 64-192 overshoot",
+          "lightroom": 0.0,
+          "after": 0.0,
+          "afterError": 0.0,
+          "before": 0.0,
+          "beforeError": 0.0
+        },
+        {
+          "stat": "edge 64-192 undershoot",
+          "lightroom": 0.0,
+          "after": 0.0,
+          "afterError": 0.0,
+          "before": 0.0,
+          "beforeError": 0.0
+        },
+        {
+          "stat": "edge 100-156 rise10to90",
+          "lightroom": 0.8,
+          "after": 0.8,
+          "afterError": 0.0,
+          "before": 0.8,
+          "beforeError": 0.0
+        },
+        {
+          "stat": "edge 100-156 overshoot",
+          "lightroom": 0.0,
+          "after": 0.0,
+          "afterError": 0.0,
+          "before": 0.0,
+          "beforeError": 0.0
+        },
+        {
+          "stat": "edge 100-156 undershoot",
+          "lightroom": 0.0,
+          "after": 0.0,
+          "afterError": 0.0,
+          "before": 0.0,
+          "beforeError": 0.0
+        },
+        {
+          "stat": "edge 120-136 rise10to90",
+          "lightroom": 0.8,
+          "after": 0.8,
+          "afterError": 0.0,
+          "before": 0.8,
+          "beforeError": 0.0
+        },
+        {
+          "stat": "edge 120-136 overshoot",
+          "lightroom": 0.0,
+          "after": 0.0,
+          "afterError": 0.0,
+          "before": 0.0,
+          "beforeError": 0.0
+        },
+        {
+          "stat": "edge 120-136 undershoot",
+          "lightroom": 0.0,
+          "after": 0.0,
+          "afterError": 0.0,
+          "before": 0.0,
+          "beforeError": 0.0
+        },
+        {
+          "stat": "grating p4 gain",
+          "lightroom": 1.0,
+          "after": 1.0,
+          "afterError": 0.0,
+          "before": 1.0,
+          "beforeError": 0.0
+        },
+        {
+          "stat": "grating p8 gain",
+          "lightroom": 1.0,
+          "after": 1.0,
+          "afterError": 0.0,
+          "before": 1.0,
+          "beforeError": 0.0
+        },
+        {
+          "stat": "grating p16 gain",
+          "lightroom": 1.0,
+          "after": 1.0,
+          "afterError": 0.0,
+          "before": 1.0,
+          "beforeError": 0.0
+        },
+        {
+          "stat": "grating p32 gain",
+          "lightroom": 1.0,
+          "after": 1.0,
+          "afterError": 0.0,
+          "before": 1.0,
+          "beforeError": 0.0
+        },
+        {
+          "stat": "patch 64/64/64 luma6 chroma0 lumaStd",
+          "lightroom": 6.132,
+          "after": 6.074,
+          "afterError": -0.058,
+          "before": 6.074,
+          "beforeError": -0.058
+        },
+        {
+          "stat": "patch 128/128/128 luma6 chroma0 lumaStd",
+          "lightroom": 6.095,
+          "after": 6.046,
+          "afterError": -0.049,
+          "before": 6.046,
+          "beforeError": -0.049
+        },
+        {
+          "stat": "patch 192/192/192 luma6 chroma0 lumaStd",
+          "lightroom": 6.132,
+          "after": 6.078,
+          "afterError": -0.054,
+          "before": 6.078,
+          "beforeError": -0.054
+        },
+        {
+          "stat": "patch 128/128/128 luma12 chroma0 lumaStd",
+          "lightroom": 12.222,
+          "after": 12.188,
+          "afterError": -0.034,
+          "before": 12.188,
+          "beforeError": -0.034
+        },
+        {
+          "stat": "patch 128/128/128 luma0 chroma8 lumaStd",
+          "lightroom": 0.196,
+          "after": 0.189,
+          "afterError": -0.007,
+          "before": 0.189,
+          "beforeError": -0.007
+        },
+        {
+          "stat": "patch 128/128/128 luma0 chroma8 chromaStd",
+          "lightroom": 8.128,
+          "after": 8.065,
+          "afterError": -0.063,
+          "before": 8.065,
+          "beforeError": -0.063
+        },
+        {
+          "stat": "patch 96/128/160 luma6 chroma8 lumaStd",
+          "lightroom": 6.086,
+          "after": 6.031,
+          "afterError": -0.055,
+          "before": 6.031,
+          "beforeError": -0.055
+        },
+        {
+          "stat": "patch 96/128/160 luma6 chroma8 chromaStd",
+          "lightroom": 8.128,
+          "after": 8.062,
+          "afterError": -0.066,
+          "before": 8.062,
+          "beforeError": -0.066
+        },
+        {
+          "stat": "patch 170/120/90 luma6 chroma8 lumaStd",
+          "lightroom": 6.111,
+          "after": 6.054,
+          "afterError": -0.057,
+          "before": 6.054,
+          "beforeError": -0.057
+        },
+        {
+          "stat": "patch 170/120/90 luma6 chroma8 chromaStd",
+          "lightroom": 8.072,
+          "after": 8.009,
+          "afterError": -0.063,
+          "before": 8.009,
+          "beforeError": -0.063
+        },
+        {
+          "stat": "patch 80/140/80 luma0 chroma12 lumaStd",
+          "lightroom": 0.536,
+          "after": 0.371,
+          "afterError": -0.165,
+          "before": 0.371,
+          "beforeError": -0.165
+        },
+        {
+          "stat": "patch 80/140/80 luma0 chroma12 chromaStd",
+          "lightroom": 12.105,
+          "after": 12.046,
+          "afterError": -0.059,
+          "before": 12.046,
+          "beforeError": -0.059
+        },
+        {
+          "stat": "patch 200/160/120 luma12 chroma12 lumaStd",
+          "lightroom": 12.097,
+          "after": 12.066,
+          "afterError": -0.031,
+          "before": 12.066,
+          "beforeError": -0.031
+        },
+        {
+          "stat": "patch 200/160/120 luma12 chroma12 chromaStd",
+          "lightroom": 12.079,
+          "after": 12.033,
+          "afterError": -0.046,
+          "before": 12.033,
+          "beforeError": -0.046
+        }
+      ]
+    },
+    "sharp_a40": {
+      "settings": {
+        "Sharpness": "40",
+        "SharpenRadius": "+1.0",
+        "SharpenDetail": "25",
+        "SharpenEdgeMasking": "0",
+        "LuminanceSmoothing": "0",
+        "ColorNoiseReduction": "0"
+      },
+      "rows": [
+        {
+          "stat": "edge 64-192 rise10to90",
+          "lightroom": 0.623,
+          "after": 0.644,
+          "afterError": 0.021,
+          "before": 0.542,
+          "beforeError": -0.081
+        },
+        {
+          "stat": "edge 64-192 overshoot",
+          "lightroom": 25.559,
+          "after": 21.0,
+          "afterError": -4.559,
+          "before": 8.0,
+          "beforeError": -17.559
+        },
+        {
+          "stat": "edge 64-192 undershoot",
+          "lightroom": 10.794,
+          "after": 10.0,
+          "afterError": -0.794,
+          "before": 53.0,
+          "beforeError": 42.206
+        },
+        {
+          "stat": "edge 100-156 rise10to90",
+          "lightroom": 0.49,
+          "after": 0.492,
+          "afterError": 0.002,
+          "before": 0.659,
+          "beforeError": 0.169
+        },
+        {
+          "stat": "edge 100-156 overshoot",
+          "lightroom": 16.2,
+          "after": 13.0,
+          "afterError": -3.2,
+          "before": 4.0,
+          "beforeError": -12.2
+        },
+        {
+          "stat": "edge 100-156 undershoot",
+          "lightroom": 19.218,
+          "after": 22.0,
+          "afterError": 2.782,
+          "before": 8.0,
+          "beforeError": -11.218
+        },
+        {
+          "stat": "edge 120-136 rise10to90",
+          "lightroom": 0.459,
+          "after": 0.474,
+          "afterError": 0.015,
+          "before": 0.674,
+          "beforeError": 0.215
+        },
+        {
+          "stat": "edge 120-136 overshoot",
+          "lightroom": 5.871,
+          "after": 5.0,
+          "afterError": -0.871,
+          "before": 1.0,
+          "beforeError": -4.871
+        },
+        {
+          "stat": "edge 120-136 undershoot",
+          "lightroom": 6.0,
+          "after": 6.0,
+          "afterError": 0.0,
+          "before": 2.0,
+          "beforeError": -4.0
+        },
+        {
+          "stat": "grating p4 gain",
+          "lightroom": 1.3979,
+          "after": 1.4167,
+          "afterError": 0.019,
+          "before": 1.3021,
+          "beforeError": -0.096
+        },
+        {
+          "stat": "grating p8 gain",
+          "lightroom": 1.1769,
+          "after": 1.2292,
+          "afterError": 0.052,
+          "before": 1.0938,
+          "beforeError": -0.083
+        },
+        {
+          "stat": "grating p16 gain",
+          "lightroom": 1.0553,
+          "after": 1.0625,
+          "afterError": 0.007,
+          "before": 1.0208,
+          "beforeError": -0.034
+        },
+        {
+          "stat": "grating p32 gain",
+          "lightroom": 1.0159,
+          "after": 1.0208,
+          "afterError": 0.005,
+          "before": 1.0,
+          "beforeError": -0.016
+        },
+        {
+          "stat": "patch 64/64/64 luma6 chroma0 lumaStd",
+          "lightroom": 10.088,
+          "after": 10.607,
+          "afterError": 0.519,
+          "before": 7.942,
+          "beforeError": -2.146
+        },
+        {
+          "stat": "patch 128/128/128 luma6 chroma0 lumaStd",
+          "lightroom": 10.816,
+          "after": 11.891,
+          "afterError": 1.075,
+          "before": 7.858,
+          "beforeError": -2.958
+        },
+        {
+          "stat": "patch 192/192/192 luma6 chroma0 lumaStd",
+          "lightroom": 10.821,
+          "after": 11.86,
+          "afterError": 1.039,
+          "before": 7.881,
+          "beforeError": -2.94
+        },
+        {
+          "stat": "patch 128/128/128 luma12 chroma0 lumaStd",
+          "lightroom": 21.057,
+          "after": 23.267,
+          "afterError": 2.21,
+          "before": 15.951,
+          "beforeError": -5.106
+        },
+        {
+          "stat": "patch 128/128/128 luma0 chroma8 lumaStd",
+          "lightroom": 1.852,
+          "after": 1.986,
+          "afterError": 0.134,
+          "before": 0.722,
+          "beforeError": -1.13
+        },
+        {
+          "stat": "patch 128/128/128 luma0 chroma8 chromaStd",
+          "lightroom": 8.135,
+          "after": 8.078,
+          "afterError": -0.057,
+          "before": 8.053,
+          "beforeError": -0.082
+        },
+        {
+          "stat": "patch 96/128/160 luma6 chroma8 lumaStd",
+          "lightroom": 10.845,
+          "after": 11.922,
+          "afterError": 1.077,
+          "before": 8.012,
+          "beforeError": -2.833
+        },
+        {
+          "stat": "patch 96/128/160 luma6 chroma8 chromaStd",
+          "lightroom": 8.239,
+          "after": 8.199,
+          "afterError": -0.04,
+          "before": 8.014,
+          "beforeError": -0.225
+        },
+        {
+          "stat": "patch 170/120/90 luma6 chroma8 lumaStd",
+          "lightroom": 10.767,
+          "after": 11.86,
+          "afterError": 1.093,
+          "before": 7.958,
+          "beforeError": -2.809
+        },
+        {
+          "stat": "patch 170/120/90 luma6 chroma8 chromaStd",
+          "lightroom": 8.177,
+          "after": 8.108,
+          "afterError": -0.069,
+          "before": 8.026,
+          "beforeError": -0.151
+        },
+        {
+          "stat": "patch 80/140/80 luma0 chroma12 lumaStd",
+          "lightroom": 4.197,
+          "after": 4.968,
+          "afterError": 0.771,
+          "before": 2.371,
+          "beforeError": -1.826
+        },
+        {
+          "stat": "patch 80/140/80 luma0 chroma12 chromaStd",
+          "lightroom": 12.566,
+          "after": 12.591,
+          "afterError": 0.025,
+          "before": 11.527,
+          "beforeError": -1.039
+        },
+        {
+          "stat": "patch 200/160/120 luma12 chroma12 lumaStd",
+          "lightroom": 20.515,
+          "after": 23.092,
+          "afterError": 2.577,
+          "before": 15.927,
+          "beforeError": -4.588
+        },
+        {
+          "stat": "patch 200/160/120 luma12 chroma12 chromaStd",
+          "lightroom": 12.095,
+          "after": 12.003,
+          "afterError": -0.092,
+          "before": 12.172,
+          "beforeError": 0.077
+        }
+      ]
+    },
+    "sharp_a80": {
+      "settings": {
+        "Sharpness": "80",
+        "SharpenRadius": "+1.0",
+        "SharpenDetail": "25",
+        "SharpenEdgeMasking": "0",
+        "LuminanceSmoothing": "0",
+        "ColorNoiseReduction": "0"
+      },
+      "rows": [
+        {
+          "stat": "edge 64-192 rise10to90",
+          "lightroom": 0.601,
+          "after": 0.602,
+          "afterError": 0.001,
+          "before": 0.495,
+          "beforeError": -0.106
+        },
+        {
+          "stat": "edge 64-192 overshoot",
+          "lightroom": 33.535,
+          "after": 32.0,
+          "afterError": -1.535,
+          "before": 15.0,
+          "beforeError": -18.535
+        },
+        {
+          "stat": "edge 64-192 undershoot",
+          "lightroom": 8.982,
+          "after": 10.0,
+          "afterError": 1.018,
+          "before": 64.0,
+          "beforeError": 55.018
+        },
+        {
+          "stat": "edge 100-156 rise10to90",
+          "lightroom": 0.38,
+          "after": 0.4,
+          "afterError": 0.02,
+          "before": 0.546,
+          "beforeError": 0.166
+        },
+        {
+          "stat": "edge 100-156 overshoot",
+          "lightroom": 29.482,
+          "after": 26.0,
+          "afterError": -3.482,
+          "before": 9.0,
+          "beforeError": -20.482
+        },
+        {
+          "stat": "edge 100-156 undershoot",
+          "lightroom": 32.447,
+          "after": 30.0,
+          "afterError": -2.447,
+          "before": 17.0,
+          "beforeError": -15.447
+        },
+        {
+          "stat": "edge 120-136 rise10to90",
+          "lightroom": 0.292,
+          "after": 0.328,
+          "afterError": 0.036,
+          "before": 0.557,
+          "beforeError": 0.265
+        },
+        {
+          "stat": "edge 120-136 overshoot",
+          "lightroom": 13.476,
+          "after": 10.0,
+          "afterError": -3.476,
+          "before": 3.0,
+          "beforeError": -10.476
+        },
+        {
+          "stat": "edge 120-136 undershoot",
+          "lightroom": 14.347,
+          "after": 13.0,
+          "afterError": -1.347,
+          "before": 4.0,
+          "beforeError": -10.347
+        },
+        {
+          "stat": "grating p4 gain",
+          "lightroom": 1.5169,
+          "after": 1.5521,
+          "afterError": 0.035,
+          "before": 1.7292,
+          "beforeError": 0.212
+        },
+        {
+          "stat": "grating p8 gain",
+          "lightroom": 1.3351,
+          "after": 1.3958,
+          "afterError": 0.061,
+          "before": 1.1875,
+          "beforeError": -0.148
+        },
+        {
+          "stat": "grating p16 gain",
+          "lightroom": 1.1144,
+          "after": 1.1562,
+          "afterError": 0.042,
+          "before": 1.0521,
+          "beforeError": -0.062
+        },
+        {
+          "stat": "grating p32 gain",
+          "lightroom": 1.0325,
+          "after": 1.0417,
+          "afterError": 0.009,
+          "before": 1.0208,
+          "beforeError": -0.012
+        },
+        {
+          "stat": "patch 64/64/64 luma6 chroma0 lumaStd",
+          "lightroom": 15.262,
+          "after": 14.324,
+          "afterError": -0.938,
+          "before": 9.914,
+          "beforeError": -5.348
+        },
+        {
+          "stat": "patch 128/128/128 luma6 chroma0 lumaStd",
+          "lightroom": 17.996,
+          "after": 18.678,
+          "afterError": 0.682,
+          "before": 9.701,
+          "beforeError": -8.295
+        },
+        {
+          "stat": "patch 192/192/192 luma6 chroma0 lumaStd",
+          "lightroom": 17.363,
+          "after": 18.382,
+          "afterError": 1.019,
+          "before": 9.712,
+          "beforeError": -7.651
+        },
+        {
+          "stat": "patch 128/128/128 luma12 chroma0 lumaStd",
+          "lightroom": 30.618,
+          "after": 32.465,
+          "afterError": 1.847,
+          "before": 20.013,
+          "beforeError": -10.605
+        },
+        {
+          "stat": "patch 128/128/128 luma0 chroma8 lumaStd",
+          "lightroom": 4.742,
+          "after": 4.447,
+          "afterError": -0.295,
+          "before": 1.296,
+          "beforeError": -3.446
+        },
+        {
+          "stat": "patch 128/128/128 luma0 chroma8 chromaStd",
+          "lightroom": 8.158,
+          "after": 8.088,
+          "afterError": -0.07,
+          "before": 8.043,
+          "beforeError": -0.115
+        },
+        {
+          "stat": "patch 96/128/160 luma6 chroma8 lumaStd",
+          "lightroom": 18.148,
+          "after": 18.8,
+          "afterError": 0.652,
+          "before": 10.102,
+          "beforeError": -8.046
+        },
+        {
+          "stat": "patch 96/128/160 luma6 chroma8 chromaStd",
+          "lightroom": 8.52,
+          "after": 8.479,
+          "afterError": -0.041,
+          "before": 8.011,
+          "beforeError": -0.509
+        },
+        {
+          "stat": "patch 170/120/90 luma6 chroma8 lumaStd",
+          "lightroom": 17.924,
+          "after": 18.702,
+          "afterError": 0.778,
+          "before": 9.939,
+          "beforeError": -7.985
+        },
+        {
+          "stat": "patch 170/120/90 luma6 chroma8 chromaStd",
+          "lightroom": 8.494,
+          "after": 8.395,
+          "afterError": -0.099,
+          "before": 8.136,
+          "beforeError": -0.358
+        },
+        {
+          "stat": "patch 80/140/80 luma0 chroma12 lumaStd",
+          "lightroom": 10.506,
+          "after": 10.843,
+          "afterError": 0.337,
+          "before": 4.529,
+          "beforeError": -5.977
+        },
+        {
+          "stat": "patch 80/140/80 luma0 chroma12 chromaStd",
+          "lightroom": 13.312,
+          "after": 13.273,
+          "afterError": -0.039,
+          "before": 11.176,
+          "beforeError": -2.136
+        },
+        {
+          "stat": "patch 200/160/120 luma12 chroma12 lumaStd",
+          "lightroom": 29.198,
+          "after": 32.347,
+          "afterError": 3.149,
+          "before": 20.055,
+          "beforeError": -9.143
+        },
+        {
+          "stat": "patch 200/160/120 luma12 chroma12 chromaStd",
+          "lightroom": 12.13,
+          "after": 12.013,
+          "afterError": -0.117,
+          "before": 12.607,
+          "beforeError": 0.477
+        }
+      ]
+    },
+    "sharp_a150": {
+      "settings": {
+        "Sharpness": "150",
+        "SharpenRadius": "+1.0",
+        "SharpenDetail": "25",
+        "SharpenEdgeMasking": "0",
+        "LuminanceSmoothing": "0",
+        "ColorNoiseReduction": "0"
+      },
+      "rows": [
+        {
+          "stat": "edge 64-192 rise10to90",
+          "lightroom": 0.599,
+          "after": 0.595,
+          "afterError": -0.004,
+          "before": 0.468,
+          "beforeError": -0.131
+        },
+        {
+          "stat": "edge 64-192 overshoot",
+          "lightroom": 33.935,
+          "after": 34.0,
+          "afterError": 0.065,
+          "before": 27.0,
+          "beforeError": -6.935
+        },
+        {
+          "stat": "edge 64-192 undershoot",
+          "lightroom": 11.482,
+          "after": 10.0,
+          "afterError": -1.482,
+          "before": 64.0,
+          "beforeError": 52.518
+        },
+        {
+          "stat": "edge 100-156 rise10to90",
+          "lightroom": 2.377,
+          "after": 0.356,
+          "afterError": -2.021,
+          "before": 0.411,
+          "beforeError": -1.966
+        },
+        {
+          "stat": "edge 100-156 overshoot",
+          "lightroom": 35.541,
+          "after": 39.0,
+          "afterError": 3.459,
+          "before": 16.0,
+          "beforeError": -19.541
+        },
+        {
+          "stat": "edge 100-156 undershoot",
+          "lightroom": 34.729,
+          "after": 31.0,
+          "afterError": -3.729,
+          "before": 37.0,
+          "beforeError": 2.271
+        },
+        {
+          "stat": "edge 120-136 rise10to90",
+          "lightroom": 2.521,
+          "after": 0.206,
+          "afterError": -2.315,
+          "before": 0.457,
+          "beforeError": -2.064
+        },
+        {
+          "stat": "edge 120-136 overshoot",
+          "lightroom": 24.853,
+          "after": 20.0,
+          "afterError": -4.853,
+          "before": 5.0,
+          "beforeError": -19.853
+        },
+        {
+          "stat": "edge 120-136 undershoot",
+          "lightroom": 24.965,
+          "after": 26.0,
+          "afterError": 1.035,
+          "before": 7.0,
+          "beforeError": -17.965
+        },
+        {
+          "stat": "grating p4 gain",
+          "lightroom": 1.5754,
+          "after": 1.5833,
+          "afterError": 0.008,
+          "before": 2.1458,
+          "beforeError": 0.57
+        },
+        {
+          "stat": "grating p8 gain",
+          "lightroom": 1.4743,
+          "after": 1.5208,
+          "afterError": 0.046,
+          "before": 1.375,
+          "beforeError": -0.099
+        },
+        {
+          "stat": "grating p16 gain",
+          "lightroom": 1.2262,
+          "after": 1.2917,
+          "afterError": 0.066,
+          "before": 1.0938,
+          "beforeError": -0.132
+        },
+        {
+          "stat": "grating p32 gain",
+          "lightroom": 1.0694,
+          "after": 1.0833,
+          "afterError": 0.014,
+          "before": 1.0208,
+          "beforeError": -0.049
+        },
+        {
+          "stat": "patch 64/64/64 luma6 chroma0 lumaStd",
+          "lightroom": 22.479,
+          "after": 19.923,
+          "afterError": -2.556,
+          "before": 13.788,
+          "beforeError": -8.691
+        },
+        {
+          "stat": "patch 128/128/128 luma6 chroma0 lumaStd",
+          "lightroom": 26.793,
+          "after": 28.026,
+          "afterError": 1.233,
+          "before": 13.043,
+          "beforeError": -13.75
+        },
+        {
+          "stat": "patch 192/192/192 luma6 chroma0 lumaStd",
+          "lightroom": 24.996,
+          "after": 26.634,
+          "afterError": 1.638,
+          "before": 12.967,
+          "beforeError": -12.029
+        },
+        {
+          "stat": "patch 128/128/128 luma12 chroma0 lumaStd",
+          "lightroom": 38.821,
+          "after": 41.148,
+          "afterError": 2.327,
+          "before": 28.31,
+          "beforeError": -10.511
+        },
+        {
+          "stat": "patch 128/128/128 luma0 chroma8 lumaStd",
+          "lightroom": 12.808,
+          "after": 9.144,
+          "afterError": -3.664,
+          "before": 2.354,
+          "beforeError": -10.454
+        },
+        {
+          "stat": "patch 128/128/128 luma0 chroma8 chromaStd",
+          "lightroom": 8.186,
+          "after": 8.103,
+          "afterError": -0.083,
+          "before": 8.031,
+          "beforeError": -0.155
+        },
+        {
+          "stat": "patch 96/128/160 luma6 chroma8 lumaStd",
+          "lightroom": 26.831,
+          "after": 27.99,
+          "afterError": 1.159,
+          "before": 14.032,
+          "beforeError": -12.799
+        },
+        {
+          "stat": "patch 96/128/160 luma6 chroma8 chromaStd",
+          "lightroom": 9.067,
+          "after": 9.072,
+          "afterError": 0.005,
+          "before": 8.16,
+          "beforeError": -0.907
+        },
+        {
+          "stat": "patch 170/120/90 luma6 chroma8 lumaStd",
+          "lightroom": 26.649,
+          "after": 28.193,
+          "afterError": 1.544,
+          "before": 13.59,
+          "beforeError": -13.059
+        },
+        {
+          "stat": "patch 170/120/90 luma6 chroma8 chromaStd",
+          "lightroom": 9.157,
+          "after": 9.078,
+          "afterError": -0.079,
+          "before": 8.559,
+          "beforeError": -0.598
+        },
+        {
+          "stat": "patch 80/140/80 luma0 chroma12 lumaStd",
+          "lightroom": 19.002,
+          "after": 19.525,
+          "afterError": 0.523,
+          "before": 8.204,
+          "beforeError": -10.798
+        },
+        {
+          "stat": "patch 80/140/80 luma0 chroma12 chromaStd",
+          "lightroom": 14.259,
+          "after": 14.387,
+          "afterError": 0.128,
+          "before": 10.829,
+          "beforeError": -3.43
+        },
+        {
+          "stat": "patch 200/160/120 luma12 chroma12 lumaStd",
+          "lightroom": 36.604,
+          "after": 39.951,
+          "afterError": 3.347,
+          "before": 28.008,
+          "beforeError": -8.596
+        },
+        {
+          "stat": "patch 200/160/120 luma12 chroma12 chromaStd",
+          "lightroom": 12.201,
+          "after": 12.004,
+          "afterError": -0.197,
+          "before": 13.717,
+          "beforeError": 1.516
+        }
+      ]
+    },
+    "sharp_a80_r05": {
+      "settings": {
+        "Sharpness": "80",
+        "SharpenRadius": "+0.5",
+        "SharpenDetail": "25",
+        "SharpenEdgeMasking": "0",
+        "LuminanceSmoothing": "0",
+        "ColorNoiseReduction": "0"
+      },
+      "rows": [
+        {
+          "stat": "edge 64-192 rise10to90",
+          "lightroom": 0.62,
+          "after": 0.621,
+          "afterError": 0.001,
+          "before": 0.652,
+          "beforeError": 0.032
+        },
+        {
+          "stat": "edge 64-192 overshoot",
+          "lightroom": 28.047,
+          "after": 27.0,
+          "afterError": -1.047,
+          "before": 5.0,
+          "beforeError": -23.047
+        },
+        {
+          "stat": "edge 64-192 undershoot",
+          "lightroom": 9.153,
+          "after": 10.0,
+          "afterError": 0.847,
+          "before": 24.0,
+          "beforeError": 14.847
+        },
+        {
+          "stat": "edge 100-156 rise10to90",
+          "lightroom": 1.826,
+          "after": 0.435,
+          "afterError": -1.391,
+          "before": 0.7,
+          "beforeError": -1.126
+        },
+        {
+          "stat": "edge 100-156 overshoot",
+          "lightroom": 25.376,
+          "after": 19.0,
+          "afterError": -6.376,
+          "before": 3.0,
+          "beforeError": -22.376
+        },
+        {
+          "stat": "edge 100-156 undershoot",
+          "lightroom": 27.824,
+          "after": 28.0,
+          "afterError": 0.176,
+          "before": 5.0,
+          "beforeError": -22.824
+        },
+        {
+          "stat": "edge 120-136 rise10to90",
+          "lightroom": 1.837,
+          "after": 0.4,
+          "afterError": -1.437,
+          "before": 0.711,
+          "beforeError": -1.126
+        },
+        {
+          "stat": "edge 120-136 overshoot",
+          "lightroom": 9.976,
+          "after": 7.0,
+          "afterError": -2.976,
+          "before": 1.0,
+          "beforeError": -8.976
+        },
+        {
+          "stat": "edge 120-136 undershoot",
+          "lightroom": 10.765,
+          "after": 9.0,
+          "afterError": -1.765,
+          "before": 1.0,
+          "beforeError": -9.765
+        },
+        {
+          "stat": "grating p4 gain",
+          "lightroom": 1.4796,
+          "after": 1.4792,
+          "afterError": -0.0,
+          "before": 1.1458,
+          "beforeError": -0.334
+        },
+        {
+          "stat": "grating p8 gain",
+          "lightroom": 1.2364,
+          "after": 1.2604,
+          "afterError": 0.024,
+          "before": 1.0417,
+          "beforeError": -0.195
+        },
+        {
+          "stat": "grating p16 gain",
+          "lightroom": 1.0755,
+          "after": 1.0833,
+          "afterError": 0.008,
+          "before": 1.0208,
+          "beforeError": -0.055
+        },
+        {
+          "stat": "grating p32 gain",
+          "lightroom": 1.0197,
+          "after": 1.0208,
+          "afterError": 0.001,
+          "before": 1.0,
+          "beforeError": -0.02
+        },
+        {
+          "stat": "patch 64/64/64 luma6 chroma0 lumaStd",
+          "lightroom": 14.488,
+          "after": 13.278,
+          "afterError": -1.21,
+          "before": 7.548,
+          "beforeError": -6.94
+        },
+        {
+          "stat": "patch 128/128/128 luma6 chroma0 lumaStd",
+          "lightroom": 16.918,
+          "after": 16.786,
+          "afterError": -0.132,
+          "before": 7.476,
+          "beforeError": -9.442
+        },
+        {
+          "stat": "patch 192/192/192 luma6 chroma0 lumaStd",
+          "lightroom": 16.327,
+          "after": 16.557,
+          "afterError": 0.23,
+          "before": 7.494,
+          "beforeError": -8.833
+        },
+        {
+          "stat": "patch 128/128/128 luma12 chroma0 lumaStd",
+          "lightroom": 29.075,
+          "after": 30.143,
+          "afterError": 1.068,
+          "before": 15.143,
+          "beforeError": -13.932
+        },
+        {
+          "stat": "patch 128/128/128 luma0 chroma8 lumaStd",
+          "lightroom": 4.352,
+          "after": 3.774,
+          "afterError": -0.578,
+          "before": 0.608,
+          "beforeError": -3.744
+        },
+        {
+          "stat": "patch 128/128/128 luma0 chroma8 chromaStd",
+          "lightroom": 8.154,
+          "after": 8.085,
+          "afterError": -0.069,
+          "before": 8.062,
+          "beforeError": -0.092
+        },
+        {
+          "stat": "patch 96/128/160 luma6 chroma8 lumaStd",
+          "lightroom": 17.055,
+          "after": 16.9,
+          "afterError": -0.155,
+          "before": 7.588,
+          "beforeError": -9.467
+        },
+        {
+          "stat": "patch 96/128/160 luma6 chroma8 chromaStd",
+          "lightroom": 8.474,
+          "after": 8.389,
+          "afterError": -0.085,
+          "before": 8.023,
+          "beforeError": -0.451
+        },
+        {
+          "stat": "patch 170/120/90 luma6 chroma8 lumaStd",
+          "lightroom": 16.852,
+          "after": 16.787,
+          "afterError": -0.065,
+          "before": 7.556,
+          "beforeError": -9.296
+        },
+        {
+          "stat": "patch 170/120/90 luma6 chroma8 chromaStd",
+          "lightroom": 8.454,
+          "after": 8.302,
+          "afterError": -0.152,
+          "before": 8.02,
+          "beforeError": -0.434
+        },
+        {
+          "stat": "patch 80/140/80 luma0 chroma12 lumaStd",
+          "lightroom": 9.722,
+          "after": 9.302,
+          "afterError": -0.42,
+          "before": 1.966,
+          "beforeError": -7.756
+        },
+        {
+          "stat": "patch 80/140/80 luma0 chroma12 chromaStd",
+          "lightroom": 13.162,
+          "after": 13.052,
+          "afterError": -0.11,
+          "before": 11.628,
+          "beforeError": -1.534
+        },
+        {
+          "stat": "patch 200/160/120 luma12 chroma12 lumaStd",
+          "lightroom": 27.764,
+          "after": 30.087,
+          "afterError": 2.323,
+          "before": 15.109,
+          "beforeError": -12.655
+        },
+        {
+          "stat": "patch 200/160/120 luma12 chroma12 chromaStd",
+          "lightroom": 12.125,
+          "after": 12.018,
+          "afterError": -0.107,
+          "before": 12.126,
+          "beforeError": 0.001
+        }
+      ]
+    },
+    "sharp_a80_r20": {
+      "settings": {
+        "Sharpness": "80",
+        "SharpenRadius": "+2.0",
+        "SharpenDetail": "25",
+        "SharpenEdgeMasking": "0",
+        "LuminanceSmoothing": "0",
+        "ColorNoiseReduction": "0"
+      },
+      "rows": [
+        {
+          "stat": "edge 64-192 rise10to90",
+          "lightroom": 0.61,
+          "after": 0.617,
+          "afterError": 0.007,
+          "before": 0.476,
+          "beforeError": -0.134
+        },
+        {
+          "stat": "edge 64-192 overshoot",
+          "lightroom": 30.9,
+          "after": 28.0,
+          "afterError": -2.9,
+          "before": 23.0,
+          "beforeError": -7.9
+        },
+        {
+          "stat": "edge 64-192 undershoot",
+          "lightroom": 12.035,
+          "after": 10.0,
+          "afterError": -2.035,
+          "before": 64.0,
+          "beforeError": 51.965
+        },
+        {
+          "stat": "edge 100-156 rise10to90",
+          "lightroom": 0.395,
+          "after": 0.427,
+          "afterError": 0.032,
+          "before": 0.453,
+          "beforeError": 0.058
+        },
+        {
+          "stat": "edge 100-156 overshoot",
+          "lightroom": 27.324,
+          "after": 20.0,
+          "afterError": -7.324,
+          "before": 13.0,
+          "beforeError": -14.324
+        },
+        {
+          "stat": "edge 100-156 undershoot",
+          "lightroom": 30.112,
+          "after": 29.0,
+          "afterError": -1.112,
+          "before": 30.0,
+          "beforeError": -0.112
+        },
+        {
+          "stat": "edge 120-136 rise10to90",
+          "lightroom": 0.329,
+          "after": 0.388,
+          "afterError": 0.059,
+          "before": 0.474,
+          "beforeError": 0.145
+        },
+        {
+          "stat": "edge 120-136 overshoot",
+          "lightroom": 11.029,
+          "after": 8.0,
+          "afterError": -3.029,
+          "before": 5.0,
+          "beforeError": -6.029
+        },
+        {
+          "stat": "edge 120-136 undershoot",
+          "lightroom": 11.912,
+          "after": 9.0,
+          "afterError": -2.912,
+          "before": 6.0,
+          "beforeError": -5.912
+        },
+        {
+          "stat": "grating p4 gain",
+          "lightroom": 1.4951,
+          "after": 1.5208,
+          "afterError": 0.026,
+          "before": 2.1042,
+          "beforeError": 0.609
+        },
+        {
+          "stat": "grating p8 gain",
+          "lightroom": 1.4149,
+          "after": 1.4167,
+          "afterError": 0.002,
+          "before": 1.7708,
+          "beforeError": 0.356
+        },
+        {
+          "stat": "grating p16 gain",
+          "lightroom": 1.1708,
+          "after": 1.2083,
+          "afterError": 0.037,
+          "before": 1.2083,
+          "beforeError": 0.037
+        },
+        {
+          "stat": "grating p32 gain",
+          "lightroom": 1.0562,
+          "after": 1.0625,
+          "afterError": 0.006,
+          "before": 1.0521,
+          "beforeError": -0.004
+        },
+        {
+          "stat": "patch 64/64/64 luma6 chroma0 lumaStd",
+          "lightroom": 12.266,
+          "after": 11.916,
+          "afterError": -0.35,
+          "before": 11.511,
+          "beforeError": -0.755
+        },
+        {
+          "stat": "patch 128/128/128 luma6 chroma0 lumaStd",
+          "lightroom": 13.739,
+          "after": 14.188,
+          "afterError": 0.449,
+          "before": 11.135,
+          "beforeError": -2.604
+        },
+        {
+          "stat": "patch 192/192/192 luma6 chroma0 lumaStd",
+          "lightroom": 13.58,
+          "after": 14.112,
+          "afterError": 0.532,
+          "before": 11.121,
+          "beforeError": -2.459
+        },
+        {
+          "stat": "patch 128/128/128 luma12 chroma0 lumaStd",
+          "lightroom": 25.492,
+          "after": 26.804,
+          "afterError": 1.312,
+          "before": 23.374,
+          "beforeError": -2.118
+        },
+        {
+          "stat": "patch 128/128/128 luma0 chroma8 lumaStd",
+          "lightroom": 2.887,
+          "after": 2.72,
+          "afterError": -0.167,
+          "before": 1.729,
+          "beforeError": -1.158
+        },
+        {
+          "stat": "patch 128/128/128 luma0 chroma8 chromaStd",
+          "lightroom": 8.142,
+          "after": 8.082,
+          "afterError": -0.06,
+          "before": 8.034,
+          "beforeError": -0.108
+        },
+        {
+          "stat": "patch 96/128/160 luma6 chroma8 lumaStd",
+          "lightroom": 13.816,
+          "after": 14.244,
+          "afterError": 0.428,
+          "before": 11.742,
+          "beforeError": -2.074
+        },
+        {
+          "stat": "patch 96/128/160 luma6 chroma8 chromaStd",
+          "lightroom": 8.334,
+          "after": 8.28,
+          "afterError": -0.054,
+          "before": 8.036,
+          "beforeError": -0.298
+        },
+        {
+          "stat": "patch 170/120/90 luma6 chroma8 lumaStd",
+          "lightroom": 13.634,
+          "after": 14.133,
+          "afterError": 0.499,
+          "before": 11.483,
+          "beforeError": -2.151
+        },
+        {
+          "stat": "patch 170/120/90 luma6 chroma8 chromaStd",
+          "lightroom": 8.279,
+          "after": 8.181,
+          "afterError": -0.098,
+          "before": 8.279,
+          "beforeError": 0.0
+        },
+        {
+          "stat": "patch 80/140/80 luma0 chroma12 lumaStd",
+          "lightroom": 6.62,
+          "after": 6.805,
+          "afterError": 0.185,
+          "before": 6.052,
+          "beforeError": -0.568
+        },
+        {
+          "stat": "patch 80/140/80 luma0 chroma12 chromaStd",
+          "lightroom": 12.861,
+          "after": 12.824,
+          "afterError": -0.037,
+          "before": 10.954,
+          "beforeError": -1.907
+        },
+        {
+          "stat": "patch 200/160/120 luma12 chroma12 lumaStd",
+          "lightroom": 24.515,
+          "after": 26.692,
+          "afterError": 2.177,
+          "before": 23.327,
+          "beforeError": -1.188
+        },
+        {
+          "stat": "patch 200/160/120 luma12 chroma12 chromaStd",
+          "lightroom": 12.1,
+          "after": 11.998,
+          "afterError": -0.102,
+          "before": 13.024,
+          "beforeError": 0.924
+        }
+      ]
+    },
+    "sharp_a80_r30": {
+      "settings": {
+        "Sharpness": "80",
+        "SharpenRadius": "+3.0",
+        "SharpenDetail": "25",
+        "SharpenEdgeMasking": "0",
+        "LuminanceSmoothing": "0",
+        "ColorNoiseReduction": "0"
+      },
+      "rows": [
+        {
+          "stat": "edge 64-192 rise10to90",
+          "lightroom": 0.623,
+          "after": 0.632,
+          "afterError": 0.009,
+          "before": 0.47,
+          "beforeError": -0.153
+        },
+        {
+          "stat": "edge 64-192 overshoot",
+          "lightroom": 25.518,
+          "after": 24.0,
+          "afterError": -1.518,
+          "before": 26.0,
+          "beforeError": 0.482
+        },
+        {
+          "stat": "edge 64-192 undershoot",
+          "lightroom": 11.435,
+          "after": 10.0,
+          "afterError": -1.435,
+          "before": 64.0,
+          "beforeError": 52.565
+        },
+        {
+          "stat": "edge 100-156 rise10to90",
+          "lightroom": 0.446,
+          "after": 0.462,
+          "afterError": 0.016,
+          "before": 0.423,
+          "beforeError": -0.023
+        },
+        {
+          "stat": "edge 100-156 overshoot",
+          "lightroom": 20.088,
+          "after": 16.0,
+          "afterError": -4.088,
+          "before": 15.0,
+          "beforeError": -5.088
+        },
+        {
+          "stat": "edge 100-156 undershoot",
+          "lightroom": 24.288,
+          "after": 25.0,
+          "afterError": 0.712,
+          "before": 35.0,
+          "beforeError": 10.712
+        },
+        {
+          "stat": "edge 120-136 rise10to90",
+          "lightroom": 0.408,
+          "after": 0.441,
+          "afterError": 0.033,
+          "before": 0.457,
+          "beforeError": 0.049
+        },
+        {
+          "stat": "edge 120-136 overshoot",
+          "lightroom": 7.488,
+          "after": 6.0,
+          "afterError": -1.488,
+          "before": 5.0,
+          "beforeError": -2.488
+        },
+        {
+          "stat": "edge 120-136 undershoot",
+          "lightroom": 7.918,
+          "after": 7.0,
+          "afterError": -0.918,
+          "before": 7.0,
+          "beforeError": -0.918
+        },
+        {
+          "stat": "grating p4 gain",
+          "lightroom": 1.3939,
+          "after": 1.4687,
+          "afterError": 0.075,
+          "before": 2.125,
+          "beforeError": 0.731
+        },
+        {
+          "stat": "grating p8 gain",
+          "lightroom": 1.4097,
+          "after": 1.4167,
+          "afterError": 0.007,
+          "before": 2.0833,
+          "beforeError": 0.674
+        },
+        {
+          "stat": "grating p16 gain",
+          "lightroom": 1.223,
+          "after": 1.2396,
+          "afterError": 0.017,
+          "before": 1.4271,
+          "beforeError": 0.204
+        },
+        {
+          "stat": "grating p32 gain",
+          "lightroom": 1.0771,
+          "after": 1.0729,
+          "afterError": -0.004,
+          "before": 1.1146,
+          "beforeError": 0.038
+        },
+        {
+          "stat": "patch 64/64/64 luma6 chroma0 lumaStd",
+          "lightroom": 9.338,
+          "after": 10.586,
+          "afterError": 1.248,
+          "before": 11.821,
+          "beforeError": 2.483
+        },
+        {
+          "stat": "patch 128/128/128 luma6 chroma0 lumaStd",
+          "lightroom": 9.885,
+          "after": 11.863,
+          "afterError": 1.978,
+          "before": 11.409,
+          "beforeError": 1.524
+        },
+        {
+          "stat": "patch 192/192/192 luma6 chroma0 lumaStd",
+          "lightroom": 9.904,
+          "after": 11.843,
+          "afterError": 1.939,
+          "before": 11.391,
+          "beforeError": 1.487
+        },
+        {
+          "stat": "patch 128/128/128 luma12 chroma0 lumaStd",
+          "lightroom": 19.344,
+          "after": 23.244,
+          "afterError": 3.9,
+          "before": 24.039,
+          "beforeError": 4.695
+        },
+        {
+          "stat": "patch 128/128/128 luma0 chroma8 lumaStd",
+          "lightroom": 1.55,
+          "after": 1.93,
+          "afterError": 0.38,
+          "before": 1.809,
+          "beforeError": 0.259
+        },
+        {
+          "stat": "patch 128/128/128 luma0 chroma8 chromaStd",
+          "lightroom": 8.133,
+          "after": 8.075,
+          "afterError": -0.058,
+          "before": 8.034,
+          "beforeError": -0.099
+        },
+        {
+          "stat": "patch 96/128/160 luma6 chroma8 lumaStd",
+          "lightroom": 9.87,
+          "after": 11.869,
+          "afterError": 1.999,
+          "before": 12.054,
+          "beforeError": 2.184
+        },
+        {
+          "stat": "patch 96/128/160 luma6 chroma8 chromaStd",
+          "lightroom": 8.216,
+          "after": 8.2,
+          "afterError": -0.016,
+          "before": 8.046,
+          "beforeError": -0.17
+        },
+        {
+          "stat": "patch 170/120/90 luma6 chroma8 lumaStd",
+          "lightroom": 9.784,
+          "after": 11.801,
+          "afterError": 2.017,
+          "before": 11.775,
+          "beforeError": 1.991
+        },
+        {
+          "stat": "patch 170/120/90 luma6 chroma8 chromaStd",
+          "lightroom": 8.146,
+          "after": 8.105,
+          "afterError": -0.041,
+          "before": 8.308,
+          "beforeError": 0.162
+        },
+        {
+          "stat": "patch 80/140/80 luma0 chroma12 lumaStd",
+          "lightroom": 3.485,
+          "after": 4.824,
+          "afterError": 1.339,
+          "before": 6.324,
+          "beforeError": 2.839
+        },
+        {
+          "stat": "patch 80/140/80 luma0 chroma12 chromaStd",
+          "lightroom": 12.462,
+          "after": 12.598,
+          "afterError": 0.136,
+          "before": 10.914,
+          "beforeError": -1.548
+        },
+        {
+          "stat": "patch 200/160/120 luma12 chroma12 lumaStd",
+          "lightroom": 18.789,
+          "after": 23.024,
+          "afterError": 4.235,
+          "before": 23.964,
+          "beforeError": 5.175
+        },
+        {
+          "stat": "patch 200/160/120 luma12 chroma12 chromaStd",
+          "lightroom": 12.086,
+          "after": 11.996,
+          "afterError": -0.09,
+          "before": 13.116,
+          "beforeError": 1.03
+        }
+      ]
+    },
+    "sharp_a80_d0": {
+      "settings": {
+        "Sharpness": "80",
+        "SharpenRadius": "+1.0",
+        "SharpenDetail": "0",
+        "SharpenEdgeMasking": "0",
+        "LuminanceSmoothing": "0",
+        "ColorNoiseReduction": "0"
+      },
+      "rows": [
+        {
+          "stat": "edge 64-192 rise10to90",
+          "lightroom": 0.661,
+          "after": 0.692,
+          "afterError": 0.031,
+          "before": 0.488,
+          "beforeError": -0.173
+        },
+        {
+          "stat": "edge 64-192 overshoot",
+          "lightroom": 16.188,
+          "after": 10.0,
+          "afterError": -6.188,
+          "before": 18.0,
+          "beforeError": 1.812
+        },
+        {
+          "stat": "edge 64-192 undershoot",
+          "lightroom": 10.735,
+          "after": 10.0,
+          "afterError": -0.735,
+          "before": 64.0,
+          "beforeError": 53.265
+        },
+        {
+          "stat": "edge 100-156 rise10to90",
+          "lightroom": 0.598,
+          "after": 0.622,
+          "afterError": 0.024,
+          "before": 0.515,
+          "beforeError": -0.083
+        },
+        {
+          "stat": "edge 100-156 overshoot",
+          "lightroom": 8.806,
+          "after": 6.0,
+          "afterError": -2.806,
+          "before": 10.0,
+          "beforeError": 1.194
+        },
+        {
+          "stat": "edge 100-156 undershoot",
+          "lightroom": 10.124,
+          "after": 10.0,
+          "afterError": -0.124,
+          "before": 21.0,
+          "beforeError": 10.876
+        },
+        {
+          "stat": "edge 120-136 rise10to90",
+          "lightroom": 0.584,
+          "after": 0.64,
+          "afterError": 0.056,
+          "before": 0.533,
+          "beforeError": -0.051
+        },
+        {
+          "stat": "edge 120-136 overshoot",
+          "lightroom": 2.918,
+          "after": 2.0,
+          "afterError": -0.918,
+          "before": 4.0,
+          "beforeError": 1.082
+        },
+        {
+          "stat": "edge 120-136 undershoot",
+          "lightroom": 2.988,
+          "after": 2.0,
+          "afterError": -0.988,
+          "before": 4.0,
+          "beforeError": 1.012
+        },
+        {
+          "stat": "grating p4 gain",
+          "lightroom": 1.2888,
+          "after": 1.2708,
+          "afterError": -0.018,
+          "before": 2.0417,
+          "beforeError": 0.753
+        },
+        {
+          "stat": "grating p8 gain",
+          "lightroom": 1.1321,
+          "after": 1.0938,
+          "afterError": -0.038,
+          "before": 1.2396,
+          "beforeError": 0.107
+        },
+        {
+          "stat": "grating p16 gain",
+          "lightroom": 1.0411,
+          "after": 1.0208,
+          "afterError": -0.02,
+          "before": 1.0625,
+          "beforeError": 0.021
+        },
+        {
+          "stat": "grating p32 gain",
+          "lightroom": 1.0121,
+          "after": 1.0,
+          "afterError": -0.012,
+          "before": 1.0208,
+          "beforeError": 0.009
+        },
+        {
+          "stat": "patch 64/64/64 luma6 chroma0 lumaStd",
+          "lightroom": 8.368,
+          "after": 8.314,
+          "afterError": -0.054,
+          "before": 10.525,
+          "beforeError": 2.157
+        },
+        {
+          "stat": "patch 128/128/128 luma6 chroma0 lumaStd",
+          "lightroom": 8.674,
+          "after": 8.47,
+          "afterError": -0.204,
+          "before": 10.251,
+          "beforeError": 1.577
+        },
+        {
+          "stat": "patch 192/192/192 luma6 chroma0 lumaStd",
+          "lightroom": 8.718,
+          "after": 8.492,
+          "afterError": -0.226,
+          "before": 10.253,
+          "beforeError": 1.535
+        },
+        {
+          "stat": "patch 128/128/128 luma12 chroma0 lumaStd",
+          "lightroom": 17.213,
+          "after": 17.107,
+          "afterError": -0.106,
+          "before": 21.293,
+          "beforeError": 4.08
+        },
+        {
+          "stat": "patch 128/128/128 luma0 chroma8 lumaStd",
+          "lightroom": 1.19,
+          "after": 0.887,
+          "afterError": -0.303,
+          "before": 1.47,
+          "beforeError": 0.28
+        },
+        {
+          "stat": "patch 128/128/128 luma0 chroma8 chromaStd",
+          "lightroom": 8.134,
+          "after": 8.069,
+          "afterError": -0.065,
+          "before": 8.041,
+          "beforeError": -0.093
+        },
+        {
+          "stat": "patch 96/128/160 luma6 chroma8 lumaStd",
+          "lightroom": 8.656,
+          "after": 8.436,
+          "afterError": -0.22,
+          "before": 10.735,
+          "beforeError": 2.079
+        },
+        {
+          "stat": "patch 96/128/160 luma6 chroma8 chromaStd",
+          "lightroom": 8.184,
+          "after": 8.108,
+          "afterError": -0.076,
+          "before": 8.019,
+          "beforeError": -0.165
+        },
+        {
+          "stat": "patch 170/120/90 luma6 chroma8 lumaStd",
+          "lightroom": 8.644,
+          "after": 8.446,
+          "afterError": -0.198,
+          "before": 10.536,
+          "beforeError": 1.892
+        },
+        {
+          "stat": "patch 170/120/90 luma6 chroma8 chromaStd",
+          "lightroom": 8.12,
+          "after": 8.035,
+          "afterError": -0.085,
+          "before": 8.188,
+          "beforeError": 0.068
+        },
+        {
+          "stat": "patch 80/140/80 luma0 chroma12 lumaStd",
+          "lightroom": 2.563,
+          "after": 2.121,
+          "afterError": -0.442,
+          "before": 5.142,
+          "beforeError": 2.579
+        },
+        {
+          "stat": "patch 80/140/80 luma0 chroma12 chromaStd",
+          "lightroom": 12.354,
+          "after": 12.274,
+          "afterError": -0.08,
+          "before": 11.091,
+          "beforeError": -1.263
+        },
+        {
+          "stat": "patch 200/160/120 luma12 chroma12 lumaStd",
+          "lightroom": 16.861,
+          "after": 16.855,
+          "afterError": -0.006,
+          "before": 21.314,
+          "beforeError": 4.453
+        },
+        {
+          "stat": "patch 200/160/120 luma12 chroma12 chromaStd",
+          "lightroom": 12.094,
+          "after": 12.011,
+          "afterError": -0.083,
+          "before": 12.767,
+          "beforeError": 0.673
+        }
+      ]
+    },
+    "sharp_a80_d75": {
+      "settings": {
+        "Sharpness": "80",
+        "SharpenRadius": "+1.0",
+        "SharpenDetail": "75",
+        "SharpenEdgeMasking": "0",
+        "LuminanceSmoothing": "0",
+        "ColorNoiseReduction": "0"
+      },
+      "rows": [
+        {
+          "stat": "edge 64-192 rise10to90",
+          "lightroom": 0.6,
+          "after": 0.595,
+          "afterError": -0.005,
+          "before": 0.509,
+          "beforeError": -0.091
+        },
+        {
+          "stat": "edge 64-192 overshoot",
+          "lightroom": 33.724,
+          "after": 34.0,
+          "afterError": 0.276,
+          "before": 9.0,
+          "beforeError": -24.724
+        },
+        {
+          "stat": "edge 64-192 undershoot",
+          "lightroom": 8.959,
+          "after": 10.0,
+          "afterError": 1.041,
+          "before": 64.0,
+          "beforeError": 55.041
+        },
+        {
+          "stat": "edge 100-156 rise10to90",
+          "lightroom": 2.495,
+          "after": 0.356,
+          "afterError": -2.139,
+          "before": 0.631,
+          "beforeError": -1.864
+        },
+        {
+          "stat": "edge 100-156 overshoot",
+          "lightroom": 40.041,
+          "after": 39.0,
+          "afterError": -1.041,
+          "before": 5.0,
+          "beforeError": -35.041
+        },
+        {
+          "stat": "edge 100-156 undershoot",
+          "lightroom": 34.6,
+          "after": 31.0,
+          "afterError": -3.6,
+          "before": 10.0,
+          "beforeError": -24.6
+        },
+        {
+          "stat": "edge 120-136 rise10to90",
+          "lightroom": 2.475,
+          "after": 0.206,
+          "afterError": -2.269,
+          "before": 0.64,
+          "beforeError": -1.835
+        },
+        {
+          "stat": "edge 120-136 overshoot",
+          "lightroom": 23.835,
+          "after": 20.0,
+          "afterError": -3.835,
+          "before": 2.0,
+          "beforeError": -21.835
+        },
+        {
+          "stat": "edge 120-136 undershoot",
+          "lightroom": 26.106,
+          "after": 26.0,
+          "afterError": -0.106,
+          "before": 2.0,
+          "beforeError": -24.106
+        },
+        {
+          "stat": "grating p4 gain",
+          "lightroom": 1.5826,
+          "after": 1.5833,
+          "afterError": 0.001,
+          "before": 1.3438,
+          "beforeError": -0.239
+        },
+        {
+          "stat": "grating p8 gain",
+          "lightroom": 1.4742,
+          "after": 1.5208,
+          "afterError": 0.047,
+          "before": 1.0938,
+          "beforeError": -0.38
+        },
+        {
+          "stat": "grating p16 gain",
+          "lightroom": 1.1931,
+          "after": 1.2917,
+          "afterError": 0.099,
+          "before": 1.0208,
+          "beforeError": -0.172
+        },
+        {
+          "stat": "grating p32 gain",
+          "lightroom": 1.0503,
+          "after": 1.0833,
+          "afterError": 0.033,
+          "before": 1.0,
+          "beforeError": -0.05
+        },
+        {
+          "stat": "patch 64/64/64 luma6 chroma0 lumaStd",
+          "lightroom": 22.654,
+          "after": 19.905,
+          "afterError": -2.749,
+          "before": 8.748,
+          "beforeError": -13.906
+        },
+        {
+          "stat": "patch 128/128/128 luma6 chroma0 lumaStd",
+          "lightroom": 30.738,
+          "after": 28.002,
+          "afterError": -2.736,
+          "before": 8.614,
+          "beforeError": -22.124
+        },
+        {
+          "stat": "patch 192/192/192 luma6 chroma0 lumaStd",
+          "lightroom": 28.493,
+          "after": 26.614,
+          "afterError": -1.879,
+          "before": 8.626,
+          "beforeError": -19.867
+        },
+        {
+          "stat": "patch 128/128/128 luma12 chroma0 lumaStd",
+          "lightroom": 44.023,
+          "after": 41.13,
+          "afterError": -2.893,
+          "before": 17.582,
+          "beforeError": -26.441
+        },
+        {
+          "stat": "patch 128/128/128 luma0 chroma8 lumaStd",
+          "lightroom": 11.402,
+          "after": 9.128,
+          "afterError": -2.274,
+          "before": 0.964,
+          "beforeError": -10.438
+        },
+        {
+          "stat": "patch 128/128/128 luma0 chroma8 chromaStd",
+          "lightroom": 8.191,
+          "after": 8.103,
+          "afterError": -0.088,
+          "before": 8.047,
+          "beforeError": -0.144
+        },
+        {
+          "stat": "patch 96/128/160 luma6 chroma8 lumaStd",
+          "lightroom": 31.002,
+          "after": 27.967,
+          "afterError": -3.035,
+          "before": 8.863,
+          "beforeError": -22.139
+        },
+        {
+          "stat": "patch 96/128/160 luma6 chroma8 chromaStd",
+          "lightroom": 9.319,
+          "after": 9.07,
+          "afterError": -0.249,
+          "before": 8.008,
+          "beforeError": -1.311
+        },
+        {
+          "stat": "patch 170/120/90 luma6 chroma8 lumaStd",
+          "lightroom": 30.62,
+          "after": 28.169,
+          "afterError": -2.451,
+          "before": 8.769,
+          "beforeError": -21.851
+        },
+        {
+          "stat": "patch 170/120/90 luma6 chroma8 chromaStd",
+          "lightroom": 9.479,
+          "after": 9.075,
+          "afterError": -0.404,
+          "before": 8.061,
+          "beforeError": -1.418
+        },
+        {
+          "stat": "patch 80/140/80 luma0 chroma12 lumaStd",
+          "lightroom": 21.966,
+          "after": 19.501,
+          "afterError": -2.465,
+          "before": 3.314,
+          "beforeError": -18.652
+        },
+        {
+          "stat": "patch 80/140/80 luma0 chroma12 chromaStd",
+          "lightroom": 14.744,
+          "after": 14.383,
+          "afterError": -0.361,
+          "before": 11.377,
+          "beforeError": -3.367
+        },
+        {
+          "stat": "patch 200/160/120 luma12 chroma12 lumaStd",
+          "lightroom": 41.125,
+          "after": 39.936,
+          "afterError": -1.189,
+          "before": 17.614,
+          "beforeError": -23.511
+        },
+        {
+          "stat": "patch 200/160/120 luma12 chroma12 chromaStd",
+          "lightroom": 12.158,
+          "after": 12.003,
+          "afterError": -0.155,
+          "before": 12.328,
+          "beforeError": 0.17
+        }
+      ]
+    },
+    "sharp_a80_d100": {
+      "settings": {
+        "Sharpness": "80",
+        "SharpenRadius": "+1.0",
+        "SharpenDetail": "100",
+        "SharpenEdgeMasking": "0",
+        "LuminanceSmoothing": "0",
+        "ColorNoiseReduction": "0"
+      },
+      "rows": [
+        {
+          "stat": "edge 64-192 rise10to90",
+          "lightroom": 0.599,
+          "after": 0.595,
+          "afterError": -0.004,
+          "before": 0.589,
+          "beforeError": -0.01
+        },
+        {
+          "stat": "edge 64-192 overshoot",
+          "lightroom": 33.918,
+          "after": 34.0,
+          "afterError": 0.082,
+          "before": 7.0,
+          "beforeError": -26.918
+        },
+        {
+          "stat": "edge 64-192 undershoot",
+          "lightroom": 8.947,
+          "after": 10.0,
+          "afterError": 1.053,
+          "before": 39.0,
+          "beforeError": 30.053
+        },
+        {
+          "stat": "edge 100-156 rise10to90",
+          "lightroom": 2.777,
+          "after": 0.35,
+          "afterError": -2.427,
+          "before": 0.669,
+          "beforeError": -2.108
+        },
+        {
+          "stat": "edge 100-156 overshoot",
+          "lightroom": 43.482,
+          "after": 41.0,
+          "afterError": -2.482,
+          "before": 4.0,
+          "beforeError": -39.482
+        },
+        {
+          "stat": "edge 100-156 undershoot",
+          "lightroom": 34.141,
+          "after": 31.0,
+          "afterError": -3.141,
+          "before": 7.0,
+          "beforeError": -27.141
+        },
+        {
+          "stat": "edge 120-136 rise10to90",
+          "lightroom": 2.759,
+          "after": 0.183,
+          "afterError": -2.576,
+          "before": 0.674,
+          "beforeError": -2.085
+        },
+        {
+          "stat": "edge 120-136 overshoot",
+          "lightroom": 27.524,
+          "after": 24.0,
+          "afterError": -3.524,
+          "before": 1.0,
+          "beforeError": -26.524
+        },
+        {
+          "stat": "edge 120-136 undershoot",
+          "lightroom": 30.612,
+          "after": 30.0,
+          "afterError": -0.612,
+          "before": 2.0,
+          "beforeError": -28.612
+        },
+        {
+          "stat": "grating p4 gain",
+          "lightroom": 1.5958,
+          "after": 1.5833,
+          "afterError": -0.013,
+          "before": 1.2083,
+          "beforeError": -0.388
+        },
+        {
+          "stat": "grating p8 gain",
+          "lightroom": 1.4996,
+          "after": 1.5521,
+          "afterError": 0.052,
+          "before": 1.0521,
+          "beforeError": -0.448
+        },
+        {
+          "stat": "grating p16 gain",
+          "lightroom": 1.21,
+          "after": 1.3438,
+          "afterError": 0.134,
+          "before": 1.0208,
+          "beforeError": -0.189
+        },
+        {
+          "stat": "grating p32 gain",
+          "lightroom": 1.0529,
+          "after": 1.1042,
+          "afterError": 0.051,
+          "before": 1.0,
+          "beforeError": -0.053
+        },
+        {
+          "stat": "patch 64/64/64 luma6 chroma0 lumaStd",
+          "lightroom": 24.809,
+          "after": 21.918,
+          "afterError": -2.891,
+          "before": 8.178,
+          "beforeError": -16.631
+        },
+        {
+          "stat": "patch 128/128/128 luma6 chroma0 lumaStd",
+          "lightroom": 35.315,
+          "after": 30.764,
+          "afterError": -4.551,
+          "before": 8.075,
+          "beforeError": -27.24
+        },
+        {
+          "stat": "patch 192/192/192 luma6 chroma0 lumaStd",
+          "lightroom": 32.396,
+          "after": 28.809,
+          "afterError": -3.587,
+          "before": 8.095,
+          "beforeError": -24.301
+        },
+        {
+          "stat": "patch 128/128/128 luma12 chroma0 lumaStd",
+          "lightroom": 47.8,
+          "after": 43.147,
+          "afterError": -4.653,
+          "before": 16.416,
+          "beforeError": -31.384
+        },
+        {
+          "stat": "patch 128/128/128 luma0 chroma8 lumaStd",
+          "lightroom": 14.393,
+          "after": 11.05,
+          "afterError": -3.343,
+          "before": 0.81,
+          "beforeError": -13.583
+        },
+        {
+          "stat": "patch 128/128/128 luma0 chroma8 chromaStd",
+          "lightroom": 8.22,
+          "after": 8.108,
+          "afterError": -0.112,
+          "before": 8.05,
+          "beforeError": -0.17
+        },
+        {
+          "stat": "patch 96/128/160 luma6 chroma8 lumaStd",
+          "lightroom": 35.374,
+          "after": 30.625,
+          "afterError": -4.749,
+          "before": 8.262,
+          "beforeError": -27.112
+        },
+        {
+          "stat": "patch 96/128/160 luma6 chroma8 chromaStd",
+          "lightroom": 9.659,
+          "after": 9.283,
+          "afterError": -0.376,
+          "before": 8.014,
+          "beforeError": -1.645
+        },
+        {
+          "stat": "patch 170/120/90 luma6 chroma8 lumaStd",
+          "lightroom": 35.206,
+          "after": 30.97,
+          "afterError": -4.236,
+          "before": 8.197,
+          "beforeError": -27.009
+        },
+        {
+          "stat": "patch 170/120/90 luma6 chroma8 chromaStd",
+          "lightroom": 9.919,
+          "after": 9.332,
+          "afterError": -0.587,
+          "before": 8.04,
+          "beforeError": -1.879
+        },
+        {
+          "stat": "patch 80/140/80 luma0 chroma12 lumaStd",
+          "lightroom": 26.216,
+          "after": 22.157,
+          "afterError": -4.059,
+          "before": 2.716,
+          "beforeError": -23.5
+        },
+        {
+          "stat": "patch 80/140/80 luma0 chroma12 chromaStd",
+          "lightroom": 15.293,
+          "after": 14.76,
+          "afterError": -0.533,
+          "before": 11.495,
+          "beforeError": -3.798
+        },
+        {
+          "stat": "patch 200/160/120 luma12 chroma12 lumaStd",
+          "lightroom": 44.798,
+          "after": 41.477,
+          "afterError": -3.321,
+          "before": 16.433,
+          "beforeError": -28.365
+        },
+        {
+          "stat": "patch 200/160/120 luma12 chroma12 chromaStd",
+          "lightroom": 12.143,
+          "after": 11.993,
+          "afterError": -0.15,
+          "before": 12.223,
+          "beforeError": 0.08
+        }
+      ]
+    },
+    "sharp_a80_m50": {
+      "settings": {
+        "Sharpness": "80",
+        "SharpenRadius": "+1.0",
+        "SharpenDetail": "25",
+        "SharpenEdgeMasking": "50",
+        "LuminanceSmoothing": "0",
+        "ColorNoiseReduction": "0"
+      },
+      "rows": [
+        {
+          "stat": "edge 64-192 rise10to90",
+          "lightroom": 0.604,
+          "after": 0.602,
+          "afterError": -0.002,
+          "before": 0.5,
+          "beforeError": -0.104
+        },
+        {
+          "stat": "edge 64-192 overshoot",
+          "lightroom": 32.641,
+          "after": 32.0,
+          "afterError": -0.641,
+          "before": 13.0,
+          "beforeError": -19.641
+        },
+        {
+          "stat": "edge 64-192 undershoot",
+          "lightroom": 8.818,
+          "after": 10.0,
+          "afterError": 1.182,
+          "before": 64.0,
+          "beforeError": 55.182
+        },
+        {
+          "stat": "edge 100-156 rise10to90",
+          "lightroom": 0.396,
+          "after": 0.407,
+          "afterError": 0.011,
+          "before": 0.605,
+          "beforeError": 0.209
+        },
+        {
+          "stat": "edge 100-156 overshoot",
+          "lightroom": 27.276,
+          "after": 24.0,
+          "afterError": -3.276,
+          "before": 6.0,
+          "beforeError": -21.276
+        },
+        {
+          "stat": "edge 100-156 undershoot",
+          "lightroom": 29.971,
+          "after": 30.0,
+          "afterError": 0.029,
+          "before": 12.0,
+          "beforeError": -17.971
+        },
+        {
+          "stat": "edge 120-136 rise10to90",
+          "lightroom": 0.383,
+          "after": 0.457,
+          "afterError": 0.074,
+          "before": 0.674,
+          "beforeError": 0.291
+        },
+        {
+          "stat": "edge 120-136 overshoot",
+          "lightroom": 8.5,
+          "after": 5.0,
+          "afterError": -3.5,
+          "before": 1.0,
+          "beforeError": -7.5
+        },
+        {
+          "stat": "edge 120-136 undershoot",
+          "lightroom": 8.947,
+          "after": 7.0,
+          "afterError": -1.947,
+          "before": 2.0,
+          "beforeError": -6.947
+        },
+        {
+          "stat": "grating p4 gain",
+          "lightroom": 1.3751,
+          "after": 1.4687,
+          "afterError": 0.094,
+          "before": 1.0,
+          "beforeError": -0.375
+        },
+        {
+          "stat": "grating p8 gain",
+          "lightroom": 1.3134,
+          "after": 1.3854,
+          "afterError": 0.072,
+          "before": 1.0,
+          "beforeError": -0.313
+        },
+        {
+          "stat": "grating p16 gain",
+          "lightroom": 1.085,
+          "after": 1.1146,
+          "afterError": 0.03,
+          "before": 1.0,
+          "beforeError": -0.085
+        },
+        {
+          "stat": "grating p32 gain",
+          "lightroom": 1.0115,
+          "after": 1.0,
+          "afterError": -0.012,
+          "before": 1.0,
+          "beforeError": -0.012
+        },
+        {
+          "stat": "patch 64/64/64 luma6 chroma0 lumaStd",
+          "lightroom": 6.818,
+          "after": 6.699,
+          "afterError": -0.119,
+          "before": 6.848,
+          "beforeError": 0.03
+        },
+        {
+          "stat": "patch 128/128/128 luma6 chroma0 lumaStd",
+          "lightroom": 7.511,
+          "after": 6.84,
+          "afterError": -0.671,
+          "before": 7.406,
+          "beforeError": -0.105
+        },
+        {
+          "stat": "patch 192/192/192 luma6 chroma0 lumaStd",
+          "lightroom": 7.861,
+          "after": 6.99,
+          "afterError": -0.871,
+          "before": 7.858,
+          "beforeError": -0.003
+        },
+        {
+          "stat": "patch 128/128/128 luma12 chroma0 lumaStd",
+          "lightroom": 19.269,
+          "after": 17.574,
+          "afterError": -1.695,
+          "before": 16.268,
+          "beforeError": -3.001
+        },
+        {
+          "stat": "patch 128/128/128 luma0 chroma8 lumaStd",
+          "lightroom": 0.226,
+          "after": 0.189,
+          "afterError": -0.037,
+          "before": 0.281,
+          "beforeError": 0.055
+        },
+        {
+          "stat": "patch 128/128/128 luma0 chroma8 chromaStd",
+          "lightroom": 8.13,
+          "after": 8.065,
+          "afterError": -0.065,
+          "before": 8.06,
+          "beforeError": -0.07
+        },
+        {
+          "stat": "patch 96/128/160 luma6 chroma8 lumaStd",
+          "lightroom": 7.617,
+          "after": 6.89,
+          "afterError": -0.727,
+          "before": 7.564,
+          "beforeError": -0.053
+        },
+        {
+          "stat": "patch 96/128/160 luma6 chroma8 chromaStd",
+          "lightroom": 8.159,
+          "after": 8.078,
+          "afterError": -0.081,
+          "before": 8.022,
+          "beforeError": -0.137
+        },
+        {
+          "stat": "patch 170/120/90 luma6 chroma8 lumaStd",
+          "lightroom": 7.496,
+          "after": 6.817,
+          "afterError": -0.679,
+          "before": 7.508,
+          "beforeError": 0.012
+        },
+        {
+          "stat": "patch 170/120/90 luma6 chroma8 chromaStd",
+          "lightroom": 8.099,
+          "after": 8.018,
+          "afterError": -0.081,
+          "before": 8.02,
+          "beforeError": -0.079
+        },
+        {
+          "stat": "patch 80/140/80 luma0 chroma12 lumaStd",
+          "lightroom": 1.386,
+          "after": 0.728,
+          "afterError": -0.658,
+          "before": 1.785,
+          "beforeError": 0.399
+        },
+        {
+          "stat": "patch 80/140/80 luma0 chroma12 chromaStd",
+          "lightroom": 12.203,
+          "after": 12.12,
+          "afterError": -0.083,
+          "before": 11.674,
+          "beforeError": -0.529
+        },
+        {
+          "stat": "patch 200/160/120 luma12 chroma12 lumaStd",
+          "lightroom": 19.287,
+          "after": 17.627,
+          "afterError": -1.66,
+          "before": 16.845,
+          "beforeError": -2.442
+        },
+        {
+          "stat": "patch 200/160/120 luma12 chroma12 chromaStd",
+          "lightroom": 12.087,
+          "after": 12.007,
+          "afterError": -0.08,
+          "before": 12.265,
+          "beforeError": 0.178
+        }
+      ]
+    },
+    "sharp_a80_m90": {
+      "settings": {
+        "Sharpness": "80",
+        "SharpenRadius": "+1.0",
+        "SharpenDetail": "25",
+        "SharpenEdgeMasking": "90",
+        "LuminanceSmoothing": "0",
+        "ColorNoiseReduction": "0"
+      },
+      "rows": [
+        {
+          "stat": "edge 64-192 rise10to90",
+          "lightroom": 0.622,
+          "after": 0.613,
+          "afterError": -0.009,
+          "before": 0.502,
+          "beforeError": -0.12
+        },
+        {
+          "stat": "edge 64-192 overshoot",
+          "lightroom": 28.959,
+          "after": 29.0,
+          "afterError": 0.041,
+          "before": 12.0,
+          "beforeError": -16.959
+        },
+        {
+          "stat": "edge 64-192 undershoot",
+          "lightroom": 7.771,
+          "after": 10.0,
+          "afterError": 2.229,
+          "before": 64.0,
+          "beforeError": 56.229
+        },
+        {
+          "stat": "edge 100-156 rise10to90",
+          "lightroom": 0.486,
+          "after": 0.521,
+          "afterError": 0.035,
+          "before": 0.631,
+          "beforeError": 0.145
+        },
+        {
+          "stat": "edge 100-156 overshoot",
+          "lightroom": 17.582,
+          "after": 11.0,
+          "afterError": -6.582,
+          "before": 5.0,
+          "beforeError": -12.582
+        },
+        {
+          "stat": "edge 100-156 undershoot",
+          "lightroom": 18.571,
+          "after": 19.0,
+          "afterError": 0.429,
+          "before": 10.0,
+          "beforeError": -8.571
+        },
+        {
+          "stat": "edge 120-136 rise10to90",
+          "lightroom": 0.711,
+          "after": 0.753,
+          "afterError": 0.042,
+          "before": 0.711,
+          "beforeError": 0.0
+        },
+        {
+          "stat": "edge 120-136 overshoot",
+          "lightroom": 1.0,
+          "after": 0.0,
+          "afterError": -1.0,
+          "before": 1.0,
+          "beforeError": 0.0
+        },
+        {
+          "stat": "edge 120-136 undershoot",
+          "lightroom": 1.0,
+          "after": 1.0,
+          "afterError": 0.0,
+          "before": 1.0,
+          "beforeError": 0.0
+        },
+        {
+          "stat": "grating p4 gain",
+          "lightroom": 1.0579,
+          "after": 1.0938,
+          "afterError": 0.036,
+          "before": 1.0,
+          "beforeError": -0.058
+        },
+        {
+          "stat": "grating p8 gain",
+          "lightroom": 1.1975,
+          "after": 1.1875,
+          "afterError": -0.01,
+          "before": 1.0,
+          "beforeError": -0.198
+        },
+        {
+          "stat": "grating p16 gain",
+          "lightroom": 1.0349,
+          "after": 1.0208,
+          "afterError": -0.014,
+          "before": 1.0,
+          "beforeError": -0.035
+        },
+        {
+          "stat": "grating p32 gain",
+          "lightroom": 1.001,
+          "after": 1.0,
+          "afterError": -0.001,
+          "before": 1.0,
+          "beforeError": -0.001
+        },
+        {
+          "stat": "patch 64/64/64 luma6 chroma0 lumaStd",
+          "lightroom": 6.134,
+          "after": 6.074,
+          "afterError": -0.06,
+          "before": 6.527,
+          "beforeError": 0.393
+        },
+        {
+          "stat": "patch 128/128/128 luma6 chroma0 lumaStd",
+          "lightroom": 6.109,
+          "after": 6.046,
+          "afterError": -0.063,
+          "before": 6.967,
+          "beforeError": 0.858
+        },
+        {
+          "stat": "patch 192/192/192 luma6 chroma0 lumaStd",
+          "lightroom": 6.161,
+          "after": 6.078,
+          "afterError": -0.083,
+          "before": 7.38,
+          "beforeError": 1.219
+        },
+        {
+          "stat": "patch 128/128/128 luma12 chroma0 lumaStd",
+          "lightroom": 12.569,
+          "after": 12.405,
+          "afterError": -0.164,
+          "before": 15.223,
+          "beforeError": 2.654
+        },
+        {
+          "stat": "patch 128/128/128 luma0 chroma8 lumaStd",
+          "lightroom": 0.196,
+          "after": 0.189,
+          "afterError": -0.007,
+          "before": 0.206,
+          "beforeError": 0.01
+        },
+        {
+          "stat": "patch 128/128/128 luma0 chroma8 chromaStd",
+          "lightroom": 8.127,
+          "after": 8.065,
+          "afterError": -0.062,
+          "before": 8.06,
+          "beforeError": -0.067
+        },
+        {
+          "stat": "patch 96/128/160 luma6 chroma8 lumaStd",
+          "lightroom": 6.106,
+          "after": 6.031,
+          "afterError": -0.075,
+          "before": 7.077,
+          "beforeError": 0.971
+        },
+        {
+          "stat": "patch 96/128/160 luma6 chroma8 chromaStd",
+          "lightroom": 8.127,
+          "after": 8.062,
+          "afterError": -0.065,
+          "before": 8.034,
+          "beforeError": -0.093
+        },
+        {
+          "stat": "patch 170/120/90 luma6 chroma8 lumaStd",
+          "lightroom": 6.125,
+          "after": 6.054,
+          "afterError": -0.071,
+          "before": 7.039,
+          "beforeError": 0.914
+        },
+        {
+          "stat": "patch 170/120/90 luma6 chroma8 chromaStd",
+          "lightroom": 8.072,
+          "after": 8.009,
+          "afterError": -0.063,
+          "before": 8.011,
+          "beforeError": -0.061
+        },
+        {
+          "stat": "patch 80/140/80 luma0 chroma12 lumaStd",
+          "lightroom": 0.546,
+          "after": 0.371,
+          "afterError": -0.175,
+          "before": 1.273,
+          "beforeError": 0.727
+        },
+        {
+          "stat": "patch 80/140/80 luma0 chroma12 chromaStd",
+          "lightroom": 12.107,
+          "after": 12.046,
+          "afterError": -0.061,
+          "before": 11.782,
+          "beforeError": -0.325
+        },
+        {
+          "stat": "patch 200/160/120 luma12 chroma12 lumaStd",
+          "lightroom": 12.497,
+          "after": 12.3,
+          "afterError": -0.197,
+          "before": 15.778,
+          "beforeError": 3.281
+        },
+        {
+          "stat": "patch 200/160/120 luma12 chroma12 chromaStd",
+          "lightroom": 12.075,
+          "after": 12.032,
+          "afterError": -0.043,
+          "before": 12.182,
+          "beforeError": 0.107
+        }
+      ]
+    },
+    "lnr_25": {
+      "settings": {
+        "Sharpness": "0",
+        "SharpenRadius": "+1.0",
+        "SharpenDetail": "25",
+        "SharpenEdgeMasking": "0",
+        "LuminanceSmoothing": "25",
+        "ColorNoiseReduction": "0",
+        "LuminanceNoiseReductionDetail": "50",
+        "LuminanceNoiseReductionContrast": "0"
+      },
+      "rows": [
+        {
+          "stat": "edge 64-192 rise10to90",
+          "lightroom": 0.835,
+          "after": 0.806,
+          "afterError": -0.029,
+          "before": 0.8,
+          "beforeError": -0.035
+        },
+        {
+          "stat": "edge 64-192 overshoot",
+          "lightroom": 0.0,
+          "after": 0.0,
+          "afterError": 0.0,
+          "before": 0.0,
+          "beforeError": 0.0
+        },
+        {
+          "stat": "edge 64-192 undershoot",
+          "lightroom": 0.001,
+          "after": 0.0,
+          "afterError": -0.001,
+          "before": 0.0,
+          "beforeError": -0.001
+        },
+        {
+          "stat": "edge 100-156 rise10to90",
+          "lightroom": 0.839,
+          "after": 0.8,
+          "afterError": -0.039,
+          "before": 0.8,
+          "beforeError": -0.039
+        },
+        {
+          "stat": "edge 100-156 overshoot",
+          "lightroom": 0.0,
+          "after": 0.0,
+          "afterError": 0.0,
+          "before": 0.0,
+          "beforeError": 0.0
+        },
+        {
+          "stat": "edge 100-156 undershoot",
+          "lightroom": 0.012,
+          "after": 0.0,
+          "afterError": -0.012,
+          "before": 0.0,
+          "beforeError": -0.012
+        },
+        {
+          "stat": "edge 120-136 rise10to90",
+          "lightroom": 2.974,
+          "after": 1.8,
+          "afterError": -1.174,
+          "before": 0.8,
+          "beforeError": -2.174
+        },
+        {
+          "stat": "edge 120-136 overshoot",
+          "lightroom": 0.0,
+          "after": 0.0,
+          "afterError": 0.0,
+          "before": 0.0,
+          "beforeError": 0.0
+        },
+        {
+          "stat": "edge 120-136 undershoot",
+          "lightroom": 0.0,
+          "after": 0.0,
+          "afterError": 0.0,
+          "before": 0.0,
+          "beforeError": 0.0
+        },
+        {
+          "stat": "grating p4 gain",
+          "lightroom": 0.9438,
+          "after": 0.9792,
+          "afterError": 0.035,
+          "before": 1.0,
+          "beforeError": 0.056
+        },
+        {
+          "stat": "grating p8 gain",
+          "lightroom": 0.9711,
+          "after": 0.9271,
+          "afterError": -0.044,
+          "before": 1.0,
+          "beforeError": 0.029
+        },
+        {
+          "stat": "grating p16 gain",
+          "lightroom": 0.9758,
+          "after": 0.9167,
+          "afterError": -0.059,
+          "before": 1.0,
+          "beforeError": 0.024
+        },
+        {
+          "stat": "grating p32 gain",
+          "lightroom": 0.9754,
+          "after": 0.9375,
+          "afterError": -0.038,
+          "before": 1.0,
+          "beforeError": 0.025
+        },
+        {
+          "stat": "patch 64/64/64 luma6 chroma0 lumaStd",
+          "lightroom": 3.233,
+          "after": 3.54,
+          "afterError": 0.307,
+          "before": 6.074,
+          "beforeError": 2.841
+        },
+        {
+          "stat": "patch 128/128/128 luma6 chroma0 lumaStd",
+          "lightroom": 3.231,
+          "after": 3.527,
+          "afterError": 0.296,
+          "before": 6.046,
+          "beforeError": 2.815
+        },
+        {
+          "stat": "patch 192/192/192 luma6 chroma0 lumaStd",
+          "lightroom": 3.642,
+          "after": 3.561,
+          "afterError": -0.081,
+          "before": 6.074,
+          "beforeError": 2.432
+        },
+        {
+          "stat": "patch 128/128/128 luma12 chroma0 lumaStd",
+          "lightroom": 7.664,
+          "after": 8.253,
+          "afterError": 0.589,
+          "before": 12.188,
+          "beforeError": 4.524
+        },
+        {
+          "stat": "patch 128/128/128 luma0 chroma8 lumaStd",
+          "lightroom": 0.885,
+          "after": 0.881,
+          "afterError": -0.004,
+          "before": 0.198,
+          "beforeError": -0.687
+        },
+        {
+          "stat": "patch 128/128/128 luma0 chroma8 chromaStd",
+          "lightroom": 8.139,
+          "after": 8.067,
+          "afterError": -0.072,
+          "before": 8.058,
+          "beforeError": -0.081
+        },
+        {
+          "stat": "patch 96/128/160 luma6 chroma8 lumaStd",
+          "lightroom": 3.265,
+          "after": 3.711,
+          "afterError": 0.446,
+          "before": 6.031,
+          "beforeError": 2.766
+        },
+        {
+          "stat": "patch 96/128/160 luma6 chroma8 chromaStd",
+          "lightroom": 8.312,
+          "after": 8.076,
+          "afterError": -0.236,
+          "before": 8.062,
+          "beforeError": -0.25
+        },
+        {
+          "stat": "patch 170/120/90 luma6 chroma8 lumaStd",
+          "lightroom": 3.222,
+          "after": 3.616,
+          "afterError": 0.394,
+          "before": 6.054,
+          "beforeError": 2.832
+        },
+        {
+          "stat": "patch 170/120/90 luma6 chroma8 chromaStd",
+          "lightroom": 8.078,
+          "after": 8.016,
+          "afterError": -0.062,
+          "before": 8.009,
+          "beforeError": -0.069
+        },
+        {
+          "stat": "patch 80/140/80 luma0 chroma12 lumaStd",
+          "lightroom": 2.321,
+          "after": 2.395,
+          "afterError": 0.074,
+          "before": 0.371,
+          "beforeError": -1.95
+        },
+        {
+          "stat": "patch 80/140/80 luma0 chroma12 chromaStd",
+          "lightroom": 12.376,
+          "after": 12.127,
+          "afterError": -0.249,
+          "before": 12.046,
+          "beforeError": -0.33
+        },
+        {
+          "stat": "patch 200/160/120 luma12 chroma12 lumaStd",
+          "lightroom": 8.231,
+          "after": 8.486,
+          "afterError": 0.255,
+          "before": 12.066,
+          "beforeError": 3.835
+        },
+        {
+          "stat": "patch 200/160/120 luma12 chroma12 chromaStd",
+          "lightroom": 12.2,
+          "after": 12.04,
+          "afterError": -0.16,
+          "before": 12.033,
+          "beforeError": -0.167
+        }
+      ]
+    },
+    "lnr_50": {
+      "settings": {
+        "Sharpness": "0",
+        "SharpenRadius": "+1.0",
+        "SharpenDetail": "25",
+        "SharpenEdgeMasking": "0",
+        "LuminanceSmoothing": "50",
+        "ColorNoiseReduction": "0",
+        "LuminanceNoiseReductionDetail": "50",
+        "LuminanceNoiseReductionContrast": "0"
+      },
+      "rows": [
+        {
+          "stat": "edge 64-192 rise10to90",
+          "lightroom": 0.849,
+          "after": 0.813,
+          "afterError": -0.036,
+          "before": 0.8,
+          "beforeError": -0.049
+        },
+        {
+          "stat": "edge 64-192 overshoot",
+          "lightroom": 0.0,
+          "after": 0.0,
+          "afterError": 0.0,
+          "before": 0.0,
+          "beforeError": 0.0
+        },
+        {
+          "stat": "edge 64-192 undershoot",
+          "lightroom": 0.0,
+          "after": 0.0,
+          "afterError": 0.0,
+          "before": 0.0,
+          "beforeError": 0.0
+        },
+        {
+          "stat": "edge 100-156 rise10to90",
+          "lightroom": 0.851,
+          "after": 0.8,
+          "afterError": -0.051,
+          "before": 0.8,
+          "beforeError": -0.051
+        },
+        {
+          "stat": "edge 100-156 overshoot",
+          "lightroom": 0.006,
+          "after": 0.0,
+          "afterError": -0.006,
+          "before": 0.0,
+          "beforeError": -0.006
+        },
+        {
+          "stat": "edge 100-156 undershoot",
+          "lightroom": 0.0,
+          "after": 0.0,
+          "afterError": 0.0,
+          "before": 0.0,
+          "beforeError": 0.0
+        },
+        {
+          "stat": "edge 120-136 rise10to90",
+          "lightroom": 4.066,
+          "after": 3.8,
+          "afterError": -0.266,
+          "before": 0.853,
+          "beforeError": -3.213
+        },
+        {
+          "stat": "edge 120-136 overshoot",
+          "lightroom": 0.012,
+          "after": 0.0,
+          "afterError": -0.012,
+          "before": 0.0,
+          "beforeError": -0.012
+        },
+        {
+          "stat": "edge 120-136 undershoot",
+          "lightroom": 0.0,
+          "after": 0.0,
+          "afterError": 0.0,
+          "before": 0.0,
+          "beforeError": 0.0
+        },
+        {
+          "stat": "grating p4 gain",
+          "lightroom": 0.9249,
+          "after": 0.9792,
+          "afterError": 0.054,
+          "before": 1.0,
+          "beforeError": 0.075
+        },
+        {
+          "stat": "grating p8 gain",
+          "lightroom": 0.961,
+          "after": 0.8958,
+          "afterError": -0.065,
+          "before": 1.0,
+          "beforeError": 0.039
+        },
+        {
+          "stat": "grating p16 gain",
+          "lightroom": 0.9666,
+          "after": 0.8854,
+          "afterError": -0.081,
+          "before": 1.0,
+          "beforeError": 0.033
+        },
+        {
+          "stat": "grating p32 gain",
+          "lightroom": 0.9645,
+          "after": 0.9062,
+          "afterError": -0.058,
+          "before": 0.9896,
+          "beforeError": 0.025
+        },
+        {
+          "stat": "patch 64/64/64 luma6 chroma0 lumaStd",
+          "lightroom": 2.233,
+          "after": 2.191,
+          "afterError": -0.042,
+          "before": 6.068,
+          "beforeError": 3.835
+        },
+        {
+          "stat": "patch 128/128/128 luma6 chroma0 lumaStd",
+          "lightroom": 2.239,
+          "after": 2.185,
+          "afterError": -0.054,
+          "before": 5.606,
+          "beforeError": 3.367
+        },
+        {
+          "stat": "patch 192/192/192 luma6 chroma0 lumaStd",
+          "lightroom": 2.834,
+          "after": 2.218,
+          "afterError": -0.616,
+          "before": 5.263,
+          "beforeError": 2.429
+        },
+        {
+          "stat": "patch 128/128/128 luma12 chroma0 lumaStd",
+          "lightroom": 6.184,
+          "after": 6.118,
+          "afterError": -0.066,
+          "before": 12.076,
+          "beforeError": 5.892
+        },
+        {
+          "stat": "patch 128/128/128 luma0 chroma8 lumaStd",
+          "lightroom": 1.083,
+          "after": 1.309,
+          "afterError": 0.226,
+          "before": 0.683,
+          "beforeError": -0.4
+        },
+        {
+          "stat": "patch 128/128/128 luma0 chroma8 chromaStd",
+          "lightroom": 8.141,
+          "after": 8.069,
+          "afterError": -0.072,
+          "before": 8.056,
+          "beforeError": -0.085
+        },
+        {
+          "stat": "patch 96/128/160 luma6 chroma8 lumaStd",
+          "lightroom": 2.581,
+          "after": 2.788,
+          "afterError": 0.207,
+          "before": 5.689,
+          "beforeError": 3.108
+        },
+        {
+          "stat": "patch 96/128/160 luma6 chroma8 chromaStd",
+          "lightroom": 8.388,
+          "after": 8.085,
+          "afterError": -0.303,
+          "before": 8.05,
+          "beforeError": -0.338
+        },
+        {
+          "stat": "patch 170/120/90 luma6 chroma8 lumaStd",
+          "lightroom": 2.25,
+          "after": 2.391,
+          "afterError": 0.141,
+          "before": 5.606,
+          "beforeError": 3.356
+        },
+        {
+          "stat": "patch 170/120/90 luma6 chroma8 chromaStd",
+          "lightroom": 8.087,
+          "after": 8.021,
+          "afterError": -0.066,
+          "before": 8.003,
+          "beforeError": -0.084
+        },
+        {
+          "stat": "patch 80/140/80 luma0 chroma12 lumaStd",
+          "lightroom": 3.048,
+          "after": 3.663,
+          "afterError": 0.615,
+          "before": 0.574,
+          "beforeError": -2.474
+        },
+        {
+          "stat": "patch 80/140/80 luma0 chroma12 chromaStd",
+          "lightroom": 12.488,
+          "after": 12.169,
+          "afterError": -0.319,
+          "before": 11.96,
+          "beforeError": -0.528
+        },
+        {
+          "stat": "patch 200/160/120 luma12 chroma12 lumaStd",
+          "lightroom": 7.017,
+          "after": 6.582,
+          "afterError": -0.435,
+          "before": 11.7,
+          "beforeError": 4.683
+        },
+        {
+          "stat": "patch 200/160/120 luma12 chroma12 chromaStd",
+          "lightroom": 12.26,
+          "after": 12.044,
+          "afterError": -0.216,
+          "before": 12.029,
+          "beforeError": -0.231
+        }
+      ]
+    },
+    "lnr_75": {
+      "settings": {
+        "Sharpness": "0",
+        "SharpenRadius": "+1.0",
+        "SharpenDetail": "25",
+        "SharpenEdgeMasking": "0",
+        "LuminanceSmoothing": "75",
+        "ColorNoiseReduction": "0",
+        "LuminanceNoiseReductionDetail": "50",
+        "LuminanceNoiseReductionContrast": "0"
+      },
+      "rows": [
+        {
+          "stat": "edge 64-192 rise10to90",
+          "lightroom": 0.861,
+          "after": 0.813,
+          "afterError": -0.048,
+          "before": 0.8,
+          "beforeError": -0.061
+        },
+        {
+          "stat": "edge 64-192 overshoot",
+          "lightroom": 0.001,
+          "after": 0.0,
+          "afterError": -0.001,
+          "before": 0.0,
+          "beforeError": -0.001
+        },
+        {
+          "stat": "edge 64-192 undershoot",
+          "lightroom": 0.001,
+          "after": 0.0,
+          "afterError": -0.001,
+          "before": 0.0,
+          "beforeError": -0.001
+        },
+        {
+          "stat": "edge 100-156 rise10to90",
+          "lightroom": 0.864,
+          "after": 0.8,
+          "afterError": -0.064,
+          "before": 0.815,
+          "beforeError": -0.049
+        },
+        {
+          "stat": "edge 100-156 overshoot",
+          "lightroom": 0.0,
+          "after": 0.0,
+          "afterError": 0.0,
+          "before": 0.0,
+          "beforeError": 0.0
+        },
+        {
+          "stat": "edge 100-156 undershoot",
+          "lightroom": 0.001,
+          "after": 0.0,
+          "afterError": -0.001,
+          "before": 0.0,
+          "beforeError": -0.001
+        },
+        {
+          "stat": "edge 120-136 rise10to90",
+          "lightroom": 4.905,
+          "after": 6.8,
+          "afterError": 1.895,
+          "before": 0.914,
+          "beforeError": -3.991
+        },
+        {
+          "stat": "edge 120-136 overshoot",
+          "lightroom": 0.0,
+          "after": 0.0,
+          "afterError": 0.0,
+          "before": 0.0,
+          "beforeError": 0.0
+        },
+        {
+          "stat": "edge 120-136 undershoot",
+          "lightroom": 0.0,
+          "after": 0.0,
+          "afterError": 0.0,
+          "before": 0.0,
+          "beforeError": 0.0
+        },
+        {
+          "stat": "grating p4 gain",
+          "lightroom": 0.9046,
+          "after": 0.9687,
+          "afterError": 0.064,
+          "before": 1.0,
+          "beforeError": 0.095
+        },
+        {
+          "stat": "grating p8 gain",
+          "lightroom": 0.9502,
+          "after": 0.8646,
+          "afterError": -0.086,
+          "before": 1.0,
+          "beforeError": 0.05
+        },
+        {
+          "stat": "grating p16 gain",
+          "lightroom": 0.9567,
+          "after": 0.875,
+          "afterError": -0.082,
+          "before": 1.0,
+          "beforeError": 0.043
+        },
+        {
+          "stat": "grating p32 gain",
+          "lightroom": 0.9542,
+          "after": 0.8854,
+          "afterError": -0.069,
+          "before": 0.9896,
+          "beforeError": 0.035
+        },
+        {
+          "stat": "patch 64/64/64 luma6 chroma0 lumaStd",
+          "lightroom": 1.257,
+          "after": 1.121,
+          "afterError": -0.136,
+          "before": 5.645,
+          "beforeError": 4.388
+        },
+        {
+          "stat": "patch 128/128/128 luma6 chroma0 lumaStd",
+          "lightroom": 1.253,
+          "after": 1.123,
+          "afterError": -0.13,
+          "before": 4.845,
+          "beforeError": 3.592
+        },
+        {
+          "stat": "patch 192/192/192 luma6 chroma0 lumaStd",
+          "lightroom": 2.073,
+          "after": 1.152,
+          "afterError": -0.921,
+          "before": 4.114,
+          "beforeError": 2.041
+        },
+        {
+          "stat": "patch 128/128/128 luma12 chroma0 lumaStd",
+          "lightroom": 4.757,
+          "after": 4.605,
+          "afterError": -0.152,
+          "before": 11.438,
+          "beforeError": 6.681
+        },
+        {
+          "stat": "patch 128/128/128 luma0 chroma8 lumaStd",
+          "lightroom": 1.291,
+          "after": 1.667,
+          "afterError": 0.376,
+          "before": 1.161,
+          "beforeError": -0.13
+        },
+        {
+          "stat": "patch 128/128/128 luma0 chroma8 chromaStd",
+          "lightroom": 8.144,
+          "after": 8.071,
+          "afterError": -0.073,
+          "before": 8.056,
+          "beforeError": -0.088
+        },
+        {
+          "stat": "patch 96/128/160 luma6 chroma8 lumaStd",
+          "lightroom": 2.321,
+          "after": 2.469,
+          "afterError": 0.148,
+          "before": 5.032,
+          "beforeError": 2.711
+        },
+        {
+          "stat": "patch 96/128/160 luma6 chroma8 chromaStd",
+          "lightroom": 8.472,
+          "after": 8.093,
+          "afterError": -0.379,
+          "before": 8.04,
+          "beforeError": -0.432
+        },
+        {
+          "stat": "patch 170/120/90 luma6 chroma8 lumaStd",
+          "lightroom": 1.312,
+          "after": 1.576,
+          "afterError": 0.264,
+          "before": 4.83,
+          "beforeError": 3.518
+        },
+        {
+          "stat": "patch 170/120/90 luma6 chroma8 chromaStd",
+          "lightroom": 8.088,
+          "after": 8.026,
+          "afterError": -0.062,
+          "before": 8.0,
+          "beforeError": -0.088
+        },
+        {
+          "stat": "patch 80/140/80 luma0 chroma12 lumaStd",
+          "lightroom": 3.794,
+          "after": 4.706,
+          "afterError": 0.912,
+          "before": 1.208,
+          "beforeError": -2.586
+        },
+        {
+          "stat": "patch 80/140/80 luma0 chroma12 chromaStd",
+          "lightroom": 12.595,
+          "after": 12.204,
+          "afterError": -0.391,
+          "before": 11.904,
+          "beforeError": -0.691
+        },
+        {
+          "stat": "patch 200/160/120 luma12 chroma12 lumaStd",
+          "lightroom": 5.867,
+          "after": 5.303,
+          "afterError": -0.564,
+          "before": 10.917,
+          "beforeError": 5.05
+        },
+        {
+          "stat": "patch 200/160/120 luma12 chroma12 chromaStd",
+          "lightroom": 12.325,
+          "after": 12.05,
+          "afterError": -0.275,
+          "before": 12.028,
+          "beforeError": -0.297
+        }
+      ]
+    },
+    "lnr_100": {
+      "settings": {
+        "Sharpness": "0",
+        "SharpenRadius": "+1.0",
+        "SharpenDetail": "25",
+        "SharpenEdgeMasking": "0",
+        "LuminanceSmoothing": "100",
+        "ColorNoiseReduction": "0",
+        "LuminanceNoiseReductionDetail": "50",
+        "LuminanceNoiseReductionContrast": "0"
+      },
+      "rows": [
+        {
+          "stat": "edge 64-192 rise10to90",
+          "lightroom": 0.875,
+          "after": 0.813,
+          "afterError": -0.062,
+          "before": 0.806,
+          "beforeError": -0.069
+        },
+        {
+          "stat": "edge 64-192 overshoot",
+          "lightroom": 0.003,
+          "after": 0.0,
+          "afterError": -0.003,
+          "before": 0.0,
+          "beforeError": -0.003
+        },
+        {
+          "stat": "edge 64-192 undershoot",
+          "lightroom": 0.001,
+          "after": 0.0,
+          "afterError": -0.001,
+          "before": 0.0,
+          "beforeError": -0.001
+        },
+        {
+          "stat": "edge 100-156 rise10to90",
+          "lightroom": 0.878,
+          "after": 0.8,
+          "afterError": -0.078,
+          "before": 0.83,
+          "beforeError": -0.048
+        },
+        {
+          "stat": "edge 100-156 overshoot",
+          "lightroom": 0.0,
+          "after": 0.0,
+          "afterError": 0.0,
+          "before": 0.0,
+          "beforeError": 0.0
+        },
+        {
+          "stat": "edge 100-156 undershoot",
+          "lightroom": 0.004,
+          "after": 0.0,
+          "afterError": -0.004,
+          "before": 0.0,
+          "beforeError": -0.004
+        },
+        {
+          "stat": "edge 120-136 rise10to90",
+          "lightroom": 5.937,
+          "after": 7.8,
+          "afterError": 1.863,
+          "before": 5.8,
+          "beforeError": -0.137
+        },
+        {
+          "stat": "edge 120-136 overshoot",
+          "lightroom": 0.0,
+          "after": 0.0,
+          "afterError": 0.0,
+          "before": 0.0,
+          "beforeError": 0.0
+        },
+        {
+          "stat": "edge 120-136 undershoot",
+          "lightroom": 0.0,
+          "after": 0.0,
+          "afterError": 0.0,
+          "before": 0.0,
+          "beforeError": 0.0
+        },
+        {
+          "stat": "grating p4 gain",
+          "lightroom": 0.885,
+          "after": 0.9583,
+          "afterError": 0.073,
+          "before": 0.9792,
+          "beforeError": 0.094
+        },
+        {
+          "stat": "grating p8 gain",
+          "lightroom": 0.9398,
+          "after": 0.8333,
+          "afterError": -0.106,
+          "before": 0.9792,
+          "beforeError": 0.039
+        },
+        {
+          "stat": "grating p16 gain",
+          "lightroom": 0.9456,
+          "after": 0.8646,
+          "afterError": -0.081,
+          "before": 0.9792,
+          "beforeError": 0.034
+        },
+        {
+          "stat": "grating p32 gain",
+          "lightroom": 0.9419,
+          "after": 0.875,
+          "afterError": -0.067,
+          "before": 0.9688,
+          "beforeError": 0.027
+        },
+        {
+          "stat": "patch 64/64/64 luma6 chroma0 lumaStd",
+          "lightroom": 0.152,
+          "after": 0.413,
+          "afterError": 0.261,
+          "before": 5.133,
+          "beforeError": 4.981
+        },
+        {
+          "stat": "patch 128/128/128 luma6 chroma0 lumaStd",
+          "lightroom": 0.156,
+          "after": 0.427,
+          "afterError": 0.271,
+          "before": 3.744,
+          "beforeError": 3.588
+        },
+        {
+          "stat": "patch 192/192/192 luma6 chroma0 lumaStd",
+          "lightroom": 1.462,
+          "after": 0.493,
+          "afterError": -0.969,
+          "before": 2.671,
+          "beforeError": 1.209
+        },
+        {
+          "stat": "patch 128/128/128 luma12 chroma0 lumaStd",
+          "lightroom": 3.563,
+          "after": 3.737,
+          "afterError": 0.174,
+          "before": 10.586,
+          "beforeError": 7.023
+        },
+        {
+          "stat": "patch 128/128/128 luma0 chroma8 lumaStd",
+          "lightroom": 1.503,
+          "after": 1.985,
+          "afterError": 0.482,
+          "before": 1.678,
+          "beforeError": 0.175
+        },
+        {
+          "stat": "patch 128/128/128 luma0 chroma8 chromaStd",
+          "lightroom": 8.149,
+          "after": 8.07,
+          "afterError": -0.079,
+          "before": 8.055,
+          "beforeError": -0.094
+        },
+        {
+          "stat": "patch 96/128/160 luma6 chroma8 lumaStd",
+          "lightroom": 2.675,
+          "after": 2.649,
+          "afterError": -0.026,
+          "before": 4.141,
+          "beforeError": 1.466
+        },
+        {
+          "stat": "patch 96/128/160 luma6 chroma8 chromaStd",
+          "lightroom": 8.569,
+          "after": 8.099,
+          "afterError": -0.47,
+          "before": 8.024,
+          "beforeError": -0.545
+        },
+        {
+          "stat": "patch 170/120/90 luma6 chroma8 lumaStd",
+          "lightroom": 0.699,
+          "after": 1.301,
+          "afterError": 0.602,
+          "before": 3.755,
+          "beforeError": 3.056
+        },
+        {
+          "stat": "patch 170/120/90 luma6 chroma8 chromaStd",
+          "lightroom": 8.101,
+          "after": 8.03,
+          "afterError": -0.071,
+          "before": 8.0,
+          "beforeError": -0.101
+        },
+        {
+          "stat": "patch 80/140/80 luma0 chroma12 lumaStd",
+          "lightroom": 4.559,
+          "after": 5.626,
+          "afterError": 1.067,
+          "before": 2.164,
+          "beforeError": -2.395
+        },
+        {
+          "stat": "patch 80/140/80 luma0 chroma12 chromaStd",
+          "lightroom": 12.69,
+          "after": 12.236,
+          "afterError": -0.454,
+          "before": 11.783,
+          "beforeError": -0.907
+        },
+        {
+          "stat": "patch 200/160/120 luma12 chroma12 lumaStd",
+          "lightroom": 4.88,
+          "after": 4.612,
+          "afterError": -0.268,
+          "before": 9.693,
+          "beforeError": 4.813
+        },
+        {
+          "stat": "patch 200/160/120 luma12 chroma12 chromaStd",
+          "lightroom": 12.4,
+          "after": 12.053,
+          "afterError": -0.347,
+          "before": 12.024,
+          "beforeError": -0.376
+        }
+      ]
+    },
+    "cnr_25": {
+      "settings": {
+        "Sharpness": "0",
+        "SharpenRadius": "+1.0",
+        "SharpenDetail": "25",
+        "SharpenEdgeMasking": "0",
+        "LuminanceSmoothing": "0",
+        "ColorNoiseReduction": "25",
+        "ColorNoiseReductionDetail": "50",
+        "ColorNoiseReductionSmoothness": "50"
+      },
+      "rows": [
+        {
+          "stat": "edge 64-192 rise10to90",
+          "lightroom": 0.8,
+          "after": 0.8,
+          "afterError": 0.0,
+          "before": 0.8,
+          "beforeError": 0.0
+        },
+        {
+          "stat": "edge 64-192 overshoot",
+          "lightroom": 0.0,
+          "after": 0.0,
+          "afterError": 0.0,
+          "before": 0.0,
+          "beforeError": 0.0
+        },
+        {
+          "stat": "edge 64-192 undershoot",
+          "lightroom": 0.0,
+          "after": 0.0,
+          "afterError": 0.0,
+          "before": 0.0,
+          "beforeError": 0.0
+        },
+        {
+          "stat": "edge 100-156 rise10to90",
+          "lightroom": 0.8,
+          "after": 0.8,
+          "afterError": 0.0,
+          "before": 0.8,
+          "beforeError": 0.0
+        },
+        {
+          "stat": "edge 100-156 overshoot",
+          "lightroom": 0.0,
+          "after": 0.0,
+          "afterError": 0.0,
+          "before": 0.0,
+          "beforeError": 0.0
+        },
+        {
+          "stat": "edge 100-156 undershoot",
+          "lightroom": 0.0,
+          "after": 0.0,
+          "afterError": 0.0,
+          "before": 0.0,
+          "beforeError": 0.0
+        },
+        {
+          "stat": "edge 120-136 rise10to90",
+          "lightroom": 0.8,
+          "after": 0.8,
+          "afterError": 0.0,
+          "before": 0.8,
+          "beforeError": 0.0
+        },
+        {
+          "stat": "edge 120-136 overshoot",
+          "lightroom": 0.0,
+          "after": 0.0,
+          "afterError": 0.0,
+          "before": 0.0,
+          "beforeError": 0.0
+        },
+        {
+          "stat": "edge 120-136 undershoot",
+          "lightroom": 0.0,
+          "after": 0.0,
+          "afterError": 0.0,
+          "before": 0.0,
+          "beforeError": 0.0
+        },
+        {
+          "stat": "grating p4 gain",
+          "lightroom": 1.0,
+          "after": 1.0,
+          "afterError": 0.0,
+          "before": 1.0,
+          "beforeError": 0.0
+        },
+        {
+          "stat": "grating p8 gain",
+          "lightroom": 1.0,
+          "after": 1.0,
+          "afterError": 0.0,
+          "before": 1.0,
+          "beforeError": 0.0
+        },
+        {
+          "stat": "grating p16 gain",
+          "lightroom": 1.0,
+          "after": 1.0,
+          "afterError": 0.0,
+          "before": 1.0,
+          "beforeError": 0.0
+        },
+        {
+          "stat": "grating p32 gain",
+          "lightroom": 1.0,
+          "after": 1.0,
+          "afterError": 0.0,
+          "before": 1.0,
+          "beforeError": 0.0
+        },
+        {
+          "stat": "patch 64/64/64 luma6 chroma0 lumaStd",
+          "lightroom": 6.133,
+          "after": 6.074,
+          "afterError": -0.059,
+          "before": 6.074,
+          "beforeError": -0.059
+        },
+        {
+          "stat": "patch 128/128/128 luma6 chroma0 lumaStd",
+          "lightroom": 6.097,
+          "after": 6.046,
+          "afterError": -0.051,
+          "before": 6.046,
+          "beforeError": -0.051
+        },
+        {
+          "stat": "patch 192/192/192 luma6 chroma0 lumaStd",
+          "lightroom": 6.132,
+          "after": 6.078,
+          "afterError": -0.054,
+          "before": 6.078,
+          "beforeError": -0.054
+        },
+        {
+          "stat": "patch 128/128/128 luma12 chroma0 lumaStd",
+          "lightroom": 12.22,
+          "after": 12.188,
+          "afterError": -0.032,
+          "before": 12.188,
+          "beforeError": -0.032
+        },
+        {
+          "stat": "patch 128/128/128 luma0 chroma8 lumaStd",
+          "lightroom": 1.498,
+          "after": 1.692,
+          "afterError": 0.194,
+          "before": 1.635,
+          "beforeError": 0.137
+        },
+        {
+          "stat": "patch 128/128/128 luma0 chroma8 chromaStd",
+          "lightroom": 2.516,
+          "after": 2.547,
+          "afterError": 0.031,
+          "before": 1.096,
+          "beforeError": -1.42
+        },
+        {
+          "stat": "patch 96/128/160 luma6 chroma8 lumaStd",
+          "lightroom": 6.847,
+          "after": 6.243,
+          "afterError": -0.604,
+          "before": 5.902,
+          "beforeError": -0.945
+        },
+        {
+          "stat": "patch 96/128/160 luma6 chroma8 chromaStd",
+          "lightroom": 2.75,
+          "after": 2.681,
+          "afterError": -0.069,
+          "before": 1.524,
+          "beforeError": -1.226
+        },
+        {
+          "stat": "patch 170/120/90 luma6 chroma8 lumaStd",
+          "lightroom": 6.089,
+          "after": 6.048,
+          "afterError": -0.041,
+          "before": 6.084,
+          "beforeError": -0.005
+        },
+        {
+          "stat": "patch 170/120/90 luma6 chroma8 chromaStd",
+          "lightroom": 2.569,
+          "after": 2.676,
+          "afterError": 0.107,
+          "before": 0.685,
+          "beforeError": -1.884
+        },
+        {
+          "stat": "patch 80/140/80 luma0 chroma12 lumaStd",
+          "lightroom": 4.043,
+          "after": 4.29,
+          "afterError": 0.247,
+          "before": 2.54,
+          "beforeError": -1.503
+        },
+        {
+          "stat": "patch 80/140/80 luma0 chroma12 chromaStd",
+          "lightroom": 3.949,
+          "after": 3.974,
+          "afterError": 0.025,
+          "before": 4.472,
+          "beforeError": 0.523
+        },
+        {
+          "stat": "patch 200/160/120 luma12 chroma12 lumaStd",
+          "lightroom": 12.188,
+          "after": 12.119,
+          "afterError": -0.069,
+          "before": 11.966,
+          "beforeError": -0.222
+        },
+        {
+          "stat": "patch 200/160/120 luma12 chroma12 chromaStd",
+          "lightroom": 4.717,
+          "after": 4.038,
+          "afterError": -0.679,
+          "before": 1.434,
+          "beforeError": -3.283
+        }
+      ]
+    },
+    "cnr_50": {
+      "settings": {
+        "Sharpness": "0",
+        "SharpenRadius": "+1.0",
+        "SharpenDetail": "25",
+        "SharpenEdgeMasking": "0",
+        "LuminanceSmoothing": "0",
+        "ColorNoiseReduction": "50",
+        "ColorNoiseReductionDetail": "50",
+        "ColorNoiseReductionSmoothness": "50"
+      },
+      "rows": [
+        {
+          "stat": "edge 64-192 rise10to90",
+          "lightroom": 0.8,
+          "after": 0.8,
+          "afterError": 0.0,
+          "before": 0.8,
+          "beforeError": 0.0
+        },
+        {
+          "stat": "edge 64-192 overshoot",
+          "lightroom": 0.0,
+          "after": 0.0,
+          "afterError": 0.0,
+          "before": 0.0,
+          "beforeError": 0.0
+        },
+        {
+          "stat": "edge 64-192 undershoot",
+          "lightroom": 0.0,
+          "after": 0.0,
+          "afterError": 0.0,
+          "before": 0.0,
+          "beforeError": 0.0
+        },
+        {
+          "stat": "edge 100-156 rise10to90",
+          "lightroom": 0.8,
+          "after": 0.8,
+          "afterError": 0.0,
+          "before": 0.8,
+          "beforeError": 0.0
+        },
+        {
+          "stat": "edge 100-156 overshoot",
+          "lightroom": 0.0,
+          "after": 0.0,
+          "afterError": 0.0,
+          "before": 0.0,
+          "beforeError": 0.0
+        },
+        {
+          "stat": "edge 100-156 undershoot",
+          "lightroom": 0.0,
+          "after": 0.0,
+          "afterError": 0.0,
+          "before": 0.0,
+          "beforeError": 0.0
+        },
+        {
+          "stat": "edge 120-136 rise10to90",
+          "lightroom": 0.8,
+          "after": 0.8,
+          "afterError": 0.0,
+          "before": 0.8,
+          "beforeError": 0.0
+        },
+        {
+          "stat": "edge 120-136 overshoot",
+          "lightroom": 0.0,
+          "after": 0.0,
+          "afterError": 0.0,
+          "before": 0.0,
+          "beforeError": 0.0
+        },
+        {
+          "stat": "edge 120-136 undershoot",
+          "lightroom": 0.0,
+          "after": 0.0,
+          "afterError": 0.0,
+          "before": 0.0,
+          "beforeError": 0.0
+        },
+        {
+          "stat": "grating p4 gain",
+          "lightroom": 1.0,
+          "after": 1.0,
+          "afterError": 0.0,
+          "before": 1.0,
+          "beforeError": 0.0
+        },
+        {
+          "stat": "grating p8 gain",
+          "lightroom": 1.0,
+          "after": 1.0,
+          "afterError": 0.0,
+          "before": 1.0,
+          "beforeError": 0.0
+        },
+        {
+          "stat": "grating p16 gain",
+          "lightroom": 1.0,
+          "after": 1.0,
+          "afterError": 0.0,
+          "before": 1.0,
+          "beforeError": 0.0
+        },
+        {
+          "stat": "grating p32 gain",
+          "lightroom": 1.0,
+          "after": 1.0,
+          "afterError": 0.0,
+          "before": 1.0,
+          "beforeError": 0.0
+        },
+        {
+          "stat": "patch 64/64/64 luma6 chroma0 lumaStd",
+          "lightroom": 6.133,
+          "after": 6.074,
+          "afterError": -0.059,
+          "before": 6.074,
+          "beforeError": -0.059
+        },
+        {
+          "stat": "patch 128/128/128 luma6 chroma0 lumaStd",
+          "lightroom": 6.097,
+          "after": 6.046,
+          "afterError": -0.051,
+          "before": 6.046,
+          "beforeError": -0.051
+        },
+        {
+          "stat": "patch 192/192/192 luma6 chroma0 lumaStd",
+          "lightroom": 6.132,
+          "after": 6.078,
+          "afterError": -0.054,
+          "before": 6.078,
+          "beforeError": -0.054
+        },
+        {
+          "stat": "patch 128/128/128 luma12 chroma0 lumaStd",
+          "lightroom": 12.22,
+          "after": 12.188,
+          "afterError": -0.032,
+          "before": 12.188,
+          "beforeError": -0.032
+        },
+        {
+          "stat": "patch 128/128/128 luma0 chroma8 lumaStd",
+          "lightroom": 1.502,
+          "after": 1.692,
+          "afterError": 0.19,
+          "before": 1.965,
+          "beforeError": 0.463
+        },
+        {
+          "stat": "patch 128/128/128 luma0 chroma8 chromaStd",
+          "lightroom": 2.512,
+          "after": 2.547,
+          "afterError": 0.035,
+          "before": 0.382,
+          "beforeError": -2.13
+        },
+        {
+          "stat": "patch 96/128/160 luma6 chroma8 lumaStd",
+          "lightroom": 6.855,
+          "after": 6.243,
+          "afterError": -0.612,
+          "before": 6.681,
+          "beforeError": -0.174
+        },
+        {
+          "stat": "patch 96/128/160 luma6 chroma8 chromaStd",
+          "lightroom": 2.737,
+          "after": 2.681,
+          "afterError": -0.056,
+          "before": 1.087,
+          "beforeError": -1.65
+        },
+        {
+          "stat": "patch 170/120/90 luma6 chroma8 lumaStd",
+          "lightroom": 6.094,
+          "after": 6.048,
+          "afterError": -0.046,
+          "before": 6.36,
+          "beforeError": 0.266
+        },
+        {
+          "stat": "patch 170/120/90 luma6 chroma8 chromaStd",
+          "lightroom": 2.555,
+          "after": 2.676,
+          "afterError": 0.121,
+          "before": 1.433,
+          "beforeError": -1.122
+        },
+        {
+          "stat": "patch 80/140/80 luma0 chroma12 lumaStd",
+          "lightroom": 4.051,
+          "after": 4.29,
+          "afterError": 0.239,
+          "before": 6.023,
+          "beforeError": 1.972
+        },
+        {
+          "stat": "patch 80/140/80 luma0 chroma12 chromaStd",
+          "lightroom": 3.904,
+          "after": 3.974,
+          "afterError": 0.07,
+          "before": 0.849,
+          "beforeError": -3.055
+        },
+        {
+          "stat": "patch 200/160/120 luma12 chroma12 lumaStd",
+          "lightroom": 12.186,
+          "after": 12.119,
+          "afterError": -0.067,
+          "before": 12.433,
+          "beforeError": 0.247
+        },
+        {
+          "stat": "patch 200/160/120 luma12 chroma12 chromaStd",
+          "lightroom": 4.61,
+          "after": 4.038,
+          "afterError": -0.572,
+          "before": 2.002,
+          "beforeError": -2.608
+        }
+      ]
+    },
+    "cnr_100": {
+      "settings": {
+        "Sharpness": "0",
+        "SharpenRadius": "+1.0",
+        "SharpenDetail": "25",
+        "SharpenEdgeMasking": "0",
+        "LuminanceSmoothing": "0",
+        "ColorNoiseReduction": "100",
+        "ColorNoiseReductionDetail": "50",
+        "ColorNoiseReductionSmoothness": "50"
+      },
+      "rows": [
+        {
+          "stat": "edge 64-192 rise10to90",
+          "lightroom": 0.8,
+          "after": 0.8,
+          "afterError": 0.0,
+          "before": 0.8,
+          "beforeError": 0.0
+        },
+        {
+          "stat": "edge 64-192 overshoot",
+          "lightroom": 0.0,
+          "after": 0.0,
+          "afterError": 0.0,
+          "before": 0.0,
+          "beforeError": 0.0
+        },
+        {
+          "stat": "edge 64-192 undershoot",
+          "lightroom": 0.0,
+          "after": 0.0,
+          "afterError": 0.0,
+          "before": 0.0,
+          "beforeError": 0.0
+        },
+        {
+          "stat": "edge 100-156 rise10to90",
+          "lightroom": 0.8,
+          "after": 0.8,
+          "afterError": 0.0,
+          "before": 0.8,
+          "beforeError": 0.0
+        },
+        {
+          "stat": "edge 100-156 overshoot",
+          "lightroom": 0.0,
+          "after": 0.0,
+          "afterError": 0.0,
+          "before": 0.0,
+          "beforeError": 0.0
+        },
+        {
+          "stat": "edge 100-156 undershoot",
+          "lightroom": 0.0,
+          "after": 0.0,
+          "afterError": 0.0,
+          "before": 0.0,
+          "beforeError": 0.0
+        },
+        {
+          "stat": "edge 120-136 rise10to90",
+          "lightroom": 0.8,
+          "after": 0.8,
+          "afterError": 0.0,
+          "before": 0.8,
+          "beforeError": 0.0
+        },
+        {
+          "stat": "edge 120-136 overshoot",
+          "lightroom": 0.0,
+          "after": 0.0,
+          "afterError": 0.0,
+          "before": 0.0,
+          "beforeError": 0.0
+        },
+        {
+          "stat": "edge 120-136 undershoot",
+          "lightroom": 0.0,
+          "after": 0.0,
+          "afterError": 0.0,
+          "before": 0.0,
+          "beforeError": 0.0
+        },
+        {
+          "stat": "grating p4 gain",
+          "lightroom": 1.0,
+          "after": 1.0,
+          "afterError": 0.0,
+          "before": 1.0,
+          "beforeError": 0.0
+        },
+        {
+          "stat": "grating p8 gain",
+          "lightroom": 1.0,
+          "after": 1.0,
+          "afterError": 0.0,
+          "before": 1.0,
+          "beforeError": 0.0
+        },
+        {
+          "stat": "grating p16 gain",
+          "lightroom": 1.0,
+          "after": 1.0,
+          "afterError": 0.0,
+          "before": 1.0,
+          "beforeError": 0.0
+        },
+        {
+          "stat": "grating p32 gain",
+          "lightroom": 1.0,
+          "after": 1.0,
+          "afterError": 0.0,
+          "before": 1.0,
+          "beforeError": 0.0
+        },
+        {
+          "stat": "patch 64/64/64 luma6 chroma0 lumaStd",
+          "lightroom": 6.133,
+          "after": 6.074,
+          "afterError": -0.059,
+          "before": 6.074,
+          "beforeError": -0.059
+        },
+        {
+          "stat": "patch 128/128/128 luma6 chroma0 lumaStd",
+          "lightroom": 6.097,
+          "after": 6.046,
+          "afterError": -0.051,
+          "before": 6.046,
+          "beforeError": -0.051
+        },
+        {
+          "stat": "patch 192/192/192 luma6 chroma0 lumaStd",
+          "lightroom": 6.132,
+          "after": 6.078,
+          "afterError": -0.054,
+          "before": 6.078,
+          "beforeError": -0.054
+        },
+        {
+          "stat": "patch 128/128/128 luma12 chroma0 lumaStd",
+          "lightroom": 12.22,
+          "after": 12.188,
+          "afterError": -0.032,
+          "before": 12.188,
+          "beforeError": -0.032
+        },
+        {
+          "stat": "patch 128/128/128 luma0 chroma8 lumaStd",
+          "lightroom": 1.501,
+          "after": 1.692,
+          "afterError": 0.191,
+          "before": 1.991,
+          "beforeError": 0.49
+        },
+        {
+          "stat": "patch 128/128/128 luma0 chroma8 chromaStd",
+          "lightroom": 2.514,
+          "after": 2.547,
+          "afterError": 0.033,
+          "before": 0.371,
+          "beforeError": -2.143
+        },
+        {
+          "stat": "patch 96/128/160 luma6 chroma8 lumaStd",
+          "lightroom": 6.859,
+          "after": 6.243,
+          "afterError": -0.616,
+          "before": 6.863,
+          "beforeError": 0.004
+        },
+        {
+          "stat": "patch 96/128/160 luma6 chroma8 chromaStd",
+          "lightroom": 2.737,
+          "after": 2.681,
+          "afterError": -0.056,
+          "before": 1.385,
+          "beforeError": -1.352
+        },
+        {
+          "stat": "patch 170/120/90 luma6 chroma8 lumaStd",
+          "lightroom": 6.095,
+          "after": 6.048,
+          "afterError": -0.047,
+          "before": 6.416,
+          "beforeError": 0.321
+        },
+        {
+          "stat": "patch 170/120/90 luma6 chroma8 chromaStd",
+          "lightroom": 2.556,
+          "after": 2.676,
+          "afterError": 0.12,
+          "before": 1.681,
+          "beforeError": -0.875
+        },
+        {
+          "stat": "patch 80/140/80 luma0 chroma12 lumaStd",
+          "lightroom": 4.053,
+          "after": 4.29,
+          "afterError": 0.237,
+          "before": 6.632,
+          "beforeError": 2.579
+        },
+        {
+          "stat": "patch 80/140/80 luma0 chroma12 chromaStd",
+          "lightroom": 3.897,
+          "after": 3.974,
+          "afterError": 0.077,
+          "before": 1.668,
+          "beforeError": -2.229
+        },
+        {
+          "stat": "patch 200/160/120 luma12 chroma12 lumaStd",
+          "lightroom": 12.188,
+          "after": 12.119,
+          "afterError": -0.069,
+          "before": 12.645,
+          "beforeError": 0.457
+        },
+        {
+          "stat": "patch 200/160/120 luma12 chroma12 chromaStd",
+          "lightroom": 4.613,
+          "after": 4.038,
+          "afterError": -0.575,
+          "before": 2.83,
+          "beforeError": -1.783
+        }
+      ]
+    },
+    "combo": {
+      "settings": {
+        "Sharpness": "80",
+        "SharpenRadius": "+1.0",
+        "SharpenDetail": "25",
+        "SharpenEdgeMasking": "0",
+        "LuminanceSmoothing": "50",
+        "ColorNoiseReduction": "25",
+        "LuminanceNoiseReductionDetail": "50",
+        "LuminanceNoiseReductionContrast": "0",
+        "ColorNoiseReductionDetail": "50",
+        "ColorNoiseReductionSmoothness": "50"
+      },
+      "rows": [
+        {
+          "stat": "edge 64-192 rise10to90",
+          "lightroom": 0.62,
+          "after": 0.606,
+          "afterError": -0.014,
+          "before": 0.495,
+          "beforeError": -0.125
+        },
+        {
+          "stat": "edge 64-192 overshoot",
+          "lightroom": 30.553,
+          "after": 31.0,
+          "afterError": 0.447,
+          "before": 15.0,
+          "beforeError": -15.553
+        },
+        {
+          "stat": "edge 64-192 undershoot",
+          "lightroom": 6.688,
+          "after": 10.0,
+          "afterError": 3.312,
+          "before": 64.0,
+          "beforeError": 57.312
+        },
+        {
+          "stat": "edge 100-156 rise10to90",
+          "lightroom": 0.395,
+          "after": 0.404,
+          "afterError": 0.009,
+          "before": 0.553,
+          "beforeError": 0.158
+        },
+        {
+          "stat": "edge 100-156 overshoot",
+          "lightroom": 27.759,
+          "after": 25.0,
+          "afterError": -2.759,
+          "before": 8.0,
+          "beforeError": -19.759
+        },
+        {
+          "stat": "edge 100-156 undershoot",
+          "lightroom": 29.606,
+          "after": 30.0,
+          "afterError": 0.394,
+          "before": 17.0,
+          "beforeError": -12.606
+        },
+        {
+          "stat": "edge 120-136 rise10to90",
+          "lightroom": 0.648,
+          "after": 0.512,
+          "afterError": -0.136,
+          "before": 0.61,
+          "beforeError": -0.038
+        },
+        {
+          "stat": "edge 120-136 overshoot",
+          "lightroom": 2.271,
+          "after": 4.0,
+          "afterError": 1.729,
+          "before": 2.0,
+          "beforeError": -0.271
+        },
+        {
+          "stat": "edge 120-136 undershoot",
+          "lightroom": 1.476,
+          "after": 5.0,
+          "afterError": 3.524,
+          "before": 3.0,
+          "beforeError": 1.524
+        },
+        {
+          "stat": "grating p4 gain",
+          "lightroom": 1.4629,
+          "after": 1.5417,
+          "afterError": 0.079,
+          "before": 1.7083,
+          "beforeError": 0.245
+        },
+        {
+          "stat": "grating p8 gain",
+          "lightroom": 1.2908,
+          "after": 1.2083,
+          "afterError": -0.083,
+          "before": 1.1875,
+          "beforeError": -0.103
+        },
+        {
+          "stat": "grating p16 gain",
+          "lightroom": 1.0832,
+          "after": 1.0208,
+          "afterError": -0.062,
+          "before": 1.0521,
+          "beforeError": -0.031
+        },
+        {
+          "stat": "grating p32 gain",
+          "lightroom": 0.9915,
+          "after": 0.9375,
+          "afterError": -0.054,
+          "before": 1.0,
+          "beforeError": 0.008
+        },
+        {
+          "stat": "patch 64/64/64 luma6 chroma0 lumaStd",
+          "lightroom": 6.36,
+          "after": 6.388,
+          "afterError": 0.028,
+          "before": 9.652,
+          "beforeError": 3.292
+        },
+        {
+          "stat": "patch 128/128/128 luma6 chroma0 lumaStd",
+          "lightroom": 6.901,
+          "after": 6.909,
+          "afterError": 0.008,
+          "before": 8.957,
+          "beforeError": 2.056
+        },
+        {
+          "stat": "patch 192/192/192 luma6 chroma0 lumaStd",
+          "lightroom": 8.511,
+          "after": 6.937,
+          "afterError": -1.574,
+          "before": 8.381,
+          "beforeError": -0.13
+        },
+        {
+          "stat": "patch 128/128/128 luma12 chroma0 lumaStd",
+          "lightroom": 17.511,
+          "after": 17.044,
+          "afterError": -0.467,
+          "before": 19.562,
+          "beforeError": 2.051
+        },
+        {
+          "stat": "patch 128/128/128 luma0 chroma8 lumaStd",
+          "lightroom": 2.102,
+          "after": 2.064,
+          "afterError": -0.038,
+          "before": 1.825,
+          "beforeError": -0.277
+        },
+        {
+          "stat": "patch 128/128/128 luma0 chroma8 chromaStd",
+          "lightroom": 2.52,
+          "after": 2.55,
+          "afterError": 0.03,
+          "before": 1.091,
+          "beforeError": -1.429
+        },
+        {
+          "stat": "patch 96/128/160 luma6 chroma8 lumaStd",
+          "lightroom": 7.53,
+          "after": 7.208,
+          "afterError": -0.322,
+          "before": 9.373,
+          "beforeError": 1.843
+        },
+        {
+          "stat": "patch 96/128/160 luma6 chroma8 chromaStd",
+          "lightroom": 2.579,
+          "after": 3.094,
+          "afterError": 0.515,
+          "before": 1.533,
+          "beforeError": -1.046
+        },
+        {
+          "stat": "patch 170/120/90 luma6 chroma8 lumaStd",
+          "lightroom": 6.778,
+          "after": 7.097,
+          "afterError": 0.319,
+          "before": 9.158,
+          "beforeError": 2.38
+        },
+        {
+          "stat": "patch 170/120/90 luma6 chroma8 chromaStd",
+          "lightroom": 2.7,
+          "after": 3.17,
+          "afterError": 0.47,
+          "before": 1.244,
+          "beforeError": -1.456
+        },
+        {
+          "stat": "patch 80/140/80 luma0 chroma12 lumaStd",
+          "lightroom": 4.414,
+          "after": 5.108,
+          "afterError": 0.694,
+          "before": 5.775,
+          "beforeError": 1.361
+        },
+        {
+          "stat": "patch 80/140/80 luma0 chroma12 chromaStd",
+          "lightroom": 4.079,
+          "after": 4.402,
+          "afterError": 0.323,
+          "before": 3.529,
+          "beforeError": -0.55
+        },
+        {
+          "stat": "patch 200/160/120 luma12 chroma12 lumaStd",
+          "lightroom": 18.914,
+          "after": 18.061,
+          "afterError": -0.853,
+          "before": 19.116,
+          "beforeError": 0.202
+        },
+        {
+          "stat": "patch 200/160/120 luma12 chroma12 chromaStd",
+          "lightroom": 4.176,
+          "after": 4.89,
+          "afterError": 0.714,
+          "before": 2.037,
+          "beforeError": -2.139
+        }
+      ]
+    }
+  }
+}

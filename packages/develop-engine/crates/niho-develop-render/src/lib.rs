@@ -140,11 +140,11 @@ impl From<niho_develop::Error> for CliError {
         match e {
             niho_develop::Error::Decode(d) => d.into(),
             niho_develop::Error::Encode(m) => Self::new(ErrorCode::EncodeFailed, m),
-            // A shape (`masks`) this build saves but does not draw yet.
-            niho_develop::Error::MasksNotRendered => Self::new(
-                ErrorCode::UnsupportedSettings,
-                niho_develop::MASKS_NOT_RENDERED,
-            ),
+            // A `brush` / `subject` / `sky` mask: this build has no surface
+            // store (M4, #68), so it cannot draw these settings.
+            e @ niho_develop::Error::MaskSurfaceMissing(_) => {
+                Self::new(ErrorCode::UnsupportedSettings, e.to_string())
+            }
             other => Self::new(ErrorCode::InvalidSettings, other.to_string()),
         }
     }
