@@ -22,7 +22,7 @@ import {
 import { smokeConsumer } from "./smoke-consumer.mjs";
 import { rewriteVersionedRuntimeReferences, runtimeBuildEnvironment, versionedRuntimeFileName } from "./build-develop-engine-runtime.mjs";
 import { normalizeArtifactDigest, verifyReleaseArtifact } from "./verify-release-artifact.mjs";
-import { nativeBuildEnvironment, validateNativeSourceClosure } from "../../packages/develop-engine/build-macos-native.mjs";
+import { nativeBuildEnvironment, swiftSourcePrefixArguments, validateNativeSourceClosure } from "../../packages/develop-engine/build-macos-native.mjs";
 
 const realRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 const temporary = [];
@@ -342,4 +342,18 @@ test("SDK ownershipはgeneratorとguardの相対import closureを含む", () => 
     for (const { fileName } of imports) if (fileName.startsWith(".")) visit(path.posix.normalize(path.posix.join(path.posix.dirname(file), fileName)));
   }
   visit("scripts/sdk/release-set-lib.mjs");
+});
+
+test("nativeのRust/Swift prefix mapは別名pathと実pathを両方扱う", () => {
+  const isolated = temp("native-prefix-real-");
+  const alias = path.join(temp("native-prefix-alias-"), "engine");
+  symlinkSync(path.join(realRoot, "packages/develop-engine"), alias, "dir");
+  const env = nativeBuildEnvironment({ PATH: "/usr/bin", HOME: "/build-user" }, { engineRoot: alias, isolatedRoot: isolated });
+  assert.ok(env.CARGO_ENCODED_RUSTFLAGS.includes(`${alias}=engine-source`));
+  assert.ok(env.CARGO_ENCODED_RUSTFLAGS.includes(`${path.join(realRoot, "packages/develop-engine")}=engine-source`));
+  const args = swiftSourcePrefixArguments(alias, isolated);
+  assert.ok(args.includes("-file-prefix-map"));
+  assert.ok(args.includes("-debug-prefix-map"));
+  assert.ok(args.includes(`${alias}=engine-source`));
+  assert.ok(args.includes(`${path.join(realRoot, "packages/develop-engine")}=engine-source`));
 });

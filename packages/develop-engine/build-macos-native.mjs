@@ -67,6 +67,7 @@ export function nativeBuildEnvironment(input, { engineRoot, isolatedRoot }) {
     [cargoHome, "cargo-registry"],
   ]
     .filter(([from]) => from)
+    .flatMap(([from, to]) => [...new Set([from, ...(existsSync(from) ? [realpathSync(from)] : [])])].map((prefix) => [prefix, to]))
     .sort(([left], [right]) => right.length - left.length)
     .map(([from, to]) => `--remap-path-prefix=${from}=${to}`);
   return {
@@ -189,9 +190,16 @@ function copyCalibration(engineRoot, lock, outputDirectory) {
   return records;
 }
 
+export function swiftSourcePrefixArguments(engineRoot, isolatedRoot) {
+  const mappings = [[engineRoot, "engine-source"], [isolatedRoot, "build-temp"]].flatMap(([from, to]) => [...new Set([from, ...(existsSync(from) ? [realpathSync(from)] : [])])].map((prefix) => `${prefix}=${to}`));
+  return mappings.flatMap((mapping) => ["-Xswiftc", "-file-prefix-map", "-Xswiftc", mapping, "-Xswiftc", "-debug-prefix-map", "-Xswiftc", mapping]);
+}
+
 function swiftBinary({ packagePath, name, scratch, env }) {
-  run("swift", ["build", "-c", "release", "--package-path", packagePath, "--scratch-path", scratch], { env, stdio: "inherit" });
-  const bin = run("swift", ["build", "-c", "release", "--package-path", packagePath, "--scratch-path", scratch, "--show-bin-path"], { env });
+  const prefixArguments = swiftSourcePrefixArguments(path.resolve(packagePath, "../.."), path.dirname(scratch));
+  const args = ["build", "-c", "release", "--package-path", packagePath, "--scratch-path", scratch, ...prefixArguments];
+  run("swift", args, { env, cwd: packagePath, stdio: "inherit" });
+  const bin = run("swift", [...args, "--show-bin-path"], { env, cwd: packagePath });
   return path.join(bin, name);
 }
 

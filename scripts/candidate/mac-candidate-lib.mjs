@@ -2,6 +2,8 @@ import { createHash } from "node:crypto";
 import { spawnSync } from "node:child_process";
 import {
   cpSync,
+  existsSync,
+  realpathSync,
   lstatSync,
   mkdirSync,
   mkdtempSync,
@@ -260,6 +262,7 @@ export function officialBuildEnvironment(input, { workspace, isolatedRoot, publi
   if (!path.isAbsolute(rustupHome ?? "")) throw new CandidateError("Rust toolchainの保存先は絶対pathが必要です");
   const remap = [[workspace, "app-source"], [isolatedRoot, "build-temp"], [rustupHome, "rust-toolchain"], [input.HOME, "build-user"]]
     .filter(([from]) => from)
+    .flatMap(([from, to]) => [...new Set([from, ...(existsSync(from) ? [realpathSync(from)] : [])])].map((prefix) => [prefix, to]))
     .sort(([left], [right]) => right.length - left.length)
     .map(([from, to]) => `--remap-path-prefix=${from}=${to}`);
   const home = path.join(isolatedRoot, "home"), cargoHome = path.join(isolatedRoot, "cargo-home"), temporary = path.join(isolatedRoot, "tmp");
@@ -287,12 +290,12 @@ export function officialBuildEnvironment(input, { workspace, isolatedRoot, publi
   };
 }
 
-export function assertCandidatePublicBytes(bytes, allowedPublicFirebaseKey) {
+export function assertCandidatePublicBytes(bytes, allowedPublicFirebaseKey, artifactPath = "candidate bytes") {
   let text = bytes.toString("utf8");
   const apiKeys = text.match(/AIza[A-Za-z0-9_-]{30,}/gu) ?? [];
   if (apiKeys.some((value) => value !== allowedPublicFirebaseKey)) throw new CandidateError("candidateに許可されていないAPI keyがあります（値は非表示）");
   if (allowedPublicFirebaseKey) text = text.replaceAll(allowedPublicFirebaseKey, "P".repeat(allowedPublicFirebaseKey.length));
-  assertPublicBytes(Buffer.from(text));
+  try { assertPublicBytes(Buffer.from(text)); } catch (error) { throw new CandidateError(`${artifactPath}: ${error.message}`); }
 }
 
 export function inventoryTree(root, { allowedPublicFirebaseKey } = {}) {
@@ -308,7 +311,7 @@ export function inventoryTree(root, { allowedPublicFirebaseKey } = {}) {
       if (stat.isDirectory()) visit(full, relative);
       else {
         const bytes = readFileSync(full);
-        assertCandidatePublicBytes(bytes, allowedPublicFirebaseKey);
+        assertCandidatePublicBytes(bytes, allowedPublicFirebaseKey, relative);
         files.push({ path: relative, sha256: sha256(bytes), bytes: bytes.length, executable: Boolean(stat.mode & 0o111) });
       }
     }

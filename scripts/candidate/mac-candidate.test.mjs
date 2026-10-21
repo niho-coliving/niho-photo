@@ -430,3 +430,8 @@ test("Tauriのgen/schemasは生成物とし、それ以外のsource追加・変�
   put(workspace, "apps/camera/src/unexpected.ts", "unexpected source\n");
   assert.throws(() => assertExpectedWorkspaceChanges(before, sourceSnapshot(workspace)), /unexpected\.ts/u);
 });
+
+test("公開byte検査の診断は対象fileと種別だけを表示し検出値を出さない", () => {
+  const privateValue = ["", "private", "test-build-root", "src.rs"].join("/");
+  assert.throws(() => assertCandidatePublicBytes(Buffer.from(`\0${privateValue}`), undefined, "Contents/MacOS/tool"), (error) => error.message.includes("Contents/MacOS/tool") && error.message.includes("absolute-path") && !error.message.includes(privateValue));
+});
