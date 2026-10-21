@@ -9703,13 +9703,13 @@
     },
     {
       "path": "docs/detail-processing.md",
-      "sha256": "80903d942131b6105da874e1fda0903e5e20515f9a858b702480a54ae73b5d54",
-      "origin": "Issue #32でNIHOが独立作成したdetail処理・保存契約・合成検証または設計文書。実写真・第三者コードは含まない。\n変更理由: owner判断2026-10-21: RAWでも群を出し、作業コピーのdrag中の送り方と1280px確定描画の実測を記録する\n変更理由: Issue #32 detail uses v6 because Issue #31 masks already owns v5; synchronize the Rust and TypeScript contract, probe, tests, and documentation.\n変更理由: Issue #32 detail v6 を、先行する masks v5 と #72 の histogram/Jキー契約に同期する。"
+      "sha256": "0280dc5e7b1d954d69ff4245bb1303bd270f81c56297a5e8144f7f3978b2a208",
+      "origin": "Issue #32でNIHOが独立作成したdetail処理・保存契約・合成検証または設計文書。実写真・第三者コードは含まない。\n変更理由: owner判断2026-10-21: RAWでも群を出し、作業コピーのdrag中の送り方と1280px確定描画の実測を記録する\n変更理由: Issue #32 detail uses v6 because Issue #31 masks already owns v5; synchronize the Rust and TypeScript contract, probe, tests, and documentation.\n変更理由: Issue #32 detail v6 を、先行する masks v5 と #72 の histogram/Jキー契約に同期する。\n変更理由: #32 の Lightroom 校正（round 32）の方法・写し方・誤差表・残る差と性能の再計測を記録"
     },
     {
       "path": "packages/develop-engine/crates/niho-develop/src/detail.rs",
-      "sha256": "cd006723378217b5e56ef13c2184604d7a67f50c978a878098211622e82b6033",
-      "origin": "Issue #32でNIHOが独立作成したdetail処理・保存契約・合成検証または設計文書。実写真・第三者コードは含まない。\n変更理由: Issue #32 detail uses v6 because Issue #31 masks already owns v5; synchronize the Rust and TypeScript contract, probe, tests, and documentation.\n変更理由: Issue #32 detail v6 を、先行する masks v5 と #72 の histogram/Jキー契約に同期する。"
+      "sha256": "d68787bb652e21261446f535cdf099b21c30c3d138ec954b5f22352a2dcbf8e0",
+      "origin": "Issue #32でNIHOが独立作成したdetail処理・保存契約・合成検証または設計文書。実写真・第三者コードは含まない。\n変更理由: Issue #32 detail uses v6 because Issue #31 masks already owns v5; synchronize the Rust and TypeScript contract, probe, tests, and documentation.\n変更理由: Issue #32 detail v6 を、先行する masks v5 と #72 の histogram/Jキー契約に同期する。\n変更理由: #32 の Lightroom 校正（round 32）: シャープを線形光の USM と明暗別のハロー制限・マスクの勾配エネルギーに、輝度 NR を √輝度の edge-avoiding à-trous に、raster のカラー NR を輝度を保つ色比のぼかしに作り直し、係数を Lightroom の統計に当てた"
     },
     {
       "path": "packages/develop-engine/crates/niho-develop/tests/detail_cross_target.rs",
@@ -9760,6 +9760,41 @@
       "path": "packages/photo-editing/src/develop-engine/develop-detail-preview.test.ts",
       "sha256": "112b2dce9b4bd16094bf8c27dbe07e5933721bb60a9d7a1178d26ad58848b8d9",
       "origin": "Issue #32 owner判断2026-10-21でNIHOが独立作成した、プレビューへの送り方の回帰。合成の設定だけを使う。\n変更理由: Issue #32 detail uses v6 because Issue #31 masks already owns v5; synchronize the Rust and TypeScript contract, probe, tests, and documentation.\n変更理由: Issue #32 detail v6 を、先行する masks v5 と #72 の histogram/Jキー契約に同期する。"
+    },
+    {
+      "path": "packages/develop-engine/crates/niho-develop/examples/round32_settings.rs",
+      "sha256": "a8bcbff7786357c689762410b96925068796de780aff7e9400abaff47cb76b43",
+      "origin": "Issue #32でNIHOが独立作成。round32の合成チャートの各variantのXMPを製品のXMPプリセット変換でdevelopSettingsにするexample。実写真を含まない。"
+    },
+    {
+      "path": "packages/develop-engine/crates/niho-develop/tests/detail_round32.rs",
+      "sha256": "334fbcf9d1a54ec2c7d74a749a7c98f132785f0fa998e686787896ddef990779",
+      "origin": "Issue #32でNIHOが独立作成した公開CIテスト。合成チャートをseed固定で生成し、Lightroomの統計（fixtureの数値）に対するv5 detailの許容幅と向きを確かめる。実写真・書き出し画像を含まない。"
+    },
+    {
+      "path": "packages/develop-engine/fixtures/color/review-2026-10-21/detail-round32-lightroom.json",
+      "sha256": "c3c578d889c350f9827deba20fab83e4ea3afc4424ecdc9f297ccc37dc8cf36f",
+      "origin": "2026-10-21のStudio実測。NIHOが独立作成した合成チャート（make_lr_round32.py）をLightroomで書き出した画像の統計値だけを記録。書き出し画像・実写真・非公開pathを含まない。"
+    },
+    {
+      "path": "packages/develop-engine/fixtures/color/review-2026-10-21/detail-round32-niho.json",
+      "sha256": "5b6402bb1bda9840575d14296ea4f9bb7063fcef05a8ed092d6239523b9233a2",
+      "origin": "2026-10-21のStudio実測。同じ合成チャートをNIHOのnative CLIで描いた校正前後の統計値と校正係数だけを記録。実写真・参照画素を含まない。"
+    },
+    {
+      "path": "packages/develop-engine/fixtures/color/review-2026-10-21/detail-round32-errors.json",
+      "sha256": "cfe53f9a976fb27ae04ca288e7d0a96cda830de497fd35ee9092e6b8a90a6db3",
+      "origin": "2026-10-21のStudio実測。Lightroomと校正前後のNIHOの統計の誤差表・スライダーごとの向きの検査結果（数値のみ）。実写真・参照画素を含まない。"
+    },
+    {
+      "path": "packages/develop-engine/tools/calibrate/make_lr_round32.py",
+      "sha256": "405d17760a79deb21154ab828148257eddba2dc5968c5a5765f4116c3dae79fb",
+      "origin": "Issue #32でNIHOが独立作成した合成チャート（段差・正弦格子・seed固定ノイズ）とXMP付きJPEGの生成。実写真を含まない。"
+    },
+    {
+      "path": "packages/develop-engine/tools/calibrate/round32_stats.py",
+      "sha256": "45b917c6b8177c2553ef3e66b1e55d44ecc41ac7e83f0a8eb2516f43737aadad",
+      "origin": "Issue #32でNIHOが独立作成した合成チャートの統計（段差・格子・平坦部）と誤差表・向きの計算。実写真を含まない。"
     }
   ],
   "excludedSources": [
