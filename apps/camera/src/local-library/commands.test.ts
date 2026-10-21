@@ -20,6 +20,15 @@ function recording(answer: (call: Call) => unknown) {
 }
 
 describe("createCameraCommands", () => {
+  it("reads an open photo's info with camera_photo_info and unwraps `info` (niho-photo#43)", async () => {
+    const info = { camera: { make: "NIHO", model: "Test" }, iso: 400, gps: null };
+    const { calls, commands } = recording(() => ({ info }));
+    await expect(commands.photoInfo("photo-1")).resolves.toEqual(info);
+    expect(calls).toEqual([{ command: "camera_photo_info", args: { request: { photoId: "photo-1" } } }]);
+    const failing = recording(() => ({ reject: { code: "notFound", message: "写真が見つかりません。" } }));
+    await expect(failing.commands.photoInfo("photo-1")).rejects.toMatchObject({ code: "notFound" });
+  });
+
   it("wraps arguments in `request` with camelCase names and unwraps the answers", async () => {
     const folder = { folderId: "folder-1", name: "DCIM", children: [], photos: [], truncated: false };
     const { calls, commands } = recording(({ command }) => {

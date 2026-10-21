@@ -11,6 +11,7 @@
  * - オリジナル（JPEG・小さな PNG）は native の現像の入力（`raster` の token）から読む。RAW・HEIC / HEIF・TIFF・大きな PNG と
  *   作業コピーで直す JPEG は、native の sidecar が作る作業コピー（`ensureWorkingCopy` → `loadWorkingCopy`）
  * - 「オリジナル」の書き出しは native がファイルを写す（バイト列を画面へ運ばない。{@link takeNativeSaveResult}）
+ * - 写真の情報（`info`。右パネルの「情報」）は、native が開いた写真のファイルの EXIF などを ImageIO で都度読む（覚えない）
  * - 消さない（`delete` は何もしない。編集面は置き場が local のとき消す道具を出さない）
  */
 import { BrowserPhotoSourceError } from "niho-photo-editing/browser-photo-source";
@@ -31,6 +32,7 @@ import type {
   PhotoLibraryListPage,
   PhotoLibraryListQuery,
   PhotoLibraryPhoto,
+  PhotoLibraryPhotoInfo,
   PhotoLibraryInteractivePreview,
   PhotoLibraryProvisionalDraft,
   PhotoLibraryWorkingCopy,
@@ -98,6 +100,7 @@ export const LOCAL_CLOSED_CAPABILITIES: PhotoLibraryCapabilities = Object.freeze
   addFiles: false,
   addFromDevice: false,
   addFromDeviceFolder: false,
+  info: false,
 });
 
 /** 現像（同梱の sidecar）が使えるかでの、この Mac のできること。 */
@@ -114,6 +117,8 @@ export function localCapabilities(
     exportFolder: status.available,
     cutout: cutoutAvailable,
     multiSelect: true,
+    // 写真の情報は native が ImageIO で読む（同梱の sidecar に依らない）
+    info: true,
   };
 }
 
@@ -337,6 +342,37 @@ function writeProvisionalDraft(contentSha256: string, settings: DevelopSettings,
     throw new CameraCommandError("internal", "未保存の補正をこの端末に退避できません。");
   }
   return draft;
+}
+
+function finiteOrNull(value: unknown): number | null {
+  return typeof value === "number" && Number.isFinite(value) ? value : null;
+}
+
+function textOrNull(value: unknown): string | null {
+  return typeof value === "string" && value.trim() ? value : null;
+}
+
+/** native の写真の情報（`camera_photo_info`）を接続口の形にする（形の違う値は読めなかった項目として null）。 */
+function toPhotoInfo(value: unknown): PhotoLibraryPhotoInfo {
+  const info = (typeof value === "object" && value !== null ? value : {}) as Record<string, unknown>;
+  const camera = (typeof info.camera === "object" && info.camera !== null ? info.camera : {}) as Record<string, unknown>;
+  const gps = (typeof info.gps === "object" && info.gps !== null ? info.gps : {}) as Record<string, unknown>;
+  const make = textOrNull(camera.make);
+  const model = textOrNull(camera.model);
+  const latitude = finiteOrNull(gps.latitude);
+  const longitude = finiteOrNull(gps.longitude);
+  return {
+    camera: make || model ? { make, model } : null,
+    lens: textOrNull(info.lens),
+    iso: finiteOrNull(info.iso),
+    exposureTimeSeconds: finiteOrNull(info.exposureTimeSeconds),
+    fNumber: finiteOrNull(info.fNumber),
+    focalLengthMm: finiteOrNull(info.focalLengthMm),
+    capturedAt: textOrNull(info.capturedAt),
+    width: finiteOrNull(info.width),
+    height: finiteOrNull(info.height),
+    gps: latitude !== null && longitude !== null ? { latitude, longitude } : null,
+  };
 }
 
 /** 作業コピーの中身（RAW は 16bit PNG、ラスタは ICC 付きの 8bit JPEG）。先頭のバイトで見分ける。 */
@@ -718,6 +754,18 @@ export function createLocalPhotoLibrary(commands: CameraCommands, options: Local
     async get(photoId) {
       try {
         return openedRow(photoId, await reopen(photoId));
+      } catch (error) {
+        if (isCode(error, "notFound", "invalidRequest")) return null;
+        throw error;
+      }
+    },
+
+    async info(photoId, requestOptions) {
+      // 開いている写真のファイルを native が都度読む（覚えない）。native が写真を手放していたら開き直して 1 回だけやり直す
+      try {
+        const info = await withHandle(photoId, (handle) => commands.photoInfo(handle.nativeId));
+        throwIfAborted(requestOptions?.signal);
+        return toPhotoInfo(info);
       } catch (error) {
         if (isCode(error, "notFound", "invalidRequest")) return null;
         throw error;

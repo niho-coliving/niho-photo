@@ -16,6 +16,30 @@ export const PHOTO_EDITING_RESET_UNDO_LABEL = "元に戻す";
 export const PHOTO_EDITING_RESET_WHITE_BALANCE_LABEL = "撮影時に戻す";
 /** 押している間だけ補正を外して見せる（写真の左上の札も同じ文言）。 */
 export const PHOTO_EDITING_COMPARE_ORIGINAL_LABEL = "補正前";
+/**
+ * 補正前と補正後を並べて見比べる（niho-photo#41）。PC の下段の「比較」はメニュー（並べる・分割・比較しない。キーは Y / ⇧Y）、
+ * スマホの 1 枚の編集の層は上下に並べる切り替え。並べている間の補正後の側の札は「補正後」。
+ */
+export const PHOTO_EDITING_COMPARE_VIEW_LABEL = "比較";
+export const PHOTO_EDITING_COMPARE_VIEW_TITLE = "比較（Y：並べる / ⇧Y：分割）";
+export const PHOTO_EDITING_COMPARE_SIDE_LABEL = "並べる（左右）";
+export const PHOTO_EDITING_COMPARE_SPLIT_LABEL = "分割";
+export const PHOTO_EDITING_COMPARE_OFF_LABEL = "比較しない";
+export const PHOTO_EDITING_COMPARE_AFTER_LABEL = "補正後";
+/** スマホの 1 枚の編集の層の切り替え（押した状態は `aria-pressed` で読まれる）。 */
+export const PHOTO_EDITING_COMPARE_STACKED_LABEL = "補正前と補正後を上下に並べる";
+/** 分割の境界（つまみ。`role="slider"`）の読み上げ名。 */
+export const PHOTO_EDITING_COMPARE_SPLIT_HANDLE_LABEL = "補正前と補正後の境界";
+/** 「比較」のボタンの読み上げ名（今の見せ方を含める。例「比較：分割」）。 */
+export function photoEditingCompareViewButtonLabel(mode: "off" | "side" | "split"): string {
+  if (mode === "side") return `${PHOTO_EDITING_COMPARE_VIEW_LABEL}：${PHOTO_EDITING_COMPARE_SIDE_LABEL}`;
+  if (mode === "split") return `${PHOTO_EDITING_COMPARE_VIEW_LABEL}：${PHOTO_EDITING_COMPARE_SPLIT_LABEL}`;
+  return PHOTO_EDITING_COMPARE_VIEW_LABEL;
+}
+/** 分割の境界の位置の読み上げ（写真の幅に対する左からの %。境界の左が補正前）。 */
+export function photoEditingCompareSplitValueText(percent: number): string {
+  return `左から${Math.round(percent)}%（左が補正前）`;
+}
 /** 失敗した操作をその場でやり直す。 */
 export const PHOTO_EDITING_RETRY_LABEL = "再試行";
 
@@ -394,6 +418,30 @@ export const PHOTO_EDITING_TOOL_CUTOUT_LABEL = "背景除去";
  * 道具の名前は プリセット（`PHOTO_EDITING_PRESETS_TITLE`）と上の 補正 / 切り抜き / 背景除去。
  */
 export const PHOTO_EDITING_TOOL_RAIL_LABEL = "道具";
+/**
+ * 右パネルの「情報」（niho-photo#43。Lightroom の「情報」）。右端の帯の下端の道具の名前と面の見出し行の名前、群の見出し、
+ * 各行のラベル（値と並べて「ISO 400」のように読み上げる）。値の整形は `photo-editing-info.ts`。
+ */
+export const PHOTO_EDITING_TOOL_INFO_LABEL = "情報";
+export const PHOTO_EDITING_INFO_GROUP_TITLES = {
+  exposure: "撮影条件",
+  camera: "カメラ・レンズ",
+  file: "ファイル",
+} as const;
+export const PHOTO_EDITING_INFO_ROW_LABELS = {
+  iso: "ISO",
+  shutter: "シャッター速度",
+  aperture: "絞り",
+  focalLength: "焦点距離",
+  camera: "カメラ",
+  lens: "レンズ",
+  fileName: "ファイル名",
+  format: "形式",
+  dimensions: "大きさ",
+  fileSize: "ファイルの大きさ",
+  capturedAt: "撮影日時",
+  location: "場所",
+} as const;
 
 /**
  * 背景除去の道具（NIHO camera だけ。`capabilities.cutout`。C4 移行元設計）。推論はこの Mac の中（Apple Vision）。

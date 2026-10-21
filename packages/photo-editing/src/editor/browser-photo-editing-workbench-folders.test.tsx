@@ -111,6 +111,8 @@ type FakeLibraryOptions = {
   /** 指定したときだけ「選んだ写真」を扱えるローカルライブラリにする。 */
   selected?: PhotoLibraryItem[];
   selectedAdded?: PhotoLibraryItem[];
+  /** 指定したときだけ写真の情報を読める（`capabilities.info`。niho-photo#43） */
+  info?: NonNullable<PhotoLibrary["info"]>;
 };
 
 function fakeLibrary(options: FakeLibraryOptions = {}) {
@@ -138,7 +140,10 @@ function fakeLibrary(options: FakeLibraryOptions = {}) {
       state.tree = state.tree.filter((candidate) => candidate.folderId !== folderId);
     }),
   };
-  const capabilities = place === "cloud" ? CLOUD_CAPABILITIES : LOCAL_CAPABILITIES;
+  const capabilities = {
+    ...(place === "cloud" ? CLOUD_CAPABILITIES : LOCAL_CAPABILITIES),
+    ...(options.info ? { info: true } : {}),
+  };
   const deletePhotos = vi.fn(async () => ({ deleted: [], errors: [] }));
   const selectedPhotos = {
     count: vi.fn(async () => state.selected.length),
@@ -176,6 +181,7 @@ function fakeLibrary(options: FakeLibraryOptions = {}) {
     lookup: vi.fn(async () => []),
     delete: deletePhotos,
     presets: { nameMaxChars: 100, list: vi.fn(async () => []) },
+    ...(options.info ? { info: options.info } : {}),
     ...(place === "local" ? { folders } : {}),
     ...(place === "local" && (options.selected !== undefined || options.selectedAdded !== undefined) ? { selectedPhotos } : {}),
   } as unknown as PhotoLibrary;
@@ -740,10 +746,11 @@ describe("右端の道具の帯（niho-photo#51）", () => {
     expect(rail.className).toContain("lg:row-span-2");
     expect(rail.previousElementSibling?.className).toContain("lg:row-span-2");
     expect(container.querySelector("footer")?.className).toContain("lg:col-start-2");
-    // 切り抜き・背景除去を使えない写真は、プリセットと補正だけ
+    // 切り抜き・背景除去を使えない写真は、プリセット・補正・情報を表示する（niho-photo#43）
     expect(Array.from(rail.querySelectorAll("button")).map((button) => button.getAttribute("aria-label"))).toEqual([
       "プリセット",
       "補正",
+      "情報",
     ]);
     const panelHeading = () => container.querySelector('aside[aria-label="補正"] h2')?.textContent;
     expect(panelHeading()).toBe("補正");
@@ -766,6 +773,70 @@ describe("右端の道具の帯（niho-photo#51）", () => {
     // プリセットの行の一覧のボタンからも、プリセットの面を開く
     await click(byLabel("プリセットの一覧"));
     expect(panelHeading()).toBe("プリセット");
+  });
+
+  it("「情報」は帯の下端。押すと右パネルが情報の面になり、もう一度押すと補正の面へ戻る（niho-photo#43）", async () => {
+    mocks.createEngine.mockImplementation(() => ({
+      ready: vi.fn(() => new Promise<boolean>(() => undefined)),
+      dispose: vi.fn(),
+      close: vi.fn(async () => undefined),
+    }));
+    const info = vi.fn(async () => ({
+      camera: { make: "SONY", model: "ILCE-7M4" },
+      iso: 400,
+      exposureTimeSeconds: 1 / 250,
+      width: 6000,
+      height: 4000,
+    }));
+    const fake = fakeLibrary({ tree: [TRAVEL], photos: { f1: [photo("p1", "IMG_0001.JPG")] }, info });
+    await render(fake.library);
+    // 1 枚も開いていない（一覧の）間は、帯も「情報」も出さない
+    expect(byLabel("情報")).toBeNull();
+    const target = tile("IMG_0001.JPG");
+    if (!target) throw new Error("tile not found");
+    await act(async () => {
+      target.dispatchEvent(new MouseEvent("dblclick", { bubbles: true, cancelable: true }));
+    });
+    await settle();
+
+    const rail = container.querySelector<HTMLElement>('nav[aria-label="道具"]');
+    if (!rail) throw new Error("tool rail not found");
+    const infoButton = byLabel("情報", rail);
+    expect(infoButton?.className).toContain("mt-auto");
+    expect(infoButton?.getAttribute("aria-pressed")).toBe("false");
+    // 面を開くまでは読まない
+    expect(info).not.toHaveBeenCalled();
+
+    await click(infoButton);
+    const infoPanel = container.querySelector<HTMLElement>('aside[aria-label="情報"]');
+    if (!infoPanel) throw new Error("info panel not found");
+    expect(infoPanel.querySelector("h2")?.textContent).toBe("情報");
+    expect(byLabel("情報", rail)?.getAttribute("aria-pressed")).toBe("true");
+    expect(byLabel("補正", rail)?.getAttribute("aria-pressed")).toBe("false");
+    expect(info).toHaveBeenCalledWith("p1", expect.objectContaining({ signal: expect.any(AbortSignal) }));
+    const rows = Array.from(infoPanel.querySelectorAll("dl > div")).map(
+      (row) => `${row.querySelector("dt")?.textContent} ${row.querySelector("dd")?.textContent?.replaceAll("\u00a0", " ")}`,
+    );
+    expect(rows).toEqual([
+      "ISO 400",
+      "シャッター速度 1/250 秒",
+      "カメラ SONY ILCE-7M4",
+      "ファイル名 IMG_0001.JPG",
+      "形式 JPEG",
+      "大きさ 6000 × 4000（24 MP）",
+      "ファイルの大きさ 1 KB",
+      "撮影日時 2026年10月1日 9:00:00",
+    ]);
+    // 情報の面には ↶ ↷ を出さず、補正の群も出さない
+    expect(byLabel("取り消す", infoPanel)).toBeNull();
+    expect(infoPanel.querySelector('input[type="range"]')).toBeNull();
+
+    // もう一度押すと補正の面へ戻る
+    await click(byLabel("情報", rail));
+    expect(container.querySelector('aside[aria-label="情報"]')).toBeNull();
+    expect(container.querySelector('aside[aria-label="補正"] h2')?.textContent).toBe("補正");
+    expect(byLabel("補正", rail)?.getAttribute("aria-pressed")).toBe("true");
+    expect(byLabel("情報", rail)?.getAttribute("aria-pressed")).toBe("false");
   });
 });
 

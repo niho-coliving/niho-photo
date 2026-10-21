@@ -19,6 +19,7 @@ import {
   Grid2x2,
   Pipette,
   Redo2,
+  Rows2,
   SquareSplitHorizontal,
   Sparkles,
   Sun,
@@ -42,6 +43,7 @@ import {
 import {
   BROWSER_PHOTO_EDITING_READ_ONLY_TEXT,
   PHOTO_EDITING_COMPARE_ORIGINAL_LABEL,
+  PHOTO_EDITING_COMPARE_STACKED_LABEL,
   PHOTO_EDITING_EXPORT_LABEL,
   PHOTO_EDITING_MOBILE_BACK_LABEL,
   PHOTO_EDITING_MOBILE_EDITOR_LABEL,
@@ -95,6 +97,7 @@ import { usePhotoEditingZoom } from "./use-photo-editing-zoom";
  *   開閉」「写真の拡大」だけ。
  * - 写真の面の指の操作（長押しで補正前・ピンチ / ダブルタップで拡大・拡大中のドラッグで送る）は `usePhotoEditingZoom`。
  *   拡大はジェスチャだけで、ボタンは置かない。「補正前」の札・直せない理由・「もう一度読み込む」は拡大しない。
+ * - 写真の面の右上の切り替えで、補正前（上）と補正後（下）を上下に並べる（niho-photo#41。拡大と送りは両方の画に同じだけ当たる）。
  * - 端末の「戻る」は一覧へ（`usePhotoEditingLayerHistory`）。書き出すのシートが開いていれば、まずシートを閉じる。
  * - 層は host の shell（`[data-niho-host-shell]`。無ければ `document.body`）に出す（host のヘッダー・サブタブより上。shell の中に
  *   出すのは、host のテーマの色の変数を層にも効かせるため。面の section の外なので、面の `inert` はかからない）。z-index は Dialog と同じ帯（150）で、
@@ -174,6 +177,11 @@ export function BrowserPhotoEditingMobileEditor(props: {
   canEdit: boolean;
   /** 「補正前」を出す（補正の入力を開けていて、直せる） */
   canCompare: boolean;
+  /**
+   * 補正前と補正後を上下に並べる切り替え（niho-photo#41）。写真の面の右上に置く（上の帯は ♥ が縮んで受ける幅しか無いので足さない）。
+   * 並べている間は「補正前」（ボタン・長押し）を使わない。渡さない間（切り抜きの道具の間など）は出さない
+   */
+  compareView?: { active: boolean; onToggle: () => void } | null;
   /** 目盛り・チップ・取り消し・「初期化」・「補正前」を押せない（PC の右パネルと同じ条件） */
   controlsDisabled: boolean;
   /** 何か当てている（「初期化」を出す） */
@@ -346,14 +354,16 @@ export function BrowserPhotoEditingMobileEditor(props: {
     else props.onBack();
   });
 
-  // 「補正前」: 押している間だけ（ボタンが正。写真の面の長押しは近道）
+  // 「補正前」: 押している間だけ（ボタンが正。写真の面の長押しは近道）。上下に並べている間（niho-photo#41）は使わない
   const setCompareOriginal = props.onCompareOriginalChange;
+  const compareView = props.compareView ?? null;
+  const comparing = compareView?.active === true;
   const compareEnabled = props.canCompare && !props.controlsDisabled;
   // 写真の面の指の操作（長押しで補正前・ピンチ / ダブルタップで拡大・拡大中のドラッグで送る）
   const zoom = usePhotoEditingZoom({
     photoKey,
     enabled: !cropCurrent && props.colorPicking !== true,
-    holdEnabled: compareEnabled,
+    holdEnabled: compareEnabled && !comparing,
     onHoldChange: setCompareOriginal,
   });
 
@@ -448,7 +458,7 @@ export function BrowserPhotoEditingMobileEditor(props: {
             // 幅 360px 未満はアイコンだけ（読み上げは同じ「補正前」）
             aria-label={PHOTO_EDITING_COMPARE_ORIGINAL_LABEL}
             aria-pressed={props.compareOriginal}
-            disabled={props.controlsDisabled}
+            disabled={props.controlsDisabled || comparing}
             onPointerDown={(event) => {
               event.currentTarget.setPointerCapture?.(event.pointerId);
               setCompareOriginal(true);
@@ -507,6 +517,23 @@ export function BrowserPhotoEditingMobileEditor(props: {
         className="relative min-h-0 flex-1 touch-none select-none overflow-hidden [-webkit-touch-callout:none]"
       >
         <div className="absolute inset-2.5">{props.photo}</div>
+        {compareView ? (
+          // 補正前と補正後を上下に並べる（niho-photo#41）。拡大しない・写真の面の指の操作には渡さない（ボタンの上は扱わない）
+          <button
+            type="button"
+            aria-label={PHOTO_EDITING_COMPARE_STACKED_LABEL}
+            aria-pressed={comparing}
+            disabled={props.controlsDisabled}
+            onClick={compareView.onToggle}
+            className={cn(
+              ICON_BUTTON_CLASS_NAME,
+              "absolute right-3.5 top-3.5 z-10 bg-white/95 shadow-sm",
+              "aria-pressed:bg-niho-text aria-pressed:text-niho-surface",
+            )}
+          >
+            <Rows2 className="h-5 w-5" aria-hidden />
+          </button>
+        ) : null}
       </div>
 
       {/* 状態の 1 行（道具の帯のすぐ上・段の上）。出すものが無ければ行を出さない */}
