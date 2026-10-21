@@ -1,0 +1,8642 @@
+{
+  "kind": "synthetic-detail-chart-niho-round32",
+  "issue": 32,
+  "source": {
+    "chart": "detail-round32-lightroom.json と同じ base-chart.jpg（tools/calibrate/make_lr_round32.py）",
+    "settings": "crates/niho-develop/examples/round32_settings.rs（各 variant の XMP を engine niho-10 の新規編集へ）",
+    "render": "niho-develop-render render --raster base-chart.jpg --settings <variant>.json（native release・原寸 1500x1000・Final）",
+    "measure": "tools/calibrate/round32_stats.py collect",
+    "after": "校正後（crates/niho-develop/src/detail.rs の calibration）",
+    "before": "校正前（raw/detail-32 db0f842）"
+  },
+  "calibration": {
+    "SHARP_SIGMA": 0.81,
+    "SHARP_SIGMA_POWER": 0.785,
+    "SHARP_GAIN": 2.9,
+    "SHARP_AMOUNT_POWER": 1.2,
+    "SHARP_GAIN_SIGMA_POWER": 1.22,
+    "DETAIL_POWER": 0.785,
+    "DETAIL_FLOOR": 0.074,
+    "LIGHT_HALO": 0.237,
+    "DARK_HALO_SLOPE": 5.9,
+    "DARK_HALO_MAX": 0.225,
+    "MASK_PRE_SIGMA": 1.31,
+    "MASK_ENERGY_SIGMA": 1.17,
+    "MASK_THRESHOLD": 0.0874,
+    "MASK_POWER": 2.67,
+    "NOISE_RANGE": 0.12,
+    "NOISE_RANGE_POWER": 0.05,
+    "NOISE_RANGE_DECAY": 0.77,
+    "NOISE_BLEND_POWER": 0.62,
+    "NOISE_LEAK": 0.01,
+    "NOISE_LEVELS": 3.0,
+    "COLOR_SIGMA": 0.9,
+    "COLOR_FULL_AMOUNT": 25.0
+  },
+  "variants": {
+    "neutral": {
+      "edges": [
+        {
+          "lo": 64,
+          "hi": 192,
+          "rise10to90": 0.8,
+          "overshoot": 0.0,
+          "undershoot": 0.0
+        },
+        {
+          "lo": 100,
+          "hi": 156,
+          "rise10to90": 0.8,
+          "overshoot": 0.0,
+          "undershoot": 0.0
+        },
+        {
+          "lo": 120,
+          "hi": 136,
+          "rise10to90": 0.8,
+          "overshoot": 0.0,
+          "undershoot": 0.0
+        }
+      ],
+      "gratings": [
+        {
+          "period": 4,
+          "gain": 1.0
+        },
+        {
+          "period": 8,
+          "gain": 1.0
+        },
+        {
+          "period": 16,
+          "gain": 1.0
+        },
+        {
+          "period": 32,
+          "gain": 1.0
+        }
+      ],
+      "noise": [
+        {
+          "rgb": [
+            64,
+            64,
+            64
+          ],
+          "lumaSigmaIn": 6,
+          "chromaSigmaIn": 0,
+          "lumaStd": 6.074,
+          "cbStd": 0.0,
+          "crStd": 0.0,
+          "mean": [
+            63.99,
+            63.99,
+            63.99
+          ]
+        },
+        {
+          "rgb": [
+            128,
+            128,
+            128
+          ],
+          "lumaSigmaIn": 6,
+          "chromaSigmaIn": 0,
+          "lumaStd": 6.046,
+          "cbStd": 0.0,
+          "crStd": 0.0,
+          "mean": [
+            127.94,
+            127.94,
+            127.94
+          ]
+        },
+        {
+          "rgb": [
+            192,
+            192,
+            192
+          ],
+          "lumaSigmaIn": 6,
+          "chromaSigmaIn": 0,
+          "lumaStd": 6.078,
+          "cbStd": 0.0,
+          "crStd": 0.0,
+          "mean": [
+            191.99,
+            191.99,
+            191.99
+          ]
+        },
+        {
+          "rgb": [
+            128,
+            128,
+            128
+          ],
+          "lumaSigmaIn": 12,
+          "chromaSigmaIn": 0,
+          "lumaStd": 12.188,
+          "cbStd": 0.0,
+          "crStd": 0.0,
+          "mean": [
+            127.98,
+            127.98,
+            127.98
+          ]
+        },
+        {
+          "rgb": [
+            128,
+            128,
+            128
+          ],
+          "lumaSigmaIn": 0,
+          "chromaSigmaIn": 8,
+          "lumaStd": 0.189,
+          "cbStd": 8.043,
+          "crStd": 8.087,
+          "mean": [
+            128.06,
+            127.97,
+            127.96
+          ]
+        },
+        {
+          "rgb": [
+            96,
+            128,
+            160
+          ],
+          "lumaSigmaIn": 6,
+          "chromaSigmaIn": 8,
+          "lumaStd": 6.031,
+          "cbStd": 8.066,
+          "crStd": 8.058,
+          "mean": [
+            96.01,
+            128.12,
+            160.0
+          ]
+        },
+        {
+          "rgb": [
+            170,
+            120,
+            90
+          ],
+          "lumaSigmaIn": 6,
+          "chromaSigmaIn": 8,
+          "lumaStd": 6.054,
+          "cbStd": 7.959,
+          "crStd": 8.059,
+          "mean": [
+            170.01,
+            119.9,
+            89.96
+          ]
+        },
+        {
+          "rgb": [
+            80,
+            140,
+            80
+          ],
+          "lumaSigmaIn": 0,
+          "chromaSigmaIn": 12,
+          "lumaStd": 0.371,
+          "cbStd": 12.045,
+          "crStd": 12.048,
+          "mean": [
+            79.86,
+            139.89,
+            79.89
+          ]
+        },
+        {
+          "rgb": [
+            128,
+            128,
+            128
+          ],
+          "lumaSigmaIn": 0,
+          "chromaSigmaIn": 0,
+          "lumaStd": 0.0,
+          "cbStd": 0.0,
+          "crStd": 0.0,
+          "mean": [
+            128.0,
+            128.0,
+            128.0
+          ]
+        },
+        {
+          "rgb": [
+            200,
+            160,
+            120
+          ],
+          "lumaSigmaIn": 12,
+          "chromaSigmaIn": 12,
+          "lumaStd": 12.066,
+          "cbStd": 12.001,
+          "crStd": 12.065,
+          "mean": [
+            199.83,
+            159.92,
+            120.0
+          ]
+        }
+      ]
+    },
+    "sharp_a40": {
+      "edges": [
+        {
+          "lo": 64,
+          "hi": 192,
+          "rise10to90": 0.644,
+          "overshoot": 21.0,
+          "undershoot": 10.0
+        },
+        {
+          "lo": 100,
+          "hi": 156,
+          "rise10to90": 0.492,
+          "overshoot": 13.0,
+          "undershoot": 22.0
+        },
+        {
+          "lo": 120,
+          "hi": 136,
+          "rise10to90": 0.474,
+          "overshoot": 5.0,
+          "undershoot": 6.0
+        }
+      ],
+      "gratings": [
+        {
+          "period": 4,
+          "gain": 1.4167
+        },
+        {
+          "period": 8,
+          "gain": 1.2292
+        },
+        {
+          "period": 16,
+          "gain": 1.0625
+        },
+        {
+          "period": 32,
+          "gain": 1.0208
+        }
+      ],
+      "noise": [
+        {
+          "rgb": [
+            64,
+            64,
+            64
+          ],
+          "lumaSigmaIn": 6,
+          "chromaSigmaIn": 0,
+          "lumaStd": 10.607,
+          "cbStd": 0.0,
+          "crStd": 0.0,
+          "mean": [
+            64.03,
+            64.03,
+            64.03
+          ]
+        },
+        {
+          "rgb": [
+            128,
+            128,
+            128
+          ],
+          "lumaSigmaIn": 6,
+          "chromaSigmaIn": 0,
+          "lumaStd": 11.891,
+          "cbStd": 0.0,
+          "crStd": 0.0,
+          "mean": [
+            127.47,
+            127.47,
+            127.47
+          ]
+        },
+        {
+          "rgb": [
+            192,
+            192,
+            192
+          ],
+          "lumaSigmaIn": 6,
+          "chromaSigmaIn": 0,
+          "lumaStd": 11.86,
+          "cbStd": 0.0,
+          "crStd": 0.0,
+          "mean": [
+            191.65,
+            191.65,
+            191.65
+          ]
+        },
+        {
+          "rgb": [
+            128,
+            128,
+            128
+          ],
+          "lumaSigmaIn": 12,
+          "chromaSigmaIn": 0,
+          "lumaStd": 23.267,
+          "cbStd": 0.0,
+          "crStd": 0.0,
+          "mean": [
+            126.46,
+            126.46,
+            126.46
+          ]
+        },
+        {
+          "rgb": [
+            128,
+            128,
+            128
+          ],
+          "lumaSigmaIn": 0,
+          "chromaSigmaIn": 8,
+          "lumaStd": 1.986,
+          "cbStd": 8.05,
+          "crStd": 8.105,
+          "mean": [
+            127.85,
+            127.97,
+            127.79
+          ]
+        },
+        {
+          "rgb": [
+            96,
+            128,
+            160
+          ],
+          "lumaSigmaIn": 6,
+          "chromaSigmaIn": 8,
+          "lumaStd": 11.922,
+          "cbStd": 8.016,
+          "crStd": 8.382,
+          "mean": [
+            95.41,
+            127.62,
+            159.15
+          ]
+        },
+        {
+          "rgb": [
+            170,
+            120,
+            90
+          ],
+          "lumaSigmaIn": 6,
+          "chromaSigmaIn": 8,
+          "lumaStd": 11.86,
+          "cbStd": 8.138,
+          "crStd": 8.078,
+          "mean": [
+            169.33,
+            119.51,
+            89.6
+          ]
+        },
+        {
+          "rgb": [
+            80,
+            140,
+            80
+          ],
+          "lumaSigmaIn": 0,
+          "chromaSigmaIn": 12,
+          "lumaStd": 4.968,
+          "cbStd": 12.352,
+          "crStd": 12.83,
+          "mean": [
+            78.92,
+            139.57,
+            79.15
+          ]
+        },
+        {
+          "rgb": [
+            128,
+            128,
+            128
+          ],
+          "lumaSigmaIn": 0,
+          "chromaSigmaIn": 0,
+          "lumaStd": 0.0,
+          "cbStd": 0.0,
+          "crStd": 0.0,
+          "mean": [
+            128.0,
+            128.0,
+            128.0
+          ]
+        },
+        {
+          "rgb": [
+            200,
+            160,
+            120
+          ],
+          "lumaSigmaIn": 12,
+          "chromaSigmaIn": 12,
+          "lumaStd": 23.092,
+          "cbStd": 12.258,
+          "crStd": 11.748,
+          "mean": [
+            197.66,
+            158.68,
+            118.95
+          ]
+        }
+      ]
+    },
+    "sharp_a80": {
+      "edges": [
+        {
+          "lo": 64,
+          "hi": 192,
+          "rise10to90": 0.602,
+          "overshoot": 32.0,
+          "undershoot": 10.0
+        },
+        {
+          "lo": 100,
+          "hi": 156,
+          "rise10to90": 0.4,
+          "overshoot": 26.0,
+          "undershoot": 30.0
+        },
+        {
+          "lo": 120,
+          "hi": 136,
+          "rise10to90": 0.328,
+          "overshoot": 10.0,
+          "undershoot": 13.0
+        }
+      ],
+      "gratings": [
+        {
+          "period": 4,
+          "gain": 1.5521
+        },
+        {
+          "period": 8,
+          "gain": 1.3958
+        },
+        {
+          "period": 16,
+          "gain": 1.1562
+        },
+        {
+          "period": 32,
+          "gain": 1.0417
+        }
+      ],
+      "noise": [
+        {
+          "rgb": [
+            64,
+            64,
+            64
+          ],
+          "lumaSigmaIn": 6,
+          "chromaSigmaIn": 0,
+          "lumaStd": 14.324,
+          "cbStd": 0.0,
+          "crStd": 0.0,
+          "mean": [
+            65.46,
+            65.46,
+            65.46
+          ]
+        },
+        {
+          "rgb": [
+            128,
+            128,
+            128
+          ],
+          "lumaSigmaIn": 6,
+          "chromaSigmaIn": 0,
+          "lumaStd": 18.678,
+          "cbStd": 0.0,
+          "crStd": 0.0,
+          "mean": [
+            126.82,
+            126.82,
+            126.82
+          ]
+        },
+        {
+          "rgb": [
+            192,
+            192,
+            192
+          ],
+          "lumaSigmaIn": 6,
+          "chromaSigmaIn": 0,
+          "lumaStd": 18.382,
+          "cbStd": 0.0,
+          "crStd": 0.0,
+          "mean": [
+            191.08,
+            191.08,
+            191.08
+          ]
+        },
+        {
+          "rgb": [
+            128,
+            128,
+            128
+          ],
+          "lumaSigmaIn": 12,
+          "chromaSigmaIn": 0,
+          "lumaStd": 32.465,
+          "cbStd": 0.0,
+          "crStd": 0.0,
+          "mean": [
+            125.78,
+            125.78,
+            125.78
+          ]
+        },
+        {
+          "rgb": [
+            128,
+            128,
+            128
+          ],
+          "lumaSigmaIn": 0,
+          "chromaSigmaIn": 8,
+          "lumaStd": 4.447,
+          "cbStd": 8.056,
+          "crStd": 8.121,
+          "mean": [
+            127.54,
+            127.93,
+            127.52
+          ]
+        },
+        {
+          "rgb": [
+            96,
+            128,
+            160
+          ],
+          "lumaSigmaIn": 6,
+          "chromaSigmaIn": 8,
+          "lumaStd": 18.8,
+          "cbStd": 8.121,
+          "crStd": 8.836,
+          "mean": [
+            94.67,
+            126.98,
+            158.09
+          ]
+        },
+        {
+          "rgb": [
+            170,
+            120,
+            90
+          ],
+          "lumaSigmaIn": 6,
+          "chromaSigmaIn": 8,
+          "lumaStd": 18.702,
+          "cbStd": 8.489,
+          "crStd": 8.301,
+          "mean": [
+            168.37,
+            118.94,
+            89.09
+          ]
+        },
+        {
+          "rgb": [
+            80,
+            140,
+            80
+          ],
+          "lumaSigmaIn": 0,
+          "chromaSigmaIn": 12,
+          "lumaStd": 10.843,
+          "cbStd": 12.768,
+          "crStd": 13.777,
+          "mean": [
+            77.67,
+            138.98,
+            78.13
+          ]
+        },
+        {
+          "rgb": [
+            128,
+            128,
+            128
+          ],
+          "lumaSigmaIn": 0,
+          "chromaSigmaIn": 0,
+          "lumaStd": 0.0,
+          "cbStd": 0.0,
+          "crStd": 0.0,
+          "mean": [
+            128.0,
+            128.0,
+            128.0
+          ]
+        },
+        {
+          "rgb": [
+            200,
+            160,
+            120
+          ],
+          "lumaSigmaIn": 12,
+          "chromaSigmaIn": 12,
+          "lumaStd": 32.347,
+          "cbStd": 12.634,
+          "crStd": 11.392,
+          "mean": [
+            195.14,
+            157.42,
+            117.89
+          ]
+        }
+      ]
+    },
+    "sharp_a150": {
+      "edges": [
+        {
+          "lo": 64,
+          "hi": 192,
+          "rise10to90": 0.595,
+          "overshoot": 34.0,
+          "undershoot": 10.0
+        },
+        {
+          "lo": 100,
+          "hi": 156,
+          "rise10to90": 0.356,
+          "overshoot": 39.0,
+          "undershoot": 31.0
+        },
+        {
+          "lo": 120,
+          "hi": 136,
+          "rise10to90": 0.206,
+          "overshoot": 20.0,
+          "undershoot": 26.0
+        }
+      ],
+      "gratings": [
+        {
+          "period": 4,
+          "gain": 1.5833
+        },
+        {
+          "period": 8,
+          "gain": 1.5208
+        },
+        {
+          "period": 16,
+          "gain": 1.2917
+        },
+        {
+          "period": 32,
+          "gain": 1.0833
+        }
+      ],
+      "noise": [
+        {
+          "rgb": [
+            64,
+            64,
+            64
+          ],
+          "lumaSigmaIn": 6,
+          "chromaSigmaIn": 0,
+          "lumaStd": 19.923,
+          "cbStd": 0.0,
+          "crStd": 0.0,
+          "mean": [
+            68.87,
+            68.87,
+            68.87
+          ]
+        },
+        {
+          "rgb": [
+            128,
+            128,
+            128
+          ],
+          "lumaSigmaIn": 6,
+          "chromaSigmaIn": 0,
+          "lumaStd": 28.026,
+          "cbStd": 0.0,
+          "crStd": 0.0,
+          "mean": [
+            126.34,
+            126.34,
+            126.34
+          ]
+        },
+        {
+          "rgb": [
+            192,
+            192,
+            192
+          ],
+          "lumaSigmaIn": 6,
+          "chromaSigmaIn": 0,
+          "lumaStd": 26.634,
+          "cbStd": 0.0,
+          "crStd": 0.0,
+          "mean": [
+            190.23,
+            190.23,
+            190.23
+          ]
+        },
+        {
+          "rgb": [
+            128,
+            128,
+            128
+          ],
+          "lumaSigmaIn": 12,
+          "chromaSigmaIn": 0,
+          "lumaStd": 41.148,
+          "cbStd": 0.0,
+          "crStd": 0.0,
+          "mean": [
+            126.49,
+            126.49,
+            126.49
+          ]
+        },
+        {
+          "rgb": [
+            128,
+            128,
+            128
+          ],
+          "lumaSigmaIn": 0,
+          "chromaSigmaIn": 8,
+          "lumaStd": 9.144,
+          "cbStd": 8.063,
+          "crStd": 8.143,
+          "mean": [
+            126.82,
+            127.7,
+            126.89
+          ]
+        },
+        {
+          "rgb": [
+            96,
+            128,
+            160
+          ],
+          "lumaSigmaIn": 6,
+          "chromaSigmaIn": 8,
+          "lumaStd": 27.99,
+          "cbStd": 8.527,
+          "crStd": 9.617,
+          "mean": [
+            94.14,
+            126.68,
+            157.38
+          ]
+        },
+        {
+          "rgb": [
+            170,
+            120,
+            90
+          ],
+          "lumaSigmaIn": 6,
+          "chromaSigmaIn": 8,
+          "lumaStd": 28.193,
+          "cbStd": 9.208,
+          "crStd": 8.948,
+          "mean": [
+            167.46,
+            118.47,
+            88.62
+          ]
+        },
+        {
+          "rgb": [
+            80,
+            140,
+            80
+          ],
+          "lumaSigmaIn": 0,
+          "chromaSigmaIn": 12,
+          "lumaStd": 19.525,
+          "cbStd": 13.502,
+          "crStd": 15.272,
+          "mean": [
+            75.85,
+            138.12,
+            76.67
+          ]
+        },
+        {
+          "rgb": [
+            128,
+            128,
+            128
+          ],
+          "lumaSigmaIn": 0,
+          "chromaSigmaIn": 0,
+          "lumaStd": 0.0,
+          "cbStd": 0.0,
+          "crStd": 0.0,
+          "mean": [
+            128.0,
+            128.0,
+            128.0
+          ]
+        },
+        {
+          "rgb": [
+            200,
+            160,
+            120
+          ],
+          "lumaSigmaIn": 12,
+          "chromaSigmaIn": 12,
+          "lumaStd": 39.951,
+          "cbStd": 13.063,
+          "crStd": 10.944,
+          "mean": [
+            192.92,
+            156.59,
+            117.2
+          ]
+        }
+      ]
+    },
+    "sharp_a80_r05": {
+      "edges": [
+        {
+          "lo": 64,
+          "hi": 192,
+          "rise10to90": 0.621,
+          "overshoot": 27.0,
+          "undershoot": 10.0
+        },
+        {
+          "lo": 100,
+          "hi": 156,
+          "rise10to90": 0.435,
+          "overshoot": 19.0,
+          "undershoot": 28.0
+        },
+        {
+          "lo": 120,
+          "hi": 136,
+          "rise10to90": 0.4,
+          "overshoot": 7.0,
+          "undershoot": 9.0
+        }
+      ],
+      "gratings": [
+        {
+          "period": 4,
+          "gain": 1.4792
+        },
+        {
+          "period": 8,
+          "gain": 1.2604
+        },
+        {
+          "period": 16,
+          "gain": 1.0833
+        },
+        {
+          "period": 32,
+          "gain": 1.0208
+        }
+      ],
+      "noise": [
+        {
+          "rgb": [
+            64,
+            64,
+            64
+          ],
+          "lumaSigmaIn": 6,
+          "chromaSigmaIn": 0,
+          "lumaStd": 13.278,
+          "cbStd": 0.0,
+          "crStd": 0.0,
+          "mean": [
+            65.02,
+            65.02,
+            65.02
+          ]
+        },
+        {
+          "rgb": [
+            128,
+            128,
+            128
+          ],
+          "lumaSigmaIn": 6,
+          "chromaSigmaIn": 0,
+          "lumaStd": 16.786,
+          "cbStd": 0.0,
+          "crStd": 0.0,
+          "mean": [
+            127.01,
+            127.01,
+            127.01
+          ]
+        },
+        {
+          "rgb": [
+            192,
+            192,
+            192
+          ],
+          "lumaSigmaIn": 6,
+          "chromaSigmaIn": 0,
+          "lumaStd": 16.557,
+          "cbStd": 0.0,
+          "crStd": 0.0,
+          "mean": [
+            191.26,
+            191.26,
+            191.26
+          ]
+        },
+        {
+          "rgb": [
+            128,
+            128,
+            128
+          ],
+          "lumaSigmaIn": 12,
+          "chromaSigmaIn": 0,
+          "lumaStd": 30.143,
+          "cbStd": 0.0,
+          "crStd": 0.0,
+          "mean": [
+            125.92,
+            125.92,
+            125.92
+          ]
+        },
+        {
+          "rgb": [
+            128,
+            128,
+            128
+          ],
+          "lumaSigmaIn": 0,
+          "chromaSigmaIn": 8,
+          "lumaStd": 3.774,
+          "cbStd": 8.054,
+          "crStd": 8.116,
+          "mean": [
+            127.64,
+            127.94,
+            127.62
+          ]
+        },
+        {
+          "rgb": [
+            96,
+            128,
+            160
+          ],
+          "lumaSigmaIn": 6,
+          "chromaSigmaIn": 8,
+          "lumaStd": 16.9,
+          "cbStd": 8.088,
+          "crStd": 8.69,
+          "mean": [
+            94.89,
+            127.16,
+            158.4
+          ]
+        },
+        {
+          "rgb": [
+            170,
+            120,
+            90
+          ],
+          "lumaSigmaIn": 6,
+          "chromaSigmaIn": 8,
+          "lumaStd": 16.787,
+          "cbStd": 8.375,
+          "crStd": 8.229,
+          "mean": [
+            168.66,
+            119.11,
+            89.24
+          ]
+        },
+        {
+          "rgb": [
+            80,
+            140,
+            80
+          ],
+          "lumaSigmaIn": 0,
+          "chromaSigmaIn": 12,
+          "lumaStd": 9.302,
+          "cbStd": 12.633,
+          "crStd": 13.471,
+          "mean": [
+            78.08,
+            139.17,
+            78.47
+          ]
+        },
+        {
+          "rgb": [
+            128,
+            128,
+            128
+          ],
+          "lumaSigmaIn": 0,
+          "chromaSigmaIn": 0,
+          "lumaStd": 0.0,
+          "cbStd": 0.0,
+          "crStd": 0.0,
+          "mean": [
+            128.0,
+            128.0,
+            128.0
+          ]
+        },
+        {
+          "rgb": [
+            200,
+            160,
+            120
+          ],
+          "lumaSigmaIn": 12,
+          "chromaSigmaIn": 12,
+          "lumaStd": 30.087,
+          "cbStd": 12.531,
+          "crStd": 11.505,
+          "mean": [
+            195.87,
+            157.77,
+            118.19
+          ]
+        }
+      ]
+    },
+    "sharp_a80_r20": {
+      "edges": [
+        {
+          "lo": 64,
+          "hi": 192,
+          "rise10to90": 0.617,
+          "overshoot": 28.0,
+          "undershoot": 10.0
+        },
+        {
+          "lo": 100,
+          "hi": 156,
+          "rise10to90": 0.427,
+          "overshoot": 20.0,
+          "undershoot": 29.0
+        },
+        {
+          "lo": 120,
+          "hi": 136,
+          "rise10to90": 0.388,
+          "overshoot": 8.0,
+          "undershoot": 9.0
+        }
+      ],
+      "gratings": [
+        {
+          "period": 4,
+          "gain": 1.5208
+        },
+        {
+          "period": 8,
+          "gain": 1.4167
+        },
+        {
+          "period": 16,
+          "gain": 1.2083
+        },
+        {
+          "period": 32,
+          "gain": 1.0625
+        }
+      ],
+      "noise": [
+        {
+          "rgb": [
+            64,
+            64,
+            64
+          ],
+          "lumaSigmaIn": 6,
+          "chromaSigmaIn": 0,
+          "lumaStd": 11.916,
+          "cbStd": 0.0,
+          "crStd": 0.0,
+          "mean": [
+            64.36,
+            64.36,
+            64.36
+          ]
+        },
+        {
+          "rgb": [
+            128,
+            128,
+            128
+          ],
+          "lumaSigmaIn": 6,
+          "chromaSigmaIn": 0,
+          "lumaStd": 14.188,
+          "cbStd": 0.0,
+          "crStd": 0.0,
+          "mean": [
+            127.25,
+            127.25,
+            127.25
+          ]
+        },
+        {
+          "rgb": [
+            192,
+            192,
+            192
+          ],
+          "lumaSigmaIn": 6,
+          "chromaSigmaIn": 0,
+          "lumaStd": 14.112,
+          "cbStd": 0.0,
+          "crStd": 0.0,
+          "mean": [
+            191.47,
+            191.47,
+            191.47
+          ]
+        },
+        {
+          "rgb": [
+            128,
+            128,
+            128
+          ],
+          "lumaSigmaIn": 12,
+          "chromaSigmaIn": 0,
+          "lumaStd": 26.804,
+          "cbStd": 0.0,
+          "crStd": 0.0,
+          "mean": [
+            126.03,
+            126.03,
+            126.03
+          ]
+        },
+        {
+          "rgb": [
+            128,
+            128,
+            128
+          ],
+          "lumaSigmaIn": 0,
+          "chromaSigmaIn": 8,
+          "lumaStd": 2.72,
+          "cbStd": 8.052,
+          "crStd": 8.111,
+          "mean": [
+            127.75,
+            127.96,
+            127.71
+          ]
+        },
+        {
+          "rgb": [
+            96,
+            128,
+            160
+          ],
+          "lumaSigmaIn": 6,
+          "chromaSigmaIn": 8,
+          "lumaStd": 14.244,
+          "cbStd": 8.029,
+          "crStd": 8.532,
+          "mean": [
+            95.14,
+            127.39,
+            158.77
+          ]
+        },
+        {
+          "rgb": [
+            170,
+            120,
+            90
+          ],
+          "lumaSigmaIn": 6,
+          "chromaSigmaIn": 8,
+          "lumaStd": 14.133,
+          "cbStd": 8.241,
+          "crStd": 8.121,
+          "mean": [
+            169.0,
+            119.32,
+            89.43
+          ]
+        },
+        {
+          "rgb": [
+            80,
+            140,
+            80
+          ],
+          "lumaSigmaIn": 0,
+          "chromaSigmaIn": 12,
+          "lumaStd": 6.805,
+          "cbStd": 12.492,
+          "crStd": 13.156,
+          "mean": [
+            78.5,
+            139.4,
+            78.81
+          ]
+        },
+        {
+          "rgb": [
+            128,
+            128,
+            128
+          ],
+          "lumaSigmaIn": 0,
+          "chromaSigmaIn": 0,
+          "lumaStd": 0.0,
+          "cbStd": 0.0,
+          "crStd": 0.0,
+          "mean": [
+            128.0,
+            128.0,
+            128.0
+          ]
+        },
+        {
+          "rgb": [
+            200,
+            160,
+            120
+          ],
+          "lumaSigmaIn": 12,
+          "chromaSigmaIn": 12,
+          "lumaStd": 26.692,
+          "cbStd": 12.381,
+          "crStd": 11.615,
+          "mean": [
+            196.71,
+            158.17,
+            118.52
+          ]
+        }
+      ]
+    },
+    "sharp_a80_r30": {
+      "edges": [
+        {
+          "lo": 64,
+          "hi": 192,
+          "rise10to90": 0.632,
+          "overshoot": 24.0,
+          "undershoot": 10.0
+        },
+        {
+          "lo": 100,
+          "hi": 156,
+          "rise10to90": 0.462,
+          "overshoot": 16.0,
+          "undershoot": 25.0
+        },
+        {
+          "lo": 120,
+          "hi": 136,
+          "rise10to90": 0.441,
+          "overshoot": 6.0,
+          "undershoot": 7.0
+        }
+      ],
+      "gratings": [
+        {
+          "period": 4,
+          "gain": 1.4687
+        },
+        {
+          "period": 8,
+          "gain": 1.4167
+        },
+        {
+          "period": 16,
+          "gain": 1.2396
+        },
+        {
+          "period": 32,
+          "gain": 1.0729
+        }
+      ],
+      "noise": [
+        {
+          "rgb": [
+            64,
+            64,
+            64
+          ],
+          "lumaSigmaIn": 6,
+          "chromaSigmaIn": 0,
+          "lumaStd": 10.586,
+          "cbStd": 0.0,
+          "crStd": 0.0,
+          "mean": [
+            64.01,
+            64.01,
+            64.01
+          ]
+        },
+        {
+          "rgb": [
+            128,
+            128,
+            128
+          ],
+          "lumaSigmaIn": 6,
+          "chromaSigmaIn": 0,
+          "lumaStd": 11.863,
+          "cbStd": 0.0,
+          "crStd": 0.0,
+          "mean": [
+            127.47,
+            127.47,
+            127.47
+          ]
+        },
+        {
+          "rgb": [
+            192,
+            192,
+            192
+          ],
+          "lumaSigmaIn": 6,
+          "chromaSigmaIn": 0,
+          "lumaStd": 11.843,
+          "cbStd": 0.0,
+          "crStd": 0.0,
+          "mean": [
+            191.65,
+            191.65,
+            191.65
+          ]
+        },
+        {
+          "rgb": [
+            128,
+            128,
+            128
+          ],
+          "lumaSigmaIn": 12,
+          "chromaSigmaIn": 0,
+          "lumaStd": 23.244,
+          "cbStd": 0.0,
+          "crStd": 0.0,
+          "mean": [
+            126.43,
+            126.43,
+            126.43
+          ]
+        },
+        {
+          "rgb": [
+            128,
+            128,
+            128
+          ],
+          "lumaSigmaIn": 0,
+          "chromaSigmaIn": 8,
+          "lumaStd": 1.93,
+          "cbStd": 8.047,
+          "crStd": 8.103,
+          "mean": [
+            127.85,
+            127.98,
+            127.79
+          ]
+        },
+        {
+          "rgb": [
+            96,
+            128,
+            160
+          ],
+          "lumaSigmaIn": 6,
+          "chromaSigmaIn": 8,
+          "lumaStd": 11.869,
+          "cbStd": 8.012,
+          "crStd": 8.387,
+          "mean": [
+            95.41,
+            127.62,
+            159.15
+          ]
+        },
+        {
+          "rgb": [
+            170,
+            120,
+            90
+          ],
+          "lumaSigmaIn": 6,
+          "chromaSigmaIn": 8,
+          "lumaStd": 11.801,
+          "cbStd": 8.14,
+          "crStd": 8.07,
+          "mean": [
+            169.33,
+            119.51,
+            89.61
+          ]
+        },
+        {
+          "rgb": [
+            80,
+            140,
+            80
+          ],
+          "lumaSigmaIn": 0,
+          "chromaSigmaIn": 12,
+          "lumaStd": 4.824,
+          "cbStd": 12.36,
+          "crStd": 12.837,
+          "mean": [
+            78.92,
+            139.58,
+            79.14
+          ]
+        },
+        {
+          "rgb": [
+            128,
+            128,
+            128
+          ],
+          "lumaSigmaIn": 0,
+          "chromaSigmaIn": 0,
+          "lumaStd": 0.0,
+          "cbStd": 0.0,
+          "crStd": 0.0,
+          "mean": [
+            128.0,
+            128.0,
+            128.0
+          ]
+        },
+        {
+          "rgb": [
+            200,
+            160,
+            120
+          ],
+          "lumaSigmaIn": 12,
+          "chromaSigmaIn": 12,
+          "lumaStd": 23.024,
+          "cbStd": 12.252,
+          "crStd": 11.74,
+          "mean": [
+            197.66,
+            158.68,
+            118.94
+          ]
+        }
+      ]
+    },
+    "sharp_a80_d0": {
+      "edges": [
+        {
+          "lo": 64,
+          "hi": 192,
+          "rise10to90": 0.692,
+          "overshoot": 10.0,
+          "undershoot": 10.0
+        },
+        {
+          "lo": 100,
+          "hi": 156,
+          "rise10to90": 0.622,
+          "overshoot": 6.0,
+          "undershoot": 10.0
+        },
+        {
+          "lo": 120,
+          "hi": 136,
+          "rise10to90": 0.64,
+          "overshoot": 2.0,
+          "undershoot": 2.0
+        }
+      ],
+      "gratings": [
+        {
+          "period": 4,
+          "gain": 1.2708
+        },
+        {
+          "period": 8,
+          "gain": 1.0938
+        },
+        {
+          "period": 16,
+          "gain": 1.0208
+        },
+        {
+          "period": 32,
+          "gain": 1.0
+        }
+      ],
+      "noise": [
+        {
+          "rgb": [
+            64,
+            64,
+            64
+          ],
+          "lumaSigmaIn": 6,
+          "chromaSigmaIn": 0,
+          "lumaStd": 8.314,
+          "cbStd": 0.0,
+          "crStd": 0.0,
+          "mean": [
+            63.81,
+            63.81,
+            63.81
+          ]
+        },
+        {
+          "rgb": [
+            128,
+            128,
+            128
+          ],
+          "lumaSigmaIn": 6,
+          "chromaSigmaIn": 0,
+          "lumaStd": 8.47,
+          "cbStd": 0.0,
+          "crStd": 0.0,
+          "mean": [
+            127.77,
+            127.77,
+            127.77
+          ]
+        },
+        {
+          "rgb": [
+            192,
+            192,
+            192
+          ],
+          "lumaSigmaIn": 6,
+          "chromaSigmaIn": 0,
+          "lumaStd": 8.492,
+          "cbStd": 0.0,
+          "crStd": 0.0,
+          "mean": [
+            191.87,
+            191.87,
+            191.87
+          ]
+        },
+        {
+          "rgb": [
+            128,
+            128,
+            128
+          ],
+          "lumaSigmaIn": 12,
+          "chromaSigmaIn": 0,
+          "lumaStd": 17.107,
+          "cbStd": 0.0,
+          "crStd": 0.0,
+          "mean": [
+            127.31,
+            127.31,
+            127.31
+          ]
+        },
+        {
+          "rgb": [
+            128,
+            128,
+            128
+          ],
+          "lumaSigmaIn": 0,
+          "chromaSigmaIn": 8,
+          "lumaStd": 0.887,
+          "cbStd": 8.044,
+          "crStd": 8.094,
+          "mean": [
+            127.98,
+            127.98,
+            127.89
+          ]
+        },
+        {
+          "rgb": [
+            96,
+            128,
+            160
+          ],
+          "lumaSigmaIn": 6,
+          "chromaSigmaIn": 8,
+          "lumaStd": 8.436,
+          "cbStd": 8.03,
+          "crStd": 8.187,
+          "mean": [
+            95.78,
+            127.94,
+            159.69
+          ]
+        },
+        {
+          "rgb": [
+            170,
+            120,
+            90
+          ],
+          "lumaSigmaIn": 6,
+          "chromaSigmaIn": 8,
+          "lumaStd": 8.446,
+          "cbStd": 8.023,
+          "crStd": 8.047,
+          "mean": [
+            169.76,
+            119.76,
+            89.83
+          ]
+        },
+        {
+          "rgb": [
+            80,
+            140,
+            80
+          ],
+          "lumaSigmaIn": 0,
+          "chromaSigmaIn": 12,
+          "lumaStd": 2.121,
+          "cbStd": 12.173,
+          "crStd": 12.376,
+          "mean": [
+            79.49,
+            139.79,
+            79.6
+          ]
+        },
+        {
+          "rgb": [
+            128,
+            128,
+            128
+          ],
+          "lumaSigmaIn": 0,
+          "chromaSigmaIn": 0,
+          "lumaStd": 0.0,
+          "cbStd": 0.0,
+          "crStd": 0.0,
+          "mean": [
+            128.0,
+            128.0,
+            128.0
+          ]
+        },
+        {
+          "rgb": [
+            200,
+            160,
+            120
+          ],
+          "lumaSigmaIn": 12,
+          "chromaSigmaIn": 12,
+          "lumaStd": 16.855,
+          "cbStd": 12.089,
+          "crStd": 11.933,
+          "mean": [
+            199.02,
+            159.45,
+            119.59
+          ]
+        }
+      ]
+    },
+    "sharp_a80_d75": {
+      "edges": [
+        {
+          "lo": 64,
+          "hi": 192,
+          "rise10to90": 0.595,
+          "overshoot": 34.0,
+          "undershoot": 10.0
+        },
+        {
+          "lo": 100,
+          "hi": 156,
+          "rise10to90": 0.356,
+          "overshoot": 39.0,
+          "undershoot": 31.0
+        },
+        {
+          "lo": 120,
+          "hi": 136,
+          "rise10to90": 0.206,
+          "overshoot": 20.0,
+          "undershoot": 26.0
+        }
+      ],
+      "gratings": [
+        {
+          "period": 4,
+          "gain": 1.5833
+        },
+        {
+          "period": 8,
+          "gain": 1.5208
+        },
+        {
+          "period": 16,
+          "gain": 1.2917
+        },
+        {
+          "period": 32,
+          "gain": 1.0833
+        }
+      ],
+      "noise": [
+        {
+          "rgb": [
+            64,
+            64,
+            64
+          ],
+          "lumaSigmaIn": 6,
+          "chromaSigmaIn": 0,
+          "lumaStd": 19.905,
+          "cbStd": 0.0,
+          "crStd": 0.0,
+          "mean": [
+            68.86,
+            68.86,
+            68.86
+          ]
+        },
+        {
+          "rgb": [
+            128,
+            128,
+            128
+          ],
+          "lumaSigmaIn": 6,
+          "chromaSigmaIn": 0,
+          "lumaStd": 28.002,
+          "cbStd": 0.0,
+          "crStd": 0.0,
+          "mean": [
+            126.34,
+            126.34,
+            126.34
+          ]
+        },
+        {
+          "rgb": [
+            192,
+            192,
+            192
+          ],
+          "lumaSigmaIn": 6,
+          "chromaSigmaIn": 0,
+          "lumaStd": 26.614,
+          "cbStd": 0.0,
+          "crStd": 0.0,
+          "mean": [
+            190.23,
+            190.23,
+            190.23
+          ]
+        },
+        {
+          "rgb": [
+            128,
+            128,
+            128
+          ],
+          "lumaSigmaIn": 12,
+          "chromaSigmaIn": 0,
+          "lumaStd": 41.13,
+          "cbStd": 0.0,
+          "crStd": 0.0,
+          "mean": [
+            126.49,
+            126.49,
+            126.49
+          ]
+        },
+        {
+          "rgb": [
+            128,
+            128,
+            128
+          ],
+          "lumaSigmaIn": 0,
+          "chromaSigmaIn": 8,
+          "lumaStd": 9.128,
+          "cbStd": 8.063,
+          "crStd": 8.143,
+          "mean": [
+            126.82,
+            127.7,
+            126.9
+          ]
+        },
+        {
+          "rgb": [
+            96,
+            128,
+            160
+          ],
+          "lumaSigmaIn": 6,
+          "chromaSigmaIn": 8,
+          "lumaStd": 27.967,
+          "cbStd": 8.526,
+          "crStd": 9.614,
+          "mean": [
+            94.14,
+            126.68,
+            157.38
+          ]
+        },
+        {
+          "rgb": [
+            170,
+            120,
+            90
+          ],
+          "lumaSigmaIn": 6,
+          "chromaSigmaIn": 8,
+          "lumaStd": 28.169,
+          "cbStd": 9.205,
+          "crStd": 8.946,
+          "mean": [
+            167.47,
+            118.47,
+            88.62
+          ]
+        },
+        {
+          "rgb": [
+            80,
+            140,
+            80
+          ],
+          "lumaSigmaIn": 0,
+          "chromaSigmaIn": 12,
+          "lumaStd": 19.501,
+          "cbStd": 13.5,
+          "crStd": 15.266,
+          "mean": [
+            75.86,
+            138.12,
+            76.67
+          ]
+        },
+        {
+          "rgb": [
+            128,
+            128,
+            128
+          ],
+          "lumaSigmaIn": 0,
+          "chromaSigmaIn": 0,
+          "lumaStd": 0.0,
+          "cbStd": 0.0,
+          "crStd": 0.0,
+          "mean": [
+            128.0,
+            128.0,
+            128.0
+          ]
+        },
+        {
+          "rgb": [
+            200,
+            160,
+            120
+          ],
+          "lumaSigmaIn": 12,
+          "chromaSigmaIn": 12,
+          "lumaStd": 39.936,
+          "cbStd": 13.062,
+          "crStd": 10.945,
+          "mean": [
+            192.92,
+            156.59,
+            117.2
+          ]
+        }
+      ]
+    },
+    "sharp_a80_d100": {
+      "edges": [
+        {
+          "lo": 64,
+          "hi": 192,
+          "rise10to90": 0.595,
+          "overshoot": 34.0,
+          "undershoot": 10.0
+        },
+        {
+          "lo": 100,
+          "hi": 156,
+          "rise10to90": 0.35,
+          "overshoot": 41.0,
+          "undershoot": 31.0
+        },
+        {
+          "lo": 120,
+          "hi": 136,
+          "rise10to90": 0.183,
+          "overshoot": 24.0,
+          "undershoot": 30.0
+        }
+      ],
+      "gratings": [
+        {
+          "period": 4,
+          "gain": 1.5833
+        },
+        {
+          "period": 8,
+          "gain": 1.5521
+        },
+        {
+          "period": 16,
+          "gain": 1.3438
+        },
+        {
+          "period": 32,
+          "gain": 1.1042
+        }
+      ],
+      "noise": [
+        {
+          "rgb": [
+            64,
+            64,
+            64
+          ],
+          "lumaSigmaIn": 6,
+          "chromaSigmaIn": 0,
+          "lumaStd": 21.918,
+          "cbStd": 0.0,
+          "crStd": 0.0,
+          "mean": [
+            70.27,
+            70.27,
+            70.27
+          ]
+        },
+        {
+          "rgb": [
+            128,
+            128,
+            128
+          ],
+          "lumaSigmaIn": 6,
+          "chromaSigmaIn": 0,
+          "lumaStd": 30.764,
+          "cbStd": 0.0,
+          "crStd": 0.0,
+          "mean": [
+            126.4,
+            126.4,
+            126.4
+          ]
+        },
+        {
+          "rgb": [
+            192,
+            192,
+            192
+          ],
+          "lumaSigmaIn": 6,
+          "chromaSigmaIn": 0,
+          "lumaStd": 28.809,
+          "cbStd": 0.0,
+          "crStd": 0.0,
+          "mean": [
+            190.01,
+            190.01,
+            190.01
+          ]
+        },
+        {
+          "rgb": [
+            128,
+            128,
+            128
+          ],
+          "lumaSigmaIn": 12,
+          "chromaSigmaIn": 0,
+          "lumaStd": 43.147,
+          "cbStd": 0.0,
+          "crStd": 0.0,
+          "mean": [
+            126.92,
+            126.92,
+            126.92
+          ]
+        },
+        {
+          "rgb": [
+            128,
+            128,
+            128
+          ],
+          "lumaSigmaIn": 0,
+          "chromaSigmaIn": 8,
+          "lumaStd": 11.05,
+          "cbStd": 8.065,
+          "crStd": 8.152,
+          "mean": [
+            126.48,
+            127.57,
+            126.6
+          ]
+        },
+        {
+          "rgb": [
+            96,
+            128,
+            160
+          ],
+          "lumaSigmaIn": 6,
+          "chromaSigmaIn": 8,
+          "lumaStd": 30.625,
+          "cbStd": 8.693,
+          "crStd": 9.873,
+          "mean": [
+            94.19,
+            126.84,
+            157.48
+          ]
+        },
+        {
+          "rgb": [
+            170,
+            120,
+            90
+          ],
+          "lumaSigmaIn": 6,
+          "chromaSigmaIn": 8,
+          "lumaStd": 30.97,
+          "cbStd": 9.469,
+          "crStd": 9.195,
+          "mean": [
+            167.43,
+            118.5,
+            88.62
+          ]
+        },
+        {
+          "rgb": [
+            80,
+            140,
+            80
+          ],
+          "lumaSigmaIn": 0,
+          "chromaSigmaIn": 12,
+          "lumaStd": 22.157,
+          "cbStd": 13.766,
+          "crStd": 15.754,
+          "mean": [
+            75.4,
+            137.99,
+            76.32
+          ]
+        },
+        {
+          "rgb": [
+            128,
+            128,
+            128
+          ],
+          "lumaSigmaIn": 0,
+          "chromaSigmaIn": 0,
+          "lumaStd": 0.0,
+          "cbStd": 0.0,
+          "crStd": 0.0,
+          "mean": [
+            128.0,
+            128.0,
+            128.0
+          ]
+        },
+        {
+          "rgb": [
+            200,
+            160,
+            120
+          ],
+          "lumaSigmaIn": 12,
+          "chromaSigmaIn": 12,
+          "lumaStd": 41.477,
+          "cbStd": 13.164,
+          "crStd": 10.822,
+          "mean": [
+            192.5,
+            156.49,
+            117.11
+          ]
+        }
+      ]
+    },
+    "sharp_a80_m50": {
+      "edges": [
+        {
+          "lo": 64,
+          "hi": 192,
+          "rise10to90": 0.602,
+          "overshoot": 32.0,
+          "undershoot": 10.0
+        },
+        {
+          "lo": 100,
+          "hi": 156,
+          "rise10to90": 0.407,
+          "overshoot": 24.0,
+          "undershoot": 30.0
+        },
+        {
+          "lo": 120,
+          "hi": 136,
+          "rise10to90": 0.457,
+          "overshoot": 5.0,
+          "undershoot": 7.0
+        }
+      ],
+      "gratings": [
+        {
+          "period": 4,
+          "gain": 1.4687
+        },
+        {
+          "period": 8,
+          "gain": 1.3854
+        },
+        {
+          "period": 16,
+          "gain": 1.1146
+        },
+        {
+          "period": 32,
+          "gain": 1.0
+        }
+      ],
+      "noise": [
+        {
+          "rgb": [
+            64,
+            64,
+            64
+          ],
+          "lumaSigmaIn": 6,
+          "chromaSigmaIn": 0,
+          "lumaStd": 6.699,
+          "cbStd": 0.0,
+          "crStd": 0.0,
+          "mean": [
+            63.92,
+            63.92,
+            63.92
+          ]
+        },
+        {
+          "rgb": [
+            128,
+            128,
+            128
+          ],
+          "lumaSigmaIn": 6,
+          "chromaSigmaIn": 0,
+          "lumaStd": 6.84,
+          "cbStd": 0.0,
+          "crStd": 0.0,
+          "mean": [
+            127.89,
+            127.89,
+            127.89
+          ]
+        },
+        {
+          "rgb": [
+            192,
+            192,
+            192
+          ],
+          "lumaSigmaIn": 6,
+          "chromaSigmaIn": 0,
+          "lumaStd": 6.99,
+          "cbStd": 0.0,
+          "crStd": 0.0,
+          "mean": [
+            191.95,
+            191.95,
+            191.95
+          ]
+        },
+        {
+          "rgb": [
+            128,
+            128,
+            128
+          ],
+          "lumaSigmaIn": 12,
+          "chromaSigmaIn": 0,
+          "lumaStd": 17.574,
+          "cbStd": 0.0,
+          "crStd": 0.0,
+          "mean": [
+            127.27,
+            127.27,
+            127.27
+          ]
+        },
+        {
+          "rgb": [
+            128,
+            128,
+            128
+          ],
+          "lumaSigmaIn": 0,
+          "chromaSigmaIn": 8,
+          "lumaStd": 0.189,
+          "cbStd": 8.043,
+          "crStd": 8.087,
+          "mean": [
+            128.06,
+            127.97,
+            127.96
+          ]
+        },
+        {
+          "rgb": [
+            96,
+            128,
+            160
+          ],
+          "lumaSigmaIn": 6,
+          "chromaSigmaIn": 8,
+          "lumaStd": 6.89,
+          "cbStd": 8.051,
+          "crStd": 8.105,
+          "mean": [
+            95.93,
+            128.06,
+            159.89
+          ]
+        },
+        {
+          "rgb": [
+            170,
+            120,
+            90
+          ],
+          "lumaSigmaIn": 6,
+          "chromaSigmaIn": 8,
+          "lumaStd": 6.817,
+          "cbStd": 7.981,
+          "crStd": 8.054,
+          "mean": [
+            169.94,
+            119.86,
+            89.92
+          ]
+        },
+        {
+          "rgb": [
+            80,
+            140,
+            80
+          ],
+          "lumaSigmaIn": 0,
+          "chromaSigmaIn": 12,
+          "lumaStd": 0.728,
+          "cbStd": 12.086,
+          "crStd": 12.155,
+          "mean": [
+            79.76,
+            139.87,
+            79.81
+          ]
+        },
+        {
+          "rgb": [
+            128,
+            128,
+            128
+          ],
+          "lumaSigmaIn": 0,
+          "chromaSigmaIn": 0,
+          "lumaStd": 0.0,
+          "cbStd": 0.0,
+          "crStd": 0.0,
+          "mean": [
+            128.0,
+            128.0,
+            128.0
+          ]
+        },
+        {
+          "rgb": [
+            200,
+            160,
+            120
+          ],
+          "lumaSigmaIn": 12,
+          "chromaSigmaIn": 12,
+          "lumaStd": 17.627,
+          "cbStd": 12.103,
+          "crStd": 11.911,
+          "mean": [
+            198.87,
+            159.37,
+            119.53
+          ]
+        }
+      ]
+    },
+    "sharp_a80_m90": {
+      "edges": [
+        {
+          "lo": 64,
+          "hi": 192,
+          "rise10to90": 0.613,
+          "overshoot": 29.0,
+          "undershoot": 10.0
+        },
+        {
+          "lo": 100,
+          "hi": 156,
+          "rise10to90": 0.521,
+          "overshoot": 11.0,
+          "undershoot": 19.0
+        },
+        {
+          "lo": 120,
+          "hi": 136,
+          "rise10to90": 0.753,
+          "overshoot": 0.0,
+          "undershoot": 1.0
+        }
+      ],
+      "gratings": [
+        {
+          "period": 4,
+          "gain": 1.0938
+        },
+        {
+          "period": 8,
+          "gain": 1.1875
+        },
+        {
+          "period": 16,
+          "gain": 1.0208
+        },
+        {
+          "period": 32,
+          "gain": 1.0
+        }
+      ],
+      "noise": [
+        {
+          "rgb": [
+            64,
+            64,
+            64
+          ],
+          "lumaSigmaIn": 6,
+          "chromaSigmaIn": 0,
+          "lumaStd": 6.074,
+          "cbStd": 0.0,
+          "crStd": 0.0,
+          "mean": [
+            63.99,
+            63.99,
+            63.99
+          ]
+        },
+        {
+          "rgb": [
+            128,
+            128,
+            128
+          ],
+          "lumaSigmaIn": 6,
+          "chromaSigmaIn": 0,
+          "lumaStd": 6.046,
+          "cbStd": 0.0,
+          "crStd": 0.0,
+          "mean": [
+            127.94,
+            127.94,
+            127.94
+          ]
+        },
+        {
+          "rgb": [
+            192,
+            192,
+            192
+          ],
+          "lumaSigmaIn": 6,
+          "chromaSigmaIn": 0,
+          "lumaStd": 6.078,
+          "cbStd": 0.0,
+          "crStd": 0.0,
+          "mean": [
+            191.99,
+            191.99,
+            191.99
+          ]
+        },
+        {
+          "rgb": [
+            128,
+            128,
+            128
+          ],
+          "lumaSigmaIn": 12,
+          "chromaSigmaIn": 0,
+          "lumaStd": 12.405,
+          "cbStd": 0.0,
+          "crStd": 0.0,
+          "mean": [
+            127.94,
+            127.94,
+            127.94
+          ]
+        },
+        {
+          "rgb": [
+            128,
+            128,
+            128
+          ],
+          "lumaSigmaIn": 0,
+          "chromaSigmaIn": 8,
+          "lumaStd": 0.189,
+          "cbStd": 8.043,
+          "crStd": 8.087,
+          "mean": [
+            128.06,
+            127.97,
+            127.96
+          ]
+        },
+        {
+          "rgb": [
+            96,
+            128,
+            160
+          ],
+          "lumaSigmaIn": 6,
+          "chromaSigmaIn": 8,
+          "lumaStd": 6.031,
+          "cbStd": 8.066,
+          "crStd": 8.058,
+          "mean": [
+            96.01,
+            128.12,
+            160.0
+          ]
+        },
+        {
+          "rgb": [
+            170,
+            120,
+            90
+          ],
+          "lumaSigmaIn": 6,
+          "chromaSigmaIn": 8,
+          "lumaStd": 6.054,
+          "cbStd": 7.959,
+          "crStd": 8.059,
+          "mean": [
+            170.01,
+            119.9,
+            89.96
+          ]
+        },
+        {
+          "rgb": [
+            80,
+            140,
+            80
+          ],
+          "lumaSigmaIn": 0,
+          "chromaSigmaIn": 12,
+          "lumaStd": 0.371,
+          "cbStd": 12.045,
+          "crStd": 12.048,
+          "mean": [
+            79.86,
+            139.89,
+            79.89
+          ]
+        },
+        {
+          "rgb": [
+            128,
+            128,
+            128
+          ],
+          "lumaSigmaIn": 0,
+          "chromaSigmaIn": 0,
+          "lumaStd": 0.0,
+          "cbStd": 0.0,
+          "crStd": 0.0,
+          "mean": [
+            128.0,
+            128.0,
+            128.0
+          ]
+        },
+        {
+          "rgb": [
+            200,
+            160,
+            120
+          ],
+          "lumaSigmaIn": 12,
+          "chromaSigmaIn": 12,
+          "lumaStd": 12.3,
+          "cbStd": 12.007,
+          "crStd": 12.057,
+          "mean": [
+            199.78,
+            159.89,
+            119.98
+          ]
+        }
+      ]
+    },
+    "lnr_25": {
+      "edges": [
+        {
+          "lo": 64,
+          "hi": 192,
+          "rise10to90": 0.806,
+          "overshoot": 0.0,
+          "undershoot": 0.0
+        },
+        {
+          "lo": 100,
+          "hi": 156,
+          "rise10to90": 0.8,
+          "overshoot": 0.0,
+          "undershoot": 0.0
+        },
+        {
+          "lo": 120,
+          "hi": 136,
+          "rise10to90": 1.8,
+          "overshoot": 0.0,
+          "undershoot": 0.0
+        }
+      ],
+      "gratings": [
+        {
+          "period": 4,
+          "gain": 0.9792
+        },
+        {
+          "period": 8,
+          "gain": 0.9271
+        },
+        {
+          "period": 16,
+          "gain": 0.9167
+        },
+        {
+          "period": 32,
+          "gain": 0.9375
+        }
+      ],
+      "noise": [
+        {
+          "rgb": [
+            64,
+            64,
+            64
+          ],
+          "lumaSigmaIn": 6,
+          "chromaSigmaIn": 0,
+          "lumaStd": 3.54,
+          "cbStd": 0.0,
+          "crStd": 0.0,
+          "mean": [
+            64.02,
+            64.02,
+            64.02
+          ]
+        },
+        {
+          "rgb": [
+            128,
+            128,
+            128
+          ],
+          "lumaSigmaIn": 6,
+          "chromaSigmaIn": 0,
+          "lumaStd": 3.527,
+          "cbStd": 0.0,
+          "crStd": 0.0,
+          "mean": [
+            127.96,
+            127.96,
+            127.96
+          ]
+        },
+        {
+          "rgb": [
+            192,
+            192,
+            192
+          ],
+          "lumaSigmaIn": 6,
+          "chromaSigmaIn": 0,
+          "lumaStd": 3.561,
+          "cbStd": 0.0,
+          "crStd": 0.0,
+          "mean": [
+            192.0,
+            192.0,
+            192.0
+          ]
+        },
+        {
+          "rgb": [
+            128,
+            128,
+            128
+          ],
+          "lumaSigmaIn": 12,
+          "chromaSigmaIn": 0,
+          "lumaStd": 8.253,
+          "cbStd": 0.0,
+          "crStd": 0.0,
+          "mean": [
+            128.03,
+            128.03,
+            128.03
+          ]
+        },
+        {
+          "rgb": [
+            128,
+            128,
+            128
+          ],
+          "lumaSigmaIn": 0,
+          "chromaSigmaIn": 8,
+          "lumaStd": 0.881,
+          "cbStd": 8.045,
+          "crStd": 8.09,
+          "mean": [
+            128.04,
+            127.98,
+            127.95
+          ]
+        },
+        {
+          "rgb": [
+            96,
+            128,
+            160
+          ],
+          "lumaSigmaIn": 6,
+          "chromaSigmaIn": 8,
+          "lumaStd": 3.711,
+          "cbStd": 8.06,
+          "crStd": 8.093,
+          "mean": [
+            96.01,
+            128.14,
+            160.01
+          ]
+        },
+        {
+          "rgb": [
+            170,
+            120,
+            90
+          ],
+          "lumaSigmaIn": 6,
+          "chromaSigmaIn": 8,
+          "lumaStd": 3.616,
+          "cbStd": 7.976,
+          "crStd": 8.056,
+          "mean": [
+            170.02,
+            119.92,
+            89.98
+          ]
+        },
+        {
+          "rgb": [
+            80,
+            140,
+            80
+          ],
+          "lumaSigmaIn": 0,
+          "chromaSigmaIn": 12,
+          "lumaStd": 2.395,
+          "cbStd": 12.092,
+          "crStd": 12.161,
+          "mean": [
+            79.75,
+            139.89,
+            79.81
+          ]
+        },
+        {
+          "rgb": [
+            128,
+            128,
+            128
+          ],
+          "lumaSigmaIn": 0,
+          "chromaSigmaIn": 0,
+          "lumaStd": 0.0,
+          "cbStd": 0.0,
+          "crStd": 0.0,
+          "mean": [
+            128.0,
+            128.0,
+            128.0
+          ]
+        },
+        {
+          "rgb": [
+            200,
+            160,
+            120
+          ],
+          "lumaSigmaIn": 12,
+          "chromaSigmaIn": 12,
+          "lumaStd": 8.486,
+          "cbStd": 12.021,
+          "crStd": 12.058,
+          "mean": [
+            199.85,
+            159.96,
+            120.03
+          ]
+        }
+      ]
+    },
+    "lnr_50": {
+      "edges": [
+        {
+          "lo": 64,
+          "hi": 192,
+          "rise10to90": 0.813,
+          "overshoot": 0.0,
+          "undershoot": 0.0
+        },
+        {
+          "lo": 100,
+          "hi": 156,
+          "rise10to90": 0.8,
+          "overshoot": 0.0,
+          "undershoot": 0.0
+        },
+        {
+          "lo": 120,
+          "hi": 136,
+          "rise10to90": 3.8,
+          "overshoot": 0.0,
+          "undershoot": 0.0
+        }
+      ],
+      "gratings": [
+        {
+          "period": 4,
+          "gain": 0.9792
+        },
+        {
+          "period": 8,
+          "gain": 0.8958
+        },
+        {
+          "period": 16,
+          "gain": 0.8854
+        },
+        {
+          "period": 32,
+          "gain": 0.9062
+        }
+      ],
+      "noise": [
+        {
+          "rgb": [
+            64,
+            64,
+            64
+          ],
+          "lumaSigmaIn": 6,
+          "chromaSigmaIn": 0,
+          "lumaStd": 2.191,
+          "cbStd": 0.0,
+          "crStd": 0.0,
+          "mean": [
+            64.03,
+            64.03,
+            64.03
+          ]
+        },
+        {
+          "rgb": [
+            128,
+            128,
+            128
+          ],
+          "lumaSigmaIn": 6,
+          "chromaSigmaIn": 0,
+          "lumaStd": 2.185,
+          "cbStd": 0.0,
+          "crStd": 0.0,
+          "mean": [
+            127.96,
+            127.96,
+            127.96
+          ]
+        },
+        {
+          "rgb": [
+            192,
+            192,
+            192
+          ],
+          "lumaSigmaIn": 6,
+          "chromaSigmaIn": 0,
+          "lumaStd": 2.218,
+          "cbStd": 0.0,
+          "crStd": 0.0,
+          "mean": [
+            192.0,
+            192.0,
+            192.0
+          ]
+        },
+        {
+          "rgb": [
+            128,
+            128,
+            128
+          ],
+          "lumaSigmaIn": 12,
+          "chromaSigmaIn": 0,
+          "lumaStd": 6.118,
+          "cbStd": 0.0,
+          "crStd": 0.0,
+          "mean": [
+            128.05,
+            128.05,
+            128.05
+          ]
+        },
+        {
+          "rgb": [
+            128,
+            128,
+            128
+          ],
+          "lumaSigmaIn": 0,
+          "chromaSigmaIn": 8,
+          "lumaStd": 1.309,
+          "cbStd": 8.046,
+          "crStd": 8.093,
+          "mean": [
+            128.04,
+            127.98,
+            127.94
+          ]
+        },
+        {
+          "rgb": [
+            96,
+            128,
+            160
+          ],
+          "lumaSigmaIn": 6,
+          "chromaSigmaIn": 8,
+          "lumaStd": 2.788,
+          "cbStd": 8.057,
+          "crStd": 8.112,
+          "mean": [
+            95.99,
+            128.15,
+            160.01
+          ]
+        },
+        {
+          "rgb": [
+            170,
+            120,
+            90
+          ],
+          "lumaSigmaIn": 6,
+          "chromaSigmaIn": 8,
+          "lumaStd": 2.391,
+          "cbStd": 7.986,
+          "crStd": 8.055,
+          "mean": [
+            170.03,
+            119.93,
+            89.98
+          ]
+        },
+        {
+          "rgb": [
+            80,
+            140,
+            80
+          ],
+          "lumaSigmaIn": 0,
+          "chromaSigmaIn": 12,
+          "lumaStd": 3.663,
+          "cbStd": 12.116,
+          "crStd": 12.222,
+          "mean": [
+            79.68,
+            139.89,
+            79.76
+          ]
+        },
+        {
+          "rgb": [
+            128,
+            128,
+            128
+          ],
+          "lumaSigmaIn": 0,
+          "chromaSigmaIn": 0,
+          "lumaStd": 0.0,
+          "cbStd": 0.0,
+          "crStd": 0.0,
+          "mean": [
+            128.0,
+            128.0,
+            128.0
+          ]
+        },
+        {
+          "rgb": [
+            200,
+            160,
+            120
+          ],
+          "lumaSigmaIn": 12,
+          "chromaSigmaIn": 12,
+          "lumaStd": 6.582,
+          "cbStd": 12.037,
+          "crStd": 12.052,
+          "mean": [
+            199.86,
+            159.98,
+            120.04
+          ]
+        }
+      ]
+    },
+    "lnr_75": {
+      "edges": [
+        {
+          "lo": 64,
+          "hi": 192,
+          "rise10to90": 0.813,
+          "overshoot": 0.0,
+          "undershoot": 0.0
+        },
+        {
+          "lo": 100,
+          "hi": 156,
+          "rise10to90": 0.8,
+          "overshoot": 0.0,
+          "undershoot": 0.0
+        },
+        {
+          "lo": 120,
+          "hi": 136,
+          "rise10to90": 6.8,
+          "overshoot": 0.0,
+          "undershoot": 0.0
+        }
+      ],
+      "gratings": [
+        {
+          "period": 4,
+          "gain": 0.9687
+        },
+        {
+          "period": 8,
+          "gain": 0.8646
+        },
+        {
+          "period": 16,
+          "gain": 0.875
+        },
+        {
+          "period": 32,
+          "gain": 0.8854
+        }
+      ],
+      "noise": [
+        {
+          "rgb": [
+            64,
+            64,
+            64
+          ],
+          "lumaSigmaIn": 6,
+          "chromaSigmaIn": 0,
+          "lumaStd": 1.121,
+          "cbStd": 0.0,
+          "crStd": 0.0,
+          "mean": [
+            64.03,
+            64.03,
+            64.03
+          ]
+        },
+        {
+          "rgb": [
+            128,
+            128,
+            128
+          ],
+          "lumaSigmaIn": 6,
+          "chromaSigmaIn": 0,
+          "lumaStd": 1.123,
+          "cbStd": 0.0,
+          "crStd": 0.0,
+          "mean": [
+            127.97,
+            127.97,
+            127.97
+          ]
+        },
+        {
+          "rgb": [
+            192,
+            192,
+            192
+          ],
+          "lumaSigmaIn": 6,
+          "chromaSigmaIn": 0,
+          "lumaStd": 1.152,
+          "cbStd": 0.0,
+          "crStd": 0.0,
+          "mean": [
+            192.0,
+            192.0,
+            192.0
+          ]
+        },
+        {
+          "rgb": [
+            128,
+            128,
+            128
+          ],
+          "lumaSigmaIn": 12,
+          "chromaSigmaIn": 0,
+          "lumaStd": 4.605,
+          "cbStd": 0.0,
+          "crStd": 0.0,
+          "mean": [
+            128.06,
+            128.06,
+            128.06
+          ]
+        },
+        {
+          "rgb": [
+            128,
+            128,
+            128
+          ],
+          "lumaSigmaIn": 0,
+          "chromaSigmaIn": 8,
+          "lumaStd": 1.667,
+          "cbStd": 8.047,
+          "crStd": 8.095,
+          "mean": [
+            128.03,
+            127.99,
+            127.94
+          ]
+        },
+        {
+          "rgb": [
+            96,
+            128,
+            160
+          ],
+          "lumaSigmaIn": 6,
+          "chromaSigmaIn": 8,
+          "lumaStd": 2.469,
+          "cbStd": 8.055,
+          "crStd": 8.13,
+          "mean": [
+            95.99,
+            128.15,
+            160.0
+          ]
+        },
+        {
+          "rgb": [
+            170,
+            120,
+            90
+          ],
+          "lumaSigmaIn": 6,
+          "chromaSigmaIn": 8,
+          "lumaStd": 1.576,
+          "cbStd": 7.994,
+          "crStd": 8.058,
+          "mean": [
+            170.03,
+            119.93,
+            89.98
+          ]
+        },
+        {
+          "rgb": [
+            80,
+            140,
+            80
+          ],
+          "lumaSigmaIn": 0,
+          "chromaSigmaIn": 12,
+          "lumaStd": 4.706,
+          "cbStd": 12.137,
+          "crStd": 12.272,
+          "mean": [
+            79.62,
+            139.89,
+            79.72
+          ]
+        },
+        {
+          "rgb": [
+            128,
+            128,
+            128
+          ],
+          "lumaSigmaIn": 0,
+          "chromaSigmaIn": 0,
+          "lumaStd": 0.0,
+          "cbStd": 0.0,
+          "crStd": 0.0,
+          "mean": [
+            128.0,
+            128.0,
+            128.0
+          ]
+        },
+        {
+          "rgb": [
+            200,
+            160,
+            120
+          ],
+          "lumaSigmaIn": 12,
+          "chromaSigmaIn": 12,
+          "lumaStd": 5.303,
+          "cbStd": 12.051,
+          "crStd": 12.049,
+          "mean": [
+            199.86,
+            159.99,
+            120.04
+          ]
+        }
+      ]
+    },
+    "lnr_100": {
+      "edges": [
+        {
+          "lo": 64,
+          "hi": 192,
+          "rise10to90": 0.813,
+          "overshoot": 0.0,
+          "undershoot": 0.0
+        },
+        {
+          "lo": 100,
+          "hi": 156,
+          "rise10to90": 0.8,
+          "overshoot": 0.0,
+          "undershoot": 0.0
+        },
+        {
+          "lo": 120,
+          "hi": 136,
+          "rise10to90": 7.8,
+          "overshoot": 0.0,
+          "undershoot": 0.0
+        }
+      ],
+      "gratings": [
+        {
+          "period": 4,
+          "gain": 0.9583
+        },
+        {
+          "period": 8,
+          "gain": 0.8333
+        },
+        {
+          "period": 16,
+          "gain": 0.8646
+        },
+        {
+          "period": 32,
+          "gain": 0.875
+        }
+      ],
+      "noise": [
+        {
+          "rgb": [
+            64,
+            64,
+            64
+          ],
+          "lumaSigmaIn": 6,
+          "chromaSigmaIn": 0,
+          "lumaStd": 0.413,
+          "cbStd": 0.0,
+          "crStd": 0.0,
+          "mean": [
+            64.03,
+            64.03,
+            64.03
+          ]
+        },
+        {
+          "rgb": [
+            128,
+            128,
+            128
+          ],
+          "lumaSigmaIn": 6,
+          "chromaSigmaIn": 0,
+          "lumaStd": 0.427,
+          "cbStd": 0.0,
+          "crStd": 0.0,
+          "mean": [
+            127.97,
+            127.97,
+            127.97
+          ]
+        },
+        {
+          "rgb": [
+            192,
+            192,
+            192
+          ],
+          "lumaSigmaIn": 6,
+          "chromaSigmaIn": 0,
+          "lumaStd": 0.493,
+          "cbStd": 0.0,
+          "crStd": 0.0,
+          "mean": [
+            192.01,
+            192.01,
+            192.01
+          ]
+        },
+        {
+          "rgb": [
+            128,
+            128,
+            128
+          ],
+          "lumaSigmaIn": 12,
+          "chromaSigmaIn": 0,
+          "lumaStd": 3.737,
+          "cbStd": 0.0,
+          "crStd": 0.0,
+          "mean": [
+            128.06,
+            128.06,
+            128.06
+          ]
+        },
+        {
+          "rgb": [
+            128,
+            128,
+            128
+          ],
+          "lumaSigmaIn": 0,
+          "chromaSigmaIn": 8,
+          "lumaStd": 1.985,
+          "cbStd": 8.047,
+          "crStd": 8.093,
+          "mean": [
+            128.03,
+            127.99,
+            127.94
+          ]
+        },
+        {
+          "rgb": [
+            96,
+            128,
+            160
+          ],
+          "lumaSigmaIn": 6,
+          "chromaSigmaIn": 8,
+          "lumaStd": 2.649,
+          "cbStd": 8.054,
+          "crStd": 8.145,
+          "mean": [
+            95.97,
+            128.15,
+            160.0
+          ]
+        },
+        {
+          "rgb": [
+            170,
+            120,
+            90
+          ],
+          "lumaSigmaIn": 6,
+          "chromaSigmaIn": 8,
+          "lumaStd": 1.301,
+          "cbStd": 8.006,
+          "crStd": 8.053,
+          "mean": [
+            170.04,
+            119.93,
+            89.98
+          ]
+        },
+        {
+          "rgb": [
+            80,
+            140,
+            80
+          ],
+          "lumaSigmaIn": 0,
+          "chromaSigmaIn": 12,
+          "lumaStd": 5.626,
+          "cbStd": 12.154,
+          "crStd": 12.317,
+          "mean": [
+            79.57,
+            139.89,
+            79.68
+          ]
+        },
+        {
+          "rgb": [
+            128,
+            128,
+            128
+          ],
+          "lumaSigmaIn": 0,
+          "chromaSigmaIn": 0,
+          "lumaStd": 0.0,
+          "cbStd": 0.0,
+          "crStd": 0.0,
+          "mean": [
+            128.0,
+            128.0,
+            128.0
+          ]
+        },
+        {
+          "rgb": [
+            200,
+            160,
+            120
+          ],
+          "lumaSigmaIn": 12,
+          "chromaSigmaIn": 12,
+          "lumaStd": 4.612,
+          "cbStd": 12.062,
+          "crStd": 12.045,
+          "mean": [
+            199.85,
+            159.99,
+            120.03
+          ]
+        }
+      ]
+    },
+    "cnr_25": {
+      "edges": [
+        {
+          "lo": 64,
+          "hi": 192,
+          "rise10to90": 0.8,
+          "overshoot": 0.0,
+          "undershoot": 0.0
+        },
+        {
+          "lo": 100,
+          "hi": 156,
+          "rise10to90": 0.8,
+          "overshoot": 0.0,
+          "undershoot": 0.0
+        },
+        {
+          "lo": 120,
+          "hi": 136,
+          "rise10to90": 0.8,
+          "overshoot": 0.0,
+          "undershoot": 0.0
+        }
+      ],
+      "gratings": [
+        {
+          "period": 4,
+          "gain": 1.0
+        },
+        {
+          "period": 8,
+          "gain": 1.0
+        },
+        {
+          "period": 16,
+          "gain": 1.0
+        },
+        {
+          "period": 32,
+          "gain": 1.0
+        }
+      ],
+      "noise": [
+        {
+          "rgb": [
+            64,
+            64,
+            64
+          ],
+          "lumaSigmaIn": 6,
+          "chromaSigmaIn": 0,
+          "lumaStd": 6.074,
+          "cbStd": 0.0,
+          "crStd": 0.0,
+          "mean": [
+            63.99,
+            63.99,
+            63.99
+          ]
+        },
+        {
+          "rgb": [
+            128,
+            128,
+            128
+          ],
+          "lumaSigmaIn": 6,
+          "chromaSigmaIn": 0,
+          "lumaStd": 6.046,
+          "cbStd": 0.0,
+          "crStd": 0.0,
+          "mean": [
+            127.94,
+            127.94,
+            127.94
+          ]
+        },
+        {
+          "rgb": [
+            192,
+            192,
+            192
+          ],
+          "lumaSigmaIn": 6,
+          "chromaSigmaIn": 0,
+          "lumaStd": 6.078,
+          "cbStd": 0.0,
+          "crStd": 0.0,
+          "mean": [
+            191.99,
+            191.99,
+            191.99
+          ]
+        },
+        {
+          "rgb": [
+            128,
+            128,
+            128
+          ],
+          "lumaSigmaIn": 12,
+          "chromaSigmaIn": 0,
+          "lumaStd": 12.188,
+          "cbStd": 0.0,
+          "crStd": 0.0,
+          "mean": [
+            127.98,
+            127.98,
+            127.98
+          ]
+        },
+        {
+          "rgb": [
+            128,
+            128,
+            128
+          ],
+          "lumaSigmaIn": 0,
+          "chromaSigmaIn": 8,
+          "lumaStd": 1.692,
+          "cbStd": 2.537,
+          "crStd": 2.557,
+          "mean": [
+            128.58,
+            128.15,
+            128.83
+          ]
+        },
+        {
+          "rgb": [
+            96,
+            128,
+            160
+          ],
+          "lumaSigmaIn": 6,
+          "chromaSigmaIn": 8,
+          "lumaStd": 6.243,
+          "cbStd": 2.637,
+          "crStd": 2.724,
+          "mean": [
+            96.78,
+            128.27,
+            160.62
+          ]
+        },
+        {
+          "rgb": [
+            170,
+            120,
+            90
+          ],
+          "lumaSigmaIn": 6,
+          "chromaSigmaIn": 8,
+          "lumaStd": 6.048,
+          "cbStd": 2.661,
+          "crStd": 2.692,
+          "mean": [
+            170.36,
+            120.11,
+            91.28
+          ]
+        },
+        {
+          "rgb": [
+            80,
+            140,
+            80
+          ],
+          "lumaSigmaIn": 0,
+          "chromaSigmaIn": 12,
+          "lumaStd": 4.29,
+          "cbStd": 3.911,
+          "crStd": 4.038,
+          "mean": [
+            81.6,
+            140.12,
+            82.74
+          ]
+        },
+        {
+          "rgb": [
+            128,
+            128,
+            128
+          ],
+          "lumaSigmaIn": 0,
+          "chromaSigmaIn": 0,
+          "lumaStd": 0.0,
+          "cbStd": 0.0,
+          "crStd": 0.0,
+          "mean": [
+            128.0,
+            128.0,
+            128.0
+          ]
+        },
+        {
+          "rgb": [
+            200,
+            160,
+            120
+          ],
+          "lumaSigmaIn": 12,
+          "chromaSigmaIn": 12,
+          "lumaStd": 12.119,
+          "cbStd": 4.135,
+          "crStd": 3.942,
+          "mean": [
+            200.46,
+            160.3,
+            122.35
+          ]
+        }
+      ]
+    },
+    "cnr_50": {
+      "edges": [
+        {
+          "lo": 64,
+          "hi": 192,
+          "rise10to90": 0.8,
+          "overshoot": 0.0,
+          "undershoot": 0.0
+        },
+        {
+          "lo": 100,
+          "hi": 156,
+          "rise10to90": 0.8,
+          "overshoot": 0.0,
+          "undershoot": 0.0
+        },
+        {
+          "lo": 120,
+          "hi": 136,
+          "rise10to90": 0.8,
+          "overshoot": 0.0,
+          "undershoot": 0.0
+        }
+      ],
+      "gratings": [
+        {
+          "period": 4,
+          "gain": 1.0
+        },
+        {
+          "period": 8,
+          "gain": 1.0
+        },
+        {
+          "period": 16,
+          "gain": 1.0
+        },
+        {
+          "period": 32,
+          "gain": 1.0
+        }
+      ],
+      "noise": [
+        {
+          "rgb": [
+            64,
+            64,
+            64
+          ],
+          "lumaSigmaIn": 6,
+          "chromaSigmaIn": 0,
+          "lumaStd": 6.074,
+          "cbStd": 0.0,
+          "crStd": 0.0,
+          "mean": [
+            63.99,
+            63.99,
+            63.99
+          ]
+        },
+        {
+          "rgb": [
+            128,
+            128,
+            128
+          ],
+          "lumaSigmaIn": 6,
+          "chromaSigmaIn": 0,
+          "lumaStd": 6.046,
+          "cbStd": 0.0,
+          "crStd": 0.0,
+          "mean": [
+            127.94,
+            127.94,
+            127.94
+          ]
+        },
+        {
+          "rgb": [
+            192,
+            192,
+            192
+          ],
+          "lumaSigmaIn": 6,
+          "chromaSigmaIn": 0,
+          "lumaStd": 6.078,
+          "cbStd": 0.0,
+          "crStd": 0.0,
+          "mean": [
+            191.99,
+            191.99,
+            191.99
+          ]
+        },
+        {
+          "rgb": [
+            128,
+            128,
+            128
+          ],
+          "lumaSigmaIn": 12,
+          "chromaSigmaIn": 0,
+          "lumaStd": 12.188,
+          "cbStd": 0.0,
+          "crStd": 0.0,
+          "mean": [
+            127.98,
+            127.98,
+            127.98
+          ]
+        },
+        {
+          "rgb": [
+            128,
+            128,
+            128
+          ],
+          "lumaSigmaIn": 0,
+          "chromaSigmaIn": 8,
+          "lumaStd": 1.692,
+          "cbStd": 2.537,
+          "crStd": 2.557,
+          "mean": [
+            128.58,
+            128.15,
+            128.83
+          ]
+        },
+        {
+          "rgb": [
+            96,
+            128,
+            160
+          ],
+          "lumaSigmaIn": 6,
+          "chromaSigmaIn": 8,
+          "lumaStd": 6.243,
+          "cbStd": 2.637,
+          "crStd": 2.724,
+          "mean": [
+            96.78,
+            128.27,
+            160.62
+          ]
+        },
+        {
+          "rgb": [
+            170,
+            120,
+            90
+          ],
+          "lumaSigmaIn": 6,
+          "chromaSigmaIn": 8,
+          "lumaStd": 6.048,
+          "cbStd": 2.661,
+          "crStd": 2.692,
+          "mean": [
+            170.36,
+            120.11,
+            91.28
+          ]
+        },
+        {
+          "rgb": [
+            80,
+            140,
+            80
+          ],
+          "lumaSigmaIn": 0,
+          "chromaSigmaIn": 12,
+          "lumaStd": 4.29,
+          "cbStd": 3.911,
+          "crStd": 4.038,
+          "mean": [
+            81.6,
+            140.12,
+            82.74
+          ]
+        },
+        {
+          "rgb": [
+            128,
+            128,
+            128
+          ],
+          "lumaSigmaIn": 0,
+          "chromaSigmaIn": 0,
+          "lumaStd": 0.0,
+          "cbStd": 0.0,
+          "crStd": 0.0,
+          "mean": [
+            128.0,
+            128.0,
+            128.0
+          ]
+        },
+        {
+          "rgb": [
+            200,
+            160,
+            120
+          ],
+          "lumaSigmaIn": 12,
+          "chromaSigmaIn": 12,
+          "lumaStd": 12.119,
+          "cbStd": 4.135,
+          "crStd": 3.942,
+          "mean": [
+            200.46,
+            160.3,
+            122.35
+          ]
+        }
+      ]
+    },
+    "cnr_100": {
+      "edges": [
+        {
+          "lo": 64,
+          "hi": 192,
+          "rise10to90": 0.8,
+          "overshoot": 0.0,
+          "undershoot": 0.0
+        },
+        {
+          "lo": 100,
+          "hi": 156,
+          "rise10to90": 0.8,
+          "overshoot": 0.0,
+          "undershoot": 0.0
+        },
+        {
+          "lo": 120,
+          "hi": 136,
+          "rise10to90": 0.8,
+          "overshoot": 0.0,
+          "undershoot": 0.0
+        }
+      ],
+      "gratings": [
+        {
+          "period": 4,
+          "gain": 1.0
+        },
+        {
+          "period": 8,
+          "gain": 1.0
+        },
+        {
+          "period": 16,
+          "gain": 1.0
+        },
+        {
+          "period": 32,
+          "gain": 1.0
+        }
+      ],
+      "noise": [
+        {
+          "rgb": [
+            64,
+            64,
+            64
+          ],
+          "lumaSigmaIn": 6,
+          "chromaSigmaIn": 0,
+          "lumaStd": 6.074,
+          "cbStd": 0.0,
+          "crStd": 0.0,
+          "mean": [
+            63.99,
+            63.99,
+            63.99
+          ]
+        },
+        {
+          "rgb": [
+            128,
+            128,
+            128
+          ],
+          "lumaSigmaIn": 6,
+          "chromaSigmaIn": 0,
+          "lumaStd": 6.046,
+          "cbStd": 0.0,
+          "crStd": 0.0,
+          "mean": [
+            127.94,
+            127.94,
+            127.94
+          ]
+        },
+        {
+          "rgb": [
+            192,
+            192,
+            192
+          ],
+          "lumaSigmaIn": 6,
+          "chromaSigmaIn": 0,
+          "lumaStd": 6.078,
+          "cbStd": 0.0,
+          "crStd": 0.0,
+          "mean": [
+            191.99,
+            191.99,
+            191.99
+          ]
+        },
+        {
+          "rgb": [
+            128,
+            128,
+            128
+          ],
+          "lumaSigmaIn": 12,
+          "chromaSigmaIn": 0,
+          "lumaStd": 12.188,
+          "cbStd": 0.0,
+          "crStd": 0.0,
+          "mean": [
+            127.98,
+            127.98,
+            127.98
+          ]
+        },
+        {
+          "rgb": [
+            128,
+            128,
+            128
+          ],
+          "lumaSigmaIn": 0,
+          "chromaSigmaIn": 8,
+          "lumaStd": 1.692,
+          "cbStd": 2.537,
+          "crStd": 2.557,
+          "mean": [
+            128.58,
+            128.15,
+            128.83
+          ]
+        },
+        {
+          "rgb": [
+            96,
+            128,
+            160
+          ],
+          "lumaSigmaIn": 6,
+          "chromaSigmaIn": 8,
+          "lumaStd": 6.243,
+          "cbStd": 2.637,
+          "crStd": 2.724,
+          "mean": [
+            96.78,
+            128.27,
+            160.62
+          ]
+        },
+        {
+          "rgb": [
+            170,
+            120,
+            90
+          ],
+          "lumaSigmaIn": 6,
+          "chromaSigmaIn": 8,
+          "lumaStd": 6.048,
+          "cbStd": 2.661,
+          "crStd": 2.692,
+          "mean": [
+            170.36,
+            120.11,
+            91.28
+          ]
+        },
+        {
+          "rgb": [
+            80,
+            140,
+            80
+          ],
+          "lumaSigmaIn": 0,
+          "chromaSigmaIn": 12,
+          "lumaStd": 4.29,
+          "cbStd": 3.911,
+          "crStd": 4.038,
+          "mean": [
+            81.6,
+            140.12,
+            82.74
+          ]
+        },
+        {
+          "rgb": [
+            128,
+            128,
+            128
+          ],
+          "lumaSigmaIn": 0,
+          "chromaSigmaIn": 0,
+          "lumaStd": 0.0,
+          "cbStd": 0.0,
+          "crStd": 0.0,
+          "mean": [
+            128.0,
+            128.0,
+            128.0
+          ]
+        },
+        {
+          "rgb": [
+            200,
+            160,
+            120
+          ],
+          "lumaSigmaIn": 12,
+          "chromaSigmaIn": 12,
+          "lumaStd": 12.119,
+          "cbStd": 4.135,
+          "crStd": 3.942,
+          "mean": [
+            200.46,
+            160.3,
+            122.35
+          ]
+        }
+      ]
+    },
+    "combo": {
+      "edges": [
+        {
+          "lo": 64,
+          "hi": 192,
+          "rise10to90": 0.606,
+          "overshoot": 31.0,
+          "undershoot": 10.0
+        },
+        {
+          "lo": 100,
+          "hi": 156,
+          "rise10to90": 0.404,
+          "overshoot": 25.0,
+          "undershoot": 30.0
+        },
+        {
+          "lo": 120,
+          "hi": 136,
+          "rise10to90": 0.512,
+          "overshoot": 4.0,
+          "undershoot": 5.0
+        }
+      ],
+      "gratings": [
+        {
+          "period": 4,
+          "gain": 1.5417
+        },
+        {
+          "period": 8,
+          "gain": 1.2083
+        },
+        {
+          "period": 16,
+          "gain": 1.0208
+        },
+        {
+          "period": 32,
+          "gain": 0.9375
+        }
+      ],
+      "noise": [
+        {
+          "rgb": [
+            64,
+            64,
+            64
+          ],
+          "lumaSigmaIn": 6,
+          "chromaSigmaIn": 0,
+          "lumaStd": 6.388,
+          "cbStd": 0.0,
+          "crStd": 0.0,
+          "mean": [
+            64.01,
+            64.01,
+            64.01
+          ]
+        },
+        {
+          "rgb": [
+            128,
+            128,
+            128
+          ],
+          "lumaSigmaIn": 6,
+          "chromaSigmaIn": 0,
+          "lumaStd": 6.909,
+          "cbStd": 0.0,
+          "crStd": 0.0,
+          "mean": [
+            127.78,
+            127.78,
+            127.78
+          ]
+        },
+        {
+          "rgb": [
+            192,
+            192,
+            192
+          ],
+          "lumaSigmaIn": 6,
+          "chromaSigmaIn": 0,
+          "lumaStd": 6.937,
+          "cbStd": 0.0,
+          "crStd": 0.0,
+          "mean": [
+            191.86,
+            191.86,
+            191.86
+          ]
+        },
+        {
+          "rgb": [
+            128,
+            128,
+            128
+          ],
+          "lumaSigmaIn": 12,
+          "chromaSigmaIn": 0,
+          "lumaStd": 17.044,
+          "cbStd": 0.0,
+          "crStd": 0.0,
+          "mean": [
+            127.14,
+            127.14,
+            127.14
+          ]
+        },
+        {
+          "rgb": [
+            128,
+            128,
+            128
+          ],
+          "lumaSigmaIn": 0,
+          "chromaSigmaIn": 8,
+          "lumaStd": 2.064,
+          "cbStd": 2.539,
+          "crStd": 2.56,
+          "mean": [
+            128.54,
+            128.13,
+            128.8
+          ]
+        },
+        {
+          "rgb": [
+            96,
+            128,
+            160
+          ],
+          "lumaSigmaIn": 6,
+          "chromaSigmaIn": 8,
+          "lumaStd": 7.208,
+          "cbStd": 3.038,
+          "crStd": 3.15,
+          "mean": [
+            96.55,
+            128.07,
+            160.37
+          ]
+        },
+        {
+          "rgb": [
+            170,
+            120,
+            90
+          ],
+          "lumaSigmaIn": 6,
+          "chromaSigmaIn": 8,
+          "lumaStd": 7.097,
+          "cbStd": 3.118,
+          "crStd": 3.221,
+          "mean": [
+            170.16,
+            119.94,
+            91.11
+          ]
+        },
+        {
+          "rgb": [
+            80,
+            140,
+            80
+          ],
+          "lumaSigmaIn": 0,
+          "chromaSigmaIn": 12,
+          "lumaStd": 5.108,
+          "cbStd": 4.203,
+          "crStd": 4.602,
+          "mean": [
+            81.32,
+            139.94,
+            82.49
+          ]
+        },
+        {
+          "rgb": [
+            128,
+            128,
+            128
+          ],
+          "lumaSigmaIn": 0,
+          "chromaSigmaIn": 0,
+          "lumaStd": 0.0,
+          "cbStd": 0.0,
+          "crStd": 0.0,
+          "mean": [
+            128.0,
+            128.0,
+            128.0
+          ]
+        },
+        {
+          "rgb": [
+            200,
+            160,
+            120
+          ],
+          "lumaSigmaIn": 12,
+          "chromaSigmaIn": 12,
+          "lumaStd": 18.061,
+          "cbStd": 5.146,
+          "crStd": 4.635,
+          "mean": [
+            199.2,
+            159.37,
+            121.52
+          ]
+        }
+      ]
+    }
+  },
+  "before": {
+    "variants": {
+      "neutral": {
+        "edges": [
+          {
+            "lo": 64,
+            "hi": 192,
+            "rise10to90": 0.8,
+            "overshoot": 0.0,
+            "undershoot": 0.0
+          },
+          {
+            "lo": 100,
+            "hi": 156,
+            "rise10to90": 0.8,
+            "overshoot": 0.0,
+            "undershoot": 0.0
+          },
+          {
+            "lo": 120,
+            "hi": 136,
+            "rise10to90": 0.8,
+            "overshoot": 0.0,
+            "undershoot": 0.0
+          }
+        ],
+        "gratings": [
+          {
+            "period": 4,
+            "gain": 1.0
+          },
+          {
+            "period": 8,
+            "gain": 1.0
+          },
+          {
+            "period": 16,
+            "gain": 1.0
+          },
+          {
+            "period": 32,
+            "gain": 1.0
+          }
+        ],
+        "noise": [
+          {
+            "rgb": [
+              64,
+              64,
+              64
+            ],
+            "lumaSigmaIn": 6,
+            "chromaSigmaIn": 0,
+            "lumaStd": 6.074,
+            "cbStd": 0.0,
+            "crStd": 0.0,
+            "mean": [
+              63.99,
+              63.99,
+              63.99
+            ]
+          },
+          {
+            "rgb": [
+              128,
+              128,
+              128
+            ],
+            "lumaSigmaIn": 6,
+            "chromaSigmaIn": 0,
+            "lumaStd": 6.046,
+            "cbStd": 0.0,
+            "crStd": 0.0,
+            "mean": [
+              127.94,
+              127.94,
+              127.94
+            ]
+          },
+          {
+            "rgb": [
+              192,
+              192,
+              192
+            ],
+            "lumaSigmaIn": 6,
+            "chromaSigmaIn": 0,
+            "lumaStd": 6.078,
+            "cbStd": 0.0,
+            "crStd": 0.0,
+            "mean": [
+              191.99,
+              191.99,
+              191.99
+            ]
+          },
+          {
+            "rgb": [
+              128,
+              128,
+              128
+            ],
+            "lumaSigmaIn": 12,
+            "chromaSigmaIn": 0,
+            "lumaStd": 12.188,
+            "cbStd": 0.0,
+            "crStd": 0.0,
+            "mean": [
+              127.98,
+              127.98,
+              127.98
+            ]
+          },
+          {
+            "rgb": [
+              128,
+              128,
+              128
+            ],
+            "lumaSigmaIn": 0,
+            "chromaSigmaIn": 8,
+            "lumaStd": 0.189,
+            "cbStd": 8.043,
+            "crStd": 8.087,
+            "mean": [
+              128.06,
+              127.97,
+              127.96
+            ]
+          },
+          {
+            "rgb": [
+              96,
+              128,
+              160
+            ],
+            "lumaSigmaIn": 6,
+            "chromaSigmaIn": 8,
+            "lumaStd": 6.031,
+            "cbStd": 8.066,
+            "crStd": 8.058,
+            "mean": [
+              96.01,
+              128.12,
+              160.0
+            ]
+          },
+          {
+            "rgb": [
+              170,
+              120,
+              90
+            ],
+            "lumaSigmaIn": 6,
+            "chromaSigmaIn": 8,
+            "lumaStd": 6.054,
+            "cbStd": 7.959,
+            "crStd": 8.059,
+            "mean": [
+              170.01,
+              119.9,
+              89.96
+            ]
+          },
+          {
+            "rgb": [
+              80,
+              140,
+              80
+            ],
+            "lumaSigmaIn": 0,
+            "chromaSigmaIn": 12,
+            "lumaStd": 0.371,
+            "cbStd": 12.045,
+            "crStd": 12.048,
+            "mean": [
+              79.86,
+              139.89,
+              79.89
+            ]
+          },
+          {
+            "rgb": [
+              128,
+              128,
+              128
+            ],
+            "lumaSigmaIn": 0,
+            "chromaSigmaIn": 0,
+            "lumaStd": 0.0,
+            "cbStd": 0.0,
+            "crStd": 0.0,
+            "mean": [
+              128.0,
+              128.0,
+              128.0
+            ]
+          },
+          {
+            "rgb": [
+              200,
+              160,
+              120
+            ],
+            "lumaSigmaIn": 12,
+            "chromaSigmaIn": 12,
+            "lumaStd": 12.066,
+            "cbStd": 12.001,
+            "crStd": 12.065,
+            "mean": [
+              199.83,
+              159.92,
+              120.0
+            ]
+          }
+        ]
+      },
+      "sharp_a40": {
+        "edges": [
+          {
+            "lo": 64,
+            "hi": 192,
+            "rise10to90": 0.542,
+            "overshoot": 8.0,
+            "undershoot": 53.0
+          },
+          {
+            "lo": 100,
+            "hi": 156,
+            "rise10to90": 0.659,
+            "overshoot": 4.0,
+            "undershoot": 8.0
+          },
+          {
+            "lo": 120,
+            "hi": 136,
+            "rise10to90": 0.674,
+            "overshoot": 1.0,
+            "undershoot": 2.0
+          }
+        ],
+        "gratings": [
+          {
+            "period": 4,
+            "gain": 1.3021
+          },
+          {
+            "period": 8,
+            "gain": 1.0938
+          },
+          {
+            "period": 16,
+            "gain": 1.0208
+          },
+          {
+            "period": 32,
+            "gain": 1.0
+          }
+        ],
+        "noise": [
+          {
+            "rgb": [
+              64,
+              64,
+              64
+            ],
+            "lumaSigmaIn": 6,
+            "chromaSigmaIn": 0,
+            "lumaStd": 7.942,
+            "cbStd": 0.0,
+            "crStd": 0.0,
+            "mean": [
+              63.76,
+              63.76,
+              63.76
+            ]
+          },
+          {
+            "rgb": [
+              128,
+              128,
+              128
+            ],
+            "lumaSigmaIn": 6,
+            "chromaSigmaIn": 0,
+            "lumaStd": 7.858,
+            "cbStd": 0.0,
+            "crStd": 0.0,
+            "mean": [
+              127.82,
+              127.82,
+              127.82
+            ]
+          },
+          {
+            "rgb": [
+              192,
+              192,
+              192
+            ],
+            "lumaSigmaIn": 6,
+            "chromaSigmaIn": 0,
+            "lumaStd": 7.881,
+            "cbStd": 0.0,
+            "crStd": 0.0,
+            "mean": [
+              191.91,
+              191.91,
+              191.91
+            ]
+          },
+          {
+            "rgb": [
+              128,
+              128,
+              128
+            ],
+            "lumaSigmaIn": 12,
+            "chromaSigmaIn": 0,
+            "lumaStd": 15.951,
+            "cbStd": 0.0,
+            "crStd": 0.0,
+            "mean": [
+              127.46,
+              127.46,
+              127.46
+            ]
+          },
+          {
+            "rgb": [
+              128,
+              128,
+              128
+            ],
+            "lumaSigmaIn": 0,
+            "chromaSigmaIn": 8,
+            "lumaStd": 0.722,
+            "cbStd": 8.037,
+            "crStd": 8.068,
+            "mean": [
+              128.12,
+              127.94,
+              128.0
+            ]
+          },
+          {
+            "rgb": [
+              96,
+              128,
+              160
+            ],
+            "lumaSigmaIn": 6,
+            "chromaSigmaIn": 8,
+            "lumaStd": 8.012,
+            "cbStd": 8.118,
+            "crStd": 7.909,
+            "mean": [
+              95.91,
+              127.95,
+              159.94
+            ]
+          },
+          {
+            "rgb": [
+              170,
+              120,
+              90
+            ],
+            "lumaSigmaIn": 6,
+            "chromaSigmaIn": 8,
+            "lumaStd": 7.958,
+            "cbStd": 7.948,
+            "crStd": 8.104,
+            "mean": [
+              169.95,
+              119.73,
+              89.74
+            ]
+          },
+          {
+            "rgb": [
+              80,
+              140,
+              80
+            ],
+            "lumaSigmaIn": 0,
+            "chromaSigmaIn": 12,
+            "lumaStd": 2.371,
+            "cbStd": 11.698,
+            "crStd": 11.356,
+            "mean": [
+              80.48,
+              139.75,
+              80.28
+            ]
+          },
+          {
+            "rgb": [
+              128,
+              128,
+              128
+            ],
+            "lumaSigmaIn": 0,
+            "chromaSigmaIn": 0,
+            "lumaStd": 0.0,
+            "cbStd": 0.0,
+            "crStd": 0.0,
+            "mean": [
+              128.0,
+              128.0,
+              128.0
+            ]
+          },
+          {
+            "rgb": [
+              200,
+              160,
+              120
+            ],
+            "lumaSigmaIn": 12,
+            "chromaSigmaIn": 12,
+            "lumaStd": 15.927,
+            "cbStd": 12.16,
+            "crStd": 12.185,
+            "mean": [
+              199.59,
+              159.42,
+              119.16
+            ]
+          }
+        ]
+      },
+      "sharp_a80": {
+        "edges": [
+          {
+            "lo": 64,
+            "hi": 192,
+            "rise10to90": 0.495,
+            "overshoot": 15.0,
+            "undershoot": 64.0
+          },
+          {
+            "lo": 100,
+            "hi": 156,
+            "rise10to90": 0.546,
+            "overshoot": 9.0,
+            "undershoot": 17.0
+          },
+          {
+            "lo": 120,
+            "hi": 136,
+            "rise10to90": 0.557,
+            "overshoot": 3.0,
+            "undershoot": 4.0
+          }
+        ],
+        "gratings": [
+          {
+            "period": 4,
+            "gain": 1.7292
+          },
+          {
+            "period": 8,
+            "gain": 1.1875
+          },
+          {
+            "period": 16,
+            "gain": 1.0521
+          },
+          {
+            "period": 32,
+            "gain": 1.0208
+          }
+        ],
+        "noise": [
+          {
+            "rgb": [
+              64,
+              64,
+              64
+            ],
+            "lumaSigmaIn": 6,
+            "chromaSigmaIn": 0,
+            "lumaStd": 9.914,
+            "cbStd": 0.0,
+            "crStd": 0.0,
+            "mean": [
+              63.45,
+              63.45,
+              63.45
+            ]
+          },
+          {
+            "rgb": [
+              128,
+              128,
+              128
+            ],
+            "lumaSigmaIn": 6,
+            "chromaSigmaIn": 0,
+            "lumaStd": 9.701,
+            "cbStd": 0.0,
+            "crStd": 0.0,
+            "mean": [
+              127.66,
+              127.66,
+              127.66
+            ]
+          },
+          {
+            "rgb": [
+              192,
+              192,
+              192
+            ],
+            "lumaSigmaIn": 6,
+            "chromaSigmaIn": 0,
+            "lumaStd": 9.712,
+            "cbStd": 0.0,
+            "crStd": 0.0,
+            "mean": [
+              191.79,
+              191.79,
+              191.79
+            ]
+          },
+          {
+            "rgb": [
+              128,
+              128,
+              128
+            ],
+            "lumaSigmaIn": 12,
+            "chromaSigmaIn": 0,
+            "lumaStd": 20.013,
+            "cbStd": 0.0,
+            "crStd": 0.0,
+            "mean": [
+              126.75,
+              126.75,
+              126.75
+            ]
+          },
+          {
+            "rgb": [
+              128,
+              128,
+              128
+            ],
+            "lumaSigmaIn": 0,
+            "chromaSigmaIn": 8,
+            "lumaStd": 1.296,
+            "cbStd": 8.027,
+            "crStd": 8.06,
+            "mean": [
+              128.17,
+              127.9,
+              128.03
+            ]
+          },
+          {
+            "rgb": [
+              96,
+              128,
+              160
+            ],
+            "lumaSigmaIn": 6,
+            "chromaSigmaIn": 8,
+            "lumaStd": 10.102,
+            "cbStd": 8.196,
+            "crStd": 7.827,
+            "mean": [
+              95.7,
+              127.75,
+              159.87
+            ]
+          },
+          {
+            "rgb": [
+              170,
+              120,
+              90
+            ],
+            "lumaSigmaIn": 6,
+            "chromaSigmaIn": 8,
+            "lumaStd": 9.939,
+            "cbStd": 8.084,
+            "crStd": 8.189,
+            "mean": [
+              169.88,
+              119.51,
+              89.33
+            ]
+          },
+          {
+            "rgb": [
+              80,
+              140,
+              80
+            ],
+            "lumaSigmaIn": 0,
+            "chromaSigmaIn": 12,
+            "lumaStd": 4.529,
+            "cbStd": 11.518,
+            "crStd": 10.834,
+            "mean": [
+              80.89,
+              139.6,
+              80.44
+            ]
+          },
+          {
+            "rgb": [
+              128,
+              128,
+              128
+            ],
+            "lumaSigmaIn": 0,
+            "chromaSigmaIn": 0,
+            "lumaStd": 0.0,
+            "cbStd": 0.0,
+            "crStd": 0.0,
+            "mean": [
+              128.0,
+              128.0,
+              128.0
+            ]
+          },
+          {
+            "rgb": [
+              200,
+              160,
+              120
+            ],
+            "lumaSigmaIn": 12,
+            "chromaSigmaIn": 12,
+            "lumaStd": 20.055,
+            "cbStd": 12.814,
+            "crStd": 12.401,
+            "mean": [
+              199.27,
+              158.77,
+              117.67
+            ]
+          }
+        ]
+      },
+      "sharp_a150": {
+        "edges": [
+          {
+            "lo": 64,
+            "hi": 192,
+            "rise10to90": 0.468,
+            "overshoot": 27.0,
+            "undershoot": 64.0
+          },
+          {
+            "lo": 100,
+            "hi": 156,
+            "rise10to90": 0.411,
+            "overshoot": 16.0,
+            "undershoot": 37.0
+          },
+          {
+            "lo": 120,
+            "hi": 136,
+            "rise10to90": 0.457,
+            "overshoot": 5.0,
+            "undershoot": 7.0
+          }
+        ],
+        "gratings": [
+          {
+            "period": 4,
+            "gain": 2.1458
+          },
+          {
+            "period": 8,
+            "gain": 1.375
+          },
+          {
+            "period": 16,
+            "gain": 1.0938
+          },
+          {
+            "period": 32,
+            "gain": 1.0208
+          }
+        ],
+        "noise": [
+          {
+            "rgb": [
+              64,
+              64,
+              64
+            ],
+            "lumaSigmaIn": 6,
+            "chromaSigmaIn": 0,
+            "lumaStd": 13.788,
+            "cbStd": 0.0,
+            "crStd": 0.0,
+            "mean": [
+              62.65,
+              62.65,
+              62.65
+            ]
+          },
+          {
+            "rgb": [
+              128,
+              128,
+              128
+            ],
+            "lumaSigmaIn": 6,
+            "chromaSigmaIn": 0,
+            "lumaStd": 13.043,
+            "cbStd": 0.0,
+            "crStd": 0.0,
+            "mean": [
+              127.29,
+              127.29,
+              127.29
+            ]
+          },
+          {
+            "rgb": [
+              192,
+              192,
+              192
+            ],
+            "lumaSigmaIn": 6,
+            "chromaSigmaIn": 0,
+            "lumaStd": 12.967,
+            "cbStd": 0.0,
+            "crStd": 0.0,
+            "mean": [
+              191.55,
+              191.55,
+              191.55
+            ]
+          },
+          {
+            "rgb": [
+              128,
+              128,
+              128
+            ],
+            "lumaSigmaIn": 12,
+            "chromaSigmaIn": 0,
+            "lumaStd": 28.31,
+            "cbStd": 0.0,
+            "crStd": 0.0,
+            "mean": [
+              124.86,
+              124.86,
+              124.86
+            ]
+          },
+          {
+            "rgb": [
+              128,
+              128,
+              128
+            ],
+            "lumaSigmaIn": 0,
+            "chromaSigmaIn": 8,
+            "lumaStd": 2.354,
+            "cbStd": 8.017,
+            "crStd": 8.045,
+            "mean": [
+              128.24,
+              127.81,
+              128.08
+            ]
+          },
+          {
+            "rgb": [
+              96,
+              128,
+              160
+            ],
+            "lumaSigmaIn": 6,
+            "chromaSigmaIn": 8,
+            "lumaStd": 14.032,
+            "cbStd": 8.414,
+            "crStd": 7.907,
+            "mean": [
+              94.98,
+              127.27,
+              159.69
+            ]
+          },
+          {
+            "rgb": [
+              170,
+              120,
+              90
+            ],
+            "lumaSigmaIn": 6,
+            "chromaSigmaIn": 8,
+            "lumaStd": 13.59,
+            "cbStd": 8.673,
+            "crStd": 8.445,
+            "mean": [
+              169.72,
+              119.0,
+              88.17
+            ]
+          },
+          {
+            "rgb": [
+              80,
+              140,
+              80
+            ],
+            "lumaSigmaIn": 0,
+            "chromaSigmaIn": 12,
+            "lumaStd": 8.204,
+            "cbStd": 11.497,
+            "crStd": 10.162,
+            "mean": [
+              81.24,
+              139.27,
+              80.3
+            ]
+          },
+          {
+            "rgb": [
+              128,
+              128,
+              128
+            ],
+            "lumaSigmaIn": 0,
+            "chromaSigmaIn": 0,
+            "lumaStd": 0.0,
+            "cbStd": 0.0,
+            "crStd": 0.0,
+            "mean": [
+              128.0,
+              128.0,
+              128.0
+            ]
+          },
+          {
+            "rgb": [
+              200,
+              160,
+              120
+            ],
+            "lumaSigmaIn": 12,
+            "chromaSigmaIn": 12,
+            "lumaStd": 28.008,
+            "cbStd": 14.236,
+            "crStd": 13.198,
+            "mean": [
+              198.49,
+              157.04,
+              114.26
+            ]
+          }
+        ]
+      },
+      "sharp_a80_r05": {
+        "edges": [
+          {
+            "lo": 64,
+            "hi": 192,
+            "rise10to90": 0.652,
+            "overshoot": 5.0,
+            "undershoot": 24.0
+          },
+          {
+            "lo": 100,
+            "hi": 156,
+            "rise10to90": 0.7,
+            "overshoot": 3.0,
+            "undershoot": 5.0
+          },
+          {
+            "lo": 120,
+            "hi": 136,
+            "rise10to90": 0.711,
+            "overshoot": 1.0,
+            "undershoot": 1.0
+          }
+        ],
+        "gratings": [
+          {
+            "period": 4,
+            "gain": 1.1458
+          },
+          {
+            "period": 8,
+            "gain": 1.0417
+          },
+          {
+            "period": 16,
+            "gain": 1.0208
+          },
+          {
+            "period": 32,
+            "gain": 1.0
+          }
+        ],
+        "noise": [
+          {
+            "rgb": [
+              64,
+              64,
+              64
+            ],
+            "lumaSigmaIn": 6,
+            "chromaSigmaIn": 0,
+            "lumaStd": 7.548,
+            "cbStd": 0.0,
+            "crStd": 0.0,
+            "mean": [
+              63.81,
+              63.81,
+              63.81
+            ]
+          },
+          {
+            "rgb": [
+              128,
+              128,
+              128
+            ],
+            "lumaSigmaIn": 6,
+            "chromaSigmaIn": 0,
+            "lumaStd": 7.476,
+            "cbStd": 0.0,
+            "crStd": 0.0,
+            "mean": [
+              127.85,
+              127.85,
+              127.85
+            ]
+          },
+          {
+            "rgb": [
+              192,
+              192,
+              192
+            ],
+            "lumaSigmaIn": 6,
+            "chromaSigmaIn": 0,
+            "lumaStd": 7.494,
+            "cbStd": 0.0,
+            "crStd": 0.0,
+            "mean": [
+              191.92,
+              191.92,
+              191.92
+            ]
+          },
+          {
+            "rgb": [
+              128,
+              128,
+              128
+            ],
+            "lumaSigmaIn": 12,
+            "chromaSigmaIn": 0,
+            "lumaStd": 15.143,
+            "cbStd": 0.0,
+            "crStd": 0.0,
+            "mean": [
+              127.58,
+              127.58,
+              127.58
+            ]
+          },
+          {
+            "rgb": [
+              128,
+              128,
+              128
+            ],
+            "lumaSigmaIn": 0,
+            "chromaSigmaIn": 8,
+            "lumaStd": 0.608,
+            "cbStd": 8.041,
+            "crStd": 8.082,
+            "mean": [
+              128.13,
+              127.95,
+              128.01
+            ]
+          },
+          {
+            "rgb": [
+              96,
+              128,
+              160
+            ],
+            "lumaSigmaIn": 6,
+            "chromaSigmaIn": 8,
+            "lumaStd": 7.588,
+            "cbStd": 8.105,
+            "crStd": 7.941,
+            "mean": [
+              95.94,
+              128.0,
+              159.96
+            ]
+          },
+          {
+            "rgb": [
+              170,
+              120,
+              90
+            ],
+            "lumaSigmaIn": 6,
+            "chromaSigmaIn": 8,
+            "lumaStd": 7.556,
+            "cbStd": 7.943,
+            "crStd": 8.096,
+            "mean": [
+              169.97,
+              119.77,
+              89.79
+            ]
+          },
+          {
+            "rgb": [
+              80,
+              140,
+              80
+            ],
+            "lumaSigmaIn": 0,
+            "chromaSigmaIn": 12,
+            "lumaStd": 1.966,
+            "cbStd": 11.762,
+            "crStd": 11.493,
+            "mean": [
+              80.37,
+              139.78,
+              80.21
+            ]
+          },
+          {
+            "rgb": [
+              128,
+              128,
+              128
+            ],
+            "lumaSigmaIn": 0,
+            "chromaSigmaIn": 0,
+            "lumaStd": 0.0,
+            "cbStd": 0.0,
+            "crStd": 0.0,
+            "mean": [
+              128.0,
+              128.0,
+              128.0
+            ]
+          },
+          {
+            "rgb": [
+              200,
+              160,
+              120
+            ],
+            "lumaSigmaIn": 12,
+            "chromaSigmaIn": 12,
+            "lumaStd": 15.109,
+            "cbStd": 12.095,
+            "crStd": 12.156,
+            "mean": [
+              199.64,
+              159.54,
+              119.37
+            ]
+          }
+        ]
+      },
+      "sharp_a80_r20": {
+        "edges": [
+          {
+            "lo": 64,
+            "hi": 192,
+            "rise10to90": 0.476,
+            "overshoot": 23.0,
+            "undershoot": 64.0
+          },
+          {
+            "lo": 100,
+            "hi": 156,
+            "rise10to90": 0.453,
+            "overshoot": 13.0,
+            "undershoot": 30.0
+          },
+          {
+            "lo": 120,
+            "hi": 136,
+            "rise10to90": 0.474,
+            "overshoot": 5.0,
+            "undershoot": 6.0
+          }
+        ],
+        "gratings": [
+          {
+            "period": 4,
+            "gain": 2.1042
+          },
+          {
+            "period": 8,
+            "gain": 1.7708
+          },
+          {
+            "period": 16,
+            "gain": 1.2083
+          },
+          {
+            "period": 32,
+            "gain": 1.0521
+          }
+        ],
+        "noise": [
+          {
+            "rgb": [
+              64,
+              64,
+              64
+            ],
+            "lumaSigmaIn": 6,
+            "chromaSigmaIn": 0,
+            "lumaStd": 11.511,
+            "cbStd": 0.0,
+            "crStd": 0.0,
+            "mean": [
+              63.15,
+              63.15,
+              63.15
+            ]
+          },
+          {
+            "rgb": [
+              128,
+              128,
+              128
+            ],
+            "lumaSigmaIn": 6,
+            "chromaSigmaIn": 0,
+            "lumaStd": 11.135,
+            "cbStd": 0.0,
+            "crStd": 0.0,
+            "mean": [
+              127.51,
+              127.51,
+              127.51
+            ]
+          },
+          {
+            "rgb": [
+              192,
+              192,
+              192
+            ],
+            "lumaSigmaIn": 6,
+            "chromaSigmaIn": 0,
+            "lumaStd": 11.121,
+            "cbStd": 0.0,
+            "crStd": 0.0,
+            "mean": [
+              191.7,
+              191.7,
+              191.7
+            ]
+          },
+          {
+            "rgb": [
+              128,
+              128,
+              128
+            ],
+            "lumaSigmaIn": 12,
+            "chromaSigmaIn": 0,
+            "lumaStd": 23.374,
+            "cbStd": 0.0,
+            "crStd": 0.0,
+            "mean": [
+              126.04,
+              126.04,
+              126.04
+            ]
+          },
+          {
+            "rgb": [
+              128,
+              128,
+              128
+            ],
+            "lumaSigmaIn": 0,
+            "chromaSigmaIn": 8,
+            "lumaStd": 1.729,
+            "cbStd": 8.02,
+            "crStd": 8.049,
+            "mean": [
+              128.2,
+              127.86,
+              128.06
+            ]
+          },
+          {
+            "rgb": [
+              96,
+              128,
+              160
+            ],
+            "lumaSigmaIn": 6,
+            "chromaSigmaIn": 8,
+            "lumaStd": 11.742,
+            "cbStd": 8.272,
+            "crStd": 7.8,
+            "mean": [
+              95.46,
+              127.56,
+              159.8
+            ]
+          },
+          {
+            "rgb": [
+              170,
+              120,
+              90
+            ],
+            "lumaSigmaIn": 6,
+            "chromaSigmaIn": 8,
+            "lumaStd": 11.483,
+            "cbStd": 8.28,
+            "crStd": 8.278,
+            "mean": [
+              169.82,
+              119.31,
+              88.9
+            ]
+          },
+          {
+            "rgb": [
+              80,
+              140,
+              80
+            ],
+            "lumaSigmaIn": 0,
+            "chromaSigmaIn": 12,
+            "lumaStd": 6.052,
+            "cbStd": 11.427,
+            "crStd": 10.482,
+            "mean": [
+              81.13,
+              139.46,
+              80.5
+            ]
+          },
+          {
+            "rgb": [
+              128,
+              128,
+              128
+            ],
+            "lumaSigmaIn": 0,
+            "chromaSigmaIn": 0,
+            "lumaStd": 0.0,
+            "cbStd": 0.0,
+            "crStd": 0.0,
+            "mean": [
+              128.0,
+              128.0,
+              128.0
+            ]
+          },
+          {
+            "rgb": [
+              200,
+              160,
+              120
+            ],
+            "lumaSigmaIn": 12,
+            "chromaSigmaIn": 12,
+            "lumaStd": 23.327,
+            "cbStd": 13.395,
+            "crStd": 12.653,
+            "mean": [
+              198.97,
+              158.13,
+              116.3
+            ]
+          }
+        ]
+      },
+      "sharp_a80_r30": {
+        "edges": [
+          {
+            "lo": 64,
+            "hi": 192,
+            "rise10to90": 0.47,
+            "overshoot": 26.0,
+            "undershoot": 64.0
+          },
+          {
+            "lo": 100,
+            "hi": 156,
+            "rise10to90": 0.423,
+            "overshoot": 15.0,
+            "undershoot": 35.0
+          },
+          {
+            "lo": 120,
+            "hi": 136,
+            "rise10to90": 0.457,
+            "overshoot": 5.0,
+            "undershoot": 7.0
+          }
+        ],
+        "gratings": [
+          {
+            "period": 4,
+            "gain": 2.125
+          },
+          {
+            "period": 8,
+            "gain": 2.0833
+          },
+          {
+            "period": 16,
+            "gain": 1.4271
+          },
+          {
+            "period": 32,
+            "gain": 1.1146
+          }
+        ],
+        "noise": [
+          {
+            "rgb": [
+              64,
+              64,
+              64
+            ],
+            "lumaSigmaIn": 6,
+            "chromaSigmaIn": 0,
+            "lumaStd": 11.821,
+            "cbStd": 0.0,
+            "crStd": 0.0,
+            "mean": [
+              63.08,
+              63.08,
+              63.08
+            ]
+          },
+          {
+            "rgb": [
+              128,
+              128,
+              128
+            ],
+            "lumaSigmaIn": 6,
+            "chromaSigmaIn": 0,
+            "lumaStd": 11.409,
+            "cbStd": 0.0,
+            "crStd": 0.0,
+            "mean": [
+              127.48,
+              127.48,
+              127.48
+            ]
+          },
+          {
+            "rgb": [
+              192,
+              192,
+              192
+            ],
+            "lumaSigmaIn": 6,
+            "chromaSigmaIn": 0,
+            "lumaStd": 11.391,
+            "cbStd": 0.0,
+            "crStd": 0.0,
+            "mean": [
+              191.68,
+              191.68,
+              191.68
+            ]
+          },
+          {
+            "rgb": [
+              128,
+              128,
+              128
+            ],
+            "lumaSigmaIn": 12,
+            "chromaSigmaIn": 0,
+            "lumaStd": 24.039,
+            "cbStd": 0.0,
+            "crStd": 0.0,
+            "mean": [
+              125.9,
+              125.9,
+              125.9
+            ]
+          },
+          {
+            "rgb": [
+              128,
+              128,
+              128
+            ],
+            "lumaSigmaIn": 0,
+            "chromaSigmaIn": 8,
+            "lumaStd": 1.809,
+            "cbStd": 8.019,
+            "crStd": 8.049,
+            "mean": [
+              128.21,
+              127.85,
+              128.06
+            ]
+          },
+          {
+            "rgb": [
+              96,
+              128,
+              160
+            ],
+            "lumaSigmaIn": 6,
+            "chromaSigmaIn": 8,
+            "lumaStd": 12.054,
+            "cbStd": 8.292,
+            "crStd": 7.799,
+            "mean": [
+              95.41,
+              127.52,
+              159.78
+            ]
+          },
+          {
+            "rgb": [
+              170,
+              120,
+              90
+            ],
+            "lumaSigmaIn": 6,
+            "chromaSigmaIn": 8,
+            "lumaStd": 11.775,
+            "cbStd": 8.32,
+            "crStd": 8.295,
+            "mean": [
+              169.8,
+              119.27,
+              88.81
+            ]
+          },
+          {
+            "rgb": [
+              80,
+              140,
+              80
+            ],
+            "lumaSigmaIn": 0,
+            "chromaSigmaIn": 12,
+            "lumaStd": 6.324,
+            "cbStd": 11.411,
+            "crStd": 10.417,
+            "mean": [
+              81.18,
+              139.44,
+              80.51
+            ]
+          },
+          {
+            "rgb": [
+              128,
+              128,
+              128
+            ],
+            "lumaSigmaIn": 0,
+            "chromaSigmaIn": 0,
+            "lumaStd": 0.0,
+            "cbStd": 0.0,
+            "crStd": 0.0,
+            "mean": [
+              128.0,
+              128.0,
+              128.0
+            ]
+          },
+          {
+            "rgb": [
+              200,
+              160,
+              120
+            ],
+            "lumaSigmaIn": 12,
+            "chromaSigmaIn": 12,
+            "lumaStd": 23.964,
+            "cbStd": 13.516,
+            "crStd": 12.716,
+            "mean": [
+              198.91,
+              158.0,
+              116.02
+            ]
+          }
+        ]
+      },
+      "sharp_a80_d0": {
+        "edges": [
+          {
+            "lo": 64,
+            "hi": 192,
+            "rise10to90": 0.488,
+            "overshoot": 18.0,
+            "undershoot": 64.0
+          },
+          {
+            "lo": 100,
+            "hi": 156,
+            "rise10to90": 0.515,
+            "overshoot": 10.0,
+            "undershoot": 21.0
+          },
+          {
+            "lo": 120,
+            "hi": 136,
+            "rise10to90": 0.533,
+            "overshoot": 4.0,
+            "undershoot": 4.0
+          }
+        ],
+        "gratings": [
+          {
+            "period": 4,
+            "gain": 2.0417
+          },
+          {
+            "period": 8,
+            "gain": 1.2396
+          },
+          {
+            "period": 16,
+            "gain": 1.0625
+          },
+          {
+            "period": 32,
+            "gain": 1.0208
+          }
+        ],
+        "noise": [
+          {
+            "rgb": [
+              64,
+              64,
+              64
+            ],
+            "lumaSigmaIn": 6,
+            "chromaSigmaIn": 0,
+            "lumaStd": 10.525,
+            "cbStd": 0.0,
+            "crStd": 0.0,
+            "mean": [
+              63.33,
+              63.33,
+              63.33
+            ]
+          },
+          {
+            "rgb": [
+              128,
+              128,
+              128
+            ],
+            "lumaSigmaIn": 6,
+            "chromaSigmaIn": 0,
+            "lumaStd": 10.251,
+            "cbStd": 0.0,
+            "crStd": 0.0,
+            "mean": [
+              127.61,
+              127.61,
+              127.61
+            ]
+          },
+          {
+            "rgb": [
+              192,
+              192,
+              192
+            ],
+            "lumaSigmaIn": 6,
+            "chromaSigmaIn": 0,
+            "lumaStd": 10.253,
+            "cbStd": 0.0,
+            "crStd": 0.0,
+            "mean": [
+              191.77,
+              191.77,
+              191.77
+            ]
+          },
+          {
+            "rgb": [
+              128,
+              128,
+              128
+            ],
+            "lumaSigmaIn": 12,
+            "chromaSigmaIn": 0,
+            "lumaStd": 21.293,
+            "cbStd": 0.0,
+            "crStd": 0.0,
+            "mean": [
+              126.49,
+              126.49,
+              126.49
+            ]
+          },
+          {
+            "rgb": [
+              128,
+              128,
+              128
+            ],
+            "lumaSigmaIn": 0,
+            "chromaSigmaIn": 8,
+            "lumaStd": 1.47,
+            "cbStd": 8.024,
+            "crStd": 8.058,
+            "mean": [
+              128.18,
+              127.88,
+              128.04
+            ]
+          },
+          {
+            "rgb": [
+              96,
+              128,
+              160
+            ],
+            "lumaSigmaIn": 6,
+            "chromaSigmaIn": 8,
+            "lumaStd": 10.735,
+            "cbStd": 8.224,
+            "crStd": 7.814,
+            "mean": [
+              95.62,
+              127.67,
+              159.84
+            ]
+          },
+          {
+            "rgb": [
+              170,
+              120,
+              90
+            ],
+            "lumaSigmaIn": 6,
+            "chromaSigmaIn": 8,
+            "lumaStd": 10.536,
+            "cbStd": 8.154,
+            "crStd": 8.221,
+            "mean": [
+              169.86,
+              119.44,
+              89.17
+            ]
+          },
+          {
+            "rgb": [
+              80,
+              140,
+              80
+            ],
+            "lumaSigmaIn": 0,
+            "chromaSigmaIn": 12,
+            "lumaStd": 5.142,
+            "cbStd": 11.485,
+            "crStd": 10.698,
+            "mean": [
+              80.99,
+              139.55,
+              80.46
+            ]
+          },
+          {
+            "rgb": [
+              128,
+              128,
+              128
+            ],
+            "lumaSigmaIn": 0,
+            "chromaSigmaIn": 0,
+            "lumaStd": 0.0,
+            "cbStd": 0.0,
+            "crStd": 0.0,
+            "mean": [
+              128.0,
+              128.0,
+              128.0
+            ]
+          },
+          {
+            "rgb": [
+              200,
+              160,
+              120
+            ],
+            "lumaSigmaIn": 12,
+            "chromaSigmaIn": 12,
+            "lumaStd": 21.314,
+            "cbStd": 13.046,
+            "crStd": 12.488,
+            "mean": [
+              199.16,
+              158.54,
+              117.15
+            ]
+          }
+        ]
+      },
+      "sharp_a80_d75": {
+        "edges": [
+          {
+            "lo": 64,
+            "hi": 192,
+            "rise10to90": 0.509,
+            "overshoot": 9.0,
+            "undershoot": 64.0
+          },
+          {
+            "lo": 100,
+            "hi": 156,
+            "rise10to90": 0.631,
+            "overshoot": 5.0,
+            "undershoot": 10.0
+          },
+          {
+            "lo": 120,
+            "hi": 136,
+            "rise10to90": 0.64,
+            "overshoot": 2.0,
+            "undershoot": 2.0
+          }
+        ],
+        "gratings": [
+          {
+            "period": 4,
+            "gain": 1.3438
+          },
+          {
+            "period": 8,
+            "gain": 1.0938
+          },
+          {
+            "period": 16,
+            "gain": 1.0208
+          },
+          {
+            "period": 32,
+            "gain": 1.0
+          }
+        ],
+        "noise": [
+          {
+            "rgb": [
+              64,
+              64,
+              64
+            ],
+            "lumaSigmaIn": 6,
+            "chromaSigmaIn": 0,
+            "lumaStd": 8.748,
+            "cbStd": 0.0,
+            "crStd": 0.0,
+            "mean": [
+              63.64,
+              63.64,
+              63.64
+            ]
+          },
+          {
+            "rgb": [
+              128,
+              128,
+              128
+            ],
+            "lumaSigmaIn": 6,
+            "chromaSigmaIn": 0,
+            "lumaStd": 8.614,
+            "cbStd": 0.0,
+            "crStd": 0.0,
+            "mean": [
+              127.76,
+              127.76,
+              127.76
+            ]
+          },
+          {
+            "rgb": [
+              192,
+              192,
+              192
+            ],
+            "lumaSigmaIn": 6,
+            "chromaSigmaIn": 0,
+            "lumaStd": 8.626,
+            "cbStd": 0.0,
+            "crStd": 0.0,
+            "mean": [
+              191.87,
+              191.87,
+              191.87
+            ]
+          },
+          {
+            "rgb": [
+              128,
+              128,
+              128
+            ],
+            "lumaSigmaIn": 12,
+            "chromaSigmaIn": 0,
+            "lumaStd": 17.582,
+            "cbStd": 0.0,
+            "crStd": 0.0,
+            "mean": [
+              127.19,
+              127.19,
+              127.19
+            ]
+          },
+          {
+            "rgb": [
+              128,
+              128,
+              128
+            ],
+            "lumaSigmaIn": 0,
+            "chromaSigmaIn": 8,
+            "lumaStd": 0.964,
+            "cbStd": 8.029,
+            "crStd": 8.065,
+            "mean": [
+              128.14,
+              127.92,
+              128.01
+            ]
+          },
+          {
+            "rgb": [
+              96,
+              128,
+              160
+            ],
+            "lumaSigmaIn": 6,
+            "chromaSigmaIn": 8,
+            "lumaStd": 8.863,
+            "cbStd": 8.146,
+            "crStd": 7.87,
+            "mean": [
+              95.84,
+              127.88,
+              159.92
+            ]
+          },
+          {
+            "rgb": [
+              170,
+              120,
+              90
+            ],
+            "lumaSigmaIn": 6,
+            "chromaSigmaIn": 8,
+            "lumaStd": 8.769,
+            "cbStd": 7.987,
+            "crStd": 8.136,
+            "mean": [
+              169.92,
+              119.65,
+              89.59
+            ]
+          },
+          {
+            "rgb": [
+              80,
+              140,
+              80
+            ],
+            "lumaSigmaIn": 0,
+            "chromaSigmaIn": 12,
+            "lumaStd": 3.314,
+            "cbStd": 11.618,
+            "crStd": 11.136,
+            "mean": [
+              80.66,
+              139.69,
+              80.36
+            ]
+          },
+          {
+            "rgb": [
+              128,
+              128,
+              128
+            ],
+            "lumaSigmaIn": 0,
+            "chromaSigmaIn": 0,
+            "lumaStd": 0.0,
+            "cbStd": 0.0,
+            "crStd": 0.0,
+            "mean": [
+              128.0,
+              128.0,
+              128.0
+            ]
+          },
+          {
+            "rgb": [
+              200,
+              160,
+              120
+            ],
+            "lumaSigmaIn": 12,
+            "chromaSigmaIn": 12,
+            "lumaStd": 17.614,
+            "cbStd": 12.394,
+            "crStd": 12.262,
+            "mean": [
+              199.46,
+              159.17,
+              118.6
+            ]
+          }
+        ]
+      },
+      "sharp_a80_d100": {
+        "edges": [
+          {
+            "lo": 64,
+            "hi": 192,
+            "rise10to90": 0.589,
+            "overshoot": 7.0,
+            "undershoot": 39.0
+          },
+          {
+            "lo": 100,
+            "hi": 156,
+            "rise10to90": 0.669,
+            "overshoot": 4.0,
+            "undershoot": 7.0
+          },
+          {
+            "lo": 120,
+            "hi": 136,
+            "rise10to90": 0.674,
+            "overshoot": 1.0,
+            "undershoot": 2.0
+          }
+        ],
+        "gratings": [
+          {
+            "period": 4,
+            "gain": 1.2083
+          },
+          {
+            "period": 8,
+            "gain": 1.0521
+          },
+          {
+            "period": 16,
+            "gain": 1.0208
+          },
+          {
+            "period": 32,
+            "gain": 1.0
+          }
+        ],
+        "noise": [
+          {
+            "rgb": [
+              64,
+              64,
+              64
+            ],
+            "lumaSigmaIn": 6,
+            "chromaSigmaIn": 0,
+            "lumaStd": 8.178,
+            "cbStd": 0.0,
+            "crStd": 0.0,
+            "mean": [
+              63.72,
+              63.72,
+              63.72
+            ]
+          },
+          {
+            "rgb": [
+              128,
+              128,
+              128
+            ],
+            "lumaSigmaIn": 6,
+            "chromaSigmaIn": 0,
+            "lumaStd": 8.075,
+            "cbStd": 0.0,
+            "crStd": 0.0,
+            "mean": [
+              127.81,
+              127.81,
+              127.81
+            ]
+          },
+          {
+            "rgb": [
+              192,
+              192,
+              192
+            ],
+            "lumaSigmaIn": 6,
+            "chromaSigmaIn": 0,
+            "lumaStd": 8.095,
+            "cbStd": 0.0,
+            "crStd": 0.0,
+            "mean": [
+              191.9,
+              191.9,
+              191.9
+            ]
+          },
+          {
+            "rgb": [
+              128,
+              128,
+              128
+            ],
+            "lumaSigmaIn": 12,
+            "chromaSigmaIn": 0,
+            "lumaStd": 16.416,
+            "cbStd": 0.0,
+            "crStd": 0.0,
+            "mean": [
+              127.39,
+              127.39,
+              127.39
+            ]
+          },
+          {
+            "rgb": [
+              128,
+              128,
+              128
+            ],
+            "lumaSigmaIn": 0,
+            "chromaSigmaIn": 8,
+            "lumaStd": 0.81,
+            "cbStd": 8.033,
+            "crStd": 8.068,
+            "mean": [
+              128.12,
+              127.94,
+              128.0
+            ]
+          },
+          {
+            "rgb": [
+              96,
+              128,
+              160
+            ],
+            "lumaSigmaIn": 6,
+            "chromaSigmaIn": 8,
+            "lumaStd": 8.262,
+            "cbStd": 8.126,
+            "crStd": 7.903,
+            "mean": [
+              95.89,
+              127.93,
+              159.94
+            ]
+          },
+          {
+            "rgb": [
+              170,
+              120,
+              90
+            ],
+            "lumaSigmaIn": 6,
+            "chromaSigmaIn": 8,
+            "lumaStd": 8.197,
+            "cbStd": 7.964,
+            "crStd": 8.115,
+            "mean": [
+              169.94,
+              119.71,
+              89.69
+            ]
+          },
+          {
+            "rgb": [
+              80,
+              140,
+              80
+            ],
+            "lumaSigmaIn": 0,
+            "chromaSigmaIn": 12,
+            "lumaStd": 2.716,
+            "cbStd": 11.688,
+            "crStd": 11.301,
+            "mean": [
+              80.52,
+              139.73,
+              80.29
+            ]
+          },
+          {
+            "rgb": [
+              128,
+              128,
+              128
+            ],
+            "lumaSigmaIn": 0,
+            "chromaSigmaIn": 0,
+            "lumaStd": 0.0,
+            "cbStd": 0.0,
+            "crStd": 0.0,
+            "mean": [
+              128.0,
+              128.0,
+              128.0
+            ]
+          },
+          {
+            "rgb": [
+              200,
+              160,
+              120
+            ],
+            "lumaSigmaIn": 12,
+            "chromaSigmaIn": 12,
+            "lumaStd": 16.433,
+            "cbStd": 12.241,
+            "crStd": 12.206,
+            "mean": [
+              199.55,
+              159.35,
+              118.99
+            ]
+          }
+        ]
+      },
+      "sharp_a80_m50": {
+        "edges": [
+          {
+            "lo": 64,
+            "hi": 192,
+            "rise10to90": 0.5,
+            "overshoot": 13.0,
+            "undershoot": 64.0
+          },
+          {
+            "lo": 100,
+            "hi": 156,
+            "rise10to90": 0.605,
+            "overshoot": 6.0,
+            "undershoot": 12.0
+          },
+          {
+            "lo": 120,
+            "hi": 136,
+            "rise10to90": 0.674,
+            "overshoot": 1.0,
+            "undershoot": 2.0
+          }
+        ],
+        "gratings": [
+          {
+            "period": 4,
+            "gain": 1.0
+          },
+          {
+            "period": 8,
+            "gain": 1.0
+          },
+          {
+            "period": 16,
+            "gain": 1.0
+          },
+          {
+            "period": 32,
+            "gain": 1.0
+          }
+        ],
+        "noise": [
+          {
+            "rgb": [
+              64,
+              64,
+              64
+            ],
+            "lumaSigmaIn": 6,
+            "chromaSigmaIn": 0,
+            "lumaStd": 6.848,
+            "cbStd": 0.0,
+            "crStd": 0.0,
+            "mean": [
+              63.88,
+              63.88,
+              63.88
+            ]
+          },
+          {
+            "rgb": [
+              128,
+              128,
+              128
+            ],
+            "lumaSigmaIn": 6,
+            "chromaSigmaIn": 0,
+            "lumaStd": 7.406,
+            "cbStd": 0.0,
+            "crStd": 0.0,
+            "mean": [
+              127.84,
+              127.84,
+              127.84
+            ]
+          },
+          {
+            "rgb": [
+              192,
+              192,
+              192
+            ],
+            "lumaSigmaIn": 6,
+            "chromaSigmaIn": 0,
+            "lumaStd": 7.858,
+            "cbStd": 0.0,
+            "crStd": 0.0,
+            "mean": [
+              191.9,
+              191.9,
+              191.9
+            ]
+          },
+          {
+            "rgb": [
+              128,
+              128,
+              128
+            ],
+            "lumaSigmaIn": 12,
+            "chromaSigmaIn": 0,
+            "lumaStd": 16.268,
+            "cbStd": 0.0,
+            "crStd": 0.0,
+            "mean": [
+              127.38,
+              127.38,
+              127.38
+            ]
+          },
+          {
+            "rgb": [
+              128,
+              128,
+              128
+            ],
+            "lumaSigmaIn": 0,
+            "chromaSigmaIn": 8,
+            "lumaStd": 0.281,
+            "cbStd": 8.039,
+            "crStd": 8.081,
+            "mean": [
+              128.09,
+              127.97,
+              127.98
+            ]
+          },
+          {
+            "rgb": [
+              96,
+              128,
+              160
+            ],
+            "lumaSigmaIn": 6,
+            "chromaSigmaIn": 8,
+            "lumaStd": 7.564,
+            "cbStd": 8.104,
+            "crStd": 7.941,
+            "mean": [
+              95.92,
+              127.98,
+              159.95
+            ]
+          },
+          {
+            "rgb": [
+              170,
+              120,
+              90
+            ],
+            "lumaSigmaIn": 6,
+            "chromaSigmaIn": 8,
+            "lumaStd": 7.508,
+            "cbStd": 7.947,
+            "crStd": 8.092,
+            "mean": [
+              169.96,
+              119.76,
+              89.79
+            ]
+          },
+          {
+            "rgb": [
+              80,
+              140,
+              80
+            ],
+            "lumaSigmaIn": 0,
+            "chromaSigmaIn": 12,
+            "lumaStd": 1.785,
+            "cbStd": 11.793,
+            "crStd": 11.556,
+            "mean": [
+              80.27,
+              139.77,
+              80.13
+            ]
+          },
+          {
+            "rgb": [
+              128,
+              128,
+              128
+            ],
+            "lumaSigmaIn": 0,
+            "chromaSigmaIn": 0,
+            "lumaStd": 0.0,
+            "cbStd": 0.0,
+            "crStd": 0.0,
+            "mean": [
+              128.0,
+              128.0,
+              128.0
+            ]
+          },
+          {
+            "rgb": [
+              200,
+              160,
+              120
+            ],
+            "lumaSigmaIn": 12,
+            "chromaSigmaIn": 12,
+            "lumaStd": 16.845,
+            "cbStd": 12.298,
+            "crStd": 12.233,
+            "mean": [
+              199.5,
+              159.26,
+              118.81
+            ]
+          }
+        ]
+      },
+      "sharp_a80_m90": {
+        "edges": [
+          {
+            "lo": 64,
+            "hi": 192,
+            "rise10to90": 0.502,
+            "overshoot": 12.0,
+            "undershoot": 64.0
+          },
+          {
+            "lo": 100,
+            "hi": 156,
+            "rise10to90": 0.631,
+            "overshoot": 5.0,
+            "undershoot": 10.0
+          },
+          {
+            "lo": 120,
+            "hi": 136,
+            "rise10to90": 0.711,
+            "overshoot": 1.0,
+            "undershoot": 1.0
+          }
+        ],
+        "gratings": [
+          {
+            "period": 4,
+            "gain": 1.0
+          },
+          {
+            "period": 8,
+            "gain": 1.0
+          },
+          {
+            "period": 16,
+            "gain": 1.0
+          },
+          {
+            "period": 32,
+            "gain": 1.0
+          }
+        ],
+        "noise": [
+          {
+            "rgb": [
+              64,
+              64,
+              64
+            ],
+            "lumaSigmaIn": 6,
+            "chromaSigmaIn": 0,
+            "lumaStd": 6.527,
+            "cbStd": 0.0,
+            "crStd": 0.0,
+            "mean": [
+              63.92,
+              63.92,
+              63.92
+            ]
+          },
+          {
+            "rgb": [
+              128,
+              128,
+              128
+            ],
+            "lumaSigmaIn": 6,
+            "chromaSigmaIn": 0,
+            "lumaStd": 6.967,
+            "cbStd": 0.0,
+            "crStd": 0.0,
+            "mean": [
+              127.88,
+              127.88,
+              127.88
+            ]
+          },
+          {
+            "rgb": [
+              192,
+              192,
+              192
+            ],
+            "lumaSigmaIn": 6,
+            "chromaSigmaIn": 0,
+            "lumaStd": 7.38,
+            "cbStd": 0.0,
+            "crStd": 0.0,
+            "mean": [
+              191.93,
+              191.93,
+              191.93
+            ]
+          },
+          {
+            "rgb": [
+              128,
+              128,
+              128
+            ],
+            "lumaSigmaIn": 12,
+            "chromaSigmaIn": 0,
+            "lumaStd": 15.223,
+            "cbStd": 0.0,
+            "crStd": 0.0,
+            "mean": [
+              127.54,
+              127.54,
+              127.54
+            ]
+          },
+          {
+            "rgb": [
+              128,
+              128,
+              128
+            ],
+            "lumaSigmaIn": 0,
+            "chromaSigmaIn": 8,
+            "lumaStd": 0.206,
+            "cbStd": 8.04,
+            "crStd": 8.08,
+            "mean": [
+              128.07,
+              127.97,
+              127.97
+            ]
+          },
+          {
+            "rgb": [
+              96,
+              128,
+              160
+            ],
+            "lumaSigmaIn": 6,
+            "chromaSigmaIn": 8,
+            "lumaStd": 7.077,
+            "cbStd": 8.092,
+            "crStd": 7.975,
+            "mean": [
+              95.96,
+              128.02,
+              159.97
+            ]
+          },
+          {
+            "rgb": [
+              170,
+              120,
+              90
+            ],
+            "lumaSigmaIn": 6,
+            "chromaSigmaIn": 8,
+            "lumaStd": 7.039,
+            "cbStd": 7.943,
+            "crStd": 8.079,
+            "mean": [
+              169.98,
+              119.81,
+              89.85
+            ]
+          },
+          {
+            "rgb": [
+              80,
+              140,
+              80
+            ],
+            "lumaSigmaIn": 0,
+            "chromaSigmaIn": 12,
+            "lumaStd": 1.273,
+            "cbStd": 11.862,
+            "crStd": 11.701,
+            "mean": [
+              80.14,
+              139.81,
+              80.06
+            ]
+          },
+          {
+            "rgb": [
+              128,
+              128,
+              128
+            ],
+            "lumaSigmaIn": 0,
+            "chromaSigmaIn": 0,
+            "lumaStd": 0.0,
+            "cbStd": 0.0,
+            "crStd": 0.0,
+            "mean": [
+              128.0,
+              128.0,
+              128.0
+            ]
+          },
+          {
+            "rgb": [
+              200,
+              160,
+              120
+            ],
+            "lumaSigmaIn": 12,
+            "chromaSigmaIn": 12,
+            "lumaStd": 15.778,
+            "cbStd": 12.176,
+            "crStd": 12.188,
+            "mean": [
+              199.58,
+              159.41,
+              119.13
+            ]
+          }
+        ]
+      },
+      "lnr_25": {
+        "edges": [
+          {
+            "lo": 64,
+            "hi": 192,
+            "rise10to90": 0.8,
+            "overshoot": 0.0,
+            "undershoot": 0.0
+          },
+          {
+            "lo": 100,
+            "hi": 156,
+            "rise10to90": 0.8,
+            "overshoot": 0.0,
+            "undershoot": 0.0
+          },
+          {
+            "lo": 120,
+            "hi": 136,
+            "rise10to90": 0.8,
+            "overshoot": 0.0,
+            "undershoot": 0.0
+          }
+        ],
+        "gratings": [
+          {
+            "period": 4,
+            "gain": 1.0
+          },
+          {
+            "period": 8,
+            "gain": 1.0
+          },
+          {
+            "period": 16,
+            "gain": 1.0
+          },
+          {
+            "period": 32,
+            "gain": 1.0
+          }
+        ],
+        "noise": [
+          {
+            "rgb": [
+              64,
+              64,
+              64
+            ],
+            "lumaSigmaIn": 6,
+            "chromaSigmaIn": 0,
+            "lumaStd": 6.074,
+            "cbStd": 0.0,
+            "crStd": 0.0,
+            "mean": [
+              63.99,
+              63.99,
+              63.99
+            ]
+          },
+          {
+            "rgb": [
+              128,
+              128,
+              128
+            ],
+            "lumaSigmaIn": 6,
+            "chromaSigmaIn": 0,
+            "lumaStd": 6.046,
+            "cbStd": 0.0,
+            "crStd": 0.0,
+            "mean": [
+              127.94,
+              127.94,
+              127.94
+            ]
+          },
+          {
+            "rgb": [
+              192,
+              192,
+              192
+            ],
+            "lumaSigmaIn": 6,
+            "chromaSigmaIn": 0,
+            "lumaStd": 6.074,
+            "cbStd": 0.0,
+            "crStd": 0.0,
+            "mean": [
+              191.99,
+              191.99,
+              191.99
+            ]
+          },
+          {
+            "rgb": [
+              128,
+              128,
+              128
+            ],
+            "lumaSigmaIn": 12,
+            "chromaSigmaIn": 0,
+            "lumaStd": 12.188,
+            "cbStd": 0.0,
+            "crStd": 0.0,
+            "mean": [
+              127.98,
+              127.98,
+              127.98
+            ]
+          },
+          {
+            "rgb": [
+              128,
+              128,
+              128
+            ],
+            "lumaSigmaIn": 0,
+            "chromaSigmaIn": 8,
+            "lumaStd": 0.198,
+            "cbStd": 8.039,
+            "crStd": 8.076,
+            "mean": [
+              128.06,
+              127.96,
+              127.96
+            ]
+          },
+          {
+            "rgb": [
+              96,
+              128,
+              160
+            ],
+            "lumaSigmaIn": 6,
+            "chromaSigmaIn": 8,
+            "lumaStd": 6.031,
+            "cbStd": 8.066,
+            "crStd": 8.058,
+            "mean": [
+              96.01,
+              128.12,
+              160.0
+            ]
+          },
+          {
+            "rgb": [
+              170,
+              120,
+              90
+            ],
+            "lumaSigmaIn": 6,
+            "chromaSigmaIn": 8,
+            "lumaStd": 6.054,
+            "cbStd": 7.959,
+            "crStd": 8.059,
+            "mean": [
+              170.01,
+              119.9,
+              89.96
+            ]
+          },
+          {
+            "rgb": [
+              80,
+              140,
+              80
+            ],
+            "lumaSigmaIn": 0,
+            "chromaSigmaIn": 12,
+            "lumaStd": 0.371,
+            "cbStd": 12.045,
+            "crStd": 12.048,
+            "mean": [
+              79.86,
+              139.89,
+              79.89
+            ]
+          },
+          {
+            "rgb": [
+              128,
+              128,
+              128
+            ],
+            "lumaSigmaIn": 0,
+            "chromaSigmaIn": 0,
+            "lumaStd": 0.0,
+            "cbStd": 0.0,
+            "crStd": 0.0,
+            "mean": [
+              128.0,
+              128.0,
+              128.0
+            ]
+          },
+          {
+            "rgb": [
+              200,
+              160,
+              120
+            ],
+            "lumaSigmaIn": 12,
+            "chromaSigmaIn": 12,
+            "lumaStd": 12.066,
+            "cbStd": 12.001,
+            "crStd": 12.065,
+            "mean": [
+              199.83,
+              159.92,
+              120.0
+            ]
+          }
+        ]
+      },
+      "lnr_50": {
+        "edges": [
+          {
+            "lo": 64,
+            "hi": 192,
+            "rise10to90": 0.8,
+            "overshoot": 0.0,
+            "undershoot": 0.0
+          },
+          {
+            "lo": 100,
+            "hi": 156,
+            "rise10to90": 0.8,
+            "overshoot": 0.0,
+            "undershoot": 0.0
+          },
+          {
+            "lo": 120,
+            "hi": 136,
+            "rise10to90": 0.853,
+            "overshoot": 0.0,
+            "undershoot": 0.0
+          }
+        ],
+        "gratings": [
+          {
+            "period": 4,
+            "gain": 1.0
+          },
+          {
+            "period": 8,
+            "gain": 1.0
+          },
+          {
+            "period": 16,
+            "gain": 1.0
+          },
+          {
+            "period": 32,
+            "gain": 0.9896
+          }
+        ],
+        "noise": [
+          {
+            "rgb": [
+              64,
+              64,
+              64
+            ],
+            "lumaSigmaIn": 6,
+            "chromaSigmaIn": 0,
+            "lumaStd": 6.068,
+            "cbStd": 0.0,
+            "crStd": 0.0,
+            "mean": [
+              63.99,
+              63.99,
+              63.99
+            ]
+          },
+          {
+            "rgb": [
+              128,
+              128,
+              128
+            ],
+            "lumaSigmaIn": 6,
+            "chromaSigmaIn": 0,
+            "lumaStd": 5.606,
+            "cbStd": 0.0,
+            "crStd": 0.0,
+            "mean": [
+              127.93,
+              127.93,
+              127.93
+            ]
+          },
+          {
+            "rgb": [
+              192,
+              192,
+              192
+            ],
+            "lumaSigmaIn": 6,
+            "chromaSigmaIn": 0,
+            "lumaStd": 5.263,
+            "cbStd": 0.0,
+            "crStd": 0.0,
+            "mean": [
+              191.97,
+              191.97,
+              191.97
+            ]
+          },
+          {
+            "rgb": [
+              128,
+              128,
+              128
+            ],
+            "lumaSigmaIn": 12,
+            "chromaSigmaIn": 0,
+            "lumaStd": 12.076,
+            "cbStd": 0.0,
+            "crStd": 0.0,
+            "mean": [
+              127.95,
+              127.95,
+              127.95
+            ]
+          },
+          {
+            "rgb": [
+              128,
+              128,
+              128
+            ],
+            "lumaSigmaIn": 0,
+            "chromaSigmaIn": 8,
+            "lumaStd": 0.683,
+            "cbStd": 8.039,
+            "crStd": 8.074,
+            "mean": [
+              128.1,
+              127.96,
+              127.99
+            ]
+          },
+          {
+            "rgb": [
+              96,
+              128,
+              160
+            ],
+            "lumaSigmaIn": 6,
+            "chromaSigmaIn": 8,
+            "lumaStd": 5.689,
+            "cbStd": 8.076,
+            "crStd": 8.025,
+            "mean": [
+              96.01,
+              128.09,
+              159.99
+            ]
+          },
+          {
+            "rgb": [
+              170,
+              120,
+              90
+            ],
+            "lumaSigmaIn": 6,
+            "chromaSigmaIn": 8,
+            "lumaStd": 5.606,
+            "cbStd": 7.942,
+            "crStd": 8.065,
+            "mean": [
+              169.99,
+              119.87,
+              89.95
+            ]
+          },
+          {
+            "rgb": [
+              80,
+              140,
+              80
+            ],
+            "lumaSigmaIn": 0,
+            "chromaSigmaIn": 12,
+            "lumaStd": 0.574,
+            "cbStd": 12.002,
+            "crStd": 11.919,
+            "mean": [
+              79.95,
+              139.85,
+              79.93
+            ]
+          },
+          {
+            "rgb": [
+              128,
+              128,
+              128
+            ],
+            "lumaSigmaIn": 0,
+            "chromaSigmaIn": 0,
+            "lumaStd": 0.0,
+            "cbStd": 0.0,
+            "crStd": 0.0,
+            "mean": [
+              128.0,
+              128.0,
+              128.0
+            ]
+          },
+          {
+            "rgb": [
+              200,
+              160,
+              120
+            ],
+            "lumaSigmaIn": 12,
+            "chromaSigmaIn": 12,
+            "lumaStd": 11.7,
+            "cbStd": 11.987,
+            "crStd": 12.072,
+            "mean": [
+              199.8,
+              159.88,
+              119.98
+            ]
+          }
+        ]
+      },
+      "lnr_75": {
+        "edges": [
+          {
+            "lo": 64,
+            "hi": 192,
+            "rise10to90": 0.8,
+            "overshoot": 0.0,
+            "undershoot": 0.0
+          },
+          {
+            "lo": 100,
+            "hi": 156,
+            "rise10to90": 0.815,
+            "overshoot": 0.0,
+            "undershoot": 0.0
+          },
+          {
+            "lo": 120,
+            "hi": 136,
+            "rise10to90": 0.914,
+            "overshoot": 0.0,
+            "undershoot": 0.0
+          }
+        ],
+        "gratings": [
+          {
+            "period": 4,
+            "gain": 1.0
+          },
+          {
+            "period": 8,
+            "gain": 1.0
+          },
+          {
+            "period": 16,
+            "gain": 1.0
+          },
+          {
+            "period": 32,
+            "gain": 0.9896
+          }
+        ],
+        "noise": [
+          {
+            "rgb": [
+              64,
+              64,
+              64
+            ],
+            "lumaSigmaIn": 6,
+            "chromaSigmaIn": 0,
+            "lumaStd": 5.645,
+            "cbStd": 0.0,
+            "crStd": 0.0,
+            "mean": [
+              63.95,
+              63.95,
+              63.95
+            ]
+          },
+          {
+            "rgb": [
+              128,
+              128,
+              128
+            ],
+            "lumaSigmaIn": 6,
+            "chromaSigmaIn": 0,
+            "lumaStd": 4.845,
+            "cbStd": 0.0,
+            "crStd": 0.0,
+            "mean": [
+              127.9,
+              127.9,
+              127.9
+            ]
+          },
+          {
+            "rgb": [
+              192,
+              192,
+              192
+            ],
+            "lumaSigmaIn": 6,
+            "chromaSigmaIn": 0,
+            "lumaStd": 4.114,
+            "cbStd": 0.0,
+            "crStd": 0.0,
+            "mean": [
+              191.95,
+              191.95,
+              191.95
+            ]
+          },
+          {
+            "rgb": [
+              128,
+              128,
+              128
+            ],
+            "lumaSigmaIn": 12,
+            "chromaSigmaIn": 0,
+            "lumaStd": 11.438,
+            "cbStd": 0.0,
+            "crStd": 0.0,
+            "mean": [
+              127.92,
+              127.92,
+              127.92
+            ]
+          },
+          {
+            "rgb": [
+              128,
+              128,
+              128
+            ],
+            "lumaSigmaIn": 0,
+            "chromaSigmaIn": 8,
+            "lumaStd": 1.161,
+            "cbStd": 8.04,
+            "crStd": 8.073,
+            "mean": [
+              128.14,
+              127.93,
+              128.02
+            ]
+          },
+          {
+            "rgb": [
+              96,
+              128,
+              160
+            ],
+            "lumaSigmaIn": 6,
+            "chromaSigmaIn": 8,
+            "lumaStd": 5.032,
+            "cbStd": 8.083,
+            "crStd": 7.998,
+            "mean": [
+              96.0,
+              128.06,
+              159.97
+            ]
+          },
+          {
+            "rgb": [
+              170,
+              120,
+              90
+            ],
+            "lumaSigmaIn": 6,
+            "chromaSigmaIn": 8,
+            "lumaStd": 4.83,
+            "cbStd": 7.929,
+            "crStd": 8.072,
+            "mean": [
+              169.98,
+              119.85,
+              89.94
+            ]
+          },
+          {
+            "rgb": [
+              80,
+              140,
+              80
+            ],
+            "lumaSigmaIn": 0,
+            "chromaSigmaIn": 12,
+            "lumaStd": 1.208,
+            "cbStd": 11.964,
+            "crStd": 11.844,
+            "mean": [
+              80.0,
+              139.8,
+              79.98
+            ]
+          },
+          {
+            "rgb": [
+              128,
+              128,
+              128
+            ],
+            "lumaSigmaIn": 0,
+            "chromaSigmaIn": 0,
+            "lumaStd": 0.0,
+            "cbStd": 0.0,
+            "crStd": 0.0,
+            "mean": [
+              128.0,
+              128.0,
+              128.0
+            ]
+          },
+          {
+            "rgb": [
+              200,
+              160,
+              120
+            ],
+            "lumaSigmaIn": 12,
+            "chromaSigmaIn": 12,
+            "lumaStd": 10.917,
+            "cbStd": 11.976,
+            "crStd": 12.08,
+            "mean": [
+              199.77,
+              159.84,
+              119.95
+            ]
+          }
+        ]
+      },
+      "lnr_100": {
+        "edges": [
+          {
+            "lo": 64,
+            "hi": 192,
+            "rise10to90": 0.806,
+            "overshoot": 0.0,
+            "undershoot": 0.0
+          },
+          {
+            "lo": 100,
+            "hi": 156,
+            "rise10to90": 0.83,
+            "overshoot": 0.0,
+            "undershoot": 0.0
+          },
+          {
+            "lo": 120,
+            "hi": 136,
+            "rise10to90": 5.8,
+            "overshoot": 0.0,
+            "undershoot": 0.0
+          }
+        ],
+        "gratings": [
+          {
+            "period": 4,
+            "gain": 0.9792
+          },
+          {
+            "period": 8,
+            "gain": 0.9792
+          },
+          {
+            "period": 16,
+            "gain": 0.9792
+          },
+          {
+            "period": 32,
+            "gain": 0.9688
+          }
+        ],
+        "noise": [
+          {
+            "rgb": [
+              64,
+              64,
+              64
+            ],
+            "lumaSigmaIn": 6,
+            "chromaSigmaIn": 0,
+            "lumaStd": 5.133,
+            "cbStd": 0.0,
+            "crStd": 0.0,
+            "mean": [
+              63.92,
+              63.92,
+              63.92
+            ]
+          },
+          {
+            "rgb": [
+              128,
+              128,
+              128
+            ],
+            "lumaSigmaIn": 6,
+            "chromaSigmaIn": 0,
+            "lumaStd": 3.744,
+            "cbStd": 0.0,
+            "crStd": 0.0,
+            "mean": [
+              127.86,
+              127.86,
+              127.86
+            ]
+          },
+          {
+            "rgb": [
+              192,
+              192,
+              192
+            ],
+            "lumaSigmaIn": 6,
+            "chromaSigmaIn": 0,
+            "lumaStd": 2.671,
+            "cbStd": 0.0,
+            "crStd": 0.0,
+            "mean": [
+              191.92,
+              191.92,
+              191.92
+            ]
+          },
+          {
+            "rgb": [
+              128,
+              128,
+              128
+            ],
+            "lumaSigmaIn": 12,
+            "chromaSigmaIn": 0,
+            "lumaStd": 10.586,
+            "cbStd": 0.0,
+            "crStd": 0.0,
+            "mean": [
+              127.85,
+              127.85,
+              127.85
+            ]
+          },
+          {
+            "rgb": [
+              128,
+              128,
+              128
+            ],
+            "lumaSigmaIn": 0,
+            "chromaSigmaIn": 8,
+            "lumaStd": 1.678,
+            "cbStd": 8.037,
+            "crStd": 8.072,
+            "mean": [
+              128.19,
+              127.91,
+              128.05
+            ]
+          },
+          {
+            "rgb": [
+              96,
+              128,
+              160
+            ],
+            "lumaSigmaIn": 6,
+            "chromaSigmaIn": 8,
+            "lumaStd": 4.141,
+            "cbStd": 8.103,
+            "crStd": 7.946,
+            "mean": [
+              96.0,
+              128.01,
+              159.96
+            ]
+          },
+          {
+            "rgb": [
+              170,
+              120,
+              90
+            ],
+            "lumaSigmaIn": 6,
+            "chromaSigmaIn": 8,
+            "lumaStd": 3.755,
+            "cbStd": 7.908,
+            "crStd": 8.092,
+            "mean": [
+              169.96,
+              119.81,
+              89.92
+            ]
+          },
+          {
+            "rgb": [
+              80,
+              140,
+              80
+            ],
+            "lumaSigmaIn": 0,
+            "chromaSigmaIn": 12,
+            "lumaStd": 2.164,
+            "cbStd": 11.896,
+            "crStd": 11.67,
+            "mean": [
+              80.12,
+              139.75,
+              80.05
+            ]
+          },
+          {
+            "rgb": [
+              128,
+              128,
+              128
+            ],
+            "lumaSigmaIn": 0,
+            "chromaSigmaIn": 0,
+            "lumaStd": 0.0,
+            "cbStd": 0.0,
+            "crStd": 0.0,
+            "mean": [
+              128.0,
+              128.0,
+              128.0
+            ]
+          },
+          {
+            "rgb": [
+              200,
+              160,
+              120
+            ],
+            "lumaSigmaIn": 12,
+            "chromaSigmaIn": 12,
+            "lumaStd": 9.693,
+            "cbStd": 11.952,
+            "crStd": 12.095,
+            "mean": [
+              199.71,
+              159.76,
+              119.9
+            ]
+          }
+        ]
+      },
+      "cnr_25": {
+        "edges": [
+          {
+            "lo": 64,
+            "hi": 192,
+            "rise10to90": 0.8,
+            "overshoot": 0.0,
+            "undershoot": 0.0
+          },
+          {
+            "lo": 100,
+            "hi": 156,
+            "rise10to90": 0.8,
+            "overshoot": 0.0,
+            "undershoot": 0.0
+          },
+          {
+            "lo": 120,
+            "hi": 136,
+            "rise10to90": 0.8,
+            "overshoot": 0.0,
+            "undershoot": 0.0
+          }
+        ],
+        "gratings": [
+          {
+            "period": 4,
+            "gain": 1.0
+          },
+          {
+            "period": 8,
+            "gain": 1.0
+          },
+          {
+            "period": 16,
+            "gain": 1.0
+          },
+          {
+            "period": 32,
+            "gain": 1.0
+          }
+        ],
+        "noise": [
+          {
+            "rgb": [
+              64,
+              64,
+              64
+            ],
+            "lumaSigmaIn": 6,
+            "chromaSigmaIn": 0,
+            "lumaStd": 6.074,
+            "cbStd": 0.0,
+            "crStd": 0.0,
+            "mean": [
+              63.99,
+              63.99,
+              63.99
+            ]
+          },
+          {
+            "rgb": [
+              128,
+              128,
+              128
+            ],
+            "lumaSigmaIn": 6,
+            "chromaSigmaIn": 0,
+            "lumaStd": 6.046,
+            "cbStd": 0.0,
+            "crStd": 0.0,
+            "mean": [
+              127.94,
+              127.94,
+              127.94
+            ]
+          },
+          {
+            "rgb": [
+              192,
+              192,
+              192
+            ],
+            "lumaSigmaIn": 6,
+            "chromaSigmaIn": 0,
+            "lumaStd": 6.078,
+            "cbStd": 0.0,
+            "crStd": 0.0,
+            "mean": [
+              191.99,
+              191.99,
+              191.99
+            ]
+          },
+          {
+            "rgb": [
+              128,
+              128,
+              128
+            ],
+            "lumaSigmaIn": 12,
+            "chromaSigmaIn": 0,
+            "lumaStd": 12.188,
+            "cbStd": 0.0,
+            "crStd": 0.0,
+            "mean": [
+              127.98,
+              127.98,
+              127.98
+            ]
+          },
+          {
+            "rgb": [
+              128,
+              128,
+              128
+            ],
+            "lumaSigmaIn": 0,
+            "chromaSigmaIn": 8,
+            "lumaStd": 1.635,
+            "cbStd": 0.916,
+            "crStd": 1.276,
+            "mean": [
+              128.68,
+              128.14,
+              128.94
+            ]
+          },
+          {
+            "rgb": [
+              96,
+              128,
+              160
+            ],
+            "lumaSigmaIn": 6,
+            "chromaSigmaIn": 8,
+            "lumaStd": 5.902,
+            "cbStd": 1.2,
+            "crStd": 1.849,
+            "mean": [
+              96.96,
+              128.22,
+              160.9
+            ]
+          },
+          {
+            "rgb": [
+              170,
+              120,
+              90
+            ],
+            "lumaSigmaIn": 6,
+            "chromaSigmaIn": 8,
+            "lumaStd": 6.084,
+            "cbStd": 0.596,
+            "crStd": 0.775,
+            "mean": [
+              170.53,
+              120.06,
+              91.38
+            ]
+          },
+          {
+            "rgb": [
+              80,
+              140,
+              80
+            ],
+            "lumaSigmaIn": 0,
+            "chromaSigmaIn": 12,
+            "lumaStd": 2.54,
+            "cbStd": 3.043,
+            "crStd": 5.9,
+            "mean": [
+              81.72,
+              140.01,
+              83.16
+            ]
+          },
+          {
+            "rgb": [
+              128,
+              128,
+              128
+            ],
+            "lumaSigmaIn": 0,
+            "chromaSigmaIn": 0,
+            "lumaStd": 0.0,
+            "cbStd": 0.0,
+            "crStd": 0.0,
+            "mean": [
+              128.0,
+              128.0,
+              128.0
+            ]
+          },
+          {
+            "rgb": [
+              200,
+              160,
+              120
+            ],
+            "lumaSigmaIn": 12,
+            "chromaSigmaIn": 12,
+            "lumaStd": 11.966,
+            "cbStd": 1.466,
+            "crStd": 1.402,
+            "mean": [
+              200.87,
+              160.17,
+              122.53
+            ]
+          }
+        ]
+      },
+      "cnr_50": {
+        "edges": [
+          {
+            "lo": 64,
+            "hi": 192,
+            "rise10to90": 0.8,
+            "overshoot": 0.0,
+            "undershoot": 0.0
+          },
+          {
+            "lo": 100,
+            "hi": 156,
+            "rise10to90": 0.8,
+            "overshoot": 0.0,
+            "undershoot": 0.0
+          },
+          {
+            "lo": 120,
+            "hi": 136,
+            "rise10to90": 0.8,
+            "overshoot": 0.0,
+            "undershoot": 0.0
+          }
+        ],
+        "gratings": [
+          {
+            "period": 4,
+            "gain": 1.0
+          },
+          {
+            "period": 8,
+            "gain": 1.0
+          },
+          {
+            "period": 16,
+            "gain": 1.0
+          },
+          {
+            "period": 32,
+            "gain": 1.0
+          }
+        ],
+        "noise": [
+          {
+            "rgb": [
+              64,
+              64,
+              64
+            ],
+            "lumaSigmaIn": 6,
+            "chromaSigmaIn": 0,
+            "lumaStd": 6.074,
+            "cbStd": 0.0,
+            "crStd": 0.0,
+            "mean": [
+              63.99,
+              63.99,
+              63.99
+            ]
+          },
+          {
+            "rgb": [
+              128,
+              128,
+              128
+            ],
+            "lumaSigmaIn": 6,
+            "chromaSigmaIn": 0,
+            "lumaStd": 6.046,
+            "cbStd": 0.0,
+            "crStd": 0.0,
+            "mean": [
+              127.94,
+              127.94,
+              127.94
+            ]
+          },
+          {
+            "rgb": [
+              192,
+              192,
+              192
+            ],
+            "lumaSigmaIn": 6,
+            "chromaSigmaIn": 0,
+            "lumaStd": 6.078,
+            "cbStd": 0.0,
+            "crStd": 0.0,
+            "mean": [
+              191.99,
+              191.99,
+              191.99
+            ]
+          },
+          {
+            "rgb": [
+              128,
+              128,
+              128
+            ],
+            "lumaSigmaIn": 12,
+            "chromaSigmaIn": 0,
+            "lumaStd": 12.188,
+            "cbStd": 0.0,
+            "crStd": 0.0,
+            "mean": [
+              127.98,
+              127.98,
+              127.98
+            ]
+          },
+          {
+            "rgb": [
+              128,
+              128,
+              128
+            ],
+            "lumaSigmaIn": 0,
+            "chromaSigmaIn": 8,
+            "lumaStd": 1.965,
+            "cbStd": 0.367,
+            "crStd": 0.397,
+            "mean": [
+              128.65,
+              128.16,
+              128.92
+            ]
+          },
+          {
+            "rgb": [
+              96,
+              128,
+              160
+            ],
+            "lumaSigmaIn": 6,
+            "chromaSigmaIn": 8,
+            "lumaStd": 6.681,
+            "cbStd": 1.277,
+            "crStd": 0.896,
+            "mean": [
+              96.65,
+              128.29,
+              160.88
+            ]
+          },
+          {
+            "rgb": [
+              170,
+              120,
+              90
+            ],
+            "lumaSigmaIn": 6,
+            "chromaSigmaIn": 8,
+            "lumaStd": 6.36,
+            "cbStd": 1.495,
+            "crStd": 1.372,
+            "mean": [
+              170.56,
+              120.05,
+              91.04
+            ]
+          },
+          {
+            "rgb": [
+              80,
+              140,
+              80
+            ],
+            "lumaSigmaIn": 0,
+            "chromaSigmaIn": 12,
+            "lumaStd": 6.023,
+            "cbStd": 0.854,
+            "crStd": 0.845,
+            "mean": [
+              81.63,
+              140.16,
+              82.86
+            ]
+          },
+          {
+            "rgb": [
+              128,
+              128,
+              128
+            ],
+            "lumaSigmaIn": 0,
+            "chromaSigmaIn": 0,
+            "lumaStd": 0.0,
+            "cbStd": 0.0,
+            "crStd": 0.0,
+            "mean": [
+              128.0,
+              128.0,
+              128.0
+            ]
+          },
+          {
+            "rgb": [
+              200,
+              160,
+              120
+            ],
+            "lumaSigmaIn": 12,
+            "chromaSigmaIn": 12,
+            "lumaStd": 12.433,
+            "cbStd": 2.069,
+            "crStd": 1.936,
+            "mean": [
+              200.9,
+              160.19,
+              121.71
+            ]
+          }
+        ]
+      },
+      "cnr_100": {
+        "edges": [
+          {
+            "lo": 64,
+            "hi": 192,
+            "rise10to90": 0.8,
+            "overshoot": 0.0,
+            "undershoot": 0.0
+          },
+          {
+            "lo": 100,
+            "hi": 156,
+            "rise10to90": 0.8,
+            "overshoot": 0.0,
+            "undershoot": 0.0
+          },
+          {
+            "lo": 120,
+            "hi": 136,
+            "rise10to90": 0.8,
+            "overshoot": 0.0,
+            "undershoot": 0.0
+          }
+        ],
+        "gratings": [
+          {
+            "period": 4,
+            "gain": 1.0
+          },
+          {
+            "period": 8,
+            "gain": 1.0
+          },
+          {
+            "period": 16,
+            "gain": 1.0
+          },
+          {
+            "period": 32,
+            "gain": 1.0
+          }
+        ],
+        "noise": [
+          {
+            "rgb": [
+              64,
+              64,
+              64
+            ],
+            "lumaSigmaIn": 6,
+            "chromaSigmaIn": 0,
+            "lumaStd": 6.074,
+            "cbStd": 0.0,
+            "crStd": 0.0,
+            "mean": [
+              63.99,
+              63.99,
+              63.99
+            ]
+          },
+          {
+            "rgb": [
+              128,
+              128,
+              128
+            ],
+            "lumaSigmaIn": 6,
+            "chromaSigmaIn": 0,
+            "lumaStd": 6.046,
+            "cbStd": 0.0,
+            "crStd": 0.0,
+            "mean": [
+              127.94,
+              127.94,
+              127.94
+            ]
+          },
+          {
+            "rgb": [
+              192,
+              192,
+              192
+            ],
+            "lumaSigmaIn": 6,
+            "chromaSigmaIn": 0,
+            "lumaStd": 6.078,
+            "cbStd": 0.0,
+            "crStd": 0.0,
+            "mean": [
+              191.99,
+              191.99,
+              191.99
+            ]
+          },
+          {
+            "rgb": [
+              128,
+              128,
+              128
+            ],
+            "lumaSigmaIn": 12,
+            "chromaSigmaIn": 0,
+            "lumaStd": 12.188,
+            "cbStd": 0.0,
+            "crStd": 0.0,
+            "mean": [
+              127.98,
+              127.98,
+              127.98
+            ]
+          },
+          {
+            "rgb": [
+              128,
+              128,
+              128
+            ],
+            "lumaSigmaIn": 0,
+            "chromaSigmaIn": 8,
+            "lumaStd": 1.991,
+            "cbStd": 0.359,
+            "crStd": 0.383,
+            "mean": [
+              128.65,
+              128.16,
+              128.92
+            ]
+          },
+          {
+            "rgb": [
+              96,
+              128,
+              160
+            ],
+            "lumaSigmaIn": 6,
+            "chromaSigmaIn": 8,
+            "lumaStd": 6.863,
+            "cbStd": 1.3,
+            "crStd": 1.471,
+            "mean": [
+              96.55,
+              128.31,
+              160.87
+            ]
+          },
+          {
+            "rgb": [
+              170,
+              120,
+              90
+            ],
+            "lumaSigmaIn": 6,
+            "chromaSigmaIn": 8,
+            "lumaStd": 6.416,
+            "cbStd": 1.862,
+            "crStd": 1.499,
+            "mean": [
+              170.56,
+              120.05,
+              90.95
+            ]
+          },
+          {
+            "rgb": [
+              80,
+              140,
+              80
+            ],
+            "lumaSigmaIn": 0,
+            "chromaSigmaIn": 12,
+            "lumaStd": 6.632,
+            "cbStd": 1.446,
+            "crStd": 1.891,
+            "mean": [
+              81.37,
+              140.18,
+              82.65
+            ]
+          },
+          {
+            "rgb": [
+              128,
+              128,
+              128
+            ],
+            "lumaSigmaIn": 0,
+            "chromaSigmaIn": 0,
+            "lumaStd": 0.0,
+            "cbStd": 0.0,
+            "crStd": 0.0,
+            "mean": [
+              128.0,
+              128.0,
+              128.0
+            ]
+          },
+          {
+            "rgb": [
+              200,
+              160,
+              120
+            ],
+            "lumaSigmaIn": 12,
+            "chromaSigmaIn": 12,
+            "lumaStd": 12.645,
+            "cbStd": 3.474,
+            "crStd": 2.185,
+            "mean": [
+              200.91,
+              160.2,
+              121.24
+            ]
+          }
+        ]
+      },
+      "combo": {
+        "edges": [
+          {
+            "lo": 64,
+            "hi": 192,
+            "rise10to90": 0.495,
+            "overshoot": 15.0,
+            "undershoot": 64.0
+          },
+          {
+            "lo": 100,
+            "hi": 156,
+            "rise10to90": 0.553,
+            "overshoot": 8.0,
+            "undershoot": 17.0
+          },
+          {
+            "lo": 120,
+            "hi": 136,
+            "rise10to90": 0.61,
+            "overshoot": 2.0,
+            "undershoot": 3.0
+          }
+        ],
+        "gratings": [
+          {
+            "period": 4,
+            "gain": 1.7083
+          },
+          {
+            "period": 8,
+            "gain": 1.1875
+          },
+          {
+            "period": 16,
+            "gain": 1.0521
+          },
+          {
+            "period": 32,
+            "gain": 1.0
+          }
+        ],
+        "noise": [
+          {
+            "rgb": [
+              64,
+              64,
+              64
+            ],
+            "lumaSigmaIn": 6,
+            "chromaSigmaIn": 0,
+            "lumaStd": 9.652,
+            "cbStd": 0.005,
+            "crStd": 0.004,
+            "mean": [
+              63.46,
+              63.46,
+              63.46
+            ]
+          },
+          {
+            "rgb": [
+              128,
+              128,
+              128
+            ],
+            "lumaSigmaIn": 6,
+            "chromaSigmaIn": 0,
+            "lumaStd": 8.957,
+            "cbStd": 0.011,
+            "crStd": 0.011,
+            "mean": [
+              127.69,
+              127.69,
+              127.69
+            ]
+          },
+          {
+            "rgb": [
+              192,
+              192,
+              192
+            ],
+            "lumaSigmaIn": 6,
+            "chromaSigmaIn": 0,
+            "lumaStd": 8.381,
+            "cbStd": 0.013,
+            "crStd": 0.014,
+            "mean": [
+              191.82,
+              191.82,
+              191.82
+            ]
+          },
+          {
+            "rgb": [
+              128,
+              128,
+              128
+            ],
+            "lumaSigmaIn": 12,
+            "chromaSigmaIn": 0,
+            "lumaStd": 19.562,
+            "cbStd": 0.009,
+            "crStd": 0.01,
+            "mean": [
+              126.78,
+              126.78,
+              126.78
+            ]
+          },
+          {
+            "rgb": [
+              128,
+              128,
+              128
+            ],
+            "lumaSigmaIn": 0,
+            "chromaSigmaIn": 8,
+            "lumaStd": 1.825,
+            "cbStd": 0.915,
+            "crStd": 1.268,
+            "mean": [
+              128.68,
+              128.11,
+              128.94
+            ]
+          },
+          {
+            "rgb": [
+              96,
+              128,
+              160
+            ],
+            "lumaSigmaIn": 6,
+            "chromaSigmaIn": 8,
+            "lumaStd": 9.373,
+            "cbStd": 1.953,
+            "crStd": 1.112,
+            "mean": [
+              96.6,
+              127.89,
+              160.79
+            ]
+          },
+          {
+            "rgb": [
+              170,
+              120,
+              90
+            ],
+            "lumaSigmaIn": 6,
+            "chromaSigmaIn": 8,
+            "lumaStd": 9.158,
+            "cbStd": 0.84,
+            "crStd": 1.649,
+            "mean": [
+              170.41,
+              119.72,
+              90.81
+            ]
+          },
+          {
+            "rgb": [
+              80,
+              140,
+              80
+            ],
+            "lumaSigmaIn": 0,
+            "chromaSigmaIn": 12,
+            "lumaStd": 5.775,
+            "cbStd": 2.283,
+            "crStd": 4.774,
+            "mean": [
+              81.97,
+              139.79,
+              83.2
+            ]
+          },
+          {
+            "rgb": [
+              128,
+              128,
+              128
+            ],
+            "lumaSigmaIn": 0,
+            "chromaSigmaIn": 0,
+            "lumaStd": 0.0,
+            "cbStd": 0.0,
+            "crStd": 0.0,
+            "mean": [
+              128.0,
+              128.0,
+              128.0
+            ]
+          },
+          {
+            "rgb": [
+              200,
+              160,
+              120
+            ],
+            "lumaSigmaIn": 12,
+            "chromaSigmaIn": 12,
+            "lumaStd": 19.116,
+            "cbStd": 1.251,
+            "crStd": 2.823,
+            "mean": [
+              200.39,
+              159.09,
+              120.78
+            ]
+          }
+        ]
+      }
+    }
+  }
+}

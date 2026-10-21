@@ -94,6 +94,35 @@ pub fn apply(
     Ok(output)
 }
 
+/// Explicit v6 detail control. The frozen 0..50 domain is unchanged; above
+/// 50, increase guided-filter regularization continuously up to 4x. This
+/// keeps the whole slider useful without applying legacy and v6 NR twice.
+/// The extended range is a NIHO approximation, not an LR calibration.
+pub fn apply_detail(
+    source: &[f32],
+    width: usize,
+    height: usize,
+    amount: f64,
+) -> Result<Vec<f32>, RawChromaError> {
+    if amount <= 50.0 {
+        return apply(source, width, height, amount);
+    }
+    validate_pixels(source, width, height, amount)?;
+    let epsilon = (0.4 * libm::pow(4.0, (amount - 50.0) / 50.0)) as f32;
+    let mut output = vec![0.0; source.len()];
+    for start in (0..height).step_by(STRIPE_ROWS) {
+        let end = start.saturating_add(STRIPE_ROWS).min(height);
+        let halo_start = start.saturating_sub(STRIPE_HALO);
+        let halo_end = end.saturating_add(STRIPE_HALO).min(height);
+        let halo = &source[halo_start * width * 3..halo_end * width * 3];
+        let filtered = guided(halo, width, halo_end - halo_start, halo.len() / 3, epsilon)
+            .map_err(|error| stripe_error(error, halo_start * width))?;
+        let center = (start - halo_start) * width * 3..(end - halo_start) * width * 3;
+        output[start * width * 3..end * width * 3].copy_from_slice(&filtered[center]);
+    }
+    Ok(output)
+}
+
 fn stripe_error(error: RawChromaError, pixel_offset: usize) -> RawChromaError {
     match error {
         RawChromaError::DerivedNonFinite(stage, index) => {
@@ -473,5 +502,51 @@ mod tests {
             apply(&source, 3, 1, 50.0).unwrap(),
             apply(&source, 3, 1, 100.0).unwrap()
         );
+    }
+    #[test]
+    fn detail_upper_range_reduces_flat_chroma_and_keeps_frozen_lower_range() {
+        // Sensor-like noise is independent per channel, so the log-luma
+        // guide carries noise too. A perfectly luma-flat chroma field would
+        // make every epsilon collapse to the same box mean (the guide has
+        // no variance), which cannot tell the extended range apart.
+        let (w, h) = (48, 24);
+        let mut seed = 71u32;
+        let mut next = || {
+            seed = seed.wrapping_mul(1_664_525).wrapping_add(1_013_904_223);
+            ((seed >> 8) as f32 / 16_777_215.0 - 0.5) * 0.12
+        };
+        let mut source = Vec::with_capacity(w * h * 3);
+        for _ in 0..w * h {
+            source.extend_from_slice(&[0.3 + next(), 0.3 + next(), 0.3 + next()]);
+        }
+        for amount in [0.0, 12.5, 25.0, 37.0, 50.0] {
+            assert_eq!(
+                apply_detail(&source, w, h, amount).unwrap(),
+                apply(&source, w, h, amount).unwrap()
+            );
+        }
+        let low = apply_detail(&source, w, h, 50.0).unwrap();
+        let high = apply_detail(&source, w, h, 100.0).unwrap();
+        let chroma_energy = |pixels: &[f32]| {
+            pixels
+                .chunks_exact(3)
+                .map(|p| (p[0] - p[1]).powi(2) + (p[2] - p[1]).powi(2))
+                .sum::<f32>()
+        };
+        let (source_energy, low_energy, high_energy) = (
+            chroma_energy(&source),
+            chroma_energy(&low),
+            chroma_energy(&high),
+        );
+        assert!(
+            high_energy < low_energy * 0.9,
+            "100 must reduce more chroma than 50: {high_energy} vs {low_energy}"
+        );
+        assert!(low_energy < source_energy);
+        for (pixel, original) in high.chunks_exact(3).zip(source.chunks_exact(3)) {
+            let y = pixel[0] * LUMA[0] + pixel[1] * LUMA[1] + pixel[2] * LUMA[2];
+            let source_y = original[0] * LUMA[0] + original[1] * LUMA[1] + original[2] * LUMA[2];
+            assert!((y - source_y).abs() < 2e-5, "luma drift {y} vs {source_y}");
+        }
     }
 }

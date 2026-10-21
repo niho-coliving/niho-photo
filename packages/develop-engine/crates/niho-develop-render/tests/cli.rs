@@ -578,8 +578,7 @@ fn failures_are_one_json_line_with_a_fixed_exit_code() {
     let no_v = with("no-v.json", r#"{"engine":"niho-1"}"#);
     let no_engine = with("no-engine.json", r#"{"v":1}"#);
     let v6 = with("v6.json", r#"{"v":6,"engine":"niho-1"}"#);
-    // A brush mask: valid (v 5), but this build has no surface store (M4,
-    // #68), so it is never drawn without the mask.
+    let v6_out = dir.path("v6-out.png");
     let masks = with(
         "masks.json",
         &format!(
@@ -587,6 +586,11 @@ fn failures_are_one_json_line_with_a_fixed_exit_code() {
             "0".repeat(64)
         ),
     );
+    let future_settings = format!(
+        r#"{{"v":{},"engine":"niho-1"}}"#,
+        niho_develop::settings::MAX_SETTINGS_VERSION + 1
+    );
+    let future_version = with("future-version.json", &future_settings);
     // A turned crop whose corners do not make a rectangle on this photo.
     let crop = with(
         "crop.json",
@@ -726,10 +730,17 @@ fn failures_are_one_json_line_with_a_fixed_exit_code() {
             "unsupported_settings",
             2,
         ),
-        ("v 6", raster(&v6, &jpeg, &out), "unsupported_settings", 2),
+        // Saved and valid (v 5), but not drawn until M4 (#68): never a frame
+        // without the brush surface.
         (
             "a brush mask without its surface",
             raster(&masks, &jpeg, &out),
+            "unsupported_settings",
+            2,
+        ),
+        (
+            "future version",
+            raster(&future_version, &jpeg, &out),
             "unsupported_settings",
             2,
         ),
@@ -839,6 +850,9 @@ fn failures_are_one_json_line_with_a_fixed_exit_code() {
         );
         assert_eq!(result.code, exit, "{name}");
     }
+    let v6_result = raster(&v6, &jpeg, &v6_out);
+    assert_eq!(v6_result.code, 0, "v 6 is supported: {}", v6_result.stdout);
+    assert!(v6_out.is_file());
     let mut kept = vec![
         good.as_path(),
         wc_path.as_path(),
@@ -850,7 +864,9 @@ fn failures_are_one_json_line_with_a_fixed_exit_code() {
         no_v.as_path(),
         no_engine.as_path(),
         v6.as_path(),
+        v6_out.as_path(),
         masks.as_path(),
+        future_version.as_path(),
         crop.as_path(),
         crop_v1.as_path(),
         look.as_path(),

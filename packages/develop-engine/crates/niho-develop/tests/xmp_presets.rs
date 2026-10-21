@@ -145,9 +145,10 @@ fn builtin_presets_match_photo_bench_engine() {
             photo_bench_unsupported, want_unsupported,
             "{id} unsupported"
         );
+        // NIHO also renders the Detail panel (v6, Issue #32).
         let niho_unsupported: Vec<String> = want_unsupported
             .iter()
-            .filter(|p| xmp::effect_field(p).is_none())
+            .filter(|p| xmp::effect_field(p).is_none() && !xmp::DETAIL_KEYS.contains(&p.as_str()))
             .cloned()
             .collect();
         assert_eq!(
@@ -160,6 +161,15 @@ fn builtin_presets_match_photo_bench_engine() {
         {
             let item = result.items.iter().find(|i| &i.property == p).unwrap();
             assert_eq!(item.level, xmp::Level::Exact, "{id} {p}");
+        }
+        // The bundled presets carry Camera Raw's default sub-controls, so
+        // every Detail-panel key is rendered (exact at 0, else approximate).
+        for p in want_unsupported
+            .iter()
+            .filter(|p| xmp::DETAIL_KEYS.contains(&p.as_str()))
+        {
+            let item = result.items.iter().find(|i| &i.property == p).unwrap();
+            assert_ne!(item.level, xmp::Level::Unsupported, "{id} {p}");
         }
         assert!(result.converted, "{id}: {:?}", result.convert_issues);
         assert!(

@@ -55,12 +55,15 @@ pub enum XmpGroup {
     Vignette,
     /// Grain.
     Grain,
-    /// NIHO 3's color noise reduction and retained detail/smoothness values.
+    /// Color noise reduction (signed RAW R209 or v6 detail) with its retained
+    /// detail / smoothness values, and v6 luminance noise reduction.
     NoiseReduction,
+    /// v6 output sharpening (amount, radius, detail, masking).
+    Sharpening,
 }
 
 impl XmpGroup {
-    pub const ALL: [XmpGroup; 12] = [
+    pub const ALL: [XmpGroup; 13] = [
         XmpGroup::Exposure,
         XmpGroup::WhiteBalance,
         XmpGroup::Tone,
@@ -73,12 +76,13 @@ impl XmpGroup {
         XmpGroup::Vignette,
         XmpGroup::Grain,
         XmpGroup::NoiseReduction,
+        XmpGroup::Sharpening,
     ];
 
     /// The default of "save the current edit as a preset": everything but
     /// the exposure and the white balance, which belong to each photo (so
     /// the preset stacks on a photo's own edit, whichever comes first).
-    pub const DEFAULT: [XmpGroup; 10] = [
+    pub const DEFAULT: [XmpGroup; 11] = [
         XmpGroup::Tone,
         XmpGroup::Presence,
         XmpGroup::ToneCurve,
@@ -89,6 +93,7 @@ impl XmpGroup {
         XmpGroup::Vignette,
         XmpGroup::Grain,
         XmpGroup::NoiseReduction,
+        XmpGroup::Sharpening,
     ];
 
     pub fn as_str(self) -> &'static str {
@@ -105,6 +110,7 @@ impl XmpGroup {
             XmpGroup::Vignette => "vignette",
             XmpGroup::Grain => "grain",
             XmpGroup::NoiseReduction => "noiseReduction",
+            XmpGroup::Sharpening => "sharpening",
         }
     }
 
@@ -395,17 +401,27 @@ pub fn settings_to_xmp(settings: &DevelopSettings, options: &XmpWriteOptions) ->
         };
         put(key.xmp, number(v, key.range.0 < 0.0));
     }
-    // Older engines do not apply CNR, so their preset bytes/defaults stay
-    // unchanged even though the writer understands the new group.
-    // ColorNoiseReduction is Integer in Adobe's Camera Raw XMP schema:
+    // Noise reduction: a signed RAW engine always carries its R209 color NR
+    // (and the retained detail / smoothness); any engine with a v6 `detail`
+    // object carries what it renders (its explicit color NR, else the
+    // legacy amount on a signed RAW engine, else 0) plus luminance NR. An
+    // edit without `detail` on another engine renders no NR, so its preset
+    // bytes stay unchanged. Camera Raw's XMP schema defines these as Integer:
     // https://developer.adobe.com/xmp/docs/xmp-namespaces/crs/
-    if matches!(
-        settings.engine.as_str(),
-        ENGINE_NIHO_3 | ENGINE_NIHO_4 | ENGINE_NIHO_5 | ENGINE_NIHO_7 | ENGINE_NIHO_11
-    ) && on(XmpGroup::NoiseReduction)
-    {
+    let legacy_raw_cnr = super::detail::renders_legacy_raw_cnr(&settings.engine);
+    if on(XmpGroup::NoiseReduction) && (legacy_raw_cnr || settings.detail.is_some()) {
+        let color = settings
+            .detail
+            .and_then(|detail| detail.color_noise_reduction)
+            .unwrap_or_else(|| super::detail::effective_color_noise_reduction(settings));
+        if let Some(detail) = settings.detail {
+            put(
+                "LuminanceSmoothing",
+                number(libm::round(detail.luminance_noise_reduction), false),
+            );
+        }
         for (key, value) in [
-            ("ColorNoiseReduction", settings.color_noise_reduction),
+            ("ColorNoiseReduction", color),
             (
                 "ColorNoiseReductionDetail",
                 settings.color_noise_reduction_detail,
@@ -417,6 +433,25 @@ pub fn settings_to_xmp(settings: &DevelopSettings, options: &XmpWriteOptions) ->
         ] {
             put(key, number(libm::round(value), false));
         }
+    }
+    // Sharpening exists only with v6 `detail`; an edit without it renders
+    // none and writes nothing (the bytes of existing presets stay). The
+    // radius is Real in Camera Raw's schema, the others Integer.
+    if let Some(detail) = settings.detail.filter(|_| on(XmpGroup::Sharpening)) {
+        let sharpening = detail.sharpening;
+        put("Sharpness", number(libm::round(sharpening.amount), false));
+        put(
+            "SharpenRadius",
+            format!("{:+.1}", libm::round(sharpening.radius * 10.0) / 10.0),
+        );
+        put(
+            "SharpenDetail",
+            number(libm::round(sharpening.detail), false),
+        );
+        put(
+            "SharpenEdgeMasking",
+            number(libm::round(sharpening.masking), false),
+        );
     }
     if on(XmpGroup::Hsl) {
         for component in 0..HSL_PREFIXES.len() {

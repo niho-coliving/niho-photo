@@ -79,6 +79,7 @@ function fakeEngine(options: { source?: { width: number; height: number }; frame
     supportsGeometry: vi.fn(async () => true),
     supportsEffects: vi.fn(async () => true),
     supportsColorPoints: vi.fn(async () => true),
+    supportsDetail: vi.fn(async () => true),
     imageSize: vi.fn(async () => source),
     rasterDecodeSize: vi.fn(async () => 2048),
     geometryOutputSize: vi.fn(async () => frame),

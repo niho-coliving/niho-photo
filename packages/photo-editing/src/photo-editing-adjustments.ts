@@ -8,6 +8,8 @@ import {
   PHOTO_EDITING_CLARITY_DESCRIPTION,
   PHOTO_EDITING_COLOR_GROUP_TITLE,
   PHOTO_EDITING_DEHAZE_DESCRIPTION,
+  PHOTO_EDITING_DETAIL_GROUP_TITLE,
+  PHOTO_EDITING_DETAIL_INFO_LABEL,
   PHOTO_EDITING_EFFECTS_GROUP_TITLE,
   PHOTO_EDITING_EFFECTS_INFO_LABEL,
   PHOTO_EDITING_GRAIN_DESCRIPTION,
@@ -16,6 +18,11 @@ import {
   PHOTO_EDITING_TEXTURE_DESCRIPTION,
   PHOTO_EDITING_VIGNETTE_DESCRIPTION,
 } from "./photo-editing-copy";
+import {
+  PHOTO_EDITING_DETAIL_SLIDERS,
+  type PhotoEditingDetailKey,
+  type PhotoEditingDetailSliderDefinition,
+} from "./photo-editing-detail";
 import {
   PHOTO_EDITING_EFFECT_SLIDERS,
   type PhotoEditingEffectKey,
@@ -282,7 +289,8 @@ export function writeRelativeWhiteBalance(
 export type PhotoEditingControlKey =
   | PhotoEditingAdjustmentKey
   | PhotoEditingRelativeWhiteBalanceKey
-  | PhotoEditingEffectKey;
+  | PhotoEditingEffectKey
+  | PhotoEditingDetailKey;
 
 /**
  * 右パネルの 1 項目。`whiteBalance` は写真と設定で絶対 / 相対を決め（{@link resolveWhiteBalanceMode}）、絶対なら同じ項目を
@@ -298,11 +306,17 @@ export type PhotoEditingAdjustmentControl =
       label: string;
     }
   | { kind: "toggle"; key: "grayscale"; label: string }
-  | { kind: "effect"; key: PhotoEditingEffectSliderKey; definition: PhotoEditingEffectSliderDefinition };
+  | { kind: "effect"; key: PhotoEditingEffectSliderKey; definition: PhotoEditingEffectSliderDefinition }
+  | { kind: "detail"; key: PhotoEditingDetailKey; definition: PhotoEditingDetailSliderDefinition };
 
-export type PhotoEditingAdjustmentGroupId = "light" | "color" | "effects";
+export type PhotoEditingAdjustmentGroupId = "light" | "color" | "effects" | "detail";
 
-export const PHOTO_EDITING_ADJUSTMENT_GROUP_IDS: ReadonlyArray<PhotoEditingAdjustmentGroupId> = ["light", "color", "effects"];
+export const PHOTO_EDITING_ADJUSTMENT_GROUP_IDS: ReadonlyArray<PhotoEditingAdjustmentGroupId> = [
+  "light",
+  "color",
+  "effects",
+  "detail",
+];
 
 /** 群名の横の ⓘ で、群の先頭に出す項目ごとの 1 行の説明。 */
 export type PhotoEditingAdjustmentGroupInfo = {
@@ -366,7 +380,8 @@ export const PHOTO_EDITING_BASE_CONTROL_KEYS: ReadonlyArray<PhotoEditingControlK
 /**
  * 効果の項目も入れた群（NIHO Photo 段 1 E1b 移行元設計）。基本の群に、カラーの**先頭**の「白黒」の切り替えと、効果の後ろの
  * 周辺光量補正 → 粒子 → 粒子のサイズを足す（効果の ⓘ に 1 行ずつ）。効果のある設定（v: 3）を読める wasm で開いた写真にだけ
- * 見せるので、`visibleKeys` に効果のキーを入れた面だけがここから絞る（省いた面＝NIHO Desktop には出さない）。
+ * 見せるので、`visibleKeys` に効果のキーを入れた面だけがここから絞る（省いた面＝NIHO Desktop には出さない）。最後にディテールの群
+ * （Issue #32）を置く。こちらも `visibleKeys` にディテールのキーを入れた面だけに出る。
  */
 export const PHOTO_EDITING_ADJUSTMENT_GROUPS_WITH_EFFECTS: ReadonlyArray<PhotoEditingAdjustmentGroup> =
   PHOTO_EDITING_ADJUSTMENT_GROUPS.map((group): PhotoEditingAdjustmentGroup => {
@@ -396,7 +411,23 @@ export const PHOTO_EDITING_ADJUSTMENT_GROUPS_WITH_EFFECTS: ReadonlyArray<PhotoEd
       };
     }
     return group;
-  });
+  }).concat([
+    // ディテール（シャープ・ノイズ軽減。Issue #32）は効果の後ろの群。v6 の `detail` を読める wasm で開いた写真の面だけが
+    // `visibleKeys` に入れて出す（Lightroom のディテールと同じ並び。説明は群名の横の ⓘ）
+    {
+      id: "detail",
+      title: PHOTO_EDITING_DETAIL_GROUP_TITLE,
+      controls: PHOTO_EDITING_DETAIL_SLIDERS.map(
+        (definition): PhotoEditingAdjustmentControl => ({ kind: "detail", key: definition.key, definition }),
+      ),
+      info: {
+        label: PHOTO_EDITING_DETAIL_INFO_LABEL,
+        descriptions: Object.fromEntries(
+          PHOTO_EDITING_DETAIL_SLIDERS.map((definition) => [definition.key, definition.description]),
+        ),
+      },
+    },
+  ]);
 
 /**
  * 見せる項目だけに絞った群。並びは群の定義のまま、項目が 1 つも残らない群は外す。
