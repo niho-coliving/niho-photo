@@ -214,7 +214,7 @@ export function BrowserPhotoEditingLoupe(props: {
           <canvas
             ref={sideCompare.beforeCanvasRef}
             aria-label={`${opened.fileName} の${PHOTO_EDITING_COMPARE_ORIGINAL_LABEL}`}
-            className={cn("max-h-full max-w-full object-contain", ZOOMABLE_CLASS_NAME)}
+            className={cn(LOUPE_FIT_CLASS_NAME, ZOOMABLE_CLASS_NAME)}
           />
         ) : null}
         {drawn ? (
