@@ -137,7 +137,7 @@ describe("describeUnsupportedPresetItems", () => {
     );
     expect(describeUnsupportedPresetItems(["FutureThing"])).toBe("1 項目は使えないので、それ以外を取り込みました");
     expect(describeUnsupportedPresetItems(["PointColors"])).toBe(
-      "Lightroom の色ミキサーは使えないので、それ以外を取り込みました",
+      "Lightroom のポイントカラーは使えないので、それ以外を取り込みました",
     );
   });
 

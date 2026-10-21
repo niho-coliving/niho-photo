@@ -158,6 +158,7 @@ import { PhotoEditingDropOverlay } from "./photo-editing-drop-overlay";
 import { PhotoEditingAddFolderEmptyState, PhotoEditingAddPhotosEmptyState } from "./photo-editing-empty-states";
 import { PhotoEditingGrid, countPhotoEditingGridColumns, type PhotoEditingGridItem } from "./photo-editing-grid";
 import { PhotoEditingHistogram } from "./photo-editing-histogram";
+import { PhotoEditingHslMixer, PhotoEditingHslMixerSection } from "./photo-editing-hsl-mixer";
 import { PhotoEditingMenu, type PhotoEditingMenuItem } from "./photo-editing-menu";
 import { PhotoEditingPresetsPanel } from "./photo-editing-presets-panel";
 import { PhotoEditingToneCurveSection } from "./photo-editing-tone-curve";
@@ -907,7 +908,7 @@ export function BrowserPhotoEditingWorkbench(props: {
     const settingsJson = JSON.stringify(settingsAtPick);
     try {
       const engine = await readyDevelopEngine();
-      if (!engine) throw new Error("色ミキサーを準備できませんでした。");
+      if (!engine) throw new Error("ポイントカラーを準備できませんでした。");
       const committed = await commitColorPickIfCurrent({
         sample: engine.sampleColor(settingsAtPick, {
           maxDimension: Math.max(canvas.width, canvas.height),
@@ -931,7 +932,7 @@ export function BrowserPhotoEditingWorkbench(props: {
       const message = error instanceof Error ? error.message : "";
       setColorPickError(
         message.includes("outside the color point target contract")
-          ? "この位置の色は色ミキサーで扱えません。別の色の部分を選んでください。"
+          ? "この位置の色はポイントカラーで扱えません。別の色の部分を選んでください。"
           : "写真の色を取得できませんでした。表示が整ってから、もう一度お試しください。",
       );
     } finally {
@@ -2132,6 +2133,12 @@ export function BrowserPhotoEditingWorkbench(props: {
             }
             settings={settings}
             colorMixer={colorMixer ? <div className="px-3 pb-2">{colorMixer}</div> : undefined}
+            // カラーミキサー（HSL。niho-photo#38）: 段 2 の wasm が画を描いている写真だけ（S1 の canvas には出さない）
+            hslMixer={
+              wasmPhotoKey !== null && !canvasOnly ? (
+                <PhotoEditingHslMixer reset settings={settings} disabled={controlsDisabled} onSettingsChange={open.changeSettings} />
+              ) : undefined
+            }
             colorPicking={colorPicking}
             visibleKeys={canvasOnly ? BROWSER_CANVAS_ADJUSTMENT_KEYS : undefined}
             presets={
@@ -2231,8 +2238,9 @@ export function BrowserPhotoEditingWorkbench(props: {
             raw={loupeItem !== null && isBrowserCloudRawPhoto(loupeItem.photo)}
             settings={settings}
             colorMixer={colorMixer}
-            // ライトの群の下の「カーブ」（niho-photo#37）: ヒストグラムと同じく PC の右パネルで、段 2 の wasm が画を描いている写真だけ
-            // （S1 の canvas・スマホの層・閲覧の面には出さない）。背後の輝度はヒストグラムの度数を使う（数え直さない）
+            // ライトの群の下の「カーブ」（niho-photo#37）とカラーの群の下の「カラーミキサー」（niho-photo#38）: ヒストグラムと同じく PC の
+            // 右パネルで、段 2 の wasm が画を描いている写真だけ（S1 の canvas・スマホの層・閲覧の面には出さない）。カーブの背後の輝度は
+            // ヒストグラムの度数を使う（数え直さない）。ポイントカラー（`colorMixer`）はカラーミキサーの節の下に並ぶ
             afterGroup={
               histogramAvailable
                 ? {
@@ -2240,6 +2248,13 @@ export function BrowserPhotoEditingWorkbench(props: {
                       <PhotoEditingToneCurveSection
                         settings={settings}
                         histogram={histogram.histogram}
+                        disabled={controlsDisabled}
+                        onSettingsChange={open.changeSettings}
+                      />
+                    ),
+                    color: (
+                      <PhotoEditingHslMixerSection
+                        settings={settings}
                         disabled={controlsDisabled}
                         onSettingsChange={open.changeSettings}
                       />

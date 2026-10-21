@@ -115,11 +115,15 @@ export function BrowserPhotoEditingAdjustments(props: {
   settings: PhotoEditingSettings;
   /** 見せる項目（省略時は基本の 13 項目。S1 の canvas は 5 項目、効果を描ける wasm の写真は効果の項目も入れて渡す） */
   visibleKeys?: ReadonlyArray<PhotoEditingControlKey>;
-  /** Oklch の独立した色ミキサー（対応する wasm の写真だけ）。 */
+  /**
+   * Oklch の独立した色ミキサー（画面の名前は「ポイントカラー」。対応する wasm の写真だけ）。カラーの群の直後（`afterGroup.color` の
+   * 「カラーミキサー」の節の下。niho-photo#38）に、開いたまま置く
+   */
   colorMixer?: ReactNode;
   /**
    * 補正の面で、群の直後に差し込む節（群の id ごと。`PhotoEditingAdjustmentGroups` の `afterGroup`）。ライトの群の下の「カーブ」
-   * （niho-photo#37。PC で wasm が描いている写真だけ渡す）など、既定で閉じた節を置く
+   * （niho-photo#37）・カラーの群の下の「カラーミキサー」（niho-photo#38。どちらも PC で wasm が描いている写真だけ渡す）など、既定で
+   * 閉じた節を置く
    */
   afterGroup?: Partial<Record<PhotoEditingAdjustmentGroupId, ReactNode>>;
   /**
@@ -187,6 +191,18 @@ export function BrowserPhotoEditingAdjustments(props: {
         ? PHOTO_EDITING_PRESETS_TITLE
         : TOOL_LABELS.adjust;
   const auto = props.auto;
+  // ポイントカラー（Oklch）はカラーの群の下、カラーミキサーの節の後ろ（Lightroom と同じくカラーの下に並べる。niho-photo#38）
+  const afterGroup = props.colorMixer
+    ? {
+        ...props.afterGroup,
+        color: (
+          <>
+            {props.afterGroup?.color}
+            {props.colorMixer}
+          </>
+        ),
+      }
+    : props.afterGroup;
   // 白黒のチップは、効果を描ける wasm の写真（`visibleKeys` に白黒が入っている）だけ
   const grayscaleChip = props.visibleKeys?.includes("grayscale") === true;
   const grayscalePressed = readGrayscale(props.settings);
@@ -345,10 +361,9 @@ export function BrowserPhotoEditingAdjustments(props: {
             visibleKeys={props.visibleKeys}
             // 白黒は一番上のチップで切り替える（群の中には描かない。白黒の間に彩度を押せなくするのは群のまま）
             grayscaleToggle="hidden"
-            afterGroup={props.afterGroup}
+            afterGroup={afterGroup}
             onSettingsChange={props.onSettingsChange}
           />
-          {props.colorMixer}
         </>
       )}
       {!props.canEdit ? <p className="mt-3 text-xs text-niho-text-muted">{BROWSER_PHOTO_EDITING_READ_ONLY_TEXT}</p> : null}
