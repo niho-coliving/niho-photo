@@ -570,6 +570,26 @@ export const PHOTO_EDITING_INFO_ROW_LABELS = {
 } as const;
 
 /**
+ * 選別（niho-photo#47。Lightroom のフラグ）。採用 / 却下の名前（下段のボタン・タイルの印の読み上げ）、ボタンの案内（キー P / X / U）、
+ * 一覧の絞り込みの群と選択肢、保存できなかったときの 1 行。お気に入り（♥）とは別の印。
+ */
+export const PHOTO_EDITING_FLAG_GROUP_LABEL = "選別";
+export const PHOTO_EDITING_FLAG_PICK_LABEL = "採用";
+export const PHOTO_EDITING_FLAG_REJECT_LABEL = "却下";
+export const PHOTO_EDITING_FLAG_CLEAR_LABEL = "採用・却下を外す";
+export const PHOTO_EDITING_FLAG_TITLES = {
+  pick: "採用（P）",
+  reject: "却下（X）",
+  clear: "外す（U）",
+} as const;
+export const PHOTO_EDITING_FLAG_FILTER_OPTIONS = {
+  all: "すべて",
+  pick: "採用だけ",
+  notRejected: "却下を隠す",
+} as const;
+export const PHOTO_EDITING_FLAG_FAILED_TEXT = "採用・却下を変更できませんでした。";
+
+/**
  * 右パネルの「版」（niho-photo#42。Lightroom の「バージョン」）。右端の帯の道具の名前と面の見出し行の名前、今の補正を版にする
  * ボタンと名前の入力、一覧の行の印・メニュー、空・読み込み・保存の失敗の 1 行。
  */
