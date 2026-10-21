@@ -569,6 +569,47 @@ export const PHOTO_EDITING_INFO_ROW_LABELS = {
 } as const;
 
 /**
+ * 右パネルの「版」（niho-photo#42。Lightroom の「バージョン」）。右端の帯の道具の名前と面の見出し行の名前、今の補正を版にする
+ * ボタンと名前の入力、一覧の行の印・メニュー、空・読み込み・保存の失敗の 1 行。
+ */
+export const PHOTO_EDITING_TOOL_VERSIONS_LABEL = "版";
+export const PHOTO_EDITING_VERSIONS_CREATE_LABEL = "今の補正を版にする";
+export const PHOTO_EDITING_VERSIONS_NAME_LABEL = "版の名前";
+export const PHOTO_EDITING_VERSIONS_CREATE_SUBMIT_LABEL = "保存";
+export const PHOTO_EDITING_VERSIONS_CREATE_CANCEL_LABEL = "やめる";
+export const PHOTO_EDITING_VERSIONS_LIST_LABEL = "版の一覧";
+/** どの版とも同じでない今の補正の行（一覧の先頭）。 */
+export const PHOTO_EDITING_VERSIONS_CURRENT_TEXT = "いまの補正（版にしていません）";
+export const PHOTO_EDITING_VERSIONS_SELECTED_TEXT = "選択中";
+export const PHOTO_EDITING_VERSIONS_AUTO_BADGE = "自動";
+export const PHOTO_EDITING_VERSIONS_EMPTY_TEXT = "版はまだありません。今の補正に名前を付けて残すと、あとでこの補正に戻れます。";
+export const PHOTO_EDITING_VERSIONS_LOAD_FAILED_TEXT = "版を読み込めませんでした。";
+export const PHOTO_EDITING_VERSIONS_RELOAD_LABEL = "再読み込み";
+export const PHOTO_EDITING_VERSIONS_SAVE_FAILED_TEXT = "版を保存できませんでした。";
+export const PHOTO_EDITING_VERSIONS_NAME_REQUIRED_TEXT = "名前を入れてください。";
+export const PHOTO_EDITING_VERSIONS_NAME_TOO_LONG_TEXT = "名前は 40 文字までにしてください。";
+export const PHOTO_EDITING_VERSIONS_LIMIT_TEXT = "名前を付けた版は 30 個までです。いらない版を削除してください。";
+export const PHOTO_EDITING_VERSIONS_RENAME_LABEL = "名前を変える";
+export const PHOTO_EDITING_VERSIONS_DELETE_LABEL = "削除";
+export const PHOTO_EDITING_VERSIONS_DELETE_DESCRIPTION = "写真の今の補正は変わりません。";
+export const PHOTO_EDITING_VERSIONS_DELETE_CONFIRM_LABEL = "削除する";
+/** 名前を付けずに作る版の既定の名前（「版 3」。数は名前つきの版の数 + 1 から、重ならない数）。 */
+export function photoEditingVersionDefaultName(order: number): string {
+  return `版 ${order}`;
+}
+/** 版を切り替える前の補正を残した自動の版の名前（「自動の版 10:32」）。 */
+export function photoEditingAutoVersionName(time: string): string {
+  return `自動の版 ${time}`;
+}
+/** 版の行の「⋯」の読み上げ名。 */
+export function photoEditingVersionMenuLabel(name: string): string {
+  return `${name} のメニュー`;
+}
+export function photoEditingVersionDeleteTitle(name: string): string {
+  return `「${name}」を削除しますか？`;
+}
+
+/**
  * 背景除去の道具（NIHO camera だけ。`capabilities.cutout`。C4 移行元設計）。推論はこの Mac の中（Apple Vision）。
  * 背景除去と切り抜き・回転は同時に使わない（使えない側の道具に理由と次の一歩を 1 行出す）。
  */

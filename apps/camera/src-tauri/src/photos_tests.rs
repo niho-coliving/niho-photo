@@ -124,6 +124,111 @@ fn edits_are_saved_with_a_revision_and_follow_the_photo_content() {
   assert!(stored["modifiedAtMs"].as_u64().is_some());
 }
 
+fn develop_version(id: &str, name: &str, kind: &str, exposure: f64) -> Value {
+  json!({
+    "id": id,
+    "name": name,
+    "createdAt": "2026-10-21T01:32:00.000Z",
+    "kind": kind,
+    "developSettings": { "v": 1, "engine": "niho-10", "base": null, "exposure": exposure },
+  })
+}
+
+#[test]
+fn develop_versions_are_saved_beside_the_edits_and_follow_the_photo_content() {
+  let temp = TempDir::new("versions");
+  let photos = camera_photos(&temp);
+  let path = temp.file("SD/DSC00001.JPG", b"jpeg bytes");
+  let (photo_id, photo) = photos.open("entry-1", &path).unwrap();
+  // 版の無い写真（今までの写真）は空の配列と版 0
+  assert_eq!(
+    photos.versions(&photo_id).unwrap(),
+    json!({ "versions": [], "revision": 0 })
+  );
+  let now = SystemTime::now();
+  // 補正を保存してから版を作っても、補正の記録と版の版は別に数える
+  assert_eq!(photos.save(&photo_id, &json!({ "exposure": 0.3 }), 0, now).unwrap(), 1);
+  let first = json!([develop_version("v1", "明るめ", "named", 0.3)]);
+  assert_eq!(photos.save_versions(&photo_id, &first, 0, now).unwrap(), 1);
+  let second = json!([
+    develop_version("v1", "明るめ", "named", 0.3),
+    develop_version("a1", "自動の版 10:32", "auto", 0.0),
+  ]);
+  assert_eq!(photos.save_versions(&photo_id, &second, 1, now).unwrap(), 2);
+  let conflict = photos.save_versions(&photo_id, &first, 1, now).unwrap_err();
+  assert_eq!(
+    (conflict.code.as_str(), conflict.current_revision),
+    ("revisionConflict", Some(2))
+  );
+  assert_eq!(
+    photos.versions(&photo_id).unwrap(),
+    json!({ "versions": second, "revision": 2 })
+  );
+  // 補正の記録は版を書いても変わらない（旧版の NIHO photo はこの記録だけを読む）
+  let saved = photos.saved(&photo.digest.key).unwrap();
+  assert_eq!((saved.settings, saved.revision), (json!({ "exposure": 0.3 }), 1));
+  let edits = temp.0.join("app-data").join(EDITS_DIR_NAME);
+  assert!(edits.join(format!("{}.versions.json", photo.digest.key)).is_file());
+
+  // 名前を変えて別のフォルダへ動かしても、同じ中身なら同じ版
+  let moved = temp.0.join("Pictures/renamed.jpg");
+  fs::create_dir_all(moved.parent().unwrap()).unwrap();
+  fs::rename(&path, &moved).unwrap();
+  let (reopened, _) = photos.open("entry-9", &moved).unwrap();
+  assert_eq!(photos.versions(&reopened).unwrap()["revision"], json!(2));
+  // 開いていない・閉じた写真は notFound
+  photos.close(std::slice::from_ref(&reopened));
+  assert_eq!(photos.versions(&reopened).unwrap_err().code, code::NOT_FOUND);
+  assert_eq!(
+    photos.save_versions(&reopened, &first, 2, now).unwrap_err().code,
+    code::NOT_FOUND
+  );
+  // 形の違う配列は invalidRequest（書かない）
+  assert_eq!(
+    photos
+      .save_versions(&photo_id, &json!([{ "id": "v1" }]), 2, now)
+      .unwrap_err()
+      .code,
+    code::INVALID_REQUEST
+  );
+  assert_eq!(photos.versions(&photo_id).unwrap()["revision"], json!(2));
+}
+
+#[test]
+fn versions_requests_are_checked() {
+  let request = |versions: Value| SaveVersionsRequest {
+    photo_id: "photo-1".into(),
+    versions,
+    expected_revision: 0,
+  };
+  assert!(validate_save_versions_request(&request(json!([]))).is_ok());
+  assert!(validate_save_versions_request(&request(json!([develop_version("v1", "版 1", "named", 0.0)]))).is_ok());
+  for versions in [
+    json!({}),
+    json!([develop_version("v1", "", "named", 0.0)]),
+    json!([develop_version("v1", "版 1", "other", 0.0)]),
+  ] {
+    assert_eq!(
+      validate_save_versions_request(&request(versions)).unwrap_err().code,
+      code::INVALID_REQUEST
+    );
+  }
+  let unknown_id = SaveVersionsRequest {
+    photo_id: String::new(),
+    versions: json!([]),
+    expected_revision: 0,
+  };
+  assert_eq!(
+    validate_save_versions_request(&unknown_id).unwrap_err().code,
+    code::NOT_FOUND
+  );
+  // 知らない項目のある引数は読まない
+  let parsed: Result<SaveVersionsRequest, _> = parse_request(Some(json!({
+    "photoId": "photo-1", "versions": [], "expectedRevision": 0, "path": "/tmp/x",
+  })));
+  assert_eq!(parsed.unwrap_err().code, code::INVALID_REQUEST);
+}
+
 #[test]
 fn closed_or_unknown_photos_cannot_be_saved_or_developed() {
   let temp = TempDir::new("close");

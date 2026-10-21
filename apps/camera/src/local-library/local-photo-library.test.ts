@@ -73,6 +73,8 @@ type FakeOptions = {
   interactivePreview?: () => Promise<ArrayBuffer> | ArrayBuffer;
   /** entryId → native の写真の情報（`camera_photo_info` の `info`） */
   info?: Record<string, unknown>;
+  /** 中身の SHA-256 → native が返す補正の版（`camera_photo_versions`。無ければ版の無い写真） */
+  versions?: Record<string, { versions: unknown; revision: number }>;
 };
 
 function sha(entryId: string): string {
@@ -86,8 +88,11 @@ function fakeNative(options: FakeOptions = {}) {
       .map((photo) => [photo.entryId, photo]),
   );
   const open = new Map<string, string>();
+  /** photoId → 開いたときの中身の SHA-256（版の置き場の鍵） */
+  const openedHashes = new Map<string, string>();
   const tokens = new Map<string, { photoId: string; entryId: string }>();
   const saved = new Map(Object.entries(options.saved ?? {}));
+  const versions = new Map(Object.entries(options.versions ?? {}));
   const hashes = new Map(Object.entries(options.hashes ?? {}).map(([key, values]) => [key, [...values]]));
   const statuses = [...(options.status ?? [{ available: true, raster: true, fullSizeRaster: true }])];
   let next = 0;
@@ -137,14 +142,16 @@ function fakeNative(options: FakeOptions = {}) {
             }
             next += 1;
             const photoId = `photo-${next}`;
+            const contentSha256 = hashes.get(entryId)?.shift() ?? sha(entryId);
             open.set(photoId, entryId);
+            openedHashes.set(photoId, contentSha256);
             photos.push({
               photoId,
               entryId,
               fileName: listed.fileName,
               format: null,
               sizeBytes: listed.sizeBytes,
-              contentSha256: hashes.get(entryId)?.shift() ?? sha(entryId),
+              contentSha256,
               modifiedAt: listed.modifiedAt,
               nativeExport: true,
               saved: saved.get(entryId) ?? null,
@@ -165,6 +172,18 @@ function fakeNative(options: FakeOptions = {}) {
             revision: current + 1,
             updatedAtMs: 1_000,
           });
+          return { revision: current + 1 };
+        }
+        case "camera_photo_versions": {
+          openEntry(request?.photoId);
+          return versions.get(openedHashes.get(String(request?.photoId)) ?? "") ?? { versions: [], revision: 0 };
+        }
+        case "camera_photo_save_versions": {
+          openEntry(request?.photoId);
+          const key = openedHashes.get(String(request?.photoId)) ?? "";
+          const current = versions.get(key)?.revision ?? 0;
+          if (request?.expectedRevision !== current) return fail("revisionConflict", "別の操作で補正が変わりました。", current);
+          versions.set(key, { versions: request?.versions, revision: current + 1 });
           return { revision: current + 1 };
         }
         case "camera_develop_source": {
@@ -218,7 +237,7 @@ function fakeNative(options: FakeOptions = {}) {
   };
   const commands = createCameraCommands(invoke);
   const library = createLocalPhotoLibrary(commands, { now: () => new Date("2026-10-15T00:00:00.000Z"), sleep: async () => undefined });
-  return { calls, commands, library, saved, open, tokens };
+  return { calls, commands, library, saved, open, tokens, versions };
 }
 
 const commandsOf = (calls: Call[]) => calls.map(([command]) => command);
@@ -238,6 +257,7 @@ describe("capabilities", () => {
       cutout: true,
       multiSelect: true,
       info: true,
+      versions: true,
     });
     await expect(library.rollout()).resolves.toEqual({ crop: true, mobileEditing: false });
   });
@@ -584,6 +604,74 @@ describe("photo info (niho-photo#43)", () => {
     await expect(fake.library.info?.("e-jpg")).resolves.toMatchObject({ iso: 100 });
     expect(commandsOf(fake.calls).slice(-3)).toEqual(["camera_photo_info", "camera_photo_open", "camera_photo_info"]);
     await expect(fake.library.info?.("e-missing")).resolves.toBeNull();
+  });
+});
+
+describe("develop versions (niho-photo#42)", () => {
+  const named = (id: string, name: string, exposure: number) => ({
+    id,
+    name,
+    createdAt: "2026-10-21T01:32:00.000Z",
+    kind: "named" as const,
+    developSettings: { v: 1 as const, engine: "niho-10", base: null, exposure },
+  });
+
+  it("a photo without versions (an older photo) opens with none and still saves its edits as before", async () => {
+    const fake = fakeNative({
+      saved: { "e-jpg": { developSettings: { v: 1, engine: "niho-10", exposure: 0.3 }, revision: 2, updatedAtMs: 0 } },
+    });
+    await fake.library.openOriginal("e-jpg");
+    await expect(fake.library.developVersions?.("e-jpg")).resolves.toEqual({ versions: [], revision: 0 });
+    expect(fake.calls.at(-1)).toEqual(["camera_photo_versions", { photoId: "photo-1" }]);
+    const result = await fake.library.saveDevelopSettings("e-jpg", { v: 1, engine: "niho-10", exposure: 0.4 } as DevelopSettings, {
+      expectedRevision: 2,
+    });
+    expect(result).toMatchObject({ kind: "saved", photo: { developRevision: 3 } });
+  });
+
+  it("saves the whole array with its own revision, keeps only well-formed versions and returns stale after another save", async () => {
+    const fake = fakeNative({
+      versions: {
+        [sha("e-raw")]: { versions: [named("v1", "明るめ", 0.8), { id: "broken" }, named("v1", "重なった ID", 0)], revision: 1 },
+      },
+    });
+    await fake.library.openOriginal("e-raw");
+    const loaded = await fake.library.developVersions?.("e-raw");
+    expect(loaded).toEqual({ versions: [named("v1", "明るめ", 0.8)], revision: 1 });
+
+    const next = [named("v1", "明るめ", 0.8), named("v2", "フィルム調", -0.2)];
+    await expect(fake.library.saveDevelopVersions?.("e-raw", next, { expectedRevision: 1 })).resolves.toEqual({
+      kind: "saved",
+      versions: next,
+      revision: 2,
+    });
+    expect(fake.calls.at(-1)).toEqual([
+      "camera_photo_save_versions",
+      { photoId: "photo-1", versions: next, expectedRevision: 1 },
+    ]);
+    // 補正の記録の版とは別に数える
+    expect(fake.saved.has("e-raw")).toBe(false);
+
+    // ほかの操作が先に保存した（今の配列と版を読み直して返す）
+    fake.versions.set(sha("e-raw"), { versions: [named("v9", "ほかの端末", 0)], revision: 7 });
+    await expect(fake.library.saveDevelopVersions?.("e-raw", next, { expectedRevision: 2 })).resolves.toEqual({
+      kind: "stale",
+      versions: [named("v9", "ほかの端末", 0)],
+      revision: 7,
+    });
+    expect(commandsOf(fake.calls).slice(-2)).toEqual(["camera_photo_save_versions", "camera_photo_versions"]);
+  });
+
+  it("never writes a photo's versions to a replacement photo after native let it go", async () => {
+    const first = "a".repeat(64);
+    const second = "b".repeat(64);
+    const fake = fakeNative({ hashes: { "e-jpg": [first, second] } });
+    await fake.library.openOriginal("e-jpg");
+    fake.open.clear();
+    await expect(
+      fake.library.saveDevelopVersions?.("e-jpg", [named("v1", "明るめ", 0.8)], { expectedRevision: 0 }),
+    ).rejects.toMatchObject({ code: "notFound" });
+    expect(fake.versions.size).toBe(0);
   });
 });
 

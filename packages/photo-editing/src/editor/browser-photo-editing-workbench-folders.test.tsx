@@ -113,6 +113,12 @@ type FakeLibraryOptions = {
   selectedAdded?: PhotoLibraryItem[];
   /** 指定したときだけ写真の情報を読める（`capabilities.info`。niho-photo#43） */
   info?: NonNullable<PhotoLibrary["info"]>;
+  /** 補正の版の口（niho-photo#42）。`capability` を省くと `capabilities.versions` は true */
+  versions?: {
+    developVersions: NonNullable<PhotoLibrary["developVersions"]>;
+    saveDevelopVersions: NonNullable<PhotoLibrary["saveDevelopVersions"]>;
+    capability?: boolean;
+  };
 };
 
 function fakeLibrary(options: FakeLibraryOptions = {}) {
@@ -143,6 +149,7 @@ function fakeLibrary(options: FakeLibraryOptions = {}) {
   const capabilities = {
     ...(place === "cloud" ? CLOUD_CAPABILITIES : LOCAL_CAPABILITIES),
     ...(options.info ? { info: true } : {}),
+    ...(options.versions ? { versions: options.versions.capability ?? true } : {}),
   };
   const deletePhotos = vi.fn(async () => ({ deleted: [], errors: [] }));
   const selectedPhotos = {
@@ -182,6 +189,9 @@ function fakeLibrary(options: FakeLibraryOptions = {}) {
     delete: deletePhotos,
     presets: { nameMaxChars: 100, list: vi.fn(async () => []) },
     ...(options.info ? { info: options.info } : {}),
+    ...(options.versions
+      ? { developVersions: options.versions.developVersions, saveDevelopVersions: options.versions.saveDevelopVersions }
+      : {}),
     ...(place === "local" ? { folders } : {}),
     ...(place === "local" && (options.selected !== undefined || options.selectedAdded !== undefined) ? { selectedPhotos } : {}),
   } as unknown as PhotoLibrary;
@@ -837,6 +847,91 @@ describe("右端の道具の帯（niho-photo#51）", () => {
     expect(container.querySelector('aside[aria-label="補正"] h2')?.textContent).toBe("補正");
     expect(byLabel("補正", rail)?.getAttribute("aria-pressed")).toBe("true");
     expect(byLabel("情報", rail)?.getAttribute("aria-pressed")).toBe("false");
+  });
+
+  it("「版」は版を残せる置き場だけ上の道具の末尾に置き、押すと右パネルが版の面になり、もう一度押すと補正の面へ戻る（niho-photo#42）", async () => {
+    mocks.createEngine.mockImplementation(() => ({
+      ready: vi.fn(() => new Promise<boolean>(() => undefined)),
+      dispose: vi.fn(),
+      close: vi.fn(async () => undefined),
+    }));
+    const developVersions = vi.fn(async () => ({
+      versions: [
+        {
+          id: "v1",
+          name: "明るめ",
+          createdAt: "2026-10-21T01:32:00.000Z",
+          kind: "named" as const,
+          developSettings: { v: 1 as const, engine: "niho-10", base: null, exposure: 0.8 },
+        },
+      ],
+      revision: 1,
+    }));
+    const saveDevelopVersions = vi.fn(async () => ({ kind: "saved" as const, versions: [], revision: 2 }));
+    const openFirstPhoto = async () => {
+      const target = tile("IMG_0001.JPG");
+      if (!target) throw new Error("tile not found");
+      await act(async () => {
+        target.dispatchEvent(new MouseEvent("dblclick", { bubbles: true, cancelable: true }));
+      });
+      await settle();
+      const found = container.querySelector<HTMLElement>('nav[aria-label="道具"]');
+      if (!found) throw new Error("tool rail not found");
+      return found;
+    };
+
+    // 口があっても `capabilities.versions` が false の置き場には出さない（fail closed）
+    const closed = fakeLibrary({
+      tree: [TRAVEL],
+      photos: { f1: [photo("p1", "IMG_0001.JPG")] },
+      versions: { developVersions, saveDevelopVersions, capability: false },
+    });
+    await render(closed.library);
+    expect(byLabel("版", await openFirstPhoto())).toBeNull();
+
+    const fake = fakeLibrary({
+      tree: [TRAVEL],
+      photos: { f1: [photo("p1", "IMG_0001.JPG")] },
+      versions: { developVersions, saveDevelopVersions },
+    });
+    await remount(fake.library);
+    // 1 枚も開いていない（一覧の）間は出さない
+    expect(byLabel("版")).toBeNull();
+    const rail = await openFirstPhoto();
+    expect(Array.from(rail.querySelectorAll("button")).map((button) => button.getAttribute("aria-label"))).toEqual([
+      "プリセット",
+      "補正",
+      "版",
+      "情報",
+    ]);
+    const versionsButton = byLabel("版", rail);
+    expect(versionsButton?.className).not.toContain("mt-auto");
+    expect(versionsButton?.getAttribute("aria-pressed")).toBe("false");
+    // 面を開くまでは読まない
+    expect(developVersions).not.toHaveBeenCalled();
+
+    await click(versionsButton);
+    const face = container.querySelector<HTMLElement>('aside[aria-label="版"]');
+    if (!face) throw new Error("versions face not found");
+    expect(face.querySelector("h2")?.textContent).toBe("版");
+    expect(byLabel("版", rail)?.getAttribute("aria-pressed")).toBe("true");
+    expect(byLabel("補正", rail)?.getAttribute("aria-pressed")).toBe("false");
+    expect(developVersions).toHaveBeenCalledWith("p1", expect.objectContaining({ signal: expect.any(AbortSignal) }));
+    expect(face.querySelector('ul[aria-label="版の一覧"]')?.textContent).toContain("明るめ");
+    // 写真を開いている途中（直せない間）は、切り替え・作成を押せない。版の面には ↶ ↷ と補正の群を出さない
+    const createButton = Array.from(face.querySelectorAll("button")).find(
+      (button) => button.textContent?.trim() === "今の補正を版にする",
+    );
+    expect(createButton?.disabled).toBe(true);
+    expect(byLabel("取り消す", face)).toBeNull();
+    expect(face.querySelector('input[type="range"]')).toBeNull();
+    expect(saveDevelopVersions).not.toHaveBeenCalled();
+
+    // もう一度押すと補正の面へ戻る
+    await click(byLabel("版", rail));
+    expect(container.querySelector('aside[aria-label="版"]')).toBeNull();
+    expect(container.querySelector('aside[aria-label="補正"] h2')?.textContent).toBe("補正");
+    expect(byLabel("補正", rail)?.getAttribute("aria-pressed")).toBe("true");
   });
 });
 
