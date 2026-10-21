@@ -234,4 +234,5 @@ RAW の白（色温度・色かぶり）を、段 2 で Apple の RAW 現像と�
 - 開発教師（非公開の作業ディレクトリの `data/teachers`・`data/teachers2`）だけを読む。sealed の manifest、`independent` に解決されるディレクトリ、repository 内の作業ディレクトリは拒否する。
 - 流れ: `plan`（metadata だけで部分集合・撮影日 fold を決める）→ `oracle`（写真ごとの定数。診断と各 fold の開始点）→ `cv --folds dates`（fold ごとに学習側の写真だけで当てはめ、fold 外を評価。B1 と B2 の選択も fold 外の誤差で決める）→ `fit`（全教師）→ `gate --family B1|B2`（2048px 描画・colorcheck 1500px・blur 2・平坦画素）→ `publish`（匿名集計）。凍結後の独立評価は `holdout` を 1 回だけ。
 - 評価器は `examples/analytic_hs_calibrate.rs`（`cargo +1.98.1 build --release --locked -p niho-develop --example analytic_hs_calibrate --example analytic_hs_probe`）。
-- テスト: `python3 -m unittest discover -s tests -t . -p "test_fit_analytic_hs.py"`（作業ディレクトリ・cohort の拒否、部分集合、目的関数、B1/B2 の選択）。
+- 案C（写真ごとの強さを niho-6 の 26 特徴の写真要約から有界の線形モデルで予測）: `targets`（写真ごとの目標。その写真の単独 H/S だけ）→ `cv-c --folds dates`（ridge・内側の撮影日 CV で λ・end-to-end 12 係数）→ `fit-c` → `gate --family C` → `publish-c --niho6-cv-rows <非公開の niho-6 撮影日 CV の行>`。採否の規則は交差検証の前に script に固定した（niho-6 の撮影日 CV との比較）。
+- テスト: `python3 -m unittest discover -s tests -t . -p "test_fit_analytic_hs.py"`（作業ディレクトリ・cohort の拒否、部分集合、目的関数、B1/B2 の選択、案C の ridge・採否、holdout の凍結検証）。

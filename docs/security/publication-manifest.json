@@ -7635,10 +7635,11 @@
         "path": "packages/develop-engine/tools/calibrate/README.md",
         "sha256": "92af841741870dad70c2ea5426e93edd6ba043b4236d06ccbb586ba245fe64c8"
       },
-      "outputSha256": "65aaa9603ce04c79e88345b0bf201c28812ed339b3f94067070297e456e93404",
+      "outputSha256": "c8a5c35831f8dbaf4f71a1828fa47f932496bf94a1acffcd91e677ce2ba1a623",
       "modifications": [
         "公開ソースに固定しないAdobe Colorプロファイル識別子の指定方法を追記。",
-        "#26 fit_analytic_hs.py の流れ・拒否条件・テストの実行方法を追記"
+        "#26 fit_analytic_hs.py の流れ・拒否条件・テストの実行方法を追記",
+        "#26 案C の流れ（targets・cv-c・fit-c・gate・publish-c）とテスト範囲を追記"
       ]
     },
     {
@@ -9317,8 +9318,8 @@
     },
     {
       "path": "packages/develop-engine/RESEARCH26-27.md",
-      "sha256": "8bdc5033f1a998907a8f329e33c9d30fa26b21092d8e883c0c94cce5118ce5ac",
-      "origin": "公開Issue #26/#27/#29 のため公開済み数式・既存primitiveから独立実装した研究用コード・合成テスト・日本語手順。非公開の写真・参照画素・パス・履歴・第三者ソースを含まない。\n変更理由: 暗所A/Bで現行niho-6を基準とし、H/S以外の色・黒レベル等を同じ数式で比較する。\n変更理由: 実測に基づくWB節点別fit、旧版を維持する候補のnative/wasm固定hashと再現可能な性能計測を整備。\n変更理由: 非公開出力をrepository外へ限定しsealed独立評価を拒否する、匿名集計の再現手順を追加。\n変更理由: Studio実測の段差・WB gate未達・wasm初期解析と継続編集の性能をsource SHA付きで記録。\n変更理由: 57場面のfloat対比較と6場面の原理式Bのgate未達を、匿名数値・残作業として記録。\n変更理由: 教師上の次候補fitとownerの撮影作業を区別し、独立評価前の未達判定であることを明確化。\n変更理由: #26 開発教師での案Bの校正・撮影日fold交差検証・gate未達の匿名数値・原因の切り分け・凍結と一度きりの独立評価の手順を記録\n変更理由: #26 開発教師での案Bの校正・撮影日fold交差検証・gate未達の匿名数値・原因の切り分け・凍結と一度きりの独立評価の手順を記録\n変更理由: holdoutの凍結照合と事前subset検査、部分集合別合否を手順に追記する"
+      "sha256": "88fb6cd850063503cc2c97afcd71cb6d484207c5b7651746b109f52fe29b681d",
+      "origin": "公開Issue #26/#27/#29 のため公開済み数式・既存primitiveから独立実装した研究用コード・合成テスト・日本語手順。非公開の写真・参照画素・パス・履歴・第三者ソースを含まない。\n変更理由: 暗所A/Bで現行niho-6を基準とし、H/S以外の色・黒レベル等を同じ数式で比較する。\n変更理由: 実測に基づくWB節点別fit、旧版を維持する候補のnative/wasm固定hashと再現可能な性能計測を整備。\n変更理由: 非公開出力をrepository外へ限定しsealed独立評価を拒否する、匿名集計の再現手順を追加。\n変更理由: Studio実測の段差・WB gate未達・wasm初期解析と継続編集の性能をsource SHA付きで記録。\n変更理由: 57場面のfloat対比較と6場面の原理式Bのgate未達を、匿名数値・残作業として記録。\n変更理由: 教師上の次候補fitとownerの撮影作業を区別し、独立評価前の未達判定であることを明確化。\n変更理由: #26 開発教師での案Bの校正・撮影日fold交差検証・gate未達の匿名数値・原因の切り分け・凍結と一度きりの独立評価の手順を記録\n変更理由: #26 開発教師での案Bの校正・撮影日fold交差検証・gate未達の匿名数値・原因の切り分け・凍結と一度きりの独立評価の手順を記録\n変更理由: holdoutの凍結照合と事前subset検査、部分集合別合否を手順に追記する\n変更理由: #26 案C（写真特徴から写真ごとの強さを予測）の交差検証前の採否規則・fold外の結果・niho-6 撮影日CVとの比較・不採用の理由を記録し、独立評価の撮影条件と評価toolの版を明確化"
     },
     {
       "path": "packages/develop-engine/crates/niho-develop/examples/analytic_hs_probe.rs",
@@ -9719,6 +9720,11 @@
       "path": "packages/develop-engine/fixtures/color/review-2026-10-21/analytic-hs-freeze.json",
       "sha256": "b60c13c1e5c123bb0c372a08c7ceaef9be15c1eb61e996eb8d167db23cf47972",
       "origin": "公開Issue #26 の独立評価前のfreeze record。source commit・実行ファイルSHA-256・係数manifestと集計のhash・評価manifest（撮影条件・設定・gate・一度きりの規則）だけを記録し、写真・私有path・scene名を含まない。独立評価は未実施。\n変更理由: 凍結tool hashとcalibrator/probe確認、subset最低数の契約を記録する"
+    },
+    {
+      "path": "packages/develop-engine/fixtures/color/review-2026-10-21/analytic-hs-teachers-C.json",
+      "sha256": "d0bf8c5fd367a68225c6980fc26500047b8f4698dded7566ede0583e79f8b42e",
+      "origin": "owner所有の既存非公開教師（57場面）で案Cを撮影日foldの交差検証・全件fit・gate計測した匿名集計のみ。niho-6の撮影日CVとの比較・採否規則の判定・preset文脈の診断、source commit・実行ファイルhash・測定手順を記録し、写真・scene名・私有path・参照画素・個別結果は公開しない。独立評価画像の参照は0枚。"
     }
   ],
   "excludedSources": [
