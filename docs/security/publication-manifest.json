@@ -10160,13 +10160,13 @@
     },
     {
       "path": "packages/photo-editing/src/editor/photo-editing-mask-overlay.tsx",
-      "sha256": "27e7326368ce339631cc4f724fc5ef8777f75a4885da72d590d836310a619155",
-      "origin": "Issue #67の公開仕様だけから新規作成した、写真の上のマスクの操作（形の線・つまみのボタン・pointer capture・矢印キー・範囲の赤い重ね）のReact部品。外部画像・非公開コード・個体metadataを含まない。"
+      "sha256": "b5193a1f71ed9e3b0b06268f09e78288e08c7bab51c53daed56c90fae0a0d492",
+      "origin": "Issue #67の公開仕様だけから新規作成した、写真の上のマスクの操作（形の線・つまみのボタン・pointer capture・矢印キー・範囲の赤い重ね）のReact部品。外部画像・非公開コード・個体metadataを含まない。\n変更理由: overlay解除時にドラッグ中の形を確定し消えたマスクの復活を防ぐ"
     },
     {
       "path": "packages/photo-editing/src/editor/photo-editing-mask-overlay.test.tsx",
-      "sha256": "216b073f7e4dfdc1f597d7d8eaf3cfc3efd34d08a15410671c41045d27bb906b",
-      "origin": "Issue #67のため新規作成した、写真の上のマスクの操作（つまみの位置・drag と1回のcommit・矢印キー・選択・O）のjsdom回帰。外部画像・非公開コード・個体metadataを含まない。"
+      "sha256": "2a2c74dfb35201c2bb8f33ac9e79159ba9941d7df0eb7a2f43072eca784bb648",
+      "origin": "Issue #67のため新規作成した、写真の上のマスクの操作（つまみの位置・drag と1回のcommit・矢印キー・選択・O）のjsdom回帰。外部画像・非公開コード・個体metadataを含まない。\n変更理由: overlay破棄時のマウス操作・キー操作の確定を回帰テストする"
     },
     {
       "path": "packages/photo-editing/src/editor/photo-editing-mask-tools.tsx",

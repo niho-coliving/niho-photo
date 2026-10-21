@@ -309,16 +309,22 @@ export function PhotoEditingMaskOverlay(props: {
   /** 動かしている間は手元の形（設定の書き換えを待たずにつまみが指に付いてくる） */
   const shown = (mask: DevelopMask): DevelopMask => (draft && draft.id === mask.id ? draft : mask);
 
-  const finish = (commit: boolean) => {
+  const finish = useCallback((commit: boolean) => {
     const gesture = gestureRef.current;
     if (!gesture) return;
     gestureRef.current = null;
     const current = draftRef.current;
-    setDraftMask(null);
+    draftRef.current = null;
+    setDraft(null);
     callbacksRef.current.onDraggingChange(false);
+    // 道具を離れて overlay が外れるときは、残っているマスクの最新形を確定する。マスク自体が同時に消えた場合は復活させない。
+    if (!callbacksRef.current.masks.some((mask) => mask.id === gesture.maskId)) return;
     // 止められたら動かし始めの形に戻す（同じ形の確定は履歴を積まない）
     callbacksRef.current.onShapeChange(commit && current ? current : gesture.start, "commit");
-  };
+  }, []);
+
+  // 道具や overlay が操作中に外れると pointerup / keyup が来ないため、最後の形を確定する。
+  useEffect(() => () => finish(true), [finish]);
 
   // 動かしている途中にマスクが無くなった（取り消し・別の端末の補正）ら、途中の形を捨てる
   useEffect(() => {

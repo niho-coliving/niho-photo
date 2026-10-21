@@ -185,6 +185,37 @@ describe("PhotoEditingMaskOverlay", () => {
     expect((changes.at(-1)!.mask as DevelopRadialMask).center).toEqual(RADIAL.center);
   });
 
+  it("ポインター操作中に overlay が外れたら、最後の形を確定して dragging を戻す", async () => {
+    await render({ masks: [LINEAR], selectedId: "mask-a" });
+    const start = handle("線形グラデーションの始点（効果 100%）");
+    await pointer(start, "pointerdown", 400, 170);
+    await pointer(start, "pointermove", 460, 150);
+
+    await act(async () => root.unmount());
+    root = createRoot(container);
+
+    expect(changes.map((change) => change.phase)).toEqual(["drag", "commit"]);
+    expect(dragging).toEqual([true, false]);
+    const committed = changes.at(-1)!.mask as DevelopLinearMask;
+    expect(committed.full.x).toBeCloseTo(0.6, 9);
+    expect(committed.full.y).toBeCloseTo(0.25, 9);
+  });
+
+  it("矢印キー操作中に overlay が外れたら、最後の形を確定して dragging を戻す", async () => {
+    await render({ masks: [RADIAL], selectedId: "mask-b" });
+    const center = handle("円形グラデーションの中心（全体を動かす）");
+    center.focus();
+    await key(center, "keydown", "ArrowRight");
+
+    await act(async () => root.unmount());
+    root = createRoot(container);
+
+    expect(changes.map((change) => change.phase)).toEqual(["drag", "commit"]);
+    expect(dragging).toEqual([true, false]);
+    const committed = changes.at(-1)!.mask as DevelopRadialMask;
+    expect(committed.center.x).toBeCloseTo(0.5 + 4 / 600, 9);
+  });
+
   it("矢印キーは見えている短い辺の 1%（⇧ で 5%）ずつ動かし、キーを離したら 1 回 commit。ほかの面のキーには渡さない", async () => {
     await render({ masks: [RADIAL], selectedId: "mask-b" });
     const center = handle("円形グラデーションの中心（全体を動かす）");
