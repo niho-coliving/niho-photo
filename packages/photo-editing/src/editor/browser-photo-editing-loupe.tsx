@@ -17,9 +17,11 @@ import {
   photoEditingPresetPreviewLabel,
 } from "../photo-editing-copy";
 import { cn } from "niho-ui/cn";
+import type { PhotoEditingClipMask } from "../photo-editing-histogram";
 
 import { DEVELOP_PREVIEW_MAX_DIMENSION, type OpenedSource } from "./browser-photo-editing-model";
 import { BrowserPhotoFavoriteButton, type BrowserPhotoFavoriteControl } from "./browser-photo-editing-favorite-button";
+import { PhotoEditingClipOverlay } from "./photo-editing-clip-overlay";
 import { PhotoEditingCropOverlay } from "./photo-editing-crop-overlay";
 import { PhotoEditingCutoutBrushOverlay } from "./photo-editing-cutout-brush-overlay";
 import { canvasNormalizedPoint } from "./photo-editing-color-mixer";
@@ -97,6 +99,11 @@ export function BrowserPhotoEditingLoupe(props: {
     onLiveStroke: (points: CutoutPoint[] | null) => void;
     onCommitStroke: (points: CutoutPoint[]) => void;
   } | null;
+  /**
+   * 写真の上に重ねるクリップ領域の印（niho-photo#36。黒つぶれ = 青 / 白飛び = 赤。PC の右パネルのヒストグラムで押したとき）。
+   * 渡さない・null の間は何も重ねない。切り抜きの道具の間は重ねない
+   */
+  clipOverlay?: { mask: PhotoEditingClipMask; shadows: boolean; highlights: boolean } | null;
   canvasRef: MutableRefObject<HTMLCanvasElement | null>;
   colorPicker?: {
     active: boolean;
@@ -217,6 +224,14 @@ export function BrowserPhotoEditingLoupe(props: {
           />
         );
       })() : null}
+      {drawn && !opened?.previewPending && !crop && props.clipOverlay ? (
+        <PhotoEditingClipOverlay
+          targetRef={props.canvasRef}
+          mask={props.clipOverlay.mask}
+          shadows={props.clipOverlay.shadows}
+          highlights={props.clipOverlay.highlights}
+        />
+      ) : null}
       {drawn && !opened?.previewPending && props.compareOriginal ? (
         <span aria-hidden data-testid="photo-compare-original-badge" className={LOUPE_BADGE_CLASS_NAME}>
           {PHOTO_EDITING_COMPARE_ORIGINAL_LABEL}

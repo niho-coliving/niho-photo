@@ -42,6 +42,28 @@ export const PHOTO_EDITING_AUTO_FAILED_TEXT = "自動補正ができませんで
 /** ブラウザ版の右パネルの補正の面で、見出しの下に並べるチップ（自動 / 白黒。niho-photo#51）の読み上げ名。 */
 export const PHOTO_EDITING_QUICK_ACTIONS_LABEL = "自動と白黒";
 
+/**
+ * ブラウザ版の右パネルの一番上のヒストグラム（niho-photo#36）。左上の印 = 黒つぶれ、右上の印 = 白飛び。押すと写真の上にその領域を
+ * 青 / 赤で重ねる（Lightroom の J。キー `J` で両方をまとめて切り替える）。印のボタンの読み上げ名は押した状態（`aria-pressed`）と
+ * 組み合わせて読まれるので、状態は含めない。
+ */
+export const PHOTO_EDITING_CLIP_SHADOWS_LABEL = "黒つぶれを写真に表示";
+export const PHOTO_EDITING_CLIP_HIGHLIGHTS_LABEL = "白飛びを写真に表示";
+export const PHOTO_EDITING_CLIP_SHADOWS_TITLE = "黒つぶれを写真に表示（J）";
+export const PHOTO_EDITING_CLIP_HIGHLIGHTS_TITLE = "白飛びを写真に表示（J）";
+/** 画をまだ数えていない間のヒストグラムの読み上げ名。 */
+export const PHOTO_EDITING_HISTOGRAM_PENDING_LABEL = "ヒストグラム。準備中";
+/** クリップの割合の読み上げ（0〜1 の割合を整数の % にする。0 より大きく 1% に満たなければ「1%未満」）。 */
+export function photoEditingClipRateText(rate: number): string {
+  if (!(rate > 0)) return "0%";
+  const percent = rate * 100;
+  return percent < 1 ? "1%未満" : `${Math.min(100, Math.round(percent))}%`;
+}
+/** ヒストグラムの読み上げ名（例「ヒストグラム。黒つぶれ 3%、白飛び 1%」）。 */
+export function photoEditingHistogramLabel(shadowRate: number, highlightRate: number): string {
+  return `ヒストグラム。黒つぶれ ${photoEditingClipRateText(shadowRate)}、白飛び ${photoEditingClipRateText(highlightRate)}`;
+}
+
 /** 効果の群名の横の ⓘ（押すと群の先頭に項目ごとの説明を出す）。 */
 export const PHOTO_EDITING_EFFECTS_INFO_LABEL = "効果の説明";
 export const PHOTO_EDITING_TEXTURE_DESCRIPTION = "細かな質感を強めたり、和らげたりします";

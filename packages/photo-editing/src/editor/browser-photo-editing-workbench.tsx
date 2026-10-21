@@ -155,6 +155,7 @@ import { PhotoEditingCutoutTools } from "./photo-editing-cutout-tools";
 import { PhotoEditingDropOverlay } from "./photo-editing-drop-overlay";
 import { PhotoEditingAddFolderEmptyState, PhotoEditingAddPhotosEmptyState } from "./photo-editing-empty-states";
 import { PhotoEditingGrid, countPhotoEditingGridColumns, type PhotoEditingGridItem } from "./photo-editing-grid";
+import { PhotoEditingHistogram } from "./photo-editing-histogram";
 import { PhotoEditingMenu, type PhotoEditingMenuItem } from "./photo-editing-menu";
 import { PhotoEditingPresetsPanel } from "./photo-editing-presets-panel";
 import { useBrowserPhotoAdd } from "./use-browser-photo-add";
@@ -166,6 +167,7 @@ import { useBrowserPhotoEditingKeys } from "./use-browser-photo-editing-keys";
 import { useBrowserPhotoColorPointsSupport, useBrowserPhotoEffectsSupport } from "./use-browser-photo-effects";
 import { useBrowserPhotoExportAndDelete } from "./use-browser-photo-export-delete";
 import { useBrowserPhotoFolders } from "./use-browser-photo-folders";
+import { useBrowserPhotoHistogram, type PhotoEditingFrameSink } from "./use-browser-photo-histogram";
 import { useBrowserPhotoItems, useBrowserPhotoListView } from "./use-browser-photo-items";
 import { useBrowserPhotoLeaveGuards } from "./use-browser-photo-leave-guards";
 import { useBrowserPhotoOpen } from "./use-browser-photo-open";
@@ -399,6 +401,8 @@ export function BrowserPhotoEditingWorkbench(props: {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   /** wasm の画を描いた直後に重ねる係（背景除去の口があるときだけ入る） */
   const framePostProcessRef = useRef<((canvas: HTMLCanvasElement) => void) | null>(null);
+  /** 描いた画を右パネルのヒストグラムへ渡す口（`useBrowserPhotoHistogram` が入れる。niho-photo#36） */
+  const frameSinkRef = useRef<PhotoEditingFrameSink | null>(null);
   const gridRef = useRef<BrowserPhotoEditingGridHandle | null>(null);
 
   useEffect(() => {
@@ -473,6 +477,7 @@ export function BrowserPhotoEditingWorkbench(props: {
     saveGenerationRef,
     setStatus,
     framePostProcessRef,
+    onFramePaintedRef: frameSinkRef,
   });
   const {
     opened,
@@ -833,6 +838,21 @@ export function BrowserPhotoEditingWorkbench(props: {
     : effectsSupported
       ? BROWSER_EFFECTS_ADJUSTMENT_KEYS
       : undefined;
+  // ヒストグラム（niho-photo#36）: PC の右パネルで、段 2 の wasm が画を描いている写真だけ（S1 の canvas・スマホの層・閲覧の
+  // 面では出さず、数えない）。描いた画（補正前・プリセットの仮の表示を含む）の分布なので、補正前を押している間は補正前の分布になる。
+  // 切り抜き / 背景除去の道具の間も分布は出すが、写真の上へ重ねる印は使えない（その道具の見た目に従う）
+  const histogramAvailable = wide && showAdjustments && wasmPhotoKey !== null && !canvasOnly;
+  const histogram = useBrowserPhotoHistogram({
+    sinkRef: frameSinkRef,
+    photoKey: opened?.key ?? null,
+    enabled: histogramAvailable,
+  });
+  const clipUnavailable = cropping || cutoutActive || cropBlocked;
+  const clipMask = histogram.histogram?.clipMask ?? null;
+  const clipOverlay =
+    histogramAvailable && !clipUnavailable && clipMask && (histogram.clip.shadows || histogram.clip.highlights)
+      ? { mask: clipMask, shadows: histogram.clip.shadows, highlights: histogram.clip.highlights }
+      : null;
   const { readyDevelopEngine } = develop;
   // 色ミキサーは v4 を描ける wasm の共通 workbench だけ。旧 canvas 面には
   // 動かない操作を出さない。写真・compare・crop・pending が変わると pick を破棄する。
@@ -1130,6 +1150,8 @@ export function BrowserPhotoEditingWorkbench(props: {
         ? () => chooseTool(toolValue === "crop" ? "adjust" : "crop")
         : crop.toggle
       : null,
+    // J: 黒つぶれ・白飛びの印をまとめて重ねる / 外す（ヒストグラムを出していて、印を使える道具の間だけ）
+    onToggleClipping: histogramAvailable && !clipUnavailable ? histogram.toggleBoth : null,
     // 切り抜きの間の Enter =［完了］・Esc =［キャンセル］（#52）
     onCropDone: cropping ? crop.leave : null,
     onCropCancel: cropping ? crop.cancel : null,
@@ -1939,6 +1961,7 @@ export function BrowserPhotoEditingWorkbench(props: {
                       }
                     : null
                 }
+                clipOverlay={clipOverlay}
                 canvasRef={canvasRef}
                 colorPicker={colorMixerAvailable ? {
                   active: colorPicking,
@@ -2137,6 +2160,17 @@ export function BrowserPhotoEditingWorkbench(props: {
             raw={loupeItem !== null && isBrowserCloudRawPhoto(loupeItem.photo)}
             settings={settings}
             colorMixer={colorMixer}
+            histogram={
+              histogramAvailable ? (
+                <PhotoEditingHistogram
+                  data={histogram.histogram}
+                  clip={histogram.clip}
+                  clipDisabled={clipUnavailable}
+                  onToggleShadows={histogram.toggleShadows}
+                  onToggleHighlights={histogram.toggleHighlights}
+                />
+              ) : undefined
+            }
             visibleKeys={visibleAdjustmentKeys}
             // 口のある wasm と分かってから出す（確かめている間・無い wasm・S1 の canvas の写真には出さない）
             auto={
