@@ -30,6 +30,7 @@ import {
   PHOTO_EDITING_TOOL_ADJUST_LABEL,
   PHOTO_EDITING_TOOL_CROP_LABEL,
   PHOTO_EDITING_TOOL_CUTOUT_LABEL,
+  PHOTO_EDITING_TOOL_INFO_LABEL,
   PHOTO_EDITING_UNDO_LABEL,
   PHOTO_EDITING_UNDO_TITLE,
 } from "../photo-editing-copy";
@@ -77,6 +78,10 @@ const TOOL_LABELS: Readonly<Record<BrowserPhotoTool, string>> = {
  *
  * ヒストグラム（niho-photo#36。`histogram` を渡したときだけ）は、どの道具・面のときも見出し行の上、パネルの一番上に置く
  * （パネルを送っても上端に残す）。
+ *
+ * 「情報」の面（niho-photo#43。`panel` が `info` で `info` を渡したとき）は 見出し行（名前だけ）→ 情報の群。写真を直す面ではないので、
+ * ↶ ↷ ⋯・「初期化」・作業コピーの状態・閲覧のみの 1 行は出さない（キーの取り消し・やり直しは今までどおり効く）。ヒストグラムは
+ * ほかの面と同じく一番上に残す（撮影条件と分布を一緒に見る。白飛び・黒つぶれの印の切り替えも消さない）。
  */
 
 /**
@@ -133,6 +138,8 @@ export function BrowserPhotoEditingAdjustments(props: {
   tool?: BrowserPhotoTool;
   /** 道具が「補正」の間に出す面（省略時は補正の面。プリセットの部品が無い写真は補正の面だけ） */
   panel?: BrowserPhotoAdjustPanel;
+  /** 「情報」の面の中身（niho-photo#43。`panel` が `info` の間だけ描く。渡さなければ情報の面は出さない） */
+  info?: ReactNode;
   /** プリセットの行から、プリセットの面を開く */
   onOpenPresets?: () => void;
   /** 切り抜きの道具（「切り抜き」の間、プリセットの節と群の代わりに出す） */
@@ -159,6 +166,23 @@ export function BrowserPhotoEditingAdjustments(props: {
   const presets = props.presets;
   // プリセットの部品が無い写真（S1 の canvas）は、補正の面だけ
   const showPresetsPanel = !cropping && !cutting && presets !== undefined && props.panel === "presets";
+  if (!cropping && !cutting && props.info !== undefined && props.panel === "info") {
+    // 情報の面: 見出し行は名前だけ（ヒストグラムの置き方は下の補正の面と同じ）
+    return (
+      <aside
+        aria-label={PHOTO_EDITING_TOOL_INFO_LABEL}
+        className={props.histogram ? ASIDE_WITH_HISTOGRAM_CLASS_NAME : ASIDE_CLASS_NAME}
+      >
+        {props.histogram ? (
+          <div className="sticky top-0 z-10 -mx-3 bg-[var(--photo-editing-surface,white)] px-3 pb-1 pt-2">{props.histogram}</div>
+        ) : null}
+        <div className="flex min-h-11 items-center gap-1">
+          <h2 className="min-w-0 flex-1 truncate text-sm font-bold text-niho-text">{PHOTO_EDITING_TOOL_INFO_LABEL}</h2>
+        </div>
+        {props.info}
+      </aside>
+    );
+  }
   const heading = cropping
     ? TOOL_LABELS.crop
     : cutting

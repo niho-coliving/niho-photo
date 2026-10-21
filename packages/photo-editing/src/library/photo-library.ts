@@ -62,6 +62,12 @@ export type PhotoLibrary = {
    * 開いた写真だけ）
    */
   lookup(contentSha256s: readonly string[], options?: PhotoLibraryRequestOptions): Promise<PhotoLibraryLookupMatch[]>;
+  /**
+   * 写真の情報（撮影条件・カメラ・レンズ・撮影日時・寸法・場所。`capabilities.info`。右パネルの「情報」。niho-photo#43）。読めた項目
+   * だけを入れ、読めない項目は null か省略。読めないファイルは全部 null で返してよい（編集面は失敗の表示をせず、写真の行の項目だけを
+   * 出す）。無い・置き終えていない写真は null。ファイル名・形式・大きさは写真の行（{@link PhotoLibraryPhoto}）で足りるので返さない
+   */
+  info?(photoId: string, options?: PhotoLibraryRequestOptions): Promise<PhotoLibraryPhotoInfo | null>;
 
   // ---- 開く
   /**
@@ -261,6 +267,11 @@ export type PhotoLibraryCapabilities = {
   addFromDevice: boolean;
   /** この Mac から足すときにフォルダを選べる（{@link PhotoLibraryDeviceImport.pick} の `folder`） */
   addFromDeviceFolder: boolean;
+  /**
+   * 写真の情報（撮影条件・カメラ・レンズなど）を読める（{@link PhotoLibrary.info}）。省略 = 読めない（右パネルの「情報」は写真の
+   * 行のファイルの項目だけを出す）
+   */
+  info?: boolean;
 };
 
 /** 受入まで拠点を絞る機能（F9 ）。 */
@@ -398,6 +409,34 @@ export type PhotoLibraryPhoto = {
   /** 補正済みか（「初期化」を保存した写真は false） */
   hasEdits?: boolean;
   editedPreview?: PhotoLibraryEditedPreview | null;
+};
+
+/**
+ * 写真の情報（{@link PhotoLibrary.info}。オリジナルのメタデータ（EXIF など）から読めた項目）。読めない項目は null か省略。単位は
+ * 秒・mm・度にそろえ、整形は編集面がする（`photo-editing-info.ts`）。
+ */
+export type PhotoLibraryPhotoInfo = {
+  /** カメラのメーカーと機種（EXIF の Make・Model） */
+  camera?: { make: string | null; model: string | null } | null;
+  lens?: string | null;
+  /** ISO 感度 */
+  iso?: number | null;
+  /** シャッター速度（秒） */
+  exposureTimeSeconds?: number | null;
+  /** 絞り（F 値） */
+  fNumber?: number | null;
+  /** 焦点距離（mm。35mm 判換算ではない） */
+  focalLengthMm?: number | null;
+  /**
+   * 撮影日時（ISO 8601）。時差の無い値（`2024-05-01T10:30:15`）は撮影した場所の時計のまま出し、時差・`Z` の付いた値は日本時間で
+   * 出す。無ければ写真の行の `capturedAt`
+   */
+  capturedAt?: string | null;
+  /** 向きを反映した寸法（画素） */
+  width?: number | null;
+  height?: number | null;
+  /** 撮影した場所（10 進の度。南緯・西経は負） */
+  gps?: { latitude: number; longitude: number } | null;
 };
 
 /** 一覧の 1 枚（{@link PhotoLibraryPhoto} に一覧だけが出すものを足したもの）。 */

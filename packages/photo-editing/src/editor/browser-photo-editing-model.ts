@@ -201,9 +201,10 @@ export type BrowserPhotoTool = "adjust" | "crop" | "cutout";
 
 /**
  * 道具が「補正」の間に右パネルに出す面（niho-photo#51）。`adjust` は自動 / 白黒・プリセットの行・補正の群、`presets` はプリセットの
- * 一覧だけ。右端の道具の帯の「プリセット」「補正」で切り替え、写真を替えても保つ（Lightroom と同じ）。
+ * 一覧だけ、`info` は写真の情報（撮影条件・カメラ・レンズ・ファイル。niho-photo#43）。右端の道具の帯の「プリセット」「補正」
+ * 「情報」で切り替え、写真を替えても保つ（Lightroom と同じ）。
  */
-export type BrowserPhotoAdjustPanel = "adjust" | "presets";
+export type BrowserPhotoAdjustPanel = "adjust" | "presets" | "info";
 
 /** 補正の面に置くプリセットの部品の形（`row` は補正の群の上の 1 行、`panel` はプリセットの面いっぱいの一覧）。 */
 export type BrowserPhotoPresetsVariant = "row" | "panel";
