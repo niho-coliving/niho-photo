@@ -29,7 +29,7 @@ import { parseDevelopEngineManifest } from "./develop-engine-manifest";
  *   `effects: true` を付ける（crate の版の比較では、画面と wasm の公開が前後したときに食い違った。移行元設計）
  * - 色ミキサーは `v: 4` の `colorPoints` を読めるときだけ `ready` に `colorPoints: true` を付ける。公開版番号だけで推測せず、
  *   `validateSettings` に実際の最小設定を渡して確かめる
- * - ディテール（シャープ・ノイズ軽減。Issue #32）も同じく、`v: 5` の `detail` を `validateSettings` が通すときだけ `ready` に
+ * - ディテール（シャープ・ノイズ軽減。Issue #32）も同じく、`v: 6` の `detail` を `validateSettings` が通すときだけ `ready` に
  *   `detail: true` を付ける
  * - プリセットの適用量・書き出し・見本（F2a 移行元設計 の口。crate 0.5.0 から）: `applyPreset`（開いている写真の撮影時の白
  *   `asShotWhite()` を渡す）・`settingsToXmp`・`renderPresetThumbnail`（開いている写真の `thumbnail(256)` の別の session を初回に
@@ -118,7 +118,7 @@ export type DevelopEngineWorkerFeatures = {
   effects?: true;
   /** wasm が独立した色ミキサーの設定（`v: 4`）を読める。 */
   colorPoints?: true;
-  /** wasm がディテール（シャープ・ノイズ軽減）の設定（`v: 5`）を読める（Issue #32）。 */
+  /** wasm がディテール（シャープ・ノイズ軽減）の設定（`v: 6`）を読める（Issue #32）。 */
   detail?: true;
   /** `applyPreset`（プリセットの適用量。F2a 移行元設計） */
   presetAmount?: true;
@@ -369,9 +369,9 @@ function acceptsColorPointSettings(validateSettings: DevelopGlue["validateSettin
   }
 }
 
-/** ディテールが 1 つだけ効いている小さな `v: 5` の設定（crate の `DETAIL_SETTINGS_VERSION` = 5）。 */
+/** ディテールが 1 つだけ効いている小さな `v: 6` の設定（crate の `DETAIL_SETTINGS_VERSION` = 6）。 */
 const DETAIL_PROBE_SETTINGS_JSON = JSON.stringify({
-  v: 5,
+  v: 6,
   engine: "niho-10",
   look: "niho-standard-1",
   base: null,
@@ -490,7 +490,7 @@ function analysisSettingsKeyFromJson(settingsJson: string): string | null {
   const colorNoiseReduction = values.colorNoiseReduction ?? 0;
   if (typeof colorNoiseReduction !== "number" || !Number.isFinite(colorNoiseReduction)) return null;
   const engine = typeof values.engine === "string" ? values.engine : "";
-  // v5 のノイズ軽減（Issue #32）も解析の元の画を変える（signed RAW の master・niho-6 の解析）
+  // v6 のノイズ軽減（Issue #32）も解析の元の画を変える（signed RAW の master・niho-6 の解析）
   const detail = values.detail;
   if (detail === undefined) return `${engine}:${colorNoiseReduction}`;
   if (typeof detail !== "object" || detail === null || Array.isArray(detail)) return null;

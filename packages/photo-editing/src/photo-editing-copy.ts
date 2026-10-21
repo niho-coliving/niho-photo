@@ -82,7 +82,7 @@ export const PHOTO_EDITING_VIGNETTE_DESCRIPTION = "写真の四隅を暗くし�
 export const PHOTO_EDITING_GRAIN_DESCRIPTION = "フィルムのような粒を足します";
 
 /**
- * ディテール（シャープ・ノイズ軽減。Issue #32）。v5 の `detail` を読める wasm で開いた写真にだけ、効果の後ろの群として出す。名前は
+ * ディテール（シャープ・ノイズ軽減。Issue #32）。v6 の `detail` を読める wasm で開いた写真にだけ、効果の後ろの群として出す。名前は
  * Lightroom のディテールと同じ。シャープは書き出しとつまみを離した後の表示で確定し、動かしている間は反映しない。RAW などの作業
  * コピーは、ノイズ軽減も動かしている間は反映しない（JPEG / PNG は反映する）。説明は ⓘ に出す。
  */

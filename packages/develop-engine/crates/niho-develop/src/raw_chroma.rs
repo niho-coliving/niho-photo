@@ -94,9 +94,9 @@ pub fn apply(
     Ok(output)
 }
 
-/// Explicit v5 detail control. The frozen 0..50 domain is unchanged; above
+/// Explicit v6 detail control. The frozen 0..50 domain is unchanged; above
 /// 50, increase guided-filter regularization continuously up to 4x. This
-/// keeps the whole slider useful without applying legacy and v5 NR twice.
+/// keeps the whole slider useful without applying legacy and v6 NR twice.
 /// The extended range is a NIHO approximation, not an LR calibration.
 pub fn apply_detail(
     source: &[f32],

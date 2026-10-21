@@ -145,7 +145,7 @@ fn builtin_presets_match_photo_bench_engine() {
             photo_bench_unsupported, want_unsupported,
             "{id} unsupported"
         );
-        // NIHO also renders the Detail panel (v5, Issue #32).
+        // NIHO also renders the Detail panel (v6, Issue #32).
         let niho_unsupported: Vec<String> = want_unsupported
             .iter()
             .filter(|p| xmp::effect_field(p).is_none() && !xmp::DETAIL_KEYS.contains(&p.as_str()))

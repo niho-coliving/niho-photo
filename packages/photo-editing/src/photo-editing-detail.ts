@@ -18,7 +18,7 @@ import {
 } from "./photo-editing-copy";
 
 /**
- * ディテール（シャープ・ノイズ軽減。Issue #32）の `developSettings.detail`（v5）の読み書き。
+ * ディテール（シャープ・ノイズ軽減。Issue #32）の `developSettings.detail`（v6）の読み書き。
  *
  * 形は crate（`settings.rs`）と同じ exact object: `{ sharpening: { amount, radius, detail, masking }, luminanceNoiseReduction,
  * colorNoiseReduction? }`。範囲はシャープ 0〜150・半径 0.5〜3.0・ほか 0〜100。`colorNoiseReduction` は省略できる: 省略は
@@ -28,7 +28,7 @@ import {
  * - 書き込みは 1 項目ずつ（範囲に収め、半径は 0.1 刻み、ほかは整数に丸める）。値が変わらなければ渡した設定をそのまま返す
  * - カラーノイズの軽減を旧の値（上の「省略」の値）と同じにしたら、明示の値を消して旧の経路に戻す（画素は同じ）
  * - すべてが既定（シャープ 0・半径 1・ディテール 25・マスク 0・ノイズ軽減 0・カラーの明示なし）に戻ったら `detail` ごと消す
- *   （形の版 `v` は書き込む側が内容から決め直すので、ディテールを使っていない写真は v5 にならない）
+ *   （形の版 `v` は書き込む側が内容から決め直すので、ディテールを使っていない写真は v6 にならない）
  */
 
 export type PhotoEditingDetailKey =

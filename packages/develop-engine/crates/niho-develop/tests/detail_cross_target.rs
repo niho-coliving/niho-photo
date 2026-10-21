@@ -1,6 +1,6 @@
-//! Synthetic v5 detail frame shared by native and wasm CI. No private photo
+//! Synthetic v6 detail frame shared by native and wasm CI. No private photo
 //! is needed. One-shot/session entry points must agree within one RGBA LSB;
-//! the neutral v5 route must remain byte-identical to the old fused route.
+//! the neutral v6 route must remain byte-identical to the old fused route.
 
 use niho_develop::decode::encode_signed_working_copy;
 use niho_develop::settings::{
@@ -31,7 +31,7 @@ fn photo() -> Vec<u8> {
 
 fn settings() -> DevelopSettings {
     let mut settings = DevelopSettings::neutral();
-    settings.v = 5;
+    settings.v = 6;
     settings.engine = "niho-10".into();
     settings.look = "niho-standard-1".into();
     settings.contrast = 30.0;
@@ -118,7 +118,7 @@ fn signed_raw() -> (Vec<u8>, String) {
 
 fn raw_settings(color_noise_reduction: Option<f64>) -> DevelopSettings {
     let mut settings = DevelopSettings::neutral();
-    settings.v = 5;
+    settings.v = 6;
     settings.engine = "niho-11".into();
     settings.look = "niho-standard-5".into();
     settings.color_noise_reduction = 37.0;
@@ -188,7 +188,7 @@ fn neutral_detail_is_old_pixel_exact_and_raster_legacy_cnr_stays_ignored() {
     let old_frame = render(&input, &old.to_json(), &RenderOptions::default()).unwrap();
 
     let mut neutral = old.clone();
-    neutral.v = 5;
+    neutral.v = 6;
     neutral.detail = Some(DetailSettings::default());
     let neutral_frame = render(&input, &neutral.to_json(), &RenderOptions::default()).unwrap();
     assert_eq!(old_frame.rgba, neutral_frame.rgba);
@@ -244,7 +244,7 @@ fn final_sharpening_materially_changes_a_512px_neutral_float_tail() {
     }
     let input = encode::encode_png(&rgba, width, height).unwrap();
     let mut neutral = DevelopSettings::neutral();
-    neutral.v = 5;
+    neutral.v = 6;
     neutral.engine = "niho-10".into();
     neutral.look = "niho-standard-1".into();
     neutral.detail = Some(DetailSettings::default());

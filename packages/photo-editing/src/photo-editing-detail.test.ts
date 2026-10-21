@@ -9,7 +9,7 @@ import {
 } from "./photo-editing-detail";
 import type { PhotoEditingSettings } from "./photo-editing-types";
 
-/** ディテール（シャープ・ノイズ軽減。Issue #32）の `developSettings.detail`（v5）の読み書き。 */
+/** ディテール（シャープ・ノイズ軽減。Issue #32）の `developSettings.detail`（v6）の読み書き。 */
 
 const RASTER: PhotoEditingSettings = neutralDevelopSettings();
 const SIGNED_RAW: PhotoEditingSettings = { ...neutralDevelopSettings(), engine: "niho-11", look: "niho-standard-5" };
@@ -31,14 +31,14 @@ describe("readDetailValue", () => {
 });
 
 describe("writeDetailValue", () => {
-  it("動かすと exact な detail を書き、v5 になる。既定に戻すと detail ごと消す", () => {
+  it("動かすと exact な detail を書き、v6 になる。既定に戻すと detail ごと消す", () => {
     const sharpened = writeDetailValue(RASTER, "sharpenAmount", 40);
     expect(sharpened.detail).toEqual({
       sharpening: { amount: 40, radius: 1, detail: 25, masking: 0 },
       luminanceNoiseReduction: 0,
     });
     const versioned = { ...sharpened, v: developSettingsVersion(sharpened) };
-    expect(versioned.v).toBe(5);
+    expect(versioned.v).toBe(6);
     // crate と同じ形の検査（exact keys・範囲）を通る
     expect(readDevelopSettings(versioned)).not.toBeNull();
 

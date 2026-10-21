@@ -661,7 +661,7 @@ pub struct Session {
     /// Point and grading changes reuse it; every earlier-stage change gets a
     /// different key and replaces it before allocating the next plane.
     color_points: Option<pipeline::ColorPointPlane>,
-    /// v5 pre-local raster source shared by render and sampleColor.
+    /// v6 pre-local raster source shared by render and sampleColor.
     noise: Option<pipeline::NoiseCache>,
     /// NIHO 3 master. Final and framed renders keep the full-source master;
     /// reduced unframed Interactive renders prepare at their display size.

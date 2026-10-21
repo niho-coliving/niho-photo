@@ -1,5 +1,5 @@
 //! Lightroom's Detail panel (sharpening, luminance and color noise
-//! reduction) <-> v5 `developSettings.detail` (Issue #32).
+//! reduction) <-> v6 `developSettings.detail` (Issue #32).
 //!
 //! Photo Bench never rendered these, so like the NIHO effects they bypass
 //! its parser and the converter. Reading follows Lightroom's preset patch:
@@ -18,7 +18,7 @@
 //! render (any amount on a raster / unsigned-RAW engine, more than 50 on a
 //! signed RAW engine whose frozen R209 path saturates at 50). Otherwise the
 //! settings keep their shape version, so a preset whose detail values are
-//! all zero does not force `v: 5`.
+//! all zero does not force `v: 6`.
 
 use super::{swift_double, Level, XmpDocument};
 use crate::settings::{
@@ -84,7 +84,7 @@ pub(super) fn renders_legacy_raw_cnr(engine: &str) -> bool {
     )
 }
 
-/// The color NR amount `settings` render: the explicit v5 value, else the
+/// The color NR amount `settings` render: the explicit v6 value, else the
 /// legacy top-level amount on a signed RAW engine (capped like R209), else 0.
 pub(super) fn effective_color_noise_reduction(settings: &DevelopSettings) -> f64 {
     match settings

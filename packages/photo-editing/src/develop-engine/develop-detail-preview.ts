@@ -1,5 +1,7 @@
+import { DEVELOP_DETAIL_SETTINGS_VERSION } from "./develop-settings";
+
 /**
- * ディテール（シャープ・ノイズ軽減。v5 の `detail`。Issue #32）を wasm のプレビューへどう送るか（owner 判断 2026-10-21）。
+ * ディテール（シャープ・ノイズ軽減。v6 の `detail`。Issue #32）を wasm のプレビューへどう送るか（owner 判断 2026-10-21）。
  *
  * - 量の無い `detail`（シャープ 0・輝度のノイズ軽減 0・カラーの明示なし）は外して送る。ディテールを使っていない写真は、今までと
  *   同じ設定の JSON・同じ経路・同じ速さで描く
@@ -72,5 +74,5 @@ export function interactiveWorkingCopySettings(settings: SettingsRecord, committ
   detail.luminanceNoiseReduction = committed?.luminanceNoiseReduction ?? 0;
   if (committed?.colorNoiseReduction === undefined) delete detail.colorNoiseReduction;
   else detail.colorNoiseReduction = committed.colorNoiseReduction;
-  return { ...current, v: Math.max(finiteOr(current.v, 1), 5), detail };
+  return { ...current, v: Math.max(finiteOr(current.v, 1), DEVELOP_DETAIL_SETTINGS_VERSION), detail };
 }

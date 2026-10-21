@@ -55,10 +55,10 @@ pub enum XmpGroup {
     Vignette,
     /// Grain.
     Grain,
-    /// Color noise reduction (signed RAW R209 or v5 detail) with its retained
-    /// detail / smoothness values, and v5 luminance noise reduction.
+    /// Color noise reduction (signed RAW R209 or v6 detail) with its retained
+    /// detail / smoothness values, and v6 luminance noise reduction.
     NoiseReduction,
-    /// v5 output sharpening (amount, radius, detail, masking).
+    /// v6 output sharpening (amount, radius, detail, masking).
     Sharpening,
 }
 
@@ -402,7 +402,7 @@ pub fn settings_to_xmp(settings: &DevelopSettings, options: &XmpWriteOptions) ->
         put(key.xmp, number(v, key.range.0 < 0.0));
     }
     // Noise reduction: a signed RAW engine always carries its R209 color NR
-    // (and the retained detail / smoothness); any engine with a v5 `detail`
+    // (and the retained detail / smoothness); any engine with a v6 `detail`
     // object carries what it renders (its explicit color NR, else the
     // legacy amount on a signed RAW engine, else 0) plus luminance NR. An
     // edit without `detail` on another engine renders no NR, so its preset
@@ -434,7 +434,7 @@ pub fn settings_to_xmp(settings: &DevelopSettings, options: &XmpWriteOptions) ->
             put(key, number(libm::round(value), false));
         }
     }
-    // Sharpening exists only with v5 `detail`; an edit without it renders
+    // Sharpening exists only with v6 `detail`; an edit without it renders
     // none and writes nothing (the bytes of existing presets stay). The
     // radius is Real in Camera Raw's schema, the others Integer.
     if let Some(detail) = settings.detail.filter(|_| on(XmpGroup::Sharpening)) {

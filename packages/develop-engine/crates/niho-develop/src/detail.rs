@@ -1,4 +1,4 @@
-//! v5 detail processing on float linear-light pixels.
+//! v6 detail processing on float linear-light pixels.
 //!
 //! Noise reduction runs on the source before adaptive/local processing.
 //! Sharpening runs on the output-sized linear-sRGB plane immediately before
@@ -18,7 +18,7 @@ pub enum SourceSpace {
     LinearProPhoto,
 }
 
-/// Settings for a pipeline whose source already includes v5 NR. Sharpening
+/// Settings for a pipeline whose source already includes v6 NR. Sharpening
 /// stays active; only the source operations are neutralized.
 pub(crate) fn source_noise_disabled(
     settings: &crate::settings::DevelopSettings,
@@ -79,7 +79,7 @@ fn validate(source: &[f32], width: usize, height: usize) -> Result<(), DetailErr
     Ok(())
 }
 
-/// Applies v5 source noise reduction. `raster_color_amount` is used only for
+/// Applies v6 source noise reduction. `raster_color_amount` is used only for
 /// raster sources; signed RAW applies the effective R209 amount in its
 /// canonical preparation cache and passes `None` here, avoiding a second
 /// chroma pass.
@@ -132,7 +132,7 @@ pub fn reduce_noise(
     Ok(output)
 }
 
-/// Source preparation uses the old frozen path unless v5 explicitly owns
+/// Source preparation uses the old frozen path unless v6 explicitly owns
 /// the color amount. This keeps every legacy RAW pixel unchanged.
 pub(crate) fn reduce_raw_chroma(
     source: &[f32],

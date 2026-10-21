@@ -543,7 +543,7 @@ export function BrowserPhotoEditingWorkbench(props: {
     engineRef: develop.engineRef,
     photoKey: wasmPhotoKey,
   });
-  // ディテール（シャープ・ノイズ軽減。v: 5。Issue #32）を描ける wasm か（同じく 1 回確かめる）。RAW を含む wasm の写真に出す
+  // ディテール（シャープ・ノイズ軽減。v: 6。Issue #32）を描ける wasm か（同じく 1 回確かめる）。RAW を含む wasm の写真に出す
   const detailWasmSupported = useBrowserPhotoDetailSupport({
     mountedRef,
     engineRef: develop.engineRef,

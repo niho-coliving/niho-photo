@@ -270,7 +270,8 @@
         "Issue #30 Oklch色ミキサーとengine 10/11対応を反映",
         "Issue 13 progressive RAW open implementation",
         "Issue #32 detail capabilityと作業コピーのプレビューからdetailを外す挙動を検証する",
-        "owner判断2026-10-21: 作業コピーのdrag中・確定描画・detail無しの設定JSONを検証する"
+        "owner判断2026-10-21: 作業コピーのdrag中・確定描画・detail無しの設定JSONを検証する",
+        "Issue #32 detail uses v6 because Issue #31 masks already owns v5; synchronize the Rust and TypeScript contract, probe, tests, and documentation."
       ]
     },
     {
@@ -288,7 +289,8 @@
         "Issue #30 Oklch色ミキサーとengine 10/11対応を反映",
         "Issue 13 progressive RAW open implementation",
         "Issue #32 supportsDetailと作業コピーのプレビューでdetailを外す方針を追加",
-        "owner判断2026-10-21: 作業コピーはdrag中だけNRを計算し直さず、確定描画・見本・色取得は今のdetailを送る"
+        "owner判断2026-10-21: 作業コピーはdrag中だけNRを計算し直さず、確定描画・見本・色取得は今のdetailを送る",
+        "Issue #32 detail uses v6 because Issue #31 masks already owns v5; synchronize the Rust and TypeScript contract, probe, tests, and documentation."
       ]
     },
     {
@@ -335,7 +337,8 @@
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
         "Issue #30 Oklch色ミキサーとengine 10/11対応を反映",
-        "Issue #32 v5 detailのcapability確認を検証する"
+        "Issue #32 v5 detailのcapability確認を検証する",
+        "Issue #32 detail uses v6 because Issue #31 masks already owns v5; synchronize the Rust and TypeScript contract, probe, tests, and documentation."
       ]
     },
     {
@@ -351,7 +354,8 @@
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
         "Issue #30 Oklch色ミキサーとengine 10/11対応を反映",
-        "Issue #32 v5 detailのcapability確認と解析keyへのNRを追加"
+        "Issue #32 v5 detailのcapability確認と解析keyへのNRを追加",
+        "Issue #32 detail uses v6 because Issue #31 masks already owns v5; synchronize the Rust and TypeScript contract, probe, tests, and documentation."
       ]
     },
     {
@@ -426,7 +430,8 @@
         "新しい色相保持エンジンと新旧バイナリの能力境界・数値回帰を整合。",
         "Issue #30 Oklch色ミキサーとengine 10/11対応を反映",
         "部分補正（マスク）#65: v6を未知版とし有効なマスク付きv5を開く回帰を追加",
-        "Issue #32 v5を読む版に合わせて未知の版の検証を更新する"
+        "Issue #32 v5を読む版に合わせて未知の版の検証を更新する",
+        "Issue #32 detail uses v6 because Issue #31 masks already owns v5; synchronize the Rust and TypeScript contract, probe, tests, and documentation."
       ]
     },
     {
@@ -546,7 +551,8 @@
         "新しい色相保持エンジンと新旧バイナリの能力境界・数値回帰を整合。",
         "Issue #30 Oklch色ミキサーとengine 10/11対応を反映",
         "部分補正（マスク）#65: v5を既知とし未知版の回帰をv6へ更新",
-        "Issue #32 developSettings v5のdetailの読み・版・コピーを検証する"
+        "Issue #32 developSettings v5のdetailの読み・版・コピーを検証する",
+        "Issue #32 detail uses v6 because Issue #31 masks already owns v5; synchronize the Rust and TypeScript contract, probe, tests, and documentation."
       ]
     },
     {
@@ -947,7 +953,8 @@
         "Issue 13 progressive RAW open implementation",
         "右パネルの補正・プリセット面の切替と段階RAW openを統合し、暫定中の見本生成停止を保つ。",
         "Issue #32 ディテールを出す入力とPC右パネルの項目を決める",
-        "owner判断2026-10-21: RAWを含むwasmの写真すべてにディテールの群を出す"
+        "owner判断2026-10-21: RAWを含むwasmの写真すべてにディテールの群を出す",
+        "Issue #32 detail uses v6 because Issue #31 masks already owns v5; synchronize the Rust and TypeScript contract, probe, tests, and documentation."
       ]
     },
     {
@@ -1118,7 +1125,8 @@
         "niho-photo#36 ヒストグラムとクリップ表示とJキーを組み込み。",
         "閲覧専用のヒストグラムで、Jキーを操作ボタンと同じ条件で有効にする。",
         "Issue #32 v5を読めるwasmのJPEG/PNGだけにディテールの群を出す",
-        "owner判断2026-10-21: RAWを含むwasmの写真すべてにディテールの群を出す"
+        "owner判断2026-10-21: RAWを含むwasmの写真すべてにディテールの群を出す",
+        "Issue #32 detail uses v6 because Issue #31 masks already owns v5; synchronize the Rust and TypeScript contract, probe, tests, and documentation."
       ]
     },
     {
@@ -1671,7 +1679,8 @@
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
         "Issue #30 Oklch色ミキサーとengine 10/11対応を反映",
-        "Issue #32 ディテールを描けるwasmかを確かめるhookを足す"
+        "Issue #32 ディテールを描けるwasmかを確かめるhookを足す",
+        "Issue #32 detail uses v6 because Issue #31 masks already owns v5; synchronize the Rust and TypeScript contract, probe, tests, and documentation."
       ]
     },
     {
@@ -2054,7 +2063,8 @@
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
         "Issue #30 Oklch色ミキサーとengine 10/11対応を反映",
-        "Issue #32 効果の後ろにディテールの群を足す"
+        "Issue #32 効果の後ろにディテールの群を足す",
+        "Issue #32 detail uses v6 because Issue #31 masks already owns v5; synchronize the Rust and TypeScript contract, probe, tests, and documentation."
       ]
     },
     {
@@ -2106,7 +2116,8 @@
         "部分補正（マスク）#65: XMP未書き込み項目に部分補正の表示名を追加",
         "niho-photo#36 ヒストグラムと黒つぶれ白飛び表示の文言を追加。",
         "Issue #32 ディテールの群・項目・説明とXMPの細かな項目の名前を足す",
-        "owner判断2026-10-21: RAWなどはノイズ軽減も指を離すと反映する旨を説明に足す"
+        "owner判断2026-10-21: RAWなどはノイズ軽減も指を離すと反映する旨を説明に足す",
+        "Issue #32 detail uses v6 because Issue #31 masks already owns v5; synchronize the Rust and TypeScript contract, probe, tests, and documentation."
       ]
     },
     {
@@ -5809,7 +5820,8 @@
         "色サンプルの段参照を集約し、キャッシュキーの回帰試験では借用を次描画前に解放する",
         "色点のサンプル座標と回帰試験を整合し、操作中640pxと確定解像度を分ける",
         "部分補正（マスク）#65: 有効なマスクの描画をmasksNotRenderedで拒否しM2まで安全に失敗させる",
-        "Issue #32 v5 detailのNR済みsourceをSession・解析・sampleColorで共有する"
+        "Issue #32 v5 detailのNR済みsourceをSession・解析・sampleColorで共有する",
+        "Issue #32 detail uses v6 because Issue #31 masks already owns v5; synchronize the Rust and TypeScript contract, probe, tests, and documentation."
       ]
     },
     {
@@ -5960,7 +5972,8 @@
         "色サンプルの有効点有無で共通のf32選択座標を使い、段の依存参照を構造体で共有する",
         "色点のサンプル座標と回帰試験を整合し、操作中640pxと確定解像度を分ける",
         "niho-8と色ポイントのcube統合を修正",
-        "Issue #32 v5 detailのNR・float出力境界のシャープ・旧unsigned RAWのNR経路を追加"
+        "Issue #32 v5 detailのNR・float出力境界のシャープ・旧unsigned RAWのNR経路を追加",
+        "Issue #32 detail uses v6 because Issue #31 masks already owns v5; synchronize the Rust and TypeScript contract, probe, tests, and documentation."
       ]
     },
     {
@@ -5973,7 +5986,8 @@
       },
       "outputSha256": "c1112a2ac5af26b7c591362a44930271e675d7e29910ae395ff20795a52a8d51",
       "modifications": [
-        "Issue #32 明示v5カラーNRの50超を連続拡張し、チャンネル独立ノイズの合成回帰で検証する"
+        "Issue #32 明示v5カラーNRの50超を連続拡張し、チャンネル独立ノイズの合成回帰で検証する",
+        "Issue #32 detail uses v6 because Issue #31 masks already owns v5; synchronize the Rust and TypeScript contract, probe, tests, and documentation."
       ]
     },
     {
@@ -6079,7 +6093,9 @@
         "新しい色相保持エンジンと新旧バイナリの能力境界・数値回帰を整合。",
         "Issue #30 Oklch色ミキサーとengine 10/11対応を反映",
         "部分補正（マスク）#65: masksの版5・型・厳密検証・正規形書き出しを追加",
-        "Issue #32 developSettings v5のdetail（シャープ・輝度/カラーNR）の形と検証を追加"
+        "Issue #32 developSettings v5のdetail（シャープ・輝度/カラーNR）の形と検証を追加",
+        "Issue #32 detail uses v6 because Issue #31 masks already owns v5; synchronize the Rust and TypeScript contract, probe, tests, and documentation.",
+        "Issue #32 assigns settings v6 to detail; preserve mask v5 and reject unknown v7."
       ]
     },
     {
@@ -6135,7 +6151,8 @@
         "新しい色相保持エンジンと新旧バイナリの能力境界・数値回帰を整合。",
         "Issue #30 Oklch色ミキサーとengine 10/11対応を反映",
         "部分補正（マスク）#65: プリセット適用でも写真自身のmasksを保つ",
-        "Issue #32 シャープ・ノイズ軽減のXMPをunsupportedからapproximateへ移しv5 detailへ読む"
+        "Issue #32 シャープ・ノイズ軽減のXMPをunsupportedからapproximateへ移しv5 detailへ読む",
+        "Issue #32 detail uses v6 because Issue #31 masks already owns v5; synchronize the Rust and TypeScript contract, probe, tests, and documentation."
       ]
     },
     {
@@ -6150,7 +6167,8 @@
       "modifications": [
         "Issue #30 Oklch色ミキサーとengine 10/11対応を反映",
         "部分補正（マスク）#65: プリセット量の合成でもmasksを保つ",
-        "Issue #32 プリセット適用量でv5 detailの各量を写真の値から動かす"
+        "Issue #32 プリセット適用量でv5 detailの各量を写真の値から動かす",
+        "Issue #32 detail uses v6 because Issue #31 masks already owns v5; synchronize the Rust and TypeScript contract, probe, tests, and documentation."
       ]
     },
     {
@@ -6169,7 +6187,8 @@
         "Issue #30 Oklch色ミキサーとengine 10/11対応を反映",
         "部分補正（マスク）#65: XMP書き出しでmasksをnotWrittenに報告する",
         "Issue #32 XMP書き出しにsharpening群と輝度NR・detailのカラーNRを追加",
-        "cap inherited legacy color reduction when writing XMP"
+        "cap inherited legacy color reduction when writing XMP",
+        "Issue #32 detail uses v6 because Issue #31 masks already owns v5; synchronize the Rust and TypeScript contract, probe, tests, and documentation."
       ]
     },
     {
@@ -6418,7 +6437,8 @@
       },
       "outputSha256": "25c0c1002a32be82b667aef29751e9bd30aa422646a222ea41c73097ffd60255",
       "modifications": [
-        "Issue #32 Photo Benchとの色の比較からv5 detailを外す"
+        "Issue #32 Photo Benchとの色の比較からv5 detailを外す",
+        "Issue #32 detail uses v6 because Issue #31 masks already owns v5; synchronize the Rust and TypeScript contract, probe, tests, and documentation."
       ]
     },
     {
@@ -6494,7 +6514,8 @@
         "Issue #28の色相安定engine追加と互換回帰を反映。",
         "新しい色相保持エンジンと新旧バイナリの能力境界・数値回帰を整合。",
         "未知engineの拒否テストをniho-12へ更新",
-        "Issue #32 XMPのカラーNRがrasterではdetail・signed RAWでは旧欄に入ることを検証する"
+        "Issue #32 XMPのカラーNRがrasterではdetail・signed RAWでは旧欄に入ることを検証する",
+        "Issue #32 detail uses v6 because Issue #31 masks already owns v5; synchronize the Rust and TypeScript contract, probe, tests, and documentation."
       ]
     },
     {
@@ -6623,7 +6644,8 @@
       },
       "outputSha256": "97ecf2f9a119356b13f60a0eb0d33bfdd5fc93a2a22d1d4419dcedefa74bead3",
       "modifications": [
-        "Issue #32 プリセットのdetailで形の版が上がることを許容する"
+        "Issue #32 プリセットのdetailで形の版が上がることを許容する",
+        "Issue #32 detail uses v6 because Issue #31 masks already owns v5; synchronize the Rust and TypeScript contract, probe, tests, and documentation."
       ]
     },
     {
@@ -6693,7 +6715,8 @@
       },
       "outputSha256": "423ce05a729e0968f3936e28924db3b09b2095cf879875beaa21bd17fdd2b72b",
       "modifications": [
-        "Issue #32 同梱プリセットのディテール項目を描画対象として検証する"
+        "Issue #32 同梱プリセットのディテール項目を描画対象として検証する",
+        "Issue #32 detail uses v6 because Issue #31 masks already owns v5; synchronize the Rust and TypeScript contract, probe, tests, and documentation."
       ]
     },
     {
@@ -6707,7 +6730,8 @@
       "outputSha256": "ed8beb33fdf73d50fd11850f3da66d1c5f95cf3157ceafa71a8f24760c597f10",
       "modifications": [
         "Issue #32 sharpening群とdetailのNR書き出し・往復を検証する",
-        "cover the capped inherited legacy XMP value"
+        "cover the capped inherited legacy XMP value",
+        "Issue #32 detail uses v6 because Issue #31 masks already owns v5; synchronize the Rust and TypeScript contract, probe, tests, and documentation."
       ]
     },
     {
@@ -7032,7 +7056,8 @@
       },
       "outputSha256": "f6a5830b2d1041f2272c30eaca8902c4e765834e8dc782d541db91b389c3481d",
       "modifications": [
-        "Issue #32 detail scenarioにJPEG入力・NRのdrag・既存Finalの基準を追加"
+        "Issue #32 detail scenarioにJPEG入力・NRのdrag・既存Finalの基準を追加",
+        "Issue #32 detail uses v6 because Issue #31 masks already owns v5; synchronize the Rust and TypeScript contract, probe, tests, and documentation."
       ]
     },
     {
@@ -9420,7 +9445,7 @@
     {
       "path": "packages/photo-editing/src/editor/photo-editing-color-mixer.test.tsx",
       "sha256": "3ec6c5f2cdab142af40d2629bebe9b7a5c67d43736d240ea0b8c877a480ae19e",
-      "origin": "Issue #30の公開仕様だけから新規作成した色ミキサーschema・座標・320px UI・keyboard回帰。合成値だけを使用。\n変更理由: deferred pickerの写真切替回帰を追加\n変更理由: 描画精度・型・共有サンプル位置・キーボードの最終レビューを反映\n変更理由: 部分補正（マスク）#65: 未知版の確認をv6へ更新\n変更理由: Issue #32 v5を読む版に合わせ未知の版を6にする"
+      "origin": "Issue #30の公開仕様だけから新規作成した色ミキサーschema・座標・320px UI・keyboard回帰。合成値だけを使用。\n変更理由: deferred pickerの写真切替回帰を追加\n変更理由: 描画精度・型・共有サンプル位置・キーボードの最終レビューを反映\n変更理由: 部分補正（マスク）#65: 未知版の確認をv6へ更新\n変更理由: Issue #32 v5を読む版に合わせ未知の版を6にする\n変更理由: Issue #32 detail uses v6 because Issue #31 masks already owns v5; synchronize the Rust and TypeScript contract, probe, tests, and documentation."
     },
     {
       "path": "packages/photo-editing/src/editor/photo-editing-color-mixer.tsx",
@@ -9575,12 +9600,12 @@
     {
       "path": "packages/develop-engine/crates/niho-develop/tests/masks_settings.rs",
       "sha256": "acff8c43a7c3f7d7d960d5f3d0bb9c8da9444e6f9a087cf3143ccff3d9526c18",
-      "origin": "Issue #65の公開仕様と合成fixtureだけから新規作成した、マスク設定の読み書き・版・互換・未描画時の安全な失敗のRust回帰。実写真・非公開コード・私有参照出力を含まない。"
+      "origin": "Issue #65の公開仕様と合成fixtureだけから新規作成した、マスク設定の読み書き・版・互換・未描画時の安全な失敗のRust回帰。実写真・非公開コード・私有参照出力を含まない。\n変更理由: Issue #32 assigns settings v6 to detail; preserve mask v5 and reject unknown v7."
     },
     {
       "path": "packages/develop-engine/crates/niho-develop/tests/fixtures/masks/settings-cases.json",
       "sha256": "68888c4ad1031929b3fe1f375806fc92c56052a2aa7468dfab8d3c60a2b162c6",
-      "origin": "Issue #65の公開仕様から合成したマスク設定の正常・異常ケース（RustとTypeScriptで共有）。実写真・利用者データ・私有参照出力を含まない。"
+      "origin": "Issue #65の公開仕様から合成したマスク設定の正常・異常ケース（RustとTypeScriptで共有）。実写真・利用者データ・私有参照出力を含まない。\n変更理由: Issue #32 assigns settings v6 to detail; preserve mask v5 and reject unknown v7."
     },
     {
       "path": "packages/photo-editing/src/develop-engine/develop-masks.ts",
@@ -9590,7 +9615,7 @@
     {
       "path": "packages/photo-editing/src/develop-engine/develop-masks.test.ts",
       "sha256": "966a544db81900703ba8457334edf9d1748e4c8578145eb25cb3f2180df993c2",
-      "origin": "Issue #65の公開仕様と合成fixtureだけから新規作成した、マスク設定のRust共有fixture照合と設定関数の回帰。外部画像・非公開コード・個体metadataを含まない。\n変更理由: 線形マスクの最小距離保持と上限超過の拒否を検証する。"
+      "origin": "Issue #65の公開仕様と合成fixtureだけから新規作成した、マスク設定のRust共有fixture照合と設定関数の回帰。外部画像・非公開コード・個体metadataを含まない。\n変更理由: 線形マスクの最小距離保持と上限超過の拒否を検証する。\n変更理由: Issue #32 detail uses v6 because Issue #31 masks already owns v5; synchronize the Rust and TypeScript contract, probe, tests, and documentation."
     },
     {
       "path": "packages/photo-editing/src/photo-editing-histogram.ts",
@@ -9640,62 +9665,62 @@
     {
       "path": "docs/detail-processing.md",
       "sha256": "e807979425bf205ef0c800bd16ba76dc18abecdd8099f71de73eddee33c83fae",
-      "origin": "Issue #32でNIHOが独立作成したdetail処理・保存契約・合成検証または設計文書。実写真・第三者コードは含まない。\n変更理由: owner判断2026-10-21: RAWでも群を出し、作業コピーのdrag中の送り方と1280px確定描画の実測を記録する"
+      "origin": "Issue #32でNIHOが独立作成したdetail処理・保存契約・合成検証または設計文書。実写真・第三者コードは含まない。\n変更理由: owner判断2026-10-21: RAWでも群を出し、作業コピーのdrag中の送り方と1280px確定描画の実測を記録する\n変更理由: Issue #32 detail uses v6 because Issue #31 masks already owns v5; synchronize the Rust and TypeScript contract, probe, tests, and documentation."
     },
     {
       "path": "packages/develop-engine/crates/niho-develop/src/detail.rs",
       "sha256": "61f4eb637e417142b3ed279c5e6d292e05e0bf9eca9b330a934cfc3894593c5f",
-      "origin": "Issue #32でNIHOが独立作成したdetail処理・保存契約・合成検証または設計文書。実写真・第三者コードは含まない。"
+      "origin": "Issue #32でNIHOが独立作成したdetail処理・保存契約・合成検証または設計文書。実写真・第三者コードは含まない。\n変更理由: Issue #32 detail uses v6 because Issue #31 masks already owns v5; synchronize the Rust and TypeScript contract, probe, tests, and documentation."
     },
     {
       "path": "packages/develop-engine/crates/niho-develop/tests/detail_cross_target.rs",
       "sha256": "7b44a9aef580fa6cd59808351cd038552eb01b2c0012f0cb7c00c32f9a5426c4",
-      "origin": "Issue #32でNIHOが独立作成したdetail処理・保存契約・合成検証または設計文書。実写真・第三者コードは含まない。"
+      "origin": "Issue #32でNIHOが独立作成したdetail処理・保存契約・合成検証または設計文書。実写真・第三者コードは含まない。\n変更理由: Issue #32 detail uses v6 because Issue #31 masks already owns v5; synchronize the Rust and TypeScript contract, probe, tests, and documentation."
     },
     {
       "path": "packages/develop-engine/crates/niho-develop/src/xmp/detail.rs",
       "sha256": "ee721a0ce0e35cd246863cdf9b95c718bb19b7350936d6537692deb769e911a7",
-      "origin": "Issue #32でNIHOが独立作成したLightroomディテールのXMPとv5 detailの読み書き。Camera Rawの公開キー名と既定値だけを使い、実写真・第三者コードは含まない。"
+      "origin": "Issue #32でNIHOが独立作成したLightroomディテールのXMPとv5 detailの読み書き。Camera Rawの公開キー名と既定値だけを使い、実写真・第三者コードは含まない。\nIssue #32でNIHOが独立作成したLightroomディテールのXMPとv6 detailの読み書き。Camera Rawの公開キー名と既定値だけを使い、実写真・第三者コードは含まない。\n変更理由: Issue #32 detail uses v6 because Issue #31 masks already owns v5; synchronize the Rust and TypeScript contract, probe, tests, and documentation."
     },
     {
       "path": "packages/develop-engine/crates/niho-develop/tests/detail_effect.rs",
       "sha256": "b194ac9a48275ade0f5ac4900fbc0ac6cbdd326d64c5e78228f84c6e5eb776e2",
-      "origin": "Issue #32でNIHOが独立作成した合成チャートによるdetailの入力別回帰（エッジの鋭さ・平坦部の標準偏差・crop・drag）。実写真・非公開fixtureを含まない。"
+      "origin": "Issue #32でNIHOが独立作成した合成チャートによるdetailの入力別回帰（エッジの鋭さ・平坦部の標準偏差・crop・drag）。実写真・非公開fixtureを含まない。\n変更理由: Issue #32 detail uses v6 because Issue #31 masks already owns v5; synchronize the Rust and TypeScript contract, probe, tests, and documentation."
     },
     {
       "path": "packages/develop-engine/crates/niho-develop/tests/xmp_detail.rs",
       "sha256": "c913f29859656526af4d955505064e8ab04c8eeab1dd4515d97f03d185e1ec64",
-      "origin": "Issue #32でNIHOが独立作成したディテールXMPの読み書き・既定値・適用量の回帰。合成XMPだけを使う。"
+      "origin": "Issue #32でNIHOが独立作成したディテールXMPの読み書き・既定値・適用量の回帰。合成XMPだけを使う。\n変更理由: Issue #32 detail uses v6 because Issue #31 masks already owns v5; synchronize the Rust and TypeScript contract, probe, tests, and documentation."
     },
     {
       "path": "packages/develop-engine/crates/niho-develop/examples/detail_chart.rs",
       "sha256": "ef16c77fda07c0048d1c17d922b5be3821c46a561b2394cff1edbfa3f2a6cecf",
-      "origin": "Issue #32でNIHOが独立作成したLightroom比較用の合成チャート生成と統計の計測。実写真を含まない。"
+      "origin": "Issue #32でNIHOが独立作成したLightroom比較用の合成チャート生成と統計の計測。実写真を含まない。\n変更理由: Issue #32 detail uses v6 because Issue #31 masks already owns v5; synchronize the Rust and TypeScript contract, probe, tests, and documentation."
     },
     {
       "path": "packages/photo-editing/src/photo-editing-detail.ts",
       "sha256": "cd32ae9da11f5ad862c0088ba99413518ed81548ad7b9e1a7860c36ea58b2b4d",
-      "origin": "Issue #32でNIHOが独立作成したv5 detail（シャープ・ノイズ軽減）の画面の読み書き。実データを含まない。\n変更理由: signed RAWの数式の一覧をdevelop-detail-previewと共有する"
+      "origin": "Issue #32でNIHOが独立作成したv5 detail（シャープ・ノイズ軽減）の画面の読み書き。実データを含まない。\n変更理由: signed RAWの数式の一覧をdevelop-detail-previewと共有する\nIssue #32でNIHOが独立作成したv6 detail（シャープ・ノイズ軽減）の画面の読み書き。実データを含まない。\n変更理由: Issue #32 detail uses v6 because Issue #31 masks already owns v5; synchronize the Rust and TypeScript contract, probe, tests, and documentation."
     },
     {
       "path": "packages/photo-editing/src/photo-editing-detail.test.ts",
       "sha256": "5ca6b11c9113e795a0bdff9db0cfd712f0d6f266c409ca2f07cfafde2f5b82cb",
-      "origin": "Issue #32でNIHOが独立作成したv5 detailの画面の読み書きの回帰。合成の設定だけを使う。"
+      "origin": "Issue #32でNIHOが独立作成したv5 detailの画面の読み書きの回帰。合成の設定だけを使う。\nIssue #32でNIHOが独立作成したv6 detailの画面の読み書きの回帰。合成の設定だけを使う。\n変更理由: Issue #32 detail uses v6 because Issue #31 masks already owns v5; synchronize the Rust and TypeScript contract, probe, tests, and documentation."
     },
     {
       "path": "packages/photo-editing/src/editor/photo-editing-adjustment-controls-detail.test.tsx",
       "sha256": "356d178bbaa602f1a5665b20fdd8fcd997ca32ef3d85cc33498a6f73176493f3",
-      "origin": "Issue #32でNIHOが独立作成した補正パネルのディテールの群の回帰。合成の設定だけを使う。\n変更理由: owner判断2026-10-21: RAWで群が出ることと旧カラーNRの表示・説明を検証する"
+      "origin": "Issue #32でNIHOが独立作成した補正パネルのディテールの群の回帰。合成の設定だけを使う。\n変更理由: owner判断2026-10-21: RAWで群が出ることと旧カラーNRの表示・説明を検証する\n変更理由: Issue #32 detail uses v6 because Issue #31 masks already owns v5; synchronize the Rust and TypeScript contract, probe, tests, and documentation."
     },
     {
       "path": "packages/photo-editing/src/develop-engine/develop-detail-preview.ts",
       "sha256": "e2aa6e75d84df199ab3672ffa275b3aa6e6aaa17de41d38037272d7516e36b3f",
-      "origin": "Issue #32 owner判断2026-10-21でNIHOが独立作成した、ディテールをwasmのプレビューへ送る規則（作業コピーのdrag中のNR・量の無いdetail）。実データを含まない。"
+      "origin": "Issue #32 owner判断2026-10-21でNIHOが独立作成した、ディテールをwasmのプレビューへ送る規則（作業コピーのdrag中のNR・量の無いdetail）。実データを含まない。\n変更理由: Issue #32 detail uses v6 because Issue #31 masks already owns v5; synchronize the Rust and TypeScript contract, probe, tests, and documentation.\n変更理由: Issue #32 detail settings now require v6 because v5 belongs to local masks."
     },
     {
       "path": "packages/photo-editing/src/develop-engine/develop-detail-preview.test.ts",
       "sha256": "1ba38ac3f0f5e9fe52b908f5d141bc02b9432fcf4cfc0858ffd15b9d8c9a9f9e",
-      "origin": "Issue #32 owner判断2026-10-21でNIHOが独立作成した、プレビューへの送り方の回帰。合成の設定だけを使う。"
+      "origin": "Issue #32 owner判断2026-10-21でNIHOが独立作成した、プレビューへの送り方の回帰。合成の設定だけを使う。\n変更理由: Issue #32 detail uses v6 because Issue #31 masks already owns v5; synchronize the Rust and TypeScript contract, probe, tests, and documentation."
     }
   ],
   "excludedSources": [

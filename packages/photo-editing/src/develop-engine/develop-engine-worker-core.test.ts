@@ -310,7 +310,7 @@ describe("createDevelopEngineWorkerHandler", () => {
     expect(autoLog).toHaveBeenCalledWith({ stage: "autoSettings", durationMs: 0, wasmMemoryBytes: 65_536, status: "ok" });
   });
 
-  it("wasm が v: 3 の効果・v: 4 の色ポイント・v: 5 のディテールを通せば、それぞれの ready capability を付ける", async () => {
+  it("wasm が v: 3 の効果・v: 4 の色ポイント・v: 6 のディテールを通せば、それぞれの ready capability を付ける", async () => {
     const glue = fakeGlue();
     const validateSettings = vi.fn((_settingsJson: string) => "[]");
     const { handler, posted } = setup({ module: { ...glue.module, validateSettings } });
@@ -339,7 +339,7 @@ describe("createDevelopEngineWorkerHandler", () => {
       colorPoints: [{ id: "probe" }],
     });
     expect(JSON.parse(validateSettings.mock.calls[2]?.[0] ?? "null")).toEqual({
-      v: 5,
+      v: 6,
       engine: "niho-10",
       look: "niho-standard-1",
       base: null,
@@ -347,10 +347,10 @@ describe("createDevelopEngineWorkerHandler", () => {
     });
   });
 
-  it("v: 5 のディテールを断る wasm（古い crate）には detail の capability を付けない", async () => {
+  it("v: 6 のディテールを断る wasm（古い crate）には detail の capability を付けない", async () => {
     const glue = fakeGlue();
     const validateSettings = vi.fn((settingsJson: string) =>
-      JSON.parse(settingsJson).v === 5 ? JSON.stringify([{ path: "v", code: "unsupportedVersion" }]) : "[]",
+      JSON.parse(settingsJson).v === 6 ? JSON.stringify([{ path: "v", code: "unsupportedVersion" }]) : "[]",
     );
     const { handler, posted } = setup({ module: { ...glue.module, validateSettings } });
     await handler({ type: "init", id: 1, manifestUrl: MANIFEST_URL });
@@ -394,7 +394,7 @@ describe("createDevelopEngineWorkerHandler", () => {
     }
   });
 
-  it("幾何の口と v3/v4/v5 設定があれば ready に全 capability を付ける", async () => {
+  it("幾何の口と v3/v4/v6 設定があれば ready に全 capability を付ける", async () => {
     const glue = fakeGlue();
     const { handler, posted } = setup({
       module: {

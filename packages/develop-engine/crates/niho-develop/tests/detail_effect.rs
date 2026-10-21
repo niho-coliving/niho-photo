@@ -1,4 +1,4 @@
-//! How v5 detail acts on every input kind (Issue #32), measured on public
+//! How v6 detail acts on every input kind (Issue #32), measured on public
 //! synthetic charts only: a vertical step edge with seeded, per-channel
 //! independent noise on both flat halves.
 //!

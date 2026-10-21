@@ -50,7 +50,7 @@ export {
  * - 効果（白黒・周辺光量補正・粒子。E1 移行元設計）は口が増えないので、Worker が起こした wasm に効果のある設定（`v: 3`）を
  *   読めるか確かめさせる（`supportsEffects()`。版の比較ではない: 画面と wasm の公開が前後すると、効果のある設定を保存したのに
  *   描けない写真ができる。移行元設計）。読めない wasm では、画面は項目を出さない
- * - ディテール（シャープ・ノイズ軽減。v5。Issue #32）も同じく `supportsDetail()` で確かめる。量の無い `detail` は外して送る。
+ * - ディテール（シャープ・ノイズ軽減。v6。Issue #32）も同じく `supportsDetail()` で確かめる。量の無い `detail` は外して送る。
  *   16bit PNG の作業コピー（RAW など）を開いている間は、drag 中（interactive）の描画で NR を計算し直さない（旧 RAW・raster は
  *   `detail` を外し、signed RAW は直前の確定描画の NR のまま。`develop-detail-preview.ts`・`docs/detail-processing.md`）。確定描画・
  *   見本・色取得・書き出しは今の値を送る
@@ -204,7 +204,7 @@ export type DevelopEngine = {
   supportsEffects: () => Promise<boolean>;
   /** 独立した色ミキサー（`developSettings` v4）を読んで描ける wasm か。 */
   supportsColorPoints: () => Promise<boolean>;
-  /** ディテール（シャープ・ノイズ軽減。`developSettings` v5。Issue #32）を読んで描ける wasm か。throw しない */
+  /** ディテール（シャープ・ノイズ軽減。`developSettings` v6。Issue #32）を読んで描ける wasm か。throw しない */
   supportsDetail: () => Promise<boolean>;
   /**
    * JPEG / PNG の寸法（EXIF の向きを反映。ヘッダーだけ読む）。bytes は Worker へコピーで渡す（呼び出し側の ArrayBuffer はそのまま

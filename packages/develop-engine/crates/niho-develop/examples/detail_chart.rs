@@ -1,4 +1,4 @@
-//! Synthetic chart and statistics for comparing v5 detail with Lightroom
+//! Synthetic chart and statistics for comparing v6 detail with Lightroom
 //! (Issue #32, `docs/detail-processing.md`). Only generated pixels; no photo.
 //!
 //!   cargo run --release -p niho-develop --example detail_chart -- write <chart.png>

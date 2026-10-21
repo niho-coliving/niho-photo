@@ -289,7 +289,7 @@ export function detailControlsAvailable(input: DevelopSourceInput | null | undef
 
 /**
  * wasm で開いた PC の右パネルに出す項目（`visibleKeys`。省くと基本の 13 項目）。効果（v: 3）・ディテール（シャープ・ノイズ軽減。
- * v: 5。Issue #32）は、それぞれ読めると確かめた wasm の写真にだけ足す。並びは群の定義のまま（ディテールは効果の後ろ）。スマホの面は
+ * v: 6。Issue #32）は、それぞれ読めると確かめた wasm の写真にだけ足す。並びは群の定義のまま（ディテールは効果の後ろ）。スマホの面は
  * 道具の帯が 7 つで幅いっぱい（375px で実測）なので、効果と同じくまだ足さない。
  */
 export function browserAdjustmentKeys(options: {

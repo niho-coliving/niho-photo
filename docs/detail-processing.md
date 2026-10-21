@@ -1,10 +1,10 @@
-# ディテール（シャープ・ノイズ軽減。developSettings v5）
+# ディテール（シャープ・ノイズ軽減。developSettings v6）
 
 Issue #32。Lightroom のディテール（シャープ・輝度のノイズ軽減・カラーノイズの軽減）を段 2 に足し、JPEG / PNG と RAW のどちらでも描く。XMP の取り込みで「使えない項目」として知らせていたシャープ・ノイズ軽減は、近い式で描く項目（`approximate`）になる。色のパイプラインは変えない。
 
 ## 保存形
 
-`developSettings.detail` が存在する設定は `v: 5` とする。形は次の exact object で、未知キー、欠落、非有限値、範囲外を Rust と TypeScript の両方で拒否する。
+`developSettings.detail` が存在する設定は `v: 6` とする。v5 は部分補正（マスク、Issue #31）が使う。形は次の exact object で、未知キー、欠落、非有限値、範囲外を Rust と TypeScript の両方で拒否する。
 
 ```json
 {
@@ -14,8 +14,8 @@ Issue #32。Lightroom のディテール（シャープ・輝度のノイズ軽�
 ```
 
 - `sharpening.amount` 0〜150、`radius` 0.5〜3.0、`detail` 0〜100、`masking` 0〜100、`luminanceNoiseReduction` 0〜100。
-- `colorNoiseReduction`（0〜100）は任意。省略は signed RAW の旧 top-level `colorNoiseReduction`（R209、上限 50）を保ち、明示値は 0 を含めてそれを上書きする。JPEG / PNG・旧（unsigned）RAW は旧 top-level 値を引き続き無視し、v5 内で明示された値だけを使う。従って RAW でも raster でもカラー NR は一回だけ。
-- 画面はすべてが既定（シャープ 0・半径 1・ディテール 25・マスク 0・ノイズ軽減 0・カラーの明示なし）に戻ったら `detail` ごと消す。ディテールを使っていない写真は v5 にならない。
+- `colorNoiseReduction`（0〜100）は任意。省略は signed RAW の旧 top-level `colorNoiseReduction`（R209、上限 50）を保ち、明示値は 0 を含めてそれを上書きする。JPEG / PNG・旧（unsigned）RAW は旧 top-level 値を引き続き無視し、v6 内で明示された値だけを使う。従って RAW でも raster でもカラー NR は一回だけ。
+- 画面はすべてが既定（シャープ 0・半径 1・ディテール 25・マスク 0・ノイズ軽減 0・カラーの明示なし）に戻ったら `detail` ごと消す。ディテールを使っていない写真は v6 にならない。
 
 ## 処理順
 
@@ -34,7 +34,7 @@ NR は linear ProPhoto でカラーを処理する（JPEG / PNG は往復行列�
 
 Session の再利用単位は immutable source、NR 量、working size、geometry window、quality。量・サイズ・geometry・Interactive / Final の変更で一致しない cache を再利用しない。RAW の canonical response / statistics cache も effective CNR と輝度 NR 量を key に含める。
 
-明示 v5 カラー NR の 0〜50 は R209 と同じ。50 を超える範囲では同じ guided filter の正則化を連続的に強め、100 で 50 時の 4 倍とする（複数の NR 段を重ねる方式ではない）。輝度に沿った正則化なので、輝度が完全に平らな色ノイズでは 50 と 100 が同じになり、センサーのように各チャンネルに独立なノイズで差が出る。旧 top-level は従来通り 50 で飽和する。新しい 50〜100 の範囲は NIHO の設計値で、Lightroom への一致を校正済みとは主張しない。
+明示 v6 カラー NR の 0〜50 は R209 と同じ。50 を超える範囲では同じ guided filter の正則化を連続的に強め、100 で 50 時の 4 倍とする（複数の NR 段を重ねる方式ではない）。輝度に沿った正則化なので、輝度が完全に平らな色ノイズでは 50 と 100 が同じになり、センサーのように各チャンネルに独立なノイズで差が出る。旧 top-level は従来通り 50 で飽和する。新しい 50〜100 の範囲は NIHO の設計値で、Lightroom への一致を校正済みとは主張しない。
 
 ### drag と final
 
@@ -73,7 +73,7 @@ Photo Bench はどれも描かなかったので、Photo Bench の level は uns
 - PC の右パネルの効果の後ろに「ディテール」の群を足す。並びは Lightroom と同じ: シャープ・半径・ディテール・マスク・ノイズ軽減・カラーノイズの軽減。半径は 0.1 刻みで小数 1 桁、ほかは整数。見出し・ⓘ・スライダーは既存の群と同じ部品（押せる高さ 44px）。
 - スマホの面（道具の帯）にはまだ出さない。帯は今の 7 つの道具（プリセット・自動・ライト・カラー・効果・色ミキサー・切り抜き）で幅いっぱいで、8 つ目を足すと 360〜390px で名前が重なり端が欠ける（同じ CSS の帯で実測: 375px で隣との隙間が -10.5px、430px で +4.5px）。効果と同じく、帯の作り替えと合わせて足す。
 - シャープが 0 の間は半径・ディテール・マスクを薄くして押せなくする（行は出したまま）。群名の横の ⓘ に項目ごとの 1 行の説明。シャープは「指を離すと反映します」、ノイズ軽減・カラーノイズの軽減は JPEG と挙動が違う所だけ「RAW などは指を離すと反映します」を足す。
-- `v: 5` を読める wasm（Worker の `validateSettings` で最小の v5 を確かめる `ready.detail`）で開いた写真に出す。RAW・HEIC / TIFF の作業コピーや、RAW を開いている途中の仮の画にも出す（owner 判断 2026-10-21）。
+- `v: 6` を読める wasm（Worker の `validateSettings` で最小の v6 を確かめる `ready.detail`）で開いた写真に出す。RAW・HEIC / TIFF の作業コピーや、RAW を開いている途中の仮の画にも出す（owner 判断 2026-10-21）。
 
 ### プレビューへの送り方（owner 判断 2026-10-21）
 
@@ -145,10 +145,10 @@ NIHO 側の今の値（手順 3〜4、niho-10・native CLI、2048×1366）:
 
 ## 版 `v` の定義箇所
 
-マスク（Issue #31）も `v` を上げる予定のため、rebase で 5 / 6 を入れ替えるときは次をそろえる。
+Issue #31 のマスクが v5 を先に使うため、Issue #32 の detail は v6 を使う。次の実装・fixtureでもこの対応を保つ。
 
-- Rust `crates/niho-develop/src/settings.rs`: `DETAIL_SETTINGS_VERSION`（5）、`MAX_SETTINGS_VERSION`、`from_value` の `v` の読み（`n == 5.0`）と `unsupportedVersion` の文言、`required_version`、`validate` の `versionTooLow` の文言、同ファイルの test（`{"v":5}` / `{"v":6}`）。
-- Rust の test: `tests/detail_cross_target.rs`（`settings.v = 5`）、`tests/niho3.rs`・`tests/xmp_detail.rs`（`v == 5`）、`crates/niho-develop-render/tests/cli.rs`（`MAX_SETTINGS_VERSION + 1` を未来の版として使う）。
-- TypeScript `packages/photo-editing/src/develop-engine/develop-settings.ts`: `DevelopSettingsVersion`、`isDevelopSettingsVersion`、`developSettingsVersion`、`readDevelopSettings` の `value.v < 5`。
-- TypeScript `develop-engine-worker-core.ts`: `DETAIL_PROBE_SETTINGS_JSON` の `v: 5`。test は `develop-settings.test.ts`・`develop-open-settings.test.ts`・`photo-editing-color-mixer.test.tsx`（未知の版 6）・`photo-editing-detail.test.ts`・`develop-engine-worker-core.test.ts`。
-- `packages/develop-engine/scripts/bench-session.mjs` の `detail` scenario（`v: Math.max(5, …)`）。
+- Rust `crates/niho-develop/src/settings.rs`: `DETAIL_SETTINGS_VERSION`（6）、`MAX_SETTINGS_VERSION`、`from_value` の `v` の読み（`n == 6.0`）と `unsupportedVersion` の文言、`required_version`、`validate` の `versionTooLow` の文言、同ファイルの test（v5 は引き続き有効、v6 は detail、v7 は未来版）。
+- Rust の test: `tests/detail_cross_target.rs`（`settings.v = 6`）、`tests/niho3.rs`・`tests/xmp_detail.rs`（`v == 6`）、`crates/niho-develop-render/tests/cli.rs`（`MAX_SETTINGS_VERSION + 1` を未来の版として使う）。
+- TypeScript `packages/photo-editing/src/develop-engine/develop-settings.ts`: `DevelopSettingsVersion`、`isDevelopSettingsVersion`、`developSettingsVersion`、`readDevelopSettings` の `value.v < 6`。
+- TypeScript `develop-engine-worker-core.ts`: `DETAIL_PROBE_SETTINGS_JSON` の `v: 6`。test は `develop-settings.test.ts`・`develop-open-settings.test.ts`・`photo-editing-color-mixer.test.tsx`（未知の版 7）・`photo-editing-detail.test.ts`・`develop-engine-worker-core.test.ts`。
+- `packages/develop-engine/scripts/bench-session.mjs` の `detail` scenario（`v: Math.max(6, …)`）。

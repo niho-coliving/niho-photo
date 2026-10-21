@@ -1,4 +1,4 @@
-//! Lightroom's Detail panel <-> v5 `developSettings.detail` (Issue #32):
+//! Lightroom's Detail panel <-> v6 `developSettings.detail` (Issue #32):
 //! which XMP keys are read, how Camera Raw's defaults are treated, the
 //! reported levels, the writer, and the preset amount.
 
@@ -74,7 +74,7 @@ fn raw_defaults_are_applied_as_written_on_every_engine() {
             color_noise_reduction: Some(25.0),
         })
     );
-    assert_eq!(on_raster.settings.v, 5);
+    assert_eq!(on_raster.settings.v, 6);
     assert!(
         on_raster.unsupported.is_empty(),
         "{:?}",
@@ -150,7 +150,7 @@ fn missing_companions_take_the_photos_value_or_camera_raws_default() {
         .unwrap()
         .settings;
     assert_eq!(kept.detail, edited.detail);
-    assert_eq!(kept.v, 5);
+    assert_eq!(kept.v, 6);
 }
 
 #[test]
@@ -276,7 +276,7 @@ fn the_preset_amount_moves_every_detail_value_from_what_the_photo_renders() {
     assert_eq!(detail.sharpening.radius, 1.5);
     assert_eq!(detail.luminance_noise_reduction, 20.0);
     assert_eq!(detail.color_noise_reduction, Some(30.0));
-    assert_eq!(half.v, 5);
+    assert_eq!(half.v, 6);
 
     let over = xmp::apply_preset(&preset, &raster(), 1.5, None)
         .unwrap()

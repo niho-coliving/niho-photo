@@ -14,7 +14,7 @@ import { browserAdjustmentKeys, detailControlsAvailable } from "./browser-photo-
 import { PhotoEditingAdjustmentGroups, type PhotoEditingSliderPhase } from "./photo-editing-adjustment-controls";
 
 /**
- * 共通の補正パネルのディテール（シャープ・ノイズ軽減。Issue #32）。v5 を読める wasm の写真の面だけが `visibleKeys` に入れて出す、
+ * 共通の補正パネルのディテール（シャープ・ノイズ軽減。Issue #32）。v6 を読める wasm の写真の面だけが `visibleKeys` に入れて出す、
  * 効果の後ろの群。
  */
 
@@ -104,7 +104,7 @@ afterEach(() => {
 });
 
 describe("ディテールの群は opt-in", () => {
-  it("ディテールのキーを渡さない面（v5 を読めない wasm・NIHO Desktop・S1 の canvas）には出ない", async () => {
+  it("ディテールのキーを渡さない面（v6 を読めない wasm・NIHO Desktop・S1 の canvas）には出ない", async () => {
     await render({ initial: NEUTRAL });
     expect(groupTitles()).toEqual(["ライト", "カラー", "効果"]);
     await render({ initial: NEUTRAL, visibleKeys: [...PHOTO_EDITING_BASE_CONTROL_KEYS, ...PHOTO_EDITING_EFFECT_KEYS] });
@@ -153,7 +153,7 @@ describe("ディテールの群は opt-in", () => {
     await render({ initial: raw, visibleKeys: browserAdjustmentKeys({ effects: true, detail: true }) });
     expect(groupTitles()).toContain("ディテール");
     expect(slider("ディテール", "カラーノイズの軽減").value).toBe("25");
-    // 旧の値と同じに戻すと明示を消す（R209 と同じ画素・detail ごと消えて v5 にしない）
+    // 旧の値と同じに戻すと明示を消す（R209 と同じ画素・detail ごと消えて v6 にしない）
     await moveSlider(slider("ディテール", "カラーノイズの軽減"), "10");
     expect(changes.at(-1)?.settings.detail).toMatchObject({ colorNoiseReduction: 10 });
     await moveSlider(slider("ディテール", "カラーノイズの軽減"), "25");
@@ -162,7 +162,7 @@ describe("ディテールの群は opt-in", () => {
 });
 
 describe("ディテールのスライダー", () => {
-  it("シャープが 0 の間は半径・ディテール・マスクを押せず、動かすと v5 の detail を書いて押せるようになる", async () => {
+  it("シャープが 0 の間は半径・ディテール・マスクを押せず、動かすと v6 の detail を書いて押せるようになる", async () => {
     await render({ initial: NEUTRAL, visibleKeys: DETAIL_KEYS });
     expect(["半径", "ディテール", "マスク"].map((label) => slider("ディテール", label).disabled)).toEqual([true, true, true]);
     expect(slider("ディテール", "ノイズ軽減").disabled).toBe(false);
@@ -182,7 +182,7 @@ describe("ディテールのスライダー", () => {
     expect(container.textContent).toContain("1.7");
   });
 
-  it("ノイズ軽減・カラーノイズの軽減を 0 に戻すと detail を消す（ディテールを使わない写真は v5 にしない）", async () => {
+  it("ノイズ軽減・カラーノイズの軽減を 0 に戻すと detail を消す（ディテールを使わない写真は v6 にしない）", async () => {
     await render({ initial: NEUTRAL, visibleKeys: DETAIL_KEYS });
     await moveSlider(slider("ディテール", "カラーノイズの軽減"), "40");
     expect(changes.at(-1)?.settings.detail).toMatchObject({ colorNoiseReduction: 40 });

@@ -557,7 +557,7 @@ describe("createDevelopEngine", () => {
       await flushPromises();
     };
     const detail = { sharpening: { amount: 40, radius: 1, detail: 25, masking: 0 }, luminanceNoiseReduction: 20 };
-    const jpeg = { v: 5, engine: "niho-10", look: "niho-standard-1", detail };
+    const jpeg = { v: 6, engine: "niho-10", look: "niho-standard-1", detail };
 
     // JPEG / PNG（open）は drag 中も今の値（NR を描く。シャープは crate が Final だけで当てる）
     const opened = engine.open(new ArrayBuffer(4), 2560);
@@ -568,19 +568,19 @@ describe("createDevelopEngine", () => {
     await finishRender();
 
     // 旧 RAW の作業コピー: drag 中は detail を外し、確定描画は今の値
-    const unsigned = { v: 5, engine: "niho-2", look: "niho-standard-1", detail };
+    const unsigned = { v: 6, engine: "niho-2", look: "niho-standard-1", detail };
     const working = engine.openWorkingCopy(new ArrayBuffer(8), '{"kind":"raw"}');
     worker.respond({ type: "opened", id: worker.lastRequest("openWorkingCopy").id, width: 2560, height: 1707 });
     await working;
     void engine.render(unsigned, { maxDimension: 1280, interactive: true });
-    expect(JSON.parse(sentRender())).toEqual({ v: 5, engine: "niho-2", look: "niho-standard-1" });
+    expect(JSON.parse(sentRender())).toEqual({ v: 6, engine: "niho-2", look: "niho-standard-1" });
     await finishRender();
     void engine.render(unsigned, { maxDimension: 1280, interactive: false });
     expect(JSON.parse(sentRender())).toEqual(unsigned);
     await finishRender();
 
     // signed RAW: drag 中は直前の確定描画の NR のまま（master を作り直さない）。確定描画は今の値
-    const signed = { v: 5, engine: "niho-11", look: "niho-standard-5", detail: { ...detail, colorNoiseReduction: 30 } };
+    const signed = { v: 6, engine: "niho-11", look: "niho-standard-5", detail: { ...detail, colorNoiseReduction: 30 } };
     void engine.render(signed, { maxDimension: 1280, interactive: false });
     expect(JSON.parse(sentRender())).toEqual(signed);
     await finishRender();
@@ -614,10 +614,10 @@ describe("createDevelopEngine", () => {
       worker.respond(frameResponse(worker.lastRequest("render").id, 1));
       await flushPromises();
     }
-    const inert = { ...plain, v: 5, detail: { sharpening: { amount: 0, radius: 2, detail: 25, masking: 0 }, luminanceNoiseReduction: 0 } };
+    const inert = { ...plain, v: 6, detail: { sharpening: { amount: 0, radius: 2, detail: 25, masking: 0 }, luminanceNoiseReduction: 0 } };
     for (const interactive of [false, true]) {
       void engine.render(inert, { maxDimension: 1280, interactive });
-      expect((worker.lastRequest("render") as { settingsJson: string }).settingsJson).toBe(JSON.stringify({ ...plain, v: 5 }));
+      expect((worker.lastRequest("render") as { settingsJson: string }).settingsJson).toBe(JSON.stringify({ ...plain, v: 6 }));
       worker.respond(frameResponse(worker.lastRequest("render").id, 1));
       await flushPromises();
     }

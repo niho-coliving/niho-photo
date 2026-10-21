@@ -139,7 +139,7 @@ fn engine_look_pairs_fail_closed() {
 fn xmp_cnr_reaches_rasters_through_detail_and_keeps_the_niho3_field() {
     let preset = xmp::builtin_preset("niho-colorful").unwrap().xmp;
     // Without a base (neutral niho-1, a raster engine) the preset's CNR 25
-    // and Sharpness 40 render through v5 detail (Issue #32); the legacy
+    // and Sharpness 40 render through v6 detail (Issue #32); the legacy
     // top-level field, which rasters ignore, stays untouched.
     let raster_result = xmp::preset_settings(preset, None).unwrap();
     let raster_cnr = raster_result
@@ -156,10 +156,10 @@ fn xmp_cnr_reaches_rasters_through_detail_and_keeps_the_niho3_field() {
         .as_object()
         .unwrap()
         .contains_key("colorNoiseReduction"));
-    let detail = raster.detail.expect("v5 detail");
+    let detail = raster.detail.expect("v6 detail");
     assert_eq!(detail.color_noise_reduction, Some(25.0));
     assert_eq!(detail.sharpening.amount, 40.0);
-    assert_eq!(raster.v, 5);
+    assert_eq!(raster.v, 6);
 
     let base = niho3();
     let result = xmp::preset_settings(preset, Some(&base)).unwrap();
@@ -209,7 +209,7 @@ fn xmp_cnr_reaches_rasters_through_detail_and_keeps_the_niho3_field() {
     let strong = cnr_only.replace("\"31\"", "\"80\"");
     let extended = xmp::preset_settings(&strong, Some(&base)).unwrap().settings;
     assert_eq!(extended.detail.unwrap().color_noise_reduction, Some(80.0));
-    assert_eq!(extended.v, 5);
+    assert_eq!(extended.v, 6);
 }
 
 #[test]

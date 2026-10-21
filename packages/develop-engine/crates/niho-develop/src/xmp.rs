@@ -1881,7 +1881,7 @@ pub fn preset_settings(
             .map(|v| v.clamp(0.0, 100.0))
             .unwrap_or(inherited.color_noise_reduction_smoothness);
     }
-    // Sharpening and noise reduction (v5 detail) after the engine and the
+    // Sharpening and noise reduction (v6 detail) after the engine and the
     // legacy signed-RAW color NR are final (detail.rs decides whether the
     // legacy field can carry the value).
     doc.apply_detail(&mut settings);
@@ -2056,7 +2056,7 @@ mod tests {
         assert_eq!(r.settings.contrast, -20.0);
         assert!(r.approximate.contains(&"Exposure2012".to_string()));
         // Sharpness 0 renders no sharpening, exactly like Lightroom at 0
-        // (Issue #32), and creates no v5 detail.
+        // (Issue #32), and creates no v6 detail.
         let sharpness = r.items.iter().find(|i| i.property == "Sharpness").unwrap();
         assert_eq!(sharpness.level, Level::Exact);
         assert_eq!(sharpness.photo_bench_level, Level::Unsupported);

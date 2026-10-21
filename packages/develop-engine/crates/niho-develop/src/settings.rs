@@ -523,7 +523,7 @@ impl GrainSettings {
 pub const GRAIN_SEED_MAX: f64 = u32::MAX as f64;
 
 /// Output-resolution sharpening controls. The defaults are serialized when
-/// a v5 `detail` object exists so its shape is exact and cross-language.
+/// a v6 `detail` object exists so its shape is exact and cross-language.
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct SharpeningSettings {
     pub amount: f64,
@@ -543,7 +543,7 @@ impl Default for SharpeningSettings {
     }
 }
 
-/// v5 detail processing. `color_noise_reduction: None` deliberately differs
+/// v6 detail processing. `color_noise_reduction: None` deliberately differs
 /// from `Some(0)`: absent preserves a signed-RAW edit's legacy R209 amount,
 /// while a present value overrides it. Raster inputs never inherit the old
 /// top-level color-noise field.
@@ -624,7 +624,7 @@ pub struct DevelopSettings {
     pub gray_mixer: GrayMixer,
     pub vignette: VignetteSettings,
     pub grain: GrainSettings,
-    /// Optional v5 detail group. Presence, not activity, requires v5.
+    /// Optional v6 detail group. Presence, not activity, requires v6.
     pub detail: Option<DetailSettings>,
     /// `EditSettings` values the converter could not carry over.
     pub legacy_settings: Option<Map<String, Value>>,
@@ -832,20 +832,20 @@ impl DevelopSettings {
             match path {
                 "v" => {
                     let n = number(v, path)?;
-                    s.v = match n {
-                        _ if n == 1.0 => 1,
-                        _ if n == 2.0 => 2,
-                        _ if n == 3.0 => 3,
-                        _ if n == 4.0 => 4,
-                        _ if n == 5.0 => 5,
-                        _ => {
-                            return Err(SettingsError::new(
+                    s.v =
+                        match n {
+                            _ if n == 1.0 => 1,
+                            _ if n == 2.0 => 2,
+                            _ if n == 3.0 => 3,
+                            _ if n == 4.0 => 4,
+                            _ if n == 5.0 => 5,
+                            _ if n == 6.0 => 6,
+                            _ => return Err(SettingsError::new(
                                 path,
                                 "unsupportedVersion",
-                                "only v = 1, v = 2, v = 3, v = 4, and v = 5 are supported",
-                            ))
-                        }
-                    };
+                                "only v = 1, v = 2, v = 3, v = 4, v = 5, and v = 6 are supported",
+                            )),
+                        };
                 }
                 "engine" => {
                     let e = string(v, path)?;
@@ -2007,8 +2007,8 @@ mod tests {
     }
 
     #[test]
-    fn detail_v5_is_exact_round_trips_and_preserves_explicit_zero_override() {
-        let json = r#"{"v":5,"detail":{"sharpening":{"amount":0,"radius":1,"detail":25,"masking":0},"luminanceNoiseReduction":0,"colorNoiseReduction":0}}"#;
+    fn detail_v6_is_exact_round_trips_and_preserves_explicit_zero_override() {
+        let json = r#"{"v":6,"detail":{"sharpening":{"amount":0,"radius":1,"detail":25,"masking":0},"luminanceNoiseReduction":0,"colorNoiseReduction":0}}"#;
         let parsed = DevelopSettings::from_json(json).unwrap();
         assert_eq!(parsed.required_version(), DETAIL_SETTINGS_VERSION);
         assert!(parsed.is_neutral());
@@ -2022,7 +2022,7 @@ mod tests {
             .is_some());
 
         let inherited = DevelopSettings::from_json(
-            r#"{"v":5,"colorNoiseReduction":31,"detail":{"sharpening":{"amount":0,"radius":1,"detail":25,"masking":0},"luminanceNoiseReduction":0}}"#,
+            r#"{"v":6,"colorNoiseReduction":31,"detail":{"sharpening":{"amount":0,"radius":1,"detail":25,"masking":0},"luminanceNoiseReduction":0}}"#,
         )
         .unwrap();
         assert_eq!(inherited.raw_color_noise_reduction(), 31.0);
@@ -2031,17 +2031,17 @@ mod tests {
     #[test]
     fn detail_rejects_empty_partial_unknown_nonfinite_ranges_and_old_version() {
         let error = |json: &str| DevelopSettings::from_json(json).unwrap_err();
-        assert_eq!(error(r#"{"v":5,"detail":{}}"#).path, "detail.sharpening");
+        assert_eq!(error(r#"{"v":6,"detail":{}}"#).path, "detail.sharpening");
         assert_eq!(
-            error(r#"{"v":5,"detail":{"sharpening":{"amount":0,"radius":1,"detail":25,"masking":0,"future":1},"luminanceNoiseReduction":0}}"#).code,
+            error(r#"{"v":6,"detail":{"sharpening":{"amount":0,"radius":1,"detail":25,"masking":0,"future":1},"luminanceNoiseReduction":0}}"#).code,
             "unknownKey"
         );
         assert_eq!(
-            error(r#"{"v":5,"detail":{"sharpening":{"amount":0,"radius":1,"detail":25,"masking":0},"luminanceNoiseReduction":"NaN"}}"#).code,
+            error(r#"{"v":6,"detail":{"sharpening":{"amount":0,"radius":1,"detail":25,"masking":0},"luminanceNoiseReduction":"NaN"}}"#).code,
             "invalidType"
         );
         let out_of_range = DevelopSettings::from_json(
-            r#"{"v":5,"detail":{"sharpening":{"amount":151,"radius":0.4,"detail":101,"masking":-1},"luminanceNoiseReduction":101,"colorNoiseReduction":-1}}"#,
+            r#"{"v":6,"detail":{"sharpening":{"amount":151,"radius":0.4,"detail":101,"masking":-1},"luminanceNoiseReduction":101,"colorNoiseReduction":-1}}"#,
         )
         .unwrap();
         assert_eq!(out_of_range.validate().len(), 6);

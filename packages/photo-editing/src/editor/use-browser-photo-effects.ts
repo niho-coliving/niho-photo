@@ -55,7 +55,7 @@ export function useBrowserPhotoColorPointsSupport(params: {
 }
 
 /**
- * ディテール（シャープ・ノイズ軽減。Issue #32）の項目を出せるか。ディテールのある設定は `v: 5` で保存するので、効果と同じく
+ * ディテール（シャープ・ノイズ軽減。Issue #32）の項目を出せるか。ディテールのある設定は `v: 6` で保存するので、効果と同じく
  * 起こした wasm が読めると確かめてから出す（確かめている間・読めない wasm・wasm を使えないときは false）。
  */
 export function useBrowserPhotoDetailSupport(params: {

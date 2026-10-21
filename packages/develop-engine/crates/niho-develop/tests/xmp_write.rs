@@ -106,7 +106,7 @@ fn everything() -> DevelopSettings {
     s.grain.size = 35.0;
     s.grain.roughness = 55.0;
     s.grain.seed = Some(20_260_930.0);
-    // v5 detail (Issue #32): Camera Raw stores these as integers except the
+    // v6 detail (Issue #32): Camera Raw stores these as integers except the
     // radius, which has one decimal.
     s.detail = Some(DetailSettings {
         sharpening: SharpeningSettings {
@@ -272,7 +272,7 @@ fn groups_decide_what_is_written() {
     for group in XmpGroup::ALL {
         let keys = written_keys(&s, &[group]);
         if group == XmpGroup::NoiseReduction {
-            // A raster engine renders NR only through v5 detail.
+            // A raster engine renders NR only through v6 detail.
             assert_eq!(
                 keys,
                 BTreeSet::from(

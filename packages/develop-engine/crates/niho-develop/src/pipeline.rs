@@ -1420,7 +1420,7 @@ impl<'a> RenderCaches<'a> {
     }
 }
 
-/// The exact pre-local v5 raster source retained by a Session. The key
+/// The exact pre-local v6 raster source retained by a Session. The key
 /// includes immutable source identity, NR amounts, working size, geometry
 /// window, whole-image scale and quality. `sampleColor` reads `image`, so it
 /// cannot accidentally sample the unfiltered source used to create it.
@@ -1431,7 +1431,7 @@ pub(crate) struct NoiseCache {
     stats: Option<LinearImage>,
 }
 
-/// Applies v5 source NR (color, then luminance) into `noise_cache`, or
+/// Applies v6 source NR (color, then luminance) into `noise_cache`, or
 /// clears it when no NR is active. Geometry windows include a halo and use
 /// the whole-frame long edge, so their filter footprint matches an uncropped
 /// render; the statistics source is reduced at its own full-resolution scale.
@@ -1758,7 +1758,7 @@ fn render_linear(
         legacy
     });
     let s = raster_legacy.as_ref().unwrap_or(s);
-    // v5 source NR precedes NIHO local tone processing. Raster color NR is
+    // v6 source NR precedes NIHO local tone processing. Raster color NR is
     // opt-in only: the legacy top-level field remains ignored on JPEG/PNG.
     let source_space = if input.is_some() {
         crate::detail::SourceSpace::LinearProPhoto
@@ -2491,7 +2491,7 @@ fn render_working_copy_with(
             // Signed RAW engines reduce noise once while preparing their
             // canonical master (niho3.rs / niho4.rs). A legacy unsigned RAW
             // working copy (niho-1 / niho-2 / niho-8) has no such master, so
-            // its v5 NR runs here on the linear ProPhoto source, before white
+            // its v6 NR runs here on the linear ProPhoto source, before white
             // balance and exposure, with the same cache as raster sources.
             let unsigned_legacy = !matches!(
                 s.engine.as_str(),

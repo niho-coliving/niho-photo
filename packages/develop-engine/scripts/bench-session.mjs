@@ -179,7 +179,7 @@ async function run() {
     for (let i = 0; i < DRAG_FRAMES; i++) {
       const settings = {
         ...currentSettings,
-        v: Math.max(5, currentSettings.v ?? 1),
+        v: Math.max(6, currentSettings.v ?? 1),
         detail: { ...baseDetail, sharpening: { ...baseDetail.sharpening, amount: 40 + i * 10 } },
       };
       const [value, timing] = timed(() => developer.render(JSON.stringify(settings), UI_MAX, true));

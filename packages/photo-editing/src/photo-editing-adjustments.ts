@@ -412,7 +412,7 @@ export const PHOTO_EDITING_ADJUSTMENT_GROUPS_WITH_EFFECTS: ReadonlyArray<PhotoEd
     }
     return group;
   }).concat([
-    // ディテール（シャープ・ノイズ軽減。Issue #32）は効果の後ろの群。v5 の `detail` を読める wasm で開いた写真の面だけが
+    // ディテール（シャープ・ノイズ軽減。Issue #32）は効果の後ろの群。v6 の `detail` を読める wasm で開いた写真の面だけが
     // `visibleKeys` に入れて出す（Lightroom のディテールと同じ並び。説明は群名の横の ⓘ）
     {
       id: "detail",

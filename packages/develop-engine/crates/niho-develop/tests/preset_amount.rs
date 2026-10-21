@@ -529,7 +529,7 @@ fn a_preset_never_carries_or_drops_the_crop() {
             let s = apply(p.xmp, &base, amount);
             assert_eq!(s.geometry, base.geometry, "{} at {amount}", p.id);
             // Never below the geometry's v 2; a preset's sharpening / NR
-            // (v5 detail, Issue #32) may raise it.
+            // (v6 detail, Issue #32) may raise it.
             assert!(s.v >= base.v, "{} at {amount}", p.id);
             assert_eq!(s.v, s.required_version(), "{} at {amount}", p.id);
             assert!(

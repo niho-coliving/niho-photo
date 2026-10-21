@@ -135,7 +135,7 @@ fn blend(
         t,
         (0.0, 100.0),
     );
-    // Detail (v5): each amount moves from the photo's value (NIHO's
+    // Detail (v6): each amount moves from the photo's value (NIHO's
     // default, or the color NR it renders today, when it has no `detail`).
     r.detail = super::detail::blend_detail(base, full, t, mix_in);
     for key in EFFECT_KEYS {
