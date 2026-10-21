@@ -1130,7 +1130,7 @@ fn version_and_help() {
         "niho-develop-render {}",
         niho_develop::CRATE_VERSION
     )));
-    assert!(version.stdout.contains("engine niho-12"));
+    assert!(version.stdout.contains("engine niho-13"));
     let help = run(&["--help"]);
     assert_eq!(help.code, 0);
     assert!(help.stdout.contains("Exit codes"));
@@ -1150,6 +1150,7 @@ fn settings_loader_accepts_all_formula_versions_and_rejects_unknown() {
         ("niho-10", "niho-standard-1"),
         ("niho-11", "niho-standard-5"),
         ("niho-12", "niho-standard-1"),
+        ("niho-13", "niho-standard-1"),
     ] {
         let settings = niho_develop_render::load_settings(&format!(
             r#"{{"v":1,"engine":"{engine}","look":"{look}"}}"#
@@ -1162,11 +1163,13 @@ fn settings_loader_accepts_all_formula_versions_and_rejects_unknown() {
     )
     .unwrap_err();
     assert_eq!(error.code, niho_develop_render::ErrorCode::InvalidSettings);
-    let error = niho_develop_render::load_settings(
-        r#"{"v":1,"engine":"niho-12","look":"niho-standard-5"}"#,
-    )
-    .unwrap_err();
-    assert_eq!(error.code, niho_develop_render::ErrorCode::InvalidSettings);
+    for engine in ["niho-12", "niho-13"] {
+        let error = niho_develop_render::load_settings(&format!(
+            r#"{{"v":1,"engine":"{engine}","look":"niho-standard-5"}}"#
+        ))
+        .unwrap_err();
+        assert_eq!(error.code, niho_develop_render::ErrorCode::InvalidSettings);
+    }
     let unsupported_engine =
         niho_develop_render::load_settings(r#"{"v":1,"engine":"niho-9","look":"niho-standard-5"}"#)
             .unwrap_err();
@@ -1176,9 +1179,9 @@ fn settings_loader_accepts_all_formula_versions_and_rejects_unknown() {
     );
     assert!(unsupported_engine
         .message
-        .contains("niho-1 through niho-8, niho-10, niho-11, and niho-12"));
+        .contains("niho-1 through niho-8, niho-10, niho-11, niho-12, and niho-13"));
     let missing_engine = niho_develop_render::load_settings(r#"{"v":1}"#).unwrap_err();
     assert!(missing_engine
         .message
-        .contains("niho-1 through niho-8, niho-10, niho-11, and niho-12"));
+        .contains("niho-1 through niho-8, niho-10, niho-11, niho-12, and niho-13"));
 }

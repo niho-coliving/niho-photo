@@ -140,12 +140,13 @@ describe("canRestoreDevelopSettingsDraft", () => {
     expect(canRestoreDevelopSettingsDraft({ ...base, draftSettings: { ...current, v: 99 as 1 } })).toBe(false);
   });
 
-  it("保存したことの無い写真では、既定が niho-12 になる前の niho-2 / niho-6 / niho-10 draft も戻す（土台・ルックが同じときだけ）", () => {
-    expect(current.engine).toBe("niho-12");
+  it("保存したことの無い写真では、既定が niho-13 になる前の niho-2 / niho-6 / niho-10 / niho-12 draft も戻す（土台・ルックが同じときだけ）", () => {
+    expect(current.engine).toBe("niho-13");
     const unsaved = { currentSettings: current, inputBase: null, hasSavedSettings: false };
     expect(canRestoreDevelopSettingsDraft({ ...unsaved, draftSettings: legacyDraft })).toBe(true);
     expect(canRestoreDevelopSettingsDraft({ ...unsaved, draftSettings: { ...legacyDraft, engine: "niho-6" } })).toBe(true);
     expect(canRestoreDevelopSettingsDraft({ ...unsaved, draftSettings: { ...legacyDraft, engine: "niho-10" } })).toBe(true);
+    expect(canRestoreDevelopSettingsDraft({ ...unsaved, draftSettings: { ...legacyDraft, engine: "niho-12" } })).toBe(true);
     // unsigned RAW の作業コピーの上の、既定が niho-2 だったころの draft も同じ
     const legacyRaw = "raw-apple.d8.p1.e1.cal-none";
     expect(
@@ -174,9 +175,12 @@ describe("canRestoreDevelopSettingsDraft", () => {
     expect(
       canRestoreDevelopSettingsDraft({ ...unsaved, currentSettings: { ...current, engine: "niho-2" }, draftSettings: { ...current } }),
     ).toBe(false);
-    // 今が保存済みの旧数式（niho-10）なら、新しい既定の niho-12 draft で読み替えない
+    // 今が保存済みの旧数式（niho-10 / niho-12）なら、新しい既定の niho-13 draft で読み替えない
     expect(
       canRestoreDevelopSettingsDraft({ ...unsaved, currentSettings: { ...current, engine: "niho-10" }, draftSettings: { ...current } }),
+    ).toBe(false);
+    expect(
+      canRestoreDevelopSettingsDraft({ ...unsaved, currentSettings: { ...current, engine: "niho-12" }, draftSettings: { ...current } }),
     ).toBe(false);
   });
 

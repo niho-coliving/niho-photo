@@ -20,6 +20,7 @@ pub mod exif;
 pub mod fastmath;
 pub mod frame;
 pub mod geometry;
+pub mod head_wb;
 pub mod icc_lut;
 mod jpeg_wb;
 pub mod local_mask;
@@ -63,11 +64,12 @@ pub use resize::Filter;
 pub use settings::{DevelopSettings, SettingsError};
 pub use spatial::Quality;
 
+use head_wb::HeadWhiteBalance;
 use std::{collections::BTreeMap, fmt, sync::Arc};
 
 /// Latest formula version this bundle can render. Settings constructors keep
 /// their own compatibility defaults; this advertises reader capability.
-pub const ENGINE_VERSION: &str = settings::ENGINE_NIHO_12;
+pub const ENGINE_VERSION: &str = settings::ENGINE_NIHO_13;
 /// Crate version (build artifacts are published per version).
 pub const CRATE_VERSION: &str = env!("CARGO_PKG_VERSION");
 
@@ -646,16 +648,64 @@ enum RawEngine {
 }
 
 /// The `niho-6` analysis shared by the sessions of one photo: its features
-/// (once) and the coefficient maps of the last exposure.
+/// (per head white balance, `niho-13` balancing the whole photo first) and
+/// the coefficient maps per white balance and exposure, the
+/// [`NIHO6_KEPT`] most recently used of each. Two, so the photo's own white
+/// balance and exposure survive the preset previews and auto candidates
+/// drawn at theirs (which otherwise make the photo's next released frame
+/// compute its analysis again).
 #[derive(Default)]
 struct Niho6AnalysisCache {
-    features: std::sync::Mutex<Option<Niho6Features>>,
-    at_exposure: std::sync::Mutex<Option<Niho6AtExposure>>,
+    features: std::sync::Mutex<Vec<Niho6Features>>,
+    at_exposure: std::sync::Mutex<Vec<Niho6AtExposure>>,
 }
 
-type Niho6Features = (String, Result<Arc<niho6::SourceFeatures>, String>);
-/// The analysis made at an exposure (its `f64` bits) and its result.
-type Niho6AtExposure = (String, u64, Result<Arc<niho6::Analysis>, String>);
+/// How many feature sets / analyses [`Niho6AnalysisCache`] keeps.
+const NIHO6_KEPT: usize = 2;
+
+/// The value of `key` in `slots` (most recent first), made and kept when
+/// missing; the least recently used is dropped first (one fewer in memory
+/// while making).
+fn most_recent<K: PartialEq + Clone, V: Clone>(
+    slots: &mut Vec<(K, V)>,
+    key: K,
+    make: impl FnOnce() -> V,
+) -> V {
+    if let Some(index) = slots.iter().position(|(cached_key, _)| cached_key == &key) {
+        let entry = slots.remove(index);
+        let value = entry.1.clone();
+        slots.insert(0, entry);
+        return value;
+    }
+    slots.truncate(NIHO6_KEPT - 1);
+    let value = make();
+    slots.insert(0, (key, value.clone()));
+    value
+}
+
+/// The features of the whole photo keyed by head white balance and detail
+/// settings.
+type Niho6Features = (
+    (Option<HeadWhiteBalance>, String),
+    Result<Arc<niho6::SourceFeatures>, String>,
+);
+
+/// The `niho-6` response gains of a frame size ([`niho6::ResponseGains`])
+/// and what they were made from: an analysis and the amounts. They do not
+/// depend on the pixels, so a drag of `niho-13`'s white balance (a new
+/// source each tick, the analysis of the frame before) keeps them.
+struct Niho6Gains {
+    analysis: Arc<niho6::Analysis>,
+    key: String,
+    gains: Arc<niho6::ResponseGains>,
+}
+
+/// The analysis made under a head white balance and detail amount at an
+/// exposure (its `f64` bits) and its result.
+type Niho6AtExposure = (
+    (Option<HeadWhiteBalance>, String, u64),
+    Result<Arc<niho6::Analysis>, String>,
+);
 
 /// A full-source NIHO 3 master and its reduction, set aside while unframed
 /// reduced Interactive frames draw from a display-size master. Releasing a
@@ -693,7 +743,15 @@ fn source_at_size_key<'a>(
 /// the window), the adaptive statistics, the cubes of the previous frame
 /// and the effects' planes.
 pub struct Session {
+    /// The decoded input as opened (never white-balanced).
+    original: Arc<SessionSource>,
+    /// What frames draw from: `original`, or (`niho-13` on a raster source)
+    /// `original` balanced by [`Session::source_white`] (`head_wb.rs`).
+    /// Every reduction, window, statistic, pass and master below is made
+    /// from it, so a change of the head white balance drops them.
     source: Arc<SessionSource>,
+    /// The head white balance `source` carries (`None`: it is `original`).
+    source_white: Option<HeadWhiteBalance>,
     filter: Filter,
     /// Preview output cap while retaining the full signed source for NIHO 3
     /// canonical analysis. Raster and legacy working-copy thumbnails keep
@@ -730,14 +788,16 @@ pub struct Session {
     /// computes it from [`Session::niho6_source`].
     niho6_analysis: Arc<Niho6AnalysisCache>,
     /// The whole photo the `niho-6` analysis reads (a preview's parent's
-    /// source, not its own reduction).
+    /// source, not its own reduction; never white-balanced: `niho-13`
+    /// balances it for the analysis).
     niho6_source: Arc<SessionSource>,
-    /// The `niho-6` analysis this session's last frame used. While dragging
-    /// (Interactive) this session's frames reuse it instead of making the
-    /// analysis again at every exposure tick. It is this session's own: the
+    /// The `niho-6` analysis this session's last frame used, with the head
+    /// white balance it was made under. While dragging (Interactive) this
+    /// session's frames reuse it instead of making the analysis again at
+    /// every exposure or white-balance tick. It is this session's own: the
     /// shared cache also holds the analyses of preset previews and auto
     /// candidates at their exposures, which must not stand in for it.
-    niho6_last_used: Option<Arc<niho6::Analysis>>,
+    niho6_last_used: Option<(Option<HeadWhiteBalance>, Arc<niho6::Analysis>)>,
     niho6_last_detail: Option<String>,
     /// Whether Interactive frames may reuse [`Session::niho6_last_used`]. Off
     /// for sessions made from another one (preset previews, auto
@@ -760,6 +820,8 @@ pub struct Session {
     /// frame's local pass, read when it is the layer's
     /// ([`pipeline::RenderCaches::sharing_local`]). `None` otherwise.
     local_shared: Option<pipeline::LocalPass>,
+    /// The response gains of the last `niho-6` master ([`Niho6Gains`]).
+    niho6_gains: Option<Niho6Gains>,
 }
 
 impl Session {
@@ -798,7 +860,10 @@ impl Session {
             niho6_last_used: None,
             niho6_last_detail: None,
             niho6_reuse_while_dragging: true,
+            niho6_gains: None,
+            original: Arc::clone(&source),
             source,
+            source_white: None,
             filter,
             preview_max_dimension: None,
             sized: None,
@@ -911,10 +976,11 @@ impl Session {
         // local plane, effects planes, or prepared master. Share only the
         // immutable decoded source and analysis seeds with an isolated
         // one-shot session.
-        let mut isolated = Session::with_shared_source(Arc::clone(&self.source), self.filter);
+        let mut isolated = Session::with_shared_source(Arc::clone(&self.original), self.filter);
         isolated.preview_max_dimension = self.preview_max_dimension;
         isolated.working_size = self.working_size;
         isolated.niho3_seed = self.niho3_analysis();
+        isolated.share_balanced_source(self);
         isolated.share_niho6_analysis(self);
         // The picker reads the global settings: the color points it targets
         // are global (local masks do not move them).
@@ -1082,7 +1148,7 @@ impl Session {
         let (w, h) = self.source_size();
         let (tw, th) = resize::fitted_size(w, h, limit);
         let signed = matches!(
-            self.source.as_ref(),
+            self.original.as_ref(),
             SessionSource::WorkingCopy {
                 meta: WorkingCopyMeta::Raw {
                     encoding: Some(WorkingCopyEncoding::SignedGamma18V1 { .. }),
@@ -1091,13 +1157,16 @@ impl Session {
                 ..
             }
         );
+        // From the unbalanced original: a preview balances its own reduction
+        // by its own preset's white balance (`niho-13`).
         let mut thumbnail = if signed {
-            let mut thumbnail = Session::with_shared_source(Arc::clone(&self.source), self.filter);
+            let mut thumbnail =
+                Session::with_shared_source(Arc::clone(&self.original), self.filter);
             thumbnail.preview_max_dimension = Some(tw.max(th));
             thumbnail.niho3_seed = self.niho3_analysis();
             thumbnail
         } else {
-            Session::with_source(self.source.reduced(tw, th, self.filter), self.filter)
+            Session::with_source(self.original.reduced(tw, th, self.filter), self.filter)
         };
         // Masks keep their place on the photo, not on the reduction.
         thumbnail.working_size = self.working_size;
@@ -1117,11 +1186,78 @@ impl Session {
         self.niho6_reuse_while_dragging = false;
     }
 
-    /// The `niho-6` analysis of the whole photo at `exposure_ev` (shared: the
-    /// features once per photo, the networks again only when the exposure
-    /// changes).
+    /// Start from `parent`'s balanced source (an isolated session of the same
+    /// original: the picker, Auto), so the same head white balance is not
+    /// applied again.
+    fn share_balanced_source(&mut self, parent: &Session) {
+        debug_assert!(Arc::ptr_eq(&self.original, &parent.original));
+        self.source = Arc::clone(&parent.source);
+        self.source_white = parent.source_white;
+    }
+
+    /// The head white balance `settings` apply to this session's source
+    /// (`niho-13` on a raster source; RAW working copies keep the linear
+    /// matrix of their formula).
+    fn head_white_for(&self, settings: &DevelopSettings) -> Option<HeadWhiteBalance> {
+        match self.original.as_ref() {
+            SessionSource::WorkingCopy {
+                meta: WorkingCopyMeta::Raw { .. },
+                ..
+            } => None,
+            _ => HeadWhiteBalance::of(settings),
+        }
+    }
+
+    /// The source `settings` draw from: the kept balanced source when its
+    /// white balance is theirs, else made from the original (not kept).
+    fn balanced_source(&self, white: Option<HeadWhiteBalance>) -> Arc<SessionSource> {
+        if white == self.source_white {
+            return Arc::clone(&self.source);
+        }
+        match white {
+            None => Arc::clone(&self.original),
+            Some(white) => Arc::new(
+                self.original.with_image(
+                    white
+                        .prepare()
+                        .apply_image(self.original.image(), self.original.space()),
+                ),
+            ),
+        }
+    }
+
+    /// Keeps the source balanced for `settings` (whether it changed). A
+    /// different head white balance replaces it and drops everything made
+    /// from the old one (its reductions, window, statistics, point plane and
+    /// master); cubes and effects' planes do not depend on the source and
+    /// stay. The local pass knows the balance it read ([`pipeline::LocalPass`]):
+    /// drag frames may keep it, released frames make their own.
+    fn ensure_head_white(&mut self, settings: &DevelopSettings) -> bool {
+        let white = self.head_white_for(settings);
+        if white == self.source_white {
+            return false;
+        }
+        // Drop the old balanced source first (one balanced copy in memory).
+        self.source = Arc::clone(&self.original);
+        self.source_white = None;
+        self.niho3 = None;
+        self.parked_niho3 = None;
+        self.sized = None;
+        self.framed = None;
+        self.stats.clear();
+        self.color_points = None;
+        self.source = self.balanced_source(white);
+        self.source_white = white;
+        true
+    }
+
+    /// The `niho-6` analysis of the whole photo balanced by `white` and
+    /// reduced by the active detail settings. The shared LRU keeps two feature
+    /// sets keyed by white balance and detail amounts, and two analyses keyed
+    /// by those values plus exposure.
     fn niho6_analysis(
         &self,
+        white: Option<HeadWhiteBalance>,
         exposure_ev: f64,
         settings: &DevelopSettings,
     ) -> Result<Arc<niho6::Analysis>, Error> {
@@ -1134,75 +1270,76 @@ impl Session {
                 )
             },
         );
-        let mut feature_cache = self
-            .niho6_analysis
-            .features
-            .lock()
-            .unwrap_or_else(std::sync::PoisonError::into_inner);
-        if feature_cache
-            .as_ref()
-            .is_none_or(|(key, _)| key != &detail_key)
-        {
-            let source = self.niho6_source.image();
-            let reduced = settings.detail.filter(|detail| {
-                detail.luminance_noise_reduction > 0.0
-                    || detail
-                        .color_noise_reduction
-                        .is_some_and(|amount| amount > 0.0)
-            });
-            let prepared = reduced.map(|detail| LinearImage {
-                width: source.width,
-                height: source.height,
-                data: detail::reduce_noise(
-                    &source.data,
-                    source.width,
-                    source.height,
-                    source.width.max(source.height),
-                    match self.niho6_source.space() {
-                        niho6::SourceSpace::LinearSrgb => detail::SourceSpace::LinearSrgb,
-                        niho6::SourceSpace::LinearProPhoto => detail::SourceSpace::LinearProPhoto,
-                    },
-                    detail,
-                    detail.color_noise_reduction,
-                )
-                .expect("validated NIHO 6 session detail input"),
-            });
-            let image = prepared.as_ref().unwrap_or(source);
-            *feature_cache = Some((
-                detail_key.clone(),
-                niho6::source_features(image, self.niho6_source.space())
+        let features = {
+            let mut slots = self
+                .niho6_analysis
+                .features
+                .lock()
+                .unwrap_or_else(std::sync::PoisonError::into_inner);
+            most_recent(&mut slots, (white, detail_key.clone()), || {
+                let whole = self.niho6_source.as_ref();
+                let balanced = match white {
+                    None => None,
+                    Some(_)
+                        if Arc::ptr_eq(&self.niho6_source, &self.original)
+                            && self.source_white == white =>
+                    {
+                        None
+                    }
+                    Some(white) => Some(white.prepare().apply_image(whole.image(), whole.space())),
+                };
+                let source = match balanced.as_ref() {
+                    Some(image) => image,
+                    None if white.is_some() => self.source.image(),
+                    None => whole.image(),
+                };
+                let filtered = settings.detail.filter(|detail| {
+                    detail.luminance_noise_reduction > 0.0
+                        || detail
+                            .color_noise_reduction
+                            .is_some_and(|amount| amount > 0.0)
+                });
+                let prepared = filtered.map(|detail| LinearImage {
+                    width: source.width,
+                    height: source.height,
+                    data: detail::reduce_noise(
+                        &source.data,
+                        source.width,
+                        source.height,
+                        source.width.max(source.height),
+                        match whole.space() {
+                            niho6::SourceSpace::LinearSrgb => detail::SourceSpace::LinearSrgb,
+                            niho6::SourceSpace::LinearProPhoto => {
+                                detail::SourceSpace::LinearProPhoto
+                            }
+                        },
+                        detail,
+                        detail.color_noise_reduction,
+                    )
+                    .expect("validated NIHO 6 session detail input"),
+                });
+                let image = prepared.as_ref().unwrap_or(source);
+                niho6::source_features(image, whole.space())
                     .map(Arc::new)
-                    .map_err(|error| error.to_string()),
-            ));
+                    .map_err(|error| error.to_string())
+            })
         }
-        let features = feature_cache
-            .as_ref()
-            .expect("NIHO 6 features")
-            .1
-            .clone()
-            .map_err(Error::Niho6Prepare)?;
-        drop(feature_cache);
-        let mut cached = self
+        .map_err(Error::Niho6Prepare)?;
+        let mut slots = self
             .niho6_analysis
             .at_exposure
             .lock()
             .unwrap_or_else(std::sync::PoisonError::into_inner);
-        let key = exposure_ev.to_bits();
-        if cached
-            .as_ref()
-            .is_none_or(|(detail, k, _)| detail != &detail_key || *k != key)
-        {
-            let made = niho6::analysis_at(&features, exposure_ev)
-                .map(Arc::new)
-                .map_err(|e| e.to_string());
-            *cached = Some((detail_key, key, made));
-        }
-        cached
-            .as_ref()
-            .expect("niho6 analysis")
-            .2
-            .clone()
-            .map_err(Error::Niho6Prepare)
+        most_recent(
+            &mut slots,
+            (white, detail_key, exposure_ev.to_bits()),
+            || {
+                niho6::analysis_at(&features, exposure_ev)
+                    .map(Arc::new)
+                    .map_err(|error| error.to_string())
+            },
+        )
+        .map_err(Error::Niho6Prepare)
     }
 
     /// The NIHO 3 analysis this session holds, for a session made from it.
@@ -1346,12 +1483,13 @@ impl Session {
         settings: &DevelopSettings,
         max_dimension: usize,
         quality: Quality,
+        white_changed: bool,
     ) -> Result<bool, Error> {
         let Some(engine) = self.niho3_mode(settings)? else {
             return Ok(false);
         };
         if engine == RawEngine::Niho6 {
-            return self.ensure_niho6(settings, max_dimension, quality);
+            return self.ensure_niho6(settings, max_dimension, quality, white_changed);
         }
         let target = self.niho3_preparation_target(settings, max_dimension, quality);
         let (image, meta) = match self.source.as_ref() {
@@ -1503,6 +1641,25 @@ impl Session {
         Ok(true)
     }
 
+    /// The `niho-6` prepared source key shared by the global frame and mask
+    /// layers. The source balance and the analysis balance can differ during
+    /// an Interactive white-balance drag.
+    fn niho6_master_key(
+        &self,
+        width: usize,
+        height: usize,
+        settings: &DevelopSettings,
+        analysis_white: Option<HeadWhiteBalance>,
+        exposure_ev: f64,
+    ) -> String {
+        format!(
+            "{}|source={}|analysis={}",
+            niho6::preparation_key(width, height, settings, exposure_ev),
+            HeadWhiteBalance::key(self.source_white),
+            HeadWhiteBalance::key(analysis_white),
+        )
+    }
+
     /// The `niho-6` master for these settings: the whole source (Final, a
     /// geometry) or its display-size reduction (unframed reduced
     /// Interactive frames) with the response applied, from the analysis of
@@ -1512,6 +1669,7 @@ impl Session {
         settings: &DevelopSettings,
         max_dimension: usize,
         quality: Quality,
+        white_changed: bool,
     ) -> Result<bool, Error> {
         let target = self.niho3_preparation_target(settings, max_dimension, quality);
         let (w, h) = match target {
@@ -1533,34 +1691,38 @@ impl Session {
                 )
             },
         );
-        // The last frame's analysis at exactly this exposure is the one the
-        // shared cache would give (the same photo's features and exposure):
-        // a released frame takes it too, so frames that alternate exposures
-        // (a local mask's layer and the global frame, `mask_session.rs`)
-        // do not make it again in the cache's single slot. Both the exposure
-        // and the detail amounts identify the cached analysis.
         let exposure = niho6::analysis_exposure(settings);
-        let analysis = match (
+        // During an interactive white-balance drag, keep the previous
+        // analysis for this session and detail amount. A released frame uses
+        // the exact current exposure and source balance.
+        let (analysis_white, analysis) = match (
             quality,
             self.niho6_reuse_while_dragging,
             self.niho6_last_used.clone(),
         ) {
-            (Quality::Interactive, true, Some(analysis))
+            (Quality::Interactive, true, Some((white, analysis)))
                 if self.niho6_last_detail.as_ref() == Some(&detail_key) =>
             {
-                analysis
+                (white, analysis)
             }
-            (_, _, Some(analysis))
+            (_, _, Some((white, analysis)))
                 if analysis.exposure_ev.to_bits() == exposure.to_bits()
+                    && white == self.source_white
                     && self.niho6_last_detail.as_ref() == Some(&detail_key) =>
             {
-                analysis
+                (white, analysis)
             }
-            _ => self.niho6_analysis(exposure, settings)?,
+            _ => (
+                self.source_white,
+                self.niho6_analysis(self.source_white, exposure, settings)?,
+            ),
         };
-        self.niho6_last_used = Some(Arc::clone(&analysis));
+        self.niho6_last_used = Some((analysis_white, Arc::clone(&analysis)));
         self.niho6_last_detail = Some(detail_key);
-        let key = niho6::preparation_key(w, h, settings, analysis.exposure_ev);
+        // The master is made from the current balanced source with the
+        // analysis response. An analysis from the previous balance during a
+        // drag must never stand in for a released frame.
+        let key = self.niho6_master_key(w, h, settings, analysis_white, analysis.exposure_ev);
         if self
             .niho3
             .as_ref()
@@ -1601,7 +1763,31 @@ impl Session {
             let reduced =
                 target.map(|target| unscaled.reduced(target.width, target.height, target.filter));
             let base = reduced.as_ref().unwrap_or(unscaled);
-            let image = pipeline::prepare_niho6(base.image(), base.space(), &analysis, settings)
+            let gains_key = format!(
+                "{w}x{h}|{}|{}",
+                settings.highlights.min(0.0),
+                settings.shadows.max(0.0)
+            );
+            let gains = match &self.niho6_gains {
+                Some(kept) if Arc::ptr_eq(&kept.analysis, &analysis) && kept.key == gains_key => {
+                    Arc::clone(&kept.gains)
+                }
+                _ => {
+                    // One set of gains in memory.
+                    self.niho6_gains = None;
+                    let made = Arc::new(
+                        niho6::response_gains(w, h, &analysis, settings)
+                            .map_err(|error| Error::Niho6Prepare(error.to_string()))?,
+                    );
+                    self.niho6_gains = Some(Niho6Gains {
+                        analysis: Arc::clone(&analysis),
+                        key: gains_key,
+                        gains: Arc::clone(&made),
+                    });
+                    made
+                }
+            };
+            let image = pipeline::prepare_niho6(base.image(), base.space(), &gains)
                 .map_err(|e| Error::Niho6Prepare(e.to_string()))?;
             self.niho3 = Some(PreparedNiho3 {
                 key,
@@ -1613,7 +1799,12 @@ impl Session {
             });
             self.framed = None;
             self.stats.clear();
-            self.local = None;
+            // A drag of `niho-13`'s white balance keeps the pass of the frame
+            // before (drag frames only: the pass knows the balance it read,
+            // a released frame makes its own, [`pipeline::LocalPass`]).
+            if !(white_changed && quality == Quality::Interactive) {
+                self.local = None;
+            }
         }
         self.niho3.as_mut().expect("prepared niho6").settings =
             detail::source_noise_disabled(settings);
@@ -1625,6 +1816,7 @@ impl Session {
     /// directions the response does not take): its reductions, window,
     /// statistics and local pass were of the master.
     fn release_master(&mut self) {
+        self.niho6_gains = None;
         if self.niho3.take().is_some() {
             self.parked_niho3 = None;
             self.sized = None;
@@ -1684,7 +1876,8 @@ impl Session {
         quality: Quality,
     ) -> Result<Rendered, Error> {
         let max_dimension = self.capped_dimension(max_dimension);
-        let use_niho3 = self.ensure_niho3(settings, max_dimension, quality)?;
+        let white_changed = self.ensure_head_white(settings);
+        let use_niho3 = self.ensure_niho3(settings, max_dimension, quality, white_changed)?;
         if !use_niho3 {
             self.release_master();
         }
@@ -1914,8 +2107,9 @@ impl Session {
             // parent's caches. It shares the parent's analysis (the same
             // source's CNR result and coefficients; coefficients it computes
             // first are the ones the parent would compute).
-            let mut isolated = Session::with_shared_source(Arc::clone(&self.source), self.filter);
+            let mut isolated = Session::with_shared_source(Arc::clone(&self.original), self.filter);
             isolated.niho3_seed = self.niho3_analysis();
+            isolated.share_balanced_source(self);
             isolated.share_niho6_analysis(self);
             let raw = use_niho3.is_some_and(|engine| engine != RawEngine::Niho6);
             return auto::try_run(settings, raw, |candidate| {
@@ -1923,8 +2117,11 @@ impl Session {
             });
         }
         // The proxy: the crop (or the whole photo) at the proxy size from
-        // the working image, made here and dropped after.
-        let source = self.source.image();
+        // the working image (`niho-13`: balanced by these settings' white
+        // balance), made here and dropped after.
+        let white = self.head_white_for(settings);
+        let balanced = self.balanced_source(white);
+        let source = balanced.image();
         let (w, h) = (source.width, source.height);
         let plan = match rendered_geometry(settings) {
             Some(g) => Some(frame::plan(g, w, h, auto::PROXY_LONG_EDGE).map_err(geometry_error)?),
@@ -1943,8 +2140,8 @@ impl Session {
                 })
             }
         };
-        let proxy = proxy.map(|image| self.source.with_image(image));
-        let image = proxy.as_ref().unwrap_or(self.source.as_ref());
+        let proxy = proxy.map(|image| balanced.with_image(image));
+        let image = proxy.as_ref().unwrap_or(balanced.as_ref());
         let framing = plan.as_ref().map(|plan| pipeline::Framing {
             stats_source: source,
             long_edge: plan.scale_long_edge,
@@ -1954,12 +2151,15 @@ impl Session {
         let quality = auto::PROXY_QUALITY;
         // Read-only: the Session's cubes and (with a geometry, whose
         // statistics read the whole source) statistics when they match.
-        let mut stats = plan.as_ref().and_then(|_| {
-            self.stats
-                .iter()
-                .find(|(k, q, _)| *k == SOURCE_STATS_KEY && *q == quality)
-                .map(|(_, _, s)| *s)
-        });
+        let mut stats = plan
+            .as_ref()
+            .filter(|_| white == self.source_white)
+            .and_then(|_| {
+                self.stats
+                    .iter()
+                    .find(|(k, q, _)| *k == SOURCE_STATS_KEY && *q == quality)
+                    .map(|(_, _, s)| *s)
+            });
         let raw = source_is_raw;
         let mut cubes = None;
         let mut local = None;
@@ -2196,7 +2396,7 @@ mod tests {
             parse_settings(r#"{"v":2,"engine":"niho-6","highlights":-40,"shadows":30}"#).unwrap();
         let mut session = Session::open_raster(&png, 0, Filter::Lanczos3).unwrap();
         session.render(&settings, 600, Quality::Final).unwrap();
-        let exposure_of = |s: &Session| s.niho6_last_used.as_ref().map(|a| a.exposure_ev);
+        let exposure_of = |s: &Session| s.niho6_last_used.as_ref().map(|(_, a)| a.exposure_ev);
         assert_eq!(exposure_of(&session), Some(0.0));
 
         // A preset preview at another exposure analyses at its own exposure (the
@@ -2216,6 +2416,48 @@ mod tests {
         dragged.vibrance = 10.0;
         session.render(&dragged, 600, Quality::Interactive).unwrap();
         assert_eq!(exposure_of(&session), Some(0.0));
+    }
+
+    #[test]
+    fn niho6_keeps_the_photos_analysis_through_previews_at_other_white_balances() {
+        let (w, h) = (240usize, 160usize);
+        let rgba: Vec<u8> = (0..w * h)
+            .flat_map(|i| {
+                let v = ((i % w) * 255 / w) as u8 / 2 + ((i / w) % 37) as u8;
+                [v, v / 2 + 40, 255 - v, 255]
+            })
+            .collect();
+        let png = encode::encode_png(&rgba, w, h).unwrap();
+        let session = Session::open_raster(&png, 0, Filter::Lanczos3).unwrap();
+        let settings = parse_settings(r#"{"v":2,"engine":"niho-6"}"#).unwrap();
+        let warm = Some(HeadWhiteBalance {
+            temperature: 30.0,
+            tint: 0.0,
+        });
+        let photo = session.niho6_analysis(warm, 0.2, &settings).unwrap();
+        // A preset preview (no white balance) and an auto candidate at another
+        // exposure use the shared cache in between.
+        let preview = session.niho6_analysis(None, 0.2, &settings).unwrap();
+        assert!(!Arc::ptr_eq(&photo, &preview));
+        assert!(Arc::ptr_eq(
+            &session.niho6_analysis(warm, 0.2, &settings).unwrap(),
+            &photo
+        ));
+        let candidate = session.niho6_analysis(warm, 0.5, &settings).unwrap();
+        assert!(Arc::ptr_eq(
+            &session.niho6_analysis(warm, 0.2, &settings).unwrap(),
+            &photo
+        ));
+        // The least recently used goes first: the preview's analysis (then
+        // the candidate's) was made again.
+        assert!(!Arc::ptr_eq(
+            &session.niho6_analysis(None, 0.2, &settings).unwrap(),
+            &preview
+        ));
+        assert!(!Arc::ptr_eq(
+            &session.niho6_analysis(warm, 0.5, &settings).unwrap(),
+            &candidate
+        ));
     }
 
     #[test]

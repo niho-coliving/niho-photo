@@ -10,6 +10,7 @@ import {
   DEVELOP_SETTINGS_ENGINE,
   DevelopSettingsBaseMismatchError,
   NIHO10_DEVELOP_SETTINGS_ENGINE,
+  NIHO12_DEVELOP_SETTINGS_ENGINE,
   NIHO2_DEVELOP_SETTINGS_ENGINE,
   hasDevelopGeometry,
   hasNullDevelopGeometryField,
@@ -32,13 +33,14 @@ import {
 const CROP = { rotate: 90, flipH: false, flipV: false, angle: -2.5, crop: { left: 0.1, top: 0, right: 0.9, bottom: 1 } };
 
 describe("neutralDevelopSettings", () => {
-  it("JPEG / PNG を直接描く新規設定は v1・niho-12・NIHO 標準ルックを使う（#29）", () => {
-    expect(DEVELOP_SETTINGS_ENGINE).toBe("niho-12");
+  it("JPEG / PNG を直接描く新規設定は v1・niho-13・NIHO 標準ルックを使う（#27）", () => {
+    expect(DEVELOP_SETTINGS_ENGINE).toBe("niho-13");
+    expect(NIHO12_DEVELOP_SETTINGS_ENGINE).toBe("niho-12");
     expect(NIHO10_DEVELOP_SETTINGS_ENGINE).toBe("niho-10");
     expect(NIHO2_DEVELOP_SETTINGS_ENGINE).toBe("niho-2");
     expect(neutralDevelopSettings()).toEqual({
       v: 1,
-      engine: "niho-12",
+      engine: "niho-13",
       look: "niho-standard-1",
       base: null,
       exposure: 0,
@@ -56,27 +58,27 @@ describe("neutralDevelopSettings", () => {
     expect(isNeutralDevelopSettings(neutralDevelopSettings("raw-apple.d8.p1.e1.cal-none"))).toBe(true);
   });
 
-  it("新規の数式は base で決める: 直接描く・raster・unsigned RAW の作業コピーは niho-12、signed・版の分からない作業コピー・RAW の写真は niho-2", () => {
-    expect(neutralDevelopSettings(null).engine).toBe("niho-12");
-    expect(neutralDevelopSettings("raster.ci2.p2.e2.icc-srgb")).toMatchObject({ engine: "niho-12", base: "raster.ci2.p2.e2.icc-srgb" });
-    expect(neutralDevelopSettings("raw-apple.d8.p1.e1.cal-none")).toMatchObject({ engine: "niho-12", base: "raw-apple.d8.p1.e1.cal-none" });
-    // signed の作業コピーは signedNeutralDevelopSettings が選ぶ。base だけでは niho-12 を約束しない
+  it("新規の数式は base で決める: 直接描く・raster・unsigned RAW の作業コピーは niho-13、signed・版の分からない作業コピー・RAW の写真は niho-2", () => {
+    expect(neutralDevelopSettings(null).engine).toBe("niho-13");
+    expect(neutralDevelopSettings("raster.ci2.p2.e2.icc-srgb")).toMatchObject({ engine: "niho-13", base: "raster.ci2.p2.e2.icc-srgb" });
+    expect(neutralDevelopSettings("raw-apple.d8.p1.e1.cal-none")).toMatchObject({ engine: "niho-13", base: "raw-apple.d8.p1.e1.cal-none" });
+    // signed の作業コピーは signedNeutralDevelopSettings が選ぶ。base だけでは niho-13 を約束しない
     expect(neutralDevelopSettings("raw-apple.d8.p3.e4.cal-signed").engine).toBe("niho-2");
     expect(neutralDevelopSettings("raw-apple.d8.p2.e9.cal-future").engine).toBe("niho-2");
     expect(neutralDevelopSettings("fixture-base").engine).toBe("niho-2");
     // base: null でも RAW の写真（作業コピーの無い RAW など）は呼び出し側が明示する
     expect(neutralDevelopSettings(null, { raw: true })).toEqual({ ...neutralDevelopSettings(null), engine: "niho-2" });
     expect(neutralDevelopSettings("raster.ci2.p2.e2.icc-srgb", { raw: true }).engine).toBe("niho-2");
-    expect(newDevelopSettingsEngine(null)).toBe("niho-12");
-    expect(newDevelopSettingsEngine("raster.x")).toBe("niho-12");
-    expect(newDevelopSettingsEngine("raw-apple.d8.p0.e1.cal-none")).toBe("niho-12");
-    expect(newDevelopSettingsEngine("raw-apple.d8.p2.e1")).toBe("niho-12");
+    expect(newDevelopSettingsEngine(null)).toBe("niho-13");
+    expect(newDevelopSettingsEngine("raster.x")).toBe("niho-13");
+    expect(newDevelopSettingsEngine("raw-apple.d8.p0.e1.cal-none")).toBe("niho-13");
+    expect(newDevelopSettingsEngine("raw-apple.d8.p2.e1")).toBe("niho-13");
     expect(newDevelopSettingsEngine("raw-apple.d8.p3.e4.cal-signed")).toBe("niho-2");
     expect(newDevelopSettingsEngine(null, { raw: true })).toBe("niho-2");
-    // niho-12 と niho-2 の neutral は数式の版だけが違う（raster は cube を通らず同じ画になる）
-    const { engine: _twelve, ...twelve } = neutralDevelopSettings(null);
+    // niho-13 と niho-2 の neutral は数式の版だけが違う（raster は cube も相対 WB も通らず同じ画になる）
+    const { engine: _thirteen, ...thirteen } = neutralDevelopSettings(null);
     const { engine: _two, ...two } = neutralDevelopSettings(null, { raw: true });
-    expect(twelve).toEqual(two);
+    expect(thirteen).toEqual(two);
   });
 });
 
@@ -151,24 +153,24 @@ describe("developSettingsOnWorkingCopy（#16944）", () => {
     expect(developSettingsOnWorkingCopy(null, "raw-apple.d8.p1.e1.cal-none").look).toBe("niho-standard-1");
   });
 
-  it("未保存なら raster・unsigned RAW の作業コピーは niho-12、版の分からない作業コピーは niho-2 で初期化する", () => {
+  it("未保存なら raster・unsigned RAW の作業コピーは niho-13、版の分からない作業コピーは niho-2 で初期化する", () => {
     expect(developSettingsOnWorkingCopy(null, "raster.ci1.p1.e1.icc-srgb")).toMatchObject({
-      engine: "niho-12",
+      engine: "niho-13",
       look: "niho-standard-1",
       base: "raster.ci1.p1.e1.icc-srgb",
     });
     expect(developSettingsOnWorkingCopy(null, "raster.ci2.p2.e2.icc-srgb", { kind: "raster", encoding: "jpeg8" }).engine).toBe(
-      "niho-12",
+      "niho-13",
     );
     expect(developSettingsOnWorkingCopy(null, "raw-apple.d8.p1.e1.cal-none", { kind: "raw" })).toMatchObject({
-      engine: "niho-12",
+      engine: "niho-13",
       look: "niho-standard-1",
       base: "raw-apple.d8.p1.e1.cal-none",
     });
     expect(developSettingsOnWorkingCopy(null, "fixture-base").engine).toBe("niho-2");
   });
 
-  it("保存済みの niho-12 は raster・unsigned RAW・版の分からない作業コピーで開き、signed RAW と描けないルックは engine_mismatch（#29）", () => {
+  it("保存済みの niho-13 / niho-12 は raster・unsigned RAW・版の分からない作業コピーで開き、signed RAW と描けないルックは engine_mismatch（#27・#29）", () => {
     const mismatch = (run: () => unknown) => {
       try {
         run();
@@ -179,20 +181,24 @@ describe("developSettingsOnWorkingCopy（#16944）", () => {
     };
     const raster = "raster.ci2.p2.e2.icc-srgb";
     const legacyRaw = "raw-apple.d8.p1.e1.cal-none";
-    const saved: DevelopSettings = { ...neutralDevelopSettings(null), exposure: 0.4, saturation: -30 };
-    expect(saved.engine).toBe("niho-12");
-    expect(developSettingsOnWorkingCopy(saved, raster)).toEqual({ ...saved, base: raster });
-    expect(developSettingsOnWorkingCopy(saved, legacyRaw, { kind: "raw" })).toEqual({ ...saved, base: legacyRaw });
-    expect(developSettingsOnWorkingCopy({ ...saved, look: "niho-interim-1" }, legacyRaw).look).toBe("niho-interim-1");
-    expect(developSettingsOnWorkingCopy(saved, "fixture-base").engine).toBe("niho-12");
-    const signedBase = "raw-apple.d8.p3.e4.cal-signed";
-    const signedMeta = { kind: "raw", encoding: { kind: "signed-gamma18-v1", ceiling: 2 } };
-    expect(mismatch(() => developSettingsOnWorkingCopy(saved, signedBase, signedMeta))).toBe("engine_mismatch");
-    expect(mismatch(() => developSettingsOnWorkingCopy({ ...saved, look: "niho-standard-2" }, raster))).toBe("engine_mismatch");
-    expect(mismatch(() => developSettingsOnWorkingCopy({ ...saved, look: "niho-standard-5" }, legacyRaw))).toBe("engine_mismatch");
-    // 保存済みの旧数式は niho-12 へ昇格しない
-    expect(developSettingsOnWorkingCopy({ ...saved, engine: "niho-10" }, raster).engine).toBe("niho-10");
-    expect(developSettingsOnWorkingCopy({ ...saved, engine: "niho-2" }, legacyRaw).engine).toBe("niho-2");
+    const fresh: DevelopSettings = { ...neutralDevelopSettings(null), exposure: 0.4, saturation: -30, relativeTemperature: 12 };
+    expect(fresh.engine).toBe("niho-13");
+    for (const engine of ["niho-13", "niho-12"]) {
+      const saved: DevelopSettings = { ...fresh, engine };
+      expect(developSettingsOnWorkingCopy(saved, raster)).toEqual({ ...saved, base: raster });
+      expect(developSettingsOnWorkingCopy(saved, legacyRaw, { kind: "raw" })).toEqual({ ...saved, base: legacyRaw });
+      expect(developSettingsOnWorkingCopy({ ...saved, look: "niho-interim-1" }, legacyRaw).look).toBe("niho-interim-1");
+      expect(developSettingsOnWorkingCopy(saved, "fixture-base").engine).toBe(engine);
+      const signedBase = "raw-apple.d8.p3.e4.cal-signed";
+      const signedMeta = { kind: "raw", encoding: { kind: "signed-gamma18-v1", ceiling: 2 } };
+      expect(mismatch(() => developSettingsOnWorkingCopy(saved, signedBase, signedMeta))).toBe("engine_mismatch");
+      expect(mismatch(() => developSettingsOnWorkingCopy({ ...saved, look: "niho-standard-2" }, raster))).toBe("engine_mismatch");
+      expect(mismatch(() => developSettingsOnWorkingCopy({ ...saved, look: "niho-standard-5" }, legacyRaw))).toBe("engine_mismatch");
+    }
+    // 保存済みの旧数式（niho-12 を含む）は niho-13 へ昇格しない
+    expect(developSettingsOnWorkingCopy({ ...fresh, engine: "niho-12" }, raster).engine).toBe("niho-12");
+    expect(developSettingsOnWorkingCopy({ ...fresh, engine: "niho-10" }, raster).engine).toBe("niho-10");
+    expect(developSettingsOnWorkingCopy({ ...fresh, engine: "niho-2" }, legacyRaw).engine).toBe("niho-2");
   });
 
   it("保存済みの niho-6 は raster の作業コピーの上でだけ開き、RAW・signed・版の分からない作業コピーと描けないルックは engine_mismatch（#18397）", () => {
@@ -322,7 +328,7 @@ describe("isEditableDevelopSettings", () => {
     expect(isEditableDevelopSettings("niho-1")).toBe(false);
   });
 
-  it("niho-6 / niho-10 / niho-12 は raster ルックだけ、niho-7 / niho-11 は standard-5 だけを直せる", () => {
+  it("niho-6 / niho-10 / niho-12 / niho-13 は raster ルックだけ、niho-7 / niho-11 は standard-5 だけを直せる", () => {
     expect(isEditableDevelopSettings(neutralDevelopSettings())).toBe(true);
     expect(isEditableDevelopSettings({ v: 1, engine: "niho-6" })).toBe(true);
     expect(isEditableDevelopSettings({ v: 1, engine: "niho-6", look: "niho-standard-1" })).toBe(true);
@@ -342,15 +348,17 @@ describe("isEditableDevelopSettings", () => {
     expect(isEditableDevelopSettings({ v: 1, engine: "niho-11", look: "niho-standard-3" })).toBe(false);
     expect(isEditableDevelopSettings({ v: 1, engine: "niho-4", look: "niho-standard-5" })).toBe(false);
     expect(isEditableDevelopSettings({ v: 1, engine: "niho-10", look: "niho-standard-5" })).toBe(false);
-    expect(isEditableDevelopSettings({ v: 1, engine: "niho-12" })).toBe(true);
-    expect(isEditableDevelopSettings({ v: 1, engine: "niho-12", look: "niho-interim-1" })).toBe(true);
-    expect(isEditableDevelopSettings({ v: 4, engine: "niho-12", look: "niho-standard-1", colorPoints: [] })).toBe(true);
-    expect(isEditableDevelopSettings({ v: 1, engine: "niho-12", look: "niho-standard-2" })).toBe(false);
-    expect(isEditableDevelopSettings({ v: 1, engine: "niho-12", look: "niho-standard-5" })).toBe(false);
-    // niho-8（評価候補）・niho-9（欠番）・niho-13 以降はこの画面では直さない
+    for (const engine of ["niho-12", "niho-13"]) {
+      expect(isEditableDevelopSettings({ v: 1, engine })).toBe(true);
+      expect(isEditableDevelopSettings({ v: 1, engine, look: "niho-interim-1" })).toBe(true);
+      expect(isEditableDevelopSettings({ v: 4, engine, look: "niho-standard-1", colorPoints: [] })).toBe(true);
+      expect(isEditableDevelopSettings({ v: 1, engine, look: "niho-standard-2" })).toBe(false);
+      expect(isEditableDevelopSettings({ v: 1, engine, look: "niho-standard-5" })).toBe(false);
+    }
+    // niho-8（評価候補）・niho-9（欠番）・niho-14 以降はこの画面では直さない
     expect(isEditableDevelopSettings({ v: 1, engine: "niho-8", look: "niho-standard-1" })).toBe(false);
     expect(isEditableDevelopSettings({ v: 1, engine: "niho-9", look: "niho-standard-1" })).toBe(false);
-    expect(isEditableDevelopSettings({ v: 1, engine: "niho-13", look: "niho-standard-1" })).toBe(false);
+    expect(isEditableDevelopSettings({ v: 1, engine: "niho-14", look: "niho-standard-1" })).toBe(false);
   });
 
   it("幾何を扱えない面（NIHO Desktop）は、幾何のある設定を直さない（幾何の無い v1 / v2 は直せる）", () => {
@@ -432,14 +440,14 @@ describe("幾何（回転・反転・角度補正・切り抜き。#17138）", (
   });
 
   it("「初期化」は今の数式を保ち、今の編集内容が無ければ base の neutral と同じ数式にする（#18397）", () => {
-    expect(resetDevelopSettingsColors(null, null).engine).toBe("niho-12");
+    expect(resetDevelopSettingsColors(null, null).engine).toBe("niho-13");
     expect(resetDevelopSettingsColors(null, "raster.ci2.p2.e2.icc-srgb")).toEqual(neutralDevelopSettings("raster.ci2.p2.e2.icc-srgb"));
     expect(resetDevelopSettingsColors(null, "raw-apple.d8.p1.e1.cal-none")).toMatchObject({
-      engine: "niho-12",
+      engine: "niho-13",
       base: "raw-apple.d8.p1.e1.cal-none",
     });
     expect(resetDevelopSettingsColors(null, "fixture-base").engine).toBe("niho-2");
-    // 保存済みの niho-2 / niho-10 の写真を初期化しても niho-12 にしない
+    // 保存済みの niho-2 / niho-10 / niho-12 の写真を初期化しても niho-13 にしない
     expect(resetDevelopSettingsColors({ ...neutralDevelopSettings(), engine: "niho-2", exposure: 0.8 }, null)).toEqual({
       ...neutralDevelopSettings(),
       engine: "niho-2",
@@ -450,7 +458,10 @@ describe("幾何（回転・反転・角度補正・切り抜き。#17138）", (
     ).toBe("niho-2");
     expect(resetDevelopSettingsColors({ ...neutralDevelopSettings("raster.x"), engine: "niho-10", exposure: 0.8 }, "raster.x").engine)
       .toBe("niho-10");
-    expect(resetDevelopSettingsColors({ ...neutralDevelopSettings("raster.x"), exposure: 0.8 }, "raster.x").engine).toBe("niho-12");
+    expect(
+      resetDevelopSettingsColors({ ...neutralDevelopSettings("raster.x"), engine: "niho-12", relativeTemperature: 20 }, "raster.x").engine,
+    ).toBe("niho-12");
+    expect(resetDevelopSettingsColors({ ...neutralDevelopSettings("raster.x"), exposure: 0.8 }, "raster.x").engine).toBe("niho-13");
   });
 
   it("切り抜いただけの写真は neutral ではない（オリジナルのままでは見せられない）が、色は neutral（初期化を押せない）", () => {
@@ -803,11 +814,12 @@ describe("補正のコピーと貼り付け（F5a-2 #17140）", () => {
     expect(pasteDevelopSettings(bare, withoutWhiteBalance)).not.toHaveProperty("whiteBalance");
   });
 
-  it("貼り付け先の数式（新規の niho-12 / 保存済みの niho-10・RAW の作業コピーの niho-2）は写し元によらず保つ", () => {
-    expect(pasteDevelopSettings(neutralDevelopSettings(), copied).engine).toBe("niho-12");
+  it("貼り付け先の数式（新規の niho-13 / 保存済みの niho-12・niho-10・RAW の作業コピーの niho-2）は写し元によらず保つ", () => {
+    expect(pasteDevelopSettings(neutralDevelopSettings(), copied).engine).toBe("niho-13");
+    expect(pasteDevelopSettings({ ...neutralDevelopSettings(), engine: "niho-12" }, copied).engine).toBe("niho-12");
     expect(pasteDevelopSettings({ ...neutralDevelopSettings(), engine: "niho-10" }, copied).engine).toBe("niho-10");
     expect(pasteDevelopSettings(neutralDevelopSettings("raw-apple.d8.p1.e1.cal-none"), copied)).toMatchObject({
-      engine: "niho-12",
+      engine: "niho-13",
       base: "raw-apple.d8.p1.e1.cal-none",
     });
     expect(
