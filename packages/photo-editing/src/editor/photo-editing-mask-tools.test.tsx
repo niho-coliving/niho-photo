@@ -299,3 +299,77 @@ describe("PhotoEditingMaskTools", () => {
     expect(button("初期化")).not.toBeNull();
   });
 });
+
+describe("PhotoEditingMaskTools の局所のカラーミキサー（niho-photo#93）", () => {
+  afterEach(() => window.localStorage.clear());
+
+  function sectionToggle(): HTMLButtonElement {
+    const found = container.querySelector<HTMLButtonElement>('[data-testid="photo-mask-hsl"] h4 button');
+    if (!found) throw new Error("mask hsl toggle not found");
+    return found;
+  }
+
+  it("カラーの群の後ろ・効果の前に既定で閉じた節を置き、開くと全体と同じ 3 択と 8 本のスライダー", async () => {
+    await render({ changeHsl: vi.fn(), resetHsl: vi.fn() });
+    const section = container.querySelector<HTMLElement>('[data-testid="photo-mask-hsl"]')!;
+    expect(section.previousElementSibling?.querySelector("h4")?.textContent).toBe("カラー");
+    expect(section.nextElementSibling?.querySelector("h4")?.textContent).toBe("効果");
+    expect(sectionToggle().textContent).toBe("カラーミキサー");
+    expect(sectionToggle().getAttribute("aria-expanded")).toBe("false");
+    expect(container.querySelector('[data-testid="photo-hsl-mixer"]')).toBeNull();
+    await click(sectionToggle());
+    expect(section.querySelector('[role="group"][aria-label="調整"]')).not.toBeNull();
+    expect(Array.from(section.querySelectorAll<HTMLInputElement>('input[type="range"]')).map((input) => input.getAttribute("aria-label"))).toEqual([
+      "赤",
+      "橙",
+      "黄",
+      "緑",
+      "水色",
+      "青",
+      "紫",
+      "マゼンタ",
+    ]);
+    // 渡さない面（古い呼び出し）には出さない
+    await render();
+    expect(container.querySelector('[data-testid="photo-mask-hsl"]')).toBeNull();
+  });
+
+  it("スライダーはマスクの id・色・軸・値・drag / commit を渡し、ダブルクリックで 0 に戻す。初期化はこのマスクの値だけ", async () => {
+    const changeHsl = vi.fn();
+    const resetHsl = vi.fn();
+    await render({ changeHsl, resetHsl });
+    await click(sectionToggle());
+    const reset = button("このマスクのカラーミキサーを初期化");
+    expect(reset.disabled).toBe(true);
+    await click(Array.from(container.querySelectorAll<HTMLButtonElement>('[role="group"][aria-label="調整"] button'))[1]!);
+    const blue = slider("青");
+    await act(async () => {
+      blue.dispatchEvent(new Event("pointerdown", { bubbles: true }));
+      setRangeValue(blue, "-40");
+    });
+    await act(async () => {
+      window.dispatchEvent(new Event("pointerup"));
+      blue.dispatchEvent(new Event("change", { bubbles: true }));
+    });
+    // 値を持たない面なので、離したときの値は持ち主の値（ここでは 0 のまま）。drag の値と順だけを見る
+    expect(changeHsl.mock.calls.map((call) => call[4])).toEqual(["drag", "commit"]);
+    expect(changeHsl.mock.calls[0]).toEqual(["mask-a", "blue", "saturation", -40, "drag"]);
+    await act(async () => {
+      blue.dispatchEvent(new MouseEvent("dblclick", { bubbles: true }));
+    });
+    expect(changeHsl.mock.calls.at(-1)).toEqual(["mask-a", "blue", "saturation", 0, "commit"]);
+
+    const edited: DevelopMask = { ...LINEAR, adjust: { ...LINEAR.adjust, hsl: { blue: { hue: 0, saturation: -40, luminance: 0 } } } };
+    await render({ changeHsl, resetHsl, masks: [edited, RADIAL], selected: edited });
+    expect(slider("青").value).toBe("-40");
+    expect(button("このマスクのカラーミキサーを初期化").disabled).toBe(false);
+    await click(button("このマスクのカラーミキサーを初期化"));
+    expect(resetHsl).toHaveBeenCalledWith("mask-a");
+    // 全体が白黒・押せない間は押せない
+    await render({ changeHsl, resetHsl, masks: [edited, RADIAL], selected: edited, grayscale: true });
+    expect(slider("青").disabled).toBe(true);
+    expect(button("このマスクのカラーミキサーを初期化").disabled).toBe(true);
+    await render({ changeHsl, resetHsl, masks: [edited, RADIAL], selected: edited, disabled: true });
+    expect(slider("青").disabled).toBe(true);
+  });
+});

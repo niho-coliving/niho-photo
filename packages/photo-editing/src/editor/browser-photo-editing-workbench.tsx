@@ -170,6 +170,7 @@ import {
 } from "./photo-editing-button-classes";
 import { PhotoEditingCropTools } from "./photo-editing-crop-tools";
 import { PhotoEditingCutoutTools } from "./photo-editing-cutout-tools";
+import { PhotoEditingMaskMobileTools } from "./photo-editing-mask-mobile-tools";
 import { BrowserPhotoEditingMaskLayer } from "./photo-editing-mask-overlay";
 import { PhotoEditingMaskTools } from "./photo-editing-mask-tools";
 import { PhotoEditingDropOverlay } from "./photo-editing-drop-overlay";
@@ -851,12 +852,13 @@ export function BrowserPhotoEditingWorkbench(props: {
   }, [crop, cropping, cutoutBlocksCrop, wasmPhotoKey]);
   // 修復の道具（niho-photo#44）を開いている（1 枚で見ている wasm の写真）
   const healing = heal.active && loupeOpened !== null;
-  // マスクの道具（部分補正。M3 #67。PC の面で、切り抜き・背景除去・修復とは同時に使わない）
+  // マスクの道具（部分補正。M3 #67。PC の面とスマホの全画面の編集の層〔niho-photo#93〕で、切り抜き・背景除去・修復とは同時に
+  // 使わない）
   const maskTool = useBrowserPhotoMasks({
     mountedRef,
     engineRef: develop.engineRef,
     developSessionRef: develop.developSessionRef,
-    wide,
+    wide: editingAllowed,
     photoKey: wasmPhotoKey,
     support: masksSupport,
     exportBlocked: photoEditingMaskExportBlocked(capabilities),
@@ -2387,6 +2389,10 @@ export function BrowserPhotoEditingWorkbench(props: {
                 onReload={selectedItem
                   ? () => void (opened?.input?.kind === "provisional" ? open.retryCanonical() : openItem(selectedItem, { reload: true }))
                   : null}
+                // マスクの道具（niho-photo#93）: PC の 1 枚の面と同じ写真の上の操作（拡大に合わせて測り直す）
+                maskOverlay={
+                  toolValue === "mask" ? <BrowserPhotoEditingMaskLayer tool={maskTool} targetRef={canvasRef} /> : undefined
+                }
                 unclipped
               />
             }
@@ -2478,6 +2484,26 @@ export function BrowserPhotoEditingWorkbench(props: {
                   }
                 : undefined
             }
+            // マスク（部分補正。niho-photo#93）: PC と同じ hook。「初期化」はマスクの道具の間はマスクだけを外す
+            mask={
+              maskTool.available
+                ? {
+                    active: maskTool.active,
+                    edited: maskTool.masks.length > 0,
+                    disabled: controlsDisabled,
+                    enter: () => chooseTool("mask"),
+                    leave: maskTool.leave,
+                    band: (
+                      <PhotoEditingMaskMobileTools
+                        {...maskTool}
+                        disabled={controlsDisabled}
+                        canReset={canReset}
+                        onReset={maskTool.reset}
+                      />
+                    ),
+                  }
+                : undefined
+            }
             canEdit={props.canEdit}
             canCompare={editable && !cropping}
             compareView={
@@ -2501,7 +2527,7 @@ export function BrowserPhotoEditingWorkbench(props: {
             onBack={showGrid}
             onUndo={open.undo}
             onRedo={open.redo}
-            onReset={open.resetSettings}
+            onReset={toolValue === "mask" ? maskTool.reset : open.resetSettings}
             onRetryWork={() => void open.retryWork()}
             onSettingsChange={open.changeSettings}
             onCompareOriginalChange={open.setCompareOriginal}

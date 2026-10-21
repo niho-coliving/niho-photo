@@ -29,6 +29,8 @@ let root: Root;
 let dabs: Array<[number, number]>;
 let finishes: boolean[];
 let brush: BrowserPhotoMaskBrush;
+/** 写真の面（親）まで届いた押下（写真の面の指の操作がピンチに使う） */
+let parentDowns: number[];
 
 function rect(left: number, top: number, width: number, height: number): DOMRect {
   return { left, top, width, height, right: left + width, bottom: top + height, x: left, y: top, toJSON: () => ({}) } as DOMRect;
@@ -75,19 +77,21 @@ function fakeBrush(overrides: Partial<BrowserPhotoMaskBrush> = {}): BrowserPhoto
 function Harness(props: { brush: BrowserPhotoMaskBrush }) {
   const targetRef = useRef<HTMLCanvasElement | null>(null);
   return (
-    <section
-      ref={(element) => {
-        if (element) element.getBoundingClientRect = () => rect(0, 0, 1000, 800);
-      }}
-    >
-      <canvas
+    <div onPointerDown={(event) => parentDowns.push(event.pointerId)}>
+      <section
         ref={(element) => {
-          targetRef.current = element;
-          if (element) element.getBoundingClientRect = () => rect(100, 50, 600, 400);
+          if (element) element.getBoundingClientRect = () => rect(0, 0, 1000, 800);
         }}
-      />
-      <PhotoEditingMaskBrushOverlay targetRef={targetRef} brush={props.brush} plane={null} overlayVisible={false} />
-    </section>
+      >
+        <canvas
+          ref={(element) => {
+            targetRef.current = element;
+            if (element) element.getBoundingClientRect = () => rect(100, 50, 600, 400);
+          }}
+        />
+        <PhotoEditingMaskBrushOverlay targetRef={targetRef} brush={props.brush} plane={null} overlayVisible={false} />
+      </section>
+    </div>
   );
 }
 
@@ -117,6 +121,7 @@ beforeEach(() => {
   root = createRoot(container);
   dabs = [];
   finishes = [];
+  parentDowns = [];
 });
 
 afterEach(() => {
@@ -214,6 +219,91 @@ describe("PhotoEditingMaskBrushOverlay", () => {
     expect(brush.startStroke).not.toHaveBeenCalled();
     expect(area().getAttribute("aria-disabled")).toBe("true");
     expect(container.querySelector('[data-testid="photo-mask-brush-cursor"]')).toBeNull();
+  });
+
+  it("マウスの押下は写真の面へ渡さない（今までどおり）", async () => {
+    await render();
+    await pointer("pointerdown", 160, 90, { pointerType: "mouse" });
+    expect(brush.startStroke).toHaveBeenCalledTimes(1);
+    expect(parentDowns).toEqual([]);
+    expect(area().hasAttribute("data-photo-zoom-pinch-only")).toBe(true);
+  });
+
+  it("指 1 本で塗る。押下は写真の面へ渡し（ピンチの 1 本目）、指の下の輪は出さない（niho-photo#93）", async () => {
+    await render();
+    await pointer("pointerdown", 160, 90, { pointerType: "touch", isPrimary: true });
+    expect(brush.startStroke).toHaveBeenCalledWith(false);
+    expect(parentDowns).toEqual([1]);
+    expect(container.querySelector('[data-testid="photo-mask-brush-cursor"]')).toBeNull();
+    await pointer("pointermove", 220, 90, { pointerType: "touch" });
+    expect(dabs).toHaveLength(11);
+    expect(container.querySelector('[data-testid="photo-mask-brush-cursor"]')).toBeNull();
+    await pointer("pointerup", 220, 90, { pointerType: "touch" });
+    expect(finishes).toEqual([true]);
+  });
+
+  it("2 本目の指が触れたら、塗っている途中のストロークを確定せずに捨て、2 本目では塗らずに写真の面（ピンチ）へ渡す", async () => {
+    await render();
+    await pointer("pointerdown", 160, 90, { pointerType: "touch", isPrimary: true });
+    await pointer("pointermove", 200, 90, { pointerType: "touch" });
+    const placed = dabs.length;
+    await pointer("pointerdown", 400, 250, { pointerType: "touch", pointerId: 2 });
+    expect(finishes).toEqual([false]);
+    expect(brush.startStroke).toHaveBeenCalledTimes(1);
+    expect(parentDowns).toEqual([1, 2]);
+    // 指を動かしても・離しても、もう塗らない・確定しない
+    await pointer("pointermove", 260, 90, { pointerType: "touch" });
+    await pointer("pointermove", 450, 260, { pointerType: "touch", pointerId: 2 });
+    await pointer("pointerup", 450, 260, { pointerType: "touch", pointerId: 2 });
+    await pointer("pointerup", 260, 90, { pointerType: "touch" });
+    expect(dabs).toHaveLength(placed);
+    expect(finishes).toEqual([false]);
+    // 指を全部離した後の 1 本は、また塗る
+    await pointer("pointerdown", 160, 90, { pointerType: "touch", pointerId: 3, isPrimary: true });
+    expect(brush.startStroke).toHaveBeenCalledTimes(2);
+  });
+
+  it("写真の外に 2 本目の指が触れても、塗っている途中のストロークを捨てる", async () => {
+    await render();
+    await pointer("pointerdown", 160, 90, { pointerType: "touch", isPrimary: true });
+    await act(async () => {
+      document.body.dispatchEvent(
+        new PointerEvent("pointerdown", { bubbles: true, cancelable: true, pointerId: 2, pointerType: "touch", clientX: 5, clientY: 5 }),
+      );
+    });
+    expect(finishes).toEqual([false]);
+    await pointer("pointerup", 160, 90, { pointerType: "touch" });
+    expect(finishes).toEqual([false]);
+  });
+
+  it("指の端末では、大きさを変えたとき写真の中央に輪の見本を少しの間出す", async () => {
+    const original = window.matchMedia;
+    window.matchMedia = ((query: string) =>
+      ({
+        matches: query === "(pointer: coarse)",
+        media: query,
+        addEventListener: () => undefined,
+        removeEventListener: () => undefined,
+      }) as unknown as MediaQueryList) as typeof window.matchMedia;
+    vi.useFakeTimers();
+    try {
+      await render();
+      expect(container.querySelector('[data-testid="photo-mask-brush-size-preview"]')).toBeNull();
+      await act(async () => {
+        root.render(<Harness brush={{ ...brush, brush: { ...brush.brush, size: 10 } }} />);
+      });
+      const preview = container.querySelector<HTMLElement>('[data-testid="photo-mask-brush-size-preview"]');
+      // 直径 = 2 × 短い辺 400 × 10%、写真の中央
+      expect(preview?.style.width).toBe("80px");
+      expect([preview?.style.left, preview?.style.top]).toEqual(["300px", "200px"]);
+      await act(async () => {
+        vi.advanceTimersByTime(1000);
+      });
+      expect(container.querySelector('[data-testid="photo-mask-brush-size-preview"]')).toBeNull();
+    } finally {
+      vi.useRealTimers();
+      window.matchMedia = original;
+    }
   });
 
   it("塗っている途中に塗れなくなったら、そのストロークを捨てる", async () => {

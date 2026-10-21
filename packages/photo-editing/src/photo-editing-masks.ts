@@ -5,12 +5,16 @@ import {
   type DevelopSize,
 } from "./develop-engine/develop-geometry";
 import {
+  DEVELOP_MASK_HSL_BANDS,
   MAX_DEVELOP_MASKS,
   MIN_DEVELOP_MASK_LINEAR_DISTANCE,
   type DevelopLinearMask,
   type DevelopMask,
   type DevelopMaskAdjust,
   type DevelopMaskAdjustKey,
+  type DevelopMaskHsl,
+  type DevelopMaskHslBand,
+  type DevelopMaskHslDelta,
   type DevelopMaskKind,
   type DevelopMaskPoint,
   type DevelopRadialMask,
@@ -21,6 +25,7 @@ import {
   PHOTO_EDITING_RELATIVE_WHITE_BALANCE_MIN,
   type PhotoEditingAdjustmentGroupId,
 } from "./photo-editing-adjustments";
+import { PHOTO_EDITING_HSL_MAX, type PhotoEditingHslAxis, type PhotoEditingHslValues } from "./photo-editing-hsl";
 
 /**
  * 部分補正（マスク。Epic #31 M3 #67）の画面の計算（React に依らない純粋な関数）。契約は `docs/local-adjustments.md`。
@@ -58,6 +63,8 @@ const LINEAR_POINT_MAX = 2;
 const RADIUS_MIN = 0.005;
 const RADIUS_MAX = 1.5;
 const FEATHER_MAX = 100;
+/** 局所の HSL の値の範囲（全体のカラーミキサーと同じ ±100） */
+const HSL_LIMIT = PHOTO_EDITING_HSL_MAX;
 /** 2 点の距離の下限（正規形で丸めても 0.001 を割らない余裕を持つ） */
 const LINEAR_DISTANCE_GUARD = MIN_DEVELOP_MASK_LINEAR_DISTANCE * 1.1;
 
@@ -336,7 +343,8 @@ export type PhotoEditingMaskAdjustGroup = {
 };
 
 /**
- * 局所のスライダーの群（全体の右パネルの ライト／カラー／効果 と同じ並び・名前）。HSL は全体の UI（#79）の後。
+ * 局所のスライダーの群（全体の右パネルの ライト／カラー／効果 と同じ並び・名前）。局所の HSL（niho-photo#93）はカラーの群の後ろに
+ * 全体と同じカラーミキサーの形で置く（{@link setPhotoEditingMaskHsl}）。
  */
 export const PHOTO_EDITING_MASK_ADJUST_GROUPS: readonly PhotoEditingMaskAdjustGroup[] = PHOTO_EDITING_ADJUSTMENT_GROUPS.map(
   (group): PhotoEditingMaskAdjustGroup => ({
@@ -397,6 +405,60 @@ export function setPhotoEditingMaskAdjust(
   if (next === 0) delete adjust[key];
   else adjust[key] = next;
   return { ...mask, adjust };
+}
+
+/**
+ * 局所の HSL（`adjust.hsl`。niho-photo#93）の 8 色 × 3 の値（無い色・値は 0）。全体のカラーミキサーと同じ形で、値は全体への差分。
+ */
+export function readPhotoEditingMaskHsl(mask: DevelopMask): PhotoEditingHslValues {
+  const values = {} as PhotoEditingHslValues;
+  for (const band of DEVELOP_MASK_HSL_BANDS) {
+    const delta = mask.adjust.hsl?.[band];
+    values[band] = { hue: delta?.hue ?? 0, saturation: delta?.saturation ?? 0, luminance: delta?.luminance ?? 0 };
+  }
+  return values;
+}
+
+/** 局所の HSL に 0 でない値があるか（「初期化」を押せるか）。 */
+export function hasPhotoEditingMaskHslEdits(mask: DevelopMask): boolean {
+  return Object.values(mask.adjust.hsl ?? {}).some(
+    (delta) => delta !== undefined && (delta.hue !== 0 || delta.saturation !== 0 || delta.luminance !== 0),
+  );
+}
+
+function withoutHsl(adjust: DevelopMaskAdjust): DevelopMaskAdjust {
+  const { hsl: _hsl, ...rest } = adjust;
+  return rest;
+}
+
+/**
+ * 局所の HSL の 1 色の 1 つの軸を変える（−100〜100 に収め、整数の目盛りに丸める）。`adjust.hsl` は写して書き換え、3 つとも 0 に
+ * なった色は消し、どの色も残らなければ `adjust.hsl` ごと消す（何も当てていない形）。値が変わらなければ、渡したマスクのまま。
+ * 書くときの形（交互の配列・0 の値は書かない）は `writeDevelopMasks` の正規形が決める。
+ */
+export function setPhotoEditingMaskHsl(
+  mask: DevelopMask,
+  band: DevelopMaskHslBand,
+  axis: PhotoEditingHslAxis,
+  value: number,
+): DevelopMask {
+  if (!Number.isFinite(value) || !DEVELOP_MASK_HSL_BANDS.includes(band)) return mask;
+  const rounded = Math.round(clamp(value, -HSL_LIMIT, HSL_LIMIT));
+  const next = rounded === 0 ? 0 : rounded;
+  const current = mask.adjust.hsl?.[band] ?? { hue: 0, saturation: 0, luminance: 0 };
+  if (current[axis] === next) return mask;
+  const delta: DevelopMaskHslDelta = { ...current, [axis]: next };
+  const hsl: DevelopMaskHsl = { ...mask.adjust.hsl };
+  if (delta.hue === 0 && delta.saturation === 0 && delta.luminance === 0) delete hsl[band];
+  else hsl[band] = delta;
+  const adjust = Object.keys(hsl).length > 0 ? { ...mask.adjust, hsl } : withoutHsl(mask.adjust);
+  return { ...mask, adjust };
+}
+
+/** 局所の HSL を全部 0 に戻す（`adjust.hsl` ごと消す。ほかの差分は残す）。無ければ、渡したマスクのまま。 */
+export function resetPhotoEditingMaskHsl(mask: DevelopMask): DevelopMask {
+  if (mask.adjust.hsl === undefined) return mask;
+  return { ...mask, adjust: withoutHsl(mask.adjust) };
 }
 
 /** 円形のぼかし（0〜100。円形のほかは変えない）。 */

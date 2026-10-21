@@ -109,10 +109,23 @@ function expectAt(element: HTMLElement, expected: [number, number]) {
   expect(top).toBeCloseTo(expected[1], 6);
 }
 
-async function pointer(element: Element, type: string, clientX: number, clientY: number, pointerId = 1) {
+async function pointer(
+  element: Element,
+  type: string,
+  clientX: number,
+  clientY: number,
+  pointerId = 1,
+  init: PointerEventInit = {},
+) {
   await act(async () => {
-    element.dispatchEvent(new PointerEvent(type, { bubbles: true, cancelable: true, clientX, clientY, pointerId, button: 0 }));
+    element.dispatchEvent(new PointerEvent(type, { bubbles: true, cancelable: true, clientX, clientY, pointerId, button: 0, ...init }));
   });
+}
+
+function backdrop(): HTMLElement {
+  const found = container.querySelector<HTMLElement>('[data-testid="photo-mask-backdrop"]');
+  if (!found) throw new Error("backdrop not found");
+  return found;
 }
 
 async function key(element: Element, type: "keydown" | "keyup", name: string, init: KeyboardEventInit = {}) {
@@ -262,14 +275,141 @@ describe("PhotoEditingMaskOverlay", () => {
     expect(container.querySelectorAll('[data-mask-shape="radial"] ellipse').length).toBeGreaterThanOrEqual(2);
   });
 
-  it("選んでいないマスクは印を押して選び、写真の何も無い所を押すと選択を外す", async () => {
+  it("選んでいないマスクは印を押して選び、写真の何も無い所をタップすると選択を外す", async () => {
     await render({ masks: [LINEAR, RADIAL], selectedId: "mask-a" });
     await act(async () => {
       handle("円形 2 を選ぶ").click();
     });
     expect(onSelect).toHaveBeenLastCalledWith("mask-b");
-    await pointer(container.querySelector('[data-testid="photo-mask-backdrop"]')!, "pointerdown", 150, 60);
+    await pointer(backdrop(), "pointerdown", 150, 60);
+    await pointer(backdrop(), "pointerup", 152, 61);
     expect(onSelect).toHaveBeenLastCalledWith(null);
+  });
+
+  it("選択を外すのはタップだけ: 押しただけ・動かした・2 本の指（ピンチ）・止められたときは外さない（niho-photo#93）", async () => {
+    await render({ masks: [LINEAR], selectedId: "mask-a" });
+    // 押した時点では外さない（ピンチの 1 本目かもしれない）
+    await pointer(backdrop(), "pointerdown", 150, 60, 1, { pointerType: "touch", isPrimary: true });
+    expect(onSelect).not.toHaveBeenCalled();
+    // 2 本目の指が触れたらピンチ: どちらを離しても外さない
+    await pointer(backdrop(), "pointerdown", 300, 200, 2, { pointerType: "touch" });
+    await pointer(backdrop(), "pointerup", 300, 200, 2, { pointerType: "touch" });
+    await pointer(backdrop(), "pointerup", 150, 60, 1, { pointerType: "touch" });
+    expect(onSelect).not.toHaveBeenCalled();
+    // 動かしてから離した（拡大中の送り）
+    await pointer(backdrop(), "pointerdown", 150, 60, 3, { pointerType: "touch", isPrimary: true });
+    await pointer(backdrop(), "pointerup", 190, 60, 3, { pointerType: "touch" });
+    expect(onSelect).not.toHaveBeenCalled();
+    // 止められた
+    await pointer(backdrop(), "pointerdown", 150, 60, 4, { pointerType: "touch", isPrimary: true });
+    await pointer(backdrop(), "pointercancel", 150, 60, 4, { pointerType: "touch" });
+    await pointer(backdrop(), "pointerup", 150, 60, 4, { pointerType: "touch" });
+    expect(onSelect).not.toHaveBeenCalled();
+    // 指 1 本のタップは外す
+    await pointer(backdrop(), "pointerdown", 150, 60, 5, { pointerType: "touch", isPrimary: true });
+    await pointer(backdrop(), "pointerup", 154, 63, 5, { pointerType: "touch" });
+    expect(onSelect).toHaveBeenCalledTimes(1);
+    expect(onSelect).toHaveBeenLastCalledWith(null);
+  });
+
+  it("つまみを動かしている途中に別の指が写真に触れたら、動かし始めの形に戻す（タップにもしない）", async () => {
+    await render({ masks: [RADIAL], selectedId: "mask-b" });
+    const center = handle("円形グラデーションの中心（全体を動かす）");
+    await pointer(center, "pointerdown", 400, 250, 1, { pointerType: "touch", isPrimary: true });
+    await pointer(center, "pointermove", 450, 250, 1, { pointerType: "touch" });
+    await pointer(backdrop(), "pointerdown", 200, 100, 2, { pointerType: "touch" });
+    expect(changes.map((change) => change.phase)).toEqual(["drag", "commit"]);
+    expect((changes.at(-1)!.mask as DevelopRadialMask).center).toEqual(RADIAL.center);
+    expect(dragging).toEqual([true, false]);
+    // 1 本目の指の続きは、もう動かさない
+    await pointer(center, "pointermove", 480, 250, 1, { pointerType: "touch" });
+    await pointer(center, "pointerup", 480, 250, 1, { pointerType: "touch" });
+    await pointer(backdrop(), "pointerup", 200, 100, 2, { pointerType: "touch" });
+    expect(changes.map((change) => change.phase)).toEqual(["drag", "commit"]);
+    expect(onSelect).not.toHaveBeenCalled();
+  });
+
+  it("指（pointer: coarse）では、つまみと印の押せる範囲を 44px にし（見た目の丸は同じ）、中心を上に重ね、回転のつまみを 44px 離す", async () => {
+    const original = window.matchMedia;
+    window.matchMedia = ((query: string) =>
+      ({
+        matches: query === "(pointer: coarse)",
+        media: query,
+        addEventListener: () => undefined,
+        removeEventListener: () => undefined,
+      }) as unknown as MediaQueryList) as typeof window.matchMedia;
+    try {
+      await render({ masks: [LINEAR, RADIAL], selectedId: "mask-b" });
+      const center = handle("円形グラデーションの中心（全体を動かす）");
+      expect(center.className).toContain("h-7");
+      expect(center.className).toContain("pointer-coarse:h-11");
+      expect(center.className).toContain("pointer-coarse:w-11");
+      expect(center.className).toContain("pointer-coarse:z-10");
+      expect(handle("円形グラデーションの幅（右）").className).toContain("pointer-coarse:h-11");
+      expect(handle("円形グラデーションの幅（右）").className).not.toContain("pointer-coarse:z-10");
+      expect(handle("線形 1 を選ぶ").className).toContain("pointer-coarse:h-11");
+      // 回転のつまみは上の端（300, 100）から 44px 上
+      const rotate = position(handle("円形グラデーションの回転"));
+      expect(rotate[0]).toBeCloseTo(300, 6);
+      expect(rotate[1]).toBeCloseTo(100 - 44, 9);
+    } finally {
+      window.matchMedia = original;
+    }
+  });
+
+  it("写真の面の拡大（style の CSS 変数）が変わったら、次の描画の前に測り直してつまみを写真に合わせる", async () => {
+    let canvasRect = rect(100, 50, 600, 400);
+    function ZoomHarness() {
+      const targetRef = useRef<HTMLCanvasElement | null>(null);
+      return (
+        <div data-photo-zoom-surface="" data-testid="zoom-surface">
+          <section
+            ref={(element) => {
+              if (element) element.getBoundingClientRect = () => rect(0, 0, 1000, 800);
+            }}
+          >
+            <canvas
+              ref={(element) => {
+                targetRef.current = element;
+                if (element) element.getBoundingClientRect = () => canvasRect;
+              }}
+            />
+            <PhotoEditingMaskOverlay
+              targetRef={targetRef}
+              masks={[LINEAR]}
+              selectedId="mask-a"
+              frame={FRAME}
+              disabled={false}
+              plane={null}
+              onSelect={onSelect}
+              onShapeChange={() => undefined}
+              onDraggingChange={() => undefined}
+              onToggleOverlay={onToggleOverlay}
+            />
+          </section>
+        </div>
+      );
+    }
+    await act(async () => {
+      root.render(<ZoomHarness />);
+    });
+    await act(async () => undefined);
+    expectAt(handle("線形グラデーションの始点（効果 100%）"), [300, 120]);
+    // 2 倍に拡大して左上へ送った（React は描き直さない。写真の面の style だけが変わる）
+    canvasRect = rect(-200, -150, 1200, 800);
+    const surface = container.querySelector<HTMLElement>('[data-testid="zoom-surface"]')!;
+    await act(async () => {
+      surface.style.setProperty("--photo-editing-zoom", "translate(-300px, -200px) scale(2)");
+      await new Promise((resolve) => setTimeout(resolve, 40));
+    });
+    const overlay = container.querySelector<HTMLElement>('[data-testid="photo-mask-overlay"]')!;
+    expect([overlay.style.left, overlay.style.top, overlay.style.width, overlay.style.height]).toEqual([
+      "-200px",
+      "-150px",
+      "1200px",
+      "800px",
+    ]);
+    expectAt(handle("線形グラデーションの始点（効果 100%）"), [600, 240]);
   });
 
   it("O で範囲の重ね表示を切り替える（文字の入力欄・修飾キーのときは扱わない）", async () => {

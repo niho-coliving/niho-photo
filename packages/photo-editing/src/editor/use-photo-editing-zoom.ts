@@ -22,6 +22,8 @@ import {
  * - 指 2 本: ピンチで拡大（2 点の距離の比で倍率、2 点の中点の下の画を動かさない。中点の移動で送る）。始めたら長押しは取り消す。
  * - 指 1 本・拡大中: ドラッグで送る（長押しをやめる 10px を越えてから）。全体表示のときのドラッグは何もしない。
  * - ダブルタップ: 全体表示 ⇄ 100%（作業画像の 1px が CSS の 1px。小さい画でも 2 倍）。
+ * - 指 1 本で別のものを描く面（マスクのブラシ。niho-photo#93）は {@link PHOTO_EDITING_ZOOM_PINCH_ONLY_ATTRIBUTE} を付ける。その面の
+ *   上の指はピンチ（指 2 本）にだけ数え、指 1 本の送り・長押し・ダブルタップには使わない。
  *
  * 画への当て方: 写真の面の要素に CSS 変数 `--photo-editing-zoom` を直接書く（指を動かすたびに React を描き直さない）。
  * 1 枚の表示（`BrowserPhotoEditingLoupe`）の canvas / img がこれを `transform` に読む。React の state に持つのは
@@ -29,6 +31,14 @@ import {
  */
 
 const ZOOM_VARIABLE = "--photo-editing-zoom";
+
+/**
+ * 写真の面（拡大を書く要素）に付ける印。写真の上に重ねる印（マスクのつまみ・ブラシ）は、この要素の `style`（拡大）が変わったら
+ * 測り直す（`usePhotoEditingTargetBox`。niho-photo#93）。
+ */
+export const PHOTO_EDITING_ZOOM_SURFACE_ATTRIBUTE = "data-photo-zoom-surface";
+/** 指 1 本ではなく、ピンチにだけ使う面の印（その面が指 1 本の操作を持つ。マスクのブラシ）。 */
+export const PHOTO_EDITING_ZOOM_PINCH_ONLY_ATTRIBUTE = "data-photo-zoom-pinch-only";
 
 /** 長押し（補正前の近道）までの時間。 */
 const PHOTO_HOLD_MS = 450;
@@ -270,6 +280,11 @@ export function usePhotoEditingZoom(options: {
       pressRef.current = null;
       lastTapRef.current = null;
       pinchRef.current = pinchSample(pointers);
+      return;
+    }
+    // 指 1 本の操作を持つ面（ブラシ）の上は、ピンチの 1 本目として数えるだけ（送り・長押し・タップにしない）
+    if (event.target instanceof Element && event.target.closest(`[${PHOTO_EDITING_ZOOM_PINCH_ONLY_ATTRIBUTE}]`)) {
+      lastTapRef.current = null;
       return;
     }
 

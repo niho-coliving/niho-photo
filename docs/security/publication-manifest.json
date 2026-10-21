@@ -1048,7 +1048,7 @@
         "path": "packages/photo-editing/src/editor/browser-photo-editing-mobile-editor.tsx",
         "sha256": "cf0ebc1e3a23b7a2e8ecea7538cc6f2d9880cbf4e181d79db61f26dc293c3d1a"
       },
-      "outputSha256": "e33e90579a1d6b2b219588652ed61f55a730c874323efb8c431d714f063f9c9d",
+      "outputSha256": "7f93f41ccbeed28b39959d7d04a2905df68a7adff3742ce24b07b7a899931ca1",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
@@ -1062,7 +1062,8 @@
         "PR #79 のHSL mixerを最新tone curveとinfo UIへ統合。",
         "PR #79のHSL mixerを最新mainから取り込み、公開出力ハッシュを更新。",
         "niho-photo#39 スマホの編集の層にカラーグレーディングの道具を足した。",
-        "PR #80 のカラーグレーディングを最新HSL UIと統合。"
+        "PR #80 のカラーグレーディングを最新HSL UIと統合。",
+        "部分補正（マスク）#93: スマホの編集の層の道具の帯に「マスク」を足し（hookの入る・出るに合わせる）、マスクの間は長押しの補正前を止め、写真の面に拡大の印を付けた"
       ]
     },
     {
@@ -1326,9 +1327,10 @@
         "PR #98を#91マージ後の最新mainへ積み直し、選別保存中の二重操作ガードを保持。",
         "PR #98で選別フラグの保存経路とUIを更新する。",
         "PR #99を#91マージ後のmainへ積み直し、遠近補正後のブラシ半径を局所ヤコビアンで写す。",
-        "PR #99のマスク面の描画・読み書きと遠近対応の変更を反映する。"
+        "PR #99のマスク面の描画・読み書きと遠近対応の変更を反映する。",
+        "部分補正（マスク）#93: マスクの道具をスマホの全画面の編集の層でも出し（写真の上の操作・段・マスクだけの初期化）を渡した"
       ],
-      "outputSha256": "0551db733032aa51da575d53fe91da74bbff99b9b62250ef4997b710a021d304"
+      "outputSha256": "54b9bcefbf251d68468013f7d0e7264d92c811ecf48c0042ec39776f0d0cd07e"
     },
     {
       "path": "packages/photo-editing/src/editor/photo-editing-adjustment-controls-effects.test.tsx",
@@ -2133,13 +2135,14 @@
         "path": "packages/photo-editing/src/editor/use-photo-editing-zoom.ts",
         "sha256": "f85914654c70c294a0cd0b550c201fae352721e966d96f71cbdfd6efcdb4d6f4"
       },
-      "outputSha256": "80dd8d8480cf3e046e1072c70362a59981b1924c8d8df9e26b77aadb8a900d6c",
+      "outputSha256": "dafb0cd6ae5ef17469852be2301c1b71bee0fc5c3062ece016cbfe3d6422bea1",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
         "niho-photo#41 上下に並べている間は指の下の半分の面で拡大を測る。",
         "niho-photo#41 の比較UIを #72 のヒストグラム・Jキー契約と併存するようmainへ積み直した。",
-        "niho-photo#41 の比較pane集合変更時に拡大位置を新しい境界へclampする。"
+        "niho-photo#41 の比較pane集合変更時に拡大位置を新しい境界へclampする。",
+        "部分補正（マスク）#93: 写真の面の印と、ピンチにだけ数える面（ブラシ）の印を足し、その面の指1本を送り・長押し・タップに使わないようにした"
       ]
     },
     {
@@ -2413,9 +2416,10 @@
         "PR #98を#91マージ後の最新mainへ積み直し、選別保存中の二重操作ガードを保持。",
         "PR #98で選別フラグの保存経路とUIを更新する。",
         "PR #99を#91マージ後のmainへ積み直し、遠近補正後のブラシ半径を局所ヤコビアンで写す。",
-        "PR #99のマスク面の描画・読み書きと遠近対応の変更を反映する。"
+        "PR #99のマスク面の描画・読み書きと遠近対応の変更を反映する。",
+        "部分補正（マスク）#93: 局所のカラーミキサーの初期化とスマホのマスクの道具の文言を足した"
       ],
-      "outputSha256": "3efde850848fca52fa92f96e1c50b76145defd10f182474e28976c0037e1b68d"
+      "outputSha256": "5e4207b7132b39aa2f1bf3390e1e6ed2b3ccf5f22349460a16a43efe6eb557c4"
     },
     {
       "path": "packages/photo-editing/src/photo-editing-crop.test.ts",
@@ -10440,8 +10444,8 @@
     },
     {
       "path": "packages/photo-editing/src/photo-editing-advanced-sections-state.ts",
-      "sha256": "1168b776ae597f1e7a5d0f962bc255cf7b96599a14061f6a3708435925c6f39c",
-      "origin": "niho-photo#37 のため新規作成。右パネルの既定で閉じた節の開閉を端末に覚えるフック（開いた節の id の配列）。外部コード・実データを含まない。\n変更理由: niho-photo#38 既定で閉じた節に「カラーミキサー」（colorMixer）を追加。\n変更理由: PR #79 のHSL mixerを最新tone curveとinfo UIへ統合。\n変更理由: PR #79のHSL mixerを最新mainから取り込み、公開出力ハッシュを更新。\n変更理由: niho-photo#39 既定で閉じた節にカラーグレーディングの id を足した。\n変更理由: PR #80 のカラーグレーディングを最新HSL UIと統合。\n変更理由: PR #88 main rebase and perspective integration with develop engine 0.22.0\n変更理由: niho-photo#46 で既定で閉じた節に geometry を足した。"
+      "sha256": "0925f936d8fe81bb73c9a624f1526c4ec334c85da2d114fb2d98f1d4a27c018a",
+      "origin": "niho-photo#37 のため新規作成。右パネルの既定で閉じた節の開閉を端末に覚えるフック（開いた節の id の配列）。外部コード・実データを含まない。\n変更理由: niho-photo#38 既定で閉じた節に「カラーミキサー」（colorMixer）を追加。\n変更理由: PR #79 のHSL mixerを最新tone curveとinfo UIへ統合。\n変更理由: PR #79のHSL mixerを最新mainから取り込み、公開出力ハッシュを更新。\n変更理由: niho-photo#39 既定で閉じた節にカラーグレーディングの id を足した。\n変更理由: PR #80 のカラーグレーディングを最新HSL UIと統合。\n変更理由: PR #88 main rebase and perspective integration with develop engine 0.22.0\n変更理由: niho-photo#46 で既定で閉じた節に geometry を足した。\n変更理由: 部分補正（マスク）#93: 局所のカラーミキサーの節の開閉のidを足した"
     },
     {
       "path": "packages/photo-editing/src/photo-editing-tone-curve.test.ts",
@@ -10465,8 +10469,8 @@
     },
     {
       "path": "packages/photo-editing/src/editor/photo-editing-hsl-mixer.tsx",
-      "sha256": "1beacebdcdf8ff6c3f556b1e1fa092b8f1f8bacf04d95e0458891b8ba8e6016d",
-      "origin": "niho-photo#38 のため新規作成。右パネルのカラーの群の下の「カラーミキサー」の節と、PC・スマホ共通の「調整」の切り替えと 8 色のスライダーの部品。外部コード・実データを含まない。\n変更理由: disable HSL controls during monochrome mode"
+      "sha256": "5f394264c4abd877c60a9caf925e446b95f63f4046fe3a486b90150a80c084ca",
+      "origin": "niho-photo#38 のため新規作成。右パネルのカラーの群の下の「カラーミキサー」の節と、PC・スマホ共通の「調整」の切り替えと 8 色のスライダーの部品。外部コード・実データを含まない。\n変更理由: disable HSL controls during monochrome mode\n変更理由: 部分補正（マスク）#93: カラーミキサーを値を持たない見た目の部品に分け、全体の部品はその薄い包みにした（局所のカラーミキサーと共有）"
     },
     {
       "path": "packages/photo-editing/src/editor/photo-editing-hsl-mixer.test.tsx",
@@ -10775,13 +10779,13 @@
     },
     {
       "path": "packages/photo-editing/src/photo-editing-masks.ts",
-      "sha256": "8bdfbb29adc1c72bf83c06d158c2f38f6ff23fd91e98cd0b61a78bbfe7ec2e3b",
-      "origin": "Issue #67の公開仕様 docs/local-adjustments.md だけから新規作成した、部分補正（マスク）の画面の計算（既定の形・つまみの位置・つまみを動かした形・局所の差分・範囲の収め方）のTypeScript実装。外部画像・非公開コード・個体metadataを含まない。"
+      "sha256": "6db61836d319858b89696b34dddac839bbce3dec740a03454abbd744ed031d5f",
+      "origin": "Issue #67の公開仕様 docs/local-adjustments.md だけから新規作成した、部分補正（マスク）の画面の計算（既定の形・つまみの位置・つまみを動かした形・局所の差分・範囲の収め方）のTypeScript実装。外部画像・非公開コード・個体metadataを含まない。\n変更理由: 部分補正（マスク）#93: 局所のカラーミキサー（adjust.hsl）の読み・書き・初期化の純粋な関数を足した"
     },
     {
       "path": "packages/photo-editing/src/photo-editing-masks.test.ts",
-      "sha256": "a1c0a5d757356e52f89fcb6e3b7427cbec5358265096eb3a9a55036b3e95483b",
-      "origin": "Issue #67の公開仕様と合成の値だけから新規作成した、部分補正の画面の計算（回転・反転・角度補正でつまみが形の上にあること・出す値が読める設定になること）の回帰。外部画像・非公開コード・個体metadataを含まない。"
+      "sha256": "58ba82023ddb9e3632264460d8dd9acb9f78e7e4950046d1802dc8208bdd399d",
+      "origin": "Issue #67の公開仕様と合成の値だけから新規作成した、部分補正の画面の計算（回転・反転・角度補正でつまみが形の上にあること・出す値が読める設定になること）の回帰。外部画像・非公開コード・個体metadataを含まない。\n変更理由: 部分補正（マスク）#93: 局所のカラーミキサーの読み書き・正規形の回帰を足した"
     },
     {
       "path": "packages/photo-editing/src/develop-engine/develop-geometry-source-to-output.test.ts",
@@ -10800,33 +10804,33 @@
     },
     {
       "path": "packages/photo-editing/src/editor/use-browser-photo-masks.ts",
-      "sha256": "f8e56ca9527f2c0bde6ea26ece14e2089678283411b997c828ab5622d783cfa8",
-      "origin": "Issue #67の公開仕様だけから新規作成した、マスクの道具の状態（出す条件・足す / 複製 / 削除 / 反転 / 目・局所の補正・形・初期化・キー）と範囲の重ね表示の面を取りに行く係のReact hook。外部画像・非公開コード・個体metadataを含まない。\n変更理由: PR #99を#91マージ後のmainへ積み直し、遠近補正後のブラシ半径を局所ヤコビアンで写す。\n変更理由: PR #99のマスク面の描画・読み書きと遠近対応の変更を反映する。"
+      "sha256": "d5591ef414a5817199096da74ad13c7f8e9132425ca229e70f4cdd5d5cc11293",
+      "origin": "Issue #67の公開仕様だけから新規作成した、マスクの道具の状態（出す条件・足す / 複製 / 削除 / 反転 / 目・局所の補正・形・初期化・キー）と範囲の重ね表示の面を取りに行く係のReact hook。外部画像・非公開コード・個体metadataを含まない。\n変更理由: PR #99を#91マージ後のmainへ積み直し、遠近補正後のブラシ半径を局所ヤコビアンで写す。\n変更理由: PR #99のマスク面の描画・読み書きと遠近対応の変更を反映する。\n変更理由: 部分補正（マスク）#93: 局所のカラーミキサーの書き込み・初期化を足し、スマホの全画面の編集の層でも出せるようにした"
     },
     {
       "path": "packages/photo-editing/src/editor/use-browser-photo-masks.test.tsx",
-      "sha256": "15f67ec17937599fac067c8ffdaa641c82c091c37c8e698a4a720c493c076434",
-      "origin": "Issue #67のため新規作成した、マスクの道具のhook（取り消しの1単位・読める設定・8枚と原寸の書き出しの理由・Esc / Delete）と重ね表示の面の係（rAFでまとめる・古い応答を捨てる）の回帰。外部画像・非公開コード・個体metadataを含まない。"
+      "sha256": "f75a4030d9f675b41faceb55d6175695e48d21e9a4da5b484aedf3f0084626ab",
+      "origin": "Issue #67のため新規作成した、マスクの道具のhook（取り消しの1単位・読める設定・8枚と原寸の書き出しの理由・Esc / Delete）と重ね表示の面の係（rAFでまとめる・古い応答を捨てる）の回帰。外部画像・非公開コード・個体metadataを含まない。\n変更理由: 部分補正（マスク）#93: 局所のカラーミキサーの書き込みと初期化の回帰を足した"
     },
     {
       "path": "packages/photo-editing/src/editor/photo-editing-mask-overlay.tsx",
-      "sha256": "6b2a22c266ee25e802b7b0eb12b420026877695d41952f1ea1f34ba20e422c56",
-      "origin": "Issue #67の公開仕様だけから新規作成した、写真の上のマスクの操作（形の線・つまみのボタン・pointer capture・矢印キー・範囲の赤い重ね）のReact部品。外部画像・非公開コード・個体metadataを含まない。\n変更理由: overlay解除時にドラッグ中の形を確定し消えたマスクの復活を防ぐ\n変更理由: PR #99を#91マージ後のmainへ積み直し、遠近補正後のブラシ半径を局所ヤコビアンで写す。\n変更理由: PR #99のマスク面の描画・読み書きと遠近対応の変更を反映する。"
+      "sha256": "0e96bf05b29dc1764c347b395026e41a021210a6e5a144ba8d9331f69bed0a6c",
+      "origin": "Issue #67の公開仕様だけから新規作成した、写真の上のマスクの操作（形の線・つまみのボタン・pointer capture・矢印キー・範囲の赤い重ね）のReact部品。外部画像・非公開コード・個体metadataを含まない。\n変更理由: overlay解除時にドラッグ中の形を確定し消えたマスクの復活を防ぐ\n変更理由: PR #99を#91マージ後のmainへ積み直し、遠近補正後のブラシ半径を局所ヤコビアンで写す。\n変更理由: PR #99のマスク面の描画・読み書きと遠近対応の変更を反映する。\n変更理由: 部分補正（マスク）#93: 選択を外すのをタップにし、指ではつまみと印の押せる範囲を44pxにして回転のつまみを離し、2本目の指で動かし始めに戻すようにした"
     },
     {
       "path": "packages/photo-editing/src/editor/photo-editing-mask-overlay.test.tsx",
-      "sha256": "2a2c74dfb35201c2bb8f33ac9e79159ba9941d7df0eb7a2f43072eca784bb648",
-      "origin": "Issue #67のため新規作成した、写真の上のマスクの操作（つまみの位置・drag と1回のcommit・矢印キー・選択・O）のjsdom回帰。外部画像・非公開コード・個体metadataを含まない。\n変更理由: overlay破棄時のマウス操作・キー操作の確定を回帰テストする"
+      "sha256": "92cb5e1a60b302f4941decb0bf6e2a9393ca23321d1a85755eed6709ac08c7e5",
+      "origin": "Issue #67のため新規作成した、写真の上のマスクの操作（つまみの位置・drag と1回のcommit・矢印キー・選択・O）のjsdom回帰。外部画像・非公開コード・個体metadataを含まない。\n変更理由: overlay破棄時のマウス操作・キー操作の確定を回帰テストする\n変更理由: 部分補正（マスク）#93: タップで選択を外す・2本目の指で戻す・指の押せる範囲・拡大に合わせた測り直しのjsdom回帰を足した"
     },
     {
       "path": "packages/photo-editing/src/editor/photo-editing-mask-tools.tsx",
-      "sha256": "4784cefd178786976cb2415b079b4d707465d18f5e7187c0f99f13c520d667d8",
-      "origin": "Issue #67の公開仕様だけから新規作成した、右パネルのマスクの面（足す・一覧・重ね表示の切り替え・局所のスライダー・ぼかし）のReact部品。外部画像・非公開コード・個体metadataを含まない。\n変更理由: PR #99を#91マージ後のmainへ積み直し、遠近補正後のブラシ半径を局所ヤコビアンで写す。\n変更理由: PR #99のマスク面の描画・読み書きと遠近対応の変更を反映する。"
+      "sha256": "8363ffbd4d610b74ab578ee448edccc0a4f631010ab2615651a2b419958d85b6",
+      "origin": "Issue #67の公開仕様だけから新規作成した、右パネルのマスクの面（足す・一覧・重ね表示の切り替え・局所のスライダー・ぼかし）のReact部品。外部画像・非公開コード・個体metadataを含まない。\n変更理由: PR #99を#91マージ後のmainへ積み直し、遠近補正後のブラシ半径を局所ヤコビアンで写す。\n変更理由: PR #99のマスク面の描画・読み書きと遠近対応の変更を反映する。\n変更理由: 部分補正（マスク）#93: 選んだマスクのカラーの群の後ろに局所のカラーミキサーの節を足し、スマホの段と共有する値の書き方を公開した"
     },
     {
       "path": "packages/photo-editing/src/editor/photo-editing-mask-tools.test.tsx",
-      "sha256": "fba02b81bbe32bae72421c35104a55dfc929c33cf90fe4ec93fae31365769a93",
-      "origin": "Issue #67のため新規作成した、右パネルのマスクの面（押せない理由・行の操作・drag / commit・相対の白の出し分け・ぼかし）のjsdom回帰。外部画像・非公開コード・個体metadataを含まない。"
+      "sha256": "bcb8d8f053b7fe61c33426cadd3668d034ed2ba0239d3f4e9be4dcde9a22a7b6",
+      "origin": "Issue #67のため新規作成した、右パネルのマスクの面（押せない理由・行の操作・drag / commit・相対の白の出し分け・ぼかし）のjsdom回帰。外部画像・非公開コード・個体metadataを含まない。\n変更理由: 部分補正（マスク）#93: 局所のカラーミキサーの節のjsdom回帰を足した"
     },
     {
       "path": "packages/develop-engine/crates/niho-develop/src/xmp/masks.rs",
@@ -11125,13 +11129,13 @@
     },
     {
       "path": "packages/photo-editing/src/editor/photo-editing-mask-brush-overlay.tsx",
-      "sha256": "a911d1adcece502b2cc3c5e51eadbc58e40c074581b82cb8308048de006a1e0f",
-      "origin": "Issue #68の公開仕様 docs/local-adjustments.md だけから新規作成した、写真の上のブラシの面（ポインタのストローク・dabの間隔・赤い面の見た目・筆の輪・キー）のReact部品。外部画像・非公開コード・個体metadataを含まない。\n変更理由: 部分補正（マスク）#68: 反転したブラシのマスクの dab の赤の足し引きを逆にする（Codex 指摘）。\n変更理由: PR #99を#91マージ後のmainへ積み直し、遠近補正後のブラシ半径を局所ヤコビアンで写す。"
+      "sha256": "3e689ed071030aac1c0410ae0b88832146b96bac4f6ee086589d8500d0273dde",
+      "origin": "Issue #68の公開仕様 docs/local-adjustments.md だけから新規作成した、写真の上のブラシの面（ポインタのストローク・dabの間隔・赤い面の見た目・筆の輪・キー）のReact部品。外部画像・非公開コード・個体metadataを含まない。\n変更理由: 部分補正（マスク）#68: 反転したブラシのマスクの dab の赤の足し引きを逆にする（Codex 指摘）。\n変更理由: PR #99を#91マージ後のmainへ積み直し、遠近補正後のブラシ半径を局所ヤコビアンで写す。\n変更理由: 部分補正（マスク）#93: 指1本で塗り、2本目の指で塗りかけを捨ててピンチへ渡し、指の下の輪を出さず大きさの見本を出すようにした"
     },
     {
       "path": "packages/photo-editing/src/editor/photo-editing-mask-brush-overlay.test.tsx",
-      "sha256": "588fe6f2ed1b738ea1d5008d6f0e67bc4f1cb531fad29ba872f2202f543c97e2",
-      "origin": "Issue #68のため新規作成した、写真の上のブラシの面（ストローク・止める・⌥・[ ]・塗れない間）のjsdom回帰。外部画像・非公開コード・個体metadataを含まない。\n変更理由: 部分補正（マスク）#68: 反転したブラシのマスクの dab の赤の足し引きを逆にする（Codex 指摘）。"
+      "sha256": "fc2f11c75f7da9985e4ee68bf0cdb10b7d4218d9a5404888d9c2f4f5e4ebdcc4",
+      "origin": "Issue #68のため新規作成した、写真の上のブラシの面（ストローク・止める・⌥・[ ]・塗れない間）のjsdom回帰。外部画像・非公開コード・個体metadataを含まない。\n変更理由: 部分補正（マスク）#68: 反転したブラシのマスクの dab の赤の足し引きを逆にする（Codex 指摘）。\n変更理由: 部分補正（マスク）#93: 指で塗る・2本目の指で捨てる・写真の面へ渡す・大きさの見本のjsdom回帰を足した"
     },
     {
       "path": "packages/photo-editing/src/editor/photo-editing-mask-brush-tools.tsx",
@@ -11155,13 +11159,43 @@
     },
     {
       "path": "packages/photo-editing/src/editor/use-photo-editing-target-box.ts",
-      "sha256": "ede74fd47cb9ffd97089b5ce47411851729b844cb19c5d7d7a9a6c8a87b376f8",
-      "origin": "Issue #67のマスクの操作から切り出した、写真のcanvasの重ねる位置と大きさを測るReactフック（Issue #68のブラシの面も使う）。外部画像・非公開コード・個体metadataを含まない。"
+      "sha256": "0d20b2e7c3a426efc691c7644ae58ba078b0cc2fac7a5bb5dca0fe1ff5655280",
+      "origin": "Issue #67のマスクの操作から切り出した、写真のcanvasの重ねる位置と大きさを測るReactフック（Issue #68のブラシの面も使う）。外部画像・非公開コード・個体metadataを含まない。\n変更理由: 部分補正（マスク）#93: 写真の面の拡大（styleの変化）を見て1フレームに1回測り直すようにした"
     },
     {
       "path": "apps/camera/src/local-library/local-photo-library-mask-surfaces.test.ts",
       "sha256": "17cf06298463620f47accdaa44f826e9ddee31bbc9cdd959e4a9f80f5f6fe35f",
       "origin": "Issue #68のため新規作成した、この Mac の PhotoLibrary のマスクの面（photoIdへの結び・開き直し・無い面・能力）の回帰。外部画像・非公開コード・個体metadataを含まない。"
+    },
+    {
+      "path": "packages/photo-editing/src/editor/photo-editing-mask-hsl.tsx",
+      "sha256": "29ea1187bcd23ca6c1ee47e01f26ba31d1164e23246627c369a31464bd39fd59",
+      "origin": "Issue #93の公開仕様 docs/local-adjustments.md だけから新規作成した、選んだマスクの局所のカラーミキサー（PCの既定で閉じた節とスマホの段）のReact部品。外部画像・非公開コード・個体metadataを含まない。"
+    },
+    {
+      "path": "packages/photo-editing/src/editor/photo-editing-mask-mobile-tools.tsx",
+      "sha256": "64e20bea0725adaf478b875cd268bc2eb94f3452a352c9f1875bc2e3332234e1",
+      "origin": "Issue #93の公開仕様 docs/local-adjustments.md だけから新規作成した、スマホの全画面の編集の層のマスクの段（足す・一覧・操作・補正の種類・チップと目盛り・ブラシ）のReact部品。外部画像・非公開コード・個体metadataを含まない。"
+    },
+    {
+      "path": "packages/photo-editing/src/editor/photo-editing-mask-mobile-tools.test.tsx",
+      "sha256": "e4346904f56da58a7daabd6d0519ba9ba932d21d4a8a1db1eefedd60875353a2",
+      "origin": "Issue #93のため新規作成した、スマホのマスクの段（足す・理由・一覧・操作・補正の種類・カラーミキサー・ブラシ・44pxの押せる範囲）のjsdom回帰。外部画像・非公開コード・個体metadataを含まない。"
+    },
+    {
+      "path": "packages/photo-editing/src/editor/browser-photo-editing-mobile-editor-mask.test.tsx",
+      "sha256": "c888bc5f9061beb615aea48fc1faab9d8e6ebdea66729333d885caf6db59c454",
+      "origin": "Issue #93のため新規作成した、スマホの編集の層の「マスク」（帯の並び・入る/出る・hookに合わせる・長押しを止める・ピンチだけの面）のjsdom回帰。外部画像・非公開コード・個体metadataを含まない。"
+    },
+    {
+      "path": "packages/photo-editing/src/editor/browser-photo-editing-workbench-masks.test.tsx",
+      "sha256": "9d818dbdac6bbed6b482b99210ddb0273bb31fd17fcdd97bae749fdea99697ac",
+      "origin": "Issue #93のため新規作成した、マスクの道具を出す幅（PC・スマホで直せる拠点・直せない拠点）の編集面のjsdom回帰。外部画像・非公開コード・個体metadataを含まない。"
+    },
+    {
+      "path": "packages/photo-editing/src/editor/use-photo-editing-coarse-pointer.ts",
+      "sha256": "15195b274e3b9769e538ae264304a116c3eb7cc8d605fa071586825ecfcd69ce",
+      "origin": "Issue #93の公開仕様 docs/local-adjustments.md だけから新規作成した、主なポインタが指か（pointer: coarse）を読むReactフック。外部画像・非公開コード・個体metadataを含まない。"
     }
   ],
   "excludedSources": [
