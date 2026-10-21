@@ -410,11 +410,10 @@ pub fn settings_to_xmp(settings: &DevelopSettings, options: &XmpWriteOptions) ->
     // https://developer.adobe.com/xmp/docs/xmp-namespaces/crs/
     let legacy_raw_cnr = super::detail::renders_legacy_raw_cnr(&settings.engine);
     if on(XmpGroup::NoiseReduction) && (legacy_raw_cnr || settings.detail.is_some()) {
-        let color = match settings.detail.and_then(|d| d.color_noise_reduction) {
-            Some(amount) => amount,
-            None if legacy_raw_cnr => settings.color_noise_reduction,
-            None => 0.0,
-        };
+        let color = settings
+            .detail
+            .and_then(|detail| detail.color_noise_reduction)
+            .unwrap_or_else(|| super::detail::effective_color_noise_reduction(settings));
         if let Some(detail) = settings.detail {
             put(
                 "LuminanceSmoothing",

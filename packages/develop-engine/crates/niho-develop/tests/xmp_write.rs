@@ -666,6 +666,18 @@ fn niho3_noise_reduction_group_round_trips_without_changing_legacy_presets() {
 }
 
 #[test]
+fn legacy_raw_color_noise_reduction_is_capped_at_the_r209_limit_in_xmp() {
+    let mut settings = DevelopSettings::neutral();
+    settings.engine = niho_develop::settings::ENGINE_NIHO_3.into();
+    settings.color_noise_reduction = 75.0;
+    assert!(settings.detail.is_none());
+
+    let written = xmp::settings_to_xmp(&settings, &all_groups());
+    let document = xmp::parse(&written.xmp).unwrap();
+    assert_eq!(document.properties["ColorNoiseReduction"], "50");
+}
+
+#[test]
 fn niho4_noise_reduction_group_round_trips_without_changing_the_formula_pair() {
     let mut settings = DevelopSettings::neutral();
     settings.engine = niho_develop::settings::ENGINE_NIHO_4.into();
