@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
+import ts from "typescript";
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
@@ -90,6 +91,7 @@ function createFixture() {
       if (matchesPackagePath(relative, definition)) put(root, name, readFileSync(path.join(realRoot, name)));
     }
   }
+  for (const name of config.ownedSourcePaths.filter((value) => value.startsWith("scripts/ci/"))) put(root, name, readFileSync(path.join(realRoot, name)));
   put(root, "packages/desktop-photo/ownership-fixture.txt", "owned\n");
   put(root, "scripts/sdk/ownership-fixture.mjs", "export {};\n");
   commit(root, "fixture");
@@ -224,7 +226,7 @@ test("clean Git object から決定的 tarball を作り repo 外 consumer で T
   assert.ok(one.manifest.recipeCompatibility.engineIdentifiers.includes("niho-13"));
   assert.equal(one.manifest.recipeCompatibility.nodeRuntimeValidator, true);
   assert.equal(one.manifest.recipeCompatibility.package, "niho-photo-contract");
-  assert.equal(one.manifest.sourceOwnership.paths.length, 11);
+  assert.equal(one.manifest.sourceOwnership.paths.length, fixture.config.ownedSourcePaths.length);
   assert.equal(one.manifest.uiSingleton.hostExport, "niho-photo-editing/sdk-dialog-host");
   for (const item of one.manifest.packages) {
     const entries = execFileSync("tar", ["-tzf", path.join(first, item.file)], { encoding: "utf8" });
@@ -249,6 +251,8 @@ test("clean Git object から決定的 tarball を作り repo 外 consumer で T
       const extracted = temp("niho-photo-sdk-native-closure-");
       execFileSync("tar", ["-xzf", path.join(first, item.file), "-C", extracted]);
       validateNativeSourceClosure(path.join(extracted, "package/engine"));
+      const inputs = JSON.parse(execFileSync("tar", ["-xOzf", path.join(first, item.file), "package/release-inputs.json"], { encoding: "utf8" }));
+      assert.match(inputs.commands.wasm, /--config engine\/\.cargo\/config\.toml/u);
     }
     if (item.id === "develop-engine-runtime") {
       const packageJson = JSON.parse(execFileSync("tar", ["-xOzf", path.join(first, item.file), "package/package.json"], { encoding: "utf8" }));
@@ -324,4 +328,18 @@ test("clean Git object から決定的 tarball を作り repo 外 consumer で T
 
   writeFileSync(path.join(fixture.root, "untracked.txt"), "dirty");
   await assert.rejects(packReleaseSet({ repoRoot: fixture.root, outputDirectory: path.join(temp("niho-photo-sdk-dirty-"), "release"), assetDirectory: linkedAssets }), /clean working tree/);
+});
+
+
+test("SDK ownershipはgeneratorとguardの相対import closureを含む", () => {
+  const config = JSON.parse(readFileSync(path.join(realRoot, "sdk/release-set.json"), "utf8"));
+  const seen = new Set();
+  function visit(file) {
+    if (seen.has(file)) return;
+    seen.add(file);
+    assert.ok(config.ownedSourcePaths.some((owned) => file === owned || file.startsWith(`${owned}/`)), `SDK ownershipにgenerator/guardがありません: ${file}`);
+    const imports = ts.preProcessFile(readFileSync(path.join(realRoot, file), "utf8"), true, true).importedFiles;
+    for (const { fileName } of imports) if (fileName.startsWith(".")) visit(path.posix.normalize(path.posix.join(path.posix.dirname(file), fileName)));
+  }
+  visit("scripts/sdk/release-set-lib.mjs");
 });

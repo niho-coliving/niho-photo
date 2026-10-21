@@ -25,6 +25,7 @@ import {
   verifyCandidateDirectory,
   verifySdkProofDirectory,
 } from "./mac-candidate-lib.mjs";
+import { sourceSnapshot, assertExpectedWorkspaceChanges } from "./build-mac-candidate.mjs";
 import { preparePublishedSdkProof } from "./prepare-published-sdk.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
@@ -177,7 +178,7 @@ function candidateFixture() {
   const sbom = { bomFormat: "CycloneDX", specVersion: "1.6", version: 1, metadata: { component: { type: "application", name: "niho-photo", version: source } }, components: [] };
   writeFileSync(path.join(directory, sbomName), `${JSON.stringify(sbom)}\n`);
   const asset = (name) => { const bytes = readFileSync(path.join(directory, name)); return { name, sha256: sha256(bytes), bytes: bytes.length }; };
-  const ownershipPaths = ["packages/photo-editing", "packages/ui", "packages/niho-cloud-contract", "packages/develop-engine", "packages/desktop-photo", "sdk", "scripts/sdk", "LICENSE.md", "ASSET_LICENSE.md", "TRADEMARKS.md", "THIRD_PARTY_NOTICES.md"].map((name, index) => ({ path: name, sha256: String(index).padStart(64, "0"), files: 1 }));
+  const ownershipPaths = JSON.parse(readFileSync(path.join(root, "sdk/release-set.json"), "utf8")).ownedSourcePaths.map((name, index) => ({ path: name, sha256: String(index).padStart(64, "0"), files: 1 }));
   const ownershipDigest = createHash("sha256").update(ownershipPaths.map(({ path: name, sha256: digest, files }) => `${name}\0${digest}\0${files}\n`).join("")).digest("hex");
   const packageNames = { ui: "niho-photo-ui", "photo-editing": "niho-photo-editing", "cloud-contract": "niho-photo-cloud-contract", "photo-contract": "niho-photo-contract", "develop-engine-source": "niho-photo-develop-engine-source", "develop-engine-runtime": "niho-photo-develop-engine-runtime" };
   const sdkPackages = Object.entries(packageNames).map(([id, name]) => ({ id, name, file: `${id}.tgz`, sha256: "c".repeat(64), bytes: 1 }));
@@ -417,4 +418,15 @@ test("prepared npm依存はnested workspaceと相対linkをbuild workspace内に
   put(mismatched, "package.json", rootManifest);
   put(mismatched, "package-lock.json", "different lock\n");
   assert.throws(() => stagePreparedNodeDependencies({ nodeModules: path.join(prepared, "node_modules"), workspace: mismatched }), /manifest\/lock/u);
+});
+
+
+test("Tauriのgen/schemasは生成物とし、それ以外のsource追加・変更を拒否する", () => {
+  const workspace = temp("photo-source-snapshot-");
+  put(workspace, "apps/camera/src/main.tsx", "source\n");
+  const before = sourceSnapshot(workspace);
+  put(workspace, "apps/camera/src-tauri/gen/schemas/desktop-schema.json", "generated schema\n");
+  assertExpectedWorkspaceChanges(before, sourceSnapshot(workspace));
+  put(workspace, "apps/camera/src/unexpected.ts", "unexpected source\n");
+  assert.throws(() => assertExpectedWorkspaceChanges(before, sourceSnapshot(workspace)), /unexpected\.ts/u);
 });

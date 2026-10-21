@@ -70,9 +70,9 @@ function readPublicConfig(file) {
   return value.NIHO_PHOTO_PUBLIC_FIREBASE_WEB_API_KEY;
 }
 
-const BUILD_OUTPUTS = ["node_modules", "packages/develop-engine/public", "apps/camera/public", "apps/camera/dist"];
+const BUILD_OUTPUTS = ["node_modules", "packages/develop-engine/public", "apps/camera/public", "apps/camera/dist", "apps/camera/src-tauri/gen/schemas"];
 
-function sourceSnapshot(workspace) {
+export function sourceSnapshot(workspace) {
   const records = new Map();
   function visit(directory, prefix = "") {
     for (const entry of readdirSync(directory, { withFileTypes: true })) {
@@ -90,9 +90,11 @@ function sourceSnapshot(workspace) {
   return records;
 }
 
-function assertExpectedWorkspaceChanges(before, after) {
+export function assertExpectedWorkspaceChanges(before, after) {
   const overlay = new Set(candidateContract.overlayPaths);
-  if (before.size !== after.size || [...before.keys()].some((name) => !after.has(name))) throw new CandidateError("build workspaceのsource file集合が変わりました");
+  const added = [...after.keys()].filter((name) => !before.has(name));
+  const removed = [...before.keys()].filter((name) => !after.has(name));
+  if (added.length || removed.length) throw new CandidateError(`build workspaceのsource file集合が変わりました: added=${added.slice(0, 12).join(",")} removed=${removed.slice(0, 12).join(",")}`);
   for (const [name, digest] of before) {
     if (!overlay.has(name) && after.get(name) !== digest) throw new CandidateError("version overlay/buildが許可外sourceを変更しました");
   }

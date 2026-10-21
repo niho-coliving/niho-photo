@@ -37,7 +37,7 @@ const ENGINE_NATIVE_CLOSURE = [
   "tools/niho-camera-cutout/Package.swift",
   "tools/niho-camera-cutout/Sources/NihoCameraCutoutCLI/main.swift",
 ];
-const OWNED_SOURCE_PATHS = ["packages/photo-editing", "packages/ui", "packages/niho-cloud-contract", "packages/develop-engine", "packages/desktop-photo", "sdk", "scripts/sdk", ...ROOT_NOTICE_FILES];
+const OWNED_SOURCE_PATHS = ["packages/photo-editing", "packages/ui", "packages/niho-cloud-contract", "packages/develop-engine", "packages/desktop-photo", "sdk", "scripts/sdk", "scripts/ci/cloud-contract-sync.mjs", "scripts/ci/image-metadata.mjs", "scripts/ci/photo-candidate-workflow-lib.mjs", "scripts/ci/photo-sdk-workflow-lib.mjs", "scripts/ci/publication-lib.mjs", "scripts/ci/release-evidence-lib.mjs", "scripts/ci/workflow-lib.mjs", "LICENSE.md", "ASSET_LICENSE.md", "TRADEMARKS.md", "THIRD_PARTY_NOTICES.md"];
 const BUILD_TOOLING_PATHS = ["package.json", "package-lock.json"];
 
 export class SdkReleaseError extends Error {}
@@ -344,7 +344,7 @@ function stageSourcePackage({ repoRoot, commit, config, definition, stage, rootN
       sourceRoot: definition.sourceRoot,
       buildInputs: config.engine.buildInputs,
       commands: {
-        wasm: "cargo build --locked --manifest-path engine/Cargo.toml --target wasm32-unknown-unknown --release -p niho-develop-wasm",
+        wasm: "cargo build --locked --config engine/.cargo/config.toml --manifest-path engine/Cargo.toml --target wasm32-unknown-unknown --release -p niho-develop-wasm",
         macosNative: "node engine/build-macos-native.mjs --engine engine --lock <camera-lock.json> --output <new-stage-directory>",
       },
     }));
