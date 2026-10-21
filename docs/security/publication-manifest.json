@@ -1867,12 +1867,13 @@
         "path": "packages/photo-editing/src/editor/use-photo-editing-zoom.ts",
         "sha256": "f85914654c70c294a0cd0b550c201fae352721e966d96f71cbdfd6efcdb4d6f4"
       },
-      "outputSha256": "53daa7a7887eb5c699ded4784e785f93b50d366c30202d0fc8ab603426b03358",
+      "outputSha256": "80dd8d8480cf3e046e1072c70362a59981b1924c8d8df9e26b77aadb8a900d6c",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
         "niho-photo#41 上下に並べている間は指の下の半分の面で拡大を測る。",
-        "niho-photo#41 の比較UIを #72 のヒストグラム・Jキー契約と併存するようmainへ積み直した。"
+        "niho-photo#41 の比較UIを #72 のヒストグラム・Jキー契約と併存するようmainへ積み直した。",
+        "niho-photo#41 の比較pane集合変更時に拡大位置を新しい境界へclampする。"
       ]
     },
     {
@@ -9632,8 +9633,8 @@
     },
     {
       "path": "packages/photo-editing/src/editor/browser-photo-editing-mobile-editor-compare.test.tsx",
-      "sha256": "6a03eea2332185217d2dcea638ceecf8132bd9c1b72c6c66a2d06a92efd8ca95",
-      "origin": "niho-photo#41 のため新規作成。補正前と補正後を並べて見比べる表示（並べる・分割・戻す、境界のドラッグとキー操作、Y / Shift+Y、スマホの上下）の test。合成の DOM と画素だけを使用。\n変更理由: niho-photo#41 の比較UIを #72 のヒストグラム・Jキー契約と併存するようmainへ積み直した。"
+      "sha256": "b291c03b646a80b68e6904b3e86017dff6da1bd55ab027cd62595f64da838e7e",
+      "origin": "niho-photo#41 のため新規作成。補正前と補正後を並べて見比べる表示（並べる・分割・戻す、境界のドラッグとキー操作、Y / Shift+Y、スマホの上下）の test。合成の DOM と画素だけを使用。\n変更理由: niho-photo#41 の比較UIを #72 のヒストグラム・Jキー契約と併存するようmainへ積み直した。\n変更理由: niho-photo#41 の比較pane追加時に拡大位置を再clampする回帰を検証する。"
     }
   ],
   "excludedSources": [
