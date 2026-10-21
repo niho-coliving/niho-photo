@@ -138,6 +138,12 @@ export function useBrowserPhotoOpen(params: {
    * 道具の枠全体の画には重ねない。`current` が null の間（web）は今までどおり描くだけ
    */
   framePostProcessRef?: MutableRefObject<((canvas: HTMLCanvasElement) => void) | null>;
+  /**
+   * wasm で描いた画を canvas に出した直後に、その画（写真の key と一緒）を渡す口（右パネルのヒストグラム。niho-photo#36）。
+   * 「補正前」・切り抜きの道具の枠全体の画も、画面に出した画として渡す。`current` が null の間は今までどおり描くだけ。渡した画は
+   * 読むだけで、書き換えない
+   */
+  onFramePaintedRef?: MutableRefObject<((key: string, frame: DevelopFrame) => void) | null>;
 }) {
   const {
     spotId,
@@ -376,6 +382,7 @@ export function useBrowserPhotoOpen(params: {
   /** 切り抜きの道具の間に描いた枠全体の画（同じ設定なら描き直さない。切り抜きを動かしても設定は変わらない） */
   const cropFrameCacheRef = useRef<{ key: string; settingsJson: string; epoch: number; frame: DevelopFrame } | null>(null);
   const framePostProcessRef = params.framePostProcessRef;
+  const onFramePaintedRef = params.onFramePaintedRef;
   /**
    * 重ねる係（`framePostProcessRef`）がある間に最後に描いた画。背景除去の当て直し（背景・ブラシ）は wasm に描かせず、この画を
    * 描き直して重ね直す（{@link repaintLastFrame}）。`raw` は重ねない画（「補正前」・切り抜きの道具の枠全体）
@@ -446,6 +453,7 @@ export function useBrowserPhotoOpen(params: {
         if (!raw) postProcess(target);
         lastPaintRef.current = { key, target, frame, raw };
       }
+      onFramePaintedRef?.current?.(key, frame);
       const current = openedRef.current;
       if (current?.key === key && current.previewPending) {
         const next = { ...current, previewPending: false };
@@ -596,6 +604,7 @@ export function useBrowserPhotoOpen(params: {
     forcedPaintKey,
     framePostProcessRef,
     frameCacheRef,
+    onFramePaintedRef,
     opened?.key,
     opened?.mode,
     opened?.input,
@@ -882,6 +891,7 @@ export function useBrowserPhotoOpen(params: {
         if (!raw) postProcess(target);
         lastPaintRef.current = { key: item.key, target, frame, raw };
       }
+      onFramePaintedRef?.current?.(item.key, frame);
     }
     const nextOpened: OpenedSource = {
       ...result.opened,
@@ -921,7 +931,7 @@ export function useBrowserPhotoOpen(params: {
       });
     }
     return true;
-  }, [beforeFrameRef, canvasRef, createSaver, developSessionRef, edit.settingsRef, engineRef, frameCacheRef, framePostProcessRef, latestAccessRef, library, presets, rebaseSettings, startSession, workingEpoch]);
+  }, [beforeFrameRef, canvasRef, createSaver, developSessionRef, edit.settingsRef, engineRef, frameCacheRef, framePostProcessRef, latestAccessRef, library, onFramePaintedRef, presets, rebaseSettings, startSession, workingEpoch]);
 
   /** 作業コピーを待っている写真の状態を変える（その写真を開いたまま待っているときだけ）。 */
   const setWorkWait = useCallback((key: string, work: WorkWait) => {

@@ -661,7 +661,7 @@
         "path": "packages/photo-editing/src/editor/browser-photo-editing-adjustments.tsx",
         "sha256": "2473ef7ca64f61e5ce7a72efb21f436f799f04a90a3a73b114cba15b7b5d23b1"
       },
-      "outputSha256": "d933231a06d1c7d4be5c1adec347a7480d142d7841935a8daa143dfb8c39d937",
+      "outputSha256": "b06b612d0d95e25e65957487fde22a08d0ef57725073a3022107c1b89e9de88e",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
@@ -669,7 +669,8 @@
         "niho-photo#51 L2: 右端の道具の帯と補正パネルの並び（見出し行・自動 / 白黒のチップ・プリセットの行・面の切り替え）。",
         "niho-photo#51の右パネルと道具帯を#35の共有UI統合後の最新mainへ合わせる。",
         "Issue #30 Oklch色ミキサーとengine 10/11対応を反映",
-        "最新mainの認証・形式能力・共通UI変更とOklch/ディテールの変更を両立して統合。"
+        "最新mainの認証・形式能力・共通UI変更とOklch/ディテールの変更を両立して統合。",
+        "niho-photo#36 ヒストグラムの枠を右パネル最上段に差し込む口を追加。"
       ]
     },
     {
@@ -844,7 +845,7 @@
         "path": "packages/photo-editing/src/editor/browser-photo-editing-loupe.tsx",
         "sha256": "51859688628c86e65c882ff94a59b6324ecb621ac9f759121c7c3d7ed4ccc35a"
       },
-      "outputSha256": "97064862170873cde56fb2b89cf2b833ee8b7823ffd1b51e0bd04133aa4e5cff",
+      "outputSha256": "38cbcc145337fdbc47a2c60aea5bd6171a9172f1133c09a7c1542eb968427477",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
@@ -854,7 +855,8 @@
         "描画精度・型・共有サンプル位置・キーボードの最終レビューを反映",
         "最新mainの認証・形式能力・共通UI変更とOklch/ディテールの変更を両立して統合。",
         "Issue #13の段階表示、provisional draft、canonical handoffと書き出し境界を実装。",
-        "最新mainのUI・共有機能と段階RAW openを統合し、既存の境界と補正保持を両立する。"
+        "最新mainのUI・共有機能と段階RAW openを統合し、既存の境界と補正保持を両立する。",
+        "niho-photo#36 クリップ領域の印を写真に重ねる口を追加。"
       ]
     },
     {
@@ -1047,7 +1049,7 @@
         "path": "packages/photo-editing/src/editor/browser-photo-editing-workbench.tsx",
         "sha256": "f655136ae0c985d793822ca8bef1668dba26ffd4bb8f13d2ba3d6c2ccb13ceb6"
       },
-      "outputSha256": "0f9bf9edbed146c56b31f2774072c41638f6ecda63ed2ee34442b64ea91dc496",
+      "outputSha256": "108c37f876698993d592c0189c7d4bfae8f0096e7a6f22491e3e060d38aeba47",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
@@ -1080,7 +1082,8 @@
         "書き出し制御へ未完了プリセット操作の待機契約を渡す",
         "最新mainのUI・共有機能と段階RAW openを統合し、既存の境界と補正保持を両立する。",
         "右パネルの補正・プリセット面の切替と段階RAW openを統合し、暫定中の見本生成停止を保つ。",
-        "Integrate filmstrip with progressive RAW open"
+        "Integrate filmstrip with progressive RAW open",
+        "niho-photo#36 ヒストグラムとクリップ表示とJキーを組み込み。"
       ]
     },
     {
@@ -1595,9 +1598,10 @@
         "path": "packages/photo-editing/src/editor/use-browser-photo-editing-keys.test.ts",
         "sha256": "9a3c9ab4818e0e9f3bb3c00f9dd720fee808dae707c3bff1e0eaabcf1f2787c1"
       },
-      "outputSha256": "1e878e95e6c808ed02fc32b00e5c495b19c2981552436c4543e4d48e047ebef5",
+      "outputSha256": "763faba1d68347e64157a3a454fd1cd51d9f2ff16fe9d19bfe56a62338a656e2",
       "modifications": [
-        "PR #61 の切り抜きUI・完了/取消操作と回帰検証を公開repoで実装。"
+        "PR #61 の切り抜きUI・完了/取消操作と回帰検証を公開repoで実装。",
+        "niho-photo#36 J キーの読み分けを検証。"
       ]
     },
     {
@@ -1608,11 +1612,12 @@
         "path": "packages/photo-editing/src/editor/use-browser-photo-editing-keys.ts",
         "sha256": "869fc1769c085f4affe0fb260ad2cc9c0df21bd16c3e893ce65f015da29ce2fa"
       },
-      "outputSha256": "18c0778c7cb43595659a93319d8b180adfdb2e99e7a9993c137df107ba730b34",
+      "outputSha256": "4d7fc50a4877c78376831726cc88eb6e9908f7518dcff777e5bade352975725a",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
-        "PR #61 の切り抜きUI・完了/取消操作と回帰検証を公開repoで実装。"
+        "PR #61 の切り抜きUI・完了/取消操作と回帰検証を公開repoで実装。",
+        "niho-photo#36 黒つぶれ白飛び表示の J キーを追加。"
       ]
     },
     {
@@ -1702,7 +1707,7 @@
         "path": "packages/photo-editing/src/editor/use-browser-photo-open.ts",
         "sha256": "2755ea206c0fe9edc8df05ff40d78326310449cb9d509e75a291fdc3822a1d2e"
       },
-      "outputSha256": "ed9153263eb6acccbb60abaa90162e09792886c9671bf070750fda1b8b8e5210",
+      "outputSha256": "89a9310548cd1bc34107360a6ecf3552856171a9557b380c1c8f2df9c508ae2f",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
@@ -1716,7 +1721,8 @@
         "Issue 13 retry outcomeのstale判定位置を修正",
         "Issue #13の段階RAW open、競合回帰、匿名の区間計測を追加。正規producerの数式と成果物は維持。",
         "暫定入力だけ既存Interactive品質を使い、正規Finalへの切替と実UIの再現計測を追加。",
-        "未解決presetを旧engineで確定し最新draftまで保存した後だけcanonicalへ切り替える。"
+        "未解決presetを旧engineで確定し最新draftまで保存した後だけcanonicalへ切り替える。",
+        "niho-photo#36 描いた画をヒストグラムへ渡す口を追加。"
       ]
     },
     {
@@ -2047,7 +2053,7 @@
         "path": "packages/photo-editing/src/photo-editing-copy.ts",
         "sha256": "1208d4124dca26c951d73f6f84c560879e69beddfb9a16426e1a9dcc9fd30c27"
       },
-      "outputSha256": "28cf9624d6799cbb227f14f4aa7282fdabffd77c65a3e2298dae3740c9cc9763",
+      "outputSha256": "ff9573bd5ac18daf76b0c32bb4d43d4e9a8c9b96b906f048ee33cc01c2962def",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
@@ -2056,7 +2062,8 @@
         "niho-photo#35と#51の統合後に公開用の画面文言契約を更新する。",
         "PR #61 の切り抜きUI・完了/取消操作と回帰検証を公開repoで実装。",
         "Issue #30 Oklch色ミキサーとengine 10/11対応を反映",
-        "公開repoでの機能変更（#54）: 1 枚の面の下にフィルムストリップを置き、切り抜き・背景除去の間は ← → で写真を替えないようにした。"
+        "公開repoでの機能変更（#54）: 1 枚の面の下にフィルムストリップを置き、切り抜き・背景除去の間は ← → で写真を替えないようにした。",
+        "niho-photo#36 ヒストグラムと黒つぶれ白飛び表示の文言を追加。"
       ]
     },
     {
@@ -9197,8 +9204,8 @@
     },
     {
       "path": "packages/photo-editing/src/editor/browser-photo-editing-adjustments.test.tsx",
-      "sha256": "13d13d32908ac1ae814a6a4aa0abfae0bb350349c0d607d3da78053068a38939",
-      "origin": "niho-photo#51 のため新規作成。右端の道具の帯と右パネルの面の部品・test。"
+      "sha256": "aec75109eadcda4ce75fd43219fe4e329a1e07657af89b1da6fa36773d7cf663",
+      "origin": "niho-photo#51 のため新規作成。右端の道具の帯と右パネルの面の部品・test。\n変更理由: niho-photo#36 ヒストグラムの位置と各道具での表示を検証。"
     },
     {
       "path": "packages/photo-editing/src/editor/browser-photo-editing-tool-rail.test.tsx",
@@ -9387,8 +9394,53 @@
     },
     {
       "path": "packages/photo-editing/src/editor/use-browser-photo-progressive-open.test.tsx",
-      "sha256": "f798412e58850f658bbb38743f7724bb9c165090fc270878c4d978af78a8e9ae",
-      "origin": "Issue #13のため独立作成。actual React hooksと合成library/engine/frameだけで、provisional編集、canonical handoff、history、retry、abort、旧frame遮断を検証。外部画像・非公開コード・個体metadataを含まない。\n変更理由: 公開signed RAW契約に合う合成metadataで実hookの正規切替を検証。\n変更理由: preview取得失敗でも正規入力の実hookで補正を続けられる回帰を追加。\n変更理由: fallback後の補正を実際にflushし通常保存のbaseと値まで検証。\n変更理由: preset適用・量drag・量commitを未解決のままhandoffに重ねるfailure injectionを追加。\n変更理由: 非同期プリセットfixtureにも実契約のversionとengineを含め型検査する\n変更理由: 同一内容draftの再表示から正規base確定後の既存saverまで実hookで回帰検証する\n変更理由: draft復元テストでも一覧復帰の成功値を明示確認しact補助のvoid型契約に合わせる\n変更理由: Expect current niho-11 default in handoff tests"
+      "sha256": "fc17d3ee618412d075fe97a523e63d6ed24a2dfb3b492998148c905d40c9ca89",
+      "origin": "Issue #13のため独立作成。actual React hooksと合成library/engine/frameだけで、provisional編集、canonical handoff、history、retry、abort、旧frame遮断を検証。外部画像・非公開コード・個体metadataを含まない。\n変更理由: 公開signed RAW契約に合う合成metadataで実hookの正規切替を検証。\n変更理由: preview取得失敗でも正規入力の実hookで補正を続けられる回帰を追加。\n変更理由: fallback後の補正を実際にflushし通常保存のbaseと値まで検証。\n変更理由: preset適用・量drag・量commitを未解決のままhandoffに重ねるfailure injectionを追加。\n変更理由: 非同期プリセットfixtureにも実契約のversionとengineを含め型検査する\n変更理由: 同一内容draftの再表示から正規base確定後の既存saverまで実hookで回帰検証する\n変更理由: draft復元テストでも一覧復帰の成功値を明示確認しact補助のvoid型契約に合わせる\n変更理由: Expect current niho-11 default in handoff tests\n変更理由: niho-photo#36 描いた画をヒストグラムへ渡すことを検証。"
+    },
+    {
+      "path": "packages/photo-editing/src/photo-editing-histogram.ts",
+      "sha256": "1ba0097140e8fdd277edede90a1c57dac12ed3ded030f10276370d89502e9194",
+      "origin": "niho-photo#36 のため新規作成。右パネル上端のヒストグラム（RGB の度数・黒つぶれ/白飛びの割合・クリップ領域の印）の計算・表示・test。合成の画素だけを使用。"
+    },
+    {
+      "path": "packages/photo-editing/src/photo-editing-histogram.test.ts",
+      "sha256": "18e80541bca4ecf59688e7bed005872b749c6697be5ae8478a7ececca34d3c1b",
+      "origin": "niho-photo#36 のため新規作成。右パネル上端のヒストグラム（RGB の度数・黒つぶれ/白飛びの割合・クリップ領域の印）の計算・表示・test。合成の画素だけを使用。"
+    },
+    {
+      "path": "packages/photo-editing/src/editor/photo-editing-histogram.tsx",
+      "sha256": "b50090df6e2e4894bb02d9a6b14094ec76c39f203c6d773ca70583138e9b6179",
+      "origin": "niho-photo#36 のため新規作成。右パネル上端のヒストグラム（RGB の度数・黒つぶれ/白飛びの割合・クリップ領域の印）の計算・表示・test。合成の画素だけを使用。"
+    },
+    {
+      "path": "packages/photo-editing/src/editor/photo-editing-histogram.test.tsx",
+      "sha256": "44f315f40d717f83e5bf0222812a4b0e7ad7ecfbe3c2fe85148b047894e94113",
+      "origin": "niho-photo#36 のため新規作成。右パネル上端のヒストグラム（RGB の度数・黒つぶれ/白飛びの割合・クリップ領域の印）の計算・表示・test。合成の画素だけを使用。"
+    },
+    {
+      "path": "packages/photo-editing/src/editor/photo-editing-clip-overlay.tsx",
+      "sha256": "92523f045eafc63fa911ac4324c51d59bbe52838f31885ead5d8aa89514114eb",
+      "origin": "niho-photo#36 のため新規作成。右パネル上端のヒストグラム（RGB の度数・黒つぶれ/白飛びの割合・クリップ領域の印）の計算・表示・test。合成の画素だけを使用。"
+    },
+    {
+      "path": "packages/photo-editing/src/editor/photo-editing-clip-overlay.test.tsx",
+      "sha256": "f66e8ee4c520409a5bf671ff38991fa0659f7c38419676abdaadc851c53019ad",
+      "origin": "niho-photo#36 のため新規作成。右パネル上端のヒストグラム（RGB の度数・黒つぶれ/白飛びの割合・クリップ領域の印）の計算・表示・test。合成の画素だけを使用。"
+    },
+    {
+      "path": "packages/photo-editing/src/editor/use-browser-photo-histogram.ts",
+      "sha256": "fd6ea1188b9036d89464bf17c4598483446858d758343e8eb2a4919dfe6cf58f",
+      "origin": "niho-photo#36 のため新規作成。右パネル上端のヒストグラム（RGB の度数・黒つぶれ/白飛びの割合・クリップ領域の印）の計算・表示・test。合成の画素だけを使用。"
+    },
+    {
+      "path": "packages/photo-editing/src/editor/use-browser-photo-histogram.test.tsx",
+      "sha256": "49d9e15c48cea9f98efa9434e2df63b18755babc91a635ee1578c6973a40acfd",
+      "origin": "niho-photo#36 のため新規作成。右パネル上端のヒストグラム（RGB の度数・黒つぶれ/白飛びの割合・クリップ領域の印）の計算・表示・test。合成の画素だけを使用。"
+    },
+    {
+      "path": "packages/photo-editing/src/editor/browser-photo-editing-loupe-clip.test.tsx",
+      "sha256": "634aca00b317f74f216c20905a5d8589b53bda62d2d54cdb13073b8c7faa1abd",
+      "origin": "niho-photo#36 のため新規作成。右パネル上端のヒストグラム（RGB の度数・黒つぶれ/白飛びの割合・クリップ領域の印）の計算・表示・test。合成の画素だけを使用。"
     }
   ],
   "excludedSources": [
