@@ -286,32 +286,27 @@ fn clamp6<V: Lanes>(x: V) -> V {
     V::select(x.gt(high), high, x)
 }
 
-/// `e^x` for `x <= 0` (Cephes `expf`: Cody–Waite reduction by `ln 2`, a
-/// degree-5 polynomial, exponent bits), `x` clamped at -87 (the result
-/// stays a normal number). A few ulps from the exact value.
+/// `e^x` for `x <= 0`: `x = n·ln 2 + r` (`n` the nearest integer to
+/// `x/ln 2`, `ln 2` split in an exact high part and the rest, `|r| <= ln 2 / 2`),
+/// `e^r` by its Taylor series to `r^7/7!` (the next term is below `f32`
+/// precision there) and `2^n` by exponent bits. `x` is clamped at -87 (the
+/// result stays a normal number). A few ulps from the exact value.
 #[inline(always)]
 fn exp<V: Lanes>(x: V) -> V {
+    const LN_2_HIGH: f32 = 355.0 / 512.0;
+    const LN_2_LOW: f32 = (core::f64::consts::LN_2 - 355.0 / 512.0) as f32;
     let low = V::splat(-87.0);
     let x = V::select(x.lt(low), low, x);
     let n = x.mul(V::splat(core::f32::consts::LOG2_E)).round_even();
     let r = x
-        // ln 2 = 355/512 (exact in f32) - 2.121944e-4.
-        .sub(n.mul(V::splat(355.0 / 512.0)))
-        .sub(n.mul(V::splat(-2.121_944_4e-4)));
-    let z = r.mul(r);
-    let p = V::splat(1.987_569_1e-4)
-        .mul(r)
-        .add(V::splat(1.398_199_9e-3))
-        .mul(r)
-        .add(V::splat(8.333_452e-3))
-        .mul(r)
-        .add(V::splat(4.166_579_6e-2))
-        .mul(r)
-        .add(V::splat(1.666_666_5e-1))
-        .mul(r)
-        // Cephes' 5.0000001201e-1 is 0.5 in f32.
-        .add(V::splat(0.5));
-    let y = p.mul(z).add(r).add(V::splat(1.0));
+        .sub(n.mul(V::splat(LN_2_HIGH)))
+        .sub(n.mul(V::splat(LN_2_LOW)));
+    // 1/2! + r/3! + … + r^5/7!, then e^r = 1 + r + r^2·(that).
+    let mut p = V::splat(1.0 / 5040.0);
+    for factorial in [720.0_f32, 120.0, 24.0, 6.0, 2.0] {
+        p = p.mul(r).add(V::splat(1.0 / factorial));
+    }
+    let y = p.mul(r.mul(r)).add(r).add(V::splat(1.0));
     y.mul(V::pow2(n))
 }
 
@@ -611,9 +606,9 @@ mod tests {
                 worst[2] = worst[2].max((e - exact).abs() / exact);
             }
         }
-        assert!(worst[0] < 2.5e-7, "tanh absolute {}", worst[0]);
-        assert!(worst[1] < 6e-7, "softplus relative {}", worst[1]);
-        assert!(worst[2] < 3e-7, "exp relative {}", worst[2]);
+        assert!(worst[0] < 1.5e-7, "tanh absolute {}", worst[0]);
+        assert!(worst[1] < 4e-7, "softplus relative {}", worst[1]);
+        assert!(worst[2] < 1.5e-7, "exp relative {}", worst[2]);
     }
 
     #[test]
