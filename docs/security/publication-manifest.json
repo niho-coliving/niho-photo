@@ -10220,13 +10220,13 @@
     },
     {
       "path": "packages/photo-editing/src/photo-editing-histogram.ts",
-      "sha256": "1ba0097140e8fdd277edede90a1c57dac12ed3ded030f10276370d89502e9194",
-      "origin": "niho-photo#36 のため新規作成。右パネル上端のヒストグラム（RGB の度数・黒つぶれ/白飛びの割合・クリップ領域の印）の計算・表示・test。合成の画素だけを使用。"
+      "sha256": "4775725a616bafe271a37cc21277815b0bf0ddaec59106303a8676b8d4230413",
+      "origin": "niho-photo#36 のため新規作成。右パネル上端のヒストグラム（RGB の度数・黒つぶれ/白飛びの割合・クリップ領域の印）の計算・表示・test。合成の画素だけを使用。\n変更理由: 白飛び・黒つぶれの判定をエンジンと同じ端から1段（254以上/1以下）にそろえた。"
     },
     {
       "path": "packages/photo-editing/src/photo-editing-histogram.test.ts",
-      "sha256": "18e80541bca4ecf59688e7bed005872b749c6697be5ae8478a7ececca34d3c1b",
-      "origin": "niho-photo#36 のため新規作成。右パネル上端のヒストグラム（RGB の度数・黒つぶれ/白飛びの割合・クリップ領域の印）の計算・表示・test。合成の画素だけを使用。"
+      "sha256": "a04b3f35cfa390bcea03fffb84ee4be84becd6ea84202a4f73459a1d4bcefb41",
+      "origin": "niho-photo#36 のため新規作成。右パネル上端のヒストグラム（RGB の度数・黒つぶれ/白飛びの割合・クリップ領域の印）の計算・表示・test。合成の画素だけを使用。\n変更理由: 白飛び・黒つぶれの判定をエンジンと同じ端から1段（254以上/1以下）にそろえた。"
     },
     {
       "path": "packages/photo-editing/src/editor/photo-editing-histogram.tsx",
