@@ -294,13 +294,15 @@
         "path": "packages/photo-editing/src/develop-engine/develop-engine-manifest.ts",
         "sha256": "5df5cda8a061155a614d1e60a1c263e0764c83978708cfcc16959905387d5e4f"
       },
-      "outputSha256": "9bb6d6fb02ed8d5dfe4e32845382f40fce3b344e122ce3fb09a87aeb19d849fc",
+      "outputSha256": "f0dfd3907dbbc02975c9e113ff8997cfe0adbbeda7d1c9be1860b6393e4cc179",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
         "Issue #28の色相安定engine追加と互換回帰を反映。",
         "新しい色相保持エンジンと新旧バイナリの能力境界・数値回帰を整合。",
-        "Issue #30 Oklch色ミキサーとengine 10/11対応を反映"
+        "Issue #30 Oklch色ミキサーとengine 10/11対応を反映",
+        "部分補正（マスク）#66: 画面が読むcrateの版を0.19.0へ上げる",
+        "PR #81 のマスク描画を最新mainの変更と統合。"
       ]
     },
     {
@@ -677,6 +679,7 @@
         "niho-photo#36 ヒストグラムの枠を右パネル最上段に差し込む口を追加。",
         "niho-photo#43 の右パネルの「情報」の面（見出し行と情報の群。↶ ↷・初期化は出さない）を追加。",
         "PR #77 の情報paneをmainの公開UI変更と統合。",
+        "squash済みPR #77のmainをマスク描画へ同期する。",
         "niho-photo#37 補正の面で群の直後に節を差し込む口（afterGroup）を追加。",
         "PR #78 のトーンカーブを最新情報paneと統合。",
         "niho-photo#38 ポイントカラー（Oklch）を群の後ろから、カラーの群の直後（カラーミキサーの節の下）へ移す。",
@@ -948,7 +951,8 @@
         "Issue 13 progressive RAW open implementation",
         "右パネルの補正・プリセット面の切替と段階RAW openを統合し、暫定中の見本生成停止を保つ。",
         "niho-photo#43 の右パネルの面に「情報」を追加。",
-        "PR #77 の情報paneをmainの公開UI変更と統合。"
+        "PR #77 の情報paneをmainの公開UI変更と統合。",
+        "squash済みPR #77のmainをマスク描画へ同期する。"
       ]
     },
     {
@@ -1071,7 +1075,8 @@
         "Issue #49の統合確認: 下段の列と左右のパネルの2段の合成テストを追加。",
         "左右パネル表示時のフッターと自動高レイアウトを検証する。",
         "niho-photo#43 の「情報」の帯の項目と情報の面の切り替えの test を追加。",
-        "PR #77 の情報paneをmainの公開UI変更と統合。"
+        "PR #77 の情報paneをmainの公開UI変更と統合。",
+        "squash済みPR #77のmainをマスク描画へ同期する。"
       ]
     },
     {
@@ -1124,6 +1129,7 @@
         "niho-photo#41 の比較UIを #72 のヒストグラム・Jキー契約と併存するようmainへ積み直した。",
         "niho-photo#43 の右端の帯の下端に「情報」を置き、右パネルを情報の面にする。",
         "PR #77 の情報paneをmainの公開UI変更と統合。",
+        "squash済みPR #77のmainをマスク描画へ同期する。",
         "niho-photo#37 PC の wasm の写真で、ライトの群の下に「カーブ」の節を置く。",
         "PR #78 のトーンカーブを最新情報paneと統合。",
         "niho-photo#38 PC のカラーの群の下にカラーミキサーの節、スマホの層にカラーミキサーの道具を置く。Oklch の文言をポイントカラーへ改名。",
@@ -1958,15 +1964,18 @@
         "path": "packages/photo-editing/src/library/photo-library.ts",
         "sha256": "d11aab9b360ff3a54e1b82c7c013729cc5044a2051b421b695c1847446a2ccbc"
       },
-      "outputSha256": "225b51e514b71780ce4de6c7194c992d4a6c99b4f006310e0515e13bc86116c2",
+      "outputSha256": "8e5b238a094d059cc5722ee9a4ff1b87357d956fc67f5480dc0c948795a6ca01",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
         "任意の個別写真ソース契約と選んだ写真のUI、復元、取消、再試行、失敗時参照保持を追加",
         "Issue #13の段階表示、provisional draft、canonical handoffと書き出し境界を実装。",
         "Issue 13 progressive RAW open implementation",
+        "部分補正（マスク）#66: 能力にnativeExportMasksを足す",
+        "PR #81 のマスク描画を最新mainの変更と統合。",
         "niho-photo#43 の写真の情報の型 PhotoLibraryPhotoInfo・info・capabilities.info を追加。",
-        "PR #77 の情報paneをmainの公開UI変更と統合。"
+        "PR #77 の情報paneをmainの公開UI変更と統合。",
+        "squash済みPR #77のmainをマスク描画へ同期する。"
       ]
     },
     {
@@ -2131,6 +2140,7 @@
         "niho-photo#41 の比較UIを #72 のヒストグラム・Jキー契約と併存するようmainへ積み直した。",
         "niho-photo#43 の右パネルの「情報」の文言（道具の名前・群の見出し・行のラベル）を追加。",
         "PR #77 の情報paneをmainの公開UI変更と統合。",
+        "squash済みPR #77のmainをマスク描画へ同期する。",
         "niho-photo#37 「カーブ」の節・グラフ・点の読み上げの文言を追加。",
         "PR #78 のトーンカーブを最新情報paneと統合。",
         "niho-photo#38 カラーミキサー（HSL）の文言を追加し、Oklch の補正と Lightroom の PointColors の名前を「ポイントカラー」に改める。",
@@ -2296,7 +2306,8 @@
         "個人クラウドの明示binding、保存先切替、単一写真コピーと公開境界を追加。",
         "個人クラウドnamespaceと写真ソース境界の説明を明確化。",
         "niho-photo#43 の写真の情報の react-query の鍵を追加。",
-        "PR #77 の情報paneをmainの公開UI変更と統合。"
+        "PR #77 の情報paneをmainの公開UI変更と統合。",
+        "squash済みPR #77のmainをマスク描画へ同期する。"
       ]
     },
     {
@@ -3491,7 +3502,8 @@
         "Issue #13の段階表示、provisional draft、canonical handoffと書き出し境界を実装。",
         "Issue 13 progressive RAW open implementation",
         "niho-photo#43 の写真の情報（camera_photo_info）を同梱の画面にだけ許可する permission を追加。",
-        "PR #77 の情報paneをmainの公開UI変更と統合。"
+        "PR #77 の情報paneをmainの公開UI変更と統合。",
+        "squash済みPR #77のmainをマスク描画へ同期する。"
       ]
     },
     {
@@ -3599,11 +3611,13 @@
         "path": "apps/camera/src-tauri/src/develop.rs",
         "sha256": "e8031f4461b78fd3a74d9011ace89081814e737868a33ee4e39f7b98e39bacb8"
       },
-      "outputSha256": "1a9edd3139729d5d20b6e2065bb4275d915346faa210c98f905bca82e6c694dd",
+      "outputSha256": "ed38a0be74646f26a7b667d71b1158b55be49f472b503cc57bb994c8d14021fc",
       "modifications": [
         "書き出しcommand境界の引数設計を明記し、Clippyの引数数lintを局所的に許容する。",
         "全open photoの原本をexport destinationから保護",
-        "全書き出し経路が全open photo原本を保護"
+        "全書き出し経路が全open photo原本を保護",
+        "部分補正（マスク）#66: 現像の状態に masks（部分補正の原寸書き出しの可否）を足す",
+        "PR #81 のマスク描画を最新mainの変更と統合。"
       ]
     },
     {
@@ -3677,7 +3691,8 @@
         "Issue #13の段階表示、provisional draft、canonical handoffと書き出し境界を実装。",
         "Issue 13 progressive RAW open implementation",
         "niho-photo#43 の写真の情報のコマンド camera_photo_info を登録。",
-        "PR #77 の情報paneをmainの公開UI変更と統合。"
+        "PR #77 の情報paneをmainの公開UI変更と統合。",
+        "squash済みPR #77のmainをマスク描画へ同期する。"
       ]
     },
     {
@@ -3738,7 +3753,8 @@
         "Issue #13の段階RAW open、競合回帰、匿名の区間計測を追加。正規producerの数式と成果物は維持。",
         "最新mainのUI・共有機能と段階RAW openを統合し、既存の境界と補正保持を両立する。",
         "niho-photo#43 の写真の情報（ImageIO で読んだ撮影条件・カメラ・レンズ・撮影日時・寸法・場所）を返すコマンドを追加。",
-        "PR #77 の情報paneをmainの公開UI変更と統合。"
+        "PR #77 の情報paneをmainの公開UI変更と統合。",
+        "squash済みPR #77のmainをマスク描画へ同期する。"
       ]
     },
     {
@@ -3754,7 +3770,8 @@
         "Issue #5の共有入力能力レジストリ、段階別検証、公開回帰契約に合わせて更新。",
         "Issue #5親レビューに従い形式検査・エラー保持・実decoder公開CI回帰を補強。",
         "niho-photo#43 の写真の情報の返す形と、読めないファイル・開いていない写真の test を追加。合成の入力だけを使用。",
-        "PR #77 の情報paneをmainの公開UI変更と統合。"
+        "PR #77 の情報paneをmainの公開UI変更と統合。",
+        "squash済みPR #77のmainをマスク描画へ同期する。"
       ]
     },
     {
@@ -3944,7 +3961,8 @@
         "Issue 13 progressive RAW open implementation",
         "最新mainのUI・共有機能と段階RAW openを統合し、既存の境界と補正保持を両立する。",
         "niho-photo#43 の photoInfo の呼び出しの test を追加。",
-        "PR #77 の情報paneをmainの公開UI変更と統合。"
+        "PR #77 の情報paneをmainの公開UI変更と統合。",
+        "squash済みPR #77のmainをマスク描画へ同期する。"
       ]
     },
     {
@@ -3955,14 +3973,17 @@
         "path": "apps/camera/src/local-library/commands.ts",
         "sha256": "6aa0e7cc890a164709ed5274f020d5070d85b69e9b01f8562ae772a8ba2c57f1"
       },
-      "outputSha256": "1463a91df2d42161d39f27e953f94d951a044391b0c235e52de56ea3c659f536",
+      "outputSha256": "27d4712c56dc43d1a1ecb948a125177317459846bc6961acec866c9feaa7d92c",
       "modifications": [
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
         "個別写真の追加・件数・一覧・参照削除を不透明なentryIdの既存経路へ接続 / 選択写真一覧を専用IPC commandへ分離。",
         "Issue #13の段階表示、provisional draft、canonical handoffと書き出し境界を実装。",
         "Issue 13 progressive RAW open implementation",
+        "部分補正（マスク）#66: DevelopStatus に masks の型を足す",
+        "PR #81 のマスク描画を最新mainの変更と統合。",
         "niho-photo#43 の写真の情報を読む native の口 photoInfo を追加。",
-        "PR #77 の情報paneをmainの公開UI変更と統合。"
+        "PR #77 の情報paneをmainの公開UI変更と統合。",
+        "squash済みPR #77のmainをマスク描画へ同期する。"
       ]
     },
     {
@@ -4006,7 +4027,7 @@
         "path": "apps/camera/src/local-library/local-photo-library.test.ts",
         "sha256": "e86937a17a1b2655448cdcf9d43313df2d5b53c37ec16172b6eaa81371d4e1aa"
       },
-      "outputSha256": "f0b1cae8a44ddf810b48742f657b7a5616484c2e1327fb9d39de086f3a8c857f",
+      "outputSha256": "c528baddbc039115163405daab53e21f8ec67c5c6acd6b5a869a8f151ba62830",
       "modifications": [
         "個別写真の追加・件数・一覧・参照削除を不透明なentryIdの既存経路へ接続 / 選択写真取得の専用IPC経路をテスト。",
         "Issue #5親レビューに従い形式検査・エラー保持・実decoder公開CI回帰を補強。",
@@ -4019,8 +4040,11 @@
         "abort直後の同一写真再選択が新native要求を発行する回帰を追加。",
         "最新mainのUI・共有機能と段階RAW openを統合し、既存の境界と補正保持を両立する。",
         "選択済みhandleの再利用と未open近隣先読みの抑止を回帰検証",
+        "部分補正（マスク）#66: nativeExportMasks の能力の回帰を足す",
+        "PR #81 のマスク描画を最新mainの変更と統合。",
         "niho-photo#43 の写真の情報の読み出し・形の検査・開き直しの test を追加。合成の値だけを使用。",
-        "PR #77 の情報paneをmainの公開UI変更と統合。"
+        "PR #77 の情報paneをmainの公開UI変更と統合。",
+        "squash済みPR #77のmainをマスク描画へ同期する。"
       ]
     },
     {
@@ -4031,7 +4055,7 @@
         "path": "apps/camera/src/local-library/local-photo-library.ts",
         "sha256": "bda72efc4c68731a2695be4906aedba55368d065dafbad6d577906ffa8441ed8"
       },
-      "outputSha256": "677a3e78064840d7dacdd896d57c2f8cc044662f9946d520e51b530211e21c13",
+      "outputSha256": "ca65b9e7dca694b6213bf6f79543f771d61ce85a26554fc5b1b8f693d9b36647",
       "modifications": [
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
         "個別写真の追加・件数・一覧・参照削除を不透明なentryIdの既存経路へ接続 / 選択写真一覧でフォルダ再走査commandを呼ばない。",
@@ -4042,8 +4066,11 @@
         "最後のconsumer中止時にjobを外し、直後の同じ写真の再選択へcancel済みPromiseを渡さない。",
         "最新mainのUI・共有機能と段階RAW openを統合し、既存の境界と補正保持を両立する。",
         "プレビュー照会で開いた写真のhandleを再利用し不要なRAW再hashを避ける",
+        "部分補正（マスク）#66: sidecar が描けるときだけ nativeExportMasks を開く",
+        "PR #81 のマスク描画を最新mainの変更と統合。",
         "niho-photo#43 の写真の情報（info）と capabilities.info をこの Mac の実装に追加。",
-        "PR #77 の情報paneをmainの公開UI変更と統合。"
+        "PR #77 の情報paneをmainの公開UI変更と統合。",
+        "squash済みPR #77のmainをマスク描画へ同期する。"
       ]
     },
     {
@@ -4193,7 +4220,7 @@
         "path": "packages/desktop-photo/src/develop.rs",
         "sha256": "7f13c1e41e82bf4bc91bef5e4a8b61f092ab0b986a6a95c5559c2246bb74d864"
       },
-      "outputSha256": "d62a7589542b84e943eb5b4c93a7358af2e7387e23ffa42ffa0e845e1c9ecfd2",
+      "outputSha256": "40d968f92015c2c6d2ed4200cb382c6c89206c15420cbf5b3c20c33547f55c70",
       "modifications": [
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
         "Issue #5の共有入力能力レジストリ、段階別検証、公開回帰契約に合わせて更新。",
@@ -4202,7 +4229,9 @@
         "Issue #30 Oklch色ミキサーとengine 10/11対応を反映",
         "最新mainの認証・形式能力・共通UI変更とOklch/ディテールの変更を両立して統合。",
         "Issue #13の段階RAW open、競合回帰、匿名の区間計測を追加。正規producerの数式と成果物は維持。",
-        "最新mainのUI・共有機能と段階RAW openを統合し、既存の境界と補正保持を両立する。"
+        "最新mainのUI・共有機能と段階RAW openを統合し、既存の境界と補正保持を両立する。",
+        "部分補正（マスク）#66: masks のある設定を描ける版の sidecar にだけ渡す（MASKS_MIN_RENDER_VERSION）",
+        "PR #81 のマスク描画を最新mainの変更と統合。"
       ]
     },
     {
@@ -4213,14 +4242,16 @@
         "path": "packages/desktop-photo/src/develop_local_raster_tests.rs",
         "sha256": "b45869e304ecb1bfa8cc4c3aea903fd7771f60c1b140f6f3c7be2f9f2b929bc2"
       },
-      "outputSha256": "3aa3ab85e3149d0e225abb9c1ea7a98c1977c7ae7ed12d1f1e1c87920b2cbff0",
+      "outputSha256": "5ab8080520fee8ff52c10be9877726e15cabd85845ea3ee19ffd6c3fb5dc36bd",
       "modifications": [
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
         "Issue #5の共有入力能力レジストリ、段階別検証、公開回帰契約に合わせて更新。",
         "Issue #5親レビューに従い形式検査・エラー保持・実decoder公開CI回帰を補強。",
         "新しい色相保持エンジンと新旧バイナリの能力境界・数値回帰を整合。",
         "Issue #30 Oklch色ミキサーとengine 10/11対応を反映",
-        "最新mainの認証・形式能力・共通UI変更とOklch/ディテールの変更を両立して統合。"
+        "最新mainの認証・形式能力・共通UI変更とOklch/ディテールの変更を両立して統合。",
+        "部分補正（マスク）#66: 古い sidecar へ masks を渡さない書き出しの回帰を足す",
+        "PR #81 のマスク描画を最新mainの変更と統合。"
       ]
     },
     {
@@ -4254,7 +4285,8 @@
         "Issue #5の共有入力能力レジストリ、段階別検証、公開回帰契約に合わせて更新。",
         "Issue #5親レビューに従い形式検査・エラー保持・実decoder公開CI回帰を補強。",
         "niho-photo#43 の写真の情報（撮影条件・カメラ・レンズ・撮影日時・寸法・GPS）を ImageIO で読む関数と、合成の JPEG / PNG による test を追加。",
-        "PR #77 の情報paneをmainの公開UI変更と統合。"
+        "PR #77 の情報paneをmainの公開UI変更と統合。",
+        "squash済みPR #77のmainをマスク描画へ同期する。"
       ]
     },
     {
@@ -4614,11 +4646,13 @@
         "path": "packages/develop-engine/Cargo.lock",
         "sha256": "e7caae6825c3c4c50d7d593c35d7163de7d311357b81558d1ad1a009cbfafadc"
       },
-      "outputSha256": "0c288a25c7ee3c5936aaa1f6a7d843289f810251b02b4e75db0856321ee26a32",
+      "outputSha256": "6f86b0d3de37ce596dac69d735c7fdf66ae8ddd5b7ecc47ad769fe0dc627215e",
       "modifications": [
         "新しい色相保持エンジンと新旧バイナリの能力境界・数値回帰を整合。",
         "現像workspaceだけを0.17.0へ更新し外部依存の固定版を維持。",
-        "Issue #30 Oklch色ミキサーとengine 10/11対応を反映"
+        "Issue #30 Oklch色ミキサーとengine 10/11対応を反映",
+        "部分補正（マスク）#66: 現像workspaceを0.19.0へ更新し外部依存の固定版を維持",
+        "PR #81 のマスク描画を最新mainの変更と統合。"
       ]
     },
     {
@@ -4629,10 +4663,12 @@
         "path": "packages/develop-engine/Cargo.toml",
         "sha256": "274ef616c08b9ade52276b660ea12ce836bc08f97e67dedcf163f76114dd4ab0"
       },
-      "outputSha256": "e90bc3821569982de08b01b8ec025ec1503f6697c660deb6a53aae1633bbad96",
+      "outputSha256": "32beb9c5297b4b772ae0416360084f428dbc270c8f84f9b28540afe9e0deb96a",
       "modifications": [
         "新しい色相保持エンジンと新旧バイナリの能力境界・数値回帰を整合。",
-        "Issue #30 Oklch色ミキサーとengine 10/11対応を反映"
+        "Issue #30 Oklch色ミキサーとengine 10/11対応を反映",
+        "部分補正（マスク）#66: 現像workspaceの版を0.19.0へ上げる",
+        "PR #81 のマスク描画を最新mainの変更と統合。"
       ]
     },
     {
@@ -5336,14 +5372,16 @@
         "path": "packages/develop-engine/crates/niho-develop-render/src/lib.rs",
         "sha256": "a9ac3a784a2eb9250747dc2eaabc10c958c1a10d71c7ca16ffdd0d96b40456bc"
       },
-      "outputSha256": "a6ad16ef911a8f5475ac3b25e28cc115fa6b5b7d5bb726cca7ddbd2cc0759704",
+      "outputSha256": "3ecbdbefbfd59d1eeb0341d03518269000338eb310051ff9192f51ad1179180c",
       "modifications": [
         "公開Issue #26/#27/#29: 旧版を保つfloat cube候補、研究用WB/H-Sプローブ、合成検証と計測契約を追加。",
         "Issue #28の色相安定engine追加と互換回帰を反映。",
         "新しい色相保持エンジンと新旧バイナリの能力境界・数値回帰を整合。",
         "Issue #30 Oklch色ミキサーとengine 10/11対応を反映",
         "PR #62 の対応engine範囲をエラー文に正確に表示",
-        "部分補正（マスク）#65: 未描画のマスク付き設定をunsupported_settingsで拒否する対応"
+        "部分補正（マスク）#65: 未描画のマスク付き設定をunsupported_settingsで拒否する対応",
+        "部分補正（マスク）#66: masksNotRenderedを外しmaskSurfaceMissingをunsupported_settingsへ写す",
+        "PR #81 のマスク描画を最新mainの変更と統合。"
       ]
     },
     {
@@ -5365,7 +5403,7 @@
         "path": "packages/develop-engine/crates/niho-develop-render/tests/cli.rs",
         "sha256": "8ddf42804ccd8202fb8834bc499d2d03a331eb0ff96e020421a776f2286ef9bd"
       },
-      "outputSha256": "ed010000d062c6ab9e1a716cf972758715c1f4826403522f9a7539ada237dc9e",
+      "outputSha256": "bdb8c29e45ad782b120c8ecb6527af6ed25a8edd5c791ece517e7fae832208aa",
       "modifications": [
         "公開Issue #26/#27/#29: 旧版を保つfloat cube候補、研究用WB/H-Sプローブ、合成検証と計測契約を追加。",
         "新engine受入と未知版拒否の境界を更新し、既存wasm CIで候補のFinal/Interactive固定画素を検証する。",
@@ -5377,7 +5415,9 @@
         "PR #62 の設定schema v4対応に合わせ未対応版をv5へ更新",
         "CLIの未知engine判定を最新契約へ更新",
         "CLI版表示の現行engine番号を正しく検証",
-        "部分補正（マスク）#65: v6を未知版とし有効なマスク付き設定の拒否を検証"
+        "部分補正（マスク）#65: v6を未知版とし有効なマスク付き設定の拒否を検証",
+        "部分補正（マスク）#66: マスク付きの描画がcrateと同じ画素になるCLIの回帰を足す",
+        "PR #81 のマスク描画を最新mainの変更と統合。"
       ]
     },
     {
@@ -5399,10 +5439,12 @@
         "path": "packages/develop-engine/crates/niho-develop-wasm/src/lib.rs",
         "sha256": "bb2c416ce23b4e3ca3208f32736f22254ed82276b24fd7f49f1a022e4eb85fbd"
       },
-      "outputSha256": "85159b68dfbefe8bf8b57d9f628d9e90dcae7895b76824e14aea82b84c45e74c",
+      "outputSha256": "cdb83cfc9220be47a4a838da6dd0683de7b11b95ec399ca8404d6bf0393e2557",
       "modifications": [
         "Issue #30 Oklch色ミキサーとengine 10/11対応を反映",
-        "部分補正（マスク）#65: validateSettingsのマスク読み取り回帰テストを追加"
+        "部分補正（マスク）#65: validateSettingsのマスク読み取り回帰テストを追加",
+        "部分補正（マスク）#66: capabilitiesとDeveloper.maskPlaneを足す",
+        "PR #81 のマスク描画を最新mainの変更と統合。"
       ]
     },
     {
@@ -5839,7 +5881,7 @@
         "path": "packages/develop-engine/crates/niho-develop/src/lib.rs",
         "sha256": "1591d49effaa779c8e23ad6877508ccf336565eec8336d5b4e6faa3b5d3846b0"
       },
-      "outputSha256": "233b69036cd12206a0524e78e0379b684e1e201d3a3e55e88e85c862c944f64a",
+      "outputSha256": "6a03f4bf649034270e5e7af37cb22284dba6f9ab256917fd97e63dbeef33aa0f",
       "modifications": [
         "公開Issue #26/#27/#29: 旧版を保つfloat cube候補、研究用WB/H-Sプローブ、合成検証と計測契約を追加。",
         "Issue #28の色相安定engine追加と互換回帰を反映。",
@@ -5853,7 +5895,9 @@
         "点補正の選択plane cacheと精度・依存関係・headroom回帰を整備",
         "色サンプルの段参照を集約し、キャッシュキーの回帰試験では借用を次描画前に解放する",
         "色点のサンプル座標と回帰試験を整合し、操作中640pxと確定解像度を分ける",
-        "部分補正（マスク）#65: 有効なマスクの描画をmasksNotRenderedで拒否しM2まで安全に失敗させる"
+        "部分補正（マスク）#65: 有効なマスクの描画をmasksNotRenderedで拒否しM2まで安全に失敗させる",
+        "部分補正（マスク）#66: Sessionの描画を層の描画に対応させ、自動補正と色の取得はmasksを除いて測る",
+        "PR #81 のマスク描画を最新mainの変更と統合。"
       ]
     },
     {
@@ -5984,7 +6028,7 @@
         "path": "packages/develop-engine/crates/niho-develop/src/pipeline.rs",
         "sha256": "d982d76cf1b5d34526f700e5edfcef00ae8647d22b845c0f7234ed340ba9d641"
       },
-      "outputSha256": "b4a66a14a851f417912689f430dc605d6a8b36d70231e32056d604e0ec465053",
+      "outputSha256": "876756b939cb95a25c8446a74abf3edc82fed6d641c99f8f4e12d8168bf9d155",
       "modifications": [
         "公開Issue #26/#27/#29: 旧版を保つfloat cube候補、研究用WB/H-Sプローブ、合成検証と計測契約を追加。",
         "Issue #28の色相安定engine追加と互換回帰を反映。",
@@ -5999,7 +6043,9 @@
         "点補正の選択plane cacheと精度・依存関係・headroom回帰を整備",
         "色サンプルの有効点有無で共通のf32選択座標を使い、段の依存参照を構造体で共有する",
         "色点のサンプル座標と回帰試験を整合し、操作中640pxと確定解像度を分ける",
-        "niho-8と色ポイントのcube統合を修正"
+        "niho-8と色ポイントのcube統合を修正",
+        "部分補正（マスク）#66: 同じ画像の層が全体の局所階調のpassを読めるようにする",
+        "PR #81 のマスク描画を最新mainの変更と統合。"
       ]
     },
     {
@@ -9320,12 +9366,12 @@
     {
       "path": "packages/photo-editing/src/editor/browser-photo-editing-tool-rail.test.tsx",
       "sha256": "813c0113285fda902ac8b23b637c86269eb6f372519455526ce286f4cf7a39fd",
-      "origin": "niho-photo#51 のため新規作成。右端の道具の帯と右パネルの面の部品・test。\n変更理由: niho-photo#43 の帯の下端の道具ともう一度押すと戻る道具の test を追加。\n変更理由: PR #77 の情報paneをmainの公開UI変更と統合。"
+      "origin": "niho-photo#51 のため新規作成。右端の道具の帯と右パネルの面の部品・test。\n変更理由: niho-photo#43 の帯の下端の道具ともう一度押すと戻る道具の test を追加。\n変更理由: PR #77 の情報paneをmainの公開UI変更と統合。\n変更理由: squash済みPR #77のmainをマスク描画へ同期する。"
     },
     {
       "path": "packages/photo-editing/src/editor/browser-photo-editing-tool-rail.tsx",
       "sha256": "cd82dc717737879bbb5de233709174cb3496c5af824877ee01bfddf3027f97e6",
-      "origin": "niho-photo#51 のため新規作成。右端の道具の帯と右パネルの面の部品・test。\n変更理由: Issue #49の統合確認: 道具の帯をPCの幅で2段に貫いて窓の底まで伸ばす。\n変更理由: niho-photo#43 の道具の帯に、下端に置く道具ともう一度押すと戻る道具を追加。\n変更理由: PR #77 の情報paneをmainの公開UI変更と統合。"
+      "origin": "niho-photo#51 のため新規作成。右端の道具の帯と右パネルの面の部品・test。\n変更理由: Issue #49の統合確認: 道具の帯をPCの幅で2段に貫いて窓の底まで伸ばす。\n変更理由: niho-photo#43 の道具の帯に、下端に置く道具ともう一度押すと戻る道具を追加。\n変更理由: PR #77 の情報paneをmainの公開UI変更と統合。\n変更理由: squash済みPR #77のmainをマスク描画へ同期する。"
     },
     {
       "path": "packages/photo-editing/src/editor/photo-editing-presets-panel-variants.test.tsx",
@@ -9529,8 +9575,8 @@
     },
     {
       "path": "scripts/ci/scopes.test.mjs",
-      "sha256": "699172b5894c2c462975e3a5c393b8a147fca187d2538f88dd73c494fef977ff",
-      "origin": "Issue #2の公開成果物・SBOM・固定SHA取り込み契約のため独立作成。公開仕様と既存公開CIから生成器・schema・guard・検証・責務境界を定義し、外部コード・秘密・実ユーザーデータを含まない。\n変更理由: Issue #2の公開検証成果物・SBOM・固定SHA取り込み契約と秘密を持たないCI検査を追加。\n変更理由: Issue #2の実装検証で成果物名・輸送receipt・build設定を強化。"
+      "sha256": "bd49b793b767f12275ed2b515ca9ef92e1fb433173eb766acc09528a7503374d",
+      "origin": "Issue #2の公開成果物・SBOM・固定SHA取り込み契約のため独立作成。公開仕様と既存公開CIから生成器・schema・guard・検証・責務境界を定義し、外部コード・秘密・実ユーザーデータを含まない。\n変更理由: Issue #2の公開検証成果物・SBOM・固定SHA取り込み契約と秘密を持たないCI検査を追加。\n変更理由: Issue #2の実装検証で成果物名・輸送receipt・build設定を強化。\n変更理由: PR #81 のマスク描画を最新mainの変更と統合。"
     },
     {
       "path": "scripts/ci/workflow-lib.mjs",
@@ -9589,13 +9635,13 @@
     },
     {
       "path": "packages/develop-engine/crates/niho-develop/src/local_mask.rs",
-      "sha256": "0d507294f2e3b182704083f9125008729ea5eff2ec39dd82dd62dcd7335a3e38",
-      "origin": "Issue #65の公開仕様 docs/local-adjustments.md だけから新規作成した部分補正（マスク）の保存形・厳密検証・正規形書き出しのRust実装。実写真・非公開コード・私有参照出力を含まない。"
+      "sha256": "b6b7a82bc23edf81a6f60fd5b1eb23ae772f6c08ffabeed860f54210ac26f8e3",
+      "origin": "Issue #65の公開仕様 docs/local-adjustments.md だけから新規作成した部分補正（マスク）の保存形・厳密検証・正規形書き出しのRust実装。実写真・非公開コード・私有参照出力を含まない。\n変更理由: 部分補正（マスク）#66: M2で描画される前提に文書を合わせる\n変更理由: PR #81 のマスク描画を最新mainの変更と統合。"
     },
     {
       "path": "packages/develop-engine/crates/niho-develop/tests/masks_settings.rs",
-      "sha256": "acff8c43a7c3f7d7d960d5f3d0bb9c8da9444e6f9a087cf3143ccff3d9526c18",
-      "origin": "Issue #65の公開仕様と合成fixtureだけから新規作成した、マスク設定の読み書き・版・互換・未描画時の安全な失敗のRust回帰。実写真・非公開コード・私有参照出力を含まない。"
+      "sha256": "72fdc7f5bf22e2634b5f0e9a70c2ea1e3c5568b38edd5c2be2b4a064f91c484a",
+      "origin": "Issue #65の公開仕様と合成fixtureだけから新規作成した、マスク設定の読み書き・版・互換・未描画時の安全な失敗のRust回帰。実写真・非公開コード・私有参照出力を含まない。\n変更理由: 部分補正（マスク）#66: M1の未描画の失敗を、すべての描画経路で描く回帰に置き換える\n変更理由: PR #81 のマスク描画を最新mainの変更と統合。"
     },
     {
       "path": "packages/develop-engine/crates/niho-develop/tests/fixtures/masks/settings-cases.json",
@@ -9691,6 +9737,51 @@
       "path": "packages/photo-editing/src/editor/browser-photo-editing-mobile-editor-compare.test.tsx",
       "sha256": "b291c03b646a80b68e6904b3e86017dff6da1bd55ab027cd62595f64da838e7e",
       "origin": "niho-photo#41 のため新規作成。補正前と補正後を並べて見比べる表示（並べる・分割・戻す、境界のドラッグとキー操作、Y / Shift+Y、スマホの上下）の test。合成の DOM と画素だけを使用。\n変更理由: niho-photo#41 の比較UIを #72 のヒストグラム・Jキー契約と併存するようmainへ積み直した。\n変更理由: niho-photo#41 の比較pane追加時に拡大位置を再clampする回帰を検証する。"
+    },
+    {
+      "path": "packages/develop-engine/crates/niho-develop/src/local_render.rs",
+      "sha256": "abdaf96fcf26d233f9f2c0cc8f30bc099f8de5ee0f438229fced78b8f71f73da",
+      "origin": "Issue #66の公開仕様 docs/local-adjustments.md だけから新規作成した部分補正（マスク）の面の式・出力から作業画像への写像・局所の設定・固定小数点の合算のRust実装。実写真・非公開コード・私有参照出力を含まない。"
+    },
+    {
+      "path": "packages/develop-engine/crates/niho-develop/src/mask_session.rs",
+      "sha256": "eb56f315f977910a11d34c02339ce3061c7e8c8be1f3ba1a1049cee4500ee2cc",
+      "origin": "Issue #66の公開仕様 docs/local-adjustments.md だけから新規作成した、Sessionの層の描画（層ごとのキャッシュの入れ替え・同じ画像の共有・結果の使い回し）とマスクの面の書き出しのRust実装。実写真・非公開コード・私有参照出力を含まない。\n変更理由: Final描画後に古いInteractiveマスクフレームを破棄し再描画する。\n変更理由: Final描画後に古いInteractiveマスクフレームを破棄し再描画する。"
+    },
+    {
+      "path": "packages/develop-engine/crates/niho-develop/tests/masks_render.rs",
+      "sha256": "cb06453d883fcc9e63751f776cf727e0d97535bc719d9aa01cd4bfee83927ddc",
+      "origin": "Issue #66の公開仕様と合成画像だけから新規作成した、部分補正の層の描画（面1でR_k・面0でR0・幾何への追従・順序非依存・無効なマスクのbit一致）のRust回帰。実写真・非公開コード・私有参照出力を含まない。\n変更理由: niho-6 Final解析後に古いInteractiveマスクフレームを再利用しない回帰テスト。\n変更理由: niho-6 Final解析後にInteractiveマスクフレームを再利用しない回帰テスト。"
+    },
+    {
+      "path": "packages/develop-engine/crates/niho-develop/tests/masks_geometry_map.rs",
+      "sha256": "3a039e0e4933e058a6082770dbde3f26565f2710f635641ecd9bb5baa4fdbb88",
+      "origin": "Issue #66の公開仕様と合成fixtureだけから新規作成した、マスクの写像がTypeScriptのgeometryOutputToSourceと一致するRust回帰（native/wasm）。実写真・非公開コード・私有参照出力を含まない。"
+    },
+    {
+      "path": "packages/develop-engine/crates/niho-develop/tests/masks_cross_target.rs",
+      "sha256": "8a17c2589b028a1029b066022719bb8cd66342c11977806bae57da9f012d134d",
+      "origin": "Issue #66の公開仕様と合成画像だけから新規作成した、マスク付きの描画と面がnativeとwasmで同じbyteになるRust回帰（FNV-1a固定）。実写真・非公開コード・私有参照出力を含まない。"
+    },
+    {
+      "path": "packages/develop-engine/crates/niho-develop/tests/fixtures/masks/geometry-map-cases.json",
+      "sha256": "295fdcb7afd0d648cae82e46d2c44c0fbcb0849a5599fdac1a689321e522cc7a",
+      "origin": "Issue #66の公開仕様から、公開TypeScript関数geometryOutputToSourceで合成した出力→作業画像の写像の値（RustとTypeScriptで共有）。実写真・利用者データ・私有参照出力を含まない。"
+    },
+    {
+      "path": "packages/develop-engine/crates/niho-develop/examples/mask_timing.rs",
+      "sha256": "31b407c3b2e993b597b5a85eb8e9faede8cd28a6368747356823354761d1a482",
+      "origin": "Issue #66の公開仕様と合成画像だけから新規作成した、部分補正の層の描画のnative計測の道具。実写真・非公開コード・私有参照出力を含まない。"
+    },
+    {
+      "path": "packages/develop-engine/tools/mask-wasm-bench.mjs",
+      "sha256": "a9e08119723042722c2cbd3a42ec091b07c6be9728d5a8b78fc49e60718b5aec",
+      "origin": "Issue #66の公開仕様と合成画像だけから新規作成した、部分補正の層の描画のwasm（Node）計測の道具。実写真・npm依存・非公開コード・私有参照出力を含まない。"
+    },
+    {
+      "path": "packages/photo-editing/src/develop-engine/develop-masks-geometry-map.test.ts",
+      "sha256": "12e6cbfe9f755ab7f5b51c2398b16f39130db5c3f035b92d95a68e01cfefcb2b",
+      "origin": "Issue #66の公開仕様と公開関数だけから新規作成した、マスクの写像のfixtureをgeometryOutputToSourceから作り照合するTypeScript回帰。外部画像・非公開コード・個体metadataを含まない。"
     },
     {
       "path": "packages/photo-editing/src/photo-editing-info.ts",

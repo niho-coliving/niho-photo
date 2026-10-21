@@ -83,6 +83,9 @@ const SIGNED_MIN_TOOL_VERSION: &str = "0.5.0";
 const SIGNED_MIN_RENDER_VERSION: &str = "0.11.0";
 const NIHO7_MIN_RENDER_VERSION: &str = "0.16.0";
 const NIHO11_MIN_RENDER_VERSION: &str = "0.18.0";
+/// 部分補正（`developSettings.masks`。線形・円形。docs/local-adjustments.md）を描ける niho-develop-render の最小の版。
+/// これより古い sidecar へは `masks` のある設定を渡さない（`v: 5` を読めないか、マスクを描かない）。
+pub const MASKS_MIN_RENDER_VERSION: &str = "0.19.0";
 pub(crate) const SIGNED_REGISTRY_SNAPSHOT: &[u8] = include_bytes!("../calibration/apple-signed-registry.json");
 
 #[derive(Clone, Copy)]
@@ -1681,6 +1684,11 @@ impl Sidecars {
       && version_at_least(&self.develop_render_version, SIGNED_MIN_RENDER_VERSION)
   }
 
+  /// 同梱の niho-develop-render が部分補正（`masks`）を描けるか（{@link MASKS_MIN_RENDER_VERSION} 以上）。
+  pub fn supports_masks(&self) -> bool {
+    version_at_least(&self.develop_render_version, MASKS_MIN_RENDER_VERSION)
+  }
+
   /// ラスタのクラウド用の作業コピーの作り方（apple-raw-linear の版だけ。校正は使わないので含めない）。変われば作り直す。
   pub fn raster_recipe(&self) -> String {
     format!("apple-raw-linear {}; raster", self.apple_raw_linear_version)
@@ -1695,6 +1703,14 @@ pub fn is_raster_tool_version(version: &str) -> bool {
 
 pub fn is_full_size_raster_export_tool_version(version: &str) -> bool {
   version_at_least(version, FULL_SIZE_RASTER_MIN_TOOL_VERSION)
+}
+
+/// 設定が部分補正（`masks` の空でない配列）を持つか。
+pub(crate) fn carries_masks(develop_settings: &Value) -> bool {
+  develop_settings
+    .get("masks")
+    .and_then(Value::as_array)
+    .is_some_and(|masks| !masks.is_empty())
 }
 
 fn version_at_least(version: &str, minimum: &str) -> bool {
@@ -2401,6 +2417,19 @@ impl PhotoDevelop {
       Err(std::sync::TryLockError::WouldBlock) => return false,
     };
     state.ready.as_ref().is_some_and(|sidecars| sidecars.supports_raster())
+  }
+
+  /// 部分補正（`masks`）のある設定を原寸で書き出せる sidecar が使えるときだけ true（待たない）。
+  pub fn is_masks_export_available_cached(&self) -> bool {
+    if self.cache.is_none() {
+      return false;
+    }
+    let state = match self.probe.try_lock() {
+      Ok(state) => state,
+      Err(std::sync::TryLockError::Poisoned(error)) => error.into_inner(),
+      Err(std::sync::TryLockError::WouldBlock) => return false,
+    };
+    state.ready.as_ref().is_some_and(|sidecars| sidecars.supports_masks())
   }
 
   /// 原寸ラスタ書き出しで必要な `raster --long-edge full` を持つ sidecar が使えるときだけ true（待たない）。
@@ -3665,6 +3694,18 @@ impl PhotoDevelop {
     steps: &mut Map<String, Value>,
   ) -> Result<ExportInput, DevelopError> {
     let sidecars = self.sidecars()?;
+    // 部分補正のある設定は、描ける sidecar にだけ渡す（作業コピーを作る前に断る。古い sidecar はマスクを落とさず失敗するが、
+    // 原寸の作業コピーを作る時間を使わせない）
+    if carries_masks(develop_settings) && !sidecars.supports_masks() {
+      return Err(DevelopError::new(
+        develop_code::UNSUPPORTED_SETTINGS,
+        UNSUPPORTED_SETTINGS_MESSAGE,
+        format!(
+          "local masks need niho-develop-render {MASKS_MIN_RENDER_VERSION} (bundled {})",
+          sidecars.develop_render_version
+        ),
+      ));
+    }
     let cache = self.cache()?;
     let photo = photos.open_photo(photo_id).ok_or_else(not_open)?;
     validate_develop_input(&photo.path, CapabilityStage::FullRender)?;

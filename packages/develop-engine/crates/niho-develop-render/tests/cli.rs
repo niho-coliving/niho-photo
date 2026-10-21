@@ -410,6 +410,100 @@ fn a_geometry_is_rendered_cropped() {
     }
 }
 
+/// `settings` with a linear and a radial local mask (`v: 5`) and `geometry`.
+fn with_masks(settings: &DevelopSettings, geometry: Option<&str>) -> DevelopSettings {
+    let mut v = settings.to_value();
+    v["v"] = 5.into();
+    if let Some(geometry) = geometry {
+        v["geometry"] = serde_json::from_str(geometry).unwrap();
+    }
+    v["masks"] = serde_json::json!([
+        {
+            "id": "sky", "kind": "linear",
+            "zero": {"x": 0.5, "y": 0.6}, "full": {"x": 0.5, "y": 0.1},
+            "adjust": {"exposure": -0.8, "highlights": -30}
+        },
+        {
+            "id": "face", "kind": "radial", "invert": true,
+            "center": {"x": 0.45, "y": 0.55}, "radius": {"x": 0.3, "y": 0.25},
+            "angle": 20, "feather": 60,
+            "adjust": {"saturation": -40, "clarity": 25}
+        }
+    ]);
+    DevelopSettings::from_json(&v.to_string()).unwrap()
+}
+
+#[test]
+fn local_masks_match_the_crates_render() {
+    let dir = TempDir::new("masks");
+    // An original, turned and cropped: the crate's one-shot render.
+    let raster_settings = with_masks(
+        &settings(None),
+        Some(r#"{"rotate":90,"crop":{"left":0.1,"top":0.2,"right":0.9,"bottom":0.7}}"#),
+    );
+    let settings_path = dir.write("settings.json", raster_settings.to_json());
+    let out = dir.path("raster.png");
+    let result = run(&[
+        "render",
+        "--settings",
+        s(&settings_path),
+        "--raster",
+        s(&golden_jpeg()),
+        "--max-dimension",
+        "320",
+        "--out",
+        s(&out),
+    ]);
+    assert_eq!(result.code, 0, "{}", result.stdout);
+    let input = fs::read(golden_jpeg()).unwrap();
+    let options = RenderOptions {
+        max_dimension: 320,
+        quality: Quality::Final,
+        filter: Filter::Lanczos3,
+        decode_cap: 0,
+    };
+    let expected = niho_develop::render(&input, &raster_settings.to_json(), &options).unwrap();
+    let (w, h, rgb) = read_png(&out);
+    assert_eq!((w, h), (expected.width, expected.height));
+    assert_eq!(rgb, rgb_of(&expected.rgba), "same pixels as the crate");
+    let mut unmasked = raster_settings.clone();
+    unmasked.masks.clear();
+    let plain = niho_develop::render(&input, &unmasked.to_json(), &options).unwrap();
+    assert_ne!(plain.rgba, expected.rgba, "the masks change the frame");
+
+    // A working copy: the session's frame at its size and reduced.
+    let png = working_copy();
+    let wc_settings = with_masks(&settings(Some(WC_BASE)), None);
+    let settings_path = dir.write("settings-wc.json", wc_settings.to_json());
+    let wc_path = dir.write("working.png", &png);
+    let meta_path = dir.write("working.json", META);
+    for max_dimension in [0usize, 48] {
+        let out = dir.path(&format!("wc-{max_dimension}.png"));
+        let result = run(&[
+            "render",
+            "--settings",
+            s(&settings_path),
+            "--working-copy",
+            s(&wc_path),
+            "--meta",
+            s(&meta_path),
+            "--base-version",
+            WC_BASE,
+            &format!("--max-dimension={max_dimension}"),
+            "--out",
+            s(&out),
+        ]);
+        assert_eq!(result.code, 0, "{}", result.stdout);
+        let expected = Session::open_working_copy(&png, META, Filter::Lanczos3)
+            .unwrap()
+            .render(&wc_settings, max_dimension, Quality::Final)
+            .unwrap();
+        let (w, h, rgb) = read_png(&out);
+        assert_eq!((w, h), (expected.width, expected.height));
+        assert_eq!(rgb, rgb_of(&expected.rgba), "max {max_dimension}");
+    }
+}
+
 #[test]
 fn a_different_base_is_rendered_and_reported() {
     let dir = TempDir::new("base-mismatch");
@@ -484,9 +578,14 @@ fn failures_are_one_json_line_with_a_fixed_exit_code() {
     let no_v = with("no-v.json", r#"{"engine":"niho-1"}"#);
     let no_engine = with("no-engine.json", r#"{"v":1}"#);
     let v6 = with("v6.json", r#"{"v":6,"engine":"niho-1"}"#);
+    // A brush mask: valid (v 5), but this build has no surface store (M4,
+    // #68), so it is never drawn without the mask.
     let masks = with(
         "masks.json",
-        r#"{"v":5,"engine":"niho-1","masks":[{"id":"m1","kind":"linear","zero":{"x":0.5,"y":0.2},"full":{"x":0.5,"y":0.5},"adjust":{"exposure":-0.7}}]}"#,
+        &format!(
+            r#"{{"v":5,"engine":"niho-1","masks":[{{"id":"b1","kind":"brush","surface":{{"id":"{}","width":8,"height":4}},"adjust":{{"exposure":-0.7}}}}]}}"#,
+            "0".repeat(64)
+        ),
     );
     // A turned crop whose corners do not make a rectangle on this photo.
     let crop = with(
@@ -628,10 +727,8 @@ fn failures_are_one_json_line_with_a_fixed_exit_code() {
             2,
         ),
         ("v 6", raster(&v6, &jpeg, &out), "unsupported_settings", 2),
-        // Saved and valid (v 5), but not drawn until M2 (#66): never a frame
-        // without the mask.
         (
-            "active local masks",
+            "a brush mask without its surface",
             raster(&masks, &jpeg, &out),
             "unsupported_settings",
             2,
