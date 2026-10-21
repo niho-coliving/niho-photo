@@ -22,6 +22,9 @@
     "sdk:test": "node --test scripts/sdk/*.test.mjs",
     "sdk:smoke": "node scripts/sdk/smoke-consumer.mjs",
     "sdk:smoke-real-engine": "node scripts/sdk/smoke-real-engine.mjs",
+    "candidate:build": "node scripts/candidate/build-mac-candidate.mjs",
+    "candidate:verify": "node scripts/candidate/verify-mac-candidate.mjs",
+    "candidate:test": "node --test scripts/candidate/*.test.mjs",
     "release:evidence": "node scripts/ci/release-evidence.mjs"
   },
   "engines": {

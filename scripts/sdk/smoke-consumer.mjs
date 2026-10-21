@@ -21,7 +21,7 @@ function run(command, args, cwd) {
     return execFileSync(command, args, {
       cwd,
       encoding: "utf8",
-      env: { ...process.env, CI: "true", npm_config_update_notifier: "false" },
+      env: { ...process.env, CI: "true", npm_config_cache: path.join(cwd, ".npm-cache"), npm_config_update_notifier: "false" },
       maxBuffer: 64 * 1024 * 1024,
       stdio: ["ignore", "pipe", "pipe"],
     });

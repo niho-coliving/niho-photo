@@ -13,9 +13,15 @@ export const scopes = {
 
 const photoSdkPrefixes = ["packages/photo-editing/", "packages/ui/", "packages/niho-cloud-contract/", "packages/develop-engine/", "packages/desktop-photo/", "sdk/", "scripts/sdk/"];
 const photoSdkFiles = new Set(["package.json", "package-lock.json", "LICENSE.md", "ASSET_LICENSE.md", "TRADEMARKS.md", "THIRD_PARTY_NOTICES.md"]);
+const photoCandidatePrefixes = ["apps/camera/", "packages/photo-editing/", "packages/ui/", "packages/niho-cloud-contract/", "packages/develop-engine/", "packages/desktop-photo/", "packages/desktop-account/", "sdk/", "scripts/sdk/", "scripts/candidate/"];
+const photoCandidateFiles = new Set(["package.json", "package-lock.json", "LICENSE.md", "ASSET_LICENSE.md", "TRADEMARKS.md", "THIRD_PARTY_NOTICES.md"]);
 
 export function selectPhotoSdk(changed) {
   return changed.some((name) => photoSdkFiles.has(name) || photoSdkPrefixes.some((prefix) => name.startsWith(prefix)) || /^\.github\/workflows\/(?:public-ci|photo-sdk-release)\.yml$/u.test(name) || /^scripts\/ci\/(?:aggregate|scopes|workflow|photo-sdk-workflow)(?:-lib)?(?:\.test)?\.mjs$/u.test(name));
+}
+
+export function selectPhotoCandidate(changed) {
+  return changed.some((name) => photoCandidateFiles.has(name) || photoCandidatePrefixes.some((prefix) => name.startsWith(prefix)) || /^\.github\/workflows\/(?:public-ci|photo-sdk-release|photo-candidate-release)\.yml$/u.test(name) || /^scripts\/ci\/(?:aggregate|scopes|workflow|photo-candidate-workflow|publication)(?:-lib)?(?:\.test)?\.mjs$/u.test(name));
 }
 
 export function selectScopes(changed, present, mainPush = false) {
@@ -49,7 +55,7 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
     const include = result.filter((item) => item.scope !== "photo-editing" && item.present && item.selected).map(({ scope }) => ({ scope }));
     // 空matrixもvalidな値にし、job自体はhas-workでskipする。
     const matrix = { include: include.length ? include : [{ scope: "camera" }] };
-    await appendFile(process.env.GITHUB_OUTPUT, `matrix=${JSON.stringify(matrix)}\nhas-native=${include.length > 0}\nhas-swift=${result.some((item) => item.swift && item.present && item.selected)}\nphoto-editing=${result.some((item) => item.scope === "photo-editing" && item.present && item.selected)}\nphoto-sdk=${selectPhotoSdk(changed)}\n`);
+    await appendFile(process.env.GITHUB_OUTPUT, `matrix=${JSON.stringify(matrix)}\nhas-native=${include.length > 0}\nhas-swift=${result.some((item) => item.swift && item.present && item.selected)}\nphoto-editing=${result.some((item) => item.scope === "photo-editing" && item.present && item.selected)}\nphoto-sdk=${selectPhotoSdk(changed)}\nphoto-candidate=${selectPhotoCandidate(changed)}\n`);
   } catch {
     console.error("変更範囲の判定に失敗しました（入力値は非表示）");
     process.exitCode = 1;

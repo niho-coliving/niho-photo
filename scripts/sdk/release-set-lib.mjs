@@ -24,6 +24,19 @@ const SHA256 = /^[a-f0-9]{64}$/;
 const SIMPLE_ASSET = /^[A-Za-z0-9][A-Za-z0-9._+-]*$/;
 const ROOT_NOTICE_FILES = ["LICENSE.md", "ASSET_LICENSE.md", "TRADEMARKS.md", "THIRD_PARTY_NOTICES.md"];
 const ENGINE_NOTICE_FILES = ["LICENSES.md", "licenses/Adobe-DNG-SDK-LICENSE.txt"];
+const ENGINE_NATIVE_CLOSURE = [
+  "build-macos-native.mjs",
+  "calibration/apple-registry.json",
+  "calibration/apple-signed-registry.json",
+  "calibration/panasonic-dc-s5/apple-v1.json",
+  "calibration/panasonic-dc-s5/apple-v2.json",
+  "crates/niho-develop-render/Cargo.toml",
+  "crates/niho-develop-render/src/main.rs",
+  "tools/apple-raw-linear/Package.swift",
+  "tools/apple-raw-linear/Sources/apple-raw-linear/main.swift",
+  "tools/niho-camera-cutout/Package.swift",
+  "tools/niho-camera-cutout/Sources/NihoCameraCutoutCLI/main.swift",
+];
 const OWNED_SOURCE_PATHS = ["packages/photo-editing", "packages/ui", "packages/niho-cloud-contract", "packages/develop-engine", "packages/desktop-photo", "sdk", "scripts/sdk", ...ROOT_NOTICE_FILES];
 const BUILD_TOOLING_PATHS = ["package.json", "package-lock.json"];
 
@@ -121,6 +134,7 @@ export function validateConfig(config) {
   if (JSON.stringify(config.buildToolingPaths) !== JSON.stringify(BUILD_TOOLING_PATHS)) throw new SdkReleaseError("SDK build tooling path が不正です");
   const engineSource = config.packages.find(({ id }) => id === "develop-engine-source");
   if (!ENGINE_NOTICE_FILES.every((file) => engineSource.include.some((pattern) => globRegex(pattern).test(file)))) throw new SdkReleaseError("engine source の license/notice closure が不足しています");
+  if (!ENGINE_NATIVE_CLOSURE.every((file) => engineSource.include.some((pattern) => globRegex(pattern).test(file)))) throw new SdkReleaseError("engine source の macOS native build closure が不足しています");
   const engine = config.engine;
   if (!engine || !/^niho-[1-9]\d*$/.test(engine.version ?? "") || !SEMVER.test(engine.crateVersion ?? "") || !PACKAGE_NAME.test(engine.runtimePackageName ?? "")) throw new SdkReleaseError("engine pin が不正です");
   assertStrictSemver(engine.crateVersion);
@@ -329,7 +343,10 @@ function stageSourcePackage({ repoRoot, commit, config, definition, stage, rootN
       crateVersion: config.engine.crateVersion,
       sourceRoot: definition.sourceRoot,
       buildInputs: config.engine.buildInputs,
-      command: "cargo build --locked --manifest-path engine/Cargo.toml --target wasm32-unknown-unknown --release -p niho-develop-wasm",
+      commands: {
+        wasm: "cargo build --locked --manifest-path engine/Cargo.toml --target wasm32-unknown-unknown --release -p niho-develop-wasm",
+        macosNative: "node engine/build-macos-native.mjs --engine engine --lock <camera-lock.json> --output <new-stage-directory>",
+      },
     }));
   } else {
     auditTypeScriptClosure(stage, manifest);
@@ -539,6 +556,8 @@ function tarEntries(tarball) {
 
 function npmPackDeterministic(stage, scratch) {
   const destinations = [mkdtempSync(path.join(scratch, "pack-a-")), mkdtempSync(path.join(scratch, "pack-b-"))];
+  const npmCache = path.join(scratch, "npm-cache");
+  mkdirSync(npmCache, { recursive: true, mode: 0o700 });
   const outputs = [];
   for (const destination of destinations) {
     let result;
@@ -546,7 +565,7 @@ function npmPackDeterministic(stage, scratch) {
       result = JSON.parse(execFileSync("npm", ["pack", "--json", "--ignore-scripts", "--offline", "--pack-destination", destination, "."], {
         cwd: stage,
         encoding: "utf8",
-        env: { ...process.env, TZ: "UTC", SOURCE_DATE_EPOCH: "0", npm_config_update_notifier: "false" },
+        env: { ...process.env, TZ: "UTC", SOURCE_DATE_EPOCH: "0", npm_config_cache: npmCache, npm_config_update_notifier: "false" },
         maxBuffer: 64 * 1024 * 1024,
       }));
     } catch {

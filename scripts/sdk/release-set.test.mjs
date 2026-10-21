@@ -21,6 +21,7 @@ import {
 import { smokeConsumer } from "./smoke-consumer.mjs";
 import { rewriteVersionedRuntimeReferences, runtimeBuildEnvironment, versionedRuntimeFileName } from "./build-develop-engine-runtime.mjs";
 import { normalizeArtifactDigest, verifyReleaseArtifact } from "./verify-release-artifact.mjs";
+import { nativeBuildEnvironment, validateNativeSourceClosure } from "../../packages/develop-engine/build-macos-native.mjs";
 
 const realRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 const temporary = [];
@@ -83,7 +84,7 @@ function createFixture() {
   for (const name of ["LICENSE.md", "ASSET_LICENSE.md", "TRADEMARKS.md", "THIRD_PARTY_NOTICES.md"]) put(root, name, readFileSync(path.join(realRoot, name)));
   put(root, "sdk/release-set.json", `${JSON.stringify(config, null, 2)}\n`);
   for (const definition of config.packages) {
-    const names = runGit(realRoot, ["ls-files", "--", definition.sourceRoot]).trim().split("\n").filter(Boolean);
+    const names = runGit(realRoot, ["ls-files", "-co", "--exclude-standard", "--", definition.sourceRoot]).trim().split("\n").filter(Boolean);
     for (const name of names) {
       const relative = name.slice(definition.sourceRoot.length + 1);
       if (matchesPackagePath(relative, definition)) put(root, name, readFileSync(path.join(realRoot, name)));
@@ -145,6 +146,31 @@ test("engine runtime build は外部Cargo設定を捨てpathをremapする", () 
   assert.throws(() => runtimeBuildEnvironment({ HOME: "/default/home" }, { home: "/isolated/home", cargoHome: "relative", temporary: "/isolated/tmp", target: "/isolated/target" }), /隔離/);
 });
 
+test("macOS native source closure は固定Rust・隔離環境・legacy calibration bytesを要求する", () => {
+  const engineRoot = path.join(realRoot, "packages/develop-engine");
+  assert.deepEqual(validateNativeSourceClosure(engineRoot), { rustToolchain: "1.98.1", target: "aarch64-apple-darwin" });
+  const isolatedRoot = temp("niho-photo-native-env-");
+  const env = nativeBuildEnvironment(
+    {
+      PATH: "/usr/bin:/bin",
+      HOME: "/untrusted/home",
+      CARGO_HOME: "/untrusted/cargo",
+      RUSTFLAGS: "untrusted",
+      RUSTUP_TOOLCHAIN: "nightly",
+      TAURI_SIGNING_PRIVATE_KEY: "must-not-pass",
+    },
+    { engineRoot, isolatedRoot },
+  );
+  assert.equal(env.HOME, path.join(isolatedRoot, "home"));
+  assert.equal(env.CARGO_HOME, path.join(isolatedRoot, "cargo-home"));
+  assert.equal(env.RUSTUP_HOME, "/untrusted/home/.rustup");
+  assert.equal(env.RUSTUP_TOOLCHAIN, "1.98.1");
+  assert.equal(env.CARGO_BUILD_TARGET, "aarch64-apple-darwin");
+  assert.equal(env.RUSTFLAGS, undefined);
+  assert.equal(env.TAURI_SIGNING_PRIVATE_KEY, undefined);
+  assert.match(env.CARGO_ENCODED_RUSTFLAGS, /engine-source/);
+});
+
 test("release-set 定義は package/path/version の改変を拒否する", () => {
   const config = JSON.parse(readFileSync(path.join(realRoot, "sdk/release-set.json"), "utf8"));
   assert.equal(validateConfig(config), config);
@@ -197,6 +223,17 @@ test("clean Git object から決定的 tarball を作り repo 外 consumer で T
     if (["develop-engine-source", "develop-engine-runtime"].includes(item.id)) {
       assert.match(entries, /LICENSES\.md/);
       assert.match(entries, /Adobe-DNG-SDK-LICENSE\.txt/);
+    }
+    if (item.id === "develop-engine-source") {
+      for (const required of [
+        "package/engine/build-macos-native.mjs",
+        "package/engine/calibration/apple-registry.json",
+        "package/engine/calibration/apple-signed-registry.json",
+        "package/engine/calibration/panasonic-dc-s5/apple-v1.json",
+        "package/engine/calibration/panasonic-dc-s5/apple-v2.json",
+        "package/engine/tools/apple-raw-linear/Package.swift",
+        "package/engine/tools/niho-camera-cutout/Package.swift",
+      ]) assert.match(entries, new RegExp(required.replaceAll(".", "\\.")));
     }
     if (item.id === "develop-engine-runtime") {
       const packageJson = JSON.parse(execFileSync("tar", ["-xOzf", path.join(first, item.file), "package/package.json"], { encoding: "utf8" }));

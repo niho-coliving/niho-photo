@@ -165,7 +165,7 @@
             "SDK_SOURCE_SHA": "${{ needs.build.outputs.source-sha }}",
             "SDK_VERSION": "${{ needs.build.outputs.version }}"
           },
-          "run": "set -euo pipefail\nif ! [[ \"$SDK_SOURCE_SHA\" =~ ^[a-f0-9]{40}$ ]]; then exit 1; fi\ntag=\"photo-sdk-v$SDK_VERSION\"\nrelease_flags=(--latest=false)\nrelease_core=\"${SDK_VERSION%%+*}\"\nif [[ \"$release_core\" == *-* ]]; then release_flags+=(--prerelease); fi\ngh api --method POST repos/niho-coliving/niho-photo/git/refs -f ref=\"refs/tags/$tag\" -f sha=\"$SDK_SOURCE_SHA\" >/dev/null\ngh release create \"$tag\" --verify-tag --target \"$SDK_SOURCE_SHA\" \"${release_flags[@]}\" --title \"NIHO photo SDK v$SDK_VERSION\" --notes \"Immutable NIHO photo SDK release set for source $SDK_SOURCE_SHA.\" \"$SDK_ARTIFACT_DIR\"/*.tgz \"$SDK_ARTIFACT_DIR\"/*.json \"$SDK_RECEIPT_FILE\""
+          "run": "set -euo pipefail\nif ! [[ \"$SDK_SOURCE_SHA\" =~ ^[a-f0-9]{40}$ ]]; then exit 1; fi\ntag=\"photo-sdk-v$SDK_VERSION\"\nrelease_flags=(--latest=false)\nrelease_core=\"${SDK_VERSION%%+*}\"\nif [[ \"$release_core\" == *-* ]]; then release_flags+=(--prerelease); fi\ngh api --method POST repos/niho-coliving/niho-photo/git/refs -f ref=\"refs/tags/$tag\" -f sha=\"$SDK_SOURCE_SHA\" >/dev/null\ngh release create \"$tag\" --verify-tag --target \"$SDK_SOURCE_SHA\" \"${release_flags[@]}\" --title \"NIHO photo SDK v$SDK_VERSION\" --notes \"source $SDK_SOURCE_SHA に固定したNIHO photo SDKリリースセットです。\" \"$SDK_ARTIFACT_DIR\"/*.tgz \"$SDK_ARTIFACT_DIR\"/*.json \"$SDK_RECEIPT_FILE\""
         }
       ]
     }

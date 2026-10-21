@@ -56,3 +56,25 @@ Public CIのrequired `Photo SDK real build` jobは、SDK所有source・生成器
 build jobの成果物はartifact ID、digest、run ID、attempt、source SHA、release manifest SHAでpublish jobへ渡します。publish jobはmainにあるzero-dependency verifierだけを実行し、downloadしたartifact内のscriptや`npm install`を実行しません。検証後に新規`photo-sdk-v<version>` tagとGitHub Releaseを作り、manifest、全tarball、輸送receiptをassetとして載せます。既存tag/releaseは上書きせず、`latest`は変更しません。SemVer prerelease版はGitHub Releaseでもprereleaseにし、consumerは常に明示した`photo-sdk-v<version>` tagを取得します。
 
 tag確保後に公開処理が失敗した場合も、確保済みversionは再利用しません。原因を修正して新しいversionを発行し、既存tagやassetの置換は行いません。
+
+## Mac native build closure
+
+SDK `0.1.1` 以降の `niho-photo-develop-engine-source` は、repo 外へ展開した
+`package/engine/` だけから Apple Silicon 用 native tool を作れる closure を含みます。
+対象は `apple-raw-linear`、`niho-develop-render`、`niho-camera-cutout`、全 calibration registry と
+それらが参照する JSON、Adobe DNG SDK notice です。段2 renderer は
+`niho-develop` / `image` の依存経路だけを build し、診断用 rawler binary は app に同梱しません。
+
+```sh
+node package/engine/build-macos-native.mjs \
+  --engine package/engine \
+  --lock /path/to/apps/camera/develop-sidecars.lock.json \
+  --output /new/path/native-stage
+```
+
+helper は Rust `1.98.1`、`aarch64-apple-darwin`、`--release --locked` を固定します。
+外部の `CARGO_HOME`、Cargo credentials/config、`RUSTFLAGS`、signing環境は継承せず、隔離した
+HOME/Cargo/target/tempとpath remapを使います。生成した3 binaryは実際に `version` を起動し、
+`otool -L` が `/usr/lib` / `/System` 以外を参照しないこと、両registryを
+`apple-raw-linear registry` で読めること、calibration hashがcamera lockと一致することを検査します。
+このhelperを実行するのは信頼されたcandidate buildだけです。署名工程はSDK内scriptを実行しません。
