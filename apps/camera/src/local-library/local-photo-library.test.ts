@@ -58,7 +58,7 @@ const ROOT: LibraryFolder = {
 type SourceWithoutToken = DevelopSource extends infer S ? (S extends DevelopSource ? Omit<S, "token"> : never) : never;
 
 type FakeOptions = {
-  status?: Array<{ available: boolean; raster: boolean; fullSizeRaster?: boolean }>;
+  status?: Array<{ available: boolean; raster: boolean; fullSizeRaster?: boolean; masks?: boolean }>;
   cutout?: boolean | CameraCommandError;
   /** entryId → open ごとに返す中身の SHA-256（写真の置き換えのテスト用） */
   hashes?: Record<string, string[]>;
@@ -251,6 +251,17 @@ describe("capabilities", () => {
       cutout: false,
     });
     expect(commandsOf(unavailable.calls).filter((command) => command === "camera_develop_status")).toHaveLength(3);
+  });
+
+  it("exports local masks only when the bundled develop sidecar draws them", async () => {
+    // 古い native は `masks` を返さない: 部分補正のある設定は原寸で書き出せない扱い
+    await expect(fakeNative().library.capabilities()).resolves.toMatchObject({ nativeExportMasks: false });
+    await expect(
+      fakeNative({ status: [{ available: true, raster: true, fullSizeRaster: true, masks: true }] }).library.capabilities(),
+    ).resolves.toMatchObject({ nativeExport: true, nativeExportMasks: true });
+    await expect(
+      fakeNative({ status: [{ available: false, raster: false, masks: true }], cutout: false }).library.capabilities(),
+    ).resolves.toMatchObject({ nativeExport: false, nativeExportMasks: false });
   });
 
   it("enables cutout only after its camera-only sidecar probe succeeds", async () => {

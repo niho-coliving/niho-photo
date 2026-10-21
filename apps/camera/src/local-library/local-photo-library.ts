@@ -88,6 +88,7 @@ export const LOCAL_CLOSED_CAPABILITIES: PhotoLibraryCapabilities = Object.freeze
   nativeExportUpdateRequired: false,
   exportFolder: false,
   nativeExportRaster: false,
+  nativeExportMasks: false,
   cutout: false,
   favorites: false,
   albums: false,
@@ -102,7 +103,7 @@ export const LOCAL_CLOSED_CAPABILITIES: PhotoLibraryCapabilities = Object.freeze
 
 /** 現像（同梱の sidecar）が使えるかでの、この Mac のできること。 */
 export function localCapabilities(
-  status: Pick<DevelopStatus, "available" | "fullSizeRaster">,
+  status: Pick<DevelopStatus, "available" | "fullSizeRaster" | "masks">,
   cutoutAvailable = false,
 ): PhotoLibraryCapabilities {
   return {
@@ -111,6 +112,8 @@ export function localCapabilities(
     nativeExport: status.available,
     // HEIC / HEIF・TIFF の原寸は、同梱の apple-raw-linear が原寸の raster を持つときだけ
     nativeExportRaster: status.available && status.fullSizeRaster === true,
+    // 部分補正（`masks`）のある設定は、同梱の niho-develop-render が描ける版のときだけ原寸で書き出す（古い native は返さない = 描けない）
+    nativeExportMasks: status.available && status.masks === true,
     exportFolder: status.available,
     cutout: cutoutAvailable,
     multiSelect: true,

@@ -1,9 +1,10 @@
 //! Local adjustments (`masks` of `developSettings`): the saved shape and its
 //! strict validation (Epic #31, M1 = #65). The contract is
 //! `docs/local-adjustments.md`; this module only reads, checks and writes the
-//! settings. The mask-plane math, the blend and the surface file I/O belong to
-//! M2 (#66) and M4 (#68), so a settings with an active mask does not render
-//! yet (`Error::MasksNotRendered`).
+//! settings. The planes and the blend are `local_render.rs` (M2, #66); the
+//! surface file I/O of `brush` / `subject` / `sky` belongs to M4 (#68), so
+//! until then an active mask of those kinds fails to render
+//! (`Error::MaskSurfaceMissing`).
 //!
 //! Strictness (Rust and `develop-masks.ts` agree through
 //! `tests/fixtures/masks/settings-cases.json`): every mask and every nested

@@ -88,8 +88,11 @@ export type DevelopSource =
       token: string;
     };
 
-/** 現像が使えるか（`fullSizeRaster` は HEIC / HEIF・TIFF も原寸で書き出せる。古い native は返さない）。 */
-export type DevelopStatus = { available: boolean; raster: boolean; fullSizeRaster?: boolean };
+/**
+ * 現像が使えるか（`fullSizeRaster` は HEIC / HEIF・TIFF も原寸で書き出せる、`masks` は部分補正のある設定を原寸で書き出せる。
+ * どちらも古い native は返さない）。
+ */
+export type DevelopStatus = { available: boolean; raster: boolean; fullSizeRaster?: boolean; masks?: boolean };
 
 /** 背景除去の sidecar が camera の lock の版で使えるか。 */
 export type CutoutStatus = { available: boolean };
