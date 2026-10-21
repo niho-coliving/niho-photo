@@ -102,3 +102,8 @@ test("現像の公開CIは固定toolchain・実RAW・fit再生成・WASM parity�
   assert.ok(commands.some(([command,args]) => command === "cargo" && args.includes("test") && args.includes("color_points")));
   assert.equal(commands.some(([command]) => command === "swift"), false, "SwiftはmacOS 26の専用jobで実行する");
 });
+
+test("main pushは文書だけでもexact SHAのcamera公開成果物を生成する", () => {
+  const result = selectScopes(["README.md"], all, true).filter((scope) => scope.selected);
+  assert.deepEqual(result.map((scope) => scope.scope), ["camera"]);
+});

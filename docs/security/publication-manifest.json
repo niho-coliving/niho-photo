@@ -3174,12 +3174,14 @@
         "path": "apps/camera/README.md",
         "sha256": "d0e1f198e83893a73cd3d84122debf76ad9755e00a5fc5e1b69c242daec8d4eb"
       },
-      "outputSha256": "c63c64d35d4f08b2ba339123461e5fbcdeb00966d19a888e268d2970dbc5bb09",
+      "outputSha256": "11f9a86c197e8105b99635ad76f15a112b8404de3ab27436dfaa397fdf96b9f6",
       "modifications": [
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
         "フォルダと個別写真の利用方法、公開契約、および許可するネイティブコマンドを明記",
         "Issue #3のpublic OAuth/PKCE、ローカル専用UI、安全契約と公開依存を新規接続。実issuer・署名検証器が未契約のため本番接続は無効。",
-        "Issue #3の公式NIHO app-connect v1契約へ適合。deep link・NIHO接続token/Firebase交換・FileSecretStore・取消と再起動を独立実装し、安全契約をv2へ改版。"
+        "Issue #3の公式NIHO app-connect v1契約へ適合。deep link・NIHO接続token/Firebase交換・FileSecretStore・取消と再起動を独立実装し、安全契約をv2へ改版。",
+        "Issue #2の公開検証成果物・SBOM・固定SHA取り込み契約と秘密を持たないCI検査を追加。",
+        "Issue #2の実装検証で成果物名・輸送receipt・build設定を強化。"
       ]
     },
     {
@@ -3212,10 +3214,12 @@
         "path": "apps/camera/package.json",
         "sha256": "c8a02fb7558712e146296e67114a29f704677064714dd4d5e87697c906756b07"
       },
-      "outputSha256": "e0d723cdde497f5806b2b7dc1a69b5642f666fa18ae6de188d7b1fddc58ecc6a",
+      "outputSha256": "db60bf3ba26f3fee0ce6ada771580e6e8b5cac1e69d6c9a4ec23c048d6535260",
       "modifications": [
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
-        "Issue #3のpublic OAuth/PKCE、ローカル専用UI、安全契約と公開依存を新規接続。実issuer・署名検証器が未契約のため本番接続は無効。"
+        "Issue #3のpublic OAuth/PKCE、ローカル専用UI、安全契約と公開依存を新規接続。実issuer・署名検証器が未契約のため本番接続は無効。",
+        "Issue #2の公開検証成果物・SBOM・固定SHA取り込み契約と秘密を持たないCI検査を追加。",
+        "Issue #2の実装検証で成果物名・輸送receipt・build設定を強化。"
       ]
     },
     {
@@ -9389,6 +9393,76 @@
       "path": "packages/photo-editing/src/editor/use-browser-photo-progressive-open.test.tsx",
       "sha256": "f798412e58850f658bbb38743f7724bb9c165090fc270878c4d978af78a8e9ae",
       "origin": "Issue #13のため独立作成。actual React hooksと合成library/engine/frameだけで、provisional編集、canonical handoff、history、retry、abort、旧frame遮断を検証。外部画像・非公開コード・個体metadataを含まない。\n変更理由: 公開signed RAW契約に合う合成metadataで実hookの正規切替を検証。\n変更理由: preview取得失敗でも正規入力の実hookで補正を続けられる回帰を追加。\n変更理由: fallback後の補正を実際にflushし通常保存のbaseと値まで検証。\n変更理由: preset適用・量drag・量commitを未解決のままhandoffに重ねるfailure injectionを追加。\n変更理由: 非同期プリセットfixtureにも実契約のversionとengineを含め型検査する\n変更理由: 同一内容draftの再表示から正規base確定後の既存saverまで実hookで回帰検証する\n変更理由: draft復元テストでも一覧復帰の成功値を明示確認しact補助のvoid型契約に合わせる\n変更理由: Expect current niho-11 default in handoff tests"
+    },
+    {
+      "path": ".github/workflows/public-ci.yml",
+      "sha256": "2f3ce4dba09f3827e72f6959ca1a904e26bd9c7961ef01de97b3bbd9d71cd33f",
+      "origin": "Issue #2の公開成果物・SBOM・固定SHA取り込み契約のため独立作成。公開仕様と既存公開CIから生成器・schema・guard・検証・責務境界を定義し、外部コード・秘密・実ユーザーデータを含まない。\n変更理由: Issue #2の公開検証成果物・SBOM・固定SHA取り込み契約と秘密を持たないCI検査を追加。\n変更理由: Issue #2の実装検証で成果物名・輸送receipt・build設定を強化。"
+    },
+    {
+      "path": "docs/ci/public-ci.md",
+      "sha256": "d6f7e8e22785771a4a0435c1d23ead472852073ee2f10ef42423aec7a8df5a98",
+      "origin": "Issue #2の公開成果物・SBOM・固定SHA取り込み契約のため独立作成。公開仕様と既存公開CIから生成器・schema・guard・検証・責務境界を定義し、外部コード・秘密・実ユーザーデータを含まない。\n変更理由: Issue #2の公開検証成果物・SBOM・固定SHA取り込み契約と秘密を持たないCI検査を追加。\n変更理由: Issue #2の実装検証で成果物名・輸送receipt・build設定を強化。"
+    },
+    {
+      "path": "package.json",
+      "sha256": "b1bb69763a169a35f46a0fcd9a8003924be9f942a4ba7fad331a02d40438b544",
+      "origin": "Issue #2の公開成果物・SBOM・固定SHA取り込み契約のため独立作成。公開仕様と既存公開CIから生成器・schema・guard・検証・責務境界を定義し、外部コード・秘密・実ユーザーデータを含まない。\n変更理由: Issue #2の公開検証成果物・SBOM・固定SHA取り込み契約と秘密を持たないCI検査を追加。\n変更理由: Issue #2の実装検証で成果物名・輸送receipt・build設定を強化。"
+    },
+    {
+      "path": "scripts/ci/scopes.mjs",
+      "sha256": "5e606c8738a85074b6e666003e30604ee38585283b4a2cd76b4c4fb733745f99",
+      "origin": "Issue #2の公開成果物・SBOM・固定SHA取り込み契約のため独立作成。公開仕様と既存公開CIから生成器・schema・guard・検証・責務境界を定義し、外部コード・秘密・実ユーザーデータを含まない。\n変更理由: Issue #2の公開検証成果物・SBOM・固定SHA取り込み契約と秘密を持たないCI検査を追加。\n変更理由: Issue #2の実装検証で成果物名・輸送receipt・build設定を強化。"
+    },
+    {
+      "path": "scripts/ci/scopes.test.mjs",
+      "sha256": "699172b5894c2c462975e3a5c393b8a147fca187d2538f88dd73c494fef977ff",
+      "origin": "Issue #2の公開成果物・SBOM・固定SHA取り込み契約のため独立作成。公開仕様と既存公開CIから生成器・schema・guard・検証・責務境界を定義し、外部コード・秘密・実ユーザーデータを含まない。\n変更理由: Issue #2の公開検証成果物・SBOM・固定SHA取り込み契約と秘密を持たないCI検査を追加。\n変更理由: Issue #2の実装検証で成果物名・輸送receipt・build設定を強化。"
+    },
+    {
+      "path": "scripts/ci/workflow-lib.mjs",
+      "sha256": "0f35b8166e6e63481514433c0702fc1058678410e0ba4d3f39ea009ddf3cd0c8",
+      "origin": "Issue #2の公開成果物・SBOM・固定SHA取り込み契約のため独立作成。公開仕様と既存公開CIから生成器・schema・guard・検証・責務境界を定義し、外部コード・秘密・実ユーザーデータを含まない。\n変更理由: Issue #2の公開検証成果物・SBOM・固定SHA取り込み契約と秘密を持たないCI検査を追加。\n変更理由: Issue #2の実装検証で成果物名・輸送receipt・build設定を強化。"
+    },
+    {
+      "path": "scripts/ci/workflow.test.mjs",
+      "sha256": "ae67f56568408609a918575252505fe2200568e973ef0f63b7194476a076d747",
+      "origin": "Issue #2の公開成果物・SBOM・固定SHA取り込み契約のため独立作成。公開仕様と既存公開CIから生成器・schema・guard・検証・責務境界を定義し、外部コード・秘密・実ユーザーデータを含まない。\n変更理由: Issue #2の公開検証成果物・SBOM・固定SHA取り込み契約と秘密を持たないCI検査を追加。\n変更理由: Issue #2の実装検証で成果物名・輸送receipt・build設定を強化。"
+    },
+    {
+      "path": "apps/camera/scripts/build-release-evidence.mjs",
+      "sha256": "c2e41c8e0da8c9a227e066f73bc5f850eda8a354ac499af04b16396c9f1fbe3d",
+      "origin": "Issue #2の公開成果物・SBOM・固定SHA取り込み契約のため独立作成。公開仕様と既存公開CIから生成器・schema・guard・検証・責務境界を定義し、外部コード・秘密・実ユーザーデータを含まない。\n変更理由: Issue #2の公開検証成果物・SBOM・固定SHA取り込み契約と秘密を持たないCI検査を追加。\n変更理由: Issue #2の実装検証で成果物名・輸送receipt・build設定を強化。"
+    },
+    {
+      "path": "docs/releases/manifest-v1.schema.json",
+      "sha256": "fb7ac95b4e59c9f1255339d86d43a358d4eed95410de5c7bcaa89858a8bcfe3f",
+      "origin": "Issue #2の公開成果物・SBOM・固定SHA取り込み契約のため独立作成。公開仕様と既存公開CIから生成器・schema・guard・検証・責務境界を定義し、外部コード・秘密・実ユーザーデータを含まない。\n変更理由: Issue #2の公開検証成果物・SBOM・固定SHA取り込み契約と秘密を持たないCI検査を追加。\n変更理由: Issue #2の実装検証で成果物名・輸送receipt・build設定を強化。"
+    },
+    {
+      "path": "docs/releases/public-artifact-contract.md",
+      "sha256": "099d28bd956d97ee8405fe10a13a46a5464bfd023f6a4dbc053b237cbf28fd32",
+      "origin": "Issue #2の公開成果物・SBOM・固定SHA取り込み契約のため独立作成。公開仕様と既存公開CIから生成器・schema・guard・検証・責務境界を定義し、外部コード・秘密・実ユーザーデータを含まない。\n変更理由: Issue #2の公開検証成果物・SBOM・固定SHA取り込み契約と秘密を持たないCI検査を追加。\n変更理由: Issue #2の実装検証で成果物名・輸送receipt・build設定を強化。"
+    },
+    {
+      "path": "scripts/ci/release-evidence-lib.mjs",
+      "sha256": "788102560082caa8b11ce6c41830985d99704df0ba216d7fa6f49091791c2f18",
+      "origin": "Issue #2の公開成果物・SBOM・固定SHA取り込み契約のため独立作成。公開仕様と既存公開CIから生成器・schema・guard・検証・責務境界を定義し、外部コード・秘密・実ユーザーデータを含まない。\n変更理由: Issue #2の公開検証成果物・SBOM・固定SHA取り込み契約と秘密を持たないCI検査を追加。\n変更理由: Issue #2の実装検証で成果物名・輸送receipt・build設定を強化。"
+    },
+    {
+      "path": "scripts/ci/release-evidence.mjs",
+      "sha256": "a49c6a29426ca07304e9e44b3f3d47da31c02aba8798d4aabd20ab6989dd590f",
+      "origin": "Issue #2の公開成果物・SBOM・固定SHA取り込み契約のため独立作成。公開仕様と既存公開CIから生成器・schema・guard・検証・責務境界を定義し、外部コード・秘密・実ユーザーデータを含まない。\n変更理由: Issue #2の公開検証成果物・SBOM・固定SHA取り込み契約と秘密を持たないCI検査を追加。\n変更理由: Issue #2の実装検証で成果物名・輸送receipt・build設定を強化。"
+    },
+    {
+      "path": "scripts/ci/release-evidence.test.mjs",
+      "sha256": "20cf0c14cd2d2cb8af49641b164f31d2f1cbd43a8d8d261cf3ad4effbd59db5d",
+      "origin": "Issue #2の公開成果物・SBOM・固定SHA取り込み契約のため独立作成。公開仕様と既存公開CIから生成器・schema・guard・検証・責務境界を定義し、外部コード・秘密・実ユーザーデータを含まない。\n変更理由: Issue #2の公開検証成果物・SBOM・固定SHA取り込み契約と秘密を持たないCI検査を追加。\n変更理由: Issue #2の実装検証で成果物名・輸送receipt・build設定を強化。"
+    },
+    {
+      "path": "scripts/ci/write-artifact-receipt.mjs",
+      "sha256": "ab0405968a45b61bae3a5714aca5959f84bee1df51fcc86530fbb9965994d2e1",
+      "origin": "Issue #2の公開CI artifact receipt用に独立作成。upload artifact ID・SHA-256 digestを検査し、公開commitとrun/attemptに結び付けたjob summaryを記録する。credentialやユーザーデータを読み取らない。"
     }
   ],
   "excludedSources": [
