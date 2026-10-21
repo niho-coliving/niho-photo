@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState, type MutableRefObject } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type MutableRefObject } from "react";
 
 import {
   browserCloudLockedReason,
@@ -144,6 +144,12 @@ export function useBrowserPhotoOpen(params: {
    * 読むだけで、書き換えない
    */
   onFramePaintedRef?: MutableRefObject<((key: string, frame: DevelopFrame) => void) | null>;
+  /**
+   * 補正前と補正後を見比べる間（niho-photo#41）の、補正前を描く 2 枚目の canvas（比較していない間は null）。描くのは「補正前」と
+   * 同じ画（切り抜いた枠のまま色だけ補正前。`beforeFrameRef` に持つ）で、幾何・写真・入力が変わらない限り描き直さない（補正後の側を
+   * 動かしても描き直さない）。重ねる係（`framePostProcessRef`）・ヒストグラムの口（`onFramePaintedRef`）には渡さない
+   */
+  compareCanvas?: HTMLCanvasElement | null;
 }) {
   const {
     spotId,
@@ -616,6 +622,70 @@ export function useBrowserPhotoOpen(params: {
     setSavedSettingsKey,
     leaveEditing,
     uploadOpenedEditedPreview,
+    viewMode,
+    workingEpoch,
+  ]);
+
+  // 補正前と補正後を見比べる間（niho-photo#41）は、補正前の画を 2 枚目の canvas（`compareCanvas`）に描く。「補正前」（押している
+  // 間）と同じ画・同じ置き場（`beforeFrameRef`）を使い、幾何・写真・入力（段階 open の canonical 差し替え・作業サイズの開き直し）が
+  // 変わったときだけ描き直す（色の補正を動かしても描き直さない）。編集の描画の「次」を取り合わないよう、優先度は background
+  // （編集の描画が空いてから 1 回）。補正後の canvas・重ねる係・ヒストグラムの口には触れない。S1 の canvas は補正を外して描く
+  const compareCanvas = params.compareCanvas ?? null;
+  const compareBeforeSettings = useMemo(
+    () =>
+      compareCanvas && opened?.mode === "wasm"
+        ? resetDevelopSettingsColors(settings, developBaseVersion(opened.input))
+        : null,
+    [compareCanvas, opened?.input, opened?.mode, settings],
+  );
+  const compareBeforeJson = compareBeforeSettings ? JSON.stringify(compareBeforeSettings) : null;
+  const compareBeforeSettingsRef = useRef(compareBeforeSettings);
+  compareBeforeSettingsRef.current = compareBeforeSettings;
+  useEffect(() => {
+    const target = compareCanvas;
+    const activeOpened = openedRef.current;
+    if (!target || viewMode !== "loupe" || !activeOpened || cropActive || cropSettling) return;
+    if (activeOpened.decoded) {
+      renderBrowserPhotoPreview(target, activeOpened.decoded, readBrowserAdjustmentsFromDevelopSettings(null), true);
+      return;
+    }
+    const beforeSettings = compareBeforeSettingsRef.current;
+    const engine = engineRef.current;
+    if (activeOpened.mode !== "wasm" || !engine || !beforeSettings || compareBeforeJson === null) return;
+    const key = activeOpened.key;
+    const cached = beforeFrameRef.current;
+    if (cached?.key === key && cached.settingsJson === compareBeforeJson) {
+      paintDevelopFrame(target, cached.frame);
+      return;
+    }
+    let current = true;
+    void engine
+      .render(beforeSettings, {
+        maxDimension: DEVELOP_PREVIEW_MAX_DIMENSION,
+        interactive: activeOpened.input?.kind === "provisional",
+        priority: "background",
+      })
+      .then((frame) => {
+        if (!frame || !current || engineRef.current !== engine || openedRef.current?.key !== key) return;
+        beforeFrameRef.current = { key, settingsJson: compareBeforeJson, frame };
+        paintDevelopFrame(target, frame);
+      })
+      .catch(() => undefined);
+    return () => {
+      current = false;
+    };
+    // `opened` の key・入力・S1 の画と `workingEpoch`: 写真・canonical 差し替え・作業サイズの開き直しで描き直す
+  }, [
+    beforeFrameRef,
+    compareBeforeJson,
+    compareCanvas,
+    cropActive,
+    cropSettling,
+    engineRef,
+    opened?.decoded,
+    opened?.input,
+    opened?.key,
+    opened?.mode,
     viewMode,
     workingEpoch,
   ]);
