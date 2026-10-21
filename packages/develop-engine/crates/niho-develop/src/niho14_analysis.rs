@@ -210,6 +210,10 @@ pub fn coefficient_maps_at(
 }
 
 /// The highlight and shadow `(a, b)` of four pixels on this target's lanes.
+/// Not inlined into the pixel loop: a wasm engine that starts in a baseline
+/// tier moves this call to its optimized code while the loop still runs
+/// (the first analysis after opening a photo).
+#[inline(never)]
 fn infer_both(networks: &Networks, lanes: &[[f32; 4]; N]) -> [[f32; 4]; 4] {
     #[cfg(target_arch = "aarch64")]
     {
