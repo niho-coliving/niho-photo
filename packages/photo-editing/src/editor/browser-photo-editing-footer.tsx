@@ -1,7 +1,7 @@
 "use client";
 
 import type { KeyboardEvent, MutableRefObject, ReactNode } from "react";
-import { FolderMinus, FolderPlus, ImageIcon, LayoutGrid } from "lucide-react";
+import { Columns2, FolderMinus, FolderPlus, ImageIcon, LayoutGrid } from "lucide-react";
 
 import type {
   BrowserPhotoExportChoices,
@@ -11,8 +11,14 @@ import type {
 import type { DevelopSettingsSaverState } from "../develop-engine/develop-settings-autosave";
 import {
   BROWSER_PHOTO_EDITING_WIDE_ONLY_TEXT,
+  PHOTO_EDITING_COMPARE_OFF_LABEL,
   PHOTO_EDITING_COMPARE_ORIGINAL_LABEL,
+  PHOTO_EDITING_COMPARE_SIDE_LABEL,
+  PHOTO_EDITING_COMPARE_SPLIT_LABEL,
+  PHOTO_EDITING_COMPARE_VIEW_LABEL,
+  PHOTO_EDITING_COMPARE_VIEW_TITLE,
   PHOTO_EDITING_RETRY_LABEL,
+  photoEditingCompareViewButtonLabel,
 } from "../photo-editing-copy";
 import { cn } from "niho-ui/cn";
 
@@ -29,8 +35,10 @@ import {
   PHOTO_EDITING_RETRY_TEXT_BUTTON_CLASS_NAME,
   PHOTO_EDITING_SECONDARY_BUTTON_CLASS_NAME,
 } from "./photo-editing-button-classes";
+import { PhotoEditingMenu } from "./photo-editing-menu";
+import type { BrowserPhotoCompareMode } from "./use-browser-photo-compare-view";
 
-/** ブラウザ版の下段（一覧 ⇄ 1 枚の切り替え・状態欄・お気に入りの ♥・「補正前」・「書き出す」）。 */
+/** ブラウザ版の下段（一覧 ⇄ 1 枚の切り替え・状態欄・お気に入りの ♥・「補正前」・「比較」・「書き出す」）。 */
 
 /** 状態欄・右パネルの「再試行」（字だけ。押せる範囲は 44px） */
 const RETRY_BUTTON_CLASS_NAME = PHOTO_EDITING_RETRY_TEXT_BUTTON_CLASS_NAME;
@@ -170,6 +178,45 @@ export function BrowserPhotoEditingStatusLine(props: {
   return null;
 }
 
+/**
+ * 下段の「比較」（niho-photo#41。PC だけ）。押すと 1 つを選ぶメニュー（並べる（左右）/ 分割 / 比較しない）。比較している間は
+ * ボタンを押した色にし、読み上げ名に今の見せ方を含める（「比較：分割」）。キーは Y（並べる）/ ⇧Y（分割）で、title で案内する。
+ */
+function BrowserPhotoCompareViewMenu(props: {
+  mode: BrowserPhotoCompareMode;
+  disabled: boolean;
+  onChange: (mode: BrowserPhotoCompareMode) => void;
+}) {
+  const { mode, onChange } = props;
+  return (
+    <PhotoEditingMenu
+      variant="browser"
+      align="end"
+      items={[
+        { key: "side", label: PHOTO_EDITING_COMPARE_SIDE_LABEL, checked: mode === "side", onSelect: () => onChange("side") },
+        { key: "split", label: PHOTO_EDITING_COMPARE_SPLIT_LABEL, checked: mode === "split", onSelect: () => onChange("split") },
+        { key: "off", label: PHOTO_EDITING_COMPARE_OFF_LABEL, checked: mode === "off", onSelect: () => onChange("off") },
+      ]}
+    >
+      <button
+        type="button"
+        aria-haspopup="menu"
+        aria-label={photoEditingCompareViewButtonLabel(mode)}
+        title={PHOTO_EDITING_COMPARE_VIEW_TITLE}
+        disabled={props.disabled}
+        className={cn(
+          PHOTO_EDITING_SECONDARY_BUTTON_CLASS_NAME,
+          "hidden h-11 lg:inline-flex",
+          mode !== "off" && "border-niho-accent-ink bg-niho-accent-soft text-niho-accent-ink",
+        )}
+      >
+        <Columns2 className="h-4 w-4" aria-hidden />
+        {PHOTO_EDITING_COMPARE_VIEW_LABEL}
+      </button>
+    </PhotoEditingMenu>
+  );
+}
+
 export function BrowserPhotoEditingFooter(props: {
   viewMode: BrowserViewMode;
   /** 1 枚を開ける（選んでいて、追加している途中でない） */
@@ -190,6 +237,11 @@ export function BrowserPhotoEditingFooter(props: {
   compareDisabled: boolean;
   compareOriginal: boolean;
   onCompareOriginalChange: (compare: boolean) => void;
+  /**
+   * 「比較」（補正前と補正後を並べる・分割する。niho-photo#41。PC だけ・「補正前」の右）。押すとメニュー（並べる（左右）/ 分割 /
+   * 比較しない）。渡さない間は出さない
+   */
+  compareView?: { mode: BrowserPhotoCompareMode; disabled: boolean; onChange: (mode: BrowserPhotoCompareMode) => void };
   exportButtonRef: MutableRefObject<HTMLButtonElement | null>;
   exportSheetOpen: boolean;
   /** 一覧の複数選択のシートも同じボタンで開く */
@@ -200,10 +252,12 @@ export function BrowserPhotoEditingFooter(props: {
   /** シートで選んだ形式と大きさ（原寸は NIHO Desktop の口があるときだけ。K2-3a 移行元設計） */
   onExport: (format: BrowserPhotoExportFormat, size: BrowserPhotoExportSizeOption) => void;
   onCloseExportSheet: () => void;
+  /** 置く列（PC の幅。狭い幅は全幅）。Lightroom と同じく中央の列の下だけに置き、左右のパネルは窓の底まで伸ばす（niho-photo#49） */
+  className?: string;
 }) {
   const setCompareOriginal = props.onCompareOriginalChange;
   return (
-    <footer className="col-span-full flex min-h-14 items-center gap-2 border-t border-niho-border px-2 max-[479px]:flex-wrap lg:px-3">
+    <footer className={cn("col-span-full flex min-h-14 items-center gap-2 border-t border-niho-border px-2 max-[479px]:flex-wrap lg:px-3 lg:max-xl:flex-wrap lg:max-xl:gap-y-1 lg:max-xl:py-1", props.className)}>
       <div role="group" aria-label="表示" className="flex shrink-0 items-center gap-0.5">
         <button
           type="button"
@@ -295,6 +349,7 @@ export function BrowserPhotoEditingFooter(props: {
           {PHOTO_EDITING_COMPARE_ORIGINAL_LABEL}
         </button>
       ) : null}
+      {props.compareView ? <BrowserPhotoCompareViewMenu {...props.compareView} /> : null}
       <div className="relative shrink-0">
         <button
           ref={props.exportButtonRef}

@@ -161,6 +161,23 @@ describe("variant: panel（プリセットの面）", () => {
     expect(rowNames).toEqual(["なし", "青空", "パステル", "夕暮れ"]);
   });
 
+  it("actionsSlot（右パネルの見出し行）を渡すと「⋯」をそこへ描き、一覧の上に「⋯」だけの行を作らない（niho-photo#49）", async () => {
+    // 受け口は container の外（右パネルの見出し行の代わり）
+    const slot = document.createElement("div");
+    document.body.appendChild(slot);
+    await render({ variant: "panel", actionsSlot: slot });
+    expect(slot.querySelector('button[aria-label="プリセットの操作"]')).not.toBeNull();
+    expect(byLabel("プリセットの操作")).toBeNull();
+    // 一覧はそのまま
+    expect(Array.from(container.querySelectorAll("li > button:first-child")).map((row) => row.textContent)).toEqual([
+      "なし",
+      "青空",
+      "パステル",
+      "夕暮れ",
+    ]);
+    slot.remove();
+  });
+
   it("節を閉じた覚えがあっても、面いっぱいの一覧は開いたまま", async () => {
     await render({});
     const toggle = container.querySelector<HTMLButtonElement>("h4 > button[aria-expanded]");

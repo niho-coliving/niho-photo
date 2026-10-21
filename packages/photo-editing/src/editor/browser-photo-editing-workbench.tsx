@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState, type MutableRefObject, type ReactElement, type ReactNode } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { Contrast, Crop, FolderOpen, Laptop, Plus, Scissors, SlidersHorizontal, Trash2 } from "lucide-react";
+import { Contrast, Crop, FolderOpen, Info, Laptop, Plus, Scissors, SlidersHorizontal, Trash2 } from "lucide-react";
 
 import { formatPhotoCloudUsage } from "../photo-library-usage";
 import { inertAttribute } from "niho-ui/inert-attribute";
@@ -59,6 +59,7 @@ import {
   PHOTO_EDITING_TOOL_ADJUST_LABEL,
   PHOTO_EDITING_TOOL_CROP_LABEL,
   PHOTO_EDITING_TOOL_CUTOUT_LABEL,
+  PHOTO_EDITING_TOOL_INFO_LABEL,
 } from "../photo-editing-copy";
 import { movePhotoEditingPhotoId } from "../photo-editing-selection";
 import { photoEditingTileGeometry } from "../photo-editing-tile-geometry";
@@ -86,6 +87,7 @@ import {
 } from "./browser-photo-editing-albums";
 import { BrowserPhotoEditingAdjustments } from "./browser-photo-editing-adjustments";
 import { BrowserPhotoEditingBulkMenu } from "./browser-photo-editing-bulk-menu";
+import { BrowserPhotoEditingInfo } from "./browser-photo-editing-info";
 import {
   BrowserPhotoCloudShareSheet,
   type BrowserPhotoCloudSharingBinding,
@@ -155,17 +157,24 @@ import { PhotoEditingCutoutTools } from "./photo-editing-cutout-tools";
 import { PhotoEditingDropOverlay } from "./photo-editing-drop-overlay";
 import { PhotoEditingAddFolderEmptyState, PhotoEditingAddPhotosEmptyState } from "./photo-editing-empty-states";
 import { PhotoEditingGrid, countPhotoEditingGridColumns, type PhotoEditingGridItem } from "./photo-editing-grid";
+import { PhotoEditingHistogram } from "./photo-editing-histogram";
 import { PhotoEditingMenu, type PhotoEditingMenuItem } from "./photo-editing-menu";
 import { PhotoEditingPresetsPanel } from "./photo-editing-presets-panel";
 import { useBrowserPhotoAdd } from "./use-browser-photo-add";
 import { useBrowserPhotoAuto } from "./use-browser-photo-auto";
 import { useBrowserPhotoBulk } from "./use-browser-photo-bulk";
+import {
+  nextBrowserPhotoCompareMode,
+  useBrowserPhotoCompareView,
+  type BrowserPhotoCompareMode,
+} from "./use-browser-photo-compare-view";
 import { useBrowserPhotoCutout } from "./use-browser-photo-cutout";
 import { useBrowserPhotoDevelop } from "./use-browser-photo-develop";
 import { useBrowserPhotoEditingKeys } from "./use-browser-photo-editing-keys";
 import { useBrowserPhotoColorPointsSupport, useBrowserPhotoEffectsSupport } from "./use-browser-photo-effects";
 import { useBrowserPhotoExportAndDelete } from "./use-browser-photo-export-delete";
 import { useBrowserPhotoFolders } from "./use-browser-photo-folders";
+import { useBrowserPhotoHistogram, type PhotoEditingFrameSink } from "./use-browser-photo-histogram";
 import { useBrowserPhotoItems, useBrowserPhotoListView } from "./use-browser-photo-items";
 import { useBrowserPhotoLeaveGuards } from "./use-browser-photo-leave-guards";
 import { useBrowserPhotoOpen } from "./use-browser-photo-open";
@@ -399,6 +408,10 @@ export function BrowserPhotoEditingWorkbench(props: {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   /** wasm の画を描いた直後に重ねる係（背景除去の口があるときだけ入る） */
   const framePostProcessRef = useRef<((canvas: HTMLCanvasElement) => void) | null>(null);
+  /** 描いた画を右パネルのヒストグラムへ渡す口（`useBrowserPhotoHistogram` が入れる。niho-photo#36） */
+  const frameSinkRef = useRef<PhotoEditingFrameSink | null>(null);
+  /** 補正前と補正後を見比べる間の、補正前を描く canvas（1 枚の表示が置く。niho-photo#41） */
+  const [compareBeforeCanvas, setCompareBeforeCanvas] = useState<HTMLCanvasElement | null>(null);
   const gridRef = useRef<BrowserPhotoEditingGridHandle | null>(null);
 
   useEffect(() => {
@@ -473,6 +486,8 @@ export function BrowserPhotoEditingWorkbench(props: {
     saveGenerationRef,
     setStatus,
     framePostProcessRef,
+    onFramePaintedRef: frameSinkRef,
+    compareCanvas: compareBeforeCanvas,
   });
   const {
     opened,
@@ -833,6 +848,21 @@ export function BrowserPhotoEditingWorkbench(props: {
     : effectsSupported
       ? BROWSER_EFFECTS_ADJUSTMENT_KEYS
       : undefined;
+  // ヒストグラム（niho-photo#36）: PC の右パネルで、段 2 の wasm が画を描いている写真だけ（S1 の canvas・スマホの層・閲覧の
+  // 面では出さず、数えない）。描いた画（補正前・プリセットの仮の表示を含む）の分布なので、補正前を押している間は補正前の分布になる。
+  // 切り抜き / 背景除去の道具の間も分布は出すが、写真の上へ重ねる印は使えない（その道具の見た目に従う）
+  const histogramAvailable = wide && showAdjustments && wasmPhotoKey !== null && !canvasOnly;
+  const histogram = useBrowserPhotoHistogram({
+    sinkRef: frameSinkRef,
+    photoKey: opened?.key ?? null,
+    enabled: histogramAvailable,
+  });
+  const clipUnavailable = cropping || cutoutActive || cropBlocked;
+  const clipMask = histogram.histogram?.clipMask ?? null;
+  const clipOverlay =
+    histogramAvailable && !clipUnavailable && clipMask && (histogram.clip.shadows || histogram.clip.highlights)
+      ? { mask: clipMask, shadows: histogram.clip.shadows, highlights: histogram.clip.highlights }
+      : null;
   const { readyDevelopEngine } = develop;
   // 色ミキサーは v4 を描ける wasm の共通 workbench だけ。旧 canvas 面には
   // 動かない操作を出さない。写真・compare・crop・pending が変わると pick を破棄する。
@@ -941,8 +971,9 @@ export function BrowserPhotoEditingWorkbench(props: {
   // 右パネルのプリセット（帯の「プリセット」と補正の面のプリセットの行）を出せる写真。S1 の canvas（段 2 を使えない）には出さない。
   // 狭い幅は右パネルを見せない（wasm も起こさない）ので、プリセットも読まない
   const presetsAvailable = !canvasOnly && wide;
-  // プリセットを出せない写真は補正の面（選んだ面は覚えたままにし、出せる写真に戻ったらその面に戻す）
-  const shownAdjustPanel: BrowserPhotoAdjustPanel = presetsAvailable ? adjustPanel : "adjust";
+  // プリセットを出せない写真は補正の面（選んだ面は覚えたままにし、出せる写真に戻ったらその面に戻す）。情報の面はどの写真でも出せる
+  const shownAdjustPanel: BrowserPhotoAdjustPanel =
+    adjustPanel === "info" || presetsAvailable ? adjustPanel : "adjust";
   /** 道具が「補正」の間の面を選ぶ（ほかの道具の間は、補正の道具に戻してから） */
   const chooseAdjustPanel = (next: BrowserPhotoAdjustPanel) => {
     if (toolValue !== "adjust") chooseTool("adjust");
@@ -990,10 +1021,36 @@ export function BrowserPhotoEditingWorkbench(props: {
       onSelect: () => chooseTool("cutout"),
     });
   }
+  // 情報（niho-photo#43）。1 枚で見ている写真があるときだけ、帯の下端に置く。押すと右パネルを情報の面にし（切り抜き・背景除去の
+  // 間は補正の道具に戻してから）、もう一度押すと補正の面へ戻る
+  if (loupeItem) {
+    toolRailItems.push({
+      key: "info",
+      label: PHOTO_EDITING_TOOL_INFO_LABEL,
+      icon: Info,
+      placement: "end",
+      pressed: toolValue === "adjust" && shownAdjustPanel === "info",
+      disabled: toolValue !== "adjust" && toolSwitchDisabled,
+      onSelect: () => chooseAdjustPanel("info"),
+      onDeselect: () => chooseAdjustPanel("adjust"),
+    });
+  }
   // スマホで直せる拠点の狭い幅は、直せる写真の 1 枚を全画面の編集の層で開く（F6c 移行元設計）。直せない写真は今の表示のまま
   const mobileEditorItem = mobileLayer && showAdjustments ? loupeItem : null;
   // 1 枚の面の下のフィルムストリップ（L5 #54）。PC の広い幅で 1 枚を見ている間だけ（一覧・狭い幅・スマホの層には出さない）
   const filmstripVisible = wide && loupeItem !== null && mobileEditorItem === null;
+  // 補正前と補正後を見比べる（niho-photo#41）。1 枚で直せる写真を開いている間だけ使え、切り抜き / 背景除去の道具の間は閉じる
+  // （道具を抜けても開き直さない）。写真・面（PC ⇄ スマホの層）が替わったら閉じる。比較の間は「補正前」（押している間）を使わない
+  const compareAvailable = editable && !cropping && !cutoutActive && !cropBlocked;
+  const compareView = useBrowserPhotoCompareView({
+    scopeKey: loupeOpened ? `${mobileEditorItem ? "layer" : "page"}:${loupeOpened.key}` : null,
+    available: compareAvailable,
+  });
+  const compareMode = compareView.mode;
+  const changeCompareView = (next: BrowserPhotoCompareMode) => {
+    if (next !== "off") open.setCompareOriginal(false);
+    compareView.change(next);
+  };
 
   const moveByArrow = (fromKey: string | null, event: ArrowKeyEvent & { shiftKey?: boolean }) => {
     if (event.altKey || event.metaKey || event.ctrlKey || operationRef.current || batchBusy) return;
@@ -1022,6 +1079,9 @@ export function BrowserPhotoEditingWorkbench(props: {
 
   // 1 枚の編集のキー（`useBrowserPhotoEditingKeys`）を聞いている（PC で補正を開けている。書き出しのシート・操作中は聞かない）
   const editingKeysEnabled = props.active && wide && !controlsDisabled && !exportSheetOpen;
+  // J は写真への表示切替だけなので、閲覧専用でも押せるヒストグラムのボタンと同じ条件で聞く。
+  const clippingKeysEnabled =
+    props.active && wide && !exportSheetOpen && histogramAvailable && !clipUnavailable && histogram.histogram !== null;
 
   // Esc（シート → 1 枚 → 一覧の選択）・Enter・← →・⌫ / Delete・G / E。設定サブタブで隠している間は効かせない
   usePhotoEditingShortcuts({
@@ -1109,6 +1169,7 @@ export function BrowserPhotoEditingWorkbench(props: {
   useBrowserPhotoEditingKeys({
     rootRef,
     enabled: editingKeysEnabled,
+    clippingEnabled: clippingKeysEnabled,
     clipboardEnabled:
       props.active &&
       wide &&
@@ -1124,12 +1185,19 @@ export function BrowserPhotoEditingWorkbench(props: {
     onCopy: open.clipboard.copy,
     onPaste: open.clipboard.paste,
     onCompareOriginalChange: open.setCompareOriginal,
-    compareEnabled: !cropping && !cutoutActive,
+    // 補正前と補正後を並べている間は、補正前（押している間）を使わない（niho-photo#41）
+    compareEnabled: !cropping && !cutoutActive && compareMode === "off",
+    // Y: 並べる ⇄ 戻す、⇧Y: 分割 ⇄ 戻す（niho-photo#41。切り抜き / 背景除去の道具の間は扱わない）
+    onToggleCompareView: compareAvailable
+      ? (key) => changeCompareView(nextBrowserPhotoCompareMode(compareMode, key))
+      : null,
     onToggleTool: crop.available
       ? cutout.available
         ? () => chooseTool(toolValue === "crop" ? "adjust" : "crop")
         : crop.toggle
       : null,
+    // J: 黒つぶれ・白飛びの印をまとめて重ねる / 外す（ヒストグラムを出していて、印を使える道具の間だけ）
+    onToggleClipping: histogramAvailable && !clipUnavailable ? histogram.toggleBoth : null,
     // 切り抜きの間の Enter =［完了］・Esc =［キャンセル］（#52）
     onCropDone: cropping ? crop.leave : null,
     onCropCancel: cropping ? crop.cancel : null,
@@ -1778,10 +1846,11 @@ export function BrowserPhotoEditingWorkbench(props: {
       )}
       <div
         className={cn(
-          "grid grid-cols-1 grid-rows-[minmax(0,1fr)_auto] lg:grid-rows-[minmax(0,1fr)_3.5rem]",
+          "grid grid-cols-1 grid-rows-[minmax(0,1fr)_auto]",
           // web の写真編集タブは画面の高さから引いた固定の高さ。NIHO photo（fill）は親の flex に合わせて窓の底まで
           props.appearance === "fill" ? "min-h-0 flex-1" : "min-h-[520px] lg:h-[calc(100dvh-12rem)] lg:min-h-[620px]",
-          // 右パネルがあるときは、その右に道具の帯（niho-photo#51）
+          // 右パネルがあるときは、その右に道具の帯（niho-photo#51）。PC の幅では左の木・右パネル・道具の帯が 2 段（面と下段）を
+          // 貫き、下段は中央の列の下だけ（niho-photo#49）
           props.treeHidden
             ? showAdjustments
               ? "lg:grid-cols-[minmax(0,1fr)_15.5rem_2.75rem]"
@@ -1938,6 +2007,19 @@ export function BrowserPhotoEditingWorkbench(props: {
                       }
                     : null
                 }
+                clipOverlay={clipOverlay}
+                compare={
+                  compareMode !== "off"
+                    ? {
+                        mode: compareMode,
+                        // 狭い幅（PC の面のまま）は上下に並べる
+                        direction: wide ? "row" : "column",
+                        beforeCanvasRef: setCompareBeforeCanvas,
+                        split: compareView.split,
+                        onSplitChange: compareView.setSplit,
+                      }
+                    : null
+                }
                 canvasRef={canvasRef}
                 colorPicker={colorMixerAvailable ? {
                   active: colorPicking,
@@ -2001,6 +2083,18 @@ export function BrowserPhotoEditingWorkbench(props: {
                         liveAngle: crop.liveAngle,
                         disabled: controlsDisabled,
                         onCommit: crop.commit,
+                      }
+                    : null
+                }
+                // スマホの層は上下に並べるだけ（分割は PC の面だけ）。拡大は同じ値を両方の画が読むので揃う
+                compare={
+                  compareMode !== "off"
+                    ? {
+                        mode: "side",
+                        direction: "column",
+                        beforeCanvasRef: setCompareBeforeCanvas,
+                        split: compareView.split,
+                        onSplitChange: compareView.setSplit,
                       }
                     : null
                 }
@@ -2095,6 +2189,11 @@ export function BrowserPhotoEditingWorkbench(props: {
             }
             canEdit={props.canEdit}
             canCompare={editable && !cropping}
+            compareView={
+              compareAvailable
+                ? { active: compareMode !== "off", onToggle: () => changeCompareView(compareMode === "off" ? "side" : "off") }
+                : null
+            }
             controlsDisabled={controlsDisabled}
             canReset={canReset}
             canUndo={open.canUndo}
@@ -2136,6 +2235,17 @@ export function BrowserPhotoEditingWorkbench(props: {
             raw={loupeItem !== null && isBrowserCloudRawPhoto(loupeItem.photo)}
             settings={settings}
             colorMixer={colorMixer}
+            histogram={
+              histogramAvailable ? (
+                <PhotoEditingHistogram
+                  data={histogram.histogram}
+                  clip={histogram.clip}
+                  clipDisabled={clipUnavailable}
+                  onToggleShadows={histogram.toggleShadows}
+                  onToggleHighlights={histogram.toggleHighlights}
+                />
+              ) : undefined
+            }
             visibleKeys={visibleAdjustmentKeys}
             // 口のある wasm と分かってから出す（確かめている間・無い wasm・S1 の canvas の写真には出さない）
             auto={
@@ -2164,12 +2274,18 @@ export function BrowserPhotoEditingWorkbench(props: {
                       support={presetSupport}
                       variant={view.variant}
                       onOpenPanel={view.onOpenPanel}
+                      actionsSlot={view.actionsSlot}
                     />
                   )
                 : undefined
             }
             tool={toolValue}
             panel={shownAdjustPanel}
+            info={
+              loupeItem ? (
+                <BrowserPhotoEditingInfo photo={loupeItem.photo} infoAvailable={capabilities.info === true} />
+              ) : undefined
+            }
             onOpenPresets={() => setAdjustPanel("presets")}
             cropTools={
               cropping && crop.source ? (
@@ -2231,6 +2347,8 @@ export function BrowserPhotoEditingWorkbench(props: {
         {showAdjustments && !mobileEditorItem ? <BrowserPhotoEditingToolRail items={toolRailItems} /> : null}
 
         <BrowserPhotoEditingFooter
+          // 中央の列の下だけ（左の木・右パネル・道具の帯は 2 段を貫いて窓の底まで。Lightroom とモックの並び。niho-photo#49）
+          className={props.treeHidden ? "lg:col-span-1 lg:col-start-1" : "lg:col-span-1 lg:col-start-2"}
           viewMode={viewMode}
           canOpenLoupe={selectedItem !== null && !selectedItem.adding && !selection.selecting && !batchBusy && operation === null}
           onShowGrid={showGrid}
@@ -2335,10 +2453,16 @@ export function BrowserPhotoEditingWorkbench(props: {
             },
           } : undefined}
           showCompare={editable}
-          // 切り抜き・背景除去の間は補正前を見せない（押せない表示）
-          compareDisabled={controlsDisabled || cropping || cutoutActive}
+          // 切り抜き・背景除去の間・補正前と補正後を並べている間は補正前を見せない（押せない表示）
+          compareDisabled={controlsDisabled || cropping || cutoutActive || compareMode !== "off"}
           compareOriginal={compareOriginal}
           onCompareOriginalChange={open.setCompareOriginal}
+          // 「比較」（niho-photo#41）: 並べる（左右）/ 分割 / 比較しない
+          compareView={
+            editable
+              ? { mode: compareMode, disabled: controlsDisabled || !compareAvailable, onChange: changeCompareView }
+              : undefined
+          }
           exportButtonRef={exportButtonRef}
           exportSheetOpen={exportSheetOpen && !mobileBatchExport}
           exportButtonExpanded={exportSheetOpen}

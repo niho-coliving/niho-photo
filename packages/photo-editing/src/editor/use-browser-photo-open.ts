@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState, type MutableRefObject } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type MutableRefObject } from "react";
 
 import {
   browserCloudLockedReason,
@@ -138,6 +138,18 @@ export function useBrowserPhotoOpen(params: {
    * 道具の枠全体の画には重ねない。`current` が null の間（web）は今までどおり描くだけ
    */
   framePostProcessRef?: MutableRefObject<((canvas: HTMLCanvasElement) => void) | null>;
+  /**
+   * wasm で描いた画を canvas に出した直後に、その画（写真の key と一緒）を渡す口（右パネルのヒストグラム。niho-photo#36）。
+   * 「補正前」・切り抜きの道具の枠全体の画も、画面に出した画として渡す。`current` が null の間は今までどおり描くだけ。渡した画は
+   * 読むだけで、書き換えない
+   */
+  onFramePaintedRef?: MutableRefObject<((key: string, frame: DevelopFrame) => void) | null>;
+  /**
+   * 補正前と補正後を見比べる間（niho-photo#41）の、補正前を描く 2 枚目の canvas（比較していない間は null）。描くのは「補正前」と
+   * 同じ画（切り抜いた枠のまま色だけ補正前。`beforeFrameRef` に持つ）で、幾何・写真・入力が変わらない限り描き直さない（補正後の側を
+   * 動かしても描き直さない）。重ねる係（`framePostProcessRef`）・ヒストグラムの口（`onFramePaintedRef`）には渡さない
+   */
+  compareCanvas?: HTMLCanvasElement | null;
 }) {
   const {
     spotId,
@@ -376,6 +388,7 @@ export function useBrowserPhotoOpen(params: {
   /** 切り抜きの道具の間に描いた枠全体の画（同じ設定なら描き直さない。切り抜きを動かしても設定は変わらない） */
   const cropFrameCacheRef = useRef<{ key: string; settingsJson: string; epoch: number; frame: DevelopFrame } | null>(null);
   const framePostProcessRef = params.framePostProcessRef;
+  const onFramePaintedRef = params.onFramePaintedRef;
   /**
    * 重ねる係（`framePostProcessRef`）がある間に最後に描いた画。背景除去の当て直し（背景・ブラシ）は wasm に描かせず、この画を
    * 描き直して重ね直す（{@link repaintLastFrame}）。`raw` は重ねない画（「補正前」・切り抜きの道具の枠全体）
@@ -446,6 +459,7 @@ export function useBrowserPhotoOpen(params: {
         if (!raw) postProcess(target);
         lastPaintRef.current = { key, target, frame, raw };
       }
+      onFramePaintedRef?.current?.(key, frame);
       const current = openedRef.current;
       if (current?.key === key && current.previewPending) {
         const next = { ...current, previewPending: false };
@@ -596,6 +610,7 @@ export function useBrowserPhotoOpen(params: {
     forcedPaintKey,
     framePostProcessRef,
     frameCacheRef,
+    onFramePaintedRef,
     opened?.key,
     opened?.mode,
     opened?.input,
@@ -607,6 +622,70 @@ export function useBrowserPhotoOpen(params: {
     setSavedSettingsKey,
     leaveEditing,
     uploadOpenedEditedPreview,
+    viewMode,
+    workingEpoch,
+  ]);
+
+  // 補正前と補正後を見比べる間（niho-photo#41）は、補正前の画を 2 枚目の canvas（`compareCanvas`）に描く。「補正前」（押している
+  // 間）と同じ画・同じ置き場（`beforeFrameRef`）を使い、幾何・写真・入力（段階 open の canonical 差し替え・作業サイズの開き直し）が
+  // 変わったときだけ描き直す（色の補正を動かしても描き直さない）。編集の描画の「次」を取り合わないよう、優先度は background
+  // （編集の描画が空いてから 1 回）。補正後の canvas・重ねる係・ヒストグラムの口には触れない。S1 の canvas は補正を外して描く
+  const compareCanvas = params.compareCanvas ?? null;
+  const compareBeforeSettings = useMemo(
+    () =>
+      compareCanvas && opened?.mode === "wasm"
+        ? resetDevelopSettingsColors(settings, developBaseVersion(opened.input))
+        : null,
+    [compareCanvas, opened?.input, opened?.mode, settings],
+  );
+  const compareBeforeJson = compareBeforeSettings ? JSON.stringify(compareBeforeSettings) : null;
+  const compareBeforeSettingsRef = useRef(compareBeforeSettings);
+  compareBeforeSettingsRef.current = compareBeforeSettings;
+  useEffect(() => {
+    const target = compareCanvas;
+    const activeOpened = openedRef.current;
+    if (!target || viewMode !== "loupe" || !activeOpened || cropActive || cropSettling) return;
+    if (activeOpened.decoded) {
+      renderBrowserPhotoPreview(target, activeOpened.decoded, readBrowserAdjustmentsFromDevelopSettings(null), true);
+      return;
+    }
+    const beforeSettings = compareBeforeSettingsRef.current;
+    const engine = engineRef.current;
+    if (activeOpened.mode !== "wasm" || !engine || !beforeSettings || compareBeforeJson === null) return;
+    const key = activeOpened.key;
+    const cached = beforeFrameRef.current;
+    if (cached?.key === key && cached.settingsJson === compareBeforeJson) {
+      paintDevelopFrame(target, cached.frame);
+      return;
+    }
+    let current = true;
+    void engine
+      .render(beforeSettings, {
+        maxDimension: DEVELOP_PREVIEW_MAX_DIMENSION,
+        interactive: activeOpened.input?.kind === "provisional",
+        priority: "background",
+      })
+      .then((frame) => {
+        if (!frame || !current || engineRef.current !== engine || openedRef.current?.key !== key) return;
+        beforeFrameRef.current = { key, settingsJson: compareBeforeJson, frame };
+        paintDevelopFrame(target, frame);
+      })
+      .catch(() => undefined);
+    return () => {
+      current = false;
+    };
+    // `opened` の key・入力・S1 の画と `workingEpoch`: 写真・canonical 差し替え・作業サイズの開き直しで描き直す
+  }, [
+    beforeFrameRef,
+    compareBeforeJson,
+    compareCanvas,
+    cropActive,
+    cropSettling,
+    engineRef,
+    opened?.decoded,
+    opened?.input,
+    opened?.key,
+    opened?.mode,
     viewMode,
     workingEpoch,
   ]);
@@ -882,6 +961,7 @@ export function useBrowserPhotoOpen(params: {
         if (!raw) postProcess(target);
         lastPaintRef.current = { key: item.key, target, frame, raw };
       }
+      onFramePaintedRef?.current?.(item.key, frame);
     }
     const nextOpened: OpenedSource = {
       ...result.opened,
@@ -921,7 +1001,7 @@ export function useBrowserPhotoOpen(params: {
       });
     }
     return true;
-  }, [beforeFrameRef, canvasRef, createSaver, developSessionRef, edit.settingsRef, engineRef, frameCacheRef, framePostProcessRef, latestAccessRef, library, presets, rebaseSettings, startSession, workingEpoch]);
+  }, [beforeFrameRef, canvasRef, createSaver, developSessionRef, edit.settingsRef, engineRef, frameCacheRef, framePostProcessRef, latestAccessRef, library, onFramePaintedRef, presets, rebaseSettings, startSession, workingEpoch]);
 
   /** 作業コピーを待っている写真の状態を変える（その写真を開いたまま待っているときだけ）。 */
   const setWorkWait = useCallback((key: string, work: WorkWait) => {

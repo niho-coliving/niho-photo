@@ -11,9 +11,9 @@ export const scopes = {
   "develop-engine": { paths: ["packages/develop-engine/"], root: "packages/develop-engine", runner: "macos-14", kind: "native", swift: true },
 };
 
-export function selectScopes(changed, present) {
+export function selectScopes(changed, present, mainPush = false) {
   const all = changed.some((name) => /^(?:\.github\/|scripts\/|docs\/(?:security|legal|ci|contracts)\/)/.test(name) || /^(?:package(?:-lock)?\.json|\.node-version|\.nvmrc)$/.test(name));
-  return Object.entries(scopes).map(([scope, config]) => ({ scope, runner: config.runner, swift: config.swift === true, present: present.includes(config.root), selected: all || changed.some((name) => config.paths.some((prefix) => name.startsWith(prefix))) }));
+  return Object.entries(scopes).map(([scope, config]) => ({ scope, runner: config.runner, swift: config.swift === true, present: present.includes(config.root), selected: (mainPush && scope === "camera") || all || changed.some((name) => config.paths.some((prefix) => name.startsWith(prefix))) }));
 }
 
 export function changedFiles(root, eventName, event, head = "HEAD") {
@@ -29,7 +29,7 @@ export async function plan(root, eventName, event) {
   for (const config of Object.values(scopes)) {
     try { await access(path.join(root, config.root)); present.push(config.root); } catch { /* 未導入を明示する */ }
   }
-  return selectScopes(changedFiles(root, eventName, event), present);
+  return selectScopes(changedFiles(root, eventName, event), present, eventName === "push");
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {

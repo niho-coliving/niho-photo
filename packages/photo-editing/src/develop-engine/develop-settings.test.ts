@@ -219,7 +219,7 @@ describe("developSettingsOnWorkingCopy（#16944）", () => {
 });
 
 describe("isEditableDevelopSettings", () => {
-  it("まだ無いか、v1〜v4 で既知の数式なら直せる（未知の版・必要版より低い値は直さない）", () => {
+  it("まだ無いか、v1〜v5 で既知の数式なら直せる（未知の版・必要版より低い値は直さない）", () => {
     expect(isEditableDevelopSettings(null)).toBe(true);
     expect(isEditableDevelopSettings(undefined)).toBe(true);
     expect(isEditableDevelopSettings({ v: 1, engine: "niho-1" })).toBe(true);
@@ -232,7 +232,8 @@ describe("isEditableDevelopSettings", () => {
     expect(isEditableDevelopSettings({ v: 2, engine: "niho-1", grayscale: true })).toBe(false);
     expect(isEditableDevelopSettings({ v: 3, engine: "niho-1", grayscale: true })).toBe(true);
     expect(isEditableDevelopSettings({ v: 4, engine: "niho-1", colorPoints: [] })).toBe(true);
-    expect(isEditableDevelopSettings({ v: 5, engine: "niho-1" })).toBe(false);
+    expect(isEditableDevelopSettings({ v: 5, engine: "niho-1" })).toBe(true);
+    expect(isEditableDevelopSettings({ v: 6, engine: "niho-1" })).toBe(false);
     expect(isEditableDevelopSettings({ v: 1, engine: "niho-1", geometry: CROP })).toBe(false);
     expect(isEditableDevelopSettings("niho-1")).toBe(false);
   });
@@ -275,11 +276,13 @@ describe("isEditableDevelopSettings", () => {
     expect(isEditableDevelopSettings({ v: 1, engine: "niho-1", look: 1 })).toBe(false);
   });
 
-  it("readDevelopSettings は v1〜v4 の形だけを読む（形の版はそのまま）", () => {
+  it("readDevelopSettings は v1〜v5 の形だけを読む（形の版はそのまま）", () => {
     expect(readDevelopSettings({ v: 1, engine: "niho-1", exposure: 1 })).toEqual({ v: 1, engine: "niho-1", exposure: 1 });
     expect(readDevelopSettings({ v: 2, engine: "niho-1", geometry: CROP })).toEqual({ v: 2, engine: "niho-1", geometry: CROP });
     expect(readDevelopSettings({ v: 3, engine: "niho-1", grayscale: true })).toEqual({ v: 3, engine: "niho-1", grayscale: true });
     expect(readDevelopSettings({ v: 4, engine: "niho-1", colorPoints: [] })).toEqual({ v: 4, engine: "niho-1", colorPoints: [] });
+    expect(readDevelopSettings({ v: 5, engine: "niho-1" })).toEqual({ v: 5, engine: "niho-1" });
+    expect(readDevelopSettings({ v: 6, engine: "niho-1" })).toBeNull();
     expect(readDevelopSettings({ v: 1 })).toBeNull();
     expect(readDevelopSettings(null)).toBeNull();
   });
@@ -612,7 +615,7 @@ describe("developSettingsToEditSettings（crate の to_edit_settings_value と�
     expect(
       developSettingsToEditSettings({ ...neutralDevelopSettings("raw-1"), legacySettings: { profile: "adobe" } }),
     ).toBeNull();
-    expect(developSettingsToEditSettings({ v: 5, engine: "niho-1" })).toBeNull();
+    expect(developSettingsToEditSettings({ v: 6, engine: "niho-1" })).toBeNull();
     expect(developSettingsToEditSettings({ ...neutralDevelopSettings(), v: 2, geometry: CROP })).toBeNull();
     expect(developSettingsToEditSettings({ v: 2, engine: "niho-1" })).toEqual({ whiteBalance: { mode: "asShot" } });
     expect(developSettingsToEditSettings(null)).toBeNull();

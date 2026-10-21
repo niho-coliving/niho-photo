@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 
 import { act } from "react";
+import { createPortal } from "react-dom";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -213,6 +214,35 @@ describe("プリセットの面", () => {
     expect(container.querySelector('button[aria-label="取り消す"]')).not.toBeNull();
   });
 
+  it("見出し行の ⋯ はプリセットのメニューだけ（補正のメニューの ⋯ と 2 つ並べない。niho-photo#49）", async () => {
+    const clipboard = { canCopy: true, canPaste: true, onCopy: vi.fn(), onPaste: vi.fn() };
+    // 一覧の部品は、受け口（actionsSlot）があれば ⋯ をそこへ描く
+    const presetsWithMenu: NonNullable<AdjustmentsProps["presets"]> = (view) => (
+      <div data-testid="presets" data-variant={view.variant}>
+        {view.actionsSlot
+          ? createPortal(
+              <button type="button" aria-label="プリセットの操作" aria-haspopup="menu">
+                ⋯
+              </button>,
+              view.actionsSlot,
+            )
+          : null}
+      </div>
+    );
+    const menus = () =>
+      Array.from(aside().querySelectorAll('button[aria-haspopup="menu"]')).map((button) => button.getAttribute("aria-label"));
+    const headerRow = () => aside().querySelector("h2")?.parentElement ?? null;
+
+    await render({ panel: "presets", presets: presetsWithMenu, clipboard });
+    expect(menus()).toEqual(["プリセットの操作"]);
+    expect(headerRow()?.querySelector('button[aria-label="プリセットの操作"]')).not.toBeNull();
+    expect(presets()?.querySelector('button[aria-label="プリセットの操作"]')).toBeNull();
+
+    // 補正の面の見出し行は補正のメニュー（コピー / 貼り付け）のまま
+    await render({ panel: "adjust", presets: presetsWithMenu, clipboard });
+    expect(menus()).toEqual(["補正のメニュー"]);
+  });
+
   it("プリセットの部品が無い写真は、プリセットの面を選んでいても補正の面", async () => {
     await render({ panel: "presets", presets: undefined });
     expect(heading()).toBe("補正");
@@ -236,5 +266,63 @@ describe("切り抜き・背景除去の面", () => {
     expect(aside().textContent).toContain("背景除去の道具");
     expect(presets()).toBeNull();
     expect(groupTitles()).toEqual([]);
+  });
+});
+
+describe("ヒストグラム（niho-photo#36）", () => {
+  const histogram = <div data-testid="histogram">ヒストグラム</div>;
+
+  function histogramBox(): HTMLElement | null {
+    return container.querySelector<HTMLElement>('[data-testid="histogram"]');
+  }
+
+  it("渡さなければ何も増えない（従来と同じ DOM）", async () => {
+    await render();
+    expect(histogramBox()).toBeNull();
+    expect(aside().querySelector(".sticky")).toBeNull();
+    expect(aside().className).toContain("py-2");
+    expect(aside().firstElementChild?.querySelector("h2")).not.toBeNull();
+  });
+
+  it("補正の面では、パネルの一番上（見出し行より上）に置き、パネルを送っても上端に残す", async () => {
+    await render({ histogram, auto: { pressed: false, disabled: false, onToggle: vi.fn() }, presets: fakePresets() });
+    const box = histogramBox();
+    expect(box).not.toBeNull();
+    expect(aside().firstElementChild).toBe(box?.parentElement);
+    expect(box?.parentElement?.className).toContain("sticky");
+    expect(box?.parentElement?.className).toContain("top-0");
+    // 上の余白は枠（sticky）の中に持たせる（パネル側の py-2 は下だけ）
+    expect(aside().className).toContain("pb-2");
+    expect(aside().className).not.toContain("py-2");
+    // 並び: ヒストグラム → 見出し → チップ → プリセットの行 → 群
+    const order = [box, aside().querySelector("h2"), quickRow(), presets(), container.querySelector("h4")];
+    for (let index = 1; index < order.length; index += 1) {
+      const previous = order[index - 1];
+      const current = order[index];
+      if (!previous || !current) throw new Error("element not found");
+      expect(previous.compareDocumentPosition(current) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    }
+  });
+
+  it("どの道具・面のときも同じ場所に出す（プリセット / 切り抜き / 背景除去）", async () => {
+    await render({ histogram, panel: "presets", presets: fakePresets() });
+    expect(heading()).toBe("プリセット");
+    expect(aside().firstElementChild).toBe(histogramBox()?.parentElement);
+
+    await render({ histogram, tool: "crop", cropTools: <p>切り抜きの道具</p> });
+    expect(heading()).toBe("切り抜き");
+    expect(aside().firstElementChild).toBe(histogramBox()?.parentElement);
+
+    await render({ histogram, tool: "cutout", cutoutTools: <p>背景除去の道具</p> });
+    expect(heading()).toBe("背景除去");
+    expect(aside().firstElementChild).toBe(histogramBox()?.parentElement);
+    expect(container.querySelectorAll('[data-testid="histogram"]')).toHaveLength(1);
+  });
+
+  it("狭い幅（スマホ）では右パネルごと出ない（hidden lg:block の中に置く）", async () => {
+    await render({ histogram });
+    expect(aside().className).toContain("hidden");
+    expect(aside().className).toContain("lg:block");
+    expect(aside().contains(histogramBox())).toBe(true);
   });
 });

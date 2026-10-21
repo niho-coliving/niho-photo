@@ -48,6 +48,33 @@ describe("resolveBrowserPhotoEditingKey", () => {
     expect(resolveBrowserPhotoEditingKey(keyEvent({ key: "r", altKey: true }), { typing: false })).toBeNull();
   });
 
+  it("J は黒つぶれ・白飛びの印の切り替え（niho-photo#36）。修飾キーつき・文字を打つ欄・IME の変換中・ほかが扱ったキーは扱わない", () => {
+    expect(resolveBrowserPhotoEditingKey(keyEvent({ key: "j" }), { typing: false })).toBe("clip");
+    // CapsLock で大文字になっても Shift を押していなければ同じ
+    expect(resolveBrowserPhotoEditingKey(keyEvent({ key: "J" }), { typing: false })).toBe("clip");
+    expect(resolveBrowserPhotoEditingKey(keyEvent({ key: "J", shiftKey: true }), { typing: false })).toBeNull();
+    expect(resolveBrowserPhotoEditingKey(keyEvent({ key: "j", altKey: true }), { typing: false })).toBeNull();
+    expect(resolveBrowserPhotoEditingKey(keyEvent({ key: "j", metaKey: true }), { typing: false })).toBeNull();
+    expect(resolveBrowserPhotoEditingKey(keyEvent({ key: "j", ctrlKey: true }), { typing: false })).toBeNull();
+    expect(resolveBrowserPhotoEditingKey(keyEvent({ key: "j" }), { typing: true })).toBeNull();
+    expect(resolveBrowserPhotoEditingKey(keyEvent({ key: "j", isComposing: true }), { typing: false })).toBeNull();
+    expect(resolveBrowserPhotoEditingKey(keyEvent({ key: "j", defaultPrevented: true }), { typing: false })).toBeNull();
+  });
+
+  it("Y は補正前と補正後を並べる、Shift+Y は分割（niho-photo#41）。⌘ ⌃ ⌥ つき・文字を打つ欄・IME の変換中・ほかが扱ったキーは扱わない", () => {
+    expect(resolveBrowserPhotoEditingKey(keyEvent({ key: "y" }), { typing: false })).toBe("compareSide");
+    // CapsLock で大文字になっても Shift を押していなければ並べる
+    expect(resolveBrowserPhotoEditingKey(keyEvent({ key: "Y" }), { typing: false })).toBe("compareSide");
+    expect(resolveBrowserPhotoEditingKey(keyEvent({ key: "Y", shiftKey: true }), { typing: false })).toBe("compareSplit");
+    expect(resolveBrowserPhotoEditingKey(keyEvent({ key: "y", metaKey: true }), { typing: false })).toBeNull();
+    expect(resolveBrowserPhotoEditingKey(keyEvent({ key: "y", ctrlKey: true }), { typing: false })).toBeNull();
+    expect(resolveBrowserPhotoEditingKey(keyEvent({ key: "y", altKey: true }), { typing: false })).toBeNull();
+    expect(resolveBrowserPhotoEditingKey(keyEvent({ key: "Y", shiftKey: true, altKey: true }), { typing: false })).toBeNull();
+    expect(resolveBrowserPhotoEditingKey(keyEvent({ key: "y" }), { typing: true })).toBeNull();
+    expect(resolveBrowserPhotoEditingKey(keyEvent({ key: "y", isComposing: true }), { typing: false })).toBeNull();
+    expect(resolveBrowserPhotoEditingKey(keyEvent({ key: "y", defaultPrevented: true }), { typing: false })).toBeNull();
+  });
+
   it("\\ と ¥ は補正前。文字を打つ欄・IME の変換中・ほかが扱ったキーは扱わない", () => {
     expect(resolveBrowserPhotoEditingKey(keyEvent({ key: "\\" }), { typing: false })).toBe("compare");
     expect(resolveBrowserPhotoEditingKey(keyEvent({ key: "¥" }), { typing: false })).toBe("compare");

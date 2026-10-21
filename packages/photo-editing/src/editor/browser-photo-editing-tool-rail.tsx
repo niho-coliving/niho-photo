@@ -13,6 +13,10 @@ export type BrowserPhotoEditingToolRailItem = {
   pressed: boolean;
   disabled: boolean;
   onSelect: () => void;
+  /** 押している道具をもう一度押したとき（省略 = 何もしない。「情報」は補正の面へ戻る。niho-photo#43） */
+  onDeselect?: () => void;
+  /** `end` は帯の下端に、上の道具から離して置く（「情報」） */
+  placement?: "end";
 };
 
 const TOOL_RAIL_BUTTON_CLASS_NAME =
@@ -21,13 +25,15 @@ const TOOL_RAIL_BUTTON_CLASS_NAME =
 /**
  * ブラウザ版の右端の道具の帯（niho-photo#51。Lightroom のデスクトップ版と同じ）。PC の幅だけ右パネルの右に縦に並べ、押した道具で
  * 右パネルを丸ごと入れ替える。並べる道具と押せるかは呼ぶ側が決める（その写真で使える道具だけ）。押している道具をもう一度押しても
- * 何もしない（今の面のまま）。
+ * 何もしない（今の面のまま）。ただし `onDeselect` のある道具（「情報」）は、もう一度押すと `onDeselect`。`placement: "end"` の道具は
+ * 帯の下端に置く。
  */
 export function BrowserPhotoEditingToolRail(props: { items: ReadonlyArray<BrowserPhotoEditingToolRailItem> }) {
+  const firstEndKey = props.items.find((item) => item.placement === "end")?.key;
   return (
     <nav
       aria-label={PHOTO_EDITING_TOOL_RAIL_LABEL}
-      className="hidden min-h-0 flex-col items-center gap-1 border-l border-niho-border bg-[var(--photo-editing-surface,white)] py-2 lg:flex"
+      className="hidden min-h-0 flex-col items-center gap-1 border-l border-niho-border bg-[var(--photo-editing-surface,white)] py-2 lg:row-span-2 lg:flex"
     >
       {props.items.map((item) => {
         const Icon = item.icon;
@@ -41,9 +47,11 @@ export function BrowserPhotoEditingToolRail(props: { items: ReadonlyArray<Browse
             disabled={item.disabled}
             onClick={() => {
               if (!item.pressed) item.onSelect();
+              else item.onDeselect?.();
             }}
             className={cn(
               TOOL_RAIL_BUTTON_CLASS_NAME,
+              item.key === firstEndKey ? "mt-auto" : null,
               item.pressed ? "bg-niho-accent-soft text-niho-accent-ink" : "text-niho-text-sub hover:bg-niho-pale/60",
             )}
           >

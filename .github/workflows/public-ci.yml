@@ -206,6 +206,37 @@
             "CI_SCOPE": "${{ matrix.scope }}"
           },
           "run": "node scripts/ci/run-scope.mjs \"$CI_SCOPE\""
+        },
+        {
+          "name": "公開検証成果物・SBOM",
+          "id": "release-evidence",
+          "if": "matrix.scope == 'camera' && github.event_name == 'push' && github.ref == 'refs/heads/main' && github.repository == 'niho-coliving/niho-photo'",
+          "run": "rustup toolchain install 1.98.1 --profile minimal\nnode scripts/ci/release-evidence.mjs"
+        },
+        {
+          "name": "公開検証成果物を保存",
+          "id": "upload-release-evidence",
+          "if": "matrix.scope == 'camera' && github.event_name == 'push' && github.ref == 'refs/heads/main' && github.repository == 'niho-coliving/niho-photo'",
+          "uses": "actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9",
+          "with": {
+            "name": "${{ steps.release-evidence.outputs.name }}",
+            "path": "dist/release-evidence/",
+            "if-no-files-found": "error",
+            "retention-days": 30,
+            "compression-level": 0,
+            "include-hidden-files": false
+          }
+        },
+        {
+          "name": "公開検証成果物の輸送receiptを記録",
+          "id": "release-artifact-receipt",
+          "if": "matrix.scope == 'camera' && github.event_name == 'push' && github.ref == 'refs/heads/main' && github.repository == 'niho-coliving/niho-photo'",
+          "env": {
+            "RELEASE_ARTIFACT_ID": "${{ steps.upload-release-evidence.outputs.artifact-id }}",
+            "RELEASE_ARTIFACT_DIGEST": "${{ steps.upload-release-evidence.outputs.artifact-digest }}",
+            "RELEASE_ARTIFACT_NAME": "${{ steps.release-evidence.outputs.name }}"
+          },
+          "run": "node scripts/ci/write-artifact-receipt.mjs"
         }
       ]
     },

@@ -157,6 +157,67 @@ fn verified_photo_rejects_an_original_replaced_after_opening() {
 }
 
 #[test]
+fn photo_info_is_the_library_shape_with_nulls_for_unread_items() {
+  let info = PhotoInfo {
+    make: Some("NIHO".into()),
+    model: Some("NIHO Test Camera".into()),
+    lens: Some("NIHO 35mm F2.8".into()),
+    iso: Some(400.0),
+    exposure_time_seconds: Some(0.004),
+    f_number: Some(2.8),
+    focal_length_mm: Some(35.0),
+    captured_at: Some("2024-05-01T10:30:15".into()),
+    dimensions: Some((6000, 4000)),
+    gps: Some(niho_desktop_photo::image_info::GpsPosition {
+      latitude: -12.5,
+      longitude: -45.25,
+    }),
+  };
+  assert_eq!(
+    info_json(&info),
+    json!({
+      "camera": { "make": "NIHO", "model": "NIHO Test Camera" },
+      "lens": "NIHO 35mm F2.8",
+      "iso": 400.0,
+      "exposureTimeSeconds": 0.004,
+      "fNumber": 2.8,
+      "focalLengthMm": 35.0,
+      "capturedAt": "2024-05-01T10:30:15",
+      "width": 6000,
+      "height": 4000,
+      "gps": { "latitude": -12.5, "longitude": -45.25 },
+    })
+  );
+  // カメラの名前が片方だけでも camera を出し、無い項目は null（パスは返さない）
+  let partial = PhotoInfo {
+    model: Some("NIHO Test Camera".into()),
+    ..PhotoInfo::default()
+  };
+  assert_eq!(
+    info_json(&partial)["camera"],
+    json!({ "make": null, "model": "NIHO Test Camera" })
+  );
+  let empty = info_json(&PhotoInfo::default());
+  assert!(empty.as_object().unwrap().values().all(Value::is_null), "{empty}");
+}
+
+#[test]
+fn photo_info_reads_an_open_photo_and_never_fails_on_unreadable_metadata() {
+  let temp = TempDir::new("info");
+  let photos = camera_photos(&temp);
+  // 先頭だけ JPEG の、中身の無いファイル（EXIF も画も読めない）
+  let path = temp.file("DSC00001.JPG", b"not really a photo");
+  let (photo_id, _) = photos.open("entry-1", &path).unwrap();
+  let info = photos.info(&photo_id).unwrap();
+  assert!(info.as_object().unwrap().values().all(Value::is_null), "{info}");
+  assert!(!info.to_string().contains(&temp.0.to_string_lossy().into_owned()));
+  // 開いていない・閉じた写真は notFound（画面は開き直す）
+  assert_eq!(photos.info("photo-unknown").unwrap_err().code, code::NOT_FOUND);
+  photos.close(std::slice::from_ref(&photo_id));
+  assert_eq!(photos.info(&photo_id).unwrap_err().code, code::NOT_FOUND);
+}
+
+#[test]
 fn the_oldest_opened_photos_are_closed_over_the_limit() {
   let temp = TempDir::new("limit");
   let photos = camera_photos(&temp);
