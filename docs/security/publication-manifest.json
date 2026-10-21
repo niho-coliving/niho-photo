@@ -2134,7 +2134,9 @@
         "niho-photo#37 「カーブ」の節・グラフ・点の読み上げの文言を追加。",
         "PR #78 のトーンカーブを最新情報paneと統合。",
         "niho-photo#38 カラーミキサー（HSL）の文言を追加し、Oklch の補正と Lightroom の PointColors の名前を「ポイントカラー」に改める。",
-        "PR #79 のHSL mixerを最新tone curveとinfo UIへ統合。"
+        "PR #79 のHSL mixerを最新tone curveとinfo UIへ統合。",
+        "PR #79のプリセット警告をHSLミキサーの表示名に合わせる。",
+        "PR #79のプリセット保存対象外表示を実UIの項目名に揃える。"
       ]
     },
     {
@@ -9607,8 +9609,8 @@
     },
     {
       "path": "packages/photo-editing/src/develop-engine/develop-masks.test.ts",
-      "sha256": "966a544db81900703ba8457334edf9d1748e4c8578145eb25cb3f2180df993c2",
-      "origin": "Issue #65の公開仕様と合成fixtureだけから新規作成した、マスク設定のRust共有fixture照合と設定関数の回帰。外部画像・非公開コード・個体metadataを含まない。\n変更理由: 線形マスクの最小距離保持と上限超過の拒否を検証する。"
+      "sha256": "3833f63f4c45c76ea6c4461844f15782807bd3918a73d8761048edcc38446d8a",
+      "origin": "Issue #65の公開仕様と合成fixtureだけから新規作成した、マスク設定のRust共有fixture照合と設定関数の回帰。外部画像・非公開コード・個体metadataを含まない。\n変更理由: 線形マスクの最小距離保持と上限超過の拒否を検証する。\n変更理由: PR #79のマスクと色ポイントの保存対象外表示テストを実UIの項目名に揃える。"
     },
     {
       "path": "packages/photo-editing/src/photo-editing-histogram.ts",
