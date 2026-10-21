@@ -10,6 +10,7 @@ import {
   hasDevelopMasks,
   hasValidDevelopMasks,
 } from "./develop-masks";
+import { presetMasksForPhoto, type PresetMasksPlacement } from "./develop-preset-masks";
 
 /**
  * NIHO の現像エンジンの編集内容 `developSettings`（移行元設計。移行時の設計文書「段 2」）。Photo Bench の
@@ -527,15 +528,26 @@ export function resetDevelopSettingsColors(current: DevelopSettings | null, base
  * （移行時の設計文書「プリセットの適用量・書き出し・見本」）。形の版 `v` は保った幾何から決め直す。効果
  * （`grayscale`・`grayMixer`・`vignette`・`grain`）は色の補正と同じくプリセットの結果のまま入れる（モノクロのプリセットを当てると
  * 白黒になる。E1b 移行元設計）。
+ *
+ * 部分補正（`masks`）は写真自身の編集で、`presetResult` の `masks` は使わない。プリセット（Lightroom の XMP）がマスクを持つときは
+ * `presetMasks`（結果の `masks` と、当てる写真の作業画像の大きさ）を渡すと、写真の幾何で見えている枠から作業画像の座標へ写して
+ * 写真のマスクと置き換える（`develop-preset-masks.ts`。docs/local-adjustments.md「Lightroom の XMP の読み」）。渡さない・大きさが
+ * 分からない・1 枚も置けないときは、当てる前の写真のマスクのまま。
  */
-export function presetDevelopSettings(base: DevelopSettings, presetResult: DevelopSettings): DevelopSettings {
+export function presetDevelopSettings(
+  base: DevelopSettings,
+  presetResult: DevelopSettings,
+  presetMasks?: PresetMasksPlacement,
+): DevelopSettings {
   const next: Record<string, unknown> = { ...presetResult, base: base.base ?? null };
   // Adobe crs:PointColors は非公開形式で相互変換しない。NIHO の点は
   // XMP プリセットを当てても写真自身の編集として保持する。
   if (base.colorPoints === undefined) delete next.colorPoints;
   else next.colorPoints = base.colorPoints;
-  // 部分補正（マスク）も写真自身の編集で、プリセット（XMP）には入らない
-  if (base.masks === undefined) delete next.masks;
+  const whiteBalance = presetResult.whiteBalance;
+  const placed = presetMasksForPhoto(base.geometry, presetMasks, isRecord(whiteBalance) ? whiteBalance.mode : undefined);
+  if (placed) next.masks = placed;
+  else if (base.masks === undefined) delete next.masks;
   else next.masks = base.masks;
   if (base.look === undefined) delete next.look;
   else next.look = base.look;
