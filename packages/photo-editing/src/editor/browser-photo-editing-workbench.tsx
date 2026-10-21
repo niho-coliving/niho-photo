@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState, type MutableRefObject, type ReactElement, type ReactNode } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { Contrast, Crop, FolderOpen, Laptop, Plus, Scissors, SlidersHorizontal, Trash2 } from "lucide-react";
+import { Contrast, Crop, FolderOpen, Info, Laptop, Plus, Scissors, SlidersHorizontal, Trash2 } from "lucide-react";
 
 import { formatPhotoCloudUsage } from "../photo-library-usage";
 import { inertAttribute } from "niho-ui/inert-attribute";
@@ -59,6 +59,7 @@ import {
   PHOTO_EDITING_TOOL_ADJUST_LABEL,
   PHOTO_EDITING_TOOL_CROP_LABEL,
   PHOTO_EDITING_TOOL_CUTOUT_LABEL,
+  PHOTO_EDITING_TOOL_INFO_LABEL,
 } from "../photo-editing-copy";
 import { movePhotoEditingPhotoId } from "../photo-editing-selection";
 import { photoEditingTileGeometry } from "../photo-editing-tile-geometry";
@@ -86,6 +87,7 @@ import {
 } from "./browser-photo-editing-albums";
 import { BrowserPhotoEditingAdjustments } from "./browser-photo-editing-adjustments";
 import { BrowserPhotoEditingBulkMenu } from "./browser-photo-editing-bulk-menu";
+import { BrowserPhotoEditingInfo } from "./browser-photo-editing-info";
 import {
   BrowserPhotoCloudShareSheet,
   type BrowserPhotoCloudSharingBinding,
@@ -969,8 +971,9 @@ export function BrowserPhotoEditingWorkbench(props: {
   // 右パネルのプリセット（帯の「プリセット」と補正の面のプリセットの行）を出せる写真。S1 の canvas（段 2 を使えない）には出さない。
   // 狭い幅は右パネルを見せない（wasm も起こさない）ので、プリセットも読まない
   const presetsAvailable = !canvasOnly && wide;
-  // プリセットを出せない写真は補正の面（選んだ面は覚えたままにし、出せる写真に戻ったらその面に戻す）
-  const shownAdjustPanel: BrowserPhotoAdjustPanel = presetsAvailable ? adjustPanel : "adjust";
+  // プリセットを出せない写真は補正の面（選んだ面は覚えたままにし、出せる写真に戻ったらその面に戻す）。情報の面はどの写真でも出せる
+  const shownAdjustPanel: BrowserPhotoAdjustPanel =
+    adjustPanel === "info" || presetsAvailable ? adjustPanel : "adjust";
   /** 道具が「補正」の間の面を選ぶ（ほかの道具の間は、補正の道具に戻してから） */
   const chooseAdjustPanel = (next: BrowserPhotoAdjustPanel) => {
     if (toolValue !== "adjust") chooseTool("adjust");
@@ -1016,6 +1019,20 @@ export function BrowserPhotoEditingWorkbench(props: {
       pressed: toolValue === "cutout",
       disabled: toolSwitchDisabled,
       onSelect: () => chooseTool("cutout"),
+    });
+  }
+  // 情報（niho-photo#43）。1 枚で見ている写真があるときだけ、帯の下端に置く。押すと右パネルを情報の面にし（切り抜き・背景除去の
+  // 間は補正の道具に戻してから）、もう一度押すと補正の面へ戻る
+  if (loupeItem) {
+    toolRailItems.push({
+      key: "info",
+      label: PHOTO_EDITING_TOOL_INFO_LABEL,
+      icon: Info,
+      placement: "end",
+      pressed: toolValue === "adjust" && shownAdjustPanel === "info",
+      disabled: toolValue !== "adjust" && toolSwitchDisabled,
+      onSelect: () => chooseAdjustPanel("info"),
+      onDeselect: () => chooseAdjustPanel("adjust"),
     });
   }
   // スマホで直せる拠点の狭い幅は、直せる写真の 1 枚を全画面の編集の層で開く（F6c 移行元設計）。直せない写真は今の表示のまま
@@ -2258,6 +2275,11 @@ export function BrowserPhotoEditingWorkbench(props: {
             }
             tool={toolValue}
             panel={shownAdjustPanel}
+            info={
+              loupeItem ? (
+                <BrowserPhotoEditingInfo photo={loupeItem.photo} infoAvailable={capabilities.info === true} />
+              ) : undefined
+            }
             onOpenPresets={() => setAdjustPanel("presets")}
             cropTools={
               cropping && crop.source ? (

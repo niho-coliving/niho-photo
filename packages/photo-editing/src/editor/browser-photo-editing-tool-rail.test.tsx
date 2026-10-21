@@ -2,7 +2,7 @@
 
 import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
-import { Contrast, Crop, Scissors, SlidersHorizontal } from "lucide-react";
+import { Contrast, Crop, Info, Scissors, SlidersHorizontal } from "lucide-react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { BrowserPhotoEditingToolRail, type BrowserPhotoEditingToolRailItem } from "./browser-photo-editing-tool-rail";
@@ -103,5 +103,35 @@ describe("BrowserPhotoEditingToolRail", () => {
     await click(button("背景除去"));
     expect(railItems[2]?.onSelect).not.toHaveBeenCalled();
     expect(railItems[3]?.onSelect).not.toHaveBeenCalled();
+  });
+
+  it("下端に置く道具（「情報」。niho-photo#43）は、上の道具から離して帯の下端に置く", async () => {
+    await render([...items(), { key: "info", label: "情報", icon: Info, pressed: false, disabled: false, onSelect: vi.fn(), placement: "end" }]);
+    const buttons = Array.from(rail().querySelectorAll<HTMLButtonElement>("button"));
+    expect(buttons.map((candidate) => candidate.getAttribute("aria-label"))).toEqual(["プリセット", "補正", "切り抜き", "背景除去", "情報"]);
+    expect(button("情報").className).toContain("mt-auto");
+    for (const label of ["プリセット", "補正", "切り抜き", "背景除去"]) expect(button(label).className).not.toContain("mt-auto");
+  });
+
+  it("onDeselect のある道具は、押している間にもう一度押すと onDeselect（「情報」から補正の面へ戻る）", async () => {
+    const info: BrowserPhotoEditingToolRailItem = {
+      key: "info",
+      label: "情報",
+      icon: Info,
+      pressed: true,
+      disabled: false,
+      onSelect: vi.fn(),
+      onDeselect: vi.fn(),
+      placement: "end",
+    };
+    await render([...items({ adjust: { pressed: false } }), info]);
+    expect(button("情報").getAttribute("aria-pressed")).toBe("true");
+    await click(button("情報"));
+    expect(info.onDeselect).toHaveBeenCalledTimes(1);
+    expect(info.onSelect).not.toHaveBeenCalled();
+    await render([...items(), { ...info, pressed: false }]);
+    await click(button("情報"));
+    expect(info.onSelect).toHaveBeenCalledTimes(1);
+    expect(info.onDeselect).toHaveBeenCalledTimes(1);
   });
 });

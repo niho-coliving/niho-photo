@@ -395,6 +395,30 @@ export const PHOTO_EDITING_TOOL_CUTOUT_LABEL = "背景除去";
  * 道具の名前は プリセット（`PHOTO_EDITING_PRESETS_TITLE`）と上の 補正 / 切り抜き / 背景除去。
  */
 export const PHOTO_EDITING_TOOL_RAIL_LABEL = "道具";
+/**
+ * 右パネルの「情報」（niho-photo#43。Lightroom の「情報」）。右端の帯の下端の道具の名前と面の見出し行の名前、群の見出し、
+ * 各行のラベル（値と並べて「ISO 400」のように読み上げる）。値の整形は `photo-editing-info.ts`。
+ */
+export const PHOTO_EDITING_TOOL_INFO_LABEL = "情報";
+export const PHOTO_EDITING_INFO_GROUP_TITLES = {
+  exposure: "撮影条件",
+  camera: "カメラ・レンズ",
+  file: "ファイル",
+} as const;
+export const PHOTO_EDITING_INFO_ROW_LABELS = {
+  iso: "ISO",
+  shutter: "シャッター速度",
+  aperture: "絞り",
+  focalLength: "焦点距離",
+  camera: "カメラ",
+  lens: "レンズ",
+  fileName: "ファイル名",
+  format: "形式",
+  dimensions: "大きさ",
+  fileSize: "ファイルの大きさ",
+  capturedAt: "撮影日時",
+  location: "場所",
+} as const;
 
 /**
  * 背景除去の道具（NIHO camera だけ。`capabilities.cutout`。C4 移行元設計）。推論はこの Mac の中（Apple Vision）。

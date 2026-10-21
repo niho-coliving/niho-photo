@@ -71,6 +71,8 @@ type FakeOptions = {
   addedPhotos?: LibraryEntry[];
   forgetPhotosError?: CameraCommandError;
   interactivePreview?: () => Promise<ArrayBuffer> | ArrayBuffer;
+  /** entryId → native の写真の情報（`camera_photo_info` の `info`） */
+  info?: Record<string, unknown>;
 };
 
 function sha(entryId: string): string {
@@ -152,6 +154,8 @@ function fakeNative(options: FakeOptions = {}) {
         }
         case "camera_photo_close":
           return {};
+        case "camera_photo_info":
+          return { info: options.info?.[openEntry(request?.photoId)] ?? {} };
         case "camera_photo_save_settings": {
           const entryId = openEntry(request?.photoId);
           const current = saved.get(entryId)?.revision ?? 0;
@@ -233,6 +237,7 @@ describe("capabilities", () => {
       exportFolder: true,
       cutout: true,
       multiSelect: true,
+      info: true,
     });
     await expect(library.rollout()).resolves.toEqual({ crop: true, mobileEditing: false });
   });
@@ -249,6 +254,8 @@ describe("capabilities", () => {
       exportFolder: false,
       favorites: false,
       cutout: false,
+      // 写真の情報は ImageIO で読むので、現像の sidecar が使えなくても読める
+      info: true,
     });
     expect(commandsOf(unavailable.calls).filter((command) => command === "camera_develop_status")).toHaveLength(3);
   });
@@ -499,6 +506,73 @@ describe("open, save and stale", () => {
     await expect(
       fake.library.loadOriginal("e-png", source, { signal: signal(), fileName: "scan.png", maxBytes: 64 }),
     ).rejects.toEqual(new BrowserPhotoSourceError("fetch_failed"));
+  });
+});
+
+describe("photo info (niho-photo#43)", () => {
+  it("reads the open photo's info from native and keeps only well-typed values", async () => {
+    const fake = fakeNative({
+      info: {
+        "e-raw": {
+          camera: { make: "Panasonic", model: "DC-G9" },
+          lens: "LEICA DG 12-60",
+          iso: 400,
+          exposureTimeSeconds: 0.004,
+          fNumber: 2.8,
+          focalLengthMm: 25,
+          capturedAt: "2024-05-01T10:30:15",
+          width: 5184,
+          height: 3888,
+          gps: { latitude: -12.5, longitude: -45.26 },
+        },
+        "e-png": {
+          camera: { make: null, model: " " },
+          lens: 3,
+          iso: "400",
+          exposureTimeSeconds: null,
+          width: 32,
+          height: 24,
+          gps: { latitude: 35, longitude: null },
+        },
+      },
+    });
+    await fake.library.openOriginal("e-raw");
+    await expect(fake.library.info?.("e-raw")).resolves.toEqual({
+      camera: { make: "Panasonic", model: "DC-G9" },
+      lens: "LEICA DG 12-60",
+      iso: 400,
+      exposureTimeSeconds: 0.004,
+      fNumber: 2.8,
+      focalLengthMm: 25,
+      capturedAt: "2024-05-01T10:30:15",
+      width: 5184,
+      height: 3888,
+      gps: { latitude: -12.5, longitude: -45.26 },
+    });
+    expect(fake.calls.at(-1)).toEqual(["camera_photo_info", { photoId: "photo-1" }]);
+    // 形の違う値は読めなかった項目（null）にする。まだ開いていない写真は開いてから読む
+    await expect(fake.library.info?.("e-png")).resolves.toEqual({
+      camera: null,
+      lens: null,
+      iso: null,
+      exposureTimeSeconds: null,
+      fNumber: null,
+      focalLengthMm: null,
+      capturedAt: null,
+      width: 32,
+      height: 24,
+      gps: null,
+    });
+    expect(commandsOf(fake.calls).slice(-2)).toEqual(["camera_photo_open", "camera_photo_info"]);
+  });
+
+  it("reopens once when native has let the photo go, and returns null for an unknown photo", async () => {
+    const fake = fakeNative({ info: { "e-jpg": { iso: 100 } } });
+    await fake.library.openOriginal("e-jpg");
+    fake.open.clear();
+    await expect(fake.library.info?.("e-jpg")).resolves.toMatchObject({ iso: 100 });
+    expect(commandsOf(fake.calls).slice(-3)).toEqual(["camera_photo_info", "camera_photo_open", "camera_photo_info"]);
+    await expect(fake.library.info?.("e-missing")).resolves.toBeNull();
   });
 });
 

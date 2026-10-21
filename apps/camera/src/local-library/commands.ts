@@ -13,7 +13,7 @@ import type {
   CutoutRecipe,
   CutoutSubject,
 } from "niho-photo-editing/photo-cutout";
-import type { PhotoLibraryDevelopSourceContext } from "niho-photo-editing/library/photo-library";
+import type { PhotoLibraryDevelopSourceContext, PhotoLibraryPhotoInfo } from "niho-photo-editing/library/photo-library";
 
 /** Tauri の `invoke`（`args` は JSON の引数か raw IPC のバイト列。`options.headers` は raw IPC の添え書き）。 */
 export type Invoke = <T>(
@@ -179,6 +179,9 @@ export function createCameraCommands(invoke: Invoke = tauriInvoke) {
     closePhotos: async (photoIds: string[]) => {
       await call<Record<string, never>>("camera_photo_close", { photoIds });
     },
+    /** 開いた写真の情報（撮影条件・カメラ・レンズ・撮影日時・寸法・場所。読めない項目は null。右パネルの「情報」）。 */
+    photoInfo: async (photoId: string) =>
+      (await call<{ info: PhotoLibraryPhotoInfo }>("camera_photo_info", { photoId })).info,
     /** 補正を保存する（新しい版）。画面が知っている版と違えば `revisionConflict`。 */
     saveSettings: async (photoId: string, developSettings: Record<string, unknown>, expectedRevision: number) =>
       (
