@@ -15,6 +15,7 @@ import {
   writeFileSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
+import { fileURLToPath } from "node:url";
 import path from "node:path";
 
 import { assertSystemNativeSearchPaths } from "../../packages/develop-engine/build-macos-native.mjs";
@@ -518,6 +519,8 @@ function validateCandidateManifest(manifest, fileName) {
     if (!manifest.app.files.some((file) => file.path === `Contents/Resources/third-party-notices/${notice.path}` && file.sha256 === notice.sha256 && file.bytes === notice.bytes && file.executable === false)) throw new CandidateError("candidateのlicense/notice inventoryが一致しません");
   }
   if (JSON.stringify((manifest.app.native ?? []).map(({ name }) => name).sort()) !== JSON.stringify(["apple-raw-linear", "niho-camera-cutout", "niho-develop-render"]) || manifest.app.native.some((item) => !/^\d+\.\d+\.\d+$/u.test(item.version ?? "") || item.architecture !== "arm64" || !SHA256.test(item.sourceSha256 ?? "") || !SHA256.test(item.sha256 ?? "") || !Number.isSafeInteger(item.bytes) || item.bytes <= 0 || !Array.isArray(item.dylibs) || item.dylibs.some((dylib) => !dylib.startsWith("/usr/lib/") && !dylib.startsWith("/System/")))) throw new CandidateError("candidate native proofが不正です");
+  const proofFiles = [manifest.app.executable, ...manifest.app.native.map((item) => ({ ...item, path: `Contents/MacOS/${item.name}` })), ...(Array.isArray(manifest.app.calibration) ? manifest.app.calibration : []).map((item) => ({ ...item, path: `Contents/Resources/develop-calibration/${item.path}` }))];
+  if (!manifest.app.executable || proofFiles.some((item) => !manifest.app.files.some((file) => file.path === item.path && file.sha256 === item.sha256 && file.bytes === item.bytes))) throw new CandidateError("candidate executable/native/calibration proofがapp inventoryと一致しません");
   if (!Array.isArray(manifest.app.calibration) || !manifest.app.calibration.length || manifest.app.calibration.some((item) => typeof item.path !== "string" || item.path.includes("..") || !SHA256.test(item.sha256 ?? "") || !Number.isSafeInteger(item.bytes) || item.bytes <= 0) || !/^niho-[1-9]\d*$/u.test(manifest.app.runtime?.engine ?? "") || !SEMVER.test(manifest.app.runtime?.crateVersion ?? "") || !SHA256.test(manifest.app.runtime?.manifest?.sha256 ?? "") || !Array.isArray(manifest.app.runtime?.files) || !manifest.app.runtime.files.length || manifest.app.runtime.files.some((item) => !SAFE_ASSET.test(item.name ?? "") || !SHA256.test(item.sha256 ?? "") || !Number.isSafeInteger(item.bytes) || item.bytes <= 0)) throw new CandidateError("candidate resource proofが不正です");
   assertStrictVersion(manifest.version);
   const base = candidateBaseName({ version: manifest.version, sourceSha: manifest.source.commit, runId: manifest.run.id, runAttempt: manifest.run.attempt });
@@ -550,6 +553,8 @@ export function verifyCandidateDirectory(directory) {
   }
   const tar = manifest.assets.find(({ name }) => name.endsWith(".app.tar.gz"));
   inspectAppTar(path.join(directory, tar.name));
+  const inventory = spawnSync("python3", [fileURLToPath(new URL("./verify-app-tar-inventory.py", import.meta.url)), manifestPath, path.join(directory, tar.name)], { encoding: "utf8", timeout: 120_000, maxBuffer: 1024 * 1024 });
+  if (inventory.error || inventory.status !== 0) throw new CandidateError("app tar inventoryの実file/hash/size/modeが検証済みappと一致しません");
   const sbom = JSON.parse(readFileSync(path.join(directory, manifest.assets.find(({ name }) => name.endsWith(".cdx.json")).name), "utf8"));
   if (sbom.bomFormat !== "CycloneDX" || sbom.specVersion !== "1.6" || sbom.metadata?.component?.version !== manifest.source.commit) throw new CandidateError("candidate SBOM proofが不正です");
   return { manifest, manifestFile, manifestSha256: sha256(manifestBytes), assets: expected };

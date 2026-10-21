@@ -21,7 +21,7 @@ export function selectPhotoSdk(changed) {
 }
 
 export function selectPhotoCandidate(changed) {
-  return changed.some((name) => photoCandidateFiles.has(name) || photoCandidatePrefixes.some((prefix) => name.startsWith(prefix)) || /^\.github\/workflows\/(?:public-ci|photo-sdk-release|photo-candidate-release)\.yml$/u.test(name) || /^scripts\/ci\/(?:aggregate|scopes|workflow|photo-candidate-workflow|publication)(?:-lib)?(?:\.test)?\.mjs$/u.test(name));
+  return changed.some((name) => photoCandidateFiles.has(name) || photoCandidatePrefixes.some((prefix) => name.startsWith(prefix)) || /^\.github\/workflows\/(?:public-ci|photo-sdk-release|photo-candidate-release)\.yml$/u.test(name) || /^scripts\/ci\/(?:aggregate|scopes|workflow|photo-candidate-workflow|publication|release-evidence)(?:-lib)?(?:\.test)?\.mjs$/u.test(name));
 }
 
 export function selectScopes(changed, present, mainPush = false) {

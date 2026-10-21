@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { execFileSync } from "node:child_process";
-import { mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, statSync, symlinkSync, truncateSync, writeFileSync } from "node:fs";
+import { chmodSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, statSync, symlinkSync, truncateSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { after, test } from "node:test";
@@ -15,7 +15,9 @@ import {
   assertSdkSelection,
   candidateBaseName,
   candidateContract,
+  inventoryTree,
   officialBuildEnvironment,
+  packAppTar,
   resolveCleanSource,
   sha256,
   stageCandidateNotices,
@@ -170,13 +172,18 @@ function candidateFixture() {
   const base = candidateBaseName({ version, sourceSha: source, runId, runAttempt });
   const appRoot = temp("niho-photo-app-fixture-");
   put(appRoot, "NIHO photo.app/Contents/Info.plist", "fixture\n");
+  for (const name of ["niho-camera", "apple-raw-linear", "niho-develop-render", "niho-camera-cutout"]) {
+    put(appRoot, `NIHO photo.app/Contents/MacOS/${name}`, `synthetic binary ${name}\n`);
+    chmodSync(path.join(appRoot, "NIHO photo.app/Contents/MacOS", name), 0o755);
+  }
+  put(appRoot, "NIHO photo.app/Contents/Resources/develop-calibration/apple-registry.json", "{}\n");
   const notices = candidateContract.noticePaths.map((name) => {
     const bytes = Buffer.from(`synthetic notice: ${name}\n`);
     put(appRoot, `NIHO photo.app/Contents/Resources/third-party-notices/${name}`, bytes);
     return { path: name, sha256: sha256(bytes), bytes: bytes.length };
   });
   const tarName = `${base}.app.tar.gz`, dmgName = `${base}.dmg`, sbomName = `${base}.cdx.json`;
-  execFileSync("tar", ["-czf", path.join(directory, tarName), "-C", appRoot, "NIHO photo.app"]);
+  packAppTar(path.join(appRoot, "NIHO photo.app"), path.join(directory, tarName));
   writeFileSync(path.join(directory, dmgName), "synthetic dmg bytes");
   const sbom = { bomFormat: "CycloneDX", specVersion: "1.6", version: 1, metadata: { component: { type: "application", name: "niho-photo", version: source } }, components: [] };
   writeFileSync(path.join(directory, sbomName), `${JSON.stringify(sbom)}\n`);
@@ -185,7 +192,11 @@ function candidateFixture() {
   const ownershipDigest = createHash("sha256").update(ownershipPaths.map(({ path: name, sha256: digest, files }) => `${name}\0${digest}\0${files}\n`).join("")).digest("hex");
   const packageNames = { ui: "niho-photo-ui", "photo-editing": "niho-photo-editing", "cloud-contract": "niho-photo-cloud-contract", "photo-contract": "niho-photo-contract", "develop-engine-source": "niho-photo-develop-engine-source", "develop-engine-runtime": "niho-photo-develop-engine-runtime" };
   const sdkPackages = Object.entries(packageNames).map(([id, name]) => ({ id, name, file: `${id}.tgz`, sha256: "c".repeat(64), bytes: 1 }));
-  const native = ["apple-raw-linear", "niho-develop-render", "niho-camera-cutout"].map((name) => ({ name, version: "1.0.0", architecture: "arm64", sourceSha256: "a".repeat(64), sha256: "b".repeat(64), bytes: 1, dylibs: ["/usr/lib/libSystem.B.dylib"] }));
+  const files = inventoryTree(path.join(appRoot, "NIHO photo.app"));
+  const native = ["apple-raw-linear", "niho-develop-render", "niho-camera-cutout"].map((name) => {
+    const file = files.find((item) => item.path === `Contents/MacOS/${name}`);
+    return { name, version: "1.0.0", architecture: "arm64", sourceSha256: "a".repeat(64), sha256: file.sha256, bytes: file.bytes, dylibs: ["/usr/lib/libSystem.B.dylib"] };
+  });
   const manifest = {
     schemaVersion: 1,
     repository: "niho-coliving/niho-photo",
@@ -202,17 +213,18 @@ function candidateFixture() {
     app: {
       identity: { product: "NIHO photo", bundleId: "life.niho.camera", version, deepLink: "niho-camera" },
       updater: { feed: candidateContract.updaterFeed, publicKeySha256: candidateContract.updaterPublicKeySha256, officialUpdates: true },
-      files: [{ path: "Contents/Info.plist", sha256: "f".repeat(64), bytes: 8, executable: false }, ...notices.map((notice) => ({ ...notice, path: `Contents/Resources/third-party-notices/${notice.path}`, executable: false }))],
+      files,
+      executable: { ...files.find((item) => item.path === "Contents/MacOS/niho-camera") },
       notices,
       native,
-      calibration: [{ path: "apple-registry.json", sha256: "3".repeat(64), bytes: 1 }],
+      calibration: [{ path: "apple-registry.json", sha256: sha256(Buffer.from("{}\n")), bytes: 3 }],
       runtime: { engine: "niho-13", crateVersion: "0.25.0", manifest: { name: "manifest-0.25.0.json", sha256: "4".repeat(64) }, files: [{ name: "runtime.wasm", sha256: "5".repeat(64), bytes: 1 }] },
     },
     assets: [asset(tarName), asset(sbomName), asset(dmgName)],
   };
   const manifestFile = `${base}.candidate.json`;
   writeFileSync(path.join(directory, manifestFile), `${JSON.stringify(manifest, null, 2)}\n`);
-  return { directory, manifest, manifestFile, names: { tarName, dmgName, sbomName } };
+  return { directory, appRoot, manifest, manifestFile, names: { tarName, dmgName, sbomName } };
 }
 
 test("appにroot notices・Adobe license・Nunito OFLを同じbytesで同梱する", () => {
@@ -492,4 +504,32 @@ test("production builderと同じ入口で実lock inventoryをSBOM bytesへ直�
   assert.equal(sbom.bomFormat, "CycloneDX");
   assert.equal(sbom.metadata.component.version, "a".repeat(40));
   assert.ok(sbom.components.length > 0);
+});
+
+test("完成tarの外側hashを更新しても検証後のapp改変・追加・実行属性変更を拒否する", () => {
+  for (const mutate of [
+    (fixture) => put(fixture.appRoot, "NIHO photo.app/Contents/MacOS/niho-camera", "modified binary\n"),
+    (fixture) => put(fixture.appRoot, "NIHO photo.app/Contents/extra.txt", "unexpected\n"),
+    (fixture) => chmodSync(path.join(fixture.appRoot, "NIHO photo.app/Contents/MacOS/niho-camera"), 0o644),
+  ]) {
+    const fixture = candidateFixture();
+    assert.doesNotThrow(() => verifyCandidateDirectory(fixture.directory));
+    mutate(fixture);
+    const archive = path.join(fixture.directory, fixture.names.tarName);
+    rmSync(archive);
+    packAppTar(path.join(fixture.appRoot, "NIHO photo.app"), archive);
+    const bytes = readFileSync(archive);
+    Object.assign(fixture.manifest.assets.find((item) => item.name === fixture.names.tarName), { sha256: sha256(bytes), bytes: bytes.length });
+    writeFileSync(path.join(fixture.directory, fixture.manifestFile), JSON.stringify(fixture.manifest));
+    assert.throws(() => verifyCandidateDirectory(fixture.directory), /tar inventory/u);
+  }
+});
+
+test("executable/native/calibrationのproofは同じapp inventoryのhashと一致しなければならない", () => {
+  for (const select of [(m) => m.app.executable, (m) => m.app.native[0], (m) => m.app.calibration[0]]) {
+    const fixture = candidateFixture();
+    select(fixture.manifest).sha256 = "0".repeat(64);
+    writeFileSync(path.join(fixture.directory, fixture.manifestFile), JSON.stringify(fixture.manifest));
+    assert.throws(() => verifyCandidateDirectory(fixture.directory), /inventory/u);
+  }
 });
