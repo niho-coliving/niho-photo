@@ -1,0 +1,87 @@
+{
+  "schema": "niho.analytic-hs-freeze.v1",
+  "issue": 26,
+  "status": "frozen-before-independent-evaluation",
+  "family": "B1",
+  "sourceCommit": "74bf5a6197c6cd86d2dc3844bc2f9c479788a9bd",
+  "executableBuildCommit": "04dc331f10c553772c6db68e4779dc1433735fa1",
+  "developmentRunCommit": "04dc331f10c553772c6db68e4779dc1433735fa1",
+  "sourceNote": "packages/develop-engine/crates and Cargo.lock are identical between executableBuildCommit and sourceCommit; sourceCommit adds only the holdout handling of missing subsets (tools/calibrate). holdout checks git diff against sourceCommit.",
+  "toolchain": "rustc 1.98.1 (cargo +1.98.1)",
+  "build": "cargo +1.98.1 build --release --locked --manifest-path packages/develop-engine/Cargo.toml -p niho-develop --example analytic_hs_calibrate --example analytic_hs_probe",
+  "executables": {
+    "analyticHsProbeSha256": "d8cbf0da6e2c2cc0d075f524bb36c88b2ef055e345e26c9d78495b956a7f060f",
+    "analyticHsCalibrateSha256": "53685569b11c75fe5a6e3880710e275410e82784810d15bebe89557b4331ffe1",
+    "note": "Studio build of executableBuildCommit; the private work directory keeps these exact files. A rebuild elsewhere may differ in bytes (embedded paths) and must be recorded before the evaluation, never after."
+  },
+  "candidateManifest": {
+    "path": "analytic-hs-candidate.json",
+    "sha256": "2d96fcb98076ad2c0a9d40083316de49ba017f1c74cdd01c73f0911c13bb78aa",
+    "coefficientsSha256": "6127d3edbf0bf7c62779e10ed368764dc0313a2e7f8f03faa1f30816c53e76b3"
+  },
+  "developmentSummary": {
+    "path": "analytic-hs-teachers-B1.json",
+    "sha256": "22f6c2824db3d0fd34cb1281b2db0864493da729547af26421fc641289287adc"
+  },
+  "evaluationManifest": {
+    "command": "python3 packages/develop-engine/tools/calibrate/fit_analytic_hs.py --repo <checkout whose crates and tools equal sourceCommit (checked by git diff)> --work <new private directory> holdout --cohort <new photos> --freeze packages/develop-engine/fixtures/color/review-2026-10-21/analytic-hs-freeze.json [--probe <frozen analytic_hs_probe>]",
+    "cohort": "manifest.json (scenes with scene, date, model, iso, band), inputs/<scene>__neutral.jpg, lr-export/<scene>__<variant>.jpg",
+    "selection": {
+      "subsets": {
+        "night": "outdoor night, band dark (ISO > 640)",
+        "darkInterior": "dark interiors, band dark (ISO > 640)",
+        "brightIphone": "iPhone, band bright (ISO <= 100), bright windows / sky"
+      },
+      "minimumScenesPerSubset": 8,
+      "rule": "metadata only (capture date, model, ISO); one scene per capture date; capture dates not used by teachers, teachers2 or the sealed independent set; no pixel inspection before the run",
+      "blankInputs": "excluded when 90% or more of the input pixels are >= 250 (fit_niho6_response.blank_input)"
+    },
+    "variants": {
+      "required": [
+        "neutral",
+        "preset_bluesky2",
+        "preset_pastel",
+        "preset_colorful"
+      ],
+      "optional": [
+        "h30",
+        "h60",
+        "h100",
+        "s30",
+        "s60",
+        "s100",
+        "h60s30",
+        "h100s100"
+      ],
+      "lightroomExport": "make_lr_p3_jpeg.py 22 settings or neutral + 3 presets; JPEG 100%, sRGB, full size, output sharpening off, lens corrections off",
+      "settings": "analytic_hs_calibrate settings: new niho-10 edit (look niho-standard-1); presets through xmp::apply_preset at amount 1"
+    },
+    "render": {
+      "maxDimension": 2048,
+      "quality": "Final",
+      "filter": "Lanczos3",
+      "baseline": "niho-10",
+      "candidate": "analytic_hs_probe with the frozen manifest"
+    },
+    "compare": {
+      "tool": "colorcheck.compare.run_compare",
+      "longEdge": 1500,
+      "blur": 2,
+      "alignment": true,
+      "pixels": "flat"
+    },
+    "gate": {
+      "neutralMeanDeltaE00Max": 2.0,
+      "presetMeanDeltaE00Max": 3.0,
+      "p99DeltaE00Max": 8.0,
+      "jpegGateP99Over8ShareMax": 0.15,
+      "reported": "both the every-scene p99 <= 8 rule and the JPEG 15% rule, per subset, and paired regressions against niho-10"
+    },
+    "once": "fit_analytic_hs.py holdout writes holdout-started.json before reading any reference and refuses a second run; coefficients, formula and thresholds are never changed after seeing the result"
+  },
+  "independentEvaluation": {
+    "status": "not-run",
+    "imagesRead": 0,
+    "dryRun": "the holdout command was exercised once on one development teacher image in a throwaway work directory (not an independent evaluation)"
+  }
+}
