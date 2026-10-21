@@ -40,7 +40,7 @@ impl std::fmt::Debug for Cube {
 /// `000, 100, 010, 110, 001, 101, 011, 111`.
 #[cfg(not(all(target_arch = "wasm32", target_feature = "simd128")))]
 #[inline]
-fn trilinear(c: &[[f32; 4]; 8], tx: f32, ty: f32, tz: f32) -> [f32; 3] {
+pub(crate) fn trilinear(c: &[[f32; 4]; 8], tx: f32, ty: f32, tz: f32) -> [f32; 3] {
     let lerp = |a: [f32; 4], b: [f32; 4], t: f32| -> [f32; 4] {
         [
             a[0] + (b[0] - a[0]) * t,
@@ -63,7 +63,7 @@ fn trilinear(c: &[[f32; 4]; 8], tx: f32, ty: f32, tz: f32) -> [f32; 3] {
 /// lane, no fused operations: bit-identical to the scalar version).
 #[cfg(all(target_arch = "wasm32", target_feature = "simd128"))]
 #[inline]
-fn trilinear(c: &[[f32; 4]; 8], tx: f32, ty: f32, tz: f32) -> [f32; 3] {
+pub(crate) fn trilinear(c: &[[f32; 4]; 8], tx: f32, ty: f32, tz: f32) -> [f32; 3] {
     use core::arch::wasm32::{
         f32x4, f32x4_add, f32x4_extract_lane, f32x4_mul, f32x4_splat, f32x4_sub, v128,
     };

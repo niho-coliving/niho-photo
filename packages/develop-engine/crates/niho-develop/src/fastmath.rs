@@ -131,6 +131,12 @@ pub fn srgb_encode_power() -> &'static PowTable {
     T.get_or_init(|| PowTable::new((1.0 / 2.4) as f32))
 }
 
+/// `x^2.4` (sRGB decode power, `niho-13`'s head white balance).
+pub fn srgb_decode_power() -> &'static PowTable {
+    static T: OnceLock<PowTable> = OnceLock::new();
+    T.get_or_init(|| PowTable::new(2.4))
+}
+
 /// Uniform `f64` table of a smooth function on `[lo, 1]` with linear
 /// interpolation.
 pub struct UniformTable {

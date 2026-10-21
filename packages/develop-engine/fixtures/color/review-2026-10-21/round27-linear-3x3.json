@@ -1,0 +1,122 @@
+{
+  "kind": "synthetic-chart-linear-3x3-fit",
+  "measurementSourceCommit": "7ba870647415de42920216a4c96849ed9056040c",
+  "measurementDate": "2026-10-21",
+  "tool": "packages/develop-engine/tools/calibrate/fit_linear_wb_3x3.py",
+  "source": "calibration/jpeg-incremental-wb-v1.bin (17^3 nodes per variant)",
+  "metric": "CIEDE2000 between the measured 8-bit output and the clipped, encoded 3x3 prediction",
+  "gate": "single white balance mean <= 0.5",
+  "rows": [
+    {
+      "variant": "temp_m80",
+      "leastSquares": {
+        "mean": 10.5543,
+        "p99": 24.9453
+      },
+      "minMeanDeltaE": {
+        "mean": 6.8338,
+        "p99": 18.7813
+      }
+    },
+    {
+      "variant": "temp_m30",
+      "leastSquares": {
+        "mean": 4.1121,
+        "p99": 9.5538
+      },
+      "minMeanDeltaE": {
+        "mean": 2.7508,
+        "p99": 10.7012
+      }
+    },
+    {
+      "variant": "temp_p30",
+      "leastSquares": {
+        "mean": 4.3535,
+        "p99": 9.8679
+      },
+      "minMeanDeltaE": {
+        "mean": 2.7666,
+        "p99": 9.4854
+      }
+    },
+    {
+      "variant": "temp_p80",
+      "leastSquares": {
+        "mean": 8.7034,
+        "p99": 21.4073
+      },
+      "minMeanDeltaE": {
+        "mean": 5.5524,
+        "p99": 17.2313
+      }
+    },
+    {
+      "variant": "tint_m50",
+      "leastSquares": {
+        "mean": 3.2152,
+        "p99": 9.5029
+      },
+      "minMeanDeltaE": {
+        "mean": 1.8896,
+        "p99": 7.7276
+      }
+    },
+    {
+      "variant": "tint_m20",
+      "leastSquares": {
+        "mean": 1.0536,
+        "p99": 3.2873
+      },
+      "minMeanDeltaE": {
+        "mean": 0.6728,
+        "p99": 2.8072
+      }
+    },
+    {
+      "variant": "tint_p20",
+      "leastSquares": {
+        "mean": 0.8405,
+        "p99": 2.8331
+      },
+      "minMeanDeltaE": {
+        "mean": 0.5706,
+        "p99": 2.6062
+      }
+    },
+    {
+      "variant": "tint_p50",
+      "leastSquares": {
+        "mean": 2.6465,
+        "p99": 8.4634
+      },
+      "minMeanDeltaE": {
+        "mean": 1.7241,
+        "p99": 7.3651
+      }
+    },
+    {
+      "variant": "wb_cool",
+      "leastSquares": {
+        "mean": 3.3893,
+        "p99": 7.3573
+      },
+      "minMeanDeltaE": {
+        "mean": 2.3366,
+        "p99": 10.1767
+      }
+    },
+    {
+      "variant": "wb_warm",
+      "leastSquares": {
+        "mean": 4.1156,
+        "p99": 8.7753
+      },
+      "minMeanDeltaE": {
+        "mean": 2.6459,
+        "p99": 8.789
+      }
+    }
+  ],
+  "anyVariantWithinGate": false
+}

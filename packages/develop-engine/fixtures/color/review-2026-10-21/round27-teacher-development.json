@@ -1,0 +1,188 @@
+{
+  "kind": "development-teachers-not-independent",
+  "commit": "7ba870647415de42920216a4c96849ed9056040c",
+  "rendererSha256": "902dab6890156d6ae5b73fd122364499edbf429195690a65f86eb84dfc888bc2",
+  "cohortCounts": {
+    "teachers": 33,
+    "teachers2": 24
+  },
+  "noiseTolerance": 0.02,
+  "halfJnd": 0.5,
+  "blankExcluded": 2,
+  "independentImagesRead": 0,
+  "protocol": {
+    "renderLongEdge": 2048,
+    "compareLongEdge": 1500,
+    "blur": 2,
+    "flatPixels": true,
+    "alignment": true
+  },
+  "summary": [
+    {
+      "engine": "niho-12",
+      "variant": "neutral",
+      "scenes": 57,
+      "mean": 0.25984561403508777,
+      "p99Mean": 0.9206789473684213,
+      "p99Max": 2.2148,
+      "p99Over8": 0
+    },
+    {
+      "engine": "niho-12",
+      "variant": "preset_bluesky2",
+      "scenes": 57,
+      "mean": 2.0975964912280705,
+      "p99Mean": 4.8729473684210545,
+      "p99Max": 10.0498,
+      "p99Over8": 4
+    },
+    {
+      "engine": "niho-12",
+      "variant": "preset_pastel",
+      "scenes": 57,
+      "mean": 2.777317543859648,
+      "p99Mean": 6.21717192982456,
+      "p99Max": 9.583,
+      "p99Over8": 5
+    },
+    {
+      "engine": "niho-12",
+      "variant": "preset_colorful",
+      "scenes": 57,
+      "mean": 2.539712280701754,
+      "p99Mean": 6.373070175438598,
+      "p99Max": 13.6177,
+      "p99Over8": 13
+    },
+    {
+      "engine": "niho-13",
+      "variant": "neutral",
+      "scenes": 57,
+      "mean": 0.25984561403508777,
+      "p99Mean": 0.9206789473684213,
+      "p99Max": 2.2148,
+      "p99Over8": 0
+    },
+    {
+      "engine": "niho-13",
+      "variant": "preset_bluesky2",
+      "scenes": 57,
+      "mean": 2.0975964912280705,
+      "p99Mean": 4.8729473684210545,
+      "p99Max": 10.0498,
+      "p99Over8": 4
+    },
+    {
+      "engine": "niho-13",
+      "variant": "preset_pastel",
+      "scenes": 57,
+      "mean": 2.777317543859648,
+      "p99Mean": 6.21717192982456,
+      "p99Max": 9.583,
+      "p99Over8": 5
+    },
+    {
+      "engine": "niho-13",
+      "variant": "preset_colorful",
+      "scenes": 57,
+      "mean": 2.539712280701754,
+      "p99Mean": 6.373070175438598,
+      "p99Max": 13.6177,
+      "p99Over8": 13
+    }
+  ],
+  "comparisons": [
+    {
+      "engine": "niho-13",
+      "baseline": "niho-12",
+      "pairs": 228,
+      "meanRegressions": 0,
+      "p99Regressions": 0,
+      "meanRegressionsOverNoise": 0,
+      "p99RegressionsOverNoise": 0,
+      "meanIncreaseAtLeastHalfJnd": 0,
+      "maxMeanIncrease": 0.0,
+      "maxP99Increase": 0.0,
+      "maxMeanDecrease": -0.0,
+      "maxP99Decrease": -0.0,
+      "baselineP99Over8": 22,
+      "p99Over8": 22,
+      "newP99Over8": 0,
+      "byVariant": {
+        "neutral": {
+          "pairs": 57,
+          "meanRegressions": 0,
+          "p99Regressions": 0,
+          "meanRegressionsOverNoise": 0,
+          "p99RegressionsOverNoise": 0,
+          "meanIncreaseAtLeastHalfJnd": 0,
+          "maxMeanIncrease": 0.0,
+          "maxP99Increase": 0.0,
+          "maxMeanDecrease": -0.0,
+          "maxP99Decrease": -0.0,
+          "baselineP99Over8": 0,
+          "p99Over8": 0,
+          "newP99Over8": 0
+        },
+        "preset_bluesky2": {
+          "pairs": 57,
+          "meanRegressions": 0,
+          "p99Regressions": 0,
+          "meanRegressionsOverNoise": 0,
+          "p99RegressionsOverNoise": 0,
+          "meanIncreaseAtLeastHalfJnd": 0,
+          "maxMeanIncrease": 0.0,
+          "maxP99Increase": 0.0,
+          "maxMeanDecrease": -0.0,
+          "maxP99Decrease": -0.0,
+          "baselineP99Over8": 4,
+          "p99Over8": 4,
+          "newP99Over8": 0
+        },
+        "preset_pastel": {
+          "pairs": 57,
+          "meanRegressions": 0,
+          "p99Regressions": 0,
+          "meanRegressionsOverNoise": 0,
+          "p99RegressionsOverNoise": 0,
+          "meanIncreaseAtLeastHalfJnd": 0,
+          "maxMeanIncrease": 0.0,
+          "maxP99Increase": 0.0,
+          "maxMeanDecrease": -0.0,
+          "maxP99Decrease": -0.0,
+          "baselineP99Over8": 5,
+          "p99Over8": 5,
+          "newP99Over8": 0
+        },
+        "preset_colorful": {
+          "pairs": 57,
+          "meanRegressions": 0,
+          "p99Regressions": 0,
+          "meanRegressionsOverNoise": 0,
+          "p99RegressionsOverNoise": 0,
+          "meanIncreaseAtLeastHalfJnd": 0,
+          "maxMeanIncrease": 0.0,
+          "maxP99Increase": 0.0,
+          "maxMeanDecrease": -0.0,
+          "maxP99Decrease": -0.0,
+          "baselineP99Over8": 13,
+          "p99Over8": 13,
+          "newP99Over8": 0
+        }
+      }
+    }
+  ],
+  "seconds": 440.9091630000039,
+  "identicalRenders": {
+    "pairs": 228,
+    "sameRenderedPngSha256": 228
+  },
+  "measurementHost": "Mac Studio (M1 Max 64GB)",
+  "measurementDate": "2026-10-21",
+  "rustToolchain": "1.98.1",
+  "scopeNotes": [
+    "Development teachers already used by the existing model; not independent evaluation (the sealed independent cohort was not opened)",
+    "niho-12 is the baseline: the teachers (neutral and the three presets) carry no relative white balance, so niho-13 draws niho-12 bytes for every pair",
+    "Only anonymous aggregates are published; photos, scene names, private paths, manifest and input hashes and per-pair rows stay private"
+  ]
+}

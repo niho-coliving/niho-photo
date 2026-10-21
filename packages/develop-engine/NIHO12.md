@@ -1,6 +1,6 @@
 # niho-12 raster・旧 RAW の float cube（#29）
 
-`niho-12` は Issue #29 の engine で、JPEG / PNG の原本・raster 作業コピー・unsigned（旧）RAW 作業コピーの**新規編集の既定**である。保存済みの `niho-1`〜`niho-11` の補正はその engine のまま描き、`niho-12` へ昇格させない。評価候補の [`niho-8`](NIHO8.md) と同じく cube の精度だけを変え、raster の土台を `niho-6` から現行の `niho-10` に替えた。
+`niho-12` は Issue #29 の engine で、JPEG / PNG の原本・raster 作業コピー・unsigned（旧）RAW 作業コピーの新規編集の既定だった（2026-10-21 の #27 で、raster の相対 WB を先頭へ移した [`niho-13`](NIHO13.md) が既定を引き継いだ）。保存済みの `niho-1`〜`niho-11` の補正はその engine のまま描き、`niho-12` へ昇格させない。保存済みの `niho-12` も `niho-13` へ昇格させない。評価候補の [`niho-8`](NIHO8.md) と同じく cube の精度だけを変え、raster の土台を `niho-6` から現行の `niho-10` に替えた。
 
 ## 数式と入力境界
 
