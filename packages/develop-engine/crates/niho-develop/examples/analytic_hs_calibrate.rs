@@ -40,8 +40,9 @@ use niho_develop::decode::{decode_raster, Raster};
 use niho_develop::niho6::SourceSpace;
 use niho_develop::pipeline::{render_raster, SettingsCubes};
 use niho_develop::research::analytic_hs::{
-    analysis_from_statistics, apply_gains, downstream_settings, exposed_luminance,
-    prepare_with_statistics, resolve, scene_statistics, Candidate, GainPlanes,
+    analysis_from_statistics, apply_gains, downstream_settings, exposed_luminance, photo_features,
+    prepare_with_statistics, resolve, scene_statistics, Candidate, GainPlanes, PhotoFeatures,
+    Resolved,
 };
 use niho_develop::research::linear_jpeg_wb::delta_e00;
 use niho_develop::spatial::{self, GainScale, Plane, SpatialParams};
@@ -153,6 +154,8 @@ struct Scene {
     /// The source at the metric size (baseline renders).
     small: Raster,
     statistics: (f64, f64),
+    /// Candidate C's photo features (at the gain size, exposure 0).
+    features: PhotoFeatures,
     cached: Option<Cached>,
 }
 
@@ -256,15 +259,7 @@ impl Cached {
         }
     }
 
-    fn gains(
-        &self,
-        settings: &DevelopSettings,
-        candidate: &Candidate,
-        exposure: f32,
-        statistics: (f64, f64),
-    ) -> GainPlanes {
-        let analysis = analysis_from_statistics(statistics, settings.exposure, candidate.residual);
-        let resolved = resolve(&candidate.formula, analysis);
+    fn gains(&self, settings: &DevelopSettings, resolved: &Resolved, exposure: f32) -> GainPlanes {
         let highlights = settings.highlights.min(0.0);
         let shadows = settings.shadows.max(0.0);
         let curve_plane = |base: &Plane, extra: Option<&Plane>, table: &[f64; 29], shift: f64| {
@@ -577,11 +572,13 @@ impl Server {
                 info: raster.info.clone(),
             };
             let statistics = scene_statistics(&raster.image, SourceSpace::LinearSrgb);
+            let features = photo_features(&raster.image, SourceSpace::LinearSrgb)?;
             let cached = fast.then(|| Cached::new(&raster.image));
             Ok(Scene {
                 raster,
                 small,
                 statistics,
+                features,
                 cached,
             })
         });
@@ -669,8 +666,9 @@ impl Server {
                     settings.exposure,
                     candidate.residual,
                 );
+                let resolved = resolve(&candidate, analysis, Some(&scene.features))?;
                 let exposure = analysis.exposure_ev as f32;
-                let (gh, gs) = cached.gains(settings, &candidate, exposure, scene.statistics);
+                let (gh, gs) = cached.gains(settings, &resolved, exposure);
                 let mut exposed = cached.ln0.clone();
                 for v in &mut exposed.data {
                     *v += exposure;
@@ -679,7 +677,7 @@ impl Server {
                     &scene.raster.image,
                     SourceSpace::LinearSrgb,
                     settings,
-                    &candidate,
+                    &resolved,
                     analysis,
                     &exposed,
                     gh.as_deref(),
@@ -694,6 +692,7 @@ impl Server {
                     settings,
                     candidate,
                     scene.statistics,
+                    Some(&scene.features),
                 )?
                 .0
             }
@@ -767,7 +766,8 @@ impl Server {
                 "metricHeight": f.height,
                 "sigma": f.sigma,
                 "meanLog2Y": s.statistics.0,
-                "p90Log2Y": s.statistics.1
+                "p90Log2Y": s.statistics.1,
+                "photoFeatures": s.features.to_vec()
             })).collect::<Vec<_>>(),
             "samples": self.items.iter().map(|i| i.samples.len()).collect::<Vec<_>>()
         })

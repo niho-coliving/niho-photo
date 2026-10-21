@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Calibrate analytic H/S candidate B (#26, RESEARCH26-27.md) on development teachers.
+"""Calibrate analytic H/S candidates B and C (#26, RESEARCH26-27.md) on development teachers.
 
 Development teachers only: the work directory's `data/teachers` and
 `data/teachers2` (manifest.json, inputs/, lr-export/ as written by
@@ -24,6 +24,11 @@ colorcheck at 1500px, blur 2, flat pixels.
   fit_analytic_hs.py --repo <checkout> --work <private> oracle
   fit_analytic_hs.py --repo <checkout> --work <private> gate --family B1|B2 [--folds dates]
   fit_analytic_hs.py --repo <checkout> --work <private> publish --family B1 --out <summary.json>
+  fit_analytic_hs.py --repo <checkout> --work <private> targets          (candidate C)
+  fit_analytic_hs.py --repo <checkout> --work <private> cv-c --folds dates
+  fit_analytic_hs.py --repo <checkout> --work <private> fit-c
+  fit_analytic_hs.py --repo <checkout> --work <private> gate --family C
+  fit_analytic_hs.py --repo <checkout> --work <private> publish-c --out <summary.json> --niho6-cv-rows <private rows>
   fit_analytic_hs.py --repo <checkout> --work <private> holdout --cohort <new-photos> --freeze <freeze.json>
       [--calibrate <frozen analytic_hs_calibrate>] [--probe <frozen analytic_hs_probe>]
       (once, only after the freeze; see RESEARCH26-27.md)
@@ -563,6 +568,339 @@ def oracle(args) -> None:
     print(json.dumps(summary, indent=1))
 
 
+# ---------------------------------------------------------------- candidate C
+#
+# Fixed before the C folds were fitted (owner 2026-10-21):
+# - inputs: the 39 photo summaries of the niho-6 26 features
+#   (research::analytic_hs::photo_features), standardized on the training
+#   photos and clipped to ±3 (PHOTO_FEATURE_Z_CLIP);
+# - outputs: ln kH, sH - m, alphaH, ln kS, sS - q, alphaS, clamped to the
+#   crate's PHOTO_OUTPUT_RANGES;
+# - targets: per-photo parameters fitted on that photo's own single H / S
+#   items with a weak data-free prior (C_PRIOR_*), computed once per photo;
+# - model: ridge per output, lambda per output from C_LAMBDAS by an inner
+#   capture-date CV on the training photos (sorted dates, groups d[i::4]);
+# - end-to-end: 12 parameters (one bias shift and one gain on the ridge
+#   deviation per output) by the same surrogate objective as B, on every H/S
+#   item of the training photos;
+# - adoption: on the gate's out-of-fold numbers, the preset mean and the
+#   preset p99 > 8 count must both be below niho-6's capture-date CV
+#   (NIHO6.md: R23 j2-s05, 2.611 and 26/171), and the night / dark interior
+#   and bright iPhone preset p99 > 8 counts below niho-6's CV in the same
+#   subsets. Otherwise C is not frozen.
+
+C_FEATURES = 39
+C_OUTPUTS = 6
+C_Z_CLIP = 3.0
+C_RANGES = np.array([(np.log(0.05), np.log(3.5)), (0.0, 12.0), (0.0, 1.5),
+                     (np.log(0.05), np.log(2.5)), (-4.0, 8.0), (0.5, 1.5)])
+C_PRIOR_REFERENCE = np.array([0.0, 6.5, 0.5, 0.0, 0.5, 1.05])
+C_PRIOR_SCALE = np.array([0.5, 2.0, 0.3, 0.5, 2.0, 0.3])
+C_PRIOR_WEIGHT = 0.02
+C_TARGET_STEP = np.array([0.25, 0.5, 0.1, 0.25, 0.5, 0.1])
+C_LAMBDAS = (0.1, 0.3, 1.0, 3.0, 10.0, 30.0, 100.0)
+C_TUNE_STEP = np.concatenate([[0.2, 0.5, 0.1, 0.2, 0.5, 0.1], np.full(6, 0.25)])
+C_TUNE_LOWER = np.concatenate([[-1.0, -4.0, -0.5, -1.0, -4.0, -0.5], np.zeros(6)])
+C_TUNE_UPPER = np.concatenate([[1.0, 4.0, 0.5, 1.0, 4.0, 0.5], np.full(6, 2.0)])
+ADOPTION_SUBSETS = ("dark", "brightIphone")
+
+
+def constant_candidate(theta: np.ndarray) -> dict:
+    """Per-photo constants in the B representation (shifts relative to m / q)."""
+    return candidate_of(np.array([np.exp(theta[0]), 0.0, theta[1], 1.0, theta[2],
+                                  np.exp(theta[3]), 0.0, theta[4], 1.0, theta[5]]), None)
+
+
+def photo_targets(args) -> None:
+    """Per-photo parameters of candidate C (photo-local: no other photo is used)."""
+    plan_path = args.work / "plan.json"
+    plan_doc = json.loads(plan_path.read_text())
+    calibrate = binaries(args.repo)["calibrate"]
+    server = Server(calibrate, args.work / "server-config.json")
+    base_rows = surrogate_baseline(
+        server, args.work, plan_doc, plan_path, args.work / "server-config.json", calibrate)
+    path = args.work / "runs" / "photo-targets.json"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    done = json.loads(path.read_text()) if path.exists() else {}
+    for j in range(len(plan_doc["scenes"])):
+        if str(j) in done:
+            continue
+        theta = C_PRIOR_REFERENCE.copy()
+        rows = {}
+        for idx, variants in (([0, 1, 2], H_ONLY), ([3, 4, 5], S_ONLY)):
+            items = [i for i, it in enumerate(plan_doc["items"]) if it["scene"] == j and it["variant"] in variants]
+            objective = Objective(server, plan_doc, items, base_rows)
+
+            def stage(sub, idx=idx, objective=objective):
+                full = theta.copy()
+                full[idx] = sub
+                prior = C_PRIOR_WEIGHT * float(np.sum(((sub - C_PRIOR_REFERENCE[idx]) / C_PRIOR_SCALE[idx]) ** 2))
+                rows_now = server.eval(constant_candidate(full), objective.items)
+                return loss(rows_now, objective.base, objective.weights, objective.guarded) + prior
+
+            best, _, _ = minimize(stage, theta[idx], C_TARGET_STEP[idx], C_RANGES[idx, 0], C_RANGES[idx, 1], args.fev)
+            theta[idx] = best
+            for i, row in zip(items, server.eval(constant_candidate(theta), items)):
+                rows[str(i)] = row.tolist()
+        done[str(j)] = {"theta": theta.tolist(), "rows": rows}
+        path.write_text(json.dumps(done))
+        print(f"targets {j + 1}/{len(plan_doc['scenes'])}", flush=True)
+    server.close()
+
+
+def standardize(features: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+    mean = features.mean(axis=0)
+    scale = features.std(axis=0)
+    scale = np.where(scale > 1e-9, scale, 1.0)
+    return mean, scale
+
+
+def z_of(features: np.ndarray, mean: np.ndarray, scale: np.ndarray) -> np.ndarray:
+    return np.clip((features - mean) / scale, -C_Z_CLIP, C_Z_CLIP)
+
+
+def ridge(z: np.ndarray, y: np.ndarray, lam: float) -> tuple[np.ndarray, float]:
+    bias = float(y.mean())
+    a = z.T @ z + lam * np.eye(z.shape[1])
+    return np.linalg.solve(a, z.T @ (y - bias)), bias
+
+
+def fit_ridge(features: np.ndarray, targets: np.ndarray, dates: list[str]) -> dict:
+    """Ridge per output with lambda chosen by an inner capture-date CV."""
+    mean, scale = standardize(features)
+    z = z_of(features, mean, scale)
+    unique = sorted(set(dates))
+    groups = [unique[i::4] for i in range(4)]
+    weights = np.zeros((C_OUTPUTS, C_FEATURES))
+    bias = np.zeros(C_OUTPUTS)
+    lambdas = []
+    for j in range(C_OUTPUTS):
+        y = targets[:, j]
+        spread = max(float(y.std()), 1e-9)
+        errors = []
+        for lam in C_LAMBDAS:
+            error = 0.0
+            for group in groups:
+                held = np.array([d in group for d in dates])
+                if held.all() or not held.any():
+                    continue
+                inner_mean, inner_scale = standardize(features[~held])
+                w, b = ridge(z_of(features[~held], inner_mean, inner_scale), y[~held], lam)
+                prediction = np.clip(b + z_of(features[held], inner_mean, inner_scale) @ w, *C_RANGES[j])
+                error += float(np.sum(((prediction - y[held]) / spread) ** 2))
+            errors.append(error)
+        lam = C_LAMBDAS[int(np.argmin(errors))]
+        weights[j], bias[j] = ridge(z, y, lam)
+        lambdas.append(lam)
+    return {"mean": mean, "scale": scale, "weights": weights, "bias": bias, "lambdas": lambdas}
+
+
+def model_candidate(model: dict, tune: np.ndarray | None = None) -> dict:
+    """Candidate C as the calibrator / freeze read it (formula unused, residual 0)."""
+    bias = np.asarray(model["bias"], dtype=float).copy()
+    weights = np.asarray(model["weights"], dtype=float).copy()
+    if tune is not None:
+        bias = bias + tune[:C_OUTPUTS]
+        weights = weights * tune[C_OUTPUTS:, None]
+    candidate = json.loads(json.dumps(UNCALIBRATED))
+    candidate["model"] = {"features": "niho6-features26-mean-std-v1",
+                          "mean": [float(v) for v in model["mean"]],
+                          "scale": [float(v) for v in model["scale"]],
+                          "weights": [[float(v) for v in row] for row in weights],
+                          "bias": [float(v) for v in bias]}
+    return candidate
+
+
+def fit_c(server: Server, plan_doc: dict, scene_ids: set[int], base_rows: np.ndarray, work: Path,
+          fev: int, log) -> dict:
+    targets_doc = json.loads((work / "runs" / "photo-targets.json").read_text())
+    features_all = np.array([s["photoFeatures"] for s in server.description["scenes"]])
+    ids = sorted(scene_ids)
+    model = fit_ridge(features_all[ids], np.array([targets_doc[str(j)]["theta"] for j in ids]),
+                      [plan_doc["scenes"][j]["date"] for j in ids])
+    items = [i for i, it in enumerate(plan_doc["items"]) if it["scene"] in scene_ids and it["variant"] in HS_VARIANTS]
+    objective = Objective(server, plan_doc, items, base_rows)
+
+    def tuned(t):
+        objective.evaluations += 1
+        rows = server.eval(model_candidate(model, t), items)
+        return loss(rows, objective.base, objective.weights, objective.guarded)
+
+    start = np.concatenate([np.zeros(C_OUTPUTS), np.ones(C_OUTPUTS)])
+    start_loss = tuned(start)
+    best, value, nfev = minimize(tuned, start, C_TUNE_STEP, C_TUNE_LOWER, C_TUNE_UPPER, fev)
+    log(f"  ridge lambdas {model['lambdas']}  end-to-end: {start_loss:.4f} -> {value:.4f} ({nfev})")
+    return {"C0": model_candidate(model), "C": model_candidate(model, best), "lambdas": model["lambdas"],
+            "tune": best.tolist(), "trace": [{"stage": "end-to-end", "items": len(items), "start": start_loss,
+                                              "loss": value, "nfev": nfev}],
+            "trainLoss": {"C0": start_loss, "C": value}}
+
+
+def cv_c(args) -> None:
+    plan_path = args.work / "plan.json"
+    plan_doc = json.loads(plan_path.read_text())
+    calibrate = binaries(args.repo)["calibrate"]
+    server = Server(calibrate, args.work / "server-config.json")
+    base_rows = surrogate_baseline(
+        server, args.work, plan_doc, plan_path, args.work / "server-config.json", calibrate)
+    key = fold_key(args.folds)
+    out_dir = args.work / "runs" / f"cv-c-{args.folds}"
+    out_dir.mkdir(parents=True, exist_ok=True)
+    rows_oof = {name: np.full((len(plan_doc["items"]), 4), np.nan) for name in ("C0", "C")}
+    for k in sorted({s[key] for s in plan_doc["scenes"]}):
+        held = {i for i, s in enumerate(plan_doc["scenes"]) if s[key] == k}
+        train = set(range(len(plan_doc["scenes"]))) - held
+        path = out_dir / f"fold{k}.json"
+        if path.exists():
+            fitted = json.loads(path.read_text())
+        else:
+            started = time.monotonic()
+            print(f"fold {k}: train {len(train)} held {len(held)}", flush=True)
+            fitted = fit_c(server, plan_doc, train, base_rows, args.work, args.tune_fev,
+                           lambda msg: print(msg, flush=True))
+            fitted["seconds"] = time.monotonic() - started
+            fitted["heldScenes"] = sorted(held)
+            path.write_text(json.dumps(fitted, indent=1))
+        held_items = [i for i, it in enumerate(plan_doc["items"]) if it["scene"] in held]
+        for name in ("C0", "C"):
+            rows_oof[name][held_items] = server.eval(fitted[name], held_items)
+    server.close()
+    (out_dir / "oof-surrogate.json").write_text(json.dumps(
+        {name: rows.tolist() for name, rows in rows_oof.items()} | {"baseline": base_rows.tolist()}))
+    for name in ("C0", "C"):
+        print(name, json.dumps(surrogate_summary(plan_doc, rows_oof[name], base_rows), ensure_ascii=False))
+
+
+def fit_all_c(args) -> None:
+    plan_path = args.work / "plan.json"
+    plan_doc = json.loads(plan_path.read_text())
+    calibrate = binaries(args.repo)["calibrate"]
+    server = Server(calibrate, args.work / "server-config.json")
+    base_rows = surrogate_baseline(
+        server, args.work, plan_doc, plan_path, args.work / "server-config.json", calibrate)
+    out_dir = args.work / "runs" / "all-c"
+    out_dir.mkdir(parents=True, exist_ok=True)
+    started = time.monotonic()
+    fitted = fit_c(server, plan_doc, set(range(len(plan_doc["scenes"]))), base_rows, args.work, args.tune_fev,
+                   lambda msg: print(msg, flush=True))
+    fitted["seconds"] = time.monotonic() - started
+    rows = {name: server.eval(fitted[name], list(range(len(plan_doc["items"])))).tolist() for name in ("C0", "C")}
+    server.close()
+    (out_dir / "fit.json").write_text(json.dumps(fitted, indent=1))
+    (out_dir / "insample-surrogate.json").write_text(json.dumps(rows))
+    for name in ("C0", "C"):
+        print(name, json.dumps(surrogate_summary(plan_doc, np.asarray(rows[name]), base_rows), ensure_ascii=False))
+
+
+def niho6_cv_tables(plan_doc: dict, path: Path, rows_c: list[dict]) -> dict:
+    """niho-6's capture-date CV (private rows: scene, variant, mean, p99) as
+    anonymous aggregates, and the pairs with candidate C's out-of-fold rows."""
+    doc = json.loads(path.read_text())
+    subset = {s["scene"]: s["subset"] for s in plan_doc["scenes"]}
+    item_of = {(plan_doc["scenes"][it["scene"]]["scene"], it["variant"]): i for i, it in enumerate(plan_doc["items"])}
+    c_by_item = {r["item"]: r["B"] for r in rows_c if r["kind"] == "oof"}
+    out = {"source": "niho-6 final response retrained per capture-date fold (NIHO6.md R23/R24, LEGACY_SHARE 0.5), same folds, 2048px render, colorcheck 1500/blur 2/flat",
+           "variants": sorted({r["variant"] for r in doc["rows"]}), "tables": {}}
+    for group in ("all",) + SUBSETS:
+        per = {}
+        labels = [(v, (v,)) for v in sorted({r["variant"] for r in doc["rows"]})] + [("presetsTotal", PRESETS)]
+        for label, variants in labels:
+            rows = [r for r in doc["rows"] if r["variant"] in variants and (group == "all" or subset[r["scene"]] == group)]
+            if not rows:
+                continue
+            pairs = [(r, c_by_item[item_of[(r["scene"], r["variant"])]]) for r in rows]
+            dm = np.array([c["mean"] - r["mean"] for r, c in pairs])
+            dp = np.array([c["p99"] - r["p99"] for r, c in pairs])
+            per[label] = {
+                "niho6CV": {"n": len(rows), "mean": round(float(np.mean([r["mean"] for r in rows])), 4),
+                            "p99Mean": round(float(np.mean([r["p99"] for r in rows])), 4),
+                            "p99Max": round(float(np.max([r["p99"] for r in rows])), 4),
+                            "p99Over8": int(sum(r["p99"] > 8 for r in rows))},
+                "pairedCandidateOutOfFold": {"meanWorse": int((dm > 0).sum()), "p99Worse": int((dp > 0).sum()),
+                                             "p99WorseBy2": int((dp >= 2).sum()),
+                                             "maxMeanIncrease": round(float(dm.max()), 4),
+                                             "maxP99Increase": round(float(dp.max()), 4),
+                                             "meanDelta": round(float(dm.mean()), 4)},
+            }
+        out["tables"][group] = per
+    return out
+
+
+def adoption(tables: dict, niho6: dict) -> dict:
+    c_all = tables["all"]["presetsTotal"]["candidateOutOfFold"]
+    n6_all = niho6["tables"]["all"]["presetsTotal"]["niho6CV"]
+    checks = {
+        "presetMean<niho6CV": c_all["mean"] < n6_all["mean"],
+        "presetP99Over8<niho6CV": c_all["p99Over8"] < n6_all["p99Over8"],
+    }
+    for group in ADOPTION_SUBSETS:
+        c = tables[group]["presetsTotal"]["candidateOutOfFold"]
+        n6 = niho6["tables"][group]["presetsTotal"]["niho6CV"]
+        checks[f"{group}PresetP99Over8<niho6CV"] = c["p99Over8"] < n6["p99Over8"]
+    return {"rule": "fixed before the C folds: out-of-fold preset mean and p99>8 count below niho-6's capture-date CV, and the dark and bright-iPhone preset p99>8 counts below niho-6's CV in the same subsets",
+            "checks": checks, "adopted": all(checks.values())}
+
+
+def publish_c(args) -> None:
+    plan_doc = json.loads((args.work / "plan.json").read_text())
+    out = args.work / "gate" / "C"
+    rows = json.loads((out / "rows-private.json").read_text())
+    meta = json.loads((out / "gate-meta.json").read_text())
+    tables = gate_tables(plan_doc, rows)
+    cv_dir = args.work / "runs" / f"cv-c-{meta['folds']}"
+    key = fold_key(meta["folds"])
+    fold_info = []
+    for k in sorted({s[key] for s in plan_doc["scenes"]}):
+        fitted = json.loads((cv_dir / f"fold{k}.json").read_text())
+        held = [s for s in plan_doc["scenes"] if s[key] == k]
+        fold_info.append({"fold": k, "heldScenes": len(held),
+                          "heldSubsets": {x: sum(s["subset"] == x for s in held) for x in SUBSETS},
+                          "lambdas": fitted["lambdas"], "tune": fitted["tune"],
+                          "coefficientsSha256": meta["manifests"][str(k)]["coefficientsSha256"],
+                          "trace": fitted["trace"], "seconds": round(fitted.get("seconds", 0.0), 1)})
+    surrogate = json.loads((cv_dir / "oof-surrogate.json").read_text())
+    base = np.asarray(surrogate["baseline"])
+    b1_rows = args.work / "gate" / "B1" / "rows-private.json"
+    niho6 = niho6_cv_tables(plan_doc, args.niho6_cv_rows, rows)
+    all_fit = json.loads((args.work / "runs/all-c/fit.json").read_text())
+    commit = subprocess.check_output(["git", "-C", str(args.repo), "rev-parse", "HEAD"], text=True).strip()
+    result = {
+        "kind": "development-teachers-not-independent",
+        "issue": 26,
+        "family": "C",
+        "sourceCommit": commit,
+        "executables": {"analyticHsProbeSha256": meta["probeSha256"],
+                        "analyticHsCalibrateSha256": meta["calibrateSha256"]},
+        "manifestSha256": list(plan_doc["manifestSha256"].values()),
+        "cohortCounts": {c: sum(s["cohort"] == c for s in plan_doc["scenes"]) for c in COHORTS},
+        "subsetCounts": {x: sum(s["subset"] == x for s in plan_doc["scenes"]) for x in SUBSETS},
+        "independentImagesRead": 0,
+        "model": {"inputs": "39 photo summaries of the niho-6 26 features (photo_features), standardized on the training photos, clipped to ±3",
+                  "outputs": "ln kH, sH-m, alphaH, ln kS, sS-q, alphaS clamped to fixed ranges",
+                  "targets": f"per-photo fit on the photo's own single H / S items with prior weight {C_PRIOR_WEIGHT}",
+                  "ridge": f"per output, lambda from {list(C_LAMBDAS)} by inner capture-date CV d[i::4]",
+                  "endToEnd": "bias shift and gain per output (12 parameters), same surrogate loss as B, every H/S item of the training photos"},
+        "folds": {"kind": meta["folds"], "rule": "sorted capture dates d, fold k holds d[k::5]", "perFold": fold_info},
+        "surrogateOutOfFold": {"niho10": surrogate_summary(plan_doc, base, base),
+                               "C0": surrogate_summary(plan_doc, np.asarray(surrogate["C0"]), base),
+                               "C": surrogate_summary(plan_doc, np.asarray(surrogate["C"]), base)},
+        "protocol": {"renderLongEdge": 2048, "compareLongEdge": 1500, "blur": 2, "flatPixels": True, "alignment": True,
+                     "baseline": "niho-10 (in-sample: its response was trained on these teachers)",
+                     "settings": "new niho-10 edit; presets through xmp::apply_preset at amount 1"},
+        "allDataCoefficientsSha256": meta["manifests"]["all"]["coefficientsSha256"],
+        "tables": tables,
+        "niho6CrossValidation": niho6,
+        "b1OutOfFold": gate_tables(plan_doc, json.loads(b1_rows.read_text())) if b1_rows.exists() else None,
+        "verdict": {"outOfFold": gate_verdict(tables["all"], "candidateOutOfFold"),
+                    "inSample": gate_verdict(tables["all"], "candidateInSample")},
+        "adoption": adoption(tables, niho6),
+    }
+    if result["b1OutOfFold"] is not None:
+        result["b1OutOfFold"] = {g: {v: t[v].get("candidateOutOfFold") for v in t} for g, t in result["b1OutOfFold"].items()}
+    args.out.write_text(json.dumps(result, indent=2, ensure_ascii=False) + "\n")
+    print(json.dumps({"verdict": result["verdict"], "adoption": result["adoption"]}, indent=1))
+
+
 # ---------------------------------------------------------------- gate
 
 def freeze(bins: dict, coefficients: dict, path: Path) -> str:
@@ -610,7 +948,7 @@ def gate(args) -> None:
     plan_doc = json.loads((args.work / "plan.json").read_text())
     bins = binaries(args.repo)
     key = fold_key(args.folds)
-    cv_dir = args.work / "runs" / f"cv-{args.folds}"
+    cv_dir = args.work / "runs" / (f"cv-c-{args.folds}" if args.family == "C" else f"cv-{args.folds}")
     out = args.work / "gate" / args.family
     out.mkdir(parents=True, exist_ok=True)
     manifests = {}
@@ -618,7 +956,7 @@ def gate(args) -> None:
         fitted = json.loads((cv_dir / f"fold{k}.json").read_text())
         manifests[k] = out / f"fold{k}.manifest.json"
         freeze(bins, fitted[args.family], manifests[k])
-    all_fit = json.loads((args.work / "runs/all/fit.json").read_text())
+    all_fit = json.loads((args.work / ("runs/all-c/fit.json" if args.family == "C" else "runs/all/fit.json")).read_text())
     manifests["all"] = out / "all.manifest.json"
     freeze(bins, all_fit[args.family], manifests["all"])
     colorcheck = str(args.repo / "packages/develop-engine/tools/colorcheck")
@@ -920,8 +1258,17 @@ def main() -> int:
         p.add_argument("--stage-fev", type=int, default=120)
         p.add_argument("--joint-fev", type=int, default=120)
         p.add_argument("--residual-fev", type=int, default=80)
+    p = sub.add_parser("targets")
+    p.add_argument("--fev", type=int, default=60)
+    for name in ("cv-c", "fit-c"):
+        p = sub.add_parser(name)
+        p.add_argument("--folds", choices=("dates", "models"), default="dates")
+        p.add_argument("--tune-fev", type=int, default=100)
+    p = sub.add_parser("publish-c")
+    p.add_argument("--out", required=True, type=Path)
+    p.add_argument("--niho6-cv-rows", required=True, type=Path)
     p = sub.add_parser("gate")
-    p.add_argument("--family", choices=("B1", "B2"), required=True)
+    p.add_argument("--family", choices=("B1", "B2", "C"), required=True)
     p.add_argument("--folds", choices=("dates", "models"), default="dates")
     p = sub.add_parser("holdout")
     p.add_argument("--cohort", required=True, type=Path)
@@ -934,7 +1281,7 @@ def main() -> int:
     args = ap.parse_args()
     guard_work(args.repo, args.work)
     {"plan": plan, "cv": cv, "fit": fit_all, "oracle": oracle, "gate": gate, "publish": publish,
-     "holdout": holdout}[args.command](args)
+     "holdout": holdout, "targets": photo_targets, "cv-c": cv_c, "fit-c": fit_all_c, "publish-c": publish_c}[args.command](args)
     return 0
 
 

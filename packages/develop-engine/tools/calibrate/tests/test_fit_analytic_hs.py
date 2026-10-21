@@ -245,5 +245,70 @@ class ModelTests(unittest.TestCase):
             self.assertFalse(np.array_equal(reordered, changed_input))
 
 
+class CandidateCTests(unittest.TestCase):
+    def test_ridge_recovers_a_linear_relation_and_clips_inputs(self):
+        rng = np.random.default_rng(26)
+        features = rng.normal(size=(40, F.C_FEATURES))
+        truth = np.zeros((F.C_OUTPUTS, F.C_FEATURES))
+        truth[:, 0] = 0.3
+        targets = 1.0 + features @ truth.T * 0.5
+        targets[:, 2] = 0.7 + 0.05 * features[:, 1]
+        dates = [f"2020-01-{i % 20 + 1:02d}" for i in range(40)]
+        model = F.fit_ridge(features, targets, dates)
+        self.assertEqual(model["weights"].shape, (F.C_OUTPUTS, F.C_FEATURES))
+        self.assertTrue(all(lam in F.C_LAMBDAS for lam in model["lambdas"]))
+        z = F.z_of(features, model["mean"], model["scale"])
+        prediction = model["bias"][0] + z @ model["weights"][0]
+        self.assertLess(float(np.abs(prediction - targets[:, 0]).mean()), 0.1)
+        far = F.z_of(np.full((1, F.C_FEATURES), 1e9), model["mean"], model["scale"])
+        self.assertTrue(np.all(np.abs(far) <= F.C_Z_CLIP))
+
+    def test_model_candidate_layout_and_tuning(self):
+        model = {"mean": np.zeros(F.C_FEATURES), "scale": np.ones(F.C_FEATURES),
+                 "weights": np.ones((F.C_OUTPUTS, F.C_FEATURES)), "bias": np.arange(F.C_OUTPUTS, dtype=float)}
+        tune = np.concatenate([np.full(F.C_OUTPUTS, 0.5), np.full(F.C_OUTPUTS, 2.0)])
+        candidate = F.model_candidate(model, tune)
+        self.assertEqual(candidate["model"]["features"], "niho6-features26-mean-std-v1")
+        self.assertEqual(candidate["model"]["bias"][1], 1.5)
+        self.assertEqual(candidate["model"]["weights"][0][0], 2.0)
+        self.assertEqual(candidate["residual"]["maxResidualEV"], 0.0)
+        self.assertNotIn("model", F.UNCALIBRATED)
+
+    def test_niho6_cv_tables_pair_by_scene_and_variant(self):
+        scenes = [{"scene": "a", "subset": "dark"}, {"scene": "b", "subset": "brightIphone"}]
+        variants = ("h100",) + F.PRESETS
+        items = [{"scene": j, "variant": v} for j in range(2) for v in variants]
+        plan = {"scenes": scenes, "items": items}
+        rows_c = [{"item": i, "kind": "oof", "B": {"mean": 2.0, "p99": 9.0 if i == 1 else 5.0}}
+                  for i in range(len(items))]
+        niho6_rows = [{"scene": s["scene"], "variant": v, "mean": 2.5, "p99": 6.0, "max": 9.0}
+                      for s in scenes for v in variants]
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "rows.json"
+            path.write_text(json.dumps({"rows": niho6_rows}))
+            out = F.niho6_cv_tables(plan, path, rows_c)
+        total = out["tables"]["all"]["presetsTotal"]
+        self.assertEqual(total["niho6CV"]["n"], 6)
+        self.assertEqual(total["niho6CV"]["p99Over8"], 0)
+        self.assertEqual(total["pairedCandidateOutOfFold"]["p99WorseBy2"], 1)
+        self.assertEqual(total["pairedCandidateOutOfFold"]["meanWorse"], 0)
+        self.assertNotIn("daylight", [k for k, v in out["tables"].items() if v])
+
+    def test_adoption_needs_every_check(self):
+        def table(mean, over):
+            return {"presetsTotal": {"candidateOutOfFold": {"mean": mean, "p99Over8": over}}}
+
+        def n6(mean, over):
+            return {"presetsTotal": {"niho6CV": {"mean": mean, "p99Over8": over}}}
+
+        niho6 = {"tables": {"all": n6(2.61, 26), "dark": n6(2.6, 10), "brightIphone": n6(2.7, 8)}}
+        good = {"all": table(2.5, 20), "dark": table(2.5, 8), "brightIphone": table(2.6, 6)}
+        self.assertTrue(F.adoption(good, niho6)["adopted"])
+        for group, value in (("all", table(2.62, 20)), ("all", table(2.5, 26)), ("dark", table(2.5, 10)),
+                             ("brightIphone", table(2.6, 9))):
+            worse = dict(good, **{group: value})
+            self.assertFalse(F.adoption(worse, niho6)["adopted"], group)
+
+
 if __name__ == "__main__":
     unittest.main()
