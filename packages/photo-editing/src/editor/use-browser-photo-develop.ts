@@ -7,6 +7,7 @@ import {
   createDevelopEngine,
   type DevelopEngine,
   type DevelopFrame,
+  type DevelopMaskSurfaceSource,
 } from "../develop-engine/develop-engine-client";
 import type { DevelopSettings } from "../develop-engine/develop-settings";
 import {
@@ -170,19 +171,38 @@ export function useBrowserPhotoDevelop(params: {
     [],
   );
 
+  /** 開いている（開こうとしている）写真の ID（面の読み口が読む写真。session ができる前の仮の描画のため、開き始めに入れる） */
+  const maskSurfacePhotoIdRef = useRef<string | null>(null);
+  /**
+   * 開いている写真のマスクの面（ブラシ・被写体・空。M4 #68）の読み口。engine が描く前に、持っていない面をここから読む（写真は
+   * 開き始めた写真か、無ければ今の session。面は中身の sha256 で呼ぶので、読み違えても別の面にはならない）。写真の出どころに口が
+   * 無ければ読めない。
+   */
+  const maskSurfaceSource = useCallback<DevelopMaskSurfaceSource>(
+    async (surfaceId) => {
+      const photoId = maskSurfacePhotoIdRef.current ?? developSessionRef.current?.photoId ?? null;
+      if (photoId === null || !library.loadMaskSurface) return null;
+      return library.loadMaskSurface(photoId, surfaceId);
+    },
+    [library],
+  );
+
   /**
    * 段 2 の wasm を使えるなら返す（初めて要るときに作る。使えなければ null）。wasm の manifest の場所は写真の出どころが決める
    * （`engineAssets`。web はこのページの `/develop-engine/…`）。
    */
   const readyDevelopEngine = useCallback(async (): Promise<DevelopEngine | null> => {
     if (!engineRef.current) {
-      engineRef.current = createDevelopEngine({ manifestUrl: library.engineAssets.manifestUrl() ?? undefined });
+      engineRef.current = createDevelopEngine({
+        manifestUrl: library.engineAssets.manifestUrl() ?? undefined,
+        maskSurfaces: maskSurfaceSource,
+      });
     }
     const engine = engineRef.current;
     const ready = await engine.ready();
     if (!ready && mountedRef.current) setDevelopUnavailable(true);
     return ready ? engine : null;
-  }, [library, mountedRef]);
+  }, [library, maskSurfaceSource, mountedRef]);
 
   /** 開いた写真の wasm の編集を持つ（保存の状態は何も送っていない状態から）。 */
   const startSession = useCallback((session: DevelopSession) => {
@@ -609,6 +629,8 @@ export function useBrowserPhotoDevelop(params: {
     beforeFrameRef,
     developUnavailable,
     readyDevelopEngine,
+    maskSurfaceSource,
+    maskSurfacePhotoIdRef,
     startSession,
     rememberOpenedFrame,
     releaseDevelopSession,

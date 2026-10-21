@@ -377,6 +377,8 @@ export function useBrowserPhotoExportAndDelete(params: {
           : (saved ?? neutralDevelopSettings()),
       size,
       capturedAt: latest.capturedAt ?? target.photo.capturedAt ?? null,
+      // 面のマスク（M4 #68）の面は、開いている写真ではなく書き出す写真の置き場から読む
+      maskSurfaces: (surfaceId) => library.loadMaskSurface?.(latest.id, surfaceId) ?? Promise.resolve(null),
     });
   };
 

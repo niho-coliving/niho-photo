@@ -1,9 +1,18 @@
+import { DevelopEngineError, DevelopMaskSurfaceError, developEngineErrorOf } from "./develop-engine-errors";
 import { developEngineManifestPath } from "./develop-engine-manifest";
 import type {
   DevelopEngineWorkerRequest,
   DevelopEngineWorkerResponse,
   DevelopMaskCapabilities,
+  DevelopMaskSurfacePng,
 } from "./develop-engine-worker-core";
+import {
+  createDevelopMaskSurfaceSync,
+  developMaskPlaneSurfaceNeeds,
+  developMaskSurfaceNeeds,
+  type DevelopMaskSurfaceNeed,
+  type DevelopMaskSurfaceSource,
+} from "./develop-mask-surfaces";
 import {
   BROKEN_CONVERSION,
   readBuiltinPresets,
@@ -26,6 +35,8 @@ import { readDevelopSettings, type DevelopSettings } from "./develop-settings";
 import { readDevelopUprightEstimate, type DevelopUprightEstimate, type DevelopUprightMode } from "./develop-upright";
 
 export type { DevelopMaskCapabilities } from "./develop-engine-worker-core";
+export type { DevelopMaskSurfaceSource } from "./develop-mask-surfaces";
+export { DevelopEngineError, DevelopMaskSurfaceError, type DevelopMaskSurfaceErrorCode } from "./develop-engine-errors";
 
 export {
   DEVELOP_XMP_DEFAULT_GROUPS,
@@ -76,10 +87,19 @@ export {
  *   枚数・面の口。口の無い古い wasm は null）。`maskPlane` は 1 枚のマスクの面（重ね表示）で、Worker へ出すのは同時に 1 つまで、
  *   出している間に来た要求は「次の 1 つ」として持ち（さらに新しい要求が来たら古い「次」は null）、描画の枠は使わない（描画を
  *   取り消さない・追い越さない）。写真を開き直す・閉じると、出している面の結果は捨て、「次」は null で終える
-* - Upright（`estimateUpright`。開いている写真の `Developer.estimateUpright`、niho-photo#46 後半）は、口が wasm にあり遠近も描けるとき
+ * - Upright（`estimateUpright`。開いている写真の `Developer.estimateUpright`、niho-photo#46 後半）は、口が wasm にあり遠近も描けるとき
  *   （`supportsUpright()`）だけ使える。`sampleColor` と同じく捨てずに順に処理し、描画の枠には入らない
  * - 修復の印（`heal`。niho-photo#44）は描画の設定の一部（口は増やさない）。印を描ける wasm か（`supportsHeal()`）は起こした wasm に
  *   小さな `v: 8` の設定を確かめさせて分かる
+ * - 面（ブラシ・被写体・空のマスク。`docs/local-adjustments.md`「面の受け渡し」。M4 #68。`supportsMasks()` の `surfaces`）:
+ *   `render`・見本・`maskPlane` は、描く前に要る面（描かれる面のマスク。重ね表示はそのマスク）を開いている写真の wasm に持たせる
+ *   （`develop-mask-surfaces.ts`。読み口は `maskSurfaces`〔写真の出どころ〕。1 回渡したら覚え、16 枚を超えたら使ったのが古い面から
+ *   手放す。写真を開き直したら渡し直す）。読んでいる間は Worker へ出さず、同じ枠の新しい要求が来たら null で終える（描画の枠の
+ *   「次」と同じ。出している描画は取り消さない）。読めない面は {@link DevelopMaskSurfaceError}（マスクの id 付き）で reject し、
+ *   面を外して描かない。`setMaskSurface` / `dropMaskSurface` は直接渡す・手放す、`encodeMaskSurface` は面の値を PNG と id にする。
+ *   `exportJpeg` / `exportWorkingCopyJpeg` は描かれる面のマスクがあれば面を添えて出す（Worker が一時的な Developer で描く。読み口は
+ *   `options.maskSurfaces`、無ければ覚えた PNG と開いている写真の読み口）。そのときも書き出しとして数え（`dispose` は描き終えるまで
+ *   待つ）、面を読み終えてから Worker へ出す
  */
 
 /** `applyPreset` の撮影時の白の出どころ（省くと開いている写真）。 */
@@ -115,12 +135,8 @@ export type DevelopAutoSettingsWarm = {
   cancel: () => void;
 };
 
-export class DevelopEngineError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = "DevelopEngineError";
-  }
-}
+/** 書き出しの描き方（`maskSurfaces` は描かれる面のマスクの面の読み口。省略 = 覚えた PNG と開いている写真の読み口）。 */
+export type DevelopExportOptions = { maxDimension: number; quality: number; maskSurfaces?: DevelopMaskSurfaceSource | null };
 
 export type DevelopEngine = {
   /** 使えるか（初回に Worker を作って wasm を起こす。throw しない） */
@@ -135,11 +151,7 @@ export type DevelopEngine = {
     options: { maxDimension: number; x: number; y: number },
   ) => Promise<DevelopSampledColor>;
   /** 別の bytes（オリジナルのコピー）から JPEG を描く。持っている写真は変えない */
-  exportJpeg: (
-    bytes: ArrayBuffer,
-    settings: object,
-    options: { maxDimension: number; quality: number },
-  ) => Promise<Uint8Array<ArrayBuffer>>;
+  exportJpeg: (bytes: ArrayBuffer, settings: object, options: DevelopExportOptions) => Promise<Uint8Array<ArrayBuffer>>;
   /**
    * 作業コピー（16bit PNG とメタデータの JSON）を開いて持つ（前の写真は手放す。待っている描画は null で終える。長辺 2560px の
    * まま持ち、描く大きさは `render` で決める）
@@ -150,7 +162,7 @@ export type DevelopEngine = {
     png: ArrayBuffer,
     metaJson: string,
     settings: object,
-    options: { maxDimension: number; quality: number },
+    options: DevelopExportOptions,
   ) => Promise<Uint8Array<ArrayBuffer>>;
   /**
    * Photo Bench `EditSettings` を `developSettings` に変換する（壊れた結果は `ok: false`）。作業コピーの上で直す写真は、その
@@ -238,6 +250,20 @@ export type DevelopEngine = {
    * `validateSettings` で小さな `v: 7` の設定を通すとき。初回に wasm を起こす。使えなければ false。throw しない）
    */
   supportsPerspective: () => Promise<boolean>;
+  /** 開いている写真の wasm に面を渡す（`png` はコピーを Worker へ渡す。Worker が受け取ったら resolve。形の違う面は
+   * {@link DevelopMaskSurfaceError}）。以後の描画はこの面を読み直さずに使う。面の口の無い wasm は reject
+   */
+  setMaskSurface?: (surfaceId: string, png: Uint8Array) => Promise<void>;
+  /** 開いている写真の wasm から面を手放す（持っていたら true） */
+  dropMaskSurface?: (surfaceId: string) => Promise<boolean>;
+  /** 面の値（`width·height` byte、0〜255）を 8bit グレーの PNG と id（sha256）にする（作った PNG は覚える）。面の口の無い wasm は reject */
+  encodeMaskSurface?: (width: number, height: number, data: Uint8Array) => Promise<{ id: string; png: Uint8Array<ArrayBuffer> }>;
+  /** 面の PNG（覚えた PNG か、開いている写真の読み口から。読めなければ null） */
+  maskSurfacePng?: (surfaceId: string) => Promise<Uint8Array | null>;
+  /** 開いている写真の面の読み口を替える（null で外す） */
+  setMaskSurfaceSource?: (source: DevelopMaskSurfaceSource | null) => void;
+  /** 読めなかった面を忘れる（次の描画で読み口を読み直す） */
+  retryMaskSurfaces?: () => void;
   /**
    * 持っている写真の Upright: 今の設定 `settings` の枠（90° 回転・反転。角度補正は差し引く）で、写真の直線から遠近の 回転・垂直方向・
    * 水平方向 を推定する（`mode`: 1 自動・2 水平・3 垂直・4 フル）。線が見つからなければ恒等で `reason` 付き。捨てずに順に処理し、
@@ -306,6 +332,8 @@ export type CreateDevelopEngineOptions = {
   diagnostics?: boolean;
   /** Worker が返した画素を JPEG にする（テストで差し替える。既定はメインスレッドの canvas） */
   encodeFrameJpeg?: (frame: DevelopFrame, quality: number) => Promise<Uint8Array<ArrayBuffer>>;
+  /** 開いている写真の面（ブラシ・被写体・空）の PNG の読み口（写真の出どころの `loadMaskSurface`。省略 = 読めない） */
+  maskSurfaces?: DevelopMaskSurfaceSource | null;
 };
 
 export function photoDevelopDiagnosticsEnabled(location: { pathname: string; search: string } | null =
@@ -336,7 +364,10 @@ type Pending = {
     | "imageSize"
     | "rasterDecodeSize"
     | "geometryOutputSize"
-    | "withCaptureExif";
+    | "withCaptureExif"
+    | "setMaskSurface"
+    | "dropMaskSurface"
+    | "encodeMaskSurface";
   resolve: (response: DevelopEngineWorkerResponse) => void;
   reject: (error: unknown) => void;
 };
@@ -357,6 +388,8 @@ type RenderRequest = {
   settingsJson: string;
   maxDimension: number;
   interactive: boolean;
+  /** 描くのに要る面（待っている間は手放さない） */
+  needs: DevelopMaskSurfaceNeed[];
   resolve: (frame: DevelopFrame | null) => void;
   reject: (error: unknown) => void;
 };
@@ -368,9 +401,14 @@ type MaskPlaneRequest = {
   settingsJson: string;
   maskId: string;
   maxDimension: number;
+  needs: DevelopMaskSurfaceNeed[];
   resolve: (plane: DevelopMaskPlane | null) => void;
   reject: (error: unknown) => void;
 };
+
+/** 面を読み終えるまで Worker へ出さずに待っている要求（同じ枠の新しい要求が来たら null で終える）。 */
+type SurfaceWait = { needs: DevelopMaskSurfaceNeed[]; cancelled: boolean; cancel: () => void };
+type SurfaceWaitSlot = "edit" | "preview" | "background" | "maskPlane";
 
 type InFlightMaskPlane = MaskPlaneRequest & { id: number; stale: boolean };
 
@@ -385,11 +423,11 @@ function renderSlotOf(priority: DevelopRenderPriority): RenderSlot {
 /** `ready` の `masks`（Worker が読んだ `capabilities()`）を写す。形が違えば null（描けない扱い）。 */
 function readMaskCapabilitiesResponse(value: unknown): DevelopMaskCapabilities | null {
   if (typeof value !== "object" || value === null) return null;
-  const { kinds, max, maskPlane } = value as Record<string, unknown>;
+  const { kinds, max, maskPlane, surfaces } = value as Record<string, unknown>;
   if (!Array.isArray(kinds) || typeof max !== "number" || !Number.isInteger(max) || max <= 0) return null;
   const readKinds = kinds.filter((kind): kind is string => typeof kind === "string");
   if (readKinds.length === 0) return null;
-  return { kinds: readKinds, max, maskPlane: maskPlane === true };
+  return { kinds: readKinds, max, maskPlane: maskPlane === true, ...(surfaces === true ? { surfaces: true } : {}) };
 }
 
 /** プリセットを当てた結果を読む（`settings` が v1 の形でなければ throw）。 */
@@ -503,6 +541,9 @@ export function createDevelopEngine(options: CreateDevelopEngineOptions = {}): D
   // 出しているマスクの面と、その間に来た「次」（描画の枠とは別）
   let inFlightMaskPlane: InFlightMaskPlane | null = null;
   let queuedMaskPlane: MaskPlaneRequest | null = null;
+  // 開いている写真の面の読み口と、面を読み終えるまで待っている要求（枠ごとに 1 つ）
+  let maskSurfaceSource: DevelopMaskSurfaceSource | null = options.maskSurfaces ?? null;
+  const surfaceWaits: Record<SurfaceWaitSlot, SurfaceWait | null> = { edit: null, preview: null, background: null, maskPlane: null };
 
   const unavailableError = () =>
     new DevelopEngineError(status === "disposed" ? "develop engine is disposed" : "develop engine is unavailable");
@@ -510,6 +551,105 @@ export function createDevelopEngine(options: CreateDevelopEngineOptions = {}): D
   const post = (message: DevelopEngineWorkerRequest, transfer: Transferable[] = []) => {
     if (!worker) throw unavailableError();
     worker.postMessage(message, transfer);
+  };
+
+  /** 面の口のある wasm か（`ready` の応答の `masks.surfaces`）。 */
+  const surfacesSupported = () => maskCapabilities?.surfaces === true;
+
+  /** Worker へ面を渡す（受け取ったら resolve）。 */
+  const postMaskSurface = async (surfaceId: string, png: Uint8Array): Promise<void> => {
+    const response = await request("setMaskSurface", (id) => {
+      const buffer = png.slice().buffer;
+      return { message: { type: "setMaskSurface", id, surfaceId, png: buffer }, transfer: [buffer] };
+    });
+    if (response.type !== "maskSurfaceSet") throw new DevelopEngineError("develop engine did not take the mask surface");
+  };
+
+  const surfaces = createDevelopMaskSurfaceSync({
+    set: postMaskSurface,
+    drop: (surfaceId) => {
+      void request("dropMaskSurface", (id) => ({ message: { type: "dropMaskSurface", id, surfaceId } })).catch(() => undefined);
+    },
+    source: () => maskSurfaceSource,
+  });
+
+  /** 待っている・持っている「次」の要求が要る面（上限で手放さない）。 */
+  const pinnedSurfaceIds = (): Set<string> => {
+    const ids = new Set<string>();
+    const add = (needs: readonly DevelopMaskSurfaceNeed[] | undefined) => {
+      for (const need of needs ?? []) ids.add(need.surface.id);
+    };
+    for (const wait of Object.values(surfaceWaits)) add(wait?.needs);
+    for (const slot of RENDER_SLOT_ORDER) add(queuedRenders[slot]?.needs);
+    add(queuedMaskPlane?.needs);
+    return ids;
+  };
+
+  /** 面を待っている要求をすべて null で終える（写真が変わる・止める）。 */
+  const dropSurfaceWaits = () => {
+    for (const slot of Object.keys(surfaceWaits) as SurfaceWaitSlot[]) {
+      const wait = surfaceWaits[slot];
+      surfaceWaits[slot] = null;
+      wait?.cancel();
+    }
+  };
+
+  /**
+   * 要る面を wasm に持たせてから `start` する。持っていればそのまま（同期のまま出す）。読んでいる間は待ち、同じ枠の新しい要求が
+   * 来たら null で終える。読めなければ {@link DevelopMaskSurfaceError} で reject。
+   */
+  const afterSurfaces = <T>(
+    slot: SurfaceWaitSlot,
+    needs: DevelopMaskSurfaceNeed[],
+    start: () => Promise<T | null>,
+  ): Promise<T | null> => {
+    const previous = surfaceWaits[slot];
+    surfaceWaits[slot] = null;
+    previous?.cancel();
+    if (surfaces.unheld(needs).length === 0) {
+      surfaces.touch(needs);
+      return start();
+    }
+    return new Promise<T | null>((resolve, reject) => {
+      const wait: SurfaceWait = {
+        needs,
+        cancelled: false,
+        cancel: () => {
+          wait.cancelled = true;
+          resolve(null);
+        },
+      };
+      surfaceWaits[slot] = wait;
+      surfaces.ensure(needs, pinnedSurfaceIds).then(
+        () => {
+          if (wait.cancelled) return;
+          if (surfaceWaits[slot] === wait) surfaceWaits[slot] = null;
+          start().then(resolve, reject);
+        },
+        (error: unknown) => {
+          if (wait.cancelled) return;
+          if (surfaceWaits[slot] === wait) surfaceWaits[slot] = null;
+          reject(error);
+        },
+      );
+    });
+  };
+
+  /** 書き出しに添える面（描かれる面のマスクの PNG。読めなければ {@link DevelopMaskSurfaceError}）。 */
+  const exportSurfaces = async (
+    settings: object,
+    source: DevelopMaskSurfaceSource | null | undefined,
+  ): Promise<DevelopMaskSurfacePng[]> => {
+    const result: DevelopMaskSurfacePng[] = [];
+    const seen = new Set<string>();
+    for (const need of developMaskSurfaceNeeds(settings)) {
+      if (seen.has(need.surface.id)) continue;
+      seen.add(need.surface.id);
+      const png = await surfaces.png(need.surface.id, source === undefined ? maskSurfaceSource : source);
+      if (!png) throw new DevelopMaskSurfaceError("maskSurfaceMissing", { maskId: need.maskId, surfaceId: need.surface.id });
+      result.push({ id: need.surface.id, png: png.slice().buffer });
+    }
+    return result;
   };
 
   /** 写真を切り替えるとき、まだ消費していない自動補正の先読みを取り消す。 */
@@ -555,6 +695,8 @@ export function createDevelopEngine(options: CreateDevelopEngineOptions = {}): D
     inFlightRender = null;
     dropQueuedRenders();
     dropMaskPlanes();
+    dropSurfaceWaits();
+    surfaces.reset();
   };
 
   /** 出しているマスクの面の結果は捨て（null）、「次」は null で終える（写真が変わる・止める）。 */
@@ -635,6 +777,9 @@ export function createDevelopEngine(options: CreateDevelopEngineOptions = {}): D
     }
     dropQueuedRenders();
     dropMaskPlanes();
+    // 新しい Developer は面を持たない（次の描画で渡し直す）
+    dropSurfaceWaits();
+    surfaces.reset();
   };
 
   const onResponse = (response: DevelopEngineWorkerResponse) => {
@@ -675,7 +820,7 @@ export function createDevelopEngine(options: CreateDevelopEngineOptions = {}): D
         if (response.type === "frame") {
           entry.resolve({ width: response.width, height: response.height, rgba: new Uint8ClampedArray(response.rgba) });
         } else if (response.type === "error") {
-          entry.reject(new DevelopEngineError(response.message));
+          entry.reject(developEngineErrorOf(response.message));
         } else {
           entry.resolve(null);
         }
@@ -689,7 +834,7 @@ export function createDevelopEngine(options: CreateDevelopEngineOptions = {}): D
         if (response.type === "maskPlane") {
           entry.resolve({ width: response.width, height: response.height, data: new Uint8Array(response.data) });
         } else if (response.type === "error") {
-          entry.reject(new DevelopEngineError(response.message));
+          entry.reject(developEngineErrorOf(response.message));
         } else {
           entry.reject(new DevelopEngineError("develop engine returned no mask plane"));
         }
@@ -700,7 +845,7 @@ export function createDevelopEngine(options: CreateDevelopEngineOptions = {}): D
     const entry = pending.get(response.id);
     if (!entry) return;
     pending.delete(response.id);
-    if (response.type === "error") entry.reject(new DevelopEngineError(response.message));
+    if (response.type === "error") entry.reject(developEngineErrorOf(response.message));
     else entry.resolve(response);
     if (isExportKind(entry.kind)) {
       exportsInFlight = Math.max(0, exportsInFlight - 1);
@@ -708,24 +853,70 @@ export function createDevelopEngine(options: CreateDevelopEngineOptions = {}): D
     }
   };
 
+  /**
+   * 1 つの要求を出して応答を待つ。`reserved` は先に書き出しとして数えておいた要求（面を読み終えてから出す書き出し。`dispose` の後
+   * でも出し、数え直さない）。
+   */
   const request = (
     kind: Pending["kind"],
     build: (id: number) => { message: DevelopEngineWorkerRequest; transfer?: Transferable[] },
+    reserved = false,
   ): Promise<DevelopEngineWorkerResponse> => {
-    if (status !== "ready" || terminateWhenIdle) return Promise.reject(unavailableError());
+    if (status !== "ready" || (terminateWhenIdle && !reserved)) {
+      if (reserved) releaseExport();
+      return Promise.reject(unavailableError());
+    }
     const id = nextId++;
     return new Promise<DevelopEngineWorkerResponse>((resolve, reject) => {
       pending.set(id, { kind, resolve, reject });
-      if (isExportKind(kind)) exportsInFlight += 1;
+      if (isExportKind(kind) && !reserved) exportsInFlight += 1;
       try {
         const { message, transfer } = build(id);
         post(message, transfer);
       } catch (error) {
         pending.delete(id);
-        if (isExportKind(kind)) exportsInFlight = Math.max(0, exportsInFlight - 1);
+        if (isExportKind(kind)) releaseExport();
         reject(error);
       }
     });
+  };
+
+  /** 書き出しを 1 つ数え終える（止める予定なら、最後の 1 つで止める）。 */
+  const releaseExport = () => {
+    exportsInFlight = Math.max(0, exportsInFlight - 1);
+    if (terminateWhenIdle && exportsInFlight === 0) terminate("disposed");
+  };
+
+  /**
+   * 書き出しを出す。描かれる面のマスクがあれば、先に書き出しとして数えてから面を読み（`dispose` は描き終えるまで待つ）、面を添えて
+   * 出す。無ければ今までどおりすぐ出す。
+   */
+  const requestExport = async (
+    kind: "exportJpeg" | "exportWorkingCopyJpeg",
+    settings: object,
+    source: DevelopMaskSurfaceSource | null | undefined,
+    build: (id: number, surfaces: DevelopMaskSurfacePng[] | undefined) => { message: DevelopEngineWorkerRequest; transfer?: Transferable[] },
+  ): Promise<DevelopEngineWorkerResponse> => {
+    if (!surfacesSupported() || developMaskSurfaceNeeds(settings).length === 0) {
+      return request(kind, (id) => build(id, undefined));
+    }
+    if (status !== "ready" || terminateWhenIdle) throw unavailableError();
+    exportsInFlight += 1;
+    let attached: DevelopMaskSurfacePng[];
+    try {
+      attached = await exportSurfaces(settings, source);
+    } catch (error) {
+      releaseExport();
+      throw error;
+    }
+    return request(
+      kind,
+      (id) => {
+        const built = build(id, attached);
+        return { ...built, transfer: [...(built.transfer ?? []), ...attached.map((surface) => surface.png)] };
+      },
+      true,
+    );
   };
 
   const startWorker = (): Promise<boolean> => {
@@ -821,21 +1012,20 @@ export function createDevelopEngine(options: CreateDevelopEngineOptions = {}): D
       if (!maskCapabilities?.maskPlane) {
         return Promise.reject(new DevelopEngineError("develop engine cannot draw mask planes"));
       }
-      return new Promise<DevelopMaskPlane | null>((resolve, reject) => {
-        const next: MaskPlaneRequest = {
-          settingsJson: JSON.stringify(settings),
-          maskId,
-          maxDimension: planeOptions.maxDimension,
-          resolve,
-          reject,
-        };
-        if (inFlightMaskPlane === null) {
-          sendMaskPlane(next);
-          return;
-        }
-        // 古い「次」は null で終える（新しい形だけを描く）
-        queuedMaskPlane?.resolve(null);
-        queuedMaskPlane = next;
+      const settingsJson = JSON.stringify(settings);
+      const needs = surfacesSupported() ? developMaskPlaneSurfaceNeeds(settings, maskId) : [];
+      return afterSurfaces("maskPlane", needs, () => {
+        if (status !== "ready" || terminateWhenIdle) return Promise.reject(unavailableError());
+        return new Promise<DevelopMaskPlane | null>((resolve, reject) => {
+          const next: MaskPlaneRequest = { settingsJson, maskId, maxDimension: planeOptions.maxDimension, needs, resolve, reject };
+          if (inFlightMaskPlane === null) {
+            sendMaskPlane(next);
+            return;
+          }
+          // 古い「次」は null で終える（新しい形だけを描く）
+          queuedMaskPlane?.resolve(null);
+          queuedMaskPlane = next;
+        });
       });
     },
 
@@ -868,6 +1058,47 @@ export function createDevelopEngine(options: CreateDevelopEngineOptions = {}): D
       if (!estimate) throw new DevelopEngineError("develop engine returned an invalid upright estimate");
       return estimate;
     },
+
+async setMaskSurface(surfaceId, png) {
+      if (status === "ready" && !terminateWhenIdle && !surfacesSupported()) {
+        throw new DevelopEngineError("develop engine cannot take mask surfaces");
+      }
+      const generation = surfaces.generation();
+      await postMaskSurface(surfaceId, png);
+      surfaces.markHeld(surfaceId, png.slice(), generation);
+    },
+
+    async dropMaskSurface(surfaceId) {
+      surfaces.markDropped(surfaceId);
+      const response = await request("dropMaskSurface", (id) => ({ message: { type: "dropMaskSurface", id, surfaceId } }));
+      return response.type === "maskSurfaceDropped" && response.dropped;
+    },
+
+    async encodeMaskSurface(width, height, data) {
+      if (status === "ready" && !terminateWhenIdle && !surfacesSupported()) {
+        throw new DevelopEngineError("develop engine cannot encode mask surfaces");
+      }
+      const response = await request("encodeMaskSurface", (id) => {
+        const buffer = data.slice().buffer;
+        return { message: { type: "encodeMaskSurface", id, width, height, data: buffer }, transfer: [buffer] };
+      });
+      if (response.type !== "maskSurfaceEncoded") throw new DevelopEngineError("develop engine returned no mask surface");
+      const png = new Uint8Array(response.png);
+      surfaces.remember(response.surfaceId, png.slice());
+      return { id: response.surfaceId, png };
+    },
+
+    maskSurfacePng(surfaceId) {
+      return surfaces.png(surfaceId);
+    },
+
+    setMaskSurfaceSource(source) {
+      maskSurfaceSource = source;
+      surfaces.forgetMissing();
+    },
+
+    retryMaskSurfaces() {
+      surfaces.forgetMissing();    },
 
     async sampleColor(settings, options) {
       const response = await request("sampleColor", (id) => ({
@@ -945,14 +1176,20 @@ export function createDevelopEngine(options: CreateDevelopEngineOptions = {}): D
     },
 
     render(settings, renderOptions) {
-      return enqueueRender(
-        {
-          kind: "render",
-          settingsJson: previewSettingsJson(settings, renderOptions.interactive),
-          maxDimension: renderOptions.maxDimension,
-          interactive: renderOptions.interactive,
-        },
-        renderOptions.priority ?? (renderOptions.interactive ? "drag" : "final"),
+      const priority = renderOptions.priority ?? (renderOptions.interactive ? "drag" : "final");
+      const settingsJson = previewSettingsJson(settings, renderOptions.interactive);
+      const needs = surfacesSupported() ? developMaskSurfaceNeeds(settings) : [];
+      return afterSurfaces(renderSlotOf(priority), needs, () =>
+        enqueueRender(
+          {
+            kind: "render",
+            settingsJson,
+            maxDimension: renderOptions.maxDimension,
+            interactive: renderOptions.interactive,
+            needs,
+          },
+          priority,
+        ),
       );
     },
 
@@ -960,10 +1197,12 @@ export function createDevelopEngine(options: CreateDevelopEngineOptions = {}): D
       if (status === "ready" && !terminateWhenIdle && !presetThumbnailsSupported) {
         return Promise.reject(new DevelopEngineError("develop engine cannot render preset thumbnails"));
       }
-      // 見本は丁寧に描く（interactive は Worker へ送らない）。編集の描画を待たせない preview の枠
-      return enqueueRender(
-        { kind: "thumbnail", settingsJson: finalSettingsJson(settings), maxDimension, interactive: false },
-        "preview",
+      // 見本は丁寧に描く（interactive は Worker へ送らない）。編集の描画を待たせない preview の枠。面のマスクの面は、開いている写真へ
+      // 渡してから見本の session にもそろえる（Worker）
+      const settingsJson = finalSettingsJson(settings);
+      const needs = surfacesSupported() ? developMaskSurfaceNeeds(settings) : [];
+      return afterSurfaces("preview", needs, () =>
+        enqueueRender({ kind: "thumbnail", settingsJson, maxDimension, interactive: false, needs }, "preview"),
       );
     },
 
@@ -1090,7 +1329,7 @@ export function createDevelopEngine(options: CreateDevelopEngineOptions = {}): D
     },
 
     async exportJpeg(bytes, settings, exportOptions) {
-      const response = await request("exportJpeg", (id) => ({
+      const response = await requestExport("exportJpeg", settings, exportOptions.maskSurfaces, (id, attached) => ({
         message: {
           type: "exportJpeg",
           id,
@@ -1098,6 +1337,7 @@ export function createDevelopEngine(options: CreateDevelopEngineOptions = {}): D
           settingsJson: JSON.stringify(settings),
           maxDimension: exportOptions.maxDimension,
           quality: exportOptions.quality,
+          ...(attached ? { surfaces: attached } : {}),
         },
         transfer: [bytes],
       }));
@@ -1119,7 +1359,7 @@ export function createDevelopEngine(options: CreateDevelopEngineOptions = {}): D
     },
 
     async exportWorkingCopyJpeg(png, metaJson, settings, exportOptions) {
-      const response = await request("exportWorkingCopyJpeg", (id) => ({
+      const response = await requestExport("exportWorkingCopyJpeg", settings, exportOptions.maskSurfaces, (id, attached) => ({
         message: {
           type: "exportWorkingCopyJpeg",
           id,
@@ -1128,6 +1368,7 @@ export function createDevelopEngine(options: CreateDevelopEngineOptions = {}): D
           settingsJson: JSON.stringify(settings),
           maxDimension: exportOptions.maxDimension,
           quality: exportOptions.quality,
+          ...(attached ? { surfaces: attached } : {}),
         },
         transfer: [png],
       }));

@@ -923,6 +923,36 @@ export const PHOTO_EDITING_MASK_HANDLE_LABELS = {
   },
 } as const;
 
+// ブラシ（M4 #68）と、被写体・空のマスク（面のマスク）。
+export const PHOTO_EDITING_MASK_ADD_BRUSH_LABEL = "ブラシ";
+export const PHOTO_EDITING_MASK_BRUSH_TITLE = "ブラシ";
+/** 描く / 消しゴムの切り替え（`aria-pressed`）。 */
+export const PHOTO_EDITING_MASK_BRUSH_PAINT_LABEL = "描く";
+export const PHOTO_EDITING_MASK_BRUSH_ERASE_LABEL = "消しゴム";
+export const PHOTO_EDITING_MASK_BRUSH_SIZE_LABEL = "大きさ";
+export const PHOTO_EDITING_MASK_BRUSH_FLOW_LABEL = "流量";
+export const PHOTO_EDITING_MASK_BRUSH_CLEAR_LABEL = "全体を消す";
+export const PHOTO_EDITING_MASK_BRUSH_FILL_LABEL = "全体を塗る";
+/** 塗るのをやめた後（esc）に、もう一度写真に塗る。 */
+export const PHOTO_EDITING_MASK_BRUSH_RESUME_LABEL = "写真に塗る";
+export const PHOTO_EDITING_MASK_BRUSH_HINT_TEXT =
+  "写真をなぞって範囲を塗ります。[ ] で大きさ、E（⌥ を押している間も）で消しゴム、esc で塗るのをやめます。";
+/** 写真の上の塗る面の読み上げ名。 */
+export const PHOTO_EDITING_MASK_BRUSH_AREA_LABEL = "ブラシで塗る";
+export const PHOTO_EDITING_MASK_BRUSH_LOADING_TEXT = "マスクの面を読み込んでいます…";
+export const PHOTO_EDITING_MASK_BRUSH_SAVE_FAILED_TEXT = "塗った範囲を保存できませんでした。もう一度塗ってください。";
+export const PHOTO_EDITING_MASK_BRUSH_ADD_FAILED_TEXT = "ブラシのマスクを追加できませんでした。もう一度お試しください。";
+/** 被写体・空（写真から選んだ範囲。この画面では塗らない）。 */
+export const PHOTO_EDITING_MASK_DETECTED_TEXT = "この範囲は写真から選んだものです。補正・反転・当てる / 外す・削除ができます。";
+/** 面を読めない（置き場に無い・壊れている）マスクの理由と次の一歩。 */
+export function photoEditingMaskSurfaceUnreadableText(name: string): string {
+  return `マスクの面を読めません（${name}）。もう一度読み込むか、このマスクを削除してください。`;
+}
+export const PHOTO_EDITING_MASK_SURFACE_RETRY_LABEL = "もう一度読み込む";
+/** 書き出す写真のマスクの面を読めなかった。 */
+export const PHOTO_EDITING_MASK_SURFACE_EXPORT_FAILED_TEXT =
+  "マスクの面を読めないため書き出せませんでした。そのマスクを削除するか、塗り直してから書き出してください。";
+
 /**
  * ブラウザ版の一覧の複数選択（F5a-2 移行元設計）。スマホの上の行の「選択」ボタンと、複数を選んでいる間の選択バー
  * （「N 枚を選択」・［すべて］・［キャンセル］）。
