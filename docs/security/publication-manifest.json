@@ -169,7 +169,8 @@
       "outputSha256": "98d13265ad9f3bd7f3a75dcf3a2dd4793d9e284b3777899a373ff1431e0e74dd",
       "modifications": [
         "Issue #30 Oklch色ミキサーとengine 10/11対応を反映",
-        "Issue 13 provisional export and rebind regression"
+        "Issue 13 provisional export and rebind regression",
+        "Issue #32 engineのsupportsDetailをmockに足す"
       ]
     },
     {
@@ -267,7 +268,8 @@
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
         "Issue #30 Oklch色ミキサーとengine 10/11対応を反映",
-        "Issue 13 progressive RAW open implementation"
+        "Issue 13 progressive RAW open implementation",
+        "Issue #32 detail capabilityと作業コピーのプレビューからdetailを外す挙動を検証する"
       ]
     },
     {
@@ -283,7 +285,8 @@
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
         "Issue #30 Oklch色ミキサーとengine 10/11対応を反映",
-        "Issue 13 progressive RAW open implementation"
+        "Issue 13 progressive RAW open implementation",
+        "Issue #32 supportsDetailと作業コピーのプレビューでdetailを外す方針を追加"
       ]
     },
     {
@@ -300,7 +303,8 @@
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
         "Issue #28の色相安定engine追加と互換回帰を反映。",
         "新しい色相保持エンジンと新旧バイナリの能力境界・数値回帰を整合。",
-        "Issue #30 Oklch色ミキサーとengine 10/11対応を反映"
+        "Issue #30 Oklch色ミキサーとengine 10/11対応を反映",
+        "Issue #32 v5 detailを読むcrate 0.19.0を読む"
       ]
     },
     {
@@ -312,7 +316,9 @@
         "sha256": "a7c7d3189bbe4fe8e3086b124e72be62bc03b83dfe70709686df356a16244dc3"
       },
       "outputSha256": "a7c7d3189bbe4fe8e3086b124e72be62bc03b83dfe70709686df356a16244dc3",
-      "modifications": []
+      "modifications": [
+        "Issue #32 XMPの群にsharpeningを足しunsupportedの説明を更新する"
+      ]
     },
     {
       "path": "packages/photo-editing/src/develop-engine/develop-engine-worker-core.test.ts",
@@ -326,7 +332,8 @@
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
-        "Issue #30 Oklch色ミキサーとengine 10/11対応を反映"
+        "Issue #30 Oklch色ミキサーとengine 10/11対応を反映",
+        "Issue #32 v5 detailのcapability確認を検証する"
       ]
     },
     {
@@ -341,7 +348,8 @@
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
-        "Issue #30 Oklch色ミキサーとengine 10/11対応を反映"
+        "Issue #30 Oklch色ミキサーとengine 10/11対応を反映",
+        "Issue #32 v5 detailのcapability確認と解析keyへのNRを追加"
       ]
     },
     {
@@ -415,7 +423,8 @@
         "Issue #28の色相安定engine追加と互換回帰を反映。",
         "新しい色相保持エンジンと新旧バイナリの能力境界・数値回帰を整合。",
         "Issue #30 Oklch色ミキサーとengine 10/11対応を反映",
-        "部分補正（マスク）#65: v6を未知版とし有効なマスク付きv5を開く回帰を追加"
+        "部分補正（マスク）#65: v6を未知版とし有効なマスク付きv5を開く回帰を追加",
+        "Issue #32 v5を読む版に合わせて未知の版の検証を更新する"
       ]
     },
     {
@@ -534,7 +543,8 @@
         "Issue #28の色相安定engine追加と互換回帰を反映。",
         "新しい色相保持エンジンと新旧バイナリの能力境界・数値回帰を整合。",
         "Issue #30 Oklch色ミキサーとengine 10/11対応を反映",
-        "部分補正（マスク）#65: v5を既知とし未知版の回帰をv6へ更新"
+        "部分補正（マスク）#65: v5を既知とし未知版の回帰をv6へ更新",
+        "Issue #32 developSettings v5のdetailの読み・版・コピーを検証する"
       ]
     },
     {
@@ -554,7 +564,8 @@
         "新しい色相保持エンジンと新旧バイナリの能力境界・数値回帰を整合。",
         "Issue #30 Oklch色ミキサーとengine 10/11対応を反映",
         "対応engineの番号を正確に列挙",
-        "部分補正（マスク）#65: masksの版5導出・厳密読み取り・初期化とコピーの扱いを追加"
+        "部分補正（マスク）#65: masksの版5導出・厳密読み取り・初期化とコピーの扱いを追加",
+        "Issue #32 developSettings v5のdetailの読み・版・コピーを追加"
       ]
     },
     {
@@ -881,7 +892,8 @@
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
-        "Issue #30 Oklch色ミキサーとengine 10/11対応を反映"
+        "Issue #30 Oklch色ミキサーとengine 10/11対応を反映",
+        "Issue #32 ディテールの群idに道具の印を足す（スマホの帯にはまだ出さない）"
       ]
     },
     {
@@ -931,7 +943,8 @@
         "Allow guarded leave to retain edit session",
         "Issue #13の段階表示、provisional draft、canonical handoffと書き出し境界を実装。",
         "Issue 13 progressive RAW open implementation",
-        "右パネルの補正・プリセット面の切替と段階RAW openを統合し、暫定中の見本生成停止を保つ。"
+        "右パネルの補正・プリセット面の切替と段階RAW openを統合し、暫定中の見本生成停止を保つ。",
+        "Issue #32 ディテールを出す入力とPC右パネルの項目を決める"
       ]
     },
     {
@@ -1100,7 +1113,8 @@
         "Issue #49の統合確認: 下段を中央の列の下だけに置き、プリセットの⋯の受け口を渡す。",
         "可変高のフッター行と中幅画面の折返しに対応する。",
         "niho-photo#36 ヒストグラムとクリップ表示とJキーを組み込み。",
-        "閲覧専用のヒストグラムで、Jキーを操作ボタンと同じ条件で有効にする。"
+        "閲覧専用のヒストグラムで、Jキーを操作ボタンと同じ条件で有効にする。",
+        "Issue #32 v5を読めるwasmのJPEG/PNGだけにディテールの群を出す"
       ]
     },
     {
@@ -1173,7 +1187,8 @@
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
         "niho-photo#51 L2: 右端の道具の帯と補正パネルの並び（見出し行・自動 / 白黒のチップ・プリセットの行・面の切り替え）。",
         "niho-photo#51の補正パネル変更を#35統合後のコントロールへ反映する。",
-        "公開repoでの機能変更（#55）: スライダーを Lightroom の見た目（細い線・白い丸・色温度 / 色かぶり補正の帯・変更ありの太字）にした。"
+        "公開repoでの機能変更（#55）: スライダーを Lightroom の見た目（細い線・白い丸・色温度 / 色かぶり補正の帯・変更ありの太字）にした。",
+        "Issue #32 ディテールのスライダーを共通の補正パネルに足す"
       ]
     },
     {
@@ -1651,7 +1666,8 @@
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
-        "Issue #30 Oklch色ミキサーとengine 10/11対応を反映"
+        "Issue #30 Oklch色ミキサーとengine 10/11対応を反映",
+        "Issue #32 ディテールを描けるwasmかを確かめるhookを足す"
       ]
     },
     {
@@ -2033,7 +2049,8 @@
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
-        "Issue #30 Oklch色ミキサーとengine 10/11対応を反映"
+        "Issue #30 Oklch色ミキサーとengine 10/11対応を反映",
+        "Issue #32 効果の後ろにディテールの群を足す"
       ]
     },
     {
@@ -2083,7 +2100,8 @@
         "Issue #30 Oklch色ミキサーとengine 10/11対応を反映",
         "公開repoでの機能変更（#54）: 1 枚の面の下にフィルムストリップを置き、切り抜き・背景除去の間は ← → で写真を替えないようにした。",
         "部分補正（マスク）#65: XMP未書き込み項目に部分補正の表示名を追加",
-        "niho-photo#36 ヒストグラムと黒つぶれ白飛び表示の文言を追加。"
+        "niho-photo#36 ヒストグラムと黒つぶれ白飛び表示の文言を追加。",
+        "Issue #32 ディテールの群・項目・説明とXMPの細かな項目の名前を足す"
       ]
     },
     {
@@ -2588,7 +2606,8 @@
       },
       "outputSha256": "a9ab324f463cbe16126d3ddd55d09a283f4b69d548e31e6b7840262746089a7a",
       "modifications": [
-        "Issue #30 Oklch色ミキサーとengine 10/11対応を反映"
+        "Issue #30 Oklch色ミキサーとengine 10/11対応を反映",
+        "Issue #32 シャープ・ノイズ軽減はapproximateになり細かな項目だけを知らせることを検証する"
       ]
     },
     {
@@ -2603,7 +2622,8 @@
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
-        "Issue #30 Oklch色ミキサーとengine 10/11対応を反映"
+        "Issue #30 Oklch色ミキサーとengine 10/11対応を反映",
+        "Issue #32 シャープ・ノイズ軽減はapproximateになり細かな項目だけを知らせる"
       ]
     },
     {
@@ -4543,7 +4563,8 @@
       "modifications": [
         "新しい色相保持エンジンと新旧バイナリの能力境界・数値回帰を整合。",
         "現像workspaceだけを0.17.0へ更新し外部依存の固定版を維持。",
-        "Issue #30 Oklch色ミキサーとengine 10/11対応を反映"
+        "Issue #30 Oklch色ミキサーとengine 10/11対応を反映",
+        "Issue #32 v5 detail追加に合わせてcrate版を0.19.0へ上げる"
       ]
     },
     {
@@ -4557,7 +4578,8 @@
       "outputSha256": "e90bc3821569982de08b01b8ec025ec1503f6697c660deb6a53aae1633bbad96",
       "modifications": [
         "新しい色相保持エンジンと新旧バイナリの能力境界・数値回帰を整合。",
-        "Issue #30 Oklch色ミキサーとengine 10/11対応を反映"
+        "Issue #30 Oklch色ミキサーとengine 10/11対応を反映",
+        "Issue #32 v5 detail追加に合わせてcrate版を0.19.0へ上げる"
       ]
     },
     {
@@ -5302,7 +5324,8 @@
         "PR #62 の設定schema v4対応に合わせ未対応版をv5へ更新",
         "CLIの未知engine判定を最新契約へ更新",
         "CLI版表示の現行engine番号を正しく検証",
-        "部分補正（マスク）#65: v6を未知版とし有効なマスク付き設定の拒否を検証"
+        "部分補正（マスク）#65: v6を未知版とし有効なマスク付き設定の拒否を検証",
+        "Issue #32 v5対応後も未来の版はMAX_SETTINGS_VERSION+1で拒否することを検証する"
       ]
     },
     {
@@ -5677,7 +5700,9 @@
         "sha256": "6cc01e4e0e0597e34ccf1cc6b3bba6d7133c01064963a28963d9bc8fe419f558"
       },
       "outputSha256": "6cc01e4e0e0597e34ccf1cc6b3bba6d7133c01064963a28963d9bc8fe419f558",
-      "modifications": []
+      "modifications": [
+        "Issue #32 シャープのhalo座標で周辺光量補正の半径を出力座標から引けるようにする"
+      ]
     },
     {
       "path": "packages/develop-engine/crates/niho-develop/src/encode.rs",
@@ -5778,7 +5803,8 @@
         "点補正の選択plane cacheと精度・依存関係・headroom回帰を整備",
         "色サンプルの段参照を集約し、キャッシュキーの回帰試験では借用を次描画前に解放する",
         "色点のサンプル座標と回帰試験を整合し、操作中640pxと確定解像度を分ける",
-        "部分補正（マスク）#65: 有効なマスクの描画をmasksNotRenderedで拒否しM2まで安全に失敗させる"
+        "部分補正（マスク）#65: 有効なマスクの描画をmasksNotRenderedで拒否しM2まで安全に失敗させる",
+        "Issue #32 v5 detailのNR済みsourceをSession・解析・sampleColorで共有する"
       ]
     },
     {
@@ -5816,7 +5842,9 @@
         "sha256": "c77c6115f19c1b11570cc4753578ff737d4d3ac6f2203c21d3a6c36e50771f35"
       },
       "outputSha256": "c77c6115f19c1b11570cc4753578ff737d4d3ac6f2203c21d3a6c36e50771f35",
-      "modifications": []
+      "modifications": [
+        "Issue #32 signed RAWのmaster準備にv5のカラー/輝度NRを入れcache keyへ含める"
+      ]
     },
     {
       "path": "packages/develop-engine/crates/niho-develop/src/niho4.rs",
@@ -5830,7 +5858,8 @@
       "modifications": [
         "Issue #28の色相安定engine追加と互換回帰を反映。",
         "新しい色相保持エンジンと新旧バイナリの能力境界・数値回帰を整合。",
-        "Issue #30 Oklch色ミキサーとengine 10/11対応を反映"
+        "Issue #30 Oklch色ミキサーとengine 10/11対応を反映",
+        "Issue #32 signed RAWのmaster準備にv5のカラー/輝度NRを入れcache keyへ含める"
       ]
     },
     {
@@ -5854,7 +5883,8 @@
       },
       "outputSha256": "1ddc4b43be744b43167eba336c75036bbcf55ed29192b27e50df0465a52b3509",
       "modifications": [
-        "公開Issue #26/#27/#29: 旧版を保つfloat cube候補、研究用WB/H-Sプローブ、合成検証と計測契約を追加。"
+        "公開Issue #26/#27/#29: 旧版を保つfloat cube候補、研究用WB/H-Sプローブ、合成検証と計測契約を追加。",
+        "Issue #32 niho-6の準備keyにv5のNR量を含める"
       ]
     },
     {
@@ -5924,7 +5954,8 @@
         "点補正の選択plane cacheと精度・依存関係・headroom回帰を整備",
         "色サンプルの有効点有無で共通のf32選択座標を使い、段の依存参照を構造体で共有する",
         "色点のサンプル座標と回帰試験を整合し、操作中640pxと確定解像度を分ける",
-        "niho-8と色ポイントのcube統合を修正"
+        "niho-8と色ポイントのcube統合を修正",
+        "Issue #32 v5 detailのNR・float出力境界のシャープ・旧unsigned RAWのNR経路を追加"
       ]
     },
     {
@@ -5936,7 +5967,9 @@
         "sha256": "c1112a2ac5af26b7c591362a44930271e675d7e29910ae395ff20795a52a8d51"
       },
       "outputSha256": "c1112a2ac5af26b7c591362a44930271e675d7e29910ae395ff20795a52a8d51",
-      "modifications": []
+      "modifications": [
+        "Issue #32 明示v5カラーNRの50超を連続拡張し、チャンネル独立ノイズの合成回帰で検証する"
+      ]
     },
     {
       "path": "packages/develop-engine/crates/niho-develop/src/raw_chroma/simd.rs",
@@ -6040,7 +6073,8 @@
         "Issue #28の色相安定engine追加と互換回帰を反映。",
         "新しい色相保持エンジンと新旧バイナリの能力境界・数値回帰を整合。",
         "Issue #30 Oklch色ミキサーとengine 10/11対応を反映",
-        "部分補正（マスク）#65: masksの版5・型・厳密検証・正規形書き出しを追加"
+        "部分補正（マスク）#65: masksの版5・型・厳密検証・正規形書き出しを追加",
+        "Issue #32 developSettings v5のdetail（シャープ・輝度/カラーNR）の形と検証を追加"
       ]
     },
     {
@@ -6095,7 +6129,8 @@
         "Issue #28の色相安定engine追加と互換回帰を反映。",
         "新しい色相保持エンジンと新旧バイナリの能力境界・数値回帰を整合。",
         "Issue #30 Oklch色ミキサーとengine 10/11対応を反映",
-        "部分補正（マスク）#65: プリセット適用でも写真自身のmasksを保つ"
+        "部分補正（マスク）#65: プリセット適用でも写真自身のmasksを保つ",
+        "Issue #32 シャープ・ノイズ軽減のXMPをunsupportedからapproximateへ移しv5 detailへ読む"
       ]
     },
     {
@@ -6109,7 +6144,8 @@
       "outputSha256": "1c1d3f0cec736af6cec9b8e37da73ad2f0b1aa658891d4f240d553d905bcdfd1",
       "modifications": [
         "Issue #30 Oklch色ミキサーとengine 10/11対応を反映",
-        "部分補正（マスク）#65: プリセット量の合成でもmasksを保つ"
+        "部分補正（マスク）#65: プリセット量の合成でもmasksを保つ",
+        "Issue #32 プリセット適用量でv5 detailの各量を写真の値から動かす"
       ]
     },
     {
@@ -6126,7 +6162,8 @@
         "Issue #28の色相安定engine追加と互換回帰を反映。",
         "新しい色相保持エンジンと新旧バイナリの能力境界・数値回帰を整合。",
         "Issue #30 Oklch色ミキサーとengine 10/11対応を反映",
-        "部分補正（マスク）#65: XMP書き出しでmasksをnotWrittenに報告する"
+        "部分補正（マスク）#65: XMP書き出しでmasksをnotWrittenに報告する",
+        "Issue #32 XMP書き出しにsharpening群と輝度NR・detailのカラーNRを追加"
       ]
     },
     {
@@ -6374,7 +6411,9 @@
         "sha256": "25c0c1002a32be82b667aef29751e9bd30aa422646a222ea41c73097ffd60255"
       },
       "outputSha256": "25c0c1002a32be82b667aef29751e9bd30aa422646a222ea41c73097ffd60255",
-      "modifications": []
+      "modifications": [
+        "Issue #32 Photo Benchとの色の比較からv5 detailを外す"
+      ]
     },
     {
       "path": "packages/develop-engine/crates/niho-develop/tests/golden_raw.rs",
@@ -6448,7 +6487,8 @@
       "modifications": [
         "Issue #28の色相安定engine追加と互換回帰を反映。",
         "新しい色相保持エンジンと新旧バイナリの能力境界・数値回帰を整合。",
-        "未知engineの拒否テストをniho-12へ更新"
+        "未知engineの拒否テストをniho-12へ更新",
+        "Issue #32 XMPのカラーNRがrasterではdetail・signed RAWでは旧欄に入ることを検証する"
       ]
     },
     {
@@ -6576,7 +6616,9 @@
         "sha256": "97ecf2f9a119356b13f60a0eb0d33bfdd5fc93a2a22d1d4419dcedefa74bead3"
       },
       "outputSha256": "97ecf2f9a119356b13f60a0eb0d33bfdd5fc93a2a22d1d4419dcedefa74bead3",
-      "modifications": []
+      "modifications": [
+        "Issue #32 プリセットのdetailで形の版が上がることを許容する"
+      ]
     },
     {
       "path": "packages/develop-engine/crates/niho-develop/tests/saturated.rs",
@@ -6644,7 +6686,9 @@
         "sha256": "423ce05a729e0968f3936e28924db3b09b2095cf879875beaa21bd17fdd2b72b"
       },
       "outputSha256": "423ce05a729e0968f3936e28924db3b09b2095cf879875beaa21bd17fdd2b72b",
-      "modifications": []
+      "modifications": [
+        "Issue #32 同梱プリセットのディテール項目を描画対象として検証する"
+      ]
     },
     {
       "path": "packages/develop-engine/crates/niho-develop/tests/xmp_write.rs",
@@ -6655,7 +6699,9 @@
         "sha256": "ed8beb33fdf73d50fd11850f3da66d1c5f95cf3157ceafa71a8f24760c597f10"
       },
       "outputSha256": "ed8beb33fdf73d50fd11850f3da66d1c5f95cf3157ceafa71a8f24760c597f10",
-      "modifications": []
+      "modifications": [
+        "Issue #32 sharpening群とdetailのNR書き出し・往復を検証する"
+      ]
     },
     {
       "path": "packages/develop-engine/crates/niho-quality-probe/Cargo.toml",
@@ -6978,7 +7024,9 @@
         "sha256": "f6a5830b2d1041f2272c30eaca8902c4e765834e8dc782d541db91b389c3481d"
       },
       "outputSha256": "f6a5830b2d1041f2272c30eaca8902c4e765834e8dc782d541db91b389c3481d",
-      "modifications": []
+      "modifications": [
+        "Issue #32 detail scenarioにJPEG入力・NRのdrag・既存Finalの基準を追加"
+      ]
     },
     {
       "path": "packages/develop-engine/scripts/golden/cases.json",
@@ -9355,7 +9403,7 @@
     {
       "path": "packages/develop-engine/crates/niho-develop/tests/color_points.rs",
       "sha256": "8e819bf878ccc32738174135f9129a54eff4b8e5670992747fb471fd0bb9192b",
-      "origin": "Issue #30の公開仕様だけから新規作成した合成Oklch値・schema・preset・性能のRust回帰。実写真・非公開fixture・私有参照出力を含まない。\n変更理由: 最小rangeの非grid描画回帰テストを追加\n変更理由: small-full-small picker source回帰を追加\n変更理由: crop正規化座標picker回帰を追加\n変更理由: picker回帰assertをcross-target向けに整理\n変更理由: 描画精度・型・共有サンプル位置・キーボードの最終レビューを反映\n変更理由: Issue #30の最小range、cache再利用、grading外側不変、独立roundtrip精度検査を追加。\n変更理由: 点補正の選択plane cacheと精度・依存関係・headroom回帰を整備\n変更理由: 色相境界の選択重みを独立のsmoothstep期待値で検証する\n変更理由: 色点のサンプル座標と回帰試験を整合し、操作中640pxと確定解像度を分ける\n変更理由: 部分補正（マスク）#65: 未知版の確認をv6へ更新"
+      "origin": "Issue #30の公開仕様だけから新規作成した合成Oklch値・schema・preset・性能のRust回帰。実写真・非公開fixture・私有参照出力を含まない。\n変更理由: 最小rangeの非grid描画回帰テストを追加\n変更理由: small-full-small picker source回帰を追加\n変更理由: crop正規化座標picker回帰を追加\n変更理由: picker回帰assertをcross-target向けに整理\n変更理由: 描画精度・型・共有サンプル位置・キーボードの最終レビューを反映\n変更理由: Issue #30の最小range、cache再利用、grading外側不変、独立roundtrip精度検査を追加。\n変更理由: 点補正の選択plane cacheと精度・依存関係・headroom回帰を整備\n変更理由: 色相境界の選択重みを独立のsmoothstep期待値で検証する\n変更理由: 色点のサンプル座標と回帰試験を整合し、操作中640pxと確定解像度を分ける\n変更理由: 部分補正（マスク）#65: 未知版の確認をv6へ更新\n変更理由: Issue #32 v5対応後の未来の版をMAX_SETTINGS_VERSION+1で検証する"
     },
     {
       "path": "packages/develop-engine/crates/niho-develop/tests/color_probe.rs",
@@ -9365,7 +9413,7 @@
     {
       "path": "packages/photo-editing/src/editor/photo-editing-color-mixer.test.tsx",
       "sha256": "3ec6c5f2cdab142af40d2629bebe9b7a5c67d43736d240ea0b8c877a480ae19e",
-      "origin": "Issue #30の公開仕様だけから新規作成した色ミキサーschema・座標・320px UI・keyboard回帰。合成値だけを使用。\n変更理由: deferred pickerの写真切替回帰を追加\n変更理由: 描画精度・型・共有サンプル位置・キーボードの最終レビューを反映\n変更理由: 部分補正（マスク）#65: 未知版の確認をv6へ更新"
+      "origin": "Issue #30の公開仕様だけから新規作成した色ミキサーschema・座標・320px UI・keyboard回帰。合成値だけを使用。\n変更理由: deferred pickerの写真切替回帰を追加\n変更理由: 描画精度・型・共有サンプル位置・キーボードの最終レビューを反映\n変更理由: 部分補正（マスク）#65: 未知版の確認をv6へ更新\n変更理由: Issue #32 v5を読む版に合わせ未知の版を6にする"
     },
     {
       "path": "packages/photo-editing/src/editor/photo-editing-color-mixer.tsx",
@@ -9581,6 +9629,56 @@
       "path": "packages/photo-editing/src/editor/browser-photo-editing-loupe-clip.test.tsx",
       "sha256": "634aca00b317f74f216c20905a5d8589b53bda62d2d54cdb13073b8c7faa1abd",
       "origin": "niho-photo#36 のため新規作成。右パネル上端のヒストグラム（RGB の度数・黒つぶれ/白飛びの割合・クリップ領域の印）の計算・表示・test。合成の画素だけを使用。"
+    },
+    {
+      "path": "docs/detail-processing.md",
+      "sha256": "e807979425bf205ef0c800bd16ba76dc18abecdd8099f71de73eddee33c83fae",
+      "origin": "Issue #32でNIHOが独立作成したdetail処理・保存契約・合成検証または設計文書。実写真・第三者コードは含まない。"
+    },
+    {
+      "path": "packages/develop-engine/crates/niho-develop/src/detail.rs",
+      "sha256": "61f4eb637e417142b3ed279c5e6d292e05e0bf9eca9b330a934cfc3894593c5f",
+      "origin": "Issue #32でNIHOが独立作成したdetail処理・保存契約・合成検証または設計文書。実写真・第三者コードは含まない。"
+    },
+    {
+      "path": "packages/develop-engine/crates/niho-develop/tests/detail_cross_target.rs",
+      "sha256": "7b44a9aef580fa6cd59808351cd038552eb01b2c0012f0cb7c00c32f9a5426c4",
+      "origin": "Issue #32でNIHOが独立作成したdetail処理・保存契約・合成検証または設計文書。実写真・第三者コードは含まない。"
+    },
+    {
+      "path": "packages/develop-engine/crates/niho-develop/src/xmp/detail.rs",
+      "sha256": "ee721a0ce0e35cd246863cdf9b95c718bb19b7350936d6537692deb769e911a7",
+      "origin": "Issue #32でNIHOが独立作成したLightroomディテールのXMPとv5 detailの読み書き。Camera Rawの公開キー名と既定値だけを使い、実写真・第三者コードは含まない。"
+    },
+    {
+      "path": "packages/develop-engine/crates/niho-develop/tests/detail_effect.rs",
+      "sha256": "b194ac9a48275ade0f5ac4900fbc0ac6cbdd326d64c5e78228f84c6e5eb776e2",
+      "origin": "Issue #32でNIHOが独立作成した合成チャートによるdetailの入力別回帰（エッジの鋭さ・平坦部の標準偏差・crop・drag）。実写真・非公開fixtureを含まない。"
+    },
+    {
+      "path": "packages/develop-engine/crates/niho-develop/tests/xmp_detail.rs",
+      "sha256": "c913f29859656526af4d955505064e8ab04c8eeab1dd4515d97f03d185e1ec64",
+      "origin": "Issue #32でNIHOが独立作成したディテールXMPの読み書き・既定値・適用量の回帰。合成XMPだけを使う。"
+    },
+    {
+      "path": "packages/develop-engine/crates/niho-develop/examples/detail_chart.rs",
+      "sha256": "ef16c77fda07c0048d1c17d922b5be3821c46a561b2394cff1edbfa3f2a6cecf",
+      "origin": "Issue #32でNIHOが独立作成したLightroom比較用の合成チャート生成と統計の計測。実写真を含まない。"
+    },
+    {
+      "path": "packages/photo-editing/src/photo-editing-detail.ts",
+      "sha256": "cd32ae9da11f5ad862c0088ba99413518ed81548ad7b9e1a7860c36ea58b2b4d",
+      "origin": "Issue #32でNIHOが独立作成したv5 detail（シャープ・ノイズ軽減）の画面の読み書き。実データを含まない。"
+    },
+    {
+      "path": "packages/photo-editing/src/photo-editing-detail.test.ts",
+      "sha256": "5ca6b11c9113e795a0bdff9db0cfd712f0d6f266c409ca2f07cfafde2f5b82cb",
+      "origin": "Issue #32でNIHOが独立作成したv5 detailの画面の読み書きの回帰。合成の設定だけを使う。"
+    },
+    {
+      "path": "packages/photo-editing/src/editor/photo-editing-adjustment-controls-detail.test.tsx",
+      "sha256": "356d178bbaa602f1a5665b20fdd8fcd997ca32ef3d85cc33498a6f73176493f3",
+      "origin": "Issue #32でNIHOが独立作成した補正パネルのディテールの群の回帰。合成の設定だけを使う。"
     }
   ],
   "excludedSources": [
