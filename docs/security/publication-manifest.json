@@ -9724,8 +9724,8 @@
     },
     {
       "path": "packages/develop-engine/RESEARCH26-27.md",
-      "sha256": "a3a5f8db6121874fb153121c1b50f6e5d49dc528feff62a18cc9aba1fa2c5011",
-      "origin": "公開Issue #26/#27/#29 のため公開済み数式・既存primitiveから独立実装した研究用コード・合成テスト・日本語手順。非公開の写真・参照画素・パス・履歴・第三者ソースを含まない。\n変更理由: 暗所A/Bで現行niho-6を基準とし、H/S以外の色・黒レベル等を同じ数式で比較する。\n変更理由: 実測に基づくWB節点別fit、旧版を維持する候補のnative/wasm固定hashと再現可能な性能計測を整備。\n変更理由: 非公開出力をrepository外へ限定しsealed独立評価を拒否する、匿名集計の再現手順を追加。\n変更理由: Studio実測の段差・WB gate未達・wasm初期解析と継続編集の性能をsource SHA付きで記録。\n変更理由: 57場面のfloat対比較と6場面の原理式Bのgate未達を、匿名数値・残作業として記録。\n変更理由: 教師上の次候補fitとownerの撮影作業を区別し、独立評価前の未達判定であることを明確化。\n変更理由: PR #84: #74 squash後のmainへ解析候補を再統合し、公開ハッシュを更新。\n変更理由: #26 案C（写真特徴から写真ごとの強さを予測）の交差検証前の採否規則・fold外の結果・niho-6 撮影日CVとの比較・不採用の理由を記録し、独立評価の撮影条件と評価toolの版を明確化\n変更理由: #26 案C′ の目的関数・目標・採否規則を交差検証の前に記録\n変更理由: PR #90: niho-13のWB先行適用とdetail連携cacheを#84後のmainへ統合。\n変更理由: PR #95: 最新mainのWB変更と案C′の交差検証結果を統合。"
+      "sha256": "fbe6b5f23e3b6bd1776f173b7a0c9c97b5909e3659eec4f7a6b49db726b5d3b5",
+      "origin": "公開Issue #26/#27/#29 のため公開済み数式・既存primitiveから独立実装した研究用コード・合成テスト・日本語手順。非公開の写真・参照画素・パス・履歴・第三者ソースを含まない。\n変更理由: 暗所A/Bで現行niho-6を基準とし、H/S以外の色・黒レベル等を同じ数式で比較する。\n変更理由: 実測に基づくWB節点別fit、旧版を維持する候補のnative/wasm固定hashと再現可能な性能計測を整備。\n変更理由: 非公開出力をrepository外へ限定しsealed独立評価を拒否する、匿名集計の再現手順を追加。\n変更理由: Studio実測の段差・WB gate未達・wasm初期解析と継続編集の性能をsource SHA付きで記録。\n変更理由: 57場面のfloat対比較と6場面の原理式Bのgate未達を、匿名数値・残作業として記録。\n変更理由: 教師上の次候補fitとownerの撮影作業を区別し、独立評価前の未達判定であることを明確化。\n変更理由: PR #84: #74 squash後のmainへ解析候補を再統合し、公開ハッシュを更新。\n変更理由: #26 案C（写真特徴から写真ごとの強さを予測）の交差検証前の採否規則・fold外の結果・niho-6 撮影日CVとの比較・不採用の理由を記録し、独立評価の撮影条件と評価toolの版を明確化\n変更理由: #26 案C′ の目的関数・目標・採否規則を交差検証の前に記録\n変更理由: PR #90: niho-13のWB先行適用とdetail連携cacheを#84後のmainへ統合。\n変更理由: PR #95: 最新mainのWB変更と案C′の交差検証結果を統合。\n変更理由: #26 案C′ の fold外の結果・niho-6 撮影日CVとの比較・不採用と原因を記録"
     },
     {
       "path": "packages/develop-engine/crates/niho-develop/examples/analytic_hs_probe.rs",
@@ -10626,6 +10626,11 @@
       "path": "packages/photo-editing/src/develop-engine/develop-preset-masks.test.ts",
       "sha256": "6502e5cc8cffcebf2355fec67676b8f22432edd97a76cf9ebd9bceb0c3412514",
       "origin": "Issue #69の公開仕様から新規作成した、回転・反転・切り抜き・角度補正でのマスクの写し方とプリセット結果の読み方の合成テスト。外部画像・非公開コード・個体metadataを含まない。"
+    },
+    {
+      "path": "packages/develop-engine/fixtures/color/review-2026-10-21/analytic-hs-teachers-CP.json",
+      "sha256": "1832140816484cdafec2c8fb4c9127b00311601f5ec8a7e50d2f7b338c7976e1",
+      "origin": "owner所有の既存非公開教師（57場面）で案C′を撮影日foldの交差検証・全件fit・gate計測した匿名集計のみ。niho-6の撮影日CV・B1・Cとの比較と採否規則の判定、source commit・実行ファイルhash・測定手順を記録し、写真・scene名・私有path・参照画素・個別結果は公開しない。独立評価画像の参照は0枚。"
     }
   ],
   "excludedSources": [
