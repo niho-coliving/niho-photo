@@ -11,6 +11,7 @@ import {
 } from "react";
 
 import {
+  constrainedCropBox,
   developAspectRatio,
   developFrameSize,
   moveCropBox,
@@ -107,8 +108,9 @@ function shadeStyle(box: { left: number; top: number; width: number; height: num
 }
 
 /**
- * 写真の上の切り抜きの枠（NIHO Photo 段 1 F3b 移行元設計）。`children` は枠全体（切り抜きと角度を外した画）を描いた canvas で、
- * 切り抜きの枠は画面でまっすぐ立ち、写真の方を CSS で回して重ねる（wasm は枠を動かすたびに描かない）。右パネルに依存しない
+ * 写真の上の切り抜きの枠（NIHO Photo 段 1 F3b 移行元設計）。`children` は枠全体（切り抜きと角度を外した画。遠近〔niho-photo#46〕は
+ * 当てた補正後の枠）を描いた canvas で、切り抜きの枠は画面でまっすぐ立ち、写真の方を CSS で回して重ねる（wasm は枠を動かすたびに
+ * 描かない）。枠の座標は補正後の枠の上で、「余白を埋める」が on なら枠は補正した写真の中に収まる。右パネルに依存しない
  * 独立の部品で、ブラウザの面の 1 枚の表示とスマホの編集面（F6c 移行元設計）が同じものを使う。
  *
  * - 枠の外は暗い幕。枠の線と、動かしている間・角度補正を動かしている間（`liveAngle`）だけ 3 分割のグリッド
@@ -182,7 +184,8 @@ export function PhotoEditingCropOverlay(props: {
   const outputSize = cropOutputSize(committedBox);
 
   const setDraftBox = (next: CropBox | null) => {
-    const value = next ? { box: next, geometryKey } : null;
+    // 「余白を埋める」が on なら、動かしている箱も補正した写真の中に収める（壁で止まり、確定するのも見えている箱）
+    const value = next ? { box: constrainedCropBox(geometry, next, frame), geometryKey } : null;
     draftRef.current = value;
     setDraft(value);
   };

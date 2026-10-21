@@ -1,4 +1,5 @@
 import {
+  constrainedCropBox,
   cropBoxFromGeometry,
   cropFromBox,
   developAspectRatio,
@@ -88,28 +89,32 @@ export function readDevelopSize(value: unknown): DevelopSize | null {
 }
 
 /**
- * 切り抜きの道具の間に canvas に描く編集内容: 切り抜きと角度を外した枠全体（`rotate` と反転だけを当てた・今の色の補正のまま）。
- * 枠と角度は画面が CSS で重ねるので、切り抜きを動かすたびに wasm で描き直さない。
+ * 切り抜きの道具の間に canvas に描く編集内容: 切り抜きと角度を外した枠全体（`rotate` と反転と遠近〔niho-photo#46〕を当てた・今の色の
+ * 補正のまま。遠近は補正後の枠全体を描き、「余白を埋める」は外す）。枠と角度は画面が CSS で重ねるので、切り抜きを動かすたびに wasm で
+ * 描き直さない（遠近のスライダーを動かすと描き直す）。
  */
 export function cropFrameDevelopSettings(settings: DevelopSettings): DevelopSettings {
   const geometry = readDevelopGeometry(settings);
-  return writeDevelopGeometry(settings, {
+  const frame: DevelopGeometry = {
     rotate: geometry.rotate,
     flipH: geometry.flipH,
     flipV: geometry.flipV,
     angle: 0,
     crop: { left: 0, top: 0, right: 1, bottom: 1 },
-  });
+  };
+  if (geometry.perspective) frame.perspective = geometry.perspective;
+  return writeDevelopGeometry(settings, frame);
 }
 
 /**
  * 画面に見せる切り抜きの箱（描かれるのと同じ箱: 角が枠から出る保存値は中心の回りに縮めて収める。長方形にならない値は、その角度・
- * 縦横比で内接する最大の箱）。`frame` は `developFrameSize(source, geometry.rotate)`。
+ * 縦横比で内接する最大の箱。「余白を埋める」が on で遠近があれば、補正した写真の中に収める）。`frame` は
+ * `developFrameSize(source, geometry.rotate)`（補正後の枠も同じ大きさ）。
  */
 export function editingCropBox(geometry: DevelopGeometry, frame: DevelopSize): CropBox {
   const raw = cropBoxFromGeometry(geometry, frame);
-  if (!raw) return maxCropBox(frame, geometry.angle, developAspectRatio(geometry.aspect, frame));
-  return fitCropBox(raw, geometry.angle, frame);
+  const box = raw ? fitCropBox(raw, geometry.angle, frame) : maxCropBox(frame, geometry.angle, developAspectRatio(geometry.aspect, frame));
+  return constrainedCropBox(geometry, box, frame);
 }
 
 /** 切り抜きの箱を幾何に書く（角度・回転・反転・縦横比はそのまま）。 */

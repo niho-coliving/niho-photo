@@ -183,6 +183,7 @@ function createEngine(options: EngineOptions): DevelopEngine {
     autoSettings: vi.fn(async (settings: object) => settings as DevelopSettings),
     supportsAuto: vi.fn(async () => true),
     supportsGeometry: vi.fn(async () => true),
+    supportsPerspective: vi.fn(async () => true),
     supportsEffects: vi.fn(async () => true),
     imageSize: vi.fn(async () => ({ width: 3000, height: 2000 })),
     rasterDecodeSize: vi.fn(async () => 1280),

@@ -109,6 +109,50 @@ describe("geometrySourceToOutput", () => {
     }
   });
 
+  it("遠近と余白を埋めるを含めても、作業画像と出力の座標が往復する", () => {
+    const source = { width: 3000, height: 2000 };
+    const perspective = { vertical: -30, horizontal: 18, rotate: 4, aspect: 10, scale: 110, x: 5, y: -3 };
+    const frame = developFrameSize(source, 90);
+    const constrained: DevelopGeometry = {
+      ...IDENTITY_DEVELOP_GEOMETRY,
+      rotate: 90,
+      flipH: true,
+      angle: 8,
+      crop: cropFromBox(
+        { cx: frame.width * 0.5, cy: frame.height * 0.5, width: frame.width * 0.7, height: frame.height * 0.65 },
+        8,
+        frame,
+      ),
+      perspective,
+      constrain: true,
+    };
+    const geometries: DevelopGeometry[] = [
+      { ...IDENTITY_DEVELOP_GEOMETRY, perspective },
+      constrained,
+    ];
+    const points: Array<[number, number]> = [[0.1, 0.2], [0.5, 0.5], [0.87, 0.73]];
+
+    for (const geometry of geometries) {
+      for (const point of points) {
+        const sourcePoint = geometryOutputToSource(geometry, source, point[0], point[1]);
+        expect(sourcePoint).not.toBeNull();
+        expectClose(
+          geometrySourceToOutput(geometry, source, sourcePoint![0], sourcePoint![1]),
+          point,
+          JSON.stringify({ geometry, point, direction: "output-source-output" }),
+        );
+
+        const outputPoint = geometrySourceToOutput(geometry, source, point[0], point[1]);
+        expect(outputPoint).not.toBeNull();
+        expectClose(
+          geometryOutputToSource(geometry, source, outputPoint![0], outputPoint![1]),
+          point,
+          JSON.stringify({ geometry, point, direction: "source-output-source" }),
+        );
+      }
+    }
+  });
+
   it("幾何が恒等なら位置はそのまま、切り抜きだけなら枠の中の割合", () => {
     const size = { width: 3000, height: 2000 };
     expectClose(geometrySourceToOutput(IDENTITY_DEVELOP_GEOMETRY, size, 0.3, 0.8), [0.3, 0.8], "identity");

@@ -229,6 +229,11 @@ export type DevelopEngine = {
    */
   maskPlane?: (settings: object, maskId: string, options: { maxDimension: number }) => Promise<DevelopMaskPlane | null>;
   /**
+   * 遠近（`developSettings` v7 の `geometry.perspective`。niho-photo#46）を読んで描ける wasm か（Worker が起こした wasm が
+   * `validateSettings` で小さな `v: 7` の設定を通すとき。初回に wasm を起こす。使えなければ false。throw しない）
+   */
+  supportsPerspective: () => Promise<boolean>;
+  /**
    * JPEG / PNG の寸法（EXIF の向きを反映。ヘッダーだけ読む）。bytes は Worker へコピーで渡す（呼び出し側の ArrayBuffer はそのまま
    * 使える。`open` / `exportJpeg` は手放す）。wasm に無ければ reject
    */
@@ -449,6 +454,7 @@ export function createDevelopEngine(options: CreateDevelopEngineOptions = {}): D
     return JSON.stringify(interactiveWorkingCopySettings(record, committedNoise));
   };
   const finalSettingsJson = (settings: object): string => JSON.stringify(withoutInertDetail(settings as Record<string, unknown>));
+  let perspectiveSupported = false;
   // プリセットの適用量・書き出し・見本の口が wasm にある（`ready` の応答で分かる）
   let presetAmountSupported = false;
   let settingsToXmpSupported = false;
@@ -610,6 +616,7 @@ export function createDevelopEngine(options: CreateDevelopEngineOptions = {}): D
         effectsSupported = response.effects === true;
         colorPointsSupported = response.colorPoints === true;
         detailSupported = response.detail === true;
+        perspectiveSupported = response.perspective === true;
         presetAmountSupported = response.presetAmount === true;
         settingsToXmpSupported = response.settingsToXmp === true;
         presetThumbnailsSupported = response.presetThumbnails === true;
@@ -766,7 +773,6 @@ export function createDevelopEngine(options: CreateDevelopEngineOptions = {}): D
     async supportsDetail() {
       return (await ready()) && detailSupported;
     },
-
     async supportsMasks() {
       if (!(await ready()) || !maskCapabilities) return null;
       return { ...maskCapabilities, kinds: [...maskCapabilities.kinds] };
@@ -793,6 +799,10 @@ export function createDevelopEngine(options: CreateDevelopEngineOptions = {}): D
         queuedMaskPlane?.resolve(null);
         queuedMaskPlane = next;
       });
+    },
+
+    async supportsPerspective() {
+      return (await ready()) && perspectiveSupported;
     },
 
     async sampleColor(settings, options) {

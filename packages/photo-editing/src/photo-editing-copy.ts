@@ -516,7 +516,7 @@ export const PHOTO_EDITING_PRESET_UNSUPPORTED_LABELS = {
   grain: "粒子",
   curveSaturation: "トーンカーブの彩度",
   pointColors: "Lightroom のポイントカラー",
-  transform: "変形",
+  upright: "Upright の自動計算",
   profile: "プロファイル",
   // 部分補正（Lightroom のマスク。docs/local-adjustments.md「Lightroom の XMP の読み」）
   maskBrush: "ブラシのマスク",
@@ -679,6 +679,24 @@ export const PHOTO_EDITING_CROP_CANCEL_LABEL = "キャンセル";
 /** ボタンの右に薄く添えるキーの印（読み上げは `aria-keyshortcuts`） */
 export const PHOTO_EDITING_CROP_DONE_KEY_HINT = "⏎";
 export const PHOTO_EDITING_CROP_CANCEL_KEY_HINT = "esc";
+
+/**
+ * 切り抜きの道具の「ジオメトリ」の節（niho-photo#46。Lightroom の「変形」の手動のスライダーと「切り抜きを制限」）。スライダーの名前は
+ * Lightroom の日本語のまま。
+ */
+export const PHOTO_EDITING_GEOMETRY_TITLE = "ジオメトリ";
+export const PHOTO_EDITING_GEOMETRY_RESET_LABEL = "ジオメトリを初期化";
+export const PHOTO_EDITING_GEOMETRY_LABELS = {
+  vertical: "垂直方向",
+  horizontal: "水平方向",
+  rotate: "回転",
+  aspect: "縦横比",
+  scale: "拡大・縮小",
+  x: "X オフセット",
+  y: "Y オフセット",
+} as const;
+export const PHOTO_EDITING_GEOMETRY_CONSTRAIN_LABEL = "余白を埋める";
+export const PHOTO_EDITING_GEOMETRY_CONSTRAIN_HINT = "補正で空いた余白が写らないよう、切り抜きを写真の中に収めます。";
 
 /** 写真の上の切り抜きの枠と、そのつまみ（角 4・辺 4。枠がまっすぐ立って見える向きで）の読み上げ名。 */
 export const PHOTO_EDITING_CROP_FRAME_LABEL = "切り抜きの枠";

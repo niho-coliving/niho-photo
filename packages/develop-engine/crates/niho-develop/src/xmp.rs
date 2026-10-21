@@ -29,6 +29,7 @@
 use crate::convert::{
     convert_edit_settings, to_edit_settings_value, ConvertIssue, CONVERTER_VERSION,
 };
+use crate::geometry::{Geometry, PerspectiveField, MAX_UPRIGHT};
 use crate::local_mask::{masks_value, LocalMask};
 use crate::settings::{
     num, CalibrationSettings, ColorGradingSettings, CurveChannel, CurvePoint, DevelopSettings,
@@ -1371,8 +1372,40 @@ const NOTE_EFFECT_FITTED: &str =
 const NOTE_EFFECT_GRAIN: &str =
     "粒の強さと大きさを Lightroom に統計で合わせた NIHO の粒（粒の形・並びは Lightroom と違う）";
 const NOTE_EFFECT_NONE: &str = "効果なし（既定値）";
+const NOTE_PERSPECTIVE: &str = "NIHO の遠近の近似モデル（Lightroom の実測による校正は未実施）";
+const NOTE_UPRIGHT: &str = "Upright の自動計算（値は保持するが適用しない）";
+const NOTE_UPRIGHT_OFF: &str = "Upright がオフなので使われない計算値（保持のみ）";
 
 impl XmpDocument {
+    /// Replaces the Transform of `s` this XMP carries (niho-photo#46).
+    pub fn apply_perspective(&self, s: &mut DevelopSettings) {
+        let had = s.geometry.is_some();
+        let mut g = s.geometry.take().unwrap_or_default();
+        for field in PerspectiveField::ALL {
+            if let Some(v) = self.optional_number(field.xmp()) {
+                let (lo, hi) = field.range();
+                *field.get_mut(&mut g.perspective) = v.clamp(lo, hi);
+            }
+        }
+        match self.optional_number("CropConstrainToWarp") {
+            Some(0.0) => g.constrain = false,
+            Some(1.0) => g.constrain = true,
+            _ => {}
+        }
+        if let Some(u) = self
+            .optional_number("PerspectiveUpright")
+            .filter(|u| *u == libm::trunc(*u) && (0.0..=f64::from(MAX_UPRIGHT)).contains(u))
+        {
+            g.upright = u;
+        }
+        s.geometry = (had || g != Geometry::default()).then_some(g);
+    }
+
+    fn upright_on(&self) -> bool {
+        self.optional_number("PerspectiveUpright")
+            .is_some_and(|u| u != 0.0)
+    }
+
     /// Replaces the effects of `s` this XMP carries (valid values only).
     pub fn apply_effects(&self, s: &mut DevelopSettings) {
         for key in EFFECT_KEYS {
@@ -1579,7 +1612,10 @@ fn is_numeric_crs_property(key: &str) -> bool {
                 | "ColorNoiseReduction"
                 | "ColorNoiseReductionDetail"
                 | "ColorNoiseReductionSmoothness"
+                | "PerspectiveUpright"
+                | "CropConstrainToWarp"
         )
+        || PerspectiveField::from_xmp(key).is_some()
         || key.starts_with("HueAdjustment")
         || key.starts_with("SaturationAdjustment")
         || key.starts_with("LuminanceAdjustment")
@@ -1596,6 +1632,9 @@ fn clamp_range(key: &str) -> Option<(f64, f64)> {
         "SharpenRadius" => return Some(detail::SHARPEN_RADIUS_RANGE),
         _ if detail::DETAIL_KEYS.contains(&key) => return Some(detail::PERCENT_RANGE),
         _ => {}
+    }
+    if let Some(field) = PerspectiveField::from_xmp(key) {
+        return Some(field.range());
     }
     if key == "Exposure2012" {
         return Some((-5.0, 5.0));
@@ -1688,6 +1727,7 @@ impl XmpDocument {
             let effect = effect_field(k);
             let graded_luminance_model =
                 matches!(k, "ColorGradeMidtoneLum" | "ColorGradeGlobalLum");
+            let perspective = PerspectiveField::from_xmp(k);
             let (mut pb, mut level, mut note): (Level, Level, String) =
                 if k == "ToneCurveName2012" && self.sequences.is_empty() {
                     (
@@ -1784,6 +1824,44 @@ impl XmpDocument {
                             "NIHO の近似式（Lightroom の実測による校正は未実施）".into(),
                         )
                     }
+                } else if let Some(field) = perspective {
+                    if swift_double(value) == Some(field.neutral()) {
+                        (Level::Unsupported, Level::Exact, NOTE_EFFECT_NONE.into())
+                    } else {
+                        (
+                            Level::Unsupported,
+                            Level::Approximate,
+                            NOTE_PERSPECTIVE.into(),
+                        )
+                    }
+                } else if k == "PerspectiveUpright" {
+                    if swift_double(value) == Some(0.0) {
+                        (Level::Unsupported, Level::Exact, NOTE_EFFECT_NONE.into())
+                    } else {
+                        (Level::Unsupported, Level::Unsupported, NOTE_UPRIGHT.into())
+                    }
+                } else if k == "CropConstrainToWarp" {
+                    match swift_double(value) {
+                        Some(0.0) => (Level::Unsupported, Level::Exact, NOTE_EFFECT_NONE.into()),
+                        Some(1.0) => (
+                            Level::Unsupported,
+                            Level::Approximate,
+                            "NIHO の「余白を埋める」（補正した写真の中に切り抜きを収める）".into(),
+                        ),
+                        _ => (
+                            Level::Unsupported,
+                            Level::Unsupported,
+                            "0 / 1 以外は適用しない".into(),
+                        ),
+                    }
+                } else if k == "UprightVersion" {
+                    (Level::Unsupported, Level::Metadata, "値を保持".into())
+                } else if k.starts_with("Upright") {
+                    if self.upright_on() {
+                        (Level::Unsupported, Level::Unsupported, NOTE_UPRIGHT.into())
+                    } else {
+                        (Level::Unsupported, Level::Metadata, NOTE_UPRIGHT_OFF.into())
+                    }
                 } else if matches!(k, "Highlights2012" | "Shadows2012") {
                     (
                         Level::Exact,
@@ -1838,11 +1916,14 @@ impl XmpDocument {
                 level = Level::Unsupported;
                 note = "有限数として読めないため適用しない".into();
             }
-            // Effects, Detail values and graded luminance in use can already
-            // be approximate; their notes still say the value was clamped.
+            // Effects, Detail values, graded luminance and Transform sliders
+            // in use can already be approximate; their notes still say the value was clamped.
             let clampable = match effect {
                 Some(_) => matches!(level, Level::Exact | Level::Approximate),
-                None if graded_luminance_model || detail::DETAIL_KEYS.contains(&k) => {
+                None if graded_luminance_model
+                    || perspective.is_some()
+                    || detail::DETAIL_KEYS.contains(&k) =>
+                {
                     matches!(level, Level::Exact | Level::Approximate)
                 }
                 None => matches!(level, Level::Exact),
@@ -1989,6 +2070,7 @@ pub fn preset_settings(
     // effects (defaults without a base) with the keys this XMP carries
     // replaced, like Lightroom applying a preset.
     doc.apply_effects(&mut settings);
+    doc.apply_perspective(&mut settings);
     if matches!(
         settings.engine.as_str(),
         ENGINE_NIHO_3 | ENGINE_NIHO_4 | ENGINE_NIHO_5 | ENGINE_NIHO_7 | ENGINE_NIHO_11

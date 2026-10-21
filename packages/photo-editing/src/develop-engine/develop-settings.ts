@@ -16,11 +16,9 @@ import { presetMasksForPhoto, type PresetMasksPlacement } from "./develop-preset
  * NIHO の現像エンジンの編集内容 `developSettings`（移行元設計。移行時の設計文書「段 2」）。Photo Bench の
  * `EditSettings` の上位集合に `v`・`engine`・`look`・`base`・`geometry` を足したもの。ブラウザは基本補正の 13 項目（NIHO Photo 段 1
  * F1 移行元設計。S1 の canvas では露光量・コントラスト・彩度と相対の色温度 / 色かぶり補正だけ）を直し、ほかの項目（HSL など）はそのまま
- * 持って返す。形の版 `v` は、detail があれば 6、部分補正（マスク。`develop-masks.ts`）があれば 5、色ポイントがあれば 4、効果が有効なら 3、幾何（回転・反転・角度補正・
- * 切り抜き。F3 移行元設計）が恒等でなければ 2、ほかは 1
- * （古い画面は未知の版を編集も描画もしないので、効果や切り抜きを知らない画面が補正を落とした画を作らない）。
- */
-/** API schemaの設定型（v1〜v6）を画面で扱う型。未知の項目はそのまま保持する。 */
+ * 持って返す。形の版 `v` は、遠近（`geometry.perspective`。niho-photo#46）があれば 7、detail があれば 6、部分補正（マスク。`develop-masks.ts`）があれば 5、色ポイントがあれば 4、効果が有効なら 3、幾何（回転・反転・角度補正・切り抜き。F3 移行元設計）が恒等でなければ 2、ほかは 1
+ * （古い画面は未知の版を編集も描画もしないので、効果や切り抜きを知らない画面が補正を落とした画を作らない）。 */
+/** API schemaの設定型（v1〜v7）を画面で扱う型。未知の項目はそのまま保持する。 */
 export type DevelopSettings = {
   v: DevelopSettingsVersion;
   engine: string;
@@ -107,12 +105,11 @@ function numberOrZero(value: unknown): number {
   return typeof value === "number" && Number.isFinite(value) ? value : 0;
 }
 
-/** この画面が読む `developSettings` の形の版（1: 基本、2: 幾何、3: 効果、4: 色ミキサー、5: 部分補正、6: detail）。 */
+/** この画面が読む `developSettings` の形の版（1: 基本、2: 幾何、3: 効果、4: 色ミキサー、5: 部分補正、6: detail、7: 遠近）。 */
 export const DEVELOP_DETAIL_SETTINGS_VERSION = 6;
-export type DevelopSettingsVersion = 1 | 2 | 3 | 4 | 5 | 6;
-
+export type DevelopSettingsVersion = 1 | 2 | 3 | 4 | 5 | 6 | 7;
 function isDevelopSettingsVersion(value: unknown): value is DevelopSettingsVersion {
-  return value === 1 || value === 2 || value === 3 || value === 4 || value === 5 || value === 6;
+  return value === 1 || value === 2 || value === 3 || value === 4 || value === 5 || value === 6 || value === 7;
 }
 
 export type DevelopDetailSettings = {
@@ -147,8 +144,7 @@ function hasValidDevelopDetail(value: Record<string, unknown>): boolean {
 }
 
 function hasDevelopDetail(value: Record<string, unknown>): boolean {
-  return Object.hasOwn(value, "detail") && value.detail !== undefined;
-}
+  return Object.hasOwn(value, "detail") && value.detail !== undefined;}
 
 export const MAX_COLOR_POINTS = 8;
 
@@ -223,15 +219,43 @@ function hasActiveDevelopColorPoints(value: unknown): boolean {
   return points !== null && points.some((point) => point.delta.hue !== 0 || point.delta.chromaScale !== 1 || point.delta.lightness !== 0);
 }
 
+/** `geometry.perspective`（Lightroom の変形の 7 本。crate の `PerspectiveField`）の恒等の値。 */
+export const DEVELOP_PERSPECTIVE_NEUTRAL: Readonly<Record<string, number>> = Object.freeze({
+  vertical: 0,
+  horizontal: 0,
+  rotate: 0,
+  aspect: 0,
+  scale: 100,
+  x: 0,
+  y: 0,
+});
+
+/**
+ * 遠近（`geometry.perspective`。niho-photo#46）が恒等でないか（crate の `Geometry::active_perspective`）。無い・7 本がすべて恒等の値
+ * なら false。形の壊れた値（オブジェクトでない・知らない項目・恒等でない値）は恒等とみなさない（描けない設定として扱う）。
+ * 「余白を埋める」（`constrain`）と Upright（`upright`）は数えない。
+ */
+export function hasDevelopPerspective(value: unknown): boolean {
+  if (!isRecord(value) || !isRecord(value.geometry)) return false;
+  const perspective = value.geometry.perspective;
+  if (perspective === undefined) return false;
+  if (!isRecord(perspective)) return true;
+  return Object.entries(perspective).some(
+    ([key, item]) => !Object.hasOwn(DEVELOP_PERSPECTIVE_NEUTRAL, key) || item !== DEVELOP_PERSPECTIVE_NEUTRAL[key],
+  );
+}
+
 /**
  * `geometry`（crate の `geometry.rs` の `is_identity`）が恒等でないか。回転（半回転と左右・上下の両方の反転は恒等）・角度・全体で
- * ない切り抜きのどれかがあれば true。縦横比の指定（`aspect`）だけなら恒等。形の壊れた値は恒等とみなさない（描けない設定として扱う）。
+ * ない切り抜き・遠近のどれかがあれば true。縦横比の指定（`aspect`）・「余白を埋める」・Upright だけなら恒等。形の壊れた値は恒等と
+ * みなさない（描けない設定として扱う）。
  */
 export function hasDevelopGeometry(value: unknown): boolean {
   if (!isRecord(value)) return false;
   const geometry = value.geometry;
   if (geometry === undefined || geometry === null) return false;
   if (!isRecord(geometry)) return true;
+  if (hasDevelopPerspective(value)) return true;
   const rotate = geometry.rotate ?? 0;
   const flipH = geometry.flipH ?? false;
   const flipV = geometry.flipV ?? false;
@@ -249,15 +273,19 @@ export function hasDevelopGeometry(value: unknown): boolean {
 export function hasNullDevelopGeometryField(value: unknown): boolean {
   if (!isRecord(value) || !isRecord(value.geometry)) return false;
   const geometry = value.geometry;
-  if (["rotate", "flipH", "flipV", "angle"].some((key) => Object.hasOwn(geometry, key) && geometry[key] === null)) return true;
+  const keys = ["rotate", "flipH", "flipV", "angle", "perspective", "constrain", "upright"];
+  if (keys.some((key) => Object.hasOwn(geometry, key) && geometry[key] === null)) return true;
+  const perspective = geometry.perspective;
+  if (isRecord(perspective) && Object.values(perspective).some((item) => item === null)) return true;
   if (!Object.hasOwn(geometry, "crop")) return false;
   const crop = geometry.crop;
   if (crop === null) return true;
   return isRecord(crop) && ["left", "top", "right", "bottom"].some((key) => Object.hasOwn(crop, key) && crop[key] === null);
 }
 
-/** 編集内容に要る形の版（detailがあれば 6、マスクがあれば 5、色ポイントがあれば 4、効果が有効なら 3、幾何が恒等でなければ 2。crate の `required_version`）。 */
+/** 編集内容に要る形の版（遠近があれば 7、detailがあれば 6、マスクがあれば 5、色ポイントがあれば 4、効果が有効なら 3、幾何が恒等でなければ 2。crate の `required_version`）。 */
 export function developSettingsVersion(settings: Record<string, unknown>): DevelopSettingsVersion {
+  if (hasDevelopPerspective(settings)) return 7;
   if (hasDevelopDetail(settings)) return DEVELOP_DETAIL_SETTINGS_VERSION;
   if (hasDevelopMasks(settings)) return DEVELOP_MASKS_SETTINGS_VERSION;
   if (hasDevelopColorPoints(settings)) return 4;
@@ -434,7 +462,7 @@ export function developSettingsOnWorkingCopy(
   return { ...next, v: developSettingsVersion(next) };
 }
 
-/** API の値を編集内容として読む（形の版が 1〜6 でない・色ポイント、マスク、detailの形が壊れている・必要な版より低ければ null）。 */
+/** API の値を編集内容として読む（形の版が1〜7でない・色ポイント、マスク、detail、遠近の形が壊れている・必要な版より低ければ null）。 */
 export function readDevelopSettings(value: unknown): DevelopSettings | null {
   if (
     !isRecord(value) ||
@@ -445,6 +473,7 @@ export function readDevelopSettings(value: unknown): DevelopSettings | null {
   ) {
     return null;
   }
+  if (value.v < developSettingsVersion(value)) return null;
   if (hasDevelopColorPoints(value) && value.v < 4) return null;
   if (hasDevelopMasks(value) && value.v < DEVELOP_MASKS_SETTINGS_VERSION) return null;
   if (hasDevelopDetail(value) && value.v < DEVELOP_DETAIL_SETTINGS_VERSION) return null;
@@ -454,10 +483,9 @@ export function readDevelopSettings(value: unknown): DevelopSettings | null {
 }
 
 /**
- * このブラウザの版で続きを直せる編集内容か。まだ無い（null）なら直せる。形の版が 1〜6 で数式の版がこの画面の知っている版
+ * このブラウザの版で続きを直せる編集内容か。まだ無い（null）なら直せる。形の版が 1〜7 で数式の版がこの画面の知っている版
  * （niho-1 / niho-2 / niho-3 / niho-4 / niho-6 / niho-7 / niho-10 / niho-11 / niho-12 / niho-13）、ルックがその数式の描ける版（無ければ恒等。
- * niho-6 / niho-10 / niho-12 / niho-13 は interim-1 / standard-1 だけ）のときだけ直せる（新しい版の NIHO で保存した設定を古い数式・ルックで読み替えない）。恒等でない
- * 幾何を v1 で持つ壊れた設定は直さない。幾何を扱えない面（NIHO Desktop。移行元設計）は `{ geometry: false }` を渡し、幾何のある設定を
+ * niho-6 / niho-10 / niho-12 / niho-13 は interim-1 / standard-1 だけ）のときだけ直せる（新しい版の NIHO で保存した設定を古い数式・ルックで読み替えない）。恒等でない * 幾何を v1 で持つ壊れた設定は直さない。幾何を扱えない面（NIHO Desktop。移行元設計）は `{ geometry: false }` を渡し、幾何のある設定を
  * 閲覧だけにする（切り抜きを落として描かない・保存しない）。
  */
 export function isEditableDevelopSettings(value: unknown, options: { geometry?: boolean } = {}): boolean {
@@ -533,7 +561,9 @@ export function resetDevelopSettingsColors(current: DevelopSettings | null, base
  * `presetMasks`（結果の `masks` と、当てる写真の作業画像の大きさ）を渡すと、写真の幾何で見えている枠から作業画像の座標へ写して
  * 写真のマスクと置き換える（`develop-preset-masks.ts`。docs/local-adjustments.md「Lightroom の XMP の読み」）。渡さない・大きさが
  * 分からない・1 枚も置けないときは、当てる前の写真のマスクのまま。
- */
+ *
+ * 幾何のうち変形（遠近 `perspective` と Upright の `upright`。niho-photo#46）だけはプリセットの結果を
+ * 入れる（crate が当てる前の幾何にプリセットの `Perspective*` を当てたもの。Lightroom のプリセットの変形も当たる）。 */
 export function presetDevelopSettings(
   base: DevelopSettings,
   presetResult: DevelopSettings,
@@ -551,11 +581,29 @@ export function presetDevelopSettings(
   else next.masks = base.masks;
   if (base.look === undefined) delete next.look;
   else next.look = base.look;
-  if (isRecord(base.geometry)) next.geometry = base.geometry;
+  const geometry = presetGeometry(base.geometry, presetResult.geometry);
+  if (geometry) next.geometry = geometry;
   else delete next.geometry;
   const promoted =
     presetResult.engine === NIHO2_DEVELOP_SETTINGS_ENGINE && base.engine === LEGACY_DEVELOP_SETTINGS_ENGINE;
   return { ...next, v: developSettingsVersion(next), engine: promoted ? NIHO2_DEVELOP_SETTINGS_ENGINE : base.engine };
+}
+
+/** プリセットの結果に入れる幾何の項目（変形）。ほかは当てる前のまま。 */
+const PRESET_GEOMETRY_KEYS = ["perspective", "upright"] as const;
+
+/**
+ * 当てる前の幾何 `base` に、プリセットの結果の幾何 `preset` の変形（{@link PRESET_GEOMETRY_KEYS}）だけを入れる。当てる前に幾何が
+ * 無く、変形も入らなければ null（キーを作らない）。
+ */
+function presetGeometry(base: unknown, preset: unknown): Record<string, unknown> | null {
+  const next: Record<string, unknown> = isRecord(base) ? { ...base } : {};
+  const source = isRecord(preset) ? preset : {};
+  for (const key of PRESET_GEOMETRY_KEYS) {
+    if (source[key] === undefined) delete next[key];
+    else next[key] = source[key];
+  }
+  return isRecord(base) || Object.keys(next).length > 0 ? next : null;
 }
 
 /**
@@ -570,6 +618,9 @@ export function autoDevelopSettings(before: DevelopSettings, autoResult: Develop
     if (before[key] === undefined) delete next[key];
     else next[key] = before[key];
   }
+  // 幾何は変形も含めて押す前のまま
+  if (isRecord(before.geometry)) next.geometry = before.geometry;
+  else delete next.geometry;
   return { ...next, v: developSettingsVersion(next), engine: before.engine };
 }
 

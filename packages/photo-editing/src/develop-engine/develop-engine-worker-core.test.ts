@@ -394,8 +394,9 @@ describe("createDevelopEngineWorkerHandler", () => {
     }
   });
 
-  it("幾何の口と v3/v4/v6 設定があれば ready に全 capability を付ける", async () => {
+  it("幾何の口と v3/v4/v5/v6/v7 設定があれば ready に全 capability を付ける", async () => {
     const glue = fakeGlue();
+    const validateSettings = vi.fn((_settingsJson: string) => "[]");
     const { handler, posted } = setup({
       module: {
         ...glue.module,
@@ -403,7 +404,43 @@ describe("createDevelopEngineWorkerHandler", () => {
         rasterDecodeSize: () => 1280,
         geometryOutputSize: () => ({ width: 1280, height: 853 }),
         beforeSettings: (settingsJson: string) => settingsJson,
-        validateSettings: () => "[]",
+        validateSettings,
+      },
+    });
+
+    await handler({ type: "init", id: 1, manifestUrl: MANIFEST_URL });
+
+    expect(posted[0]?.message).toEqual({
+      type: "ready",
+      id: 1,
+      version: "0.2.0+test",
+      geometry: true,
+      effects: true,
+      colorPoints: true,
+      detail: true,
+      perspective: true,
+    });
+    // 遠近（niho-photo#46）は小さな v: 7 の設定で確かめる
+    expect(JSON.parse(validateSettings.mock.calls[3]?.[0] ?? "null")).toEqual({
+      v: 7,
+      engine: "niho-10",
+      look: "niho-standard-1",
+      base: null,
+      geometry: { perspective: { vertical: -10 }, constrain: true },
+    });
+  });
+
+  it("幾何の口があっても v: 7 を断る wasm には perspective を付けない", async () => {
+    const glue = fakeGlue();
+    const unsupportedVersion = JSON.stringify([{ code: "unsupportedVersion", message: "only v = 1, v = 2, v = 3, and v = 4 are supported", path: "v" }]);
+    const { handler, posted } = setup({
+      module: {
+        ...glue.module,
+        imageSize: () => ({ width: 6000, height: 4000 }),
+        rasterDecodeSize: () => 1280,
+        geometryOutputSize: () => ({ width: 1280, height: 853 }),
+        beforeSettings: (settingsJson: string) => settingsJson,
+        validateSettings: (settingsJson: string) => (JSON.parse(settingsJson).v === 7 ? unsupportedVersion : "[]"),
       },
     });
 

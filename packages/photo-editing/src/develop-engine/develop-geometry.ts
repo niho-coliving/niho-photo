@@ -1,3 +1,12 @@
+import {
+  DEVELOP_PERSPECTIVE_FIELDS,
+  constrainCropBoxToPerspective,
+  developPerspectiveWarp,
+  isIdentityDevelopPerspective,
+  perspectiveToCanvas,
+  perspectiveToFrame,
+  transformDevelopPerspective,
+} from "./develop-perspective";
 import { developSettingsVersion, hasDevelopGeometry, type DevelopSettings } from "./develop-settings";
 
 /**
@@ -16,11 +25,33 @@ import { developSettingsVersion, hasDevelopGeometry, type DevelopSettings } from
  *
  * `aspect`（画面が守る縦横比。描画は読まない）の `original` は**枠の**比率（回した後の見えている向き）、`originalSwapped` はその逆数。
  * 無いのは `original` と同じ。
+ *
+ * 遠近（`perspective`。Lightroom の変形。niho-photo#46。計算は `develop-perspective.ts`）は、枠を同じ大きさの「補正後の枠」に射影で
+ * 写す（回転・反転の後・切り抜きの前）。`crop` と `angle` は補正後の枠の上の座標なので、上の式も箱の計算もそのまま補正後の枠で
+ * 成り立つ。「余白を埋める」（`constrain`）は描くときに切り抜きを補正した写真の中に収める（保存する `crop` は変えない）。
  */
 
 export type DevelopGeometryRotate = 0 | 90 | 180 | 270;
 
 export type DevelopCrop = { left: number; top: number; right: number; bottom: number };
+
+/** 遠近（Lightroom の変形の 7 本。XMP の `Perspective*` と同じ単位・範囲。恒等は 0・0・0・0・100・0・0）。 */
+export type DevelopPerspective = {
+  /** 垂直方向（−100〜100。負で上が広がる） */
+  vertical: number;
+  /** 水平方向（−100〜100。正で右が広がる） */
+  horizontal: number;
+  /** 回転（度。−10〜10。正で写真が反時計回り。角度補正と同じ向き） */
+  rotate: number;
+  /** 縦横比（−100〜100。正で横に伸びる） */
+  aspect: number;
+  /** 拡大・縮小（%。50〜150） */
+  scale: number;
+  /** X オフセット（−100〜100。正で右へ。100 で枠の幅の半分） */
+  x: number;
+  /** Y オフセット（−100〜100。正で下へ。100 で枠の高さの半分） */
+  y: number;
+};
 
 export type DevelopGeometry = {
   /** 時計回りの 90° 回転 */
@@ -32,6 +63,12 @@ export type DevelopGeometry = {
   crop: DevelopCrop;
   /** 画面が守る縦横比（`free`・`original`・`originalSwapped`・`<w>:<h>`。無ければ `original` と同じ） */
   aspect?: string;
+  /** 遠近（無ければ恒等。恒等なら保存しない） */
+  perspective?: DevelopPerspective;
+  /** 余白を埋める（無ければ off。遠近が無いときは描画に効かない） */
+  constrain?: boolean;
+  /** Lightroom の Upright の種類（0〜5。保持のみで描かない。無ければ 0） */
+  upright?: number;
   /** 知らないキー（そのまま持って書き戻す） */
   extra?: Readonly<Record<string, unknown>>;
 };
@@ -59,7 +96,21 @@ Object.freeze(FROZEN_IDENTITY.crop);
 /** 恒等の幾何（枠は作業画像そのもの・全体）。 */
 export const IDENTITY_DEVELOP_GEOMETRY: Readonly<DevelopGeometry> = Object.freeze(FROZEN_IDENTITY);
 
-const KNOWN_GEOMETRY_KEYS: ReadonlySet<string> = new Set(["rotate", "flipH", "flipV", "angle", "crop", "aspect"]);
+const KNOWN_GEOMETRY_KEYS: ReadonlySet<string> = new Set([
+  "rotate",
+  "flipH",
+  "flipV",
+  "angle",
+  "crop",
+  "aspect",
+  "perspective",
+  "constrain",
+  "upright",
+]);
+/** 保存する遠近の小数の桁（スライダーの刻みは 0.1。XMP の細かい値も揺らさない）。 */
+const PERSPECTIVE_DIGITS = 6;
+/** Upright の種類の上限（crate の `MAX_UPRIGHT`）。 */
+const MAX_UPRIGHT = 5;
 
 /** 保存する `crop` の小数の桁（長辺 6000px で 0.003px。保存のたびに揺れない）。 */
 const CROP_DIGITS = 6;
@@ -100,6 +151,18 @@ function readCrop(value: unknown): DevelopCrop | null {
   return crop;
 }
 
+/** `perspective` を読む（欠けた項目は恒等の値。知らないキー・数でない値は壊れた形で null。crate と同じ）。 */
+function readPerspective(value: unknown): DevelopPerspective | null {
+  if (!isRecord(value)) return null;
+  const perspective: DevelopPerspective = { vertical: 0, horizontal: 0, rotate: 0, aspect: 0, scale: 100, x: 0, y: 0 };
+  for (const [key, item] of Object.entries(value)) {
+    const field = DEVELOP_PERSPECTIVE_FIELDS.find((candidate) => candidate.key === key);
+    if (!field || !isFiniteNumber(item)) return null;
+    perspective[field.key] = item;
+  }
+  return perspective;
+}
+
 /**
  * `geometry` の値を読む。無ければ（undefined / null）恒等、欠けた項目は既定で補い、知らないキーは `extra` に保つ。形が壊れていれば
  * null（crate の `Geometry::from_value` が拒む形。範囲は見ない）。
@@ -119,6 +182,19 @@ export function parseDevelopGeometry(value: unknown): DevelopGeometry | null {
   const aspect = value.aspect;
   if (typeof aspect === "string") geometry.aspect = aspect;
   else if (aspect !== undefined && aspect !== null) return null;
+  if (value.perspective !== undefined) {
+    const perspective = readPerspective(value.perspective);
+    if (!perspective) return null;
+    geometry.perspective = perspective;
+  }
+  if (value.constrain !== undefined) {
+    if (typeof value.constrain !== "boolean") return null;
+    geometry.constrain = value.constrain;
+  }
+  if (value.upright !== undefined) {
+    if (!isFiniteNumber(value.upright)) return null;
+    geometry.upright = value.upright;
+  }
   const extra: Record<string, unknown> = {};
   for (const [key, item] of Object.entries(value)) {
     if (!KNOWN_GEOMETRY_KEYS.has(key)) extra[key] = item;
@@ -146,9 +222,21 @@ function clampAngle(angle: number): number {
   return clamp(angle, -DEVELOP_GEOMETRY_MAX_ANGLE, DEVELOP_GEOMETRY_MAX_ANGLE) + 0;
 }
 
+/** 遠近を範囲に収めて小数 6 桁に丸める（数でない値は恒等の値）。 */
+export function normalizeDevelopPerspective(perspective: DevelopPerspective): DevelopPerspective {
+  const scale = 10 ** PERSPECTIVE_DIGITS;
+  const next = { ...perspective };
+  for (const { key, min, max, neutral } of DEVELOP_PERSPECTIVE_FIELDS) {
+    const value = perspective[key];
+    next[key] = Number.isFinite(value) ? Math.round(clamp(value, min, max) * scale) / scale + 0 : neutral;
+  }
+  return next;
+}
+
 /**
- * 幾何を編集内容に書く。幾何が恒等で `aspect` も既定（無い・`original`）なら `geometry` のキーを消し、ほかは書く（`crop` は 0〜1 に
- * 収めて小数 6 桁、`angle` は −45〜45 に収める）。形の版 `v` は書いた幾何から決め直す（恒等でなければ 2）。ほかのキーは触らない。
+ * 幾何を編集内容に書く。幾何が恒等で `aspect` も既定（無い・`original`）・「余白を埋める」も Upright も無いなら `geometry` のキーを
+ * 消し、ほかは書く（`crop` は 0〜1 に収めて小数 6 桁、`angle` は −45〜45 に収める。遠近は範囲に収めて小数 6 桁、恒等なら書かない）。
+ * 形の版 `v` は書いた幾何から決め直す（遠近があれば 7、ほかの恒等でない幾何は 2）。ほかのキーは触らない。
  */
 export function writeDevelopGeometry(settings: DevelopSettings, geometry: DevelopGeometry): DevelopSettings {
   const next: Record<string, unknown> = { ...settings };
@@ -165,15 +253,55 @@ export function writeDevelopGeometry(settings: DevelopSettings, geometry: Develo
     },
   };
   if (geometry.aspect !== undefined) written.aspect = geometry.aspect;
+  if (geometry.perspective) {
+    const perspective = normalizeDevelopPerspective(geometry.perspective);
+    if (!isIdentityDevelopPerspective(perspective)) written.perspective = perspective;
+  }
+  if (geometry.constrain === true) written.constrain = true;
+  const upright = geometry.upright;
+  if (upright !== undefined && Number.isInteger(upright) && upright > 0 && upright <= MAX_UPRIGHT) written.upright = upright;
   const extra = geometry.extra ?? {};
   for (const [key, value] of Object.entries(extra)) {
     if (!KNOWN_GEOMETRY_KEYS.has(key)) written[key] = value;
   }
   const defaultAspect = geometry.aspect === undefined || geometry.aspect === "original";
+  const switches = written.constrain !== undefined || written.upright !== undefined;
   const hasExtra = Object.keys(written).some((key) => !KNOWN_GEOMETRY_KEYS.has(key));
-  if (!hasDevelopGeometry({ geometry: written }) && defaultAspect && !hasExtra) delete next.geometry;
+  if (!hasDevelopGeometry({ geometry: written }) && defaultAspect && !switches && !hasExtra) delete next.geometry;
   else next.geometry = written;
   return { ...next, v: developSettingsVersion(next), engine: settings.engine };
+}
+
+/** 遠近（無ければ恒等）。 */
+export function developGeometryPerspective(geometry: DevelopGeometry): DevelopPerspective {
+  return geometry.perspective ?? { vertical: 0, horizontal: 0, rotate: 0, aspect: 0, scale: 100, x: 0, y: 0 };
+}
+
+/**
+ * ジオメトリの節の「初期化」: 遠近・「余白を埋める」・Upright を既定に戻す（角度・反転・回転・切り抜き・縦横比は触らない）。
+ */
+export function resetGeometryPerspective(geometry: DevelopGeometry): DevelopGeometry {
+  const { perspective: _perspective, constrain: _constrain, upright: _upright, ...rest } = geometry;
+  return rest;
+}
+
+/** 遠近が恒等でない・「余白を埋める」が on・Upright がある（ジオメトリの節の「初期化」で戻すものがある）か。 */
+export function hasGeometryPerspectiveEdits(geometry: DevelopGeometry): boolean {
+  return (
+    !isIdentityDevelopPerspective(geometry.perspective) ||
+    geometry.constrain === true ||
+    (geometry.upright !== undefined && geometry.upright !== 0)
+  );
+}
+
+/**
+ * 描かれる切り抜きの箱: 「余白を埋める」が on で遠近があれば、箱を補正した写真の中に収める（crate の `constrain_corners`。
+ * 保存する `crop` は変えない）。ほかはそのまま。`frame` は {@link developFrameSize}。
+ */
+export function constrainedCropBox(geometry: DevelopGeometry, box: CropBox, frame: DevelopSize): CropBox {
+  if (geometry.constrain !== true) return box;
+  const warp = developPerspectiveWarp(geometry.perspective, frame);
+  return warp ? constrainCropBoxToPerspective(box, geometry.angle, warp) : box;
 }
 
 /** 切り抜きの「初期化」: 幾何を消して `v: 1` にする（色の補正は触らない）。 */
@@ -520,6 +648,7 @@ export function setGeometryAspect(geometry: DevelopGeometry, aspect: string, fra
  * 表示される結果を時計回りに 90° 回す（反転があっても）。`rotate` を 90 進めて `flipH` と `flipV` を入れ替え（回した後に鏡映する
  * 順なので、先に回すと左右と上下の鏡映が入れ替わる）、切り抜きの箱も枠と一緒に回す（幅と高さが入れ替わる。角度はそのまま）。
  * `aspect` は `<w>:<h>` の縦横を入れ替える（`original` / `originalSwapped` は枠の比率に対する値で、枠ごと回るのでそのまま）。
+ * 遠近も結果がいっしょに回るように写す（垂直と水平・X と Y が入れ替わり、縦横比の符号が反転する。`transformDevelopPerspective`）。
  * `source` は作業画像（向き反映済み・幾何を当てる前）の大きさ。
  */
 export function rotateGeometryClockwise(geometry: DevelopGeometry, source: DevelopSize): DevelopGeometry {
@@ -538,12 +667,13 @@ export function rotateGeometryClockwise(geometry: DevelopGeometry, source: Devel
   if (geometry.aspect !== undefined && FIXED_ASPECT_PATTERN.test(geometry.aspect)) {
     next.aspect = swapDevelopAspect(geometry.aspect);
   }
+  if (geometry.perspective) next.perspective = transformDevelopPerspective(geometry.perspective, "clockwise");
   return next;
 }
 
 /**
  * 表示される結果を反時計回りに 90° 回す（{@link rotateGeometryClockwise} を 3 回と同じ）。枠の点 (x, y) は回した枠の (y, W − x)
- * へ移る。`rotate`・反転・`aspect` の扱いは時計回りと同じ。
+ * へ移る。`rotate`・反転・`aspect`・遠近の扱いは時計回りと同じ。
  */
 export function rotateGeometryCounterClockwise(geometry: DevelopGeometry, source: DevelopSize): DevelopGeometry {
   const frame = developFrameSize(source, geometry.rotate);
@@ -560,12 +690,14 @@ export function rotateGeometryCounterClockwise(geometry: DevelopGeometry, source
   if (geometry.aspect !== undefined && FIXED_ASPECT_PATTERN.test(geometry.aspect)) {
     next.aspect = swapDevelopAspect(geometry.aspect);
   }
+  if (geometry.perspective) next.perspective = transformDevelopPerspective(geometry.perspective, "counterClockwise");
   return next;
 }
 
 /**
  * 表示される結果を上下に鏡映する（{@link rotateGeometryClockwise} を 2 回してから {@link flipGeometryHorizontal} と同じ結果）。
- * `flipV` を切り替え、切り抜きの箱も枠の上で上下に鏡映し、角度の符号を反転する（`rotate` は変えない）。
+ * `flipV` を切り替え、切り抜きの箱も枠の上で上下に鏡映し、角度の符号を反転する（`rotate` は変えない）。遠近は垂直・回転・
+ * Y オフセットの符号を反転する。
  */
 export function flipGeometryVertical(geometry: DevelopGeometry, source: DevelopSize): DevelopGeometry {
   const frame = developFrameSize(source, geometry.rotate);
@@ -576,12 +708,13 @@ export function flipGeometryVertical(geometry: DevelopGeometry, source: DevelopS
     flipV: !geometry.flipV,
     angle,
     crop: cropFromBox({ ...box, cy: frame.height - box.cy }, angle, frame),
+    ...(geometry.perspective ? { perspective: transformDevelopPerspective(geometry.perspective, "flipVertical") } : {}),
   };
 }
 
 /**
- * 表示される結果を左右に鏡映する。`flipH` を切り替え、切り抜きの箱も枠の上で鏡映し、角度の符号を反転する。`source` は作業画像の
- * 大きさ。
+ * 表示される結果を左右に鏡映する。`flipH` を切り替え、切り抜きの箱も枠の上で鏡映し、角度の符号を反転する。遠近は水平・回転・
+ * X オフセットの符号を反転する。`source` は作業画像の大きさ。
  */
 export function flipGeometryHorizontal(geometry: DevelopGeometry, source: DevelopSize): DevelopGeometry {
   const frame = developFrameSize(source, geometry.rotate);
@@ -592,13 +725,15 @@ export function flipGeometryHorizontal(geometry: DevelopGeometry, source: Develo
     flipH: !geometry.flipH,
     angle,
     crop: cropFromBox({ ...box, cx: frame.width - box.cx }, angle, frame),
+    ...(geometry.perspective ? { perspective: transformDevelopPerspective(geometry.perspective, "flipHorizontal") } : {}),
   };
 }
 
 /**
  * 出力の位置 `(px, py)`（切り抜いた結果の左上が 0,0・右下が 1,1）が、作業画像（向き反映済み・幾何を当てる前）のどこ
  * `(sx, sy)`（0〜1）に当たるか。crate の描き方どおり: 切り抜き枠の上の位置（角が枠から出る角度つきの切り抜きは中心の回りに縮めて
- * 収める）→ 反転を戻す → 回転を戻す。長方形にならない・角度つきで中心が枠の外の切り抜き（crate の `invalidCrop`）は null。
+ * 収める。「余白を埋める」は補正した写真の中に収める）→ 遠近を戻す → 反転を戻す → 回転を戻す。長方形にならない・角度つきで中心が
+ * 枠の外の切り抜き（crate の `invalidCrop`）・消失線の向こうの点は null。
  */
 export function geometryOutputToSource(
   geometry: DevelopGeometry,
@@ -614,11 +749,18 @@ export function geometryOutputToSource(
     const scale = inscribedScale(box, geometry.angle, frame);
     if (scale < 1) box = { ...box, width: box.width * scale, height: box.height * scale };
   }
+  box = constrainedCropBox(geometry, box, frame);
   const { u, v } = axes(geometry.angle);
   const a = (px - 0.5) * box.width;
   const b = (py - 0.5) * box.height;
   let x = box.cx + a * u[0] + b * v[0];
   let y = box.cy + a * u[1] + b * v[1];
+  const warp = developPerspectiveWarp(geometry.perspective, frame);
+  if (warp) {
+    const point = perspectiveToFrame(warp, [x, y]);
+    if (!point) return null;
+    [x, y] = point;
+  }
   if (geometry.flipH) x = frame.width - x;
   if (geometry.flipV) y = frame.height - y;
   let sx: number;
@@ -641,9 +783,10 @@ export function geometryOutputToSource(
 
 /**
  * {@link geometryOutputToSource} の逆: 作業画像の位置 `(sx, sy)`（0〜1）が出力（切り抜いた結果。左上 0,0・右下 1,1）のどこに見えるか。
- * 回転を戻す → 反転を戻す → 切り抜き枠の自分の軸へ射影する（角が枠から出る角度つきの切り抜きは、描き方と同じく中心の回りに縮めた
- * 枠で）。出力の外の点もそのまま返す（0〜1 の外）。順方向が null を返す切り抜き（長方形にならない・角度つきで中心が枠の外）は null。
- * 部分補正（マスク）の画面のつまみを、写真の上の見えている位置に置くために使う。
+ * 作業画像へ回転・反転を当てる → 遠近で補正後の枠へ写す → 「余白を埋める」を反映した切り抜き枠の自分の軸へ射影する（角が枠から
+ * 出る角度つきの切り抜きは、描き方と同じく中心の回りに縮めた枠で）。出力の外の点もそのまま返す（0〜1 の外）。順方向が null を返す
+ * 切り抜き（長方形にならない・角度つきで中心が枠の外）や消失線の向こうの点は null。部分補正（マスク）の画面のつまみを、写真の上の
+ * 見えている位置に置くために使う。
  */
 export function geometrySourceToOutput(
   geometry: DevelopGeometry,
@@ -659,6 +802,7 @@ export function geometrySourceToOutput(
     const scale = inscribedScale(box, geometry.angle, frame);
     if (scale < 1) box = { ...box, width: box.width * scale, height: box.height * scale };
   }
+  box = constrainedCropBox(geometry, box, frame);
   const px = sx * source.width;
   const py = sy * source.height;
   let x: number;
@@ -678,6 +822,12 @@ export function geometrySourceToOutput(
   }
   if (geometry.flipH) x = frame.width - x;
   if (geometry.flipV) y = frame.height - y;
+  const warp = developPerspectiveWarp(geometry.perspective, frame);
+  if (warp) {
+    const point = perspectiveToCanvas(warp, [x, y]);
+    if (!point) return null;
+    [x, y] = point;
+  }
   // u・v は正規直交なので、枠の中心からのずれを軸へ射影すれば切り抜きの自分の座標になる
   const { u, v } = axes(geometry.angle);
   const dx = x - box.cx;

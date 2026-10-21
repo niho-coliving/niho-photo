@@ -27,14 +27,218 @@
 //! `aspect` is the ratio the editor keeps while the crop is dragged
 //! (`free`, `original`, `originalSwapped` or `<w>:<h>`); rendering does not
 //! read it.
+//!
+//! `perspective` (niho-photo#46) is Lightroom's Transform (`crs:Perspective*`,
+//! same units and ranges, [`Perspective`]): a projective warp of the frame
+//! onto a canvas of the frame's size, applied after the quarter turns and
+//! flips and before the crop, so the crop (and its angle) lies on the
+//! corrected canvas ([`crate::perspective`], `docs/geometry-perspective.md`).
+//! Settings with a perspective that is not the identity are `v: 7`.
+//! `constrain` ("余白を埋める", Lightroom's Constrain Crop) keeps the crop
+//! inside the corrected photo; `upright` (`crs:PerspectiveUpright`, 0..5) is
+//! kept but not rendered. Neither makes the geometry non-identity.
 
 use crate::settings::{num, SettingsError};
 use serde_json::{Map, Value};
 
 /// `v` of settings whose geometry is not the identity.
 pub const GEOMETRY_SETTINGS_VERSION: u32 = 2;
+/// `v` of settings whose geometry has a perspective that is not the
+/// identity (niho-photo#46). 5 and 6 belong to other features.
+pub const PERSPECTIVE_SETTINGS_VERSION: u32 = 7;
 /// Straighten limit (degrees, both ways).
 pub const MAX_ANGLE_DEGREES: f64 = 45.0;
+/// Largest `upright` (Lightroom's `PerspectiveUpright`: 0 off, 1 auto,
+/// 2 level, 3 vertical, 4 full, 5 guided).
+pub const MAX_UPRIGHT: u32 = 5;
+
+/// One of the seven Transform sliders ([`Perspective`]).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum PerspectiveField {
+    Vertical,
+    Horizontal,
+    Rotate,
+    Aspect,
+    Scale,
+    X,
+    Y,
+}
+
+impl PerspectiveField {
+    pub const ALL: [PerspectiveField; 7] = [
+        PerspectiveField::Vertical,
+        PerspectiveField::Horizontal,
+        PerspectiveField::Rotate,
+        PerspectiveField::Aspect,
+        PerspectiveField::Scale,
+        PerspectiveField::X,
+        PerspectiveField::Y,
+    ];
+
+    /// The key in `geometry.perspective`.
+    pub fn key(self) -> &'static str {
+        match self {
+            PerspectiveField::Vertical => "vertical",
+            PerspectiveField::Horizontal => "horizontal",
+            PerspectiveField::Rotate => "rotate",
+            PerspectiveField::Aspect => "aspect",
+            PerspectiveField::Scale => "scale",
+            PerspectiveField::X => "x",
+            PerspectiveField::Y => "y",
+        }
+    }
+
+    /// The Camera Raw key (`crs:` stripped).
+    pub fn xmp(self) -> &'static str {
+        match self {
+            PerspectiveField::Vertical => "PerspectiveVertical",
+            PerspectiveField::Horizontal => "PerspectiveHorizontal",
+            PerspectiveField::Rotate => "PerspectiveRotate",
+            PerspectiveField::Aspect => "PerspectiveAspect",
+            PerspectiveField::Scale => "PerspectiveScale",
+            PerspectiveField::X => "PerspectiveX",
+            PerspectiveField::Y => "PerspectiveY",
+        }
+    }
+
+    /// The slider's range (Lightroom's): degrees for `rotate`, percent for
+    /// `scale`, -100..100 for the others.
+    pub fn range(self) -> (f64, f64) {
+        match self {
+            PerspectiveField::Rotate => (-10.0, 10.0),
+            PerspectiveField::Scale => (50.0, 150.0),
+            _ => (-100.0, 100.0),
+        }
+    }
+
+    /// The identity's value (`scale` 100, the others 0).
+    pub fn neutral(self) -> f64 {
+        match self {
+            PerspectiveField::Scale => 100.0,
+            _ => 0.0,
+        }
+    }
+
+    pub fn get(self, p: &Perspective) -> f64 {
+        match self {
+            PerspectiveField::Vertical => p.vertical,
+            PerspectiveField::Horizontal => p.horizontal,
+            PerspectiveField::Rotate => p.rotate,
+            PerspectiveField::Aspect => p.aspect,
+            PerspectiveField::Scale => p.scale,
+            PerspectiveField::X => p.x,
+            PerspectiveField::Y => p.y,
+        }
+    }
+
+    pub fn get_mut(self, p: &mut Perspective) -> &mut f64 {
+        match self {
+            PerspectiveField::Vertical => &mut p.vertical,
+            PerspectiveField::Horizontal => &mut p.horizontal,
+            PerspectiveField::Rotate => &mut p.rotate,
+            PerspectiveField::Aspect => &mut p.aspect,
+            PerspectiveField::Scale => &mut p.scale,
+            PerspectiveField::X => &mut p.x,
+            PerspectiveField::Y => &mut p.y,
+        }
+    }
+
+    /// The field of a Camera Raw key.
+    pub fn from_xmp(key: &str) -> Option<Self> {
+        Self::ALL.into_iter().find(|f| f.xmp() == key)
+    }
+}
+
+/// `geometry.perspective`: Lightroom's Transform sliders in the units of
+/// `crs:Perspective*` ([`PerspectiveField`]). How they warp the frame is
+/// NIHO's model ([`crate::perspective`]), not calibrated against Lightroom.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct Perspective {
+    /// -100..100; negative widens the top (converging verticals of a
+    /// building shot from below are corrected to the left).
+    pub vertical: f64,
+    /// -100..100; positive widens the right side.
+    pub horizontal: f64,
+    /// Degrees, -10..10; positive turns the photo counter-clockwise, like a
+    /// positive `angle`.
+    pub rotate: f64,
+    /// -100..100; positive stretches across and shrinks down (+-25% at
+    /// +-100).
+    pub aspect: f64,
+    /// Percent, 50..150.
+    pub scale: f64,
+    /// -100..100; positive moves the photo right (100: half the frame's
+    /// width).
+    pub x: f64,
+    /// -100..100; positive moves the photo down (100: half the frame's
+    /// height).
+    pub y: f64,
+}
+
+impl Default for Perspective {
+    fn default() -> Self {
+        Self {
+            vertical: 0.0,
+            horizontal: 0.0,
+            rotate: 0.0,
+            aspect: 0.0,
+            scale: 100.0,
+            x: 0.0,
+            y: 0.0,
+        }
+    }
+}
+
+impl Perspective {
+    pub fn is_identity(&self) -> bool {
+        PerspectiveField::ALL
+            .into_iter()
+            .all(|f| f.get(self) == f.neutral())
+    }
+
+    fn from_value(v: &Value) -> Result<Self, SettingsError> {
+        let o = v.as_object().ok_or_else(|| {
+            SettingsError::new("geometry.perspective", "invalidType", "must be an object")
+        })?;
+        let mut p = Self::default();
+        for (key, value) in o {
+            let path = format!("geometry.perspective.{key}");
+            let field = PerspectiveField::ALL
+                .into_iter()
+                .find(|f| f.key() == key)
+                .ok_or_else(|| {
+                    SettingsError::new(
+                        &path,
+                        "unknownKey",
+                        "perspective has vertical, horizontal, rotate, aspect, scale, x and y only",
+                    )
+                })?;
+            *field.get_mut(&mut p) = number(value, &path)?;
+        }
+        Ok(p)
+    }
+
+    fn to_value(self) -> Value {
+        let mut o = Map::new();
+        for f in PerspectiveField::ALL {
+            o.insert(f.key().into(), num(f.get(&self)));
+        }
+        Value::Object(o)
+    }
+
+    fn validate(&self, issues: &mut Vec<SettingsError>) {
+        for f in PerspectiveField::ALL {
+            let (lo, hi) = f.range();
+            if !(lo..=hi).contains(&f.get(self)) {
+                issues.push(SettingsError::new(
+                    &format!("geometry.perspective.{}", f.key()),
+                    "outOfRange",
+                    &format!("must be within {lo}..{hi}"),
+                ));
+            }
+        }
+    }
+}
 
 /// The crop's corners on the frame (see the module docs).
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -108,6 +312,17 @@ pub struct Geometry {
     pub crop: CropRect,
     /// The editor's aspect ratio lock (not rendered).
     pub aspect: Option<String>,
+    /// Lightroom's Transform (niho-photo#46): warps the frame before the
+    /// crop. Written only when it is not the identity.
+    pub perspective: Perspective,
+    /// "余白を埋める": with a perspective, the crop is kept inside the
+    /// corrected photo ([`crate::perspective::constrain_corners`]). Written
+    /// only when on.
+    pub constrain: bool,
+    /// Lightroom's `PerspectiveUpright` (0..=5), kept but not rendered (the
+    /// automatic Upright writes its result into `perspective`). Written
+    /// only when not 0.
+    pub upright: f64,
     /// Unknown keys, preserved verbatim.
     pub extra: Map<String, Value>,
 }
@@ -121,6 +336,9 @@ impl Default for Geometry {
             angle: 0.0,
             crop: CropRect::default(),
             aspect: None,
+            perspective: Perspective::default(),
+            constrain: false,
+            upright: 0.0,
             extra: Map::new(),
         }
     }
@@ -128,14 +346,19 @@ impl Default for Geometry {
 
 impl Geometry {
     /// Whether the frame is the working image itself: no turn (a half turn
-    /// with both flips is a turn too), no angle, the whole frame. `aspect`
-    /// does not count.
+    /// with both flips is a turn too), no angle, the whole frame, no
+    /// perspective. `aspect`, `constrain` and `upright` do not count.
     pub fn is_identity(&self) -> bool {
         let turned = !matches!(
             (self.rotate % 360, self.flip_h, self.flip_v),
             (0, false, false) | (180, true, true)
         );
-        !turned && self.angle == 0.0 && self.crop.is_full()
+        !turned && self.angle == 0.0 && self.crop.is_full() && self.perspective.is_identity()
+    }
+
+    /// The perspective when it is not the identity.
+    pub fn active_perspective(&self) -> Option<&Perspective> {
+        (!self.perspective.is_identity()).then_some(&self.perspective)
     }
 
     /// Reads a `geometry` object. Missing keys take the identity; wrong types
@@ -168,6 +391,9 @@ impl Geometry {
                 "flipV" => g.flip_v = boolean(value, &path)?,
                 "angle" => g.angle = number(value, &path)?,
                 "crop" => g.crop = parse_crop(value)?,
+                "perspective" => g.perspective = Perspective::from_value(value)?,
+                "constrain" => g.constrain = boolean(value, &path)?,
+                "upright" => g.upright = number(value, &path)?,
                 "aspect" => {
                     g.aspect = match value {
                         Value::Null => None,
@@ -203,6 +429,15 @@ impl Geometry {
         o.insert("crop".into(), Value::Object(crop));
         if let Some(aspect) = &self.aspect {
             o.insert("aspect".into(), Value::from(aspect.clone()));
+        }
+        if !self.perspective.is_identity() {
+            o.insert("perspective".into(), self.perspective.to_value());
+        }
+        if self.constrain {
+            o.insert("constrain".into(), Value::from(true));
+        }
+        if self.upright != 0.0 {
+            o.insert("upright".into(), num(self.upright));
         }
         for (k, v) in &self.extra {
             o.entry(k.clone()).or_insert_with(|| v.clone());
@@ -253,6 +488,16 @@ impl Geometry {
                     "must be free, original, originalSwapped or <w>:<h>",
                 ));
             }
+        }
+        self.perspective.validate(issues);
+        if self.upright != libm::trunc(self.upright)
+            || !(0.0..=f64::from(MAX_UPRIGHT)).contains(&self.upright)
+        {
+            issues.push(SettingsError::new(
+                "geometry.upright",
+                "outOfRange",
+                &format!("must be an integer within 0..{MAX_UPRIGHT}"),
+            ));
         }
     }
 }
@@ -438,5 +683,86 @@ mod tests {
         let g = geometry(r#"{"rotate":90,"futureKey":[1]}"#);
         assert_eq!(g.to_value()["futureKey"][0], 1);
         assert_eq!(g.to_value()["rotate"], 90);
+    }
+
+    #[test]
+    fn a_perspective_is_not_the_identity_and_round_trips() {
+        let g = geometry(r#"{"perspective":{"vertical":-30,"scale":90,"x":12.5}}"#);
+        assert!(!g.is_identity());
+        assert_eq!(g.perspective.vertical, -30.0);
+        assert_eq!(g.perspective.scale, 90.0);
+        assert_eq!(g.perspective.horizontal, 0.0);
+        let out = g.to_value();
+        // Every key is written once the perspective is not the identity.
+        assert_eq!(out["perspective"]["rotate"], 0);
+        assert_eq!(out["perspective"]["x"], 12.5);
+        assert_eq!(Geometry::from_value(&out).unwrap(), g);
+        // The identity's values (scale 100) are the identity, and are not
+        // written; `constrain` and `upright` do not count.
+        let neutral =
+            geometry(r#"{"perspective":{"vertical":0,"scale":100},"constrain":true,"upright":3}"#);
+        assert!(neutral.is_identity());
+        let out = neutral.to_value();
+        assert!(out.get("perspective").is_none());
+        assert_eq!(out["constrain"], true);
+        assert_eq!(out["upright"], 3);
+        assert_eq!(Geometry::from_value(&out).unwrap(), neutral);
+        // Off and 0 are not written (an old geometry keeps its shape).
+        let plain = geometry(r#"{"rotate":90,"constrain":false,"upright":0}"#).to_value();
+        assert!(plain.get("constrain").is_none() && plain.get("upright").is_none());
+    }
+
+    #[test]
+    fn perspective_ranges_and_shapes_are_checked() {
+        let codes = |json: &str| {
+            let mut issues = Vec::new();
+            geometry(json).validate(&mut issues);
+            issues
+                .into_iter()
+                .map(|e| (e.path, e.code))
+                .collect::<Vec<_>>()
+        };
+        for (key, ok, bad) in [
+            ("vertical", -100.0, -100.5),
+            ("horizontal", 100.0, 101.0),
+            ("rotate", 10.0, 10.1),
+            ("aspect", -100.0, -101.0),
+            ("scale", 50.0, 49.9),
+            ("scale", 150.0, 151.0),
+            ("x", 100.0, 100.01),
+            ("y", -100.0, -120.0),
+        ] {
+            assert!(codes(&format!(r#"{{"perspective":{{"{key}":{ok}}}}}"#)).is_empty());
+            assert_eq!(
+                codes(&format!(r#"{{"perspective":{{"{key}":{bad}}}}}"#)),
+                vec![(format!("geometry.perspective.{key}"), "outOfRange".into())]
+            );
+        }
+        for bad in ["-1", "6", "1.5"] {
+            assert_eq!(
+                codes(&format!(r#"{{"upright":{bad}}}"#)),
+                vec![("geometry.upright".into(), "outOfRange".into())]
+            );
+        }
+        let code = |json: &str| {
+            Geometry::from_value(&serde_json::from_str(json).unwrap())
+                .unwrap_err()
+                .code
+        };
+        assert_eq!(code(r#"{"perspective":{"tilt":1}}"#), "unknownKey");
+        assert_eq!(code(r#"{"perspective":{"vertical":"1"}}"#), "invalidType");
+        assert_eq!(code(r#"{"perspective":[]}"#), "invalidType");
+        assert_eq!(code(r#"{"constrain":1}"#), "invalidType");
+        assert_eq!(code(r#"{"upright":"auto"}"#), "invalidType");
+    }
+
+    #[test]
+    fn perspective_fields_name_lightrooms_keys() {
+        for f in PerspectiveField::ALL {
+            assert_eq!(PerspectiveField::from_xmp(f.xmp()), Some(f));
+            let (lo, hi) = f.range();
+            assert!(lo < f.neutral() && f.neutral() < hi);
+        }
+        assert_eq!(PerspectiveField::from_xmp("PerspectiveUpright"), None);
     }
 }

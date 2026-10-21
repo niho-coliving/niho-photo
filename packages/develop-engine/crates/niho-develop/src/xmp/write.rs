@@ -11,6 +11,7 @@
 
 use super::{hsl_key, EffectField, EffectGroup, CURVE_MAP, EFFECT_KEYS, HSL_PREFIXES, SCALAR_KEYS};
 use crate::effects::GRAIN_DEFAULT_SEED;
+use crate::geometry::PerspectiveField;
 use crate::settings::{
     CurveChannel, DevelopSettings, HslBand, SettingsError, ToneCurve, WhiteBalanceMode,
     ENGINE_NIHO_10, ENGINE_NIHO_11, ENGINE_NIHO_12, ENGINE_NIHO_13, ENGINE_NIHO_2, ENGINE_NIHO_3,
@@ -58,10 +59,15 @@ pub enum XmpGroup {
     NoiseReduction,
     /// v6 output sharpening (amount, radius, detail, masking).
     Sharpening,
+    /// The Transform sliders (`Perspective*`), "余白を埋める"
+    /// (`CropConstrainToWarp`) and the kept `PerspectiveUpright`
+    /// (niho-photo#46). Not in [`Self::DEFAULT`]: the geometry belongs to
+    /// each photo, like the exposure.
+    Transform,
 }
 
 impl XmpGroup {
-    pub const ALL: [XmpGroup; 13] = [
+    pub const ALL: [XmpGroup; 14] = [
         XmpGroup::Exposure,
         XmpGroup::WhiteBalance,
         XmpGroup::Tone,
@@ -75,11 +81,12 @@ impl XmpGroup {
         XmpGroup::Grain,
         XmpGroup::NoiseReduction,
         XmpGroup::Sharpening,
+        XmpGroup::Transform,
     ];
 
     /// The default of "save the current edit as a preset": everything but
-    /// the exposure and the white balance, which belong to each photo (so
-    /// the preset stacks on a photo's own edit, whichever comes first).
+    /// the exposure, white balance and transform, which belong to each photo
+    /// (so the preset stacks on a photo's own edit, whichever comes first).
     pub const DEFAULT: [XmpGroup; 11] = [
         XmpGroup::Tone,
         XmpGroup::Presence,
@@ -109,6 +116,7 @@ impl XmpGroup {
             XmpGroup::Grain => "grain",
             XmpGroup::NoiseReduction => "noiseReduction",
             XmpGroup::Sharpening => "sharpening",
+            XmpGroup::Transform => "transform",
         }
     }
 
@@ -485,6 +493,23 @@ pub fn settings_to_xmp(settings: &DevelopSettings, options: &XmpWriteOptions) ->
             Some(range) => number(v, range.0 < 0.0),
         };
         put(key.xmp, text);
+    }
+    if on(XmpGroup::Transform) {
+        // Every slider, the identity's too (applying the preset sets them),
+        // and the kept Upright mode.
+        let geometry = settings.geometry.clone().unwrap_or_default();
+        for field in PerspectiveField::ALL {
+            let (lo, _) = field.range();
+            put(
+                field.xmp(),
+                number(field.get(&geometry.perspective), lo < 0.0),
+            );
+        }
+        put("PerspectiveUpright", number(geometry.upright, false));
+        put(
+            "CropConstrainToWarp",
+            if geometry.constrain { "1" } else { "0" }.into(),
+        );
     }
     if settings.legacy_settings.is_some() {
         not_written.push("legacySettings".into());

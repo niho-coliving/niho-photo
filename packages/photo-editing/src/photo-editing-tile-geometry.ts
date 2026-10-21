@@ -1,6 +1,6 @@
 import type { CSSProperties } from "react";
 
-import { hasDevelopGeometry } from "./develop-engine/develop-settings";
+import { hasDevelopGeometry, hasDevelopPerspective } from "./develop-engine/develop-settings";
 
 /**
  * 一覧のタイルで、補正前のプレビュー（長辺 1024px）に `developSettings.geometry`（回転・反転・角度補正・切り抜き。F3 移行元設計）を
@@ -13,6 +13,8 @@ import { hasDevelopGeometry } from "./develop-engine/develop-settings";
  *
  * CSS は測らずに当てる: 切り抜きの縦横比の箱をタイルに cover で置き（{@link PhotoEditingTileGeometryStyles.box}）、その中で
  * プレビューの `<img>` に「平行移動（img の箱に対する %）→ 回転・反転の行列」を掛ける（{@link PhotoEditingTileGeometryStyles.image}）。
+ * 遠近（`perspective`。niho-photo#46）のある幾何は CSS で再現しないので当てない（補正後のプレビューができるまで補正前のまま出す。
+ * 遠近を外して切り抜き・回転だけを当てると、違う枠を見せてしまう）。
  */
 
 /** 箱と画像に当てる style（どちらも絶対配置。箱の親はタイルのセルで、`overflow: hidden` と `position: relative` を持つ）。 */
@@ -66,6 +68,7 @@ export function photoEditingTileGeometryStyles(
   cellAspect = 4 / 3,
 ): PhotoEditingTileGeometryStyles | null {
   if (!isRecord(geometry) || !(naturalWidth > 0) || !(naturalHeight > 0)) return null;
+  if (hasDevelopPerspective({ geometry })) return null;
   const rotate = finite(geometry.rotate, 0);
   const angle = finite(geometry.angle, 0);
   const flipH = geometry.flipH === undefined ? false : geometry.flipH;

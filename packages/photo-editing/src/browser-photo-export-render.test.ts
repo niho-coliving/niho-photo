@@ -80,7 +80,7 @@ function fakeEngine(options: { source?: { width: number; height: number }; frame
     supportsEffects: vi.fn(async () => true),
     supportsColorPoints: vi.fn(async () => true),
     supportsDetail: vi.fn(async () => true),
-    imageSize: vi.fn(async () => source),
+    supportsPerspective: vi.fn(async () => true),    imageSize: vi.fn(async () => source),
     rasterDecodeSize: vi.fn(async () => 2048),
     geometryOutputSize: vi.fn(async () => frame),
     withCaptureExif: vi.fn(async (jpeg: Uint8Array<ArrayBuffer>) => withExifMark(jpeg)),

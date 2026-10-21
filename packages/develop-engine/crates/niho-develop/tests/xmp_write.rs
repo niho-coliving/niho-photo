@@ -578,7 +578,8 @@ fn options_are_read_from_json() {
             "vignette",
             "grain",
             "noiseReduction",
-            "sharpening"
+            "sharpening",
+            "transform"
         ]
     );
 }

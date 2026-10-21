@@ -125,18 +125,13 @@ const UNSUPPORTED_GROUPS: readonly UnsupportedGroup[] = [
   // （niho-photo#39。crate は `unsupported` に入れない）ので、ここには置かない
   { label: LABELS.curveSaturation, keys: ["CurveRefineSaturation"], always: true },
   { label: LABELS.pointColors, keys: ["PointColors"], always: true },
+  // 変形の手動のスライダー（`Perspective*`）と「切り抜きを制限」（`CropConstrainToWarp`）は、エンジン 0.20.0 から描く（niho-photo#46。
+  // crate は `unsupported` に入れない）。残るのは Upright の自動計算（`PerspectiveUpright` がオンのときの `Upright*`）だけ
   {
-    label: LABELS.transform,
-    prefixes: ["Perspective", "Upright"],
-    masters: [
-      "PerspectiveUpright",
-      "PerspectiveVertical",
-      "PerspectiveHorizontal",
-      "PerspectiveRotate",
-      "PerspectiveAspect",
-      "PerspectiveX",
-      "PerspectiveY",
-    ],
+    label: LABELS.upright,
+    keys: ["PerspectiveUpright"],
+    prefixes: ["Upright"],
+    masters: ["PerspectiveUpright"],
   },
   // 既定のプロファイル（Default Color など）は写真のルックを変えない
   { label: LABELS.profile, keys: ["CameraProfile"], noEffect: (value) => /^default\b/i.test(value.trim()) },

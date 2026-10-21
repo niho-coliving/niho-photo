@@ -31,6 +31,8 @@ import { parseDevelopEngineManifest } from "./develop-engine-manifest";
  *   `validateSettings` に実際の最小設定を渡して確かめる
  * - ディテール（シャープ・ノイズ軽減。Issue #32）も同じく、`v: 6` の `detail` を `validateSettings` が通すときだけ `ready` に
  *   `detail: true` を付ける
+ * - 遠近（`v: 7` の `geometry.perspective`。niho-photo#46）も同じく、`validateSettings` が小さな `v: 7` の設定を通すときだけ `ready` に
+ *   `perspective: true` を付ける（幾何の口が無い wasm には付けない）
  * - プリセットの適用量・書き出し・見本（F2a 移行元設計 の口。crate 0.5.0 から）: `applyPreset`（開いている写真の撮影時の白
  *   `asShotWhite()` を渡す）・`settingsToXmp`・`renderPresetThumbnail`（開いている写真の `thumbnail(256)` の別の session を初回に
  *   作って持ち、丁寧に〔final〕描く。親のengine/CNR設定が変わったら手放し、次回に現在の解析から作り直す。写真を手放すと一緒に手放す）。口が glue にあれば `ready` に `presetAmount` /
@@ -125,6 +127,8 @@ export type DevelopEngineWorkerFeatures = {
   colorPoints?: true;
   /** wasm がディテール（シャープ・ノイズ軽減）の設定（`v: 6`）を読める（Issue #32）。 */
   detail?: true;
+  /** wasm が遠近のある設定（`v: 7`。niho-photo#46）を読める。 */
+  perspective?: true;
   /** `applyPreset`（プリセットの適用量。F2a 移行元設計） */
   presetAmount?: true;
   /** `settingsToXmp`（今の補正をプリセットに書き出す） */
@@ -447,6 +451,23 @@ function acceptsDetailSettings(validateSettings: DevelopGlue["validateSettings"]
     return false;
   }
 }
+const PERSPECTIVE_PROBE_SETTINGS_JSON = JSON.stringify({
+  v: 7,
+  engine: "niho-10",
+  look: "niho-standard-1",
+  base: null,
+  geometry: { perspective: { vertical: -10 }, constrain: true },
+});
+
+function acceptsPerspectiveSettings(validateSettings: DevelopGlue["validateSettings"]): boolean {
+  if (!validateSettings) return false;
+  try {
+    const issues: unknown = JSON.parse(String(validateSettings(PERSPECTIVE_PROBE_SETTINGS_JSON)));
+    return Array.isArray(issues) && issues.length === 0;
+  } catch {
+    return false;
+  }
+}
 
 /** glue にある口（`ready` に付ける）。 */
 function glueFeatures(glue: DevelopGlue): DevelopEngineWorkerFeatures {
@@ -580,6 +601,7 @@ export function createDevelopEngineWorkerHandler(
   let detail = false;
   // 起こした wasm が描ける部分補正（起こしたときに `capabilities()` を 1 回だけ読む。描けなければ null）
   let masks: DevelopMaskCapabilities | null = null;
+  let perspective = false;
   let wasmMemory: () => ArrayBufferLike | null = () => null;
   let diagnostics = false;
   let unavailableReason: string | null = null;
@@ -701,6 +723,7 @@ export function createDevelopEngineWorkerHandler(
       ...(colorPoints ? { colorPoints: true as const } : {}),
       ...(detail ? { detail: true as const } : {}),
       ...(masks ? { masks: { ...masks, kinds: [...masks.kinds] } } : {}),
+      ...(perspective ? { perspective: true as const } : {}),
     });
   };
 
@@ -738,6 +761,7 @@ export function createDevelopEngineWorkerHandler(
       colorPoints = loaded.colorSampling && acceptsColorPointSettings(loaded.validateSettings);
       detail = acceptsDetailSettings(loaded.validateSettings);
       masks = readMaskCapabilities(loaded);
+      perspective = loaded.geometry !== null && acceptsPerspectiveSettings(loaded.validateSettings);
       postReady(id);
     } catch (error) {
       unavailableReason = errorMessage(error);

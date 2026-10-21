@@ -25,9 +25,12 @@
 //!   `adjust` ranges: 0% carries no mask, 100% the preset's, 150% half as
 //!   much again. Their shapes do not move. The photo's `masks` in `settings`
 //!   stay the photo's at every amount.
-
+//! - The Transform sliders (`geometry.perspective`, niho-photo#46) move
+//!   linearly like numbers; the rest of the geometry is the photo's and the
+//!   kept Upright mode the preset's above 0%.
 use super::{preset_settings, EffectField, PresetResult, XmpError, EFFECT_KEYS, SCALAR_KEYS};
 use crate::decode::LightroomWhite;
+use crate::geometry::{Geometry, PerspectiveField};
 use crate::local_mask::{LocalAdjust, LocalMask};
 use crate::settings::{
     ColorGradeBand, ColorPoint, CurveChannel, CurvePoint, DevelopSettings, HslAdjustment,
@@ -212,12 +215,35 @@ fn blend(
         }
     }
     r.tone_curves = mix_curves(&base.tone_curves, &full.tone_curves, t);
+    mix_perspective(base, t, &mut r);
     mix_white_balance(base, full, t, as_shot, &mut r);
     // The blended result may turn on an effect even when the photo's base
     // used the legacy shape version. Keep the version contract in sync with
     // the actual settings rather than carrying the base version through.
     r.v = r.required_version();
     r
+}
+
+/// The Transform sliders of `r` (the whole preset's geometry, which is the
+/// photo's with the preset's Transform) moved from the photo's at `t`
+/// (stopped at their ranges). A photo without a geometry keeps none when
+/// the result is the identity.
+fn mix_perspective(base: &DevelopSettings, t: f64, r: &mut DevelopSettings) {
+    let Some(g) = r.geometry.as_mut() else {
+        return;
+    };
+    let from = base
+        .geometry
+        .as_ref()
+        .map(|g| g.perspective)
+        .unwrap_or_default();
+    for field in PerspectiveField::ALL {
+        let to = field.get(&g.perspective);
+        *field.get_mut(&mut g.perspective) = mix_in(field.get(&from), to, t, field.range());
+    }
+    if base.geometry.is_none() && *g == Geometry::default() {
+        r.geometry = None;
+    }
 }
 
 /// A color grading wheel angle: the short arc from the photo's hue to the
