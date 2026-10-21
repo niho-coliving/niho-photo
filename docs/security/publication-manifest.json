@@ -9645,8 +9645,8 @@
     },
     {
       "path": "packages/develop-engine/RESEARCH26-27.md",
-      "sha256": "c8063b2f779753919172b822b06ac6f64c612465708caed4f8a10c638bee108a",
-      "origin": "公開Issue #26/#27/#29 のため公開済み数式・既存primitiveから独立実装した研究用コード・合成テスト・日本語手順。非公開の写真・参照画素・パス・履歴・第三者ソースを含まない。\n変更理由: 暗所A/Bで現行niho-6を基準とし、H/S以外の色・黒レベル等を同じ数式で比較する。\n変更理由: 実測に基づくWB節点別fit、旧版を維持する候補のnative/wasm固定hashと再現可能な性能計測を整備。\n変更理由: 非公開出力をrepository外へ限定しsealed独立評価を拒否する、匿名集計の再現手順を追加。\n変更理由: Studio実測の段差・WB gate未達・wasm初期解析と継続編集の性能をsource SHA付きで記録。\n変更理由: 57場面のfloat対比較と6場面の原理式Bのgate未達を、匿名数値・残作業として記録。\n変更理由: 教師上の次候補fitとownerの撮影作業を区別し、独立評価前の未達判定であることを明確化。\n変更理由: PR #84: #74 squash後のmainへ解析候補を再統合し、公開ハッシュを更新。\n変更理由: #26 案C（写真特徴から写真ごとの強さを予測）の交差検証前の採否規則・fold外の結果・niho-6 撮影日CVとの比較・不採用の理由を記録し、独立評価の撮影条件と評価toolの版を明確化\n変更理由: #26 案C′ の目的関数・目標・採否規則を交差検証の前に記録\n変更理由: #26 案C′ の目的関数・目標・採否規則を交差検証の前に記録"
+      "sha256": "399c23c962fa27721454c2825c1733bd7540e8d0c805045a7bdcdca3e221f0b8",
+      "origin": "公開Issue #26/#27/#29 のため公開済み数式・既存primitiveから独立実装した研究用コード・合成テスト・日本語手順。非公開の写真・参照画素・パス・履歴・第三者ソースを含まない。\n変更理由: 暗所A/Bで現行niho-6を基準とし、H/S以外の色・黒レベル等を同じ数式で比較する。\n変更理由: 実測に基づくWB節点別fit、旧版を維持する候補のnative/wasm固定hashと再現可能な性能計測を整備。\n変更理由: 非公開出力をrepository外へ限定しsealed独立評価を拒否する、匿名集計の再現手順を追加。\n変更理由: Studio実測の段差・WB gate未達・wasm初期解析と継続編集の性能をsource SHA付きで記録。\n変更理由: 57場面のfloat対比較と6場面の原理式Bのgate未達を、匿名数値・残作業として記録。\n変更理由: 教師上の次候補fitとownerの撮影作業を区別し、独立評価前の未達判定であることを明確化。\n変更理由: PR #84: #74 squash後のmainへ解析候補を再統合し、公開ハッシュを更新。\n変更理由: #26 案C（写真特徴から写真ごとの強さを予測）の交差検証前の採否規則・fold外の結果・niho-6 撮影日CVとの比較・不採用の理由を記録し、独立評価の撮影条件と評価toolの版を明確化\n変更理由: #26 案C′ の目的関数・目標・採否規則を交差検証の前に記録\n変更理由: #26 案C′ の目的関数・目標・採否規則を交差検証の前に記録\n変更理由: #26 案C′ の fold外の結果・niho-6 撮影日CVとの比較・不採用と原因を記録\n変更理由: #26 案C′ の fold外の結果・niho-6 撮影日CVとの比較・不採用と原因を記録\n変更理由: #26 案C′ の fold外の結果・niho-6 撮影日CVとの比較・不採用と原因を記録"
     },
     {
       "path": "packages/develop-engine/crates/niho-develop/examples/analytic_hs_probe.rs",
@@ -10367,6 +10367,11 @@
       "path": "packages/develop-engine/fixtures/color/review-2026-10-21/analytic-hs-teachers-C.json",
       "sha256": "d0bf8c5fd367a68225c6980fc26500047b8f4698dded7566ede0583e79f8b42e",
       "origin": "owner所有の既存非公開教師（57場面）で案Cを撮影日foldの交差検証・全件fit・gate計測した匿名集計のみ。niho-6の撮影日CVとの比較・採否規則の判定・preset文脈の診断、source commit・実行ファイルhash・測定手順を記録し、写真・scene名・私有path・参照画素・個別結果は公開しない。独立評価画像の参照は0枚。"
+    },
+    {
+      "path": "packages/develop-engine/fixtures/color/review-2026-10-21/analytic-hs-teachers-CP.json",
+      "sha256": "1832140816484cdafec2c8fb4c9127b00311601f5ec8a7e50d2f7b338c7976e1",
+      "origin": "owner所有の既存非公開教師（57場面）で案C′を撮影日foldの交差検証・全件fit・gate計測した匿名集計のみ。niho-6の撮影日CV・B1・Cとの比較と採否規則の判定、source commit・実行ファイルhash・測定手順を記録し、写真・scene名・私有path・参照画素・個別結果は公開しない。独立評価画像の参照は0枚。"
     }
   ],
   "excludedSources": [
