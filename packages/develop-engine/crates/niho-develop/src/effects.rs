@@ -176,6 +176,32 @@ pub fn vignette_radius(w: usize, h: usize, roundness: f64) -> Plane {
     plane
 }
 
+/// The same post-crop radius definition as [`vignette_radius`] at an
+/// arbitrary pixel coordinate. Coordinates outside the output are used only
+/// for a filter halo; keeping the output's center and dimensions here avoids
+/// treating an output-sized rho table as a working-window table.
+fn vignette_radius_at(w: usize, h: usize, roundness: f64, x: isize, y: isize) -> f32 {
+    let r = (roundness / 100.0).clamp(-1.0, 1.0);
+    let (hw, hh) = (w as f64 / 2.0, h as f64 / 2.0);
+    let (x, y) = (x as f64 + 0.5, y as f64 + 0.5);
+    if r < 0.0 {
+        let corner = hw.max(hh) * (1.0 - (1.0 - VIGNETTE_BOX_RADIUS_MIN) * -r);
+        let radius_x = corner.min(hw);
+        let radius_y = corner.min(hh);
+        let qx = ((x - hw).abs() - (hw - radius_x)) / radius_x;
+        let qy = ((y - hh).abs() - (hh - radius_y)) / radius_y;
+        let (px, py) = (qx.max(0.0), qy.max(0.0));
+        return ((libm::sqrt(px * px + py * py) + qx.max(qy).min(0.0))
+            * std::f64::consts::FRAC_1_SQRT_2) as f32;
+    }
+    let circle = libm::sqrt((hw * hw + hh * hh) / 2.0);
+    let (sx, sy) = (1.0 + (hw / circle - 1.0) * r, 1.0 + (hh / circle - 1.0) * r);
+    let dx = (x - hw) / hw * sx;
+    let dy = (y - hh) / hh * sy;
+    let corner = libm::sqrt(sx * sx + sy * sy);
+    (libm::sqrt(dx * dx + dy * dy) / corner) as f32
+}
+
 /// `ys` at `x` on the knots `xs` (linear between, the ends outside).
 fn interpolate(x: f64, xs: &[f64], ys: &[f64]) -> f64 {
     let last = xs.len() - 1;
@@ -302,6 +328,9 @@ enum LinearLaw {
 /// (the constants above).
 pub struct LinearVignette<'a> {
     radius: &'a [f32],
+    width: usize,
+    height: usize,
+    roundness: f64,
     law: LinearLaw,
 }
 
@@ -310,6 +339,17 @@ impl LinearVignette<'_> {
     #[inline]
     pub fn radius(&self) -> &[f32] {
         self.radius
+    }
+
+    /// `rho` in output coordinates, including coordinates just outside the
+    /// output that belong to a sharpening halo.
+    #[inline]
+    pub fn radius_at(&self, x: isize, y: isize) -> f32 {
+        if x >= 0 && y >= 0 && (x as usize) < self.width && (y as usize) < self.height {
+            self.radius[y as usize * self.width + x as usize]
+        } else {
+            vignette_radius_at(self.width, self.height, self.roundness, x, y)
+        }
     }
 
     /// The linear value `v` with the vignette at `rho`.
@@ -879,6 +919,9 @@ pub fn prepare<'a>(
             VignetteStyle::HighlightPriority | VignetteStyle::ColorPriority => {
                 linear = Some(LinearVignette {
                     radius,
+                    width: w,
+                    height: h,
+                    roundness: v.roundness,
                     law: LinearLaw::new(v),
                 });
             }
@@ -1159,6 +1202,9 @@ mod tests {
         let radius = [0.0f32, 1.0];
         let law = |amount: f64, style: VignetteStyle| LinearVignette {
             radius: &radius,
+            width: 2,
+            height: 1,
+            roundness: 0.0,
             law: LinearLaw::new(&VignetteSettings {
                 amount,
                 style,
@@ -1211,6 +1257,9 @@ mod tests {
         // all of it, and a brightening vignette none of the slider.
         let with = |amount: f64, highlights: f64| LinearVignette {
             radius: &radius,
+            width: 2,
+            height: 1,
+            roundness: 0.0,
             law: LinearLaw::new(&VignetteSettings {
                 amount,
                 highlights,

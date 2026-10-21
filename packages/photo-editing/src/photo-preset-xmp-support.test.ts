@@ -17,22 +17,41 @@ describe("summarizeUnsupportedPresetItems", () => {
       summarizeUnsupportedPresetItems([
         "IncrementalTemperature",
         "IncrementalTint",
-        "Sharpness",
-        "SharpenRadius",
-        "SharpenDetail",
-        "SharpenEdgeMasking",
-        "LuminanceSmoothing",
-        "ColorNoiseReduction",
-        "ColorNoiseReductionDetail",
-        "ColorNoiseReductionSmoothness",
         "AutoLateralCA",
         "LensProfileEnable",
         "LensProfileSetup",
       ]),
+    ).toEqual({ labels: ["色収差の除去", "レンズ補正", "色温度・色かぶり補正"], otherCount: 0 });
+  });
+
+  it("シャープ・ノイズ軽減は描けるので、届くのは読めない値と既定でない細かな項目だけ（Issue #32）", () => {
+    // crate 0.19.0 はシャープ・ノイズ軽減・カラーノイズの軽減を approximate で返す。unsupported に来るのは、読めない値（主の項目）と、
+    // 既定（ディテール 50・コントラスト 0・滑らかさ 50）でない細かな項目
+    const text = xmp(
+      [
+        'crs:Sharpness="sharp"',
+        'crs:LuminanceSmoothing="30"',
+        'crs:LuminanceNoiseReductionContrast="20"',
+        'crs:ColorNoiseReduction="25"',
+        'crs:ColorNoiseReductionSmoothness="70"',
+      ].join(" "),
+    );
+    expect(
+      summarizeUnsupportedPresetItems(
+        ["Sharpness", "LuminanceNoiseReductionContrast", "ColorNoiseReductionSmoothness"],
+        text,
+      ),
     ).toEqual({
-      labels: ["シャープ", "ノイズ軽減", "カラーノイズの軽減", "色収差の除去", "レンズ補正", "色温度・色かぶり補正"],
+      labels: ["シャープ", "ノイズ軽減のディテール・コントラスト", "カラーノイズの軽減のディテール・滑らかさ"],
       otherCount: 0,
     });
+    // ノイズ軽減が 0 なら細かな項目は効かないので知らせない
+    expect(
+      summarizeUnsupportedPresetItems(
+        ["LuminanceNoiseReductionContrast"],
+        xmp('crs:LuminanceSmoothing="0" crs:LuminanceNoiseReductionContrast="20"'),
+      ),
+    ).toEqual({ labels: [], otherCount: 0 });
   });
 
   it("まだ描けない効果（白黒・周辺光量補正・粒子）も Lightroom の名前にする", () => {
@@ -113,6 +132,10 @@ describe("summarizeUnsupportedPresetItems", () => {
         text,
       ),
     ).toEqual({ labels: ["ノイズ軽減", "色温度・色かぶり補正"], otherCount: 1 });
+    // 細かな項目は主の項目（ノイズ軽減 20）が効いていれば、細かな項目の名前で知らせる
+    expect(summarizeUnsupportedPresetItems(["LuminanceNoiseReductionDetail"], text).labels).toEqual([
+      "ノイズ軽減のディテール・コントラスト",
+    ]);
   });
 
   it("主の項目が XMP に無い群と、値を読めなかった項目は外さない。既定でないプロファイルは知らせる", () => {

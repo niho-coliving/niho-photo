@@ -860,6 +860,21 @@ impl RasterTail {
         )
     }
 
+    /// Float-boundary evaluation for working halo pixels. Active points use
+    /// the same f32 selection coordinates as the output-sized point cache,
+    /// but the halo itself is never retained in that cache.
+    #[inline]
+    fn float_boundary_pixel(&self, value: [f32; 3]) -> [f32; 3] {
+        if self.point_tail.is_none() {
+            return self.pixel(value);
+        }
+        let value = self.before_color_points(value);
+        self.cached_point_pixel(CachedColorPointPixel {
+            value,
+            oklch: color_ops::cached_prophoto_to_oklch(value),
+        })
+    }
+
     /// Shared normal-render / picker chain through the input of independent
     /// color points, returned in linear ProPhoto.
     #[inline]
@@ -1161,6 +1176,144 @@ fn fill_rgba(
     });
 }
 
+/// Float boundary immediately before output transform. When sharpening is
+/// active this spans the working window, not just the output crop, so the
+/// convolution sees the geometry halo. Later mask composition can reuse the
+/// same boundary without decoding RGBA8.
+struct LinearRgbPlane {
+    width: usize,
+    height: usize,
+    data: Vec<f32>,
+}
+
+/// Builds a working-sized float plane. The local ratio is working-sized;
+/// the vignette remains defined on the post-crop output and evaluates halo
+/// coordinates relative to that output instead of indexing its rho table by
+/// a working index.
+#[allow(clippy::too_many_arguments)]
+fn collect_working_float_plane(
+    source: &[f32],
+    width: usize,
+    height: usize,
+    output: Rect,
+    output_filled_from_cache: bool,
+    local: Option<&Plane>,
+    vignette: Option<&LinearVignette<'_>>,
+    head: impl Fn([f32; 3]) -> [f32; 3],
+    tail: impl Fn([f32; 3]) -> [f32; 3],
+) -> LinearRgbPlane {
+    let mut data = vec![0.0f32; width * height * 3];
+    for y in 0..height {
+        for x in 0..width {
+            // The exact cached tail fills the interior once below. Only
+            // halo pixels need the uncached evaluation here.
+            if output_filled_from_cache
+                && x >= output.x
+                && x < output.x + output.width
+                && y >= output.y
+                && y < output.y + output.height
+            {
+                continue;
+            }
+            let index = y * width + x;
+            let offset = index * 3;
+            let mut value = head([source[offset], source[offset + 1], source[offset + 2]]);
+            let vignette_at = vignette.map(|effect| {
+                let rho = effect.radius_at(
+                    x as isize - output.x as isize,
+                    y as isize - output.y as isize,
+                );
+                (effect, rho)
+            });
+            value = linear_spatial_pixel(value, local.map(|plane| plane.data[index]), vignette_at);
+            data[offset..offset + 3].copy_from_slice(&tail(value));
+        }
+    }
+    LinearRgbPlane {
+        width,
+        height,
+        data,
+    }
+}
+
+fn replace_output_region(
+    plane: &mut LinearRgbPlane,
+    output: Rect,
+    values: impl IntoIterator<Item = [f32; 3]>,
+) {
+    let mut values = values.into_iter();
+    for y in 0..output.height {
+        for x in 0..output.width {
+            let index = ((output.y + y) * plane.width + output.x + x) * 3;
+            plane.data[index..index + 3]
+                .copy_from_slice(&values.next().expect("complete output float region"));
+        }
+    }
+    debug_assert!(values.next().is_none());
+}
+
+#[derive(Clone, Copy)]
+enum FloatEncoding<'a> {
+    Standard { transform: bool },
+    Niho3(&'a crate::fastmath::Niho3Srgb8Encoder),
+}
+
+/// Float -> optional sharp -> output crop -> existing output transform /
+/// encode -> output effects exactly once.
+fn finalize_float_plane(
+    mut plane: LinearRgbPlane,
+    output: Rect,
+    whole_long_edge: usize,
+    sharpening: Option<crate::settings::SharpeningSettings>,
+    encoding: FloatEncoding<'_>,
+    output_effects: Option<&OutputEffects>,
+    mark_out_of_srgb: bool,
+) -> Vec<u8> {
+    assert!(output.x + output.width <= plane.width);
+    assert!(output.y + output.height <= plane.height);
+    if let Some(sharpening) = sharpening.filter(|value| value.amount > 0.0) {
+        // FramePlan retains a full internal halo. Near an actual photo edge
+        // it clips that halo, and Gaussian clamping matches the whole render.
+        crate::detail::sharpen_linear_srgb(
+            &mut plane.data,
+            plane.width,
+            plane.height,
+            whole_long_edge,
+            sharpening,
+        )
+        .expect("validated float detail output");
+    }
+
+    let mut rgba = vec![0u8; output.width * output.height * 4];
+    for y in 0..output.height {
+        for x in 0..output.width {
+            let source_index = ((output.y + y) * plane.width + output.x + x) * 3;
+            let output_index = y * output.width + x;
+            let pixel = &plane.data[source_index..source_index + 3];
+            let value = [pixel[0], pixel[1], pixel[2]];
+            let destination = &mut rgba[output_index * 4..output_index * 4 + 4];
+            match encoding {
+                FloatEncoding::Standard { transform } => {
+                    write_rgba_fx(destination, value, transform, output_effects, output_index);
+                    if mark_out_of_srgb
+                        && transform
+                        && (value[0] < 0.0 || value[1] < 0.0 || value[2] < 0.0)
+                    {
+                        destination[3] = 0;
+                    }
+                }
+                FloatEncoding::Niho3(encoder) => match output_effects {
+                    None => write_niho3_output_rgba(destination, value, encoder),
+                    Some(effect) => {
+                        write_niho3_output_rgba_fx(destination, value, effect, output_index)
+                    }
+                },
+            }
+        }
+    }
+    rgba
+}
+
 fn color_point_plane_key(
     kind: &str,
     img: &LinearImage,
@@ -1249,8 +1402,14 @@ pub struct LocalPass {
 pub(crate) struct RenderCaches<'a> {
     cubes: Option<&'a SettingsCubes>,
     local: &'a mut Option<LocalPass>,
+    /// Another frame's local pass of the same image (a local mask's layer
+    /// reads its global frame's, `mask_session.rs`): taken instead of
+    /// computing one when it is the pass this frame would compute (the same
+    /// input, adaptive parameters and quality). Never written.
+    shared_local: Option<&'a LocalPass>,
     effects: &'a mut EffectsCache,
     color_points: &'a mut Option<ColorPointPlane>,
+    noise: &'a mut Option<NoiseCache>,
 }
 
 impl<'a> RenderCaches<'a> {
@@ -1259,14 +1418,118 @@ impl<'a> RenderCaches<'a> {
         local: &'a mut Option<LocalPass>,
         effects: &'a mut EffectsCache,
         color_points: &'a mut Option<ColorPointPlane>,
+        noise: &'a mut Option<NoiseCache>,
     ) -> Self {
         Self {
             cubes,
             local,
+            shared_local: None,
             effects,
             color_points,
+            noise,
         }
     }
+
+    /// These caches with `shared` as [`RenderCaches::shared_local`].
+    pub(crate) fn sharing_local(mut self, shared: Option<&'a LocalPass>) -> Self {
+        self.shared_local = shared;
+        self
+    }
+}
+
+/// A frame's local pass slot and the shared pass it may read
+/// ([`RenderCaches::shared_local`]).
+struct LocalCaches<'a> {
+    own: &'a mut Option<LocalPass>,
+    shared: Option<&'a LocalPass>,
+}
+
+/// The exact pre-local v6 raster source retained by a Session. The key
+/// includes immutable source identity, NR amounts, working size, geometry
+/// window, whole-image scale and quality. `sampleColor` reads `image`, so it
+/// cannot accidentally sample the unfiltered source used to create it.
+pub(crate) struct NoiseCache {
+    key: String,
+    pub(crate) source_ptr: usize,
+    pub(crate) image: LinearImage,
+    stats: Option<LinearImage>,
+}
+
+/// Applies v6 source NR (color, then luminance) into `noise_cache`, or
+/// clears it when no NR is active. Geometry windows include a halo and use
+/// the whole-frame long edge, so their filter footprint matches an uncropped
+/// render; the statistics source is reduced at its own full-resolution scale.
+fn update_noise_cache(
+    source_img: &LinearImage,
+    framing: Option<&Framing<'_>>,
+    source_space: crate::detail::SourceSpace,
+    detail: Option<crate::settings::DetailSettings>,
+    quality: Quality,
+    noise_cache: &mut Option<NoiseCache>,
+) {
+    let source_long_edge = framing.map_or(source_img.width.max(source_img.height), |frame| {
+        frame.long_edge
+    });
+    let active_detail = detail.filter(|value| {
+        value.luminance_noise_reduction > 0.0
+            || value
+                .color_noise_reduction
+                .is_some_and(|amount| amount > 0.0)
+    });
+    let Some(value) = active_detail else {
+        *noise_cache = None;
+        return;
+    };
+    let frame_key = framing.map_or("", |frame| frame.key);
+    let output = framing.map(|frame| frame.output);
+    let key = format!(
+        "{:p}|{}x{}|{source_long_edge}|{frame_key}|{output:?}|{quality:?}|{source_space:?}|{}|{:?}",
+        source_img.data.as_ptr(),
+        source_img.width,
+        source_img.height,
+        value.luminance_noise_reduction,
+        value.color_noise_reduction,
+    );
+    if noise_cache.as_ref().is_some_and(|cache| cache.key == key) {
+        return;
+    }
+    let image = LinearImage {
+        width: source_img.width,
+        height: source_img.height,
+        data: crate::detail::reduce_noise(
+            &source_img.data,
+            source_img.width,
+            source_img.height,
+            source_long_edge,
+            source_space,
+            value,
+            value.color_noise_reduction,
+        )
+        .expect("validated decoded detail input"),
+    };
+    let stats = framing.map(|frame| LinearImage {
+        width: frame.stats_source.width,
+        height: frame.stats_source.height,
+        data: crate::detail::reduce_noise(
+            &frame.stats_source.data,
+            frame.stats_source.width,
+            frame.stats_source.height,
+            // Statistics read the full source before geometry. Its NR
+            // footprint belongs to that full-resolution source; the working
+            // window separately uses frame.long_edge.
+            frame.stats_source.width.max(frame.stats_source.height),
+            source_space,
+            value,
+            value.color_noise_reduction,
+        )
+        .expect("validated decoded detail statistics input"),
+    });
+    *noise_cache = Some(NoiseCache {
+        key,
+        source_ptr: source_img.data.as_ptr() as usize,
+        image,
+        stats,
+    });
 }
 
 /// Keeps only a local pass that may be reused by the next frame. A frame
@@ -1281,14 +1544,19 @@ fn prepare_local_cache(cache: &mut Option<LocalPass>, spatial_on: bool, input_ke
 /// The local pass for this frame from `cache` or computed (the kept plane
 /// is dropped first: one pass in memory at a time), left in `cache`.
 /// `params` computes the adaptive parameters (statistics), `ln0` the log
-/// luminance of the stages before the pass.
-fn local_pass(
-    cache: &mut Option<LocalPass>,
+/// luminance of the stages before the pass. `shared` (another frame's pass
+/// of the same image, [`RenderCaches::shared_local`]) serves when it has
+/// this frame's input and adaptive parameters and is of this frame's
+/// quality (the pass this frame would compute) or, for a drag frame, a
+/// released pass (which a drag frame takes from its own cache too).
+fn local_pass<'c>(
+    cache: &'c mut Option<LocalPass>,
+    shared: Option<&'c LocalPass>,
     input_key: String,
     quality: Quality,
     params: impl FnOnce() -> SpatialParams,
     ln0: impl FnOnce() -> Plane,
-) -> Option<&LocalPass> {
+) -> Option<&'c LocalPass> {
     let same_input = cache.as_ref().is_some_and(|c| c.input_key == input_key);
     if same_input && quality == Quality::Interactive {
         return cache.as_ref();
@@ -1300,6 +1568,14 @@ fn local_pass(
         .is_some_and(|c| c.quality == Quality::Final && c.params_key == params_key);
     if same_input && same_pass {
         return cache.as_ref();
+    }
+    if let Some(shared) = shared.filter(|c| {
+        c.input_key == input_key
+            && c.params_key == params_key
+            && (c.quality == quality || c.quality == Quality::Final)
+    }) {
+        *cache = None;
+        return Some(shared);
     }
     *cache = None;
     let ln0 = ln0();
@@ -1333,16 +1609,24 @@ pub fn render_raster(
         Some(Err(_)) => (raster, true),
         None => (raster, false),
     };
+    let downstream;
+    let render_settings = if matches!(&prepared, Some(Ok(_))) {
+        downstream = crate::detail::source_noise_disabled(s);
+        &downstream
+    } else {
+        s
+    };
     let (mut rendered, cubes, stats) = render_raster_in_session(
         raster,
         None,
-        s,
+        render_settings,
         quality,
         stats_cache,
         RenderCaches::new(
             cubes_cache,
             &mut None,
             &mut EffectsCache::default(),
+            &mut None,
             &mut None,
         ),
     );
@@ -1362,9 +1646,34 @@ fn niho6_one_shot(
         return None;
     }
     let space = crate::niho6::SourceSpace::LinearSrgb;
+    let reduced;
+    let image = if let Some(detail) = s.detail.filter(|detail| {
+        detail.luminance_noise_reduction > 0.0
+            || detail
+                .color_noise_reduction
+                .is_some_and(|amount| amount > 0.0)
+    }) {
+        reduced = LinearImage {
+            width: raster.image.width,
+            height: raster.image.height,
+            data: crate::detail::reduce_noise(
+                &raster.image.data,
+                raster.image.width,
+                raster.image.height,
+                raster.image.width.max(raster.image.height),
+                crate::detail::SourceSpace::LinearSrgb,
+                detail,
+                detail.color_noise_reduction,
+            )
+            .expect("validated decoded NIHO 6 detail input"),
+        };
+        &reduced
+    } else {
+        &raster.image
+    };
     Some(
-        crate::niho6::analysis(&raster.image, space, crate::niho6::analysis_exposure(s))
-            .and_then(|analysis| crate::niho6::apply(&raster.image, space, &analysis, s))
+        crate::niho6::analysis(image, space, crate::niho6::analysis_exposure(s))
+            .and_then(|analysis| crate::niho6::apply(image, space, &analysis, s))
             .map(|image| Raster {
                 image,
                 info: raster.info.clone(),
@@ -1398,8 +1707,10 @@ pub(crate) fn render_raster_in_session(
     let RenderCaches {
         cubes,
         local,
+        shared_local,
         effects,
         color_points,
+        noise,
     } = caches;
     render_linear(
         &raster.image,
@@ -1410,9 +1721,13 @@ pub(crate) fn render_raster_in_session(
         quality,
         stats_cache,
         cubes,
-        local,
+        LocalCaches {
+            own: local,
+            shared: shared_local,
+        },
         effects,
         color_points,
+        noise,
         false,
     )
 }
@@ -1424,17 +1739,28 @@ pub(crate) fn render_raster_in_session(
 pub fn render_raster_marking_out_of_srgb(raster: &Raster, s: &DevelopSettings) -> Rendered {
     let prepared = niho6_one_shot(raster, s).and_then(Result::ok);
     let raster = prepared.as_ref().unwrap_or(raster);
+    let downstream;
+    let render_settings = if prepared.is_some() {
+        downstream = crate::detail::source_noise_disabled(s);
+        &downstream
+    } else {
+        s
+    };
     render_linear(
         &raster.image,
         None,
         raster.info.is_bounded_srgb(),
         None,
-        s,
+        render_settings,
         Quality::Final,
         None,
         None,
-        &mut None,
+        LocalCaches {
+            own: &mut None,
+            shared: None,
+        },
         &mut EffectsCache::default(),
+        &mut None,
         &mut None,
         true,
     )
@@ -1450,7 +1776,7 @@ pub fn render_raster_marking_out_of_srgb(raster: &Raster, s: &DevelopSettings) -
 /// geometry, `img` is the window ([`Framing`]).
 #[allow(clippy::too_many_arguments)]
 fn render_linear(
-    img: &LinearImage,
+    source_img: &LinearImage,
     framing: Option<&Framing<'_>>,
     bounded_srgb: bool,
     input: Option<[[f32; 3]; 3]>,
@@ -1458,11 +1784,16 @@ fn render_linear(
     quality: Quality,
     stats_cache: Option<AdaptiveStats>,
     cubes_cache: Option<&SettingsCubes>,
-    local_cache: &mut Option<LocalPass>,
+    local_caches: LocalCaches<'_>,
     effects_cache: &mut EffectsCache,
     color_point_cache: &mut Option<ColorPointPlane>,
+    noise_cache: &mut Option<NoiseCache>,
     mark_out_of_srgb: bool,
 ) -> (Rendered, SettingsCubes, Option<AdaptiveStats>) {
+    let LocalCaches {
+        own: local_cache,
+        shared: shared_local,
+    } = local_caches;
     // NIHO 3 changes only signed RAW rendering. Raster input inherits the
     // complete NIHO 2 formula, including Interactive preview closures; do
     // this once at the entrance so no RAW-only branch can leak into JPEG.
@@ -1475,6 +1806,30 @@ fn render_linear(
         legacy
     });
     let s = raster_legacy.as_ref().unwrap_or(s);
+    // v6 source NR precedes NIHO local tone processing. Raster color NR is
+    // opt-in only: the legacy top-level field remains ignored on JPEG/PNG.
+    let source_space = if input.is_some() {
+        crate::detail::SourceSpace::LinearProPhoto
+    } else {
+        crate::detail::SourceSpace::LinearSrgb
+    };
+    update_noise_cache(
+        source_img,
+        framing,
+        source_space,
+        s.detail,
+        quality,
+        noise_cache,
+    );
+    let cached_noise = noise_cache.as_ref();
+    let img = cached_noise.map_or(source_img, |cache| &cache.image);
+    let reduced_framing = framing.map(|frame| Framing {
+        stats_source: cached_noise
+            .and_then(|cache| cache.stats.as_ref())
+            .unwrap_or(frame.stats_source),
+        ..*frame
+    });
+    let framing = reduced_framing.as_ref();
     let mut approximations = Vec::new();
     if ignored_cnr_detail {
         approximations.push("colorNoiseReductionDetail");
@@ -1631,6 +1986,7 @@ fn render_linear(
     let local_pass = if spatial_on {
         local_pass(
             local_cache,
+            shared_local,
             input_key,
             quality,
             || {
@@ -1690,7 +2046,89 @@ fn render_linear(
             }
         };
     }
-    if s.has_active_color_points() {
+    let final_sharpening = (quality == Quality::Final)
+        .then(|| s.detail.map(|detail| detail.sharpening))
+        .flatten()
+        .filter(|sharpening| sharpening.amount > 0.0);
+    if let Some(sharpening) = final_sharpening {
+        // Keep the tail in float. Detail sharpening must never decode the
+        // already quantized Rendered.rgba, and output effects are applied
+        // exactly once after sharpening. The float plane spans the working
+        // halo; only finalize extracts the output rectangle.
+        let mut linear = match &input_matrix {
+            Some(matrix) => collect_working_float_plane(
+                &img.data,
+                w,
+                h,
+                out,
+                s.has_active_color_points(),
+                local,
+                vignette,
+                |pixel| rest(mat_vec_f32(matrix, pixel)),
+                |value| tail.float_boundary_pixel(value),
+            ),
+            None => collect_working_float_plane(
+                &img.data,
+                w,
+                h,
+                out,
+                s.has_active_color_points(),
+                local,
+                vignette,
+                rest,
+                |value| tail.float_boundary_pixel(value),
+            ),
+        };
+        if s.has_active_color_points() {
+            let key = format!(
+                "{}|local={:?}",
+                color_point_plane_key("raster", img, frame, quality, s),
+                local_pass.map(|pass| &pass.params_key)
+            );
+            let plane = match &input_matrix {
+                Some(m) => cached_color_point_plane(
+                    color_point_cache,
+                    key,
+                    out.width,
+                    out.height,
+                    pixels,
+                    |px| rest(mat_vec_f32(m, px)),
+                    |value| tail.before_color_points(value),
+                ),
+                None => cached_color_point_plane(
+                    color_point_cache,
+                    key,
+                    out.width,
+                    out.height,
+                    pixels,
+                    rest,
+                    |value| tail.before_color_points(value),
+                ),
+            };
+            replace_output_region(
+                &mut linear,
+                out,
+                plane
+                    .pixels
+                    .iter()
+                    .copied()
+                    .map(|pixel| tail.cached_point_pixel(pixel)),
+            );
+        } else {
+            *color_point_cache = None;
+        }
+        rgba = finalize_float_plane(
+            linear,
+            out,
+            frame.long_edge,
+            Some(sharpening),
+            FloatEncoding::Standard {
+                transform: tail.output_transform,
+            },
+            out_fx,
+            mark_out_of_srgb,
+        );
+    } else if s.has_active_color_points() {
         let key = format!(
             "{}|local={:?}",
             color_point_plane_key("raster", img, frame, quality, s),
@@ -1840,6 +2278,19 @@ impl RawTail {
             .apply_cached_color_points_and_grading(pixel.value, pixel.oklch)
     }
 
+    /// Working-halo counterpart of the output-sized point cache.
+    #[inline]
+    fn float_boundary_pixel(&self, value: [f32; 3]) -> [f32; 3] {
+        if self.point_tail.is_none() {
+            return self.pixel(value);
+        }
+        let value = self.before_color_points(value);
+        self.cached_point_pixel(CachedColorPointPixel {
+            value,
+            oklch: color_ops::cached_prophoto_to_oklch(value),
+        })
+    }
+
     /// Shared normal-render / picker chain through the input of independent
     /// color points.
     #[inline]
@@ -1905,18 +2356,26 @@ pub fn render_working_copy(
         Some(Err(_)) => (wc.image, true),
         None => (wc.image, false),
     };
+    let downstream;
+    let render_settings = if matches!(&prepared, Some(Ok(_))) {
+        downstream = crate::detail::source_noise_disabled(s);
+        &downstream
+    } else {
+        s
+    };
     let (mut rendered, cubes) = render_working_copy_in_session(
         &WorkingCopy {
             image,
             meta: wc.meta,
         },
         None,
-        s,
+        render_settings,
         quality,
         RenderCaches::new(
             cubes_cache,
             &mut None,
             &mut EffectsCache::default(),
+            &mut None,
             &mut None,
         ),
     );
@@ -1940,9 +2399,34 @@ fn niho6_working_copy_one_shot(
         return None;
     }
     let space = crate::niho6::SourceSpace::LinearProPhoto;
+    let reduced;
+    let image = if let Some(detail) = s.detail.filter(|detail| {
+        detail.luminance_noise_reduction > 0.0
+            || detail
+                .color_noise_reduction
+                .is_some_and(|amount| amount > 0.0)
+    }) {
+        reduced = LinearImage {
+            width: wc.image.width,
+            height: wc.image.height,
+            data: crate::detail::reduce_noise(
+                &wc.image.data,
+                wc.image.width,
+                wc.image.height,
+                wc.image.width.max(wc.image.height),
+                crate::detail::SourceSpace::LinearProPhoto,
+                detail,
+                detail.color_noise_reduction,
+            )
+            .expect("validated NIHO 6 working-copy detail input"),
+        };
+        &reduced
+    } else {
+        wc.image
+    };
     Some(
-        crate::niho6::analysis(wc.image, space, crate::niho6::analysis_exposure(s))
-            .and_then(|analysis| crate::niho6::apply(wc.image, space, &analysis, s)),
+        crate::niho6::analysis(image, space, crate::niho6::analysis_exposure(s))
+            .and_then(|analysis| crate::niho6::apply(image, space, &analysis, s)),
     )
 }
 
@@ -1972,15 +2456,28 @@ pub fn render_working_copy_marking_out_of_srgb(
         Some(Err(_)) => (wc.image, true),
         None => (wc.image, false),
     };
+    let downstream;
+    let render_settings = if matches!(&prepared, Some(Ok(_))) {
+        downstream = crate::detail::source_noise_disabled(s);
+        &downstream
+    } else {
+        s
+    };
     let mut rendered = render_working_copy_with(
         &WorkingCopy {
             image,
             meta: wc.meta,
         },
         None,
-        s,
+        render_settings,
         Quality::Final,
-        RenderCaches::new(None, &mut None, &mut EffectsCache::default(), &mut None),
+        RenderCaches::new(
+            None,
+            &mut None,
+            &mut EffectsCache::default(),
+            &mut None,
+            &mut None,
+        ),
         true,
     )
     .0;
@@ -2001,9 +2498,15 @@ fn render_working_copy_with(
     let RenderCaches {
         cubes,
         local,
+        shared_local,
         effects,
         color_points,
+        noise,
     } = caches;
+    let local = LocalCaches {
+        own: local,
+        shared: shared_local,
+    };
     match wc.meta {
         WorkingCopyMeta::Raster { .. } => {
             // Non-RAW working copies (HEIC / TIFF / large JPEG) are linear
@@ -2020,6 +2523,7 @@ fn render_working_copy_with(
                 local,
                 effects,
                 color_points,
+                noise,
                 mark_out_of_srgb,
             );
             (r, c)
@@ -2038,9 +2542,36 @@ fn render_working_copy_with(
                 white_balance_table.as_deref(),
                 s,
             );
+            // Signed RAW engines reduce noise once while preparing their
+            // canonical master (niho3.rs / niho4.rs). A legacy unsigned RAW
+            // working copy (niho-1 / niho-2 / niho-8) has no such master, so
+            // its v6 NR runs here on the linear ProPhoto source, before white
+            // balance and exposure, with the same cache as raster sources.
+            let unsigned_legacy = !matches!(
+                s.engine.as_str(),
+                ENGINE_NIHO_3 | ENGINE_NIHO_4 | ENGINE_NIHO_5 | ENGINE_NIHO_7 | ENGINE_NIHO_11
+            );
+            if unsigned_legacy {
+                update_noise_cache(
+                    wc.image,
+                    framing,
+                    crate::detail::SourceSpace::LinearProPhoto,
+                    s.detail,
+                    quality,
+                    noise,
+                );
+            }
+            let cached_noise = noise.as_ref().filter(|_| unsigned_legacy);
+            let img = cached_noise.map_or(wc.image, |cache| &cache.image);
+            let reduced_framing = framing.map(|frame| Framing {
+                stats_source: cached_noise
+                    .and_then(|cache| cache.stats.as_ref())
+                    .unwrap_or(frame.stats_source),
+                ..*frame
+            });
             render_raw(
-                wc.image,
-                framing,
+                img,
+                reduced_framing.as_ref(),
                 *baseline_ev,
                 white_balance,
                 matches!(
@@ -2241,11 +2772,15 @@ fn render_raw(
     s: &DevelopSettings,
     quality: Quality,
     cubes_cache: Option<&SettingsCubes>,
-    local_cache: &mut Option<LocalPass>,
+    local_caches: LocalCaches<'_>,
     effects_cache: &mut EffectsCache,
     color_point_cache: &mut Option<ColorPointPlane>,
     mark_out_of_srgb: bool,
 ) -> (Rendered, SettingsCubes) {
+    let LocalCaches {
+        own: local_cache,
+        shared: shared_local,
+    } = local_caches;
     // The opt-in candidate deliberately keeps the legacy unsigned-RAW
     // formula. Only its three cubes change precision; signed RAW never
     // reaches this path with niho-8.
@@ -2303,6 +2838,7 @@ fn render_raw(
     let local_pass = if spatial_on {
         local_pass(
             local_cache,
+            shared_local,
             input_key,
             quality,
             || {
@@ -2440,7 +2976,91 @@ fn render_raw(
             }
         };
     }
-    if s.has_active_color_points() {
+    let final_sharpening = (quality == Quality::Final)
+        .then(|| s.detail.map(|detail| detail.sharpening))
+        .flatten()
+        .filter(|sharpening| sharpening.amount > 0.0);
+    if let Some(sharpening) = final_sharpening {
+        let mut linear = match &white_balance {
+            Some(matrix) => collect_working_float_plane(
+                &img.data,
+                w,
+                h,
+                out,
+                s.has_active_color_points(),
+                local,
+                vignette,
+                |pixel| expose(mat_vec_f32(matrix, pixel)),
+                |value| finish(tail.float_boundary_pixel(value)),
+            ),
+            None => collect_working_float_plane(
+                &img.data,
+                w,
+                h,
+                out,
+                s.has_active_color_points(),
+                local,
+                vignette,
+                expose,
+                |value| finish(tail.float_boundary_pixel(value)),
+            ),
+        };
+        if s.has_active_color_points() {
+            let key = format!(
+                "{}|local={:?}",
+                color_point_plane_key("raw", img, frame, quality, s),
+                local_pass.map(|pass| &pass.params_key)
+            );
+            let plane = match &white_balance {
+                Some(matrix) => cached_color_point_plane(
+                    color_point_cache,
+                    key,
+                    out.width,
+                    out.height,
+                    pixels,
+                    |pixel| expose(mat_vec_f32(matrix, pixel)),
+                    |value| tail.before_color_points(value),
+                ),
+                None => cached_color_point_plane(
+                    color_point_cache,
+                    key,
+                    out.width,
+                    out.height,
+                    pixels,
+                    expose,
+                    |value| tail.before_color_points(value),
+                ),
+            };
+            replace_output_region(
+                &mut linear,
+                out,
+                plane
+                    .pixels
+                    .iter()
+                    .copied()
+                    .map(|pixel| finish(tail.cached_point_pixel(pixel))),
+            );
+        } else {
+            *color_point_cache = None;
+        }
+        let legacy = matches!(
+            s.engine.as_str(),
+            ENGINE_NIHO_3 | ENGINE_NIHO_4 | ENGINE_NIHO_5 | ENGINE_NIHO_7 | ENGINE_NIHO_11
+        );
+        let encoder = legacy.then(crate::fastmath::niho3_srgb8);
+        let encoding = encoder.map_or(FloatEncoding::Standard { transform: true }, |encoder| {
+            FloatEncoding::Niho3(encoder)
+        });
+        rgba = finalize_float_plane(
+            linear,
+            out,
+            frame.long_edge,
+            Some(sharpening),
+            encoding,
+            out_fx,
+            mark_out_of_srgb,
+        );
+    } else if s.has_active_color_points() {
         let key = format!(
             "{}|local={:?}",
             color_point_plane_key("raw", img, frame, quality, s),

@@ -117,10 +117,11 @@ import { BrowserPhotoMobileExportSheet } from "./browser-photo-editing-mobile-ex
 import {
   ADD_ACCEPT,
   BROWSER_CANVAS_ADJUSTMENT_KEYS,
-  BROWSER_EFFECTS_ADJUSTMENT_KEYS,
   FAVORITE_FAILED_TEXT,
+  browserAdjustmentKeys,
   browserPhotoTileUrl,
   cloudKey,
+  detailControlsAvailable,
   isBrowserItemInPlace,
   isWideWindow,
   type BrowserItem,
@@ -175,7 +176,11 @@ import {
 import { useBrowserPhotoCutout } from "./use-browser-photo-cutout";
 import { useBrowserPhotoDevelop } from "./use-browser-photo-develop";
 import { useBrowserPhotoEditingKeys } from "./use-browser-photo-editing-keys";
-import { useBrowserPhotoColorPointsSupport, useBrowserPhotoEffectsSupport } from "./use-browser-photo-effects";
+import {
+  useBrowserPhotoColorPointsSupport,
+  useBrowserPhotoDetailSupport,
+  useBrowserPhotoEffectsSupport,
+} from "./use-browser-photo-effects";
 import { useBrowserPhotoExportAndDelete } from "./use-browser-photo-export-delete";
 import { useBrowserPhotoFolders } from "./use-browser-photo-folders";
 import { useBrowserPhotoHistogram, type PhotoEditingFrameSink } from "./use-browser-photo-histogram";
@@ -552,6 +557,13 @@ export function BrowserPhotoEditingWorkbench(props: {
     engineRef: develop.engineRef,
     photoKey: wasmPhotoKey,
   });
+  // ディテール（シャープ・ノイズ軽減。v: 6。Issue #32）を描ける wasm か（同じく 1 回確かめる）。RAW を含む wasm の写真に出す
+  const detailWasmSupported = useBrowserPhotoDetailSupport({
+    mountedRef,
+    engineRef: develop.engineRef,
+    photoKey: wasmPhotoKey,
+  });
+  const detailSupported = detailWasmSupported && detailControlsAvailable(opened?.input);
   // プリセットの適用量・今の補正の保存・見本を出せる wasm か（同じく 1 回確かめて覚える。右パネルを閉じても行の形を変えない）
   const presetSupport = useBrowserPhotoPresetSupport({ mountedRef, engineRef: develop.engineRef, photoKey: wasmPhotoKey });
   const mobilePresetThumbnails = useBrowserPresetThumbnails({
@@ -849,9 +861,7 @@ export function BrowserPhotoEditingWorkbench(props: {
   const canvasOnly = loupeOpened ? loupeOpened.mode === "canvas" : develop.developUnavailable;
   const visibleAdjustmentKeys = canvasOnly
     ? BROWSER_CANVAS_ADJUSTMENT_KEYS
-    : effectsSupported
-      ? BROWSER_EFFECTS_ADJUSTMENT_KEYS
-      : undefined;
+    : browserAdjustmentKeys({ effects: effectsSupported, detail: detailSupported });
   // ヒストグラム（niho-photo#36）: PC の右パネルで、段 2 の wasm が画を描いている写真だけ（S1 の canvas・スマホの層・閲覧の
   // 面では出さず、数えない）。描いた画（補正前・プリセットの仮の表示を含む）の分布なので、補正前を押している間は補正前の分布になる。
   // 切り抜き / 背景除去の道具の間も分布は出すが、写真の上へ重ねる印は使えない（その道具の見た目に従う）

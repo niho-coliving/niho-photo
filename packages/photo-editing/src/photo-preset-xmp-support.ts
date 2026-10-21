@@ -10,7 +10,8 @@ import {
  *
  * - {@link summarizeUnsupportedPresetItems}: エンジンの `presetSettings` が返す `unsupported`（XMP の項目名。crate の
  *   `xmp.rs` の `UNSUPPORTED_KNOWN`・知らない項目・まだ描けない効果・埋め込みの Look の `Look.<項目>`）を、Lightroom の日本語の
- *   名前にまとめる。表に無い項目は数だけ数える
+ *   名前にまとめる。表に無い項目は数だけ数える。シャープ・ノイズ軽減・カラーノイズの軽減は crate 0.19.0（Issue #32）から近い式で
+ *   描く（`approximate`）ので、ここに来るのは読めない値と、既定でないノイズ軽減の細かな項目（ディテール・コントラスト・滑らかさ）だけ
  * - {@link presetUsesLightroomColorTable}: Lightroom 専用の色の表（プロファイルの LUT）を使うプリセットか
  */
 
@@ -38,12 +39,18 @@ const UNSUPPORTED_GROUPS: readonly UnsupportedGroup[] = [
     keys: ["Sharpness", "SharpenRadius", "SharpenDetail", "SharpenEdgeMasking"],
     masters: ["Sharpness"],
   },
+  { label: LABELS.noiseReduction, keys: ["LuminanceSmoothing"], masters: ["LuminanceSmoothing"] },
   {
-    label: LABELS.noiseReduction,
-    keys: ["LuminanceSmoothing", "LuminanceNoiseReductionDetail", "LuminanceNoiseReductionContrast"],
+    label: LABELS.noiseReductionDetail,
+    keys: ["LuminanceNoiseReductionDetail", "LuminanceNoiseReductionContrast"],
     masters: ["LuminanceSmoothing"],
   },
-  { label: LABELS.colorNoiseReduction, prefixes: ["ColorNoiseReduction"], masters: ["ColorNoiseReduction"] },
+  { label: LABELS.colorNoiseReduction, keys: ["ColorNoiseReduction"], masters: ["ColorNoiseReduction"] },
+  {
+    label: LABELS.colorNoiseReductionDetail,
+    prefixes: ["ColorNoiseReduction"],
+    masters: ["ColorNoiseReduction"],
+  },
   { label: LABELS.chromaticAberration, keys: ["AutoLateralCA"] },
   { label: LABELS.defringe, prefixes: ["Defringe"], masters: ["DefringePurpleAmount", "DefringeGreenAmount"] },
   {

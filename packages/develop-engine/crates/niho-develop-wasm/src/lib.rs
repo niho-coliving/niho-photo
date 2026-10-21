@@ -12,6 +12,10 @@
 //! crop, `geometryOutputSize` the frame's size without rendering.
 //! `developer.autoSettings(settingsJson)` is "自動" (the six Light sliders
 //! and Vibrance for this photo).
+//! Local masks (`masks`, v 5) render through the same `render` calls;
+//! `capabilities()` says which kinds this build draws and
+//! `developer.maskPlane(settingsJson, maskId, maxDimension)` gives one
+//! mask's plane for the editor's overlay.
 //! Everything runs single threaded (no SharedArrayBuffer, spec "段 2").
 
 use js_sys::{Object, Reflect, Uint8ClampedArray};
@@ -88,6 +92,24 @@ pub fn version() -> String {
         niho_develop::CRATE_VERSION,
         niho_develop::ENGINE_VERSION
     )
+}
+
+/// What this build draws beyond what `validateSettings` reads, as JSON:
+/// `{"masks":{"kinds":["linear","radial"],"max":8,"maskPlane":true}}` —
+/// local masks of those kinds render (`brush` / `subject` / `sky` need a
+/// surface store and fail with `maskSurfaceMissing`), at most `max` of them,
+/// and `Developer.maskPlane` exists. A build without this export draws no
+/// masks (it may still validate them).
+#[wasm_bindgen]
+pub fn capabilities() -> String {
+    serde_json::json!({
+        "masks": {
+            "kinds": ["linear", "radial"],
+            "max": niho_develop::settings::MAX_LOCAL_MASKS,
+            "maskPlane": true,
+        }
+    })
+    .to_string()
 }
 
 /// Renders a JPEG / PNG original: `{ width, height, rgba, approximations }`
@@ -233,7 +255,16 @@ pub fn neutral_settings() -> String {
 
 #[cfg(test)]
 mod tests {
-    use super::{neutral_settings, validate_settings};
+    use super::{capabilities, neutral_settings, validate_settings};
+
+    #[test]
+    fn capabilities_name_the_mask_kinds_this_build_draws() {
+        let value: serde_json::Value = serde_json::from_str(&capabilities()).unwrap();
+        assert_eq!(
+            value,
+            serde_json::json!({"masks": {"kinds": ["linear", "radial"], "max": 8, "maskPlane": true}})
+        );
+    }
 
     #[test]
     fn neutral_settings_initializer_uses_standard_look() {
@@ -241,7 +272,8 @@ mod tests {
         assert_eq!(settings["look"], "niho-standard-1");
     }
 
-    /// `validateSettings` reads `masks` like the crate does (v 5, strict keys).
+    /// `validateSettings` reads `masks` like the crate does (v 5 and later,
+    /// strict keys; v 6 is the detail version, v 7 is a future version).
     #[test]
     fn validate_settings_accepts_and_rejects_masks() {
         let mask = r#"{"id":"m1","kind":"linear","zero":{"x":0.5,"y":0.2},"full":{"x":0.5,"y":0.5},"adjust":{"exposure":-0.7}}"#;
@@ -252,8 +284,9 @@ mod tests {
             serde_json::from_str(&validate_settings(&text)).unwrap()
         };
         assert!(issues(5, mask).is_empty());
+        assert!(issues(6, mask).is_empty());
         assert_eq!(issues(4, mask)[0]["code"], "versionTooLow");
-        assert_eq!(issues(6, mask)[0]["code"], "unsupportedVersion");
+        assert_eq!(issues(7, mask)[0]["code"], "unsupportedVersion");
         let unknown = mask.replace(r#""adjust""#, r#""opacity":1,"adjust""#);
         assert_eq!(issues(5, &unknown)[0]["code"], "unknownMaskKey");
     }
@@ -475,6 +508,36 @@ impl Developer {
             .render(&settings, max_dimension as usize, quality)
             .map_err(js_error)?;
         frame_object(&frame)
+    }
+
+    /// One local mask's plane for the editor's overlay: `{ width, height,
+    /// data }` where `data` is a `Uint8Array` of `width * height` values
+    /// (`round(weight / 65536 * 255)`, row-major, the mask's `invert`
+    /// applied, drawn whether or not it is enabled) at the size `render`
+    /// gives these settings at `maxDimension`, from the same map and plane
+    /// as the render. Leaves the drag frames' kept state as it was. A
+    /// `brush` / `subject` / `sky` mask fails with `maskSurfaceMissing`, an
+    /// id the settings do not have with `maskNotFound`.
+    #[wasm_bindgen(js_name = maskPlane)]
+    pub fn mask_plane(
+        &self,
+        settings_json: &str,
+        mask_id: &str,
+        max_dimension: u32,
+    ) -> Result<Object, JsError> {
+        let settings = niho_develop::parse_settings(settings_json).map_err(js_error)?;
+        let (width, height, data) = self
+            .session
+            .mask_plane(&settings, mask_id, max_dimension as usize)
+            .map_err(js_error)?;
+        let o = size_object(width, height)?;
+        Reflect::set(
+            &o,
+            &JsValue::from_str("data"),
+            &js_sys::Uint8Array::from(&data[..]).into(),
+        )
+        .map_err(|_| JsError::new("set"))?;
+        Ok(o)
     }
 
     /// Samples Stage Q after hue stabilization and before color points /
