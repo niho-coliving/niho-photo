@@ -11,6 +11,7 @@ import {
   type DevelopSize,
 } from "../develop-engine/develop-geometry";
 import { sameDevelopSettings, type DevelopSettings } from "../develop-engine/develop-settings";
+import type { PhotoEditingSettings } from "../photo-editing-types";
 import {
   PHOTO_EDITING_CROP_EXPORT_DECODE_CAP,
   PHOTO_EDITING_CROP_EXPORT_LONG_EDGE,
@@ -20,6 +21,7 @@ import {
 } from "../photo-editing-crop";
 
 import type { DevelopSession } from "./browser-photo-editing-model";
+import type { PhotoEditingSettingsUpdate, PhotoEditingSliderPhase } from "./photo-editing-adjustment-controls";
 
 /** 切り抜きの道具を開いている写真の、座標の基準と書き出しの入力の大きさ。 */
 type CropSource = {
@@ -65,6 +67,9 @@ export async function readCropSource(
  * - 確定は `commitEdit(writeDevelopGeometry(今の編集内容, 新しい幾何))` だけ（取り消しの 1 単位。自動保存と履歴はそこに任せる。
  *   同じ幾何なら何もしない）。「初期化」は切り抜きだけを戻す（`resetDevelopGeometry`。色は触らない）
  * - 入ったときの幾何を覚える。［完了］（Enter）は「補正」に戻るだけ、［キャンセル］（Esc）は覚えた幾何に戻してから戻る（#52）
+ * - ジオメトリの節（遠近のスライダー・「余白を埋める」。niho-photo#46）も幾何の一部として同じ作法: スライダーは補正のスライダーと同じく
+ *   動かしている間は手元で描き直し（`changeGeometry` の `drag`）、離したら 1 単位で確定する。［キャンセル］で入ったときの遠近に戻る。
+ *   遠近を描ける wasm（`supportsPerspective`）のときだけ節を出す（`perspective`）
  * - 「補正」に戻るとき（と、切り抜きの間に写真を離れるとき）は、切り抜きに合わせて wasm の作業サイズを確かめ直す
  *   （`ensureDevelopWorkingSize`）。終わるまで `settling`（面はその間描かず、終わってから切り抜いた画を丁寧に描く）
  * - 編集内容がまるごと入れ替わった（別の写真・別の端末の補正の読み直し）・写真を離れた（一覧へ戻った）・出す条件を満たさなく
@@ -85,6 +90,8 @@ export function useBrowserPhotoCrop(params: {
   settingsRef: MutableRefObject<DevelopSettings>;
   /** 取り消しの 1 単位として編集内容を確定する（直せなければ false） */
   commitEdit: (next: DevelopSettings, options?: { resetDone?: boolean }) => boolean;
+  /** 補正のスライダーと同じ変更の口（`drag` は履歴に積まず描き直し、`commit` で 1 単位に確定する） */
+  changeSettings: (update: PhotoEditingSettingsUpdate, phase: PhotoEditingSliderPhase) => void;
   setCompareOriginal: (compare: boolean) => void;
   ensureDevelopWorkingSize: (settings: DevelopSettings) => Promise<boolean>;
   /** 編集内容がまるごと入れ替わった・写真を離れたときに呼ばれる係を入れる先 */
@@ -94,6 +101,8 @@ export function useBrowserPhotoCrop(params: {
   const { commitEdit, setCompareOriginal, ensureDevelopWorkingSize } = params;
   /** wasm に幾何の口があるか（確かめるまで null） */
   const [supported, setSupported] = useState<boolean | null>(null);
+  /** wasm が遠近（v 7）を描けるか（確かめるまで null） */
+  const [perspectiveSupported, setPerspectiveSupported] = useState<boolean | null>(null);
   /** 切り抜きの道具を開いている写真と、その座標の基準（開いていなければ null） */
   const [cropSource, setCropSource] = useState<CropSource | null>(null);
   const cropSourceRef = useRef<CropSource | null>(null);
@@ -130,6 +139,23 @@ export function useBrowserPhotoCrop(params: {
   }, [engineRef, mountedRef, photoKey, supported, wanted]);
 
   const available = wanted && supported === true;
+  useEffect(() => {
+    if (!available || perspectiveSupported !== null) return;
+    const engine = engineRef.current;
+    if (!engine) return;
+    let cancelled = false;
+    engine.supportsPerspective().then(
+      (value) => {
+        if (!cancelled && mountedRef.current) setPerspectiveSupported(value === true);
+      },
+      () => {
+        if (!cancelled && mountedRef.current) setPerspectiveSupported(false);
+      },
+    );
+    return () => {
+      cancelled = true;
+    };
+  }, [available, engineRef, mountedRef, perspectiveSupported]);
   const active = available && cropSource !== null && cropSource.key === photoKey;
   const latestRef = useRef({ available, active, photoKey });
   latestRef.current = { available, active, photoKey };
@@ -222,6 +248,18 @@ export function useBrowserPhotoCrop(params: {
   };
 
   /**
+   * ジオメトリの節のスライダー・スイッチ: 今の幾何から `update` で作った幾何を書く（`drag` の間は履歴に積まずに描き直し、`commit`
+   * で取り消しの 1 単位として確定する。補正のスライダーと同じ口）。
+   */
+  const changeGeometry = (update: (current: DevelopGeometry) => DevelopGeometry, phase: PhotoEditingSliderPhase) => {
+    if (!latestRef.current.active) return;
+    params.changeSettings((current) => {
+      const settings = current as DevelopSettings;
+      return writeDevelopGeometry(settings, update(readDevelopGeometry(settings))) as PhotoEditingSettings;
+    }, phase);
+  };
+
+  /**
    * ［キャンセル］・Esc: 入ったときの幾何に戻し（今と違えば取り消しの 1 単位。↶ でキャンセルの前に戻せる）、「補正」に戻る。
    * ［完了］・Enter・ほかの道具へ移るのは {@link leave}（幾何は押すたびに確定済みなので、そのまま残す）。
    */
@@ -273,6 +311,8 @@ export function useBrowserPhotoCrop(params: {
     settling,
     /** 確定している幾何 */
     geometry,
+    /** ジオメトリの節（遠近）を出す（切り抜きの道具を開いていて、wasm が遠近を描ける） */
+    perspective: active && perspectiveSupported === true,
     /** 座標の基準（切り抜きの道具を開いている間だけ） */
     source: active && cropSource ? cropSource.source : null,
     liveAngle: active ? liveAngle : null,
@@ -285,6 +325,7 @@ export function useBrowserPhotoCrop(params: {
     cancel,
     toggle: () => (latestRef.current.active ? leave() : enter()),
     commit,
+    changeGeometry,
     reset,
   };
 }

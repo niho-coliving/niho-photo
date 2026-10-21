@@ -36,7 +36,7 @@ use std::time::Instant;
 
 use image::codecs::png::PngEncoder;
 use image::{ExtendedColorType, ImageEncoder};
-use niho_develop::settings::{MAX_SETTINGS_VERSION, SETTINGS_VERSION};
+use niho_develop::settings::READABLE_SETTINGS_VERSIONS;
 use niho_develop::{DecodeError, DevelopSettings, Filter, Quality, Session};
 use serde_json::{json, Value};
 
@@ -423,20 +423,19 @@ pub fn load_settings(text: &str) -> Result<DevelopSettings, CliError> {
     let object = value
         .as_object()
         .ok_or_else(|| invalid("developSettings must be an object".into()))?;
-    let readable = SETTINGS_VERSION..=MAX_SETTINGS_VERSION;
+    let readable = READABLE_SETTINGS_VERSIONS.map(|r| r.to_string()).join(", ");
     match object.get("v") {
         Some(v)
-            if v.as_f64().is_some_and(|n| {
-                readable.clone().any(|r| n == r as f64)
-            }) => {}
+            if v.as_f64()
+                .is_some_and(|n| READABLE_SETTINGS_VERSIONS.iter().any(|&r| n == r as f64)) => {}
         Some(v) => {
             return Err(unsupported(format!(
-                "developSettings v {v} is not supported (this build reads v {SETTINGS_VERSION}..{MAX_SETTINGS_VERSION})"
+                "developSettings v {v} is not supported (this build reads v {readable})"
             )))
         }
         None => {
             return Err(unsupported(format!(
-                "developSettings has no v (this build reads v {SETTINGS_VERSION}..{MAX_SETTINGS_VERSION})"
+                "developSettings has no v (this build reads v {readable})"
             )))
         }
     }

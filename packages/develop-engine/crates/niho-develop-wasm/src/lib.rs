@@ -348,7 +348,7 @@ mod tests {
     }
 
     /// `validateSettings` reads `masks` like the crate does (v 5 and later,
-    /// strict keys; v 6 is the detail version, v 7 is a future version).
+    /// strict keys; v 6 is detail, v 7 is perspective, and v 8 is unknown).
     #[test]
     fn validate_settings_accepts_and_rejects_masks() {
         let mask = r#"{"id":"m1","kind":"linear","zero":{"x":0.5,"y":0.2},"full":{"x":0.5,"y":0.5},"adjust":{"exposure":-0.7}}"#;
@@ -360,8 +360,9 @@ mod tests {
         };
         assert!(issues(5, mask).is_empty());
         assert!(issues(6, mask).is_empty());
+        assert!(issues(7, mask).is_empty());
         assert_eq!(issues(4, mask)[0]["code"], "versionTooLow");
-        assert_eq!(issues(7, mask)[0]["code"], "unsupportedVersion");
+        assert_eq!(issues(8, mask)[0]["code"], "unsupportedVersion");
         let unknown = mask.replace(r#""adjust""#, r#""opacity":1,"adjust""#);
         assert_eq!(issues(5, &unknown)[0]["code"], "unknownMaskKey");
     }

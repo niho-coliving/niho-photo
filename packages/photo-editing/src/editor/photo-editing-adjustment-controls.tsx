@@ -140,9 +140,9 @@ function controlLabel(control: PhotoEditingAdjustmentControl): string {
 
 /**
  * 群の中の切り替えの行（「白黒」。E1b 移行元設計）。行全体が 1 つのスイッチ（高さ 44px）で、名前は左のラベル。見た目はスライダーの
- * 行のラベルにそろえ、右に小さなつまみを置く。
+ * 行のラベルにそろえ、右に小さなつまみを置く。切り抜きの道具の「余白を埋める」（niho-photo#46）も使う。
  */
-function AdjustmentSwitch(props: {
+export function AdjustmentSwitch(props: {
   id: string;
   label: string;
   checked: boolean;

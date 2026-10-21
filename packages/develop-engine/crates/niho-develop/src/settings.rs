@@ -1,13 +1,12 @@
-//! `developSettings` v1 / v2 / v3 / v4 / v5 / v6: the saved edit of one photo.
+//! `developSettings` v1 / v2 / v3 / v4 / v5 / v6 / v7: the saved edit of one photo.
 //!
 //! The JSON shape is Photo Bench `EditSettings` (`docs/ENGINE_PROTOCOL.md`,
 //! `EditSettings.swift`'s `CodingKeys`) plus `v`, `engine`, `look`, `base`
-//! and `geometry` (spec `niho-develop-engine.md` "段 2"). `v` is 6 when detail
+//! and `geometry` (spec `niho-develop-engine.md` "段 2"). `v` is 7 when a perspective is active, 6 when detail
 //! exists, 5 when a local mask exists, 4 when color points exist, 3 when an
 //! effect is active, 2 when geometry is not the identity (`geometry.rs`),
-//! else 1, so an older reader
-//! refuses an edit it cannot render instead of silently dropping it.
-//! Differences from `EditSettings`:
+//! else 1, so an older reader refuses an edit it cannot render instead of
+//! silently dropping it. Differences from `EditSettings`:
 //!
 //! - `whiteBalance.mode` is `asShot | absolute | relative`. `absolute` keeps
 //!   the RAW Kelvin/tint in `whiteBalance.temperature` / `whiteBalance.tint`;
@@ -29,7 +28,7 @@
 //! are preserved verbatim (`extra`) and written back, so a client can round
 //! trip fields it does not understand.
 
-pub use crate::geometry::{Geometry, GEOMETRY_SETTINGS_VERSION};
+pub use crate::geometry::{Geometry, GEOMETRY_SETTINGS_VERSION, PERSPECTIVE_SETTINGS_VERSION};
 pub use crate::local_mask::LocalMask;
 use serde_json::{Map, Value};
 use std::fmt;
@@ -48,7 +47,17 @@ pub const MASKS_SETTINGS_VERSION: u32 = 5;
 /// drop a control group they do not understand.
 pub const DETAIL_SETTINGS_VERSION: u32 = 6;
 /// Highest shape version this crate reads.
-pub const MAX_SETTINGS_VERSION: u32 = DETAIL_SETTINGS_VERSION;
+pub const MAX_SETTINGS_VERSION: u32 = PERSPECTIVE_SETTINGS_VERSION;
+/// The shape versions this crate reads.
+pub const READABLE_SETTINGS_VERSIONS: [u32; 7] = [
+    SETTINGS_VERSION,
+    GEOMETRY_SETTINGS_VERSION,
+    EFFECTS_SETTINGS_VERSION,
+    COLOR_POINTS_SETTINGS_VERSION,
+    MASKS_SETTINGS_VERSION,
+    DETAIL_SETTINGS_VERSION,
+    PERSPECTIVE_SETTINGS_VERSION,
+];
 /// The UI and renderer intentionally share this small upper bound.
 pub const MAX_COLOR_POINTS: usize = 8;
 /// At most this many local masks (`masks`); the renderer draws one layer each.
@@ -737,11 +746,17 @@ impl DevelopSettings {
         settings
     }
 
-    /// The `v` these settings need: 6 when detail is present, 5 for local
-    /// masks, 4 for color points, 3 for active effects, 2 for non-identity
+    /// The `v` these settings need: 7 for a perspective, 6 for detail, 5 for
+    /// local masks, 4 for color points, 3 for active effects, 2 for non-identity
     /// geometry, and 1 otherwise.
     pub fn required_version(&self) -> u32 {
-        if self.detail.is_some() {
+        if self
+            .geometry
+            .as_ref()
+            .is_some_and(|g| g.active_perspective().is_some())
+        {
+            PERSPECTIVE_SETTINGS_VERSION
+        } else if self.detail.is_some() {
             DETAIL_SETTINGS_VERSION
         } else if !self.masks.is_empty() {
             MASKS_SETTINGS_VERSION
@@ -873,20 +888,22 @@ impl DevelopSettings {
             match path {
                 "v" => {
                     let n = number(v, path)?;
-                    s.v =
-                        match n {
-                            _ if n == 1.0 => 1,
-                            _ if n == 2.0 => 2,
-                            _ if n == 3.0 => 3,
-                            _ if n == 4.0 => 4,
-                            _ if n == 5.0 => 5,
-                            _ if n == 6.0 => 6,
-                            _ => return Err(SettingsError::new(
+                    s.v = match n {
+                        _ if n == 1.0 => 1,
+                        _ if n == 2.0 => 2,
+                        _ if n == 3.0 => 3,
+                        _ if n == 4.0 => 4,
+                        _ if n == 5.0 => 5,
+                        _ if n == 6.0 => 6,
+                        _ if n == 7.0 => 7,
+                        _ => {
+                            return Err(SettingsError::new(
                                 path,
                                 "unsupportedVersion",
-                                "only v = 1, v = 2, v = 3, v = 4, v = 5, and v = 6 are supported",
-                            )),
-                        };
+                                "only v = 1, v = 2, v = 3, v = 4, v = 5, v = 6, and v = 7 are supported",
+                            ))
+                        }
+                    };
                 }
                 "engine" => {
                     let e = string(v, path)?;
@@ -1514,8 +1531,7 @@ impl DevelopSettings {
             issues.push(SettingsError::new(
                 "v",
                 "versionTooLow",
-                "detail needs v = 6, local masks need v = 5, color points need v = 4, active effects need v = 3, and non-identity geometry needs v = 2",
-            ));
+                "a perspective needs v = 7, detail needs v = 6, local masks need v = 5, color points need v = 4, active effects need v = 3, and non-identity geometry needs v = 2",            ));
         }
         let matched = match self.engine.as_str() {
             ENGINE_NIHO_3 => self.look == LOOK_NIHO_STANDARD_2,
@@ -2233,7 +2249,7 @@ mod tests {
         assert!(DevelopSettings::from_json(r#"{"v":5}"#).is_ok());
         assert!(DevelopSettings::from_json(r#"{"v":6}"#).is_ok());
         assert_eq!(
-            DevelopSettings::from_json(r#"{"v":7}"#).unwrap_err().code,
+            DevelopSettings::from_json(r#"{"v":8}"#).unwrap_err().code,
             "unsupportedVersion"
         );
         assert_eq!(
@@ -2246,6 +2262,38 @@ mod tests {
                 .path,
             "geometry.rotate"
         );
+    }
+
+    #[test]
+    fn a_perspective_needs_v7_above_every_other_feature() {
+        let perspective = r#""geometry":{"perspective":{"vertical":-25}}"#;
+        let v7 = DevelopSettings::from_json(&format!(r#"{{"v":7,{perspective}}}"#)).unwrap();
+        assert_eq!(v7.v, PERSPECTIVE_SETTINGS_VERSION);
+        assert_eq!(v7.required_version(), 7);
+        assert!(v7.validate().is_empty());
+        assert!(v7.is_neutral(), "the perspective is not a color edit");
+        assert_eq!(DevelopSettings::from_value(&v7.to_value()).unwrap(), v7);
+        // Lower versions are too low, whatever else they carry.
+        for v in [2, 3, 4] {
+            let low = DevelopSettings::from_json(&format!(r#"{{"v":{v},{perspective}}}"#)).unwrap();
+            assert!(low
+                .validate()
+                .iter()
+                .any(|issue| issue.path == "v" && issue.code == "versionTooLow"));
+        }
+        let mut with_points = v7.clone();
+        with_points.grayscale = true;
+        assert_eq!(with_points.required_version(), 7);
+        // `constrain` and `upright` alone keep the old version (they do not
+        // change the pixels an older reader would draw).
+        let switches = DevelopSettings::from_json(
+            r#"{"v":1,"geometry":{"constrain":true,"upright":1,"perspective":{"scale":100}}}"#,
+        )
+        .unwrap();
+        assert_eq!(switches.required_version(), 1);
+        assert!(switches.validate().is_empty());
+        assert!(READABLE_SETTINGS_VERSIONS.contains(&7));
+        assert_eq!(MAX_SETTINGS_VERSION, 7);
     }
 
     #[test]

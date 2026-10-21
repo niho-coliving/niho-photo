@@ -41,7 +41,8 @@ describe("color point schema and picker", () => {
     expect(readDevelopSettings(one)).toEqual(one);
     expect(developSettingsVersion({ ...one, colorPoints: [] })).toBe(1);
     expect(readDevelopSettings({ ...one, v: 3 })).toBeNull();
-    expect(readDevelopSettings({ ...one, v: 7 })).toBeNull();
+    expect(readDevelopSettings({ ...one, v: 7 })).toEqual({ ...one, v: 7 });
+    expect(readDevelopSettings({ ...one, v: 8 })).toBeNull();
     expect(readDevelopSettings({ ...one, colorPoints: [{ ...(one.colorPoints as object[])[0], unknown: true }] })).toBeNull();
     expect(readDevelopSettings({ ...one, colorPoints: [{ ...(one.colorPoints as object[])[0], target: { ...target, hue: Number.NaN } }] })).toBeNull();
     let eight = base;

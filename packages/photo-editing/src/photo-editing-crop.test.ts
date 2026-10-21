@@ -261,4 +261,25 @@ describe("保存の形", () => {
       geometry({ rotate: 270, flipV: true }),
     );
   });
+
+  it("遠近（niho-photo#46）は補正後の枠全体を描くので残し、「余白を埋める」は外す（形の版は 7 のまま）", () => {
+    const perspective = { vertical: -30, horizontal: 0, rotate: 1, aspect: 0, scale: 100, x: 0, y: 0 };
+    const settings: DevelopSettings = {
+      ...neutralDevelopSettings(),
+      v: 7,
+      geometry: { angle: 3, crop: { left: 0.1, top: 0, right: 0.9, bottom: 1 }, perspective, constrain: true },
+    };
+    const frame = cropFrameDevelopSettings(settings);
+    expect(frame.v).toBe(7);
+    expect(readDevelopGeometry(frame)).toEqual({ ...geometry({}), perspective });
+  });
+
+  it("editingCropBox は「余白を埋める」が on で遠近があれば、補正した写真の中に収めた箱を見せる", () => {
+    const frame = { width: 3000, height: 2000 };
+    const tilted = { ...geometry({}), perspective: { vertical: -40, horizontal: 0, rotate: 0, aspect: 0, scale: 100, x: 0, y: 0 } };
+    expect(editingCropBox(tilted, frame)).toEqual({ cx: 1500, cy: 1000, width: 3000, height: 2000 });
+    const constrained = editingCropBox({ ...tilted, constrain: true }, frame);
+    expect(constrained.width).toBeLessThan(3000);
+    expect(constrained.width / constrained.height).toBeCloseTo(1.5, 9);
+  });
 });

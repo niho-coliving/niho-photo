@@ -73,6 +73,19 @@ describe("summarizeUnsupportedPresetItems", () => {
     expect(Object.keys(PHOTO_EDITING_PRESET_UNSUPPORTED_LABELS)).not.toContain("colorGradeLuminance");
   });
 
+  it("変形の手動のスライダーは描ける（エンジン 0.20.0〜。niho-photo#46）ので、残るのは Upright がオンのときの自動計算だけ", () => {
+    expect(Object.keys(PHOTO_EDITING_PRESET_UNSUPPORTED_LABELS)).not.toContain("transform");
+    const on = xmp('crs:PerspectiveUpright="1" crs:PerspectiveVertical="-20" crs:UprightTransform_0="1 0 0 0 1 0 0 0 1"');
+    expect(summarizeUnsupportedPresetItems(["PerspectiveUpright", "UprightTransform_0"], on)).toEqual({
+      labels: [PHOTO_EDITING_PRESET_UNSUPPORTED_LABELS.upright],
+      otherCount: 0,
+    });
+    // Upright がオフなら知らせない（crate は計算値を `unsupported` に入れないが、入っていても外す）
+    const off = xmp('crs:PerspectiveUpright="0" crs:UprightTransform_0="1 0 0 0 1 0 0 0 1"');
+    expect(summarizeUnsupportedPresetItems(["PerspectiveUpright", "UprightTransform_0"], off)).toEqual({ labels: [], otherCount: 0 });
+    expect(describeUnsupportedPresetItems(["PerspectiveUpright"], on)).toContain("Upright の自動計算");
+  });
+
   it("表に無い項目は数だけ数える（同じ項目は 1 回）。埋め込みの Look は数えない", () => {
     expect(summarizeUnsupportedPresetItems(["FutureThing", "FutureThing", "AnotherThing", "Look.Name", "Look.Amount"])).toEqual({
       labels: [],
@@ -125,7 +138,6 @@ describe("summarizeUnsupportedPresetItems", () => {
           "CropConstrainToWarp",
           "OverrideLookVignette",
           "PerspectiveUpright",
-          "PerspectiveScale",
           "CameraProfile",
           "FutureThing",
         ],

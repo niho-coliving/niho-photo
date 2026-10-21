@@ -54,6 +54,7 @@ import {
 import { cn } from "niho-ui/cn";
 
 import { PHOTO_EDITING_PRIMARY_BUTTON_CLASS_NAME } from "./photo-editing-button-classes";
+import { PhotoEditingGeometrySection, type PhotoEditingGeometryChange } from "./photo-editing-geometry-section";
 import { PhotoEditingMenu, type PhotoEditingMenuItem } from "./photo-editing-menu";
 import { PhotoEditingSlider, type PhotoEditingSliderPhase } from "./photo-editing-slider";
 import { PhotoEditingRuler } from "./photo-editing-ruler";
@@ -65,8 +66,9 @@ const FOCUS_RING_CLASS_NAME = "focus-visible:outline-none focus-visible:ring-2 f
  * （F6c 移行元設計。`mobile`）が同じものを使う。
  *
  * - PC（Lightroom の並び。#52）: 縦横比の行（今の比率の名前 ▾ のメニューと、右端に「縦横の入れ替え」）→ 角度補正のスライダー →
- *   「反転と回転」の 4 つの icon（左に 90° 回転・右に 90° 回転・左右の反転・上下の反転）→ 書き出しの大きさの 1 行 →［完了］
- *   ［キャンセル］（`onDone` / `onCancel` を渡したときだけ。Enter / Esc は面のキーで同じものを呼ぶ）
+ *   「反転と回転」の 4 つの icon（左に 90° 回転・右に 90° 回転・左右の反転・上下の反転）→「ジオメトリ」の節（遠近のスライダーと
+ *   「余白を埋める」。niho-photo#46。`onGeometryChange` を渡し、wasm が遠近を描ける〔`perspective`〕ときだけ）→ 書き出しの大きさの
+ *   1 行 →［完了］［キャンセル］（`onDone` / `onCancel` を渡したときだけ。Enter / Esc は面のキーで同じものを呼ぶ）
  * - スマホ: 縦横比のチップ・入れ替え・90° 回転・左右の反転・「初期化」の帯と、角度補正の目盛り
  * - 押すたびに新しい幾何を `onCommit` に渡す（取り消しの 1 単位。保存と履歴は呼ぶ側）
  * - 角度補正は、つまみを動かしている間は手元の角度だけを `onLiveAngleChange` に知らせ（枠の部品が写真を回してグリッドを出す）、
@@ -94,6 +96,10 @@ export function PhotoEditingCropTools(props: {
   onDone?: () => void;
   /** PC の［キャンセル］（入ったときの幾何に戻して補正へ戻る） */
   onCancel?: () => void;
+  /** PC の「ジオメトリ」の節を出す（wasm が遠近〔v 7〕を描ける） */
+  perspective?: boolean;
+  /** PC の「ジオメトリ」の節の変更（`drag` は描き直すだけ、`commit` で取り消しの 1 単位） */
+  onGeometryChange?: PhotoEditingGeometryChange;
 }) {
   const { geometry, source, disabled } = props;
   const headingId = useId();
@@ -301,6 +307,11 @@ export function PhotoEditingCropTools(props: {
           );
         })}
       </div>
+      {props.perspective && props.onGeometryChange ? (
+        <div className="mt-3">
+          <PhotoEditingGeometrySection geometry={geometry} disabled={disabled} onChange={props.onGeometryChange} />
+        </div>
+      ) : null}
       {props.exportLongEdge !== null ? (
         <p className="mt-3 text-xs leading-relaxed text-niho-text-sub">{photoEditingCropExportLimitText(props.exportLongEdge)}</p>
       ) : null}

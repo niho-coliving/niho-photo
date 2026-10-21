@@ -622,6 +622,34 @@ describe("createDevelopEngine", () => {
       await flushPromises();
     }
   });
+  it("ready に perspective: true が付いた wasm だけ遠近（v7。niho-photo#46）を公開する", async () => {
+    const worker = new FakeWorker();
+    const engine = createDevelopEngine({ createWorker: () => worker as unknown as Worker, manifestUrl: MANIFEST_URL });
+    const supported = engine.supportsPerspective();
+    worker.respond({
+      type: "ready",
+      id: worker.lastRequest("init").id,
+      version: "niho-develop 0.20.0 (engine niho-11)",
+      geometry: true,
+      perspective: true,
+    });
+
+    expect(await supported).toBe(true);
+    expect(await engine.supportsPerspective()).toBe(true);
+    expect(await engine.supportsColorPoints()).toBe(false);
+
+    engine.dispose();
+    expect(await engine.supportsPerspective()).toBe(false);
+  });
+
+  it("perspective の無い ready（v7 を読めない wasm）では遠近を公開しない", async () => {
+    const worker = new FakeWorker();
+    const engine = createDevelopEngine({ createWorker: () => worker as unknown as Worker, manifestUrl: MANIFEST_URL });
+    const supported = engine.supportsPerspective();
+    worker.respond({ type: "ready", id: worker.lastRequest("init").id, version: "niho-develop 0.19.0 (engine niho-11)", geometry: true });
+    expect(await supported).toBe(false);
+    expect(await engine.supportsGeometry()).toBe(true);
+  });
 
   it("sampleColor は設定・描画長辺・正規化座標を worker に渡す", async () => {
     const { worker, engine } = await readyEngine({ features: { colorPoints: true } });

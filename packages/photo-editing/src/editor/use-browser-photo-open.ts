@@ -255,6 +255,7 @@ export function useBrowserPhotoOpen(params: {
     settingsKey,
     settingsRef: edit.settingsRef,
     commitEdit: edit.commitEdit,
+    changeSettings: edit.changeSettings,
     setCompareOriginal,
     ensureDevelopWorkingSize,
     editResetHandlerRef: cropResetRef,
@@ -509,16 +510,17 @@ export function useBrowserPhotoOpen(params: {
         return;
       }
       const sequence = ++order.requested;
+      // ジオメトリの節（遠近。niho-photo#46）のスライダーを動かしている間は速い描き方にし、その画は覚えない（離したら丁寧に描く）
       void engine
-        .render(frameSettings, { maxDimension: DEVELOP_PREVIEW_MAX_DIMENSION, interactive: provisionalQuality })
+        .render(frameSettings, { maxDimension: DEVELOP_PREVIEW_MAX_DIMENSION, interactive: provisionalQuality || dragging })
         .then((frame) => {
           if (!frame) return;
           if (engineRef.current !== engine || order.generation !== paintGeneration) return;
           if (openedRef.current?.key !== key || !cropActiveRef.current) return;
           if (sequence !== order.requested || !canvasRef.current) return;
           order.painted = sequence;
-          cropFrameCacheRef.current = { key, settingsJson: frameJson, epoch: workingEpoch, frame };
-          paint(canvasRef.current, frame, true, true);
+          if (!dragging) cropFrameCacheRef.current = { key, settingsJson: frameJson, epoch: workingEpoch, frame };
+          paint(canvasRef.current, frame, !dragging, true);
         })
         .catch(() => failInitial(sequence));
       return;

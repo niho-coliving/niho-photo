@@ -16,7 +16,7 @@ export type DevelopEditSettingsConversion = {
 /** crate に同梱したプリセット（`builtinPresets`）。 */
 export type DevelopBuiltinPreset = { id: string; name: string; xmp: string };
 
-/** 今の補正を XMP に書き出すときの群（crate の `XmpGroup`。既定は `exposure` と `whiteBalance` を除く 11 群）。 */
+/** 今の補正を XMP に書き出すときの群（crate の `XmpGroup`。既定は `exposure`・`whiteBalance`・`transform` を除く 11 群）。 */
 export type DevelopXmpGroup =
   | "exposure"
   | "whiteBalance"
@@ -30,9 +30,9 @@ export type DevelopXmpGroup =
   | "vignette"
   | "grain"
   | "noiseReduction"
-  | "sharpening";
-
-/** crate の既定の群（露光量と絶対のホワイトバランスを含めない）。 */
+  | "sharpening"
+  | "transform";
+/** crate の既定の群（露光量・絶対のホワイトバランス・写真固有の変形を含めない）。 */
 export const DEVELOP_XMP_DEFAULT_GROUPS: readonly DevelopXmpGroup[] = [
   "tone",
   "presence",

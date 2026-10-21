@@ -4,8 +4,11 @@
 //! defines the frame and the crop's coordinates.
 //!
 //! Order: quarter turns and flips (the order the frame's rows are read from
-//! the source) -> the straighten angle (resampled in linear light) -> the
-//! crop -> the output size.
+//! the source) -> the perspective (niho-photo#46, [`crate::perspective`]:
+//! the frame warped onto a canvas of its size) -> the straighten angle
+//! (resampled in linear light) -> the crop -> the output size. The crop's
+//! coordinates are on the canvas; "余白を埋める" (`constrain`) keeps it
+//! inside the corrected photo ([`crate::perspective::constrain_corners`]).
 //!
 //! - **Output size, never enlarged** ([`plan`]). Angle 0: the crop of a
 //!   "virtual whole", the frame reduced as a whole render would be, at the
@@ -28,10 +31,19 @@
 //!   pixels (a direct copy when nothing is reduced). With an angle: the
 //!   frame reduced per axis, then Catmull-Rom (4 x 4, `a = -0.5`) in
 //!   linear light at each pixel's center; indices outside the photo are
-//!   clamped to its edge (only the margin reaches them).
+//!   clamped to its edge (only the margin reaches them). With a
+//!   perspective: the same single Catmull-Rom pass, each pixel's center
+//!   taken through the crop (with its angle) onto the canvas and then
+//!   through the inverse warp onto the frame; the frame is reduced by the
+//!   output's scale over the warp's at the crop's center, so a smaller
+//!   `scale` does not alias. Points outside the photo (the corners a
+//!   perspective uncovers when `constrain` is off) take its nearest edge:
+//!   the stage-2 pass has no alpha, an edge keeps the local pass free of a
+//!   hard border, and `constrain` cuts them away.
 
 use crate::decode::{DecodeError, LinearImage};
 use crate::geometry::{CropCorners, Geometry};
+use crate::perspective::{constrain_corners, Warp};
 use crate::resize::{fitted_size, resample_window, Filter};
 use crate::settings::SettingsError;
 use crate::spatial::{levels_for_scale, scale_px};
@@ -145,11 +157,13 @@ enum Sampling {
     /// `top_left + ((i + 0.5) / width) across + ((j + 0.5) / height) down`
     /// (frame pixel `n`'s center at `n + 0.5`), the window `pad` pixels
     /// further on every side (the same map). The frame is read reduced to
-    /// `reduced` (per axis).
+    /// `reduced` (per axis). With a `warp` (a perspective) that point is on
+    /// the canvas and the frame point is its inverse warp.
     Turned {
         corners: CropCorners,
         pad: usize,
         reduced: (usize, usize),
+        warp: Option<Box<Warp>>,
     },
 }
 
@@ -196,17 +210,30 @@ impl Plan {
 
     /// The frame point (continuous frame pixels, pixel `n`'s center at
     /// `n + 0.5`) where output pixel `(i, j)`'s center comes from, at an
-    /// angle. `None` at angle 0.
+    /// angle or with a perspective. `None` at angle 0 without one.
     pub fn turned_point(&self, i: usize, j: usize) -> Option<[f64; 2]> {
         match &self.sampling {
-            Sampling::Turned { corners: c, .. } => {
+            Sampling::Turned {
+                corners: c, warp, ..
+            } => {
                 let a = (i as f64 + 0.5) / self.width as f64;
                 let b = (j as f64 + 0.5) / self.height as f64;
-                Some([
+                let q = [
                     c.top_left[0] + a * c.across[0] + b * c.down[0],
                     c.top_left[1] + a * c.across[1] + b * c.down[1],
-                ])
+                ];
+                Some(warp.as_ref().map_or(q, |w| w.sample_point(q)))
             }
+            Sampling::Aligned { .. } => None,
+        }
+    }
+
+    /// The crop's corners on the canvas (on the frame without a
+    /// perspective) the output covers, at an angle or with a perspective
+    /// (after "余白を埋める"). `None` at angle 0 without one.
+    pub fn crop_corners(&self) -> Option<CropCorners> {
+        match &self.sampling {
+            Sampling::Turned { corners, .. } => Some(*corners),
             Sampling::Aligned { .. } => None,
         }
     }
@@ -296,6 +323,35 @@ fn crop_corners(g: &Geometry, width: usize, height: usize) -> Result<CropCorners
     })
 }
 
+/// The perspective's warp of `g` on a `width x height` frame (`None`
+/// without one).
+fn warp_of(g: &Geometry, width: usize, height: usize) -> Option<Warp> {
+    g.active_perspective()
+        .and_then(|p| Warp::new(p, width, height))
+}
+
+/// [`crop_corners`] on the canvas, kept inside the corrected photo when
+/// `constrain` is on with a perspective.
+fn framed_corners(
+    g: &Geometry,
+    width: usize,
+    height: usize,
+    warp: Option<&Warp>,
+) -> Result<CropCorners, SettingsError> {
+    let c = crop_corners(g, width, height)?;
+    Ok(match warp {
+        Some(warp) if g.constrain => constrain_corners(c, warp),
+        _ => c,
+    })
+}
+
+fn corners_center(c: &CropCorners) -> [f64; 2] {
+    [
+        c.top_left[0] + (c.across[0] + c.down[0]) / 2.0,
+        c.top_left[1] + (c.across[1] + c.down[1]) / 2.0,
+    ]
+}
+
 /// How `g` renders a `source_width x source_height` source (the working
 /// image, EXIF orientation applied) at `max_dimension` (0 = no reduction).
 /// A crop that is not a rectangle at its angle is `geometry.crop` /
@@ -308,11 +364,12 @@ pub fn plan(
 ) -> Result<Plan, SettingsError> {
     let orientation = Orientation::new(g, source_width, source_height);
     let (fw, fh) = orientation.frame_size();
-    let corners = crop_corners(g, fw, fh)?;
-    Ok(if g.angle == 0.0 {
+    let warp = warp_of(g, fw, fh);
+    let corners = framed_corners(g, fw, fh, warp.as_ref())?;
+    Ok(if g.angle == 0.0 && warp.is_none() {
         aligned_plan(g, orientation, max_dimension)
     } else {
-        turned_plan(corners, orientation, max_dimension)
+        turned_plan(corners, orientation, max_dimension, warp)
     })
 }
 
@@ -383,7 +440,12 @@ fn aligned_plan(g: &Geometry, orientation: Orientation, m: usize) -> Plan {
     }
 }
 
-fn turned_plan(corners: CropCorners, orientation: Orientation, m: usize) -> Plan {
+fn turned_plan(
+    corners: CropCorners,
+    orientation: Orientation,
+    m: usize,
+    warp: Option<Warp>,
+) -> Plan {
     let (fw, fh) = orientation.frame_size();
     let k = if m == 0 {
         1.0
@@ -400,10 +462,25 @@ fn turned_plan(corners: CropCorners, orientation: Orientation, m: usize) -> Plan
     };
     let (width, height) = (side(corners.width), side(corners.height));
     let scale_long_edge = (libm::round(fw.max(fh) as f64 * k) as usize).max(1);
-    let reduced = if k < 1.0 {
-        fitted_size(fw, fh, scale_long_edge)
-    } else {
-        (fw, fh)
+    let reduced = match &warp {
+        None => {
+            if k < 1.0 {
+                fitted_size(fw, fh, scale_long_edge)
+            } else {
+                (fw, fh)
+            }
+        }
+        Some(warp) => {
+            // An output pixel spans `inverse_scale / k` frame pixels at the
+            // crop's center: reduce the frame to about one per output pixel
+            // (never enlarged).
+            let r = (k / warp.inverse_scale(corners_center(&corners))).min(1.0);
+            if r < 1.0 {
+                fitted_size(fw, fh, (libm::round(fw.max(fh) as f64 * r) as usize).max(1))
+            } else {
+                (fw, fh)
+            }
+        }
     };
     let (_, pad) = margin(scale_long_edge);
     Plan {
@@ -423,16 +500,27 @@ fn turned_plan(corners: CropCorners, orientation: Orientation, m: usize) -> Plan
             corners,
             pad,
             reduced,
+            warp: warp.map(Box::new),
         },
     }
 }
 
 /// What a geometry frame's working image depends on besides the source:
-/// the rendered geometry (not its aspect lock) and `max_dimension`.
+/// the rendered geometry (not its aspect lock; the perspective and
+/// `constrain` when there is a perspective) and `max_dimension`.
 pub fn frame_key(g: &Geometry, max_dimension: usize) -> String {
     let c = &g.crop;
+    let perspective = g
+        .active_perspective()
+        .map(|p| {
+            format!(
+                "{:?}|{:?}|{:?}|{:?}|{:?}|{:?}|{:?}|{}",
+                p.vertical, p.horizontal, p.rotate, p.aspect, p.scale, p.x, p.y, g.constrain
+            )
+        })
+        .unwrap_or_default();
     format!(
-        "{}|{}|{}|{:?}|{:?}|{:?}|{:?}|{:?}|{max_dimension}",
+        "{}|{}|{}|{:?}|{:?}|{:?}|{:?}|{:?}|{perspective}|{max_dimension}",
         g.rotate % 360,
         g.flip_h,
         g.flip_v,
@@ -449,7 +537,8 @@ pub fn frame_key(g: &Geometry, max_dimension: usize) -> String {
 /// `min(cap, long edge, ceil(long edge * M / crop long edge))` with the
 /// crop's long edge in the original's pixels (`M` 0: the original's size;
 /// `cap` 0: no cap). Without a geometry the crop is the whole photo
-/// (`min(cap, long edge, M)`).
+/// (`min(cap, long edge, M)`). With a perspective the crop is on the canvas
+/// and a magnifying warp (`scale` above 100) needs that many more pixels.
 pub fn decode_long_edge(
     g: Option<&Geometry>,
     width: usize,
@@ -463,8 +552,16 @@ pub fn decode_long_edge(
         (m, None) => m,
         (m, Some(g)) => {
             let (fw, fh) = Orientation::new(g, width, height).frame_size();
-            let corners = crop_corners(g, fw, fh)?;
-            libm::ceil(long as f64 * m as f64 / corners.width.max(corners.height)) as usize
+            let warp = warp_of(g, fw, fh);
+            let corners = framed_corners(g, fw, fh, warp.as_ref())?;
+            let crop_long = match &warp {
+                None => corners.width.max(corners.height),
+                Some(warp) => {
+                    corners.width.max(corners.height)
+                        * warp.inverse_scale(corners_center(&corners)).min(1.0)
+                }
+            };
+            libm::ceil(long as f64 * m as f64 / crop_long) as usize
         }
     };
     let mut size = wanted.min(long);
@@ -562,7 +659,16 @@ pub fn working_image(source: &LinearImage, plan: &Plan, filter: Filter) -> Linea
             corners,
             pad,
             reduced,
-        } => turned_window(source, plan, corners, *pad, *reduced, filter),
+            warp,
+        } => turned_window(
+            source,
+            plan,
+            corners,
+            *pad,
+            *reduced,
+            warp.as_deref(),
+            filter,
+        ),
     };
     LinearImage {
         width: plan.window_width,
@@ -608,13 +714,15 @@ fn catmull_rom_taps(coordinate: f64, n: usize, range: &Range<usize>) -> ([usize;
 
 /// The straightened window: the frame reduced per axis to `reduced` over
 /// the window's footprint (plus the interpolation's reach), then
-/// Catmull-Rom at every window pixel's center.
+/// Catmull-Rom at every window pixel's center. With a perspective (`warp`)
+/// each center goes through the inverse warp first.
 fn turned_window(
     source: &LinearImage,
     plan: &Plan,
     c: &CropCorners,
     pad: usize,
     reduced: (usize, usize),
+    warp: Option<&Warp>,
     filter: Filter,
 ) -> Vec<f32> {
     let o = &plan.orientation;
@@ -623,25 +731,46 @@ fn turned_window(
     let (sx, sy) = (rw as f64 / fw as f64, rh as f64 / fh as f64);
     let (wo, ho) = (plan.width as f64, plan.height as f64);
     let pad = pad as f64;
-    // Window pixel (i, j) on the reduced frame (continuous coordinates).
-    let point = |i: usize, j: usize| -> [f64; 2] {
+    // Window pixel (i, j) on the canvas.
+    let canvas = |i: usize, j: usize| -> [f64; 2] {
         let a = (i as f64 - pad + 0.5) / wo;
         let b = (j as f64 - pad + 0.5) / ho;
         [
-            (c.top_left[0] + a * c.across[0] + b * c.down[0]) * sx,
-            (c.top_left[1] + a * c.across[1] + b * c.down[1]) * sy,
+            c.top_left[0] + a * c.across[0] + b * c.down[0],
+            c.top_left[1] + a * c.across[1] + b * c.down[1],
         ]
     };
+    // A warped point far outside the frame takes its edge like one just
+    // outside (the taps clamp); held finite so the taps' indices do too.
+    let (cx, cy) = (rw as f64 + 4.0, rh as f64 + 4.0);
+    // Window pixel (i, j) on the reduced frame (continuous coordinates).
+    let point = |i: usize, j: usize| -> [f64; 2] {
+        let q = canvas(i, j);
+        match warp {
+            None => [q[0] * sx, q[1] * sy],
+            Some(warp) => {
+                let p = warp.sample_point(q);
+                [(p[0] * sx).clamp(-4.0, cx), (p[1] * sy).clamp(-4.0, cy)]
+            }
+        }
+    };
     let (ww, wh) = (plan.window_width, plan.window_height);
-    let ends = [
-        point(0, 0),
-        point(ww - 1, 0),
-        point(0, wh - 1),
-        point(ww - 1, wh - 1),
-    ];
+    let corners = [(0, 0), (ww - 1, 0), (0, wh - 1), (ww - 1, wh - 1)];
+    let ends = corners.map(|(i, j)| point(i, j));
+    // The warp keeps the window a convex quadrilateral (its corners'
+    // bounding box holds it) unless the window reaches the vanishing line:
+    // then the whole frame is read.
+    let bounded = warp.is_none_or(|warp| {
+        corners
+            .iter()
+            .all(|&(i, j)| warp.to_frame(canvas(i, j)).is_some())
+    });
     // The reduced frame's pixels the window reads: the footprint's bounding
     // box, the taps' reach and a pixel for rounding.
     let range = |axis: usize, n: usize| {
+        if !bounded {
+            return 0..n;
+        }
         let lo = ends.iter().map(|p| p[axis]).fold(f64::INFINITY, f64::min);
         let hi = ends
             .iter()
@@ -937,5 +1066,160 @@ mod tests {
         assert_eq!(output_size(None, 600, 400, 0), Ok((600, 400)));
         let turned = geometry(r#"{"rotate":90}"#);
         assert_eq!(output_size(Some(&turned), 600, 400, 300), Ok((200, 300)));
+    }
+
+    fn reduced_of(p: &Plan) -> (usize, usize) {
+        match &p.sampling {
+            Sampling::Turned { reduced, .. } => *reduced,
+            Sampling::Aligned { .. } => panic!("not turned"),
+        }
+    }
+
+    #[test]
+    fn a_perspective_samples_the_canvas_like_a_straightened_crop() {
+        let g = geometry(r#"{"perspective":{"vertical":-30}}"#);
+        // The canvas is the frame's size; angle 0 is not the aligned path.
+        let p = plan(&g, 3000, 2000, 0).unwrap();
+        assert_eq!((p.width, p.height), (3000, 2000));
+        assert!(p.virtual_crop().is_none() && !p.window_is_source());
+        let p = plan(&g, 3000, 2000, 1000).unwrap();
+        assert_eq!((p.width, p.height), (1000, 667));
+        assert_eq!(p.scale_long_edge, 1000);
+        assert_eq!(reduced_of(&p), (1000, 667));
+        assert_eq!(output_size(Some(&g), 3000, 2000, 1000), Ok((1000, 667)));
+        // A perspective and the identity's values: the identity, aligned.
+        let neutral = geometry(r#"{"perspective":{"scale":100},"constrain":true}"#);
+        assert!(neutral.is_identity());
+        let crop = geometry(r#"{"perspective":{"scale":100},"crop":{"right":0.5}}"#);
+        assert!(plan(&crop, 3000, 2000, 0).unwrap().virtual_crop().is_some());
+    }
+
+    #[test]
+    fn output_pixels_come_through_the_inverse_warp() {
+        let g = geometry(
+            r#"{"perspective":{"vertical":-40,"horizontal":15,"rotate":2,"scale":90},"angle":3,"crop":{"left":0.1,"top":0.05,"right":0.9,"bottom":0.95}}"#,
+        );
+        let (w, h) = (3000usize, 2000usize);
+        let warp = Warp::new(&g.perspective, w, h).unwrap();
+        let c = crop_corners(&g, w, h).unwrap();
+        for m in [0usize, 700] {
+            let p = plan(&g, w, h, m).unwrap();
+            assert_eq!(p.crop_corners(), Some(c));
+            for (i, j) in [(0, 0), (17, p.height / 2), (p.width - 1, p.height - 1)] {
+                let a = (i as f64 + 0.5) / p.width as f64;
+                let b = (j as f64 + 0.5) / p.height as f64;
+                let q = [
+                    c.top_left[0] + a * c.across[0] + b * c.down[0],
+                    c.top_left[1] + a * c.across[1] + b * c.down[1],
+                ];
+                assert_eq!(p.turned_point(i, j), warp.to_frame(q));
+            }
+        }
+    }
+
+    #[test]
+    fn constrain_keeps_every_output_pixel_inside_the_photo() {
+        for (w, h) in [(3000usize, 2000usize), (1707, 2560)] {
+            for json in [
+                r#"{"perspective":{"vertical":-60},"constrain":true}"#,
+                r#"{"perspective":{"horizontal":70,"rotate":-6,"aspect":40},"constrain":true}"#,
+                r#"{"perspective":{"scale":70,"x":-60,"y":30},"constrain":true}"#,
+                r#"{"perspective":{"vertical":35},"angle":-4,"constrain":true,"crop":{"left":0.05,"top":0.1,"right":0.8,"bottom":0.9}}"#,
+            ] {
+                let g = geometry(json);
+                for m in [0usize, 97, 1280] {
+                    let p = plan(&g, w, h, m).unwrap();
+                    let (fw, fh) = p.frame_size();
+                    let border = (0..p.width)
+                        .flat_map(|i| [(i, 0), (i, p.height - 1)])
+                        .chain((0..p.height).flat_map(|j| [(0, j), (p.width - 1, j)]));
+                    for (i, j) in border {
+                        let [x, y] = p.turned_point(i, j).unwrap();
+                        assert!(
+                            x > 0.0 && x < fw as f64 && y > 0.0 && y < fh as f64,
+                            "{json} {w}x{h} M {m}: ({i}, {j}) at ({x}, {y})"
+                        );
+                    }
+                    if m > 0 {
+                        assert!(p.width.max(p.height) <= m);
+                    }
+                    assert!(p.output.x + p.output.width <= p.window_width);
+                }
+                // The output is the constrained crop's size.
+                let open = plan(
+                    &geometry(&json.replace(r#","constrain":true"#, "")),
+                    w,
+                    h,
+                    0,
+                )
+                .unwrap();
+                let fitted = plan(&g, w, h, 0).unwrap();
+                assert!(fitted.width <= open.width, "{json}");
+                if !json.contains("angle") {
+                    assert!(fitted.width < open.width, "{json}");
+                }
+            }
+        }
+        // Without constrain the corners a perspective uncovers come from
+        // outside the photo (its edge is sampled there).
+        let p = plan(
+            &geometry(r#"{"perspective":{"vertical":-40}}"#),
+            3000,
+            2000,
+            0,
+        )
+        .unwrap();
+        let [x, _] = p.turned_point(p.width - 1, p.height - 1).unwrap();
+        assert!(x > 3000.0, "{x}");
+    }
+
+    #[test]
+    fn the_frame_is_reduced_by_the_output_and_the_warp() {
+        let reduced = |json: &str| reduced_of(&plan(&geometry(json), 4000, 3000, 1000).unwrap());
+        // A keystone keeps the scale at the center: like a straightened crop.
+        assert_eq!(reduced(r#"{"perspective":{"vertical":-10}}"#), (1000, 750));
+        // Half the scale reads twice the frame per output pixel.
+        assert_eq!(reduced(r#"{"perspective":{"scale":50}}"#), (500, 375));
+        // Magnified: retain the extra source resolution requested before the warp.
+        assert_eq!(reduced(r#"{"perspective":{"scale":150}}"#), (1500, 1125));
+        // Unreduced when the output reaches the frame.
+        let p = plan(&geometry(r#"{"perspective":{"scale":150}}"#), 1000, 800, 0).unwrap();
+        assert_eq!(reduced_of(&p), (1000, 800));
+    }
+
+    #[test]
+    fn the_frame_key_follows_the_perspective_and_constrain() {
+        let key = |json: &str| frame_key(&geometry(json), 1280);
+        let base = key(r#"{"perspective":{"vertical":-10}}"#);
+        assert_ne!(base, key(r#"{"perspective":{"vertical":-11}}"#));
+        assert_ne!(base, key(r#"{"perspective":{"vertical":-10,"y":0.5}}"#));
+        assert_ne!(
+            base,
+            key(r#"{"perspective":{"vertical":-10},"constrain":true}"#)
+        );
+        // Without a perspective `constrain` and `upright` do not render.
+        assert_eq!(
+            key(r#"{"rotate":90}"#),
+            key(r#"{"rotate":90,"constrain":true,"upright":2}"#)
+        );
+    }
+
+    #[test]
+    fn a_magnifying_perspective_decodes_more() {
+        let crop = r#""crop":{"left":0.25,"top":0.25,"right":0.75,"bottom":0.75}"#;
+        let size = |perspective: &str| {
+            decode_long_edge(
+                Some(&geometry(&format!("{{{crop}{perspective}}}"))),
+                6000,
+                4000,
+                1000,
+                0,
+            )
+            .unwrap()
+        };
+        assert_eq!(size(""), 2000);
+        assert_eq!(size(r#","perspective":{"vertical":-30}"#), 2000);
+        assert_eq!(size(r#","perspective":{"scale":50}"#), 2000);
+        assert!((3000..=3001).contains(&size(r#","perspective":{"scale":150}"#)));
     }
 }

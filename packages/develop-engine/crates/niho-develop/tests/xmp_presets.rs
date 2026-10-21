@@ -145,12 +145,17 @@ fn builtin_presets_match_photo_bench_engine() {
             photo_bench_unsupported, want_unsupported,
             "{id} unsupported"
         );
-        // NIHO renders effects, the graded-luminance approximation, and the
-        // Detail panel; Photo Bench keeps these values unsupported.
+        // NIHO renders effects, the graded-luminance approximation, the
+        // Detail panel, and Transform with Constrain Crop; Photo Bench keeps
+        // these values unsupported.
         let niho_renders = |p: &str| {
             xmp::effect_field(p).is_some()
-                || matches!(p, "ColorGradeMidtoneLum" | "ColorGradeGlobalLum")
+                || matches!(
+                    p,
+                    "ColorGradeMidtoneLum" | "ColorGradeGlobalLum" | "CropConstrainToWarp"
+                )
                 || xmp::DETAIL_KEYS.contains(&p)
+                || niho_develop::geometry::PerspectiveField::from_xmp(p).is_some()
         };
         let niho_unsupported: Vec<String> = want_unsupported
             .iter()

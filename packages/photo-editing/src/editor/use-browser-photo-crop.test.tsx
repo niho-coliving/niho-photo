@@ -39,6 +39,7 @@ let ensureDevelopWorkingSize: ReturnType<typeof vi.fn<(settings: DevelopSettings
 
 const engine = {
   supportsGeometry: async () => true,
+  supportsPerspective: async () => true,
   imageSize: async () => SOURCE,
   geometryOutputSize: async () => null,
 } as unknown as DevelopEngine;
@@ -69,6 +70,13 @@ function Harness(props: { initial: DevelopSettings }) {
       ref.current = next;
       setSettings(next);
       return true;
+    },
+    // 補正のスライダーと同じ口: `drag` は手元の編集内容だけを替え、`commit` で 1 単位を積む
+    changeSettings: (update, phase) => {
+      const next = update(ref.current) as DevelopSettings;
+      if (phase === "commit") commits.push(next);
+      ref.current = next;
+      setSettings(next);
     },
     setCompareOriginal: () => undefined,
     ensureDevelopWorkingSize,
@@ -204,5 +212,52 @@ describe("［キャンセル］（Esc）", () => {
     expect(commits).toEqual([]);
     expect(crop.active).toBe(false);
     expect(ensureDevelopWorkingSize).not.toHaveBeenCalled();
+  });
+});
+
+describe("ジオメトリの節（遠近。niho-photo#46）", () => {
+  const vertical = (value: number) => (current: DevelopGeometry): DevelopGeometry => ({
+    ...current,
+    perspective: { vertical: value, horizontal: 0, rotate: 0, aspect: 0, scale: 100, x: 0, y: 0 },
+  });
+
+  it("遠近を描ける wasm で切り抜きを開いている間だけ節を出す", async () => {
+    await render();
+    expect(crop.perspective).toBe(false);
+    await enter();
+    expect(crop.perspective).toBe(true);
+    await run(() => crop.leave());
+    expect(crop.perspective).toBe(false);
+  });
+
+  it("drag は積まずに編集内容だけを替え、commit で 1 単位を積む（形の版は 7）", async () => {
+    await render();
+    await enter();
+    await run(() => crop.changeGeometry(vertical(-10), "drag"));
+    await run(() => crop.changeGeometry(vertical(-20), "drag"));
+    expect(commits).toEqual([]);
+    expect(currentGeometry().perspective?.vertical).toBe(-20);
+    await run(() => crop.changeGeometry(vertical(-20), "commit"));
+    expect(commits).toHaveLength(1);
+    expect(commits[0]?.v).toBe(7);
+    expect(readDevelopGeometry(commits[0]).perspective?.vertical).toBe(-20);
+  });
+
+  it("［キャンセル］は入ったときの遠近（無し）に戻す", async () => {
+    await render();
+    await enter();
+    await run(() => crop.changeGeometry(vertical(-35), "commit"));
+    await run(() => crop.changeGeometry((current) => ({ ...current, constrain: true }), "commit"));
+    await run(() => crop.cancel());
+    expect(crop.active).toBe(false);
+    expect(Object.hasOwn(settingsRef.current, "geometry")).toBe(false);
+    expect(settingsRef.current.v).toBe(1);
+  });
+
+  it("切り抜きを開いていない間は何もしない", async () => {
+    await render();
+    await run(() => crop.changeGeometry(vertical(-35), "commit"));
+    expect(commits).toEqual([]);
+    expect(Object.hasOwn(settingsRef.current, "geometry")).toBe(false);
   });
 });

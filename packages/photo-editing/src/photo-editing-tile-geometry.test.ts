@@ -111,6 +111,14 @@ describe("photoEditingTileGeometryStyles", () => {
     expect(photoEditingTileGeometryStyles({ crop: { left: 0.6, right: 0.4 } }, 3000, 2000)).toBeNull();
     expect(photoEditingTileGeometryStyles({ rotate: 90 }, 0, 2000)).toBeNull();
   });
+
+  it("遠近（niho-photo#46）のある幾何は CSS で再現しないので null（補正前のまま。恒等の遠近・余白を埋めるだけなら今までどおり）", () => {
+    const crop = { left: 0.2, top: 0.1, right: 0.8, bottom: 0.6 };
+    expect(photoEditingTileGeometryStyles({ crop, perspective: { vertical: -20 } }, 3000, 2000)).toBeNull();
+    expect(photoEditingTileGeometryStyles({ crop, perspective: { scale: 100 }, constrain: true }, 3000, 2000)).toEqual(
+      photoEditingTileGeometryStyles({ crop }, 3000, 2000),
+    );
+  });
 });
 
 describe("photoEditingTileGeometry", () => {
