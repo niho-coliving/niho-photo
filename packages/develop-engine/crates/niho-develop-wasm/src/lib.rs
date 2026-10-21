@@ -392,7 +392,10 @@ pub fn builtin_presets() -> String {
 }
 
 /// XMP preset on `baseJson` (neutral when absent): `{ name, settings,
-/// unsupported, approximate, items, converted, convertIssues, ... }`.
+/// unsupported, approximate, items, converted, convertIssues, ..., masks }`.
+/// `masks` are the preset's Lightroom masks in the coordinates of the
+/// photo's visible frame (`xmp::PresetResult::masks`; `settings.masks` stay
+/// the base's).
 #[wasm_bindgen(js_name = presetSettings)]
 pub fn preset_settings(xmp_text: &str, base_json: Option<String>) -> Result<String, JsError> {
     let base = match base_json {

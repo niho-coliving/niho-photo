@@ -29,6 +29,7 @@
 use crate::convert::{
     convert_edit_settings, to_edit_settings_value, ConvertIssue, CONVERTER_VERSION,
 };
+use crate::local_mask::{masks_value, LocalMask};
 use crate::settings::{
     num, CalibrationSettings, ColorGradingSettings, CurveChannel, CurvePoint, DevelopSettings,
     HslAdjustment, HslBand, ToneCurve, VignetteStyle, ENGINE_NIHO_10, ENGINE_NIHO_11,
@@ -43,10 +44,12 @@ use std::fmt;
 
 mod amount;
 mod detail;
+mod masks;
 mod write;
 
 pub use amount::{apply_preset, PRESET_AMOUNT_MAX};
 pub use detail::DETAIL_KEYS;
+pub use masks::LOCAL_CORRECTION_LISTS;
 pub use write::{
     settings_to_xmp, XmpGroup, XmpWriteOptions, XmpWriteResult, XMP_CAMERA_RAW_VERSION,
     XMP_PROCESS_VERSION,
@@ -124,6 +127,61 @@ pub struct XmpDocument {
     /// Adobe's private `crs:PointColors` payload was present in an attribute,
     /// element, or nested description. NIHO never guesses its encoding.
     pub point_colors: bool,
+    /// Lightroom's local correction lists ([`LOCAL_CORRECTION_LISTS`], e.g.
+    /// `crs:MaskGroupBasedCorrections`) of the root description, each as its
+    /// element tree. Their nested descriptions repeat the same keys per
+    /// correction, so they never enter `properties` / `nested` (they used to
+    /// show up as `Look.*`); `masks.rs` reads them into `masks`.
+    pub local_corrections: Vec<XmlNode>,
+}
+
+/// One XML element of a local correction list: qualified name, attributes
+/// (qualified names, unescaped values), text and child elements.
+#[derive(Debug, Clone, Default, PartialEq)]
+pub struct XmlNode {
+    pub name: String,
+    pub attributes: Vec<(String, String)>,
+    pub text: String,
+    pub children: Vec<XmlNode>,
+}
+
+/// Builds the tree of one local correction list while [`parse`] reads it.
+struct CorrectionCapture {
+    /// The open elements, the list itself first.
+    open: Vec<XmlNode>,
+}
+
+impl CorrectionCapture {
+    fn start(&mut self, name: String, attributes: Vec<(String, String)>) {
+        self.open.push(XmlNode {
+            name,
+            attributes,
+            ..XmlNode::default()
+        });
+    }
+
+    /// Closes an element inside the list (never the list itself).
+    fn end(&mut self) {
+        if self.open.len() > 1 {
+            let node = self.open.pop().expect("open element");
+            self.open
+                .last_mut()
+                .expect("parent element")
+                .children
+                .push(node);
+        }
+    }
+
+    fn text(&mut self, s: &str) {
+        if let Some(node) = self.open.last_mut() {
+            node.text.push_str(s);
+        }
+    }
+
+    /// The list element itself is the only one open.
+    fn at_list(&self) -> bool {
+        self.open.len() == 1
+    }
 }
 
 const CURVE_MAP: [(&str, CurveChannel); 4] = [
@@ -165,6 +223,9 @@ pub fn parse(text: &str) -> Result<XmpDocument, XmpError> {
     let mut name_item: Option<(Option<String>, String)> = None;
     let mut names: Vec<(Option<String>, String)> = Vec::new();
     let mut depth_counter: usize = 0;
+    // A local correction list being read (its inside is only an element
+    // tree: no properties, nested descriptions, curves or names).
+    let mut capture: Option<CorrectionCapture> = None;
 
     loop {
         let event = reader
@@ -190,6 +251,13 @@ pub fn parse(text: &str) -> Result<XmpDocument, XmpError> {
                 }
                 if attributes.iter().any(|(key, _)| key == "crs:PointColors") {
                     doc.point_colors = true;
+                }
+                if let Some(list) = capture.as_mut() {
+                    list.start(qualified, attributes);
+                    if is_empty {
+                        list.end();
+                    }
+                    continue;
                 }
                 // --- start ---
                 let parent = stack.last().cloned();
@@ -221,6 +289,25 @@ pub fn parse(text: &str) -> Result<XmpDocument, XmpError> {
                         text: String::new(),
                         has_child: false,
                     });
+                }
+                if parent.as_deref() == Some("rdf:Description")
+                    && description_depth == 1
+                    && LOCAL_CORRECTION_LISTS.contains(&qualified.as_str())
+                {
+                    // Not a simple property, whatever it holds.
+                    if let Some(simple) = active.last_mut() {
+                        simple.has_child = true;
+                    }
+                    let list = XmlNode {
+                        name: qualified.clone(),
+                        attributes: attributes.clone(),
+                        ..XmlNode::default()
+                    };
+                    if is_empty {
+                        doc.local_corrections.push(list);
+                    } else {
+                        capture = Some(CorrectionCapture { open: vec![list] });
+                    }
                 }
                 if curve_channel(&qualified).is_some() && description_depth == 1 {
                     active_sequence = Some(qualified.clone());
@@ -263,6 +350,15 @@ pub fn parse(text: &str) -> Result<XmpDocument, XmpError> {
             }
             Event::End(ref e) => {
                 let qualified = String::from_utf8_lossy(e.name().as_ref()).into_owned();
+                if let Some(list) = capture.as_mut() {
+                    if !list.at_list() {
+                        list.end();
+                        continue;
+                    }
+                    let mut finished = capture.take().expect("capture");
+                    doc.local_corrections
+                        .push(finished.open.pop().expect("list element"));
+                }
                 end_element(
                     &qualified,
                     &mut doc,
@@ -285,10 +381,18 @@ pub fn parse(text: &str) -> Result<XmpDocument, XmpError> {
                 let s = e
                     .unescape()
                     .map_err(|err| XmpError::InvalidXml(err.to_string()))?;
+                if let Some(list) = capture.as_mut() {
+                    list.text(&s);
+                    continue;
+                }
                 characters(&s, &stack, &mut active, in_li, &mut li_text, &mut name_item);
             }
             Event::CData(ref e) => {
                 let s = String::from_utf8_lossy(e.as_ref()).into_owned();
+                if let Some(list) = capture.as_mut() {
+                    list.text(&s);
+                    continue;
+                }
                 characters(&s, &stack, &mut active, in_li, &mut li_text, &mut name_item);
             }
             Event::Eof => break,
@@ -1809,6 +1913,17 @@ pub struct PresetResult {
     /// The preset amount of [`apply_preset`] (0..1.5); `None` for
     /// [`preset_settings`] (the whole preset).
     pub amount: Option<f64>,
+    /// The preset's local adjustments (Lightroom's linear / radial masks,
+    /// at most [`crate::settings::MAX_LOCAL_MASKS`], ids `xmp-1`...), in the
+    /// coordinates of the **visible frame** of the photo the preset is
+    /// applied to (its cropped, rotated, flipped and straightened output),
+    /// not of the working image like `developSettings.masks`. They are not
+    /// in `settings` (whose `masks` stay the base's): the caller maps them
+    /// through the photo's geometry and size (`develop-preset-masks.ts`).
+    /// What could not be read is in `items` / `unsupported`
+    /// (`MaskGroupBasedCorrections.<n>.<reason>`). [`apply_preset`] scales
+    /// their `adjust` by the amount.
+    pub masks: Vec<LocalMask>,
 }
 
 /// Parses `xmp` and applies it on `base` (neutral when `None`).
@@ -1817,7 +1932,10 @@ pub fn preset_settings(
     base: Option<&DevelopSettings>,
 ) -> Result<PresetResult, XmpError> {
     let doc = parse(xmp)?;
-    if doc.properties.is_empty() && doc.sequences.values().all(|p| p.len() < 2) && !doc.point_colors
+    if doc.properties.is_empty()
+        && doc.sequences.values().all(|p| p.len() < 2)
+        && !doc.point_colors
+        && doc.local_corrections.is_empty()
     {
         return Err(XmpError::NoSettings);
     }
@@ -1898,7 +2016,10 @@ pub fn preset_settings(
     // The preset may turn on an effect after the geometry/base shape was
     // restored, so derive the version only after all effect patches land.
     settings.v = settings.required_version();
-    let items = doc.compatibility_for(&settings);
+    let mut items = doc.compatibility_for(&settings);
+    // Lightroom's masks: separate from `settings` (visible-frame coordinates).
+    let local = masks::read_local_masks(&doc, settings.white_balance.mode);
+    items.extend(local.items);
     let mut converted = outcome.ok;
     let mut convert_issues = outcome.issues;
     let mut legacy = settings.legacy_settings.take().unwrap_or_default();
@@ -1983,6 +2104,7 @@ pub fn preset_settings(
         convert_issues,
         convert_notes: outcome.notes,
         amount: None,
+        masks: local.masks,
     })
 }
 
@@ -2031,6 +2153,8 @@ impl PresetResult {
         };
         o.insert("convertIssues".into(), issues(&self.convert_issues));
         o.insert("convertNotes".into(), issues(&self.convert_notes));
+        // Visible-frame coordinates (see `masks`), in the canonical shape.
+        o.insert("masks".into(), masks_value(&self.masks));
         if let Some(amount) = self.amount {
             o.insert("amount".into(), num(amount));
         }

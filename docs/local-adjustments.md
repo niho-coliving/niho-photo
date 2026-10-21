@@ -8,7 +8,7 @@ Epic #31 の契約。線形・円形・ブラシ・被写体・空の「面」�
 | #66 M2 | 線形・円形の面と、混ぜる描画（native / wasm の画素一致） |
 | #67 M3 | UI（マスクタブ・画像の上の操作） |
 | #68 M4 | ブラシ。面の保存と受け渡し（被写体・空の面も同じ口で読む） |
-| #69 M6 | Lightroom XMP の読み（線形・円形・ブラシ） |
+| #69 M6 | Lightroom XMP の読み（線形・円形。ブラシ・AI などは知らせるだけ。下の「Lightroom の XMP の読み」） |
 
 被写体・空の面を作って保存する側（Mac ワーカー・API）は非公開側（`niho-coliving/niho-app#19218`）で、ここでは「面が来れば同じ経路で混ざる」ところまでを扱う。
 
@@ -139,7 +139,69 @@ M4（#68）。エンジン（native・wasm）・書き出しの CLI・Mac の置
 
 - `masks` に 1 枚でもあれば `v = 5`（`MASKS_SETTINGS_VERSION`）を要求する。`detail`（#32）も 5 を使う予定で、先に merge された側が 5、後の側が 6 に振り直す。古い reader は `v` が未知のため設定を補正なしとして読み替えず、閲覧のみにする。
 - 能力の問い合わせ: `validateSettings` の probe は M1 の wasm（マスクを読めるが描かない）でも通るので使わない。wasm の `capabilities()`（`{"masks":{"kinds":["linear","radial","brush","subject","sky"],"max":8,"maskPlane":true,"surfaces":true}}`）が描ける種類を返し、この口の無い古い wasm は描けない扱いにする（画面の扱いは M3）。`surfaces` の無い M2 の wasm（`kinds` が `linear` `radial` だけ）は面の口を持たない。Mac の書き出しは同梱の niho-develop-render が `MASKS_MIN_RENDER_VERSION`（0.19.0）以上のときだけ `masks` 付きの設定を渡し、それより古ければ作業コピーを作る前に `unsupportedSettings` で断る。0.19.0 は線形・円形（M2）と `--mask-surface`（M4）を同じ版で出す（どちらも公開前）ので、版の境は 1 つで、`camera_develop_status` の `masks` は面のマスクの書き出しも含む。NIHO camera の `camera_develop_status` は `masks`（`PhotoLibraryCapabilities.nativeExportMasks`）でこれを画面へ知らせる。sidecar の lock（`apps/camera/develop-sidecars.lock.json`）は repo の外の公開の手順で 0.19.0 に上げる。
-- 取り扱い: 「初期化」とプリセット適用前の比較は `masks` を除く。プリセット（XMP）の適用・自動補正・設定のコピーは対象の `masks` を変えない（コピー元の `masks` も持ち出さない）。旧形式への変換 (`developSettingsToEditSettings`) は `masks` が有効なら null。XMP の書き出しは `masks` を書かず `notWritten: ["masks"]` を返す。
+- 取り扱い: 「初期化」とプリセット適用前の比較は `masks` を除く。自動補正・設定のコピーは対象の `masks` を変えない（コピー元の `masks` も持ち出さない）。プリセット（XMP）の適用も `settings.masks` は当てる前の写真のままで、プリセット自身がマスクを持つときだけ、それを写真の座標へ写して置き換える（下の「Lightroom の XMP の読み」）。旧形式への変換 (`developSettingsToEditSettings`) は `masks` が有効なら null。XMP の書き出しは `masks` を書かず `notWritten: ["masks"]` を返す（Lightroom への書き出しは未対応のまま）。
+
+## Lightroom の XMP の読み
+
+M6（#69）。Lightroom のプリセット（XMP）の局所補正を `masks` として取り込む。Rust の `xmp/masks.rs`（`presetSettings` / `applyPreset` の結果の `masks`）が読み、TypeScript の `develop-preset-masks.ts`（`presetDevelopSettings` の第 3 引数）が写真に置く。下の事実は 2026-10-21 にオーナーの Lightroom（クラウド版）の写真ごとの XMP とプリセットで確かめたもので、実際の値・id・digest はリポジトリに入れていない（テストは同じ構造の合成の XMP）。
+
+### 読む物
+
+- `crs:MaskGroupBasedCorrections`（Lightroom 11 以降）の `rdf:Seq` の 1 項目（`crs:What="Correction"`）が 1 つの補正で、その `crs:CorrectionMasks` にマスクが 1 枚だけある補正を 1 枚の NIHO のマスクにする。属性は `rdf:li` に直接・`rdf:Description`・`rdf:parseType="Resource"` の単純な要素のどれでも読む。
+- 旧形式の `crs:GradientBasedCorrections` / `crs:CircularGradientBasedCorrections` は読まない。実物の書き出しで単位と形を確かめていないので、見た目が似ていても `MaskGroupBasedCorrections` の規則を当てはめず、補正ごとに `unsupported`（`<一覧>.<n>.legacyList`）にする。`crs:PaintBasedCorrections` は補正ごとに `brush`。`MaskGroupBasedCorrections` もある XMP では、旧形式の一覧は同じマスクの写しとして `metadata` にする（知らせない）。
+- `Mask/Gradient` → `linear`: `ZeroX` `ZeroY` → `zero`（面が 0）、`FullX` `FullY` → `full`（面が 1）。`MaskInverted="true"` → `invert: true`。
+- `Mask/CircularGradient`（`Angle = 0`・`Roundness = 0`・`Midpoint = 50`・`Flipped="true"`・`Version` は無いか 2）→ `radial`: `center = ((Left + Right) / 2, (Top + Bottom) / 2)`、`radius = ((Right − Left) / 2, (Bottom − Top) / 2)`、`angle = 0`。`Right > Left` と `Bottom > Top` が要り、中心 0〜1・半軸 0.005〜1.5 を外れる物は丸めずに読まない。`Feather`（0〜100）はそのまま `feather` にする（Lightroom のなじませ方の近似）。`Flipped="true"` は既定の円形（効果が内側）でしか見ていないので、これを通常の場合として扱う。
+- 補正の量: `Local*` は Lightroom のスライダー（−100〜100）の 1/100 で保存されている（例 `LocalContrast2012 = 0.39` は +39、`LocalHighlights2012 = −1` は −100）。`LocalExposure2012` だけは EV のまま。`CorrectionAmount`（0〜1）を全部の差分に掛ける。
+
+  | XMP | `adjust` |
+  | --- | --- |
+  | `LocalExposure2012` | `exposure`（EV） |
+  | `LocalContrast2012` `LocalHighlights2012` `LocalShadows2012` `LocalWhites2012` `LocalBlacks2012` | `contrast` `highlights` `shadows` `whites` `blacks`（×100） |
+  | `LocalTexture` `LocalClarity2012` `LocalDehaze` `LocalSaturation` | `texture` `clarity` `dehaze` `saturation`（×100） |
+  | `LocalTemperature` `LocalTint` | `relativeTemperature` `relativeTint`（×100。相対のホワイトバランスでの近似。結果の全体の白が `absolute` なら使わない） |
+
+- `CorrectionActive="false"` か `MaskActive="false"` は、あるが描かないマスク（`enabled: false`）。範囲外の差分は範囲に丸めて `approximate` にする。
+- id は `xmp-1` から順。9 枚目からは読まない（`tooMany`）。
+
+### 座標の枠
+
+- **プリセット**のマスクの座標は、当てる写真の**見えている枠**（切り抜き・回転・反転の後）に対する 0〜1。切り抜きの無い写真に当てると写真ごとの XMP に同じ数が入り、切り抜いた写真では写真ごとの数がプリセットの数の `crop.left + x · crop.width`（y も同じ）になっていた。
+- **写真ごとの XMP** の座標は切り抜く前の枠に対する 0〜1（今回は読まない）。
+- NIHO の `masks` は作業画像（向き反映済み・幾何の前）の座標なので、Rust はプリセットのマスクを見えている枠の座標のまま返し（`PresetResult::masks`。`settings.masks` には入れない）、TypeScript が写真の `geometry` と作業画像の大きさで写す（`geometryOutputToSource`）。線形は 2 点、円形は中心と 2 本の半軸の端を写して中心・半軸・角度を求め直す（90° / 270° は半軸が入れ替わり、角度補正はその角度が付く。角度は −45〜45 にそろえる）。写した後で M1 の範囲を外れるマスク（小さな切り抜きで縮んだ物）は置かない。
+- 写真の作業画像の大きさは、開いている写真（切り抜きの道具と同じ大きさ）でだけ分かる。一覧の一括のプリセットとプリセットの見本は大きさを持たないので、プリセットのマスクを置かない（写真のマスクのまま）。
+- プリセットがマスクを持つときは、写真のマスクをプリセットのマスクで置き換える。持たないプリセットは写真のマスクを変えない。
+
+### 適用量
+
+`applyPreset` の適用量（0〜150%）は、プリセットのマスクの `adjust` の差分に掛けて範囲で止める（0% はマスクなし、100% はそのまま、150% は 1.5 倍）。形・有効・反転・id は変えない。写真自身のマスク（`settings.masks`）はどの適用量でも当てる前のまま。
+
+### 読まない物と理由
+
+読まない物は `unsupported` に `<一覧>.<n>.<理由>`（例 `MaskGroupBasedCorrections.3.brush`）で入れ、その補正は取り込まない（`Local*` の項目だけは、マスクを取り込んだまま項目ごとに入れる）。画面は取り込みの知らせ（「…は使えないので、それ以外を取り込みました」）で種類の名前を出す。
+
+| 理由 | 何か | なぜ |
+| --- | --- | --- |
+| `brush` | ブラシ（`Mask/Paint`、その集まりの `Mask/Aggregate`、旧形式の `PaintBasedCorrections`） | 写真の上の位置に描いた線（`crs:Dabs`）で、プリセットが持つ意味が無い。NIHO に線から面を作る道もまだ無い（M4） |
+| `aiMask` | AI のマスク（`Mask/Image`。`MaskSubType` で被写体・空・背景・人物など） | 写真ごとの検出で、プリセットからは面を作れない |
+| `rangeMask` | 範囲マスク（`Mask/RangeMask`・`CorrectionRangeMask`。輝度・色・深度） | NIHO の対象外 |
+| `multipleMasks` `maskBlend` | 1 つの補正の複数のマスク・`MaskBlendMode` が 0 以外 | 追加・交差・除外の重ね方は未対応 |
+| `maskValue` | `MaskValue` が 1 以外 | マスクの不透明度は未対応 |
+| `rotatedRadial` | `Angle` が 0 以外の円形 | 回した楕円の `Top` `Left` `Bottom` `Right` は外接の箱に見えず（`Left > Right`・`Top ≈ Bottom` があった）、同じプリセットでも写真ごとに違ったため、値の意味が分からない |
+| `radialRoundness` `radialMidpoint` `radialFlipped` `radialVersion` | `Roundness ≠ 0`・`Midpoint ≠ 50`・`Flipped` が `true` 以外・`Version` が 2 以外 | 意味を確かめていない |
+| `outOfRange` `invalid` `unknownMask` | NIHO の範囲の外・値が欠ける / 数でない・未知の種類 | 丸めて別の形にしない |
+| `tooMany` | 9 枚目から | 上限 8 枚 |
+| `legacyList` | 旧形式の `GradientBasedCorrections` / `CircularGradientBasedCorrections` の補正（`MaskGroupBasedCorrections` が無い XMP） | 実物の XMP で単位と形を確かめていない（形を推測しない） |
+| `Local<項目>` | 0 でない `LocalHue`・`LocalToningSaturation`・`LocalSharpness`・`LocalLuminanceNoise`・`LocalMoire`・`LocalDefringe`・`LocalBrightness`・旧式の `LocalExposure` `LocalContrast` `LocalClarity`（2012 の値を使う）・100 以外の `LocalCurveRefineSaturation`・未知の `Local*` | NIHO の局所補正に無い。`LocalToningHue` は `LocalToningSaturation` が 0 なら効かないので知らせない（240 などの値が残る） |
+
+結果のマスクを TypeScript が M1 の読み方で読めないときは、プリセットのマスクを全部使わず `unsupported` に `MaskGroupBasedCorrections` を足す（「読めないマスク」）。
+
+### 分かっていない物（実物の標本で広げる）
+
+- 回した円形（`Angle ≠ 0`）の `Top` `Left` `Bottom` `Right` の決まり。写真ごとの XMP とプリセットの組を増やして式を当てる。
+- `Flipped="false"` の円形、`Roundness`・`Midpoint` の効き方、`Version` 2 以外。
+- ブラシの `Dabs`（`d x y`・`r 半径` の並び）を面にする道（M4 の面の受け渡しに載せられる）と、AI のマスクの `MaskSubType` の対応。
+- 局所の色温度・色かぶりと Lightroom の見え方の差、`Feather` となじませ方の差（M2 の描画で実測する）。
+- 旧形式の一覧（`GradientBasedCorrections` / `CircularGradientBasedCorrections`）の単位と形。実物の書き出しで確かめるまで読まない（`legacyList`）。確かめたら同じ読み方を当てられるかを決める。
 
 ## 性能の目安と測り方
 
@@ -223,4 +285,4 @@ drag 100ms／final 1 秒（マスク 3 枚まで）が目安。層は「描く�
 
 ## 対象外（今回）
 
-範囲マスク（輝度・色・深度）、マスクの不透明度、マスクごとのカーブ・カラーグレーディング・シャープ・ノイズ（#32 の後）、順序で結果が変わる重ね方、ブラシの自動なぞり補正。
+範囲マスク（輝度・色・深度）、マスクの不透明度、マスクごとのカーブ・カラーグレーディング・シャープ・ノイズ（#32 の後）、順序で結果が変わる重ね方、ブラシの自動なぞり補正、Lightroom の XMP へのマスクの書き出し。
