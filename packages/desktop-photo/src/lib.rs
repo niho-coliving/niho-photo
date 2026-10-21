@@ -34,6 +34,8 @@
 //! - [`remembered::RememberedStore`]（覚えたフォルダ・写真の置き場）。
 //! - [`mask_surfaces::MaskSurfaceStore`]（部分補正のマスクの面〔ブラシ・被写体・空〕の PNG を、写真の中身の SHA-256 と面の
 //!   SHA-256 で置く。原寸の書き出しは [`develop::DevelopPhotos::mask_surface`] でここから読み、`niho-develop-render` へ渡す）。
+//! - [`saved_flags::FlagStore`]（選別のフラグ〔採用 / 却下〕。一覧の写真の名前・大きさ・更新日時の SHA-256 をキーにした置き場。
+//!   niho-photo#47）。
 //!
 //! ### 共通（[`common`]）
 //!
@@ -56,6 +58,7 @@ pub mod image_info;
 pub mod library;
 pub mod mask_surfaces;
 pub mod remembered;
+pub mod saved_flags;
 pub mod saved_settings;
 #[cfg(any(test, feature = "test-support"))]
 pub mod test_support;

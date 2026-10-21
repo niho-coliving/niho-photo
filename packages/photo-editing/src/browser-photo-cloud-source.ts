@@ -9,6 +9,7 @@ import { isNeutralDevelopSettings } from "./develop-engine/develop-settings";
 import type {
   PhotoLibrary,
   PhotoLibraryArticleImage,
+  PhotoLibraryFlagFilter,
   PhotoLibraryItem,
   PhotoLibraryKindFilter,
   PhotoLibraryPhoto,
@@ -133,13 +134,18 @@ export function isBrowserCloudRawPhoto(photo: Pick<PhotoLibraryItem, "fileExtens
 export type BrowserCloudPhotoKind = PhotoLibraryKindFilter;
 
 /**
- * 一覧の絞り込みの条件（種類・補正済み。F5b 移行元設計 の画面 2 本目）。null は絞らない。端末にも覚えない（ページを閉じたら消える）。
+ * 一覧の絞り込みの条件（種類・補正済み。F5b 移行元設計 の画面 2 本目。選別〔採用だけ / 却下を隠す〕は niho-photo#47 で、選別のフラグを
+ * 持つ写真の出どころだけが選べる）。null・省略は絞らない。端末にも覚えない（ページを閉じたら消える）。
  * 条件を掛けるのは「写真」「お気に入り」だけ（{@link canFilterBrowserCloudPlace}）。
  */
-export type BrowserCloudListFilter = { kind: BrowserCloudPhotoKind | null; edited: boolean | null };
+export type BrowserCloudListFilter = {
+  kind: BrowserCloudPhotoKind | null;
+  edited: boolean | null;
+  flag?: PhotoLibraryFlagFilter | null;
+};
 
 /** 絞り込まない条件。 */
-export const BROWSER_CLOUD_NO_LIST_FILTER: BrowserCloudListFilter = { kind: null, edited: null };
+export const BROWSER_CLOUD_NO_LIST_FILTER: BrowserCloudListFilter = { kind: null, edited: null, flag: null };
 
 /**
  * 絞り込みの条件を掛ける場所か（「写真」「お気に入り」とこの Mac のフォルダ。元の写真の無い「記事の画像」は種類・補正済みを
@@ -157,9 +163,9 @@ export function appliedBrowserCloudListFilter(
   return canFilterBrowserCloudPlace(place) ? filter : BROWSER_CLOUD_NO_LIST_FILTER;
 }
 
-/** 有効な条件の数（0〜2）。 */
+/** 有効な条件の数（0〜3）。 */
 export function countBrowserCloudListFilter(filter: BrowserCloudListFilter): number {
-  return (filter.kind === null ? 0 : 1) + (filter.edited === null ? 0 : 1);
+  return (filter.kind === null ? 0 : 1) + (filter.edited === null ? 0 : 1) + (filter.flag ? 1 : 0);
 }
 
 /**
@@ -178,12 +184,14 @@ export function browserCloudListParams(
   localSource?: "selected";
   kind?: BrowserCloudPhotoKind;
   edited?: boolean;
+  flag?: PhotoLibraryFlagFilter;
 } {
   const applied = appliedBrowserCloudListFilter(place, filter);
   return {
     ...browserCloudPlaceListFilter(place),
     ...(applied.kind === null ? {} : { kind: applied.kind }),
     ...(applied.edited === null ? {} : { edited: applied.edited }),
+    ...(applied.flag ? { flag: applied.flag } : {}),
   };
 }
 
@@ -198,14 +206,16 @@ export function browserCloudPhotoKind(
 }
 
 /**
- * 写真が絞り込みの条件に合うか（サーバーと同じ条件。サーバーの一覧に載っていない手元の写真を選り分ける）。補正済みは `hasEdits`
- * （省かれた古い行・保存したことの無い写真は未補正）。
+ * 写真が絞り込みの条件に合うか（サーバーと同じ条件。サーバーの一覧に載っていない手元の写真と、一覧を読み直す前にフラグを付け替えた
+ * 写真を選り分ける）。補正済みは `hasEdits`（省かれた古い行・保存したことの無い写真は未補正）、選別は `flag`（省かれた行はフラグなし）。
  */
 export function isBrowserCloudPhotoInFilter(
-  photo: Pick<PhotoLibraryItem, "fileExtension" | "hasEdits">,
+  photo: Pick<PhotoLibraryItem, "fileExtension" | "hasEdits" | "flag">,
   filter: BrowserCloudListFilter,
 ): boolean {
   if (filter.kind !== null && browserCloudPhotoKind(photo) !== filter.kind) return false;
+  if (filter.flag === "pick" && photo.flag !== "pick") return false;
+  if (filter.flag === "notRejected" && photo.flag === "reject") return false;
   return filter.edited === null || (photo.hasEdits === true) === filter.edited;
 }
 

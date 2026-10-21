@@ -738,8 +738,8 @@
       "code": "versionTooLow"
     },
     {
-      "name": "v 9 is newer",
-      "settings": {"v": 9, "engine": "niho-10", "look": "niho-standard-1", "base": null, "masks": [{"id": "lin-1", "kind": "linear", "zero": {"x": 0.5, "y": 0.2}, "full": {"x": 0.5, "y": 0.5}, "adjust": {"exposure": -0.7}}]},
+      "name": "v 10 is newer",
+      "settings": {"v": 10, "engine": "niho-10", "look": "niho-standard-1", "base": null, "masks": [{"id": "lin-1", "kind": "linear", "zero": {"x": 0.5, "y": 0.2}, "full": {"x": 0.5, "y": 0.5}, "adjust": {"exposure": -0.7}}]},
       "code": "unsupportedVersion"
     },
     {

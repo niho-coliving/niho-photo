@@ -671,6 +671,33 @@ describe("createDevelopEngine", () => {
     expect(await engine.supportsHeal()).toBe(false);
   });
 
+  it("ready に lens: true が付いた wasm だけレンズ補正（v9。niho-photo#45）を描けると答える", async () => {
+    const worker = new FakeWorker();
+    const engine = createDevelopEngine({ createWorker: () => worker as unknown as Worker, manifestUrl: MANIFEST_URL });
+    const supported = engine.supportsLens();
+    worker.respond({
+      type: "ready",
+      id: worker.lastRequest("init").id,
+      version: "niho-develop 0.23.0 (engine niho-13)",
+      geometry: true,
+      heal: true,
+      lens: true,
+    });
+    expect(await supported).toBe(true);
+    expect(await engine.supportsLens()).toBe(true);
+    engine.dispose();
+    expect(await engine.supportsLens()).toBe(false);
+  });
+
+  it("lens の無い ready（v9 を読めない wasm）ではレンズ補正を描けないと答える", async () => {
+    const worker = new FakeWorker();
+    const engine = createDevelopEngine({ createWorker: () => worker as unknown as Worker, manifestUrl: MANIFEST_URL });
+    const supported = engine.supportsLens();
+    worker.respond({ type: "ready", id: worker.lastRequest("init").id, version: "niho-develop 0.22.0 (engine niho-13)", heal: true });
+    expect(await supported).toBe(false);
+    expect(await engine.supportsHeal()).toBe(true);
+  });
+
   it("heal の無い ready（v8 を読めない wasm）では修復を描けないと答える", async () => {
     const worker = new FakeWorker();
     const engine = createDevelopEngine({ createWorker: () => worker as unknown as Worker, manifestUrl: MANIFEST_URL });

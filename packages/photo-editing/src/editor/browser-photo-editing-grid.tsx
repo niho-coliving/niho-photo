@@ -31,8 +31,10 @@ import {
   type PhotoLibrarySort,
 } from "../photo-library-sections";
 import type { PhotoEditingThumbnail } from "../photo-editing-thumbnail";
+import type { PhotoLibraryFlag } from "../library/photo-library";
 import { cn } from "niho-ui/cn";
 
+import { BrowserPhotoFlagMark } from "./browser-photo-editing-flags";
 import { PhotoEditingTileImage, type PhotoEditingGridMore } from "./photo-editing-grid";
 
 /** 一覧のタイル 1 枚（クラウドの写真。追加している途中の写真を含む）。 */
@@ -48,6 +50,8 @@ export type BrowserPhotoEditingGridItem = {
   adding?: { fraction: number | null };
   /** お気に入り（左上に ♥） */
   favorite: boolean;
+  /** 選別のフラグ（右下に採用 / 却下の印。却下は写真を薄く出す。省略・null はフラグなし。niho-photo#47） */
+  flag?: PhotoLibraryFlag | null;
   /** 作業コピーを待っている写真（RAW か、ほか）。薄い幕だけにし、状態の語や回転は出さない（待ちの件数は状態欄） */
   pending: "raw" | "other" | null;
   /** 見出しの日時（ISO。撮影日の並びは撮影日か追加日、最近追加は追加日）。null は今（このタブで足した写真） */
@@ -617,21 +621,25 @@ export const BrowserPhotoEditingGrid = forwardRef<BrowserPhotoEditingGridHandle,
               "group-focus-visible:outline-niho-text-sub",
             )}
           >
-            {thumbnail.url ? (
-              <PhotoEditingTileImage
-                key={thumbnail.url}
-                url={thumbnail.url}
-                geometry={item.geometry ?? null}
-                cellAspect={compact ? 1 : undefined}
-              />
-            ) : thumbnail.failed ? (
-              <span
-                aria-hidden
-                className="flex h-full w-full items-center justify-center text-xl font-bold text-niho-text-muted"
-              >
-                {Array.from(item.fileName)[0] ?? ""}
-              </span>
-            ) : null}
+            {/* 却下した写真は画だけ薄くする（選択の枠・印・読み上げは落とさない。niho-photo#47） */}
+            <span className={cn("block h-full w-full", item.flag === "reject" && "opacity-40")}>
+              {thumbnail.url ? (
+                <PhotoEditingTileImage
+                  key={thumbnail.url}
+                  url={thumbnail.url}
+                  geometry={item.geometry ?? null}
+                  cellAspect={compact ? 1 : undefined}
+                />
+              ) : thumbnail.failed ? (
+                <span
+                  aria-hidden
+                  className="flex h-full w-full items-center justify-center text-xl font-bold text-niho-text-muted"
+                >
+                  {Array.from(item.fileName)[0] ?? ""}
+                </span>
+              ) : null}
+            </span>
+            {item.flag ? <BrowserPhotoFlagMark flag={item.flag} className="bottom-[5px] right-[5px]" /> : null}
             {item.pending ? (
               // 作業コピーを待っている間は薄い幕だけ（状態の語・回転は出さない）
               <span className="absolute inset-0 bg-white/45">

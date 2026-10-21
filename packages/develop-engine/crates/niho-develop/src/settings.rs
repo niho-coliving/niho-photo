@@ -1,8 +1,9 @@
-//! `developSettings` v1 / v2 / v3 / v4 / v5 / v6 / v7 / v8: the saved edit of one photo.
+//! `developSettings` v1 / v2 / v3 / v4 / v5 / v6 / v7 / v8 / v9: the saved edit of one photo.
 //!
 //! The JSON shape is Photo Bench `EditSettings` (`docs/ENGINE_PROTOCOL.md`,
 //! `EditSettings.swift`'s `CodingKeys`) plus `v`, `engine`, `look`, `base`
-//! and `geometry` (spec `niho-develop-engine.md` "段 2"). `v` is 8 when heal
+//! and `geometry` (spec `niho-develop-engine.md` "段 2"). `v` is 9 when the
+//! lens corrections render something (`lens.rs`), 8 when heal
 //! marks exist, 7 when perspective is active, 6 when detail exists, 5 when a
 //! local mask exists, 4 when color points exist, 3 when an effect is active,
 //! 2 when geometry is not the identity, else 1. An older reader refuses an
@@ -31,6 +32,7 @@
 
 pub use crate::geometry::{Geometry, GEOMETRY_SETTINGS_VERSION, PERSPECTIVE_SETTINGS_VERSION};
 pub use crate::heal::{HealMark, HealMode, HEAL_SETTINGS_VERSION};
+pub use crate::lens::{Lens, LENS_SETTINGS_VERSION};
 pub use crate::local_mask::LocalMask;
 use serde_json::{Map, Value};
 use std::fmt;
@@ -49,9 +51,9 @@ pub const MASKS_SETTINGS_VERSION: u32 = 5;
 /// drop a control group they do not understand.
 pub const DETAIL_SETTINGS_VERSION: u32 = 6;
 /// Highest shape version this crate reads.
-pub const MAX_SETTINGS_VERSION: u32 = HEAL_SETTINGS_VERSION;
+pub const MAX_SETTINGS_VERSION: u32 = LENS_SETTINGS_VERSION;
 /// The shape versions this crate reads.
-pub const READABLE_SETTINGS_VERSIONS: [u32; 8] = [
+pub const READABLE_SETTINGS_VERSIONS: [u32; 9] = [
     SETTINGS_VERSION,
     GEOMETRY_SETTINGS_VERSION,
     EFFECTS_SETTINGS_VERSION,
@@ -60,6 +62,7 @@ pub const READABLE_SETTINGS_VERSIONS: [u32; 8] = [
     DETAIL_SETTINGS_VERSION,
     PERSPECTIVE_SETTINGS_VERSION,
     HEAL_SETTINGS_VERSION,
+    LENS_SETTINGS_VERSION,
 ];
 /// The UI and renderer intentionally share this small upper bound.
 pub const MAX_COLOR_POINTS: usize = 8;
@@ -701,6 +704,9 @@ pub struct DevelopSettings {
     pub geometry: Option<Geometry>,
     /// Heal marks in the order drawn (`heal.rs`; empty = not written).
     pub heal: Vec<HealMark>,
+    /// Manual lens corrections and the chromatic aberration / fringe removal
+    /// (`lens.rs`; the defaults = not written).
+    pub lens: Lens,
     /// Unknown keys, preserved verbatim.
     pub extra: Map<String, Value>,
 }
@@ -758,6 +764,7 @@ impl DevelopSettings {
             legacy_settings: None,
             geometry: None,
             heal: Vec::new(),
+            lens: Lens::default(),
             extra: Map::new(),
         }
     }
@@ -770,11 +777,14 @@ impl DevelopSettings {
         settings
     }
 
-    /// The `v` these settings need: 8 for heal marks, 7 for a perspective,
-    /// 6 for detail, 5 for local masks, 4 for color points, 3 for active
-    /// effects, 2 for non-identity geometry, and 1 otherwise.
+    /// The `v` these settings need: 9 for an active lens, 8 for heal marks,
+    /// 7 for a perspective, 6 for detail, 5 for local masks, 4 for color
+    /// points, 3 for active effects, 2 for non-identity geometry, and 1
+    /// otherwise.
     pub fn required_version(&self) -> u32 {
-        if !self.heal.is_empty() {
+        if self.lens.is_active() {
+            LENS_SETTINGS_VERSION
+        } else if !self.heal.is_empty() {
             HEAL_SETTINGS_VERSION
         } else if self
             .geometry
@@ -821,7 +831,8 @@ impl DevelopSettings {
     /// `hasActiveColorEdits` complement plus the white balance mode).
     /// `engine` / `look` / `base` / `geometry` / `heal` / retained-only
     /// values do not count ("初期化" resets the color, not the crop or the
-    /// heal marks).
+    /// heal marks); an active `lens` does (it changes the pixels and
+    /// "初期化" resets it).
     pub fn is_neutral(&self) -> bool {
         let scalars = [
             self.exposure,
@@ -886,6 +897,7 @@ impl DevelopSettings {
             && !self.vignette.is_active()
             && !self.grain.is_active()
             && self.detail.is_none_or(|detail| !detail.is_active())
+            && !self.lens.is_active()
     }
 
     /// Parses `developSettings` JSON text.
@@ -924,11 +936,12 @@ impl DevelopSettings {
                         _ if n == 6.0 => 6,
                         _ if n == 7.0 => 7,
                         _ if n == 8.0 => 8,
+                        _ if n == 9.0 => 9,
                         _ => {
                             return Err(SettingsError::new(
                                 path,
                                 "unsupportedVersion",
-                                "only v = 1, v = 2, v = 3, v = 4, v = 5, v = 6, v = 7, and v = 8 are supported",
+                                "only v = 1, v = 2, v = 3, v = 4, v = 5, v = 6, v = 7, v = 8, and v = 9 are supported",
                             ))
                         }
                     };
@@ -1012,6 +1025,7 @@ impl DevelopSettings {
                     };
                 }
                 "heal" => s.heal = crate::heal::parse_heal(v)?,
+                "lens" => s.lens = crate::lens::parse_lens(v)?,
                 "legacySettings" => {
                     s.legacy_settings = if v.is_null() {
                         None
@@ -1271,6 +1285,9 @@ impl DevelopSettings {
         }
         if !self.heal.is_empty() {
             o.insert("heal".into(), crate::heal::heal_to_value(&self.heal));
+        }
+        if !self.lens.is_default() {
+            o.insert("lens".into(), crate::lens::lens_to_value(&self.lens));
         }
         for (k, v) in &self.extra {
             o.entry(k.clone()).or_insert_with(|| v.clone());
@@ -1560,11 +1577,12 @@ impl DevelopSettings {
             geometry.validate(&mut issues);
         }
         crate::heal::validate_heal(&self.heal, &mut issues);
+        crate::lens::validate_lens(&self.lens, &mut issues);
         if self.v < self.required_version() {
             issues.push(SettingsError::new(
                 "v",
                 "versionTooLow",
-                "heal marks need v = 8, a perspective needs v = 7, detail needs v = 6, local masks need v = 5, color points need v = 4, active effects need v = 3, and non-identity geometry needs v = 2",
+                "an active lens needs v = 9, heal marks need v = 8, a perspective needs v = 7, detail needs v = 6, local masks need v = 5, color points need v = 4, active effects need v = 3, and non-identity geometry needs v = 2",
             ));
         }
         let matched = match self.engine.as_str() {
@@ -2289,7 +2307,7 @@ mod tests {
         assert!(DevelopSettings::from_json(r#"{"v":5}"#).is_ok());
         assert!(DevelopSettings::from_json(r#"{"v":6}"#).is_ok());
         assert_eq!(
-            DevelopSettings::from_json(r#"{"v":9}"#).unwrap_err().code,
+            DevelopSettings::from_json(r#"{"v":10}"#).unwrap_err().code,
             "unsupportedVersion"
         );
         assert_eq!(
@@ -2333,7 +2351,7 @@ mod tests {
         assert_eq!(switches.required_version(), 1);
         assert!(switches.validate().is_empty());
         assert!(READABLE_SETTINGS_VERSIONS.contains(&7));
-        assert_eq!(MAX_SETTINGS_VERSION, HEAL_SETTINGS_VERSION);
+        assert_eq!(MAX_SETTINGS_VERSION, LENS_SETTINGS_VERSION);
     }
 
     #[test]

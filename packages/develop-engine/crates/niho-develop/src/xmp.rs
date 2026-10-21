@@ -45,11 +45,13 @@ use std::fmt;
 
 mod amount;
 mod detail;
+mod lens;
 mod masks;
 mod write;
 
 pub use amount::{apply_preset, PRESET_AMOUNT_MAX};
 pub use detail::DETAIL_KEYS;
+pub use lens::LENS_KEYS;
 pub use masks::LOCAL_CORRECTION_LISTS;
 pub use write::{
     settings_to_xmp, XmpGroup, XmpWriteOptions, XmpWriteResult, XMP_CAMERA_RAW_VERSION,
@@ -1555,7 +1557,6 @@ const SUPPORTED_COLOR_SCALARS: [&str; 25] = [
     "SplitToningBalance",
     "ShadowTint",
 ];
-const UNSUPPORTED_KNOWN: [&str; 3] = ["AutoLateralCA", "LensProfileEnable", "LensProfileSetup"];
 const METADATA_KEYS: [&str; 25] = [
     "AutoGrayscaleMix",
     "Version",
@@ -1616,6 +1617,7 @@ fn is_numeric_crs_property(key: &str) -> bool {
                 | "CropConstrainToWarp"
         )
         || PerspectiveField::from_xmp(key).is_some()
+        || LENS_KEYS.contains(&key)
         || key.starts_with("HueAdjustment")
         || key.starts_with("SaturationAdjustment")
         || key.starts_with("LuminanceAdjustment")
@@ -1635,6 +1637,9 @@ fn clamp_range(key: &str) -> Option<(f64, f64)> {
     }
     if let Some(field) = PerspectiveField::from_xmp(key) {
         return Some(field.range());
+    }
+    if let Some(range) = lens::lens_range(key) {
+        return Some(range);
     }
     if key == "Exposure2012" {
         return Some((-5.0, 5.0));
@@ -1692,6 +1697,7 @@ impl XmpDocument {
         let mut settings = DevelopSettings::neutral();
         self.apply_effects(&mut settings);
         self.apply_detail(&mut settings);
+        self.apply_lens(&mut settings);
         self.compatibility_for(&settings)
     }
 
@@ -1876,6 +1882,8 @@ impl XmpDocument {
                     )
                 } else if let Some(found) = self.detail_level(k, value, effective_settings) {
                     found
+                } else if let Some(found) = self.lens_level(k, value, effective_settings) {
+                    found
                 } else if k == "Dehaze" {
                     (Level::Exact, Level::Exact, "トーンカーブ＋彩度倍率".into())
                 } else if SUPPORTED_SCALARS.contains(&k) {
@@ -1891,12 +1899,6 @@ impl XmpDocument {
                         Level::Approximate,
                         Level::Approximate,
                         "曲線点で描く（名称は保持のみ）".into(),
-                    )
-                } else if UNSUPPORTED_KNOWN.contains(&k) {
-                    (
-                        Level::Unsupported,
-                        Level::Unsupported,
-                        "値を保持するのみ（未実装）".into(),
                     )
                 } else if METADATA_KEYS.contains(&k) {
                     (Level::Metadata, Level::Metadata, "値を保持".into())
@@ -1922,7 +1924,8 @@ impl XmpDocument {
                 Some(_) => matches!(level, Level::Exact | Level::Approximate),
                 None if graded_luminance_model
                     || perspective.is_some()
-                    || detail::DETAIL_KEYS.contains(&k) =>
+                    || detail::DETAIL_KEYS.contains(&k)
+                    || LENS_KEYS.contains(&k) =>
                 {
                     matches!(level, Level::Exact | Level::Approximate)
                 }
@@ -2067,6 +2070,10 @@ pub fn preset_settings(
         settings.masks = b.masks.clone();
         // Heal marks belong to the photo (niho-photo#44), like its geometry.
         settings.heal = b.heal.clone();
+        // The lens corrections are not in Photo Bench's EditSettings: start
+        // from the photo's, then let this XMP's Lens Corrections keys
+        // replace them below (niho-photo#45).
+        settings.lens = b.lens;
     }
     // NIHO effects are not in Photo Bench's `EditSettings`, so they do not go
     // through the converter (`CONVERTER_VERSION` is unchanged): the base's
@@ -2074,6 +2081,7 @@ pub fn preset_settings(
     // replaced, like Lightroom applying a preset.
     doc.apply_effects(&mut settings);
     doc.apply_perspective(&mut settings);
+    doc.apply_lens(&mut settings);
     if matches!(
         settings.engine.as_str(),
         ENGINE_NIHO_3 | ENGINE_NIHO_4 | ENGINE_NIHO_5 | ENGINE_NIHO_7 | ENGINE_NIHO_11

@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState, type MutableRefObject, type ReactElement, type ReactNode } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { Bandage, CircleDashed, Contrast, Crop, FolderOpen, History, Info, Laptop, Plus, Scissors, SlidersHorizontal, Trash2 } from "lucide-react";
+import { Bandage, Contrast, Crop, FolderOpen, History, Info, Laptop, Plus, Scissors, SlidersHorizontal, Trash2 } from "lucide-react";
 
 import { formatPhotoCloudUsage } from "../photo-library-usage";
 import { inertAttribute } from "niho-ui/inert-attribute";
@@ -16,6 +16,7 @@ import {
   browserCloudLockedReason,
   canFavoriteBrowserCloudPhoto,
   canFilterBrowserCloudPlace,
+  isBrowserCloudPhotoInFilter,
   isBrowserCloudPhotoPlace,
   isBrowserSelectedPhotosPlace,
   isBrowserCloudRawPhoto,
@@ -34,6 +35,7 @@ import {
 } from "../browser-photo-batch-export";
 import { hasDevelopGeometry, isNeutralDevelopColors, type DevelopSettings } from "../develop-engine/develop-settings";
 import { hasPhotoEditingColorGradingNativeExportUnsupportedLuminance } from "../photo-editing-color-grading";
+import { readWorkingCopyLensProfile } from "../photo-editing-lens";
 import { isDevelopWorkTarget } from "../develop-engine/develop-work-target";
 import {
   isWorkPending,
@@ -49,6 +51,7 @@ import type { PhotoEditingCutoutHost } from "../photo-cutout";
 import {
   BROWSER_PHOTO_EDITING_DEVELOP_RELOADING_TEXT,
   PHOTO_EDITING_CROP_BLOCKED_BY_CUTOUT_TEXT,
+  PHOTO_EDITING_FLAG_FAILED_TEXT,
   PHOTO_EDITING_FOLDER_EMPTY_TEXT,
   PHOTO_EDITING_FOLDERS_LOAD_FAILED_TEXT,
   PHOTO_EDITING_LOCAL_PHOTOS_LOAD_FAILED_TEXT,
@@ -62,7 +65,6 @@ import {
   PHOTO_EDITING_TOOL_CUTOUT_LABEL,
   PHOTO_EDITING_TOOL_HEAL_LABEL,
   PHOTO_EDITING_TOOL_INFO_LABEL,
-  PHOTO_EDITING_TOOL_MASK_LABEL,
   PHOTO_EDITING_TOOL_VERSIONS_LABEL,
 } from "../photo-editing-copy";
 import { movePhotoEditingPhotoId } from "../photo-editing-selection";
@@ -71,6 +73,7 @@ import { describePhotoCloudAddProgress } from "../photo-cloud-add-queue";
 import { photoLibrarySectionDate } from "../photo-library-sections";
 import { usePhotoEditingLayerHistory } from "../use-photo-editing-layer-history";
 import { usePhotoCloudFavorite } from "../use-photo-cloud-favorite";
+import { usePhotoLibraryFlags } from "../use-photo-library-flags";
 import { usePhotoCloudAlbums } from "../use-photo-cloud-albums";
 import { usePhotoCloudPhotos, type PhotoCloudCounts } from "../use-photo-cloud-photos";
 import { usePhotoEditingRollout } from "../use-photo-editing-rollout";
@@ -80,6 +83,7 @@ import {
   usePhotoLibraryCapabilities,
 } from "../library/photo-library-context";
 import { usePhotoEditingShortcuts, type PhotoEditingShortcut } from "../use-photo-editing-shortcuts";
+import type { PhotoLibraryFlag } from "../library/photo-library";
 import { PHOTO_SAVE_MAX_FILES } from "../save-photos-to-device";
 import { photoEditingQueryKeys } from "../photo-editing-query-keys";
 import { cn } from "niho-ui/cn";
@@ -99,6 +103,7 @@ import {
 export type { BrowserPhotoCloudSharingBinding } from "./browser-photo-cloud-share-sheet";
 import type { BrowserPhotoFavoriteControl } from "./browser-photo-editing-favorite-button";
 import { BrowserPhotoListFilterControl } from "./browser-photo-editing-filter";
+import type { BrowserPhotoFlagControl } from "./browser-photo-editing-flags";
 import { BrowserPhotoEditingFolderTree } from "./browser-photo-editing-folder-tree";
 import { BrowserPhotoEditingFooter, BrowserPhotoEditingStatusLine } from "./browser-photo-editing-footer";
 import { BrowserPhotoExportSheet } from "./browser-photo-editing-export-sheet";
@@ -165,8 +170,6 @@ import {
 } from "./photo-editing-button-classes";
 import { PhotoEditingCropTools } from "./photo-editing-crop-tools";
 import { PhotoEditingCutoutTools } from "./photo-editing-cutout-tools";
-import { BrowserPhotoEditingMaskLayer } from "./photo-editing-mask-overlay";
-import { PhotoEditingMaskTools } from "./photo-editing-mask-tools";
 import { PhotoEditingDropOverlay } from "./photo-editing-drop-overlay";
 import { PhotoEditingHealTools } from "./photo-editing-heal-tools";
 import { PhotoEditingAddFolderEmptyState, PhotoEditingAddPhotosEmptyState } from "./photo-editing-empty-states";
@@ -174,6 +177,7 @@ import { PhotoEditingGrid, countPhotoEditingGridColumns, type PhotoEditingGridIt
 import { PhotoEditingHistogram } from "./photo-editing-histogram";
 import { PhotoEditingColorGrading, PhotoEditingColorGradingSection } from "./photo-editing-color-grading";
 import { PhotoEditingHslMixer, PhotoEditingHslMixerSection } from "./photo-editing-hsl-mixer";
+import { PhotoEditingLensSection } from "./photo-editing-lens";
 import { PhotoEditingMenu, type PhotoEditingMenuItem } from "./photo-editing-menu";
 import { PhotoEditingPresetsPanel } from "./photo-editing-presets-panel";
 import { PhotoEditingToneCurveSection } from "./photo-editing-tone-curve";
@@ -192,14 +196,16 @@ import {
   useBrowserPhotoColorPointsSupport,
   useBrowserPhotoDetailSupport,
   useBrowserPhotoEffectsSupport,
+  useBrowserPhotoLensSupport,
 } from "./use-browser-photo-effects";
-import { photoEditingMaskExportBlocked, useBrowserPhotoMasks, useBrowserPhotoMasksSupport } from "./use-browser-photo-masks";
 import { useBrowserPhotoExportAndDelete } from "./use-browser-photo-export-delete";
+import { useBrowserPhotoFlagKeys } from "./use-browser-photo-flag-keys";
 import { useBrowserPhotoFolders } from "./use-browser-photo-folders";
 import { useBrowserPhotoHealKeys } from "./use-browser-photo-heal";
 import { useBrowserPhotoHistogram, type PhotoEditingFrameSink } from "./use-browser-photo-histogram";
 import { useBrowserPhotoItems, useBrowserPhotoListView } from "./use-browser-photo-items";
 import { useBrowserPhotoLeaveGuards } from "./use-browser-photo-leave-guards";
+import { photoEditingMaskExportBlocked, useBrowserPhotoMasks, useBrowserPhotoMasksSupport } from "./use-browser-photo-masks";
 import { useBrowserPhotoOpen } from "./use-browser-photo-open";
 import { useBrowserPhotoSelection } from "./use-browser-photo-selection";
 import { useBrowserPhotoPresetSupport } from "./use-browser-photo-preset-support";
@@ -281,6 +287,9 @@ export type BrowserPhotoCopyToCloudBinding = {
  * - 一覧で選んだ複数枚への一括の補正（F5a-2 移行元設計。PC のブラウザ版だけ）: 選択バーの「補正」メニュー（補正を貼り付け・プリセット
  *   100%）と、一覧を見ている間の ⌥⇧⌘C / ⌥⇧⌘V。右パネルは出さず、一覧の列数を動かさない。処理中は `operation` が `bulk` で
  *   ほかの操作を止め、終わったら状態欄に 1 行と［元に戻す］（`useBrowserPhotoBulk`）
+ * - 選別（niho-photo#47。`capabilities.flags` の写真の出どころだけ）: 一覧でも 1 枚でも P = 採用・X = 却下・U = 外す（PC だけ。
+ *   一覧は選んでいる写真すべて）と下段の小さなボタン。絞り込みに「採用だけ」「却下を隠す」。却下した写真は薄く出すだけで消さない。
+ *   書き出しの対象は今の一覧で選んだ写真なので、絞り込み中は絞った写真だけ（`usePhotoLibraryFlags`・`useBrowserPhotoFlagKeys`）
  *
  * 面の分け方（移行元設計）: ここは組み立ての根。一覧は `useBrowserPhotoItems`、段 2 の session・自動保存・離れるときは
  * `useBrowserPhotoDevelop`、1 枚を開く流れと補正は `useBrowserPhotoOpen`、追加・書き出しと削除・離れる前の確かめはそれぞれの
@@ -339,10 +348,11 @@ export function BrowserPhotoEditingWorkbench(props: {
     spotId: props.spotId,
     // 補正済み / 未補正で絞った一覧は、1 枚で見ている間は読み直さない（作業コピーの待ちの読み直しも止める。直した写真の補正済みが
     // 変わっても一覧から外さない = 1 枚の表示を閉じない）。一覧へ戻ると、止めていた間に古くなった一覧を読み直す（staleTime 0）。
-    // 条件が無ければ今までどおり（戻っても読み直さない）
+    // 条件が無ければ今までどおり（戻っても読み直さない）。選別（採用だけ / 却下を隠す。niho-photo#47）で絞った一覧も同じ（1 枚で
+    // 却下した写真を、別の写真へ移るまで出したままにする）
     enabled:
       (!folderMode || browserPlaceFolderId(listView.place) !== null || isBrowserSelectedPhotosPlace(listView.place)) &&
-      (viewMode !== "loupe" || listView.filter.edited === null),
+      (viewMode !== "loupe" || (listView.filter.edited === null && !listView.filter.flag)),
     sort: listView.sort,
     ...browserCloudListParams(listView.place, listView.filter),
   });
@@ -582,8 +592,16 @@ export function BrowserPhotoEditingWorkbench(props: {
     photoKey: wasmPhotoKey,
   });
   const detailSupported = detailWasmSupported && detailControlsAvailable(opened?.input);
-  // 部分補正（マスク。M3 #67）を描ける wasm か（`capabilities()`。同じく 1 回確かめて覚える）
+  // 部分補正（マスク。M3 #67）を描ける wasm か（同じく1回だけ確認）。
   const masksSupport = useBrowserPhotoMasksSupport({ mountedRef, engineRef: develop.engineRef, photoKey: wasmPhotoKey });
+  // レンズ補正（v: 9。niho-photo#45）を描ける wasm か（同じく 1 回確かめる）。右パネルの「レンズ」の節を出す
+  const lensSupported = useBrowserPhotoLensSupport({
+    mountedRef,
+    engineRef: develop.engineRef,
+    photoKey: wasmPhotoKey,
+  });
+  // 作業コピーに焼き込まれたプロファイル補正（`_source.lensCorrection.mode`）。オリジナル・読めない meta は null（状態を出さない）
+  const lensProfile = readWorkingCopyLensProfile(opened?.input?.kind === "workingCopy" ? opened.input.metaJson : null);
   // プリセットの適用量・今の補正の保存・見本を出せる wasm か（同じく 1 回確かめて覚える。右パネルを閉じても行の形を変えない）
   const presetSupport = useBrowserPhotoPresetSupport({ mountedRef, engineRef: develop.engineRef, photoKey: wasmPhotoKey });
   const mobilePresetThumbnails = useBrowserPresetThumbnails({
@@ -654,6 +672,12 @@ export function BrowserPhotoEditingWorkbench(props: {
     applyLocal: (photoId, favorite) => patchLocalPhoto(photoId, { favorite }),
     onError: () => setStatus({ kind: "error", text: FAVORITE_FAILED_TEXT }),
   });
+  // 選別のフラグ（採用 / 却下。niho-photo#47）。♥ と同じく押した直後に書き換え、送れなかったら戻して状態欄に 1 行
+  const flags = usePhotoLibraryFlags({
+    spotId: props.spotId,
+    applyLocal: (photoId, flag) => patchLocalPhoto(photoId, { flag }),
+    onError: () => setStatus({ kind: "error", text: PHOTO_EDITING_FLAG_FAILED_TEXT }),
+  });
   // 一覧で選んだ写真への一括の補正（F5a-2 移行元設計。PC は「補正」メニューとキー、狭い幅は選択バーの「操作」。状態と実行は hook）
   const browserBulkRuntime =
     !host.isDesktopApp() && !host.isNativeViewport();
@@ -714,6 +738,7 @@ export function BrowserPhotoEditingWorkbench(props: {
           geometry: photoEditingTileGeometry(item.photo),
           adding: item.adding ? { fraction: null } : undefined,
           favorite: item.photo.favorite === true,
+          flag: item.photo.flag ?? null,
           pending: isWorkPending(item.photo) ? (raw ? "raw" : "other") : null,
           sectionDate: local ? null : photoLibrarySectionDate(item.photo, listSort),
         };
@@ -849,6 +874,13 @@ export function BrowserPhotoEditingWorkbench(props: {
     settingsRef: open.settingsRef,
     changeSettings: open.changeSettings,
     commitEdit: open.commitEdit,
+    // ブラシ（M4 #68）は面を保存できる写真の出どころだけ。面を読めなかったマスクは描画の失敗から知らせる
+    saveMaskSurface:
+      capabilities.maskSurfaces === true && library.saveMaskSurface
+        ? (photoId: string, png: Uint8Array) => library.saveMaskSurface!(photoId, png)
+        : null,
+    surfaceIssue: open.maskSurfaceIssue,
+    onRetrySurfaces: open.retryMaskSurfaces,
   });
 
   /** 右パネルの今の道具（理由だけを出している「切り抜き」も「切り抜き」） */
@@ -860,9 +892,7 @@ export function BrowserPhotoEditingWorkbench(props: {
         ? "heal"
         : cropBlocked
           ? "crop"
-          : maskTool.active
-            ? "mask"
-            : "adjust";
+          : "adjust";
   /** 道具が「補正」の間に右パネルに出す面（右端の帯の「プリセット」「補正」。写真を替えても保つ。niho-photo#51） */
   const [adjustPanel, setAdjustPanel] = useState<BrowserPhotoAdjustPanel>("adjust");
   /** この写真で使える道具（右端の帯に並べる） */
@@ -870,20 +900,10 @@ export function BrowserPhotoEditingWorkbench(props: {
   if (crop.available) tools.push("crop");
   if (heal.available) tools.push("heal");
   if (cutout.available) tools.push("cutout");
-  if (maskTool.available) tools.push("mask");
   /** 道具を選ぶ（切り替え・R・Esc）。背景除去の推論の途中は替えない */
   const chooseTool = (next: BrowserPhotoTool) => {
     if (cutout.running) return;
     open.clearResetDone();
-    if (next === "mask") {
-      cutout.leave();
-      heal.leave();
-      crop.leave();
-      setCropBlockedKey(null);
-      maskTool.enter();
-      return;
-    }
-    maskTool.leave();
     if (next === "cutout") {
       crop.leave();
       heal.leave();
@@ -916,13 +936,13 @@ export function BrowserPhotoEditingWorkbench(props: {
     !cutoutActive &&
     !healing &&
     !cropBlocked &&
-    (cropping ? hasDevelopGeometry(settings) : maskTool.active ? maskTool.canReset : !isNeutralDevelopColors(settings));
+    (cropping ? hasDevelopGeometry(settings) : !isNeutralDevelopColors(settings));
   // 「自動」（F4b 移行元設計）: wasm で開いた写真を 1 枚で見ている間だけ。押せない間・切り抜き / 背景除去の道具の間は押せない
   const auto = useBrowserPhotoAuto({
     mountedRef,
     engineRef: develop.engineRef,
     photoKey: wasmPhotoKey,
-    disabled: controlsDisabled || crop.active || cutout.active || healing || maskTool.active,
+    disabled: controlsDisabled || crop.active || cutout.active,
     settingsKey: open.settingsKey,
     settingsRef: open.settingsRef,
     commitEdit: open.commitEdit,
@@ -963,13 +983,13 @@ export function BrowserPhotoEditingWorkbench(props: {
     setColorPickError(null);
   }, [wasmPhotoKey]);
   useEffect(() => {
-    if (compareOriginal || cropping || cutoutActive || healing || maskTool.active || opened?.previewPending || presets.previewName !== null) {
+    if (compareOriginal || cropping || cutoutActive || healing || opened?.previewPending || presets.previewName !== null) {
       colorPickGenerationRef.current += 1;
       setColorPicking(false);
     }
-  }, [compareOriginal, cropping, cutoutActive, healing, maskTool.active, opened?.previewPending, presets.previewName]);
+  }, [compareOriginal, cropping, cutoutActive, healing, opened?.previewPending, presets.previewName]);
   const colorMixerAvailable = wasmPhotoKey !== null && !canvasOnly && colorPointsSupported;
-  const colorMixerDisabled = controlsDisabled || cropping || cutoutActive || healing || maskTool.active || compareOriginal || opened?.previewPending === true || presets.previewName !== null;
+  const colorMixerDisabled = controlsDisabled || cropping || cutoutActive || healing || compareOriginal || opened?.previewPending === true || presets.previewName !== null;
   const latestColorPickContextRef = useRef({
     photoKey: "",
     settingsJson: "",
@@ -1141,16 +1161,6 @@ export function BrowserPhotoEditingWorkbench(props: {
       onDeselect: () => chooseTool("adjust"),
     });
   }
-  if (tools.includes("mask")) {
-    toolRailItems.push({
-      key: "mask",
-      label: PHOTO_EDITING_TOOL_MASK_LABEL,
-      icon: CircleDashed,
-      pressed: toolValue === "mask",
-      disabled: toolSwitchDisabled,
-      onSelect: () => chooseTool("mask"),
-    });
-  }
   if (tools.includes("cutout")) {
     toolRailItems.push({
       key: "cutout",
@@ -1252,8 +1262,6 @@ export function BrowserPhotoEditingWorkbench(props: {
         }
         return;
       }
-      // マスクの道具の間は Esc（選択を外す）と ⌫ / Delete（選んだマスクを削除。写真は消さない）を先に扱う
-      if (viewModeRef.current === "loupe" && toolValue === "mask" && maskTool.handleShortcut(shortcut, event)) return;
       switch (shortcut) {
         case "grid":
           event.preventDefault();
@@ -1276,7 +1284,7 @@ export function BrowserPhotoEditingWorkbench(props: {
             if (heal.selectedId !== null) heal.select(null);
             else chooseTool("adjust");
           } else if (viewModeRef.current === "loupe" && cropping) crop.leave();
-          else if (viewModeRef.current === "loupe" && (cutoutActive || cropBlocked || toolValue === "mask")) chooseTool("adjust");
+          else if (viewModeRef.current === "loupe" && (cutoutActive || cropBlocked)) chooseTool("adjust");
           else if (viewModeRef.current === "loupe") showGrid();
           // 書き出し・一括の補正の途中は選択を解かない（［キャンセル］と同じく止める）
           else if (!operationRef.current) selection.clear();
@@ -1614,6 +1622,53 @@ export function BrowserPhotoEditingWorkbench(props: {
   const albumsAvailable = capabilities.albums && library.albums !== undefined;
   const shownFavoriteControl = favoritesAvailable ? favoriteControl : undefined;
 
+  // 選別（採用 / 却下。niho-photo#47。♥ とは別の印）。対象は一覧で選んでいる写真（複数選択なら全部）か、1 枚で開いている写真（元の
+  // 写真のある写真だけ。追加中・記事の画像は対象にしない）。キー P / X / U と下段のボタンが同じ写真に効く。却下しても写真は消さない
+  const flagsAvailable = capabilities.flags === true && library.flags !== undefined;
+  const flagTargets = (viewMode === "loupe" ? (loupeItem ? [loupeItem] : []) : selectedItems).filter(
+    (item) => !item.adding && item.photo.hasOriginal,
+  );
+  const flagsDisabled = !props.canEdit || operation !== null || batchBusy;
+  const applyFlag = (flag: PhotoLibraryFlag | null) => {
+    if (!flagsAvailable || flagsDisabled || flagTargets.length === 0) return;
+    // 前に出した失敗の 1 行は、押し直したら消す
+    setStatus((current) => (current?.kind === "error" && current.text === PHOTO_EDITING_FLAG_FAILED_TEXT ? null : current));
+    // 一覧で選んでいる 1 枚が今の絞り込み（採用だけ / 却下を隠す）から外れるなら、隣の写真を選んでフォーカスを移す（続けて選別
+    // できる）。1 枚の表示では、別の写真へ移るまで出したまま
+    const [target] = flagTargets;
+    if (
+      viewModeRef.current === "grid" &&
+      flagTargets.length === 1 &&
+      target &&
+      !flags.isPending(target.photo.id) &&
+      (target.photo.flag ?? null) !== flag &&
+      !isBrowserCloudPhotoInFilter({ ...target.photo, flag }, listView.filter)
+    ) {
+      const index = selectableKeys.indexOf(target.key);
+      const neighbor = selectableKeys[index + 1] ?? (index > 0 ? selectableKeys[index - 1] : undefined) ?? null;
+      setSelectedKey(neighbor);
+      if (neighbor) gridRef.current?.revealKey(neighbor, { focus: true });
+    }
+    void flags.setFlag(flagTargets.map((item) => item.photo), flag);
+  };
+  const flagValues = flagTargets.map((item) => item.photo.flag ?? null);
+  const flagControl: BrowserPhotoFlagControl | undefined = flagsAvailable
+    ? {
+        flag: flagValues.every((value) => value === flagValues[0]) ? (flagValues[0] ?? null) : "mixed",
+        available: flagTargets.length > 0,
+        busy: flagTargets.some((item) => flags.pendingIds.has(item.photo.id)),
+        disabled: flagsDisabled,
+        onSet: applyFlag,
+      }
+    : undefined;
+  // P / X / U（PC だけ。一覧でも 1 枚でも。書き出しのシート・操作中・閲覧のみの間は聞かない）。修復など写真の上のキーを使う道具の
+  // キーを先に扱う（この listener は後から足し、道具が使ったキーは `defaultPrevented` で飛ばす）
+  useBrowserPhotoFlagKeys({
+    rootRef,
+    enabled: props.active && wide && flagsAvailable && !flagsDisabled && !exportSheetOpen,
+    onFlag: applyFlag,
+  });
+
   // 複数選択の操作対象は、既存 selection が指す置き終えた元写真だけ。混在時は「追加」にし、全枚に同じ結果を適用する。
   const selectedPhotoIds = selectedBatchPhotos.map((photo) => photo.id);
   const selectedAreAllFavorite = selectedBatchPhotos.length > 0 && selectedBatchPhotos.every((photo) => photo.favorite === true);
@@ -1837,6 +1892,7 @@ export function BrowserPhotoEditingWorkbench(props: {
         <BrowserPhotoListFilterControl
           filter={listView.filter}
           count={listView.filterCount}
+          flags={flagsAvailable}
           onChange={listView.changeFilter}
           onClear={listView.clearFilter}
         />
@@ -2218,9 +2274,6 @@ export function BrowserPhotoEditingWorkbench(props: {
                       }
                     : null
                 }
-                maskOverlay={
-                  toolValue === "mask" ? <BrowserPhotoEditingMaskLayer tool={maskTool} targetRef={canvasRef} /> : undefined
-                }
                 canvasRef={canvasRef}
                 colorPicker={colorMixerAvailable ? {
                   active: colorPicking,
@@ -2457,7 +2510,7 @@ export function BrowserPhotoEditingWorkbench(props: {
             // ライトの群の下の「カーブ」（niho-photo#37）とカラーの群の下の「カラーミキサー」（niho-photo#38）: ヒストグラムと同じく PC の
             // 右パネルで、段 2 の wasm が画を描いている写真だけ（S1 の canvas・スマホの層・閲覧の面には出さない）。カーブの背後の輝度は
             // ヒストグラムの度数を使う（数え直さない）。カラーミキサーの節の下に「カラーグレーディング」（niho-photo#39）を続け、
-            // ポイントカラー（`colorMixer`）はその下に並ぶ
+            // ポイントカラー（`colorMixer`）はその下に並ぶ。効果の群の下に「レンズ」（niho-photo#45。v: 9 を描ける wasm だけ）
             afterGroup={
               histogramAvailable
                 ? {
@@ -2483,6 +2536,18 @@ export function BrowserPhotoEditingWorkbench(props: {
                         />
                       </>
                     ),
+                    ...(lensSupported
+                      ? {
+                          effects: (
+                            <PhotoEditingLensSection
+                              settings={settings}
+                              disabled={controlsDisabled}
+                              profile={lensProfile}
+                              onSettingsChange={open.changeSettings}
+                            />
+                          ),
+                        }
+                      : {}),
                   }
                 : undefined
             }
@@ -2621,11 +2686,10 @@ export function BrowserPhotoEditingWorkbench(props: {
                 />
               ) : undefined
             }
-            maskTools={toolValue === "mask" ? <PhotoEditingMaskTools {...maskTool} disabled={controlsDisabled} /> : undefined}
             clipboard={
               // 別の端末の補正を読み直している間は当てない（読み直した補正が入る）。写すのは閲覧のみでもできる。切り抜き・背景除去・
               // 修復の道具の間は出さない（写す・当てるのは色の補正）
-              canvasOnly || cropping || cutoutActive || healing || maskTool.active || cropBlocked
+              canvasOnly || cropping || cutoutActive || healing || cropBlocked
                 ? undefined
                 : {
                     canCopy: open.clipboard.canCopy && !staleReloading && !draftRecoveryPending,
@@ -2634,7 +2698,7 @@ export function BrowserPhotoEditingWorkbench(props: {
                     onPaste: open.clipboard.paste,
                   }
             }
-            onReset={cropping ? crop.reset : toolValue === "mask" ? maskTool.reset : open.resetSettings}
+            onReset={cropping ? crop.reset : open.resetSettings}
             onUndo={cutoutActive ? cutout.undo : open.undo}
             onRedo={cutoutActive ? cutout.redo : open.redo}
             onRetryWork={() => void open.retryWork()}
@@ -2674,6 +2738,7 @@ export function BrowserPhotoEditingWorkbench(props: {
             />
           }
           favorite={shownFavoriteControl}
+          flag={flagControl}
           albumAction={selectedPhotoIds.length === 1 && albumsAvailable ? {
             label: currentAlbumId ? "アルバムから外す" : "アルバムに追加",
             disabled: !props.canEdit || batchBusy || operation !== null,
