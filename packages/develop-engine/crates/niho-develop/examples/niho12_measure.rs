@@ -86,20 +86,26 @@ fn delta(a: &[u8], b: &[u8]) -> Value {
     let mut sum = 0u64;
     let mut max = 0u8;
     let mut changed = 0usize;
+    // Pixels by their largest channel difference: 1, 2, >= 3 code values.
+    let mut by_max = [0usize; 3];
     for (pa, pb) in a.chunks_exact(4).zip(b.chunks_exact(4)) {
-        let mut pixel_changed = false;
+        let mut pixel_max = 0u8;
         for channel in 0..3 {
             let d = pa[channel].abs_diff(pb[channel]);
             sum += u64::from(d);
             max = max.max(d);
-            pixel_changed |= d != 0;
+            pixel_max = pixel_max.max(d);
         }
-        changed += usize::from(pixel_changed);
+        changed += usize::from(pixel_max != 0);
+        if pixel_max != 0 {
+            by_max[usize::from(pixel_max.min(3)) - 1] += 1;
+        }
     }
     json!({
         "meanAbsoluteCodeDelta": sum as f64 / (a.len() / 4 * 3) as f64,
         "maxAbsoluteCodeDelta": max,
         "changedPixels": changed,
+        "pixelsByMaxDelta": {"1": by_max[0], "2": by_max[1], "atLeast3": by_max[2]},
         "pixels": a.len() / 4
     })
 }
@@ -182,6 +188,7 @@ fn main() {
     let cases = golden_cases();
     let mut fixtures = Vec::new();
     let mut fixture_summary = (0usize, 0u8, 0.0f64);
+    let mut photo_pixels = (0usize, 0usize);
     for name in [
         "dsc02072.jpg",
         "dsc02078.jpg",
@@ -209,6 +216,10 @@ fn main() {
             fixture_summary.2 = fixture_summary
                 .2
                 .max(d["meanAbsoluteCodeDelta"].as_f64().unwrap());
+            if name.ends_with(".jpg") {
+                photo_pixels.0 += d["pixels"].as_u64().unwrap() as usize;
+                photo_pixels.1 += d["pixelsByMaxDelta"]["atLeast3"].as_u64().unwrap() as usize;
+            }
             rows.push(json!({"case": case, "niho12MinusNiho10Final": d}));
         }
         fixtures.push(json!({"fixture": name, "cases": rows}));
@@ -300,7 +311,9 @@ fn main() {
                 "pairs": fixtures.len() * cases.len(),
                 "pairsWithChangedPixels": fixture_summary.0,
                 "maxAbsoluteCodeDelta": fixture_summary.1,
-                "maxMeanAbsoluteCodeDelta": fixture_summary.2
+                "maxMeanAbsoluteCodeDelta": fixture_summary.2,
+                "photoPixelsCompared": photo_pixels.0,
+                "photoPixelsWithDeltaAtLeast3": photo_pixels.1
             },
             "inputs": fixtures
         },
