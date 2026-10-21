@@ -2,13 +2,13 @@
 
 import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
-import { Contrast, Crop, Info, Scissors, SlidersHorizontal } from "lucide-react";
+import { CircleDashed, Contrast, Crop, Info, Scissors, SlidersHorizontal } from "lucide-react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { BrowserPhotoEditingToolRail, type BrowserPhotoEditingToolRailItem } from "./browser-photo-editing-tool-rail";
 
 /**
- * ブラウザ版の右端の道具の帯（niho-photo#51）。プリセット・補正・切り抜き・背景除去を縦に並べ、押している道具を `aria-pressed` で
+ * ブラウザ版の右端の道具の帯（niho-photo#51）。プリセット・補正・切り抜き・マスク（M3 #67）・背景除去を縦に並べ、押している道具を `aria-pressed` で
  * 示し、押すと `onSelect`（押している道具・押せない道具は呼ばない）。
  */
 
@@ -20,6 +20,7 @@ function items(overrides: Partial<Record<string, Partial<BrowserPhotoEditingTool
     { key: "presets", label: "プリセット", icon: Contrast, pressed: false, disabled: false, onSelect: vi.fn() },
     { key: "adjust", label: "補正", icon: SlidersHorizontal, pressed: true, disabled: false, onSelect: vi.fn() },
     { key: "crop", label: "切り抜き", icon: Crop, pressed: false, disabled: false, onSelect: vi.fn() },
+    { key: "mask", label: "マスク", icon: CircleDashed, pressed: false, disabled: false, onSelect: vi.fn() },
     { key: "cutout", label: "背景除去", icon: Scissors, pressed: false, disabled: false, onSelect: vi.fn() },
   ];
   return base.map((item) => ({ ...item, ...overrides[item.key] }));
@@ -62,13 +63,19 @@ afterEach(() => {
 });
 
 describe("BrowserPhotoEditingToolRail", () => {
-  it("4 つの道具を並べ順に、日本語の読み上げ名と title で出す（PC の幅だけ見せる）", async () => {
+  it("5 つの道具を並べ順に、日本語の読み上げ名と title で出す（PC の幅だけ見せる）", async () => {
     await render(items());
     expect(rail().className).toContain("hidden");
     expect(rail().className).toContain("lg:flex");
     const buttons = Array.from(rail().querySelectorAll<HTMLButtonElement>("button"));
-    expect(buttons.map((candidate) => candidate.getAttribute("aria-label"))).toEqual(["プリセット", "補正", "切り抜き", "背景除去"]);
-    expect(buttons.map((candidate) => candidate.title)).toEqual(["プリセット", "補正", "切り抜き", "背景除去"]);
+    expect(buttons.map((candidate) => candidate.getAttribute("aria-label"))).toEqual([
+      "プリセット",
+      "補正",
+      "切り抜き",
+      "マスク",
+      "背景除去",
+    ]);
+    expect(buttons.map((candidate) => candidate.title)).toEqual(["プリセット", "補正", "切り抜き", "マスク", "背景除去"]);
     // 文字は出さず、絵だけ
     expect(rail().textContent).toBe("");
     expect(buttons.every((candidate) => candidate.querySelector("svg") !== null)).toBe(true);
@@ -78,7 +85,7 @@ describe("BrowserPhotoEditingToolRail", () => {
     await render(items());
     expect(button("補正").getAttribute("aria-pressed")).toBe("true");
     expect(button("補正").className).toContain("bg-niho-accent-soft");
-    for (const label of ["プリセット", "切り抜き", "背景除去"]) {
+    for (const label of ["プリセット", "切り抜き", "マスク", "背景除去"]) {
       expect(button(label).getAttribute("aria-pressed")).toBe("false");
       expect(button(label).className).not.toContain("bg-niho-accent-soft");
     }
@@ -102,15 +109,15 @@ describe("BrowserPhotoEditingToolRail", () => {
     await click(button("切り抜き"));
     await click(button("背景除去"));
     expect(railItems[2]?.onSelect).not.toHaveBeenCalled();
-    expect(railItems[3]?.onSelect).not.toHaveBeenCalled();
+    expect(railItems[4]?.onSelect).not.toHaveBeenCalled();
   });
 
   it("下端に置く道具（「情報」。niho-photo#43）は、上の道具から離して帯の下端に置く", async () => {
     await render([...items(), { key: "info", label: "情報", icon: Info, pressed: false, disabled: false, onSelect: vi.fn(), placement: "end" }]);
     const buttons = Array.from(rail().querySelectorAll<HTMLButtonElement>("button"));
-    expect(buttons.map((candidate) => candidate.getAttribute("aria-label"))).toEqual(["プリセット", "補正", "切り抜き", "背景除去", "情報"]);
+    expect(buttons.map((candidate) => candidate.getAttribute("aria-label"))).toEqual(["プリセット", "補正", "切り抜き", "マスク", "背景除去", "情報"]);
     expect(button("情報").className).toContain("mt-auto");
-    for (const label of ["プリセット", "補正", "切り抜き", "背景除去"]) expect(button(label).className).not.toContain("mt-auto");
+    for (const label of ["プリセット", "補正", "切り抜き", "マスク", "背景除去"]) expect(button(label).className).not.toContain("mt-auto");
   });
 
   it("onDeselect のある道具は、押している間にもう一度押すと onDeselect（「情報」から補正の面へ戻る）", async () => {
