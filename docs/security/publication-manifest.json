@@ -9554,13 +9554,13 @@
     },
     {
       "path": "packages/photo-editing/src/editor/photo-editing-tone-curve.tsx",
-      "sha256": "629b4b0c1c86d8b09f64227198203ff16037bd4bc223a9d23174440dcf12309e",
-      "origin": "niho-photo#37 のため新規作成。右パネルの「カーブ」の節とトーンカーブのグラフ（SVG、点のドラッグ・キー操作、チャンネルの切り替え、曲線だけの初期化）。外部コード・実データを含まない。"
+      "sha256": "b04fd7a242eaa842d8969db41ee5a5b6efc876c3b5e1df91210fb4ed86150933",
+      "origin": "niho-photo#37 のため新規作成。右パネルの「カーブ」の節とトーンカーブのグラフ（SVG、点のドラッグ・キー操作、チャンネルの切り替え、曲線だけの初期化）。外部コード・実データを含まない。\n変更理由: commit active tone curve drag on close"
     },
     {
       "path": "packages/photo-editing/src/editor/photo-editing-tone-curve.test.tsx",
-      "sha256": "e7cf7ec78235903c0d042163673d99ab551183e2f4dab8eb461480d045f3f92d",
-      "origin": "niho-photo#37 のため新規作成。トーンカーブのグラフの操作と「カーブ」の節の開閉・初期化の test。合成の値だけを使用。"
+      "sha256": "625295309b95d9e37d6d4e5def26c2b7f854aabc79c54c5e646712e90d9b6494",
+      "origin": "niho-photo#37 のため新規作成。トーンカーブのグラフの操作と「カーブ」の節の開閉・初期化の test。合成の値だけを使用。\n変更理由: cover commit on tone curve unmount"
     },
     {
       "path": "packages/photo-editing/src/editor/photo-editing-adjustment-controls-after-group.test.tsx",

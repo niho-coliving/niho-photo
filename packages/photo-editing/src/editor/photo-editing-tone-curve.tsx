@@ -139,8 +139,23 @@ export function PhotoEditingToneCurve(props: ToneCurveProps) {
   const graphRef = useRef<HTMLDivElement | null>(null);
   const pointRefs = useRef<Array<HTMLButtonElement | null>>([]);
   const dragRef = useRef<CurveDrag | null>(null);
+  const onSettingsChangeRef = useRef(onSettingsChange);
   const pendingFocusRef = useRef<number | null>(null);
   const helpId = useId();
+
+  useEffect(() => {
+    onSettingsChangeRef.current = onSettingsChange;
+  }, [onSettingsChange]);
+
+  // 層を閉じたとき、ドラッグでまだ確定していない変更を履歴へ commit する。
+  useEffect(
+    () => () => {
+      const drag = dragRef.current;
+      dragRef.current = null;
+      if (drag?.changed) onSettingsChangeRef.current(keepSettings, "commit");
+    },
+    [],
+  );
 
   const curves = useMemo(() => readPhotoEditingToneCurves(settings), [settings]);
   const points = curves[channel];
