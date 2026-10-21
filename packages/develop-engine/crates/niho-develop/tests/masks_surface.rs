@@ -134,6 +134,34 @@ fn the_store_takes_only_the_surface_its_id_names() {
 }
 
 #[test]
+fn a_surface_mask_whose_delta_is_clamped_away_needs_no_surface() {
+    // Global exposure 5 with a local +1 stays 5: the layer is not drawn
+    // (`render_layers`), so its missing surface is not an error and the frame
+    // is the global one.
+    let photo = photo_png(120, 80);
+    let (id, _, _) = left_half();
+    let clamped = settings(json!({
+        "exposure": 5.0,
+        "masks": [brush("b", &id, 60, 40, json!({"exposure": 1}))]
+    }));
+    let global = settings(json!({ "exposure": 5.0 }));
+    let mut session = open(&photo);
+    let frame = session.render(&clamped, 0, Quality::Final).unwrap();
+    let plain = open(&photo).render(&global, 0, Quality::Final).unwrap();
+    assert_eq!(frame.rgba, plain.rgba);
+    // A delta that does change the settings still needs it.
+    let drawn = settings(json!({
+        "exposure": 4.5,
+        "masks": [brush("b", &id, 60, 40, json!({"exposure": 1}))]
+    }));
+    assert!(session
+        .render(&drawn, 0, Quality::Final)
+        .unwrap_err()
+        .to_string()
+        .starts_with("maskSurfaceMissing"));
+}
+
+#[test]
 fn a_surface_mask_needs_its_surface_of_its_size() {
     let photo = photo_png(120, 80);
     let (id, png, _) = left_half();

@@ -379,4 +379,19 @@ fn the_settings_name_the_surfaces_they_draw_and_keep() {
   assert_eq!(mask_surface_ids(&settings, false), vec![a, b, c]);
   assert!(mask_surface_ids(&json!({ "exposure": 1 }), false).is_empty());
   assert!(mask_surface_ids(&json!({ "masks": [] }), true).is_empty());
+  // A delta the global value clamps away (global exposure 5 with a local +1) draws nothing, so it needs no surface; a
+  // delta that moves the value does. Both keep their surface.
+  let d = key('d');
+  let mask = json!({ "id": "m7", "kind": "brush", "surface": { "id": d, "width": 4, "height": 4 }, "adjust": { "exposure": 1 } });
+  let clamped = json!({ "exposure": 5, "masks": [mask.clone()] });
+  assert!(mask_surface_ids(&clamped, true).is_empty());
+  assert_eq!(mask_surface_ids(&clamped, false), vec![d.clone()]);
+  let moved = json!({ "exposure": 4, "masks": [mask.clone()] });
+  assert_eq!(mask_surface_ids(&moved, true), vec![d.clone()]);
+  // A relative white-balance delta starts from 0 unless the white balance is already relative.
+  let white = json!({ "id": "m8", "kind": "brush", "surface": { "id": d, "width": 4, "height": 4 }, "adjust": { "relativeTemperature": 10 } });
+  let as_shot = json!({ "relativeTemperature": 100, "masks": [white.clone()] });
+  assert_eq!(mask_surface_ids(&as_shot, true), vec![d.clone()]);
+  let relative = json!({ "whiteBalance": { "mode": "relative" }, "relativeTemperature": 100, "masks": [white] });
+  assert!(mask_surface_ids(&relative, true).is_empty());
 }

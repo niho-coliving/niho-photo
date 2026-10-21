@@ -10186,8 +10186,8 @@
     },
     {
       "path": "packages/develop-engine/crates/niho-develop/src/mask_session.rs",
-      "sha256": "592c8afe3f059348b8c973331d7ee6d55d9ba82a198f418b5be12c571c833356",
-      "origin": "Issue #66の公開仕様 docs/local-adjustments.md だけから新規作成した、Sessionの層の描画（層ごとのキャッシュの入れ替え・同じ画像の共有・結果の使い回し）とマスクの面の書き出しのRust実装。実写真・非公開コード・私有参照出力を含まない。\n変更理由: Final描画後に古いInteractiveマスクフレームを破棄し再描画する。\n変更理由: Final描画後に古いInteractiveマスクフレームを破棄し再描画する。"
+      "sha256": "a5636a4c20ebe28a2829aa699e2bbee8b8b2ff3f54f3db57e3d28e991c078dfb",
+      "origin": "Issue #66の公開仕様 docs/local-adjustments.md だけから新規作成した、Sessionの層の描画（層ごとのキャッシュの入れ替え・同じ画像の共有・結果の使い回し）とマスクの面の書き出しのRust実装。実写真・非公開コード・私有参照出力を含まない。\n変更理由: Final描画後に古いInteractiveマスクフレームを破棄し再描画する。\n変更理由: Final描画後に古いInteractiveマスクフレームを破棄し再描画する。\n変更理由: 部分補正（マスク）#68: 局所の値が全体で潰れて描かれない層は、その面も要らない（Codex 指摘）。"
     },
     {
       "path": "packages/develop-engine/crates/niho-develop/tests/masks_render.rs",
@@ -10331,18 +10331,18 @@
     },
     {
       "path": "packages/develop-engine/crates/niho-develop/tests/masks_surface.rs",
-      "sha256": "8aec7c56ea62ee1a35213f69fe6827640ef9b4d633d82d9269e054da6d129df2",
-      "origin": "Issue #68の公開仕様と合成画像だけから新規作成した、Sessionの面の置き場の検査・面の欠落と寸法違い・幾何への追従・線形マスクとの合算・面を使わない設定のbit一致のRust回帰。実写真・非公開コード・私有参照出力を含まない。"
+      "sha256": "9dc3fd1a8a0d2dc5e3242844635ceada96e23102af5235b733bb1a289637ba47",
+      "origin": "Issue #68の公開仕様と合成画像だけから新規作成した、Sessionの面の置き場の検査・面の欠落と寸法違い・幾何への追従・線形マスクとの合算・面を使わない設定のbit一致のRust回帰。実写真・非公開コード・私有参照出力を含まない。\n変更理由: 部分補正（マスク）#68: 局所の値が全体で潰れて描かれない層は、その面も要らない（Codex 指摘）。"
     },
     {
       "path": "packages/desktop-photo/src/mask_surfaces.rs",
-      "sha256": "5ebd6e47618897566a67418044d90f8bb66bb1be0c88643b3f8e7edeb7fd97b1",
-      "origin": "Issue #68の公開仕様 docs/local-adjustments.md だけから新規作成した、Macの写真ごとのマスクの面の置き場（ヘッダー検査・sha256・原子的な書き込み・上限と掃除）のRust実装。実写真・非公開コード・私有参照出力を含まない。"
+      "sha256": "d3965a0e67233dda889d1dec9cca70a824d927052ee04724116f861eefe84782",
+      "origin": "Issue #68の公開仕様 docs/local-adjustments.md だけから新規作成した、Macの写真ごとのマスクの面の置き場（ヘッダー検査・sha256・原子的な書き込み・上限と掃除）のRust実装。実写真・非公開コード・私有参照出力を含まない。\n変更理由: 部分補正（マスク）#68: 局所の値が全体で潰れて描かれない層は、その面も要らない（Codex 指摘）。"
     },
     {
       "path": "packages/desktop-photo/src/mask_surfaces_tests.rs",
-      "sha256": "ba92fdb46bee431fbefd55ff3c383aee3ac82a76eeb0333d1b6bf31f42dcb47b",
-      "origin": "Issue #68の公開仕様と手作りの合成PNGだけから新規作成した、マスクの面の置き場の往復・壊れたファイル・パスの検査・上限の回帰。実写真・非公開コード・私有参照出力を含まない。"
+      "sha256": "697f992eab6061b6fb63bc442cbb3342fd39b3ce8d9016979f4d76da46e1c69f",
+      "origin": "Issue #68の公開仕様と手作りの合成PNGだけから新規作成した、マスクの面の置き場の往復・壊れたファイル・パスの検査・上限の回帰。実写真・非公開コード・私有参照出力を含まない。\n変更理由: 部分補正（マスク）#68: 局所の値が全体で潰れて描かれない層は、その面も要らない（Codex 指摘）。"
     },
     {
       "path": "apps/camera/src-tauri/src/mask_surfaces.rs",

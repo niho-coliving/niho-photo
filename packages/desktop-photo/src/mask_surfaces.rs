@@ -380,7 +380,7 @@ fn crc32(bytes: &[u8]) -> u32 {
 }
 
 /// 補正（`developSettings`）の `masks` が参照する面の id（重複なし・配列の順）。`active_only` なら描かれるマスク（`enabled` が
-/// false でなく、`adjust` に 0 でない値がある。エンジンの `LocalMask::is_active` と同じ）だけ。書き出しはこれだけを
+/// false でなく、`adjust` が全体の設定を変える。{@link is_active_mask}）だけ。書き出しはこれだけを
 /// `niho-develop-render` へ渡し、残すもの（{@link MaskSurfaceStore::save} の `keep`）は無効なマスクの面も含めて全部。
 pub fn mask_surface_ids(develop_settings: &Value, active_only: bool) -> Vec<String> {
   let mut ids: Vec<String> = Vec::new();
@@ -395,7 +395,7 @@ pub fn mask_surface_ids(develop_settings: &Value, active_only: bool) -> Vec<Stri
     else {
       continue;
     };
-    if active_only && !is_active_mask(mask) {
+    if active_only && !is_active_mask(develop_settings, mask) {
       continue;
     }
     if !ids.iter().any(|known| known == id) {
@@ -405,8 +405,64 @@ pub fn mask_surface_ids(develop_settings: &Value, active_only: bool) -> Vec<Stri
   ids
 }
 
-fn is_active_mask(mask: &Value) -> bool {
-  mask.get("enabled") != Some(&Value::Bool(false)) && mask.get("adjust").is_some_and(has_non_zero)
+/// 描かれるマスクか。`enabled` が false でなく、`adjust` が全体の設定を変える（エンジンは `local_settings(全体, adjust)` が
+/// 全体と同じになる層を描かず、その面も要らない）。ここは「全体の値 + 差分を全体の範囲に収めても全体の値のまま」の値だけを
+/// 「変えない」とみなし、それ以外（`hsl`・知らないキーの 0 でない値を含む）は変える側に倒す（足りない面はエンジンが断る）。
+fn is_active_mask(settings: &Value, mask: &Value) -> bool {
+  mask.get("enabled") != Some(&Value::Bool(false))
+    && mask
+      .get("adjust")
+      .is_some_and(|adjust| adjust_changes_settings(settings, adjust))
+}
+
+/// `adjust` の差分（局所の補正）が全体の設定を変えるか。
+fn adjust_changes_settings(settings: &Value, adjust: &Value) -> bool {
+  const RANGES: [(&str, f64, f64); 13] = [
+    ("exposure", -5.0, 5.0),
+    ("contrast", -100.0, 100.0),
+    ("highlights", -100.0, 100.0),
+    ("shadows", -100.0, 100.0),
+    ("whites", -100.0, 100.0),
+    ("blacks", -100.0, 100.0),
+    ("texture", -100.0, 100.0),
+    ("clarity", -100.0, 100.0),
+    ("dehaze", -100.0, 100.0),
+    ("vibrance", -100.0, 100.0),
+    ("saturation", -100.0, 100.0),
+    ("relativeTemperature", -100.0, 100.0),
+    ("relativeTint", -100.0, 100.0),
+  ];
+  let Some(entries) = adjust.as_object() else {
+    return has_non_zero(adjust);
+  };
+  let relative_white = settings
+    .get("whiteBalance")
+    .and_then(|white| white.get("mode"))
+    .and_then(Value::as_str)
+    == Some("relative");
+  for (key, delta) in entries {
+    let Some(range) = RANGES.iter().find(|(name, _, _)| name == key) else {
+      if has_non_zero(delta) {
+        return true;
+      }
+      continue;
+    };
+    let Some(delta) = delta.as_f64().filter(|delta| *delta != 0.0) else {
+      continue;
+    };
+    // A relative white-balance delta starts from 0 unless the white balance
+    // is already `relative` (the engine turns `asShot` into `relative`).
+    let relative_key = key == "relativeTemperature" || key == "relativeTint";
+    let global = if relative_key && !relative_white {
+      0.0
+    } else {
+      settings.get(key).and_then(Value::as_f64).unwrap_or(0.0)
+    };
+    if (global + delta).clamp(range.1, range.2) != global {
+      return true;
+    }
+  }
+  false
 }
 
 fn has_non_zero(value: &Value) -> bool {

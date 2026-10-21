@@ -273,9 +273,15 @@ impl Session {
         max_dimension: usize,
         quality: Quality,
     ) -> Result<Rendered, Error> {
-        // Every active surface mask needs its surface, before anything is
-        // drawn.
+        // Every surface mask that is drawn needs its surface, before anything
+        // is drawn. A layer whose local settings equal the global ones (its
+        // delta clamped away by the global value) is not drawn
+        // (`render_layers`), so it needs none either.
+        let global = local_render::without_masks(settings);
         for mask in settings.masks.iter().filter(|m| m.is_active()) {
+            if local_render::local_settings(&global, &mask.adjust) == global {
+                continue;
+            }
             self.surface_of(mask)?;
         }
         let max_dimension = self.capped_dimension(max_dimension);
