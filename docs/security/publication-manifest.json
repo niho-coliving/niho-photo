@@ -207,7 +207,7 @@
         "path": "packages/photo-editing/src/browser-photo-export.test.ts",
         "sha256": "60c3cd32192302e933a8941375069b4a4625309e054716b8417fbe6752cf87b5"
       },
-      "outputSha256": "764a181afebc294924c083afe8323482daf07cb3ba5a6db38ad3d0dd08527ef7",
+      "outputSha256": "a9e13f5964b7f770965e8dc5c96855affe5f8f707eb6b04592fcf1c3700bae21",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
@@ -218,7 +218,8 @@
         "原寸native書き出しの輝度互換性ガードと色相ホイール操作を修正。",
         "PR #80 のカラーグレーディングを最新HSL UIと統合。",
         "Issue #29: 未知の新しい版の例をniho-13へ変更",
-        "PR #74: #80 統合後に float-cube の変更を重ね、最終ハッシュを反映。"
+        "PR #74: #80 統合後に float-cube の変更を重ね、最終ハッシュを反映。",
+        "PR #90: rasterの相対WBをniho-13へ移し、新規編集の既定とsettings/UI契約を同期。"
       ]
     },
     {
@@ -312,7 +313,7 @@
         "path": "packages/photo-editing/src/develop-engine/develop-engine-manifest.ts",
         "sha256": "5df5cda8a061155a614d1e60a1c263e0764c83978708cfcc16959905387d5e4f"
       },
-      "outputSha256": "44e37837f235c1c52f87ddc2775ace44cd0fae52f23e02350168fdc15b7f2544",
+      "outputSha256": "38dbe2d61f2f8ea29f0004d72b6137416ab60345bd4bac9c7decbed6b6c225ec",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
@@ -326,7 +327,8 @@
         "niho-photo#39 画面が読む crate 版を 0.19.0 に上げた。",
         "PR #80 のカラーグレーディングを最新HSL UIと統合。",
         "Issue #29: wasm公開物をniho-12・0.19.0へ更新",
-        "PR #74: #80 統合後に float-cube の変更を重ね、最終ハッシュを反映。"
+        "PR #74: #80 統合後に float-cube の変更を重ね、最終ハッシュを反映。",
+        "PR #90: rasterの相対WBをniho-13へ移し、新規編集の既定とsettings/UI契約を同期。"
       ]
     },
     {
@@ -448,7 +450,7 @@
         "path": "packages/photo-editing/src/develop-engine/develop-open-settings.test.ts",
         "sha256": "21fe5f90f50903caae881358a3c73b81f782dc6fcb9a348c1413eff5c128f1d8"
       },
-      "outputSha256": "6a7ad86dcc7c47a8927fa4a5739fad2e457a25d6492c5b17823aca91d8e8f1e4",
+      "outputSha256": "c92019c2fcde7a5182522c6126e5494e065d4b3409f36fef7f3d53dc90545097",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
@@ -461,7 +463,8 @@
         "Issue #32 detail v6 を、先行する masks v5 と #72 の histogram/Jキー契約に同期する。",
         "Issue #29: 未保存はniho-12で開き保存済みniho-2/niho-10は昇格しないことを検証",
         "Issue #29: main のマスク契約（#71）ほかと niho-12 の変更を merge",
-        "PR #74: #80 統合後に float-cube の変更を重ね、最終ハッシュを反映。"
+        "PR #74: #80 統合後に float-cube の変更を重ね、最終ハッシュを反映。",
+        "PR #90: rasterの相対WBをniho-13へ移し、新規編集の既定とsettings/UI契約を同期。"
       ]
     },
     {
@@ -514,13 +517,14 @@
         "path": "packages/photo-editing/src/develop-engine/develop-settings-draft.test.ts",
         "sha256": "ae30ca9e7253910301e27285d26eb1b88e1dbadd8878264981cb844886509779"
       },
-      "outputSha256": "d614d87e651bb3d2a964da7fb65948d61e896a3d7cf9edaa5d0282fe328e0857",
+      "outputSha256": "05da0dfa46dcb17c6bb534a87bc6d58db755b14fd031678cf8bd928209534e94",
       "modifications": [
         "Issue #28の色相安定engine追加と互換回帰を反映。",
         "新しい色相保持エンジンと新旧バイナリの能力境界・数値回帰を整合。",
         "Issue #30 Oklch色ミキサーとengine 10/11対応を反映",
         "Issue #29: 既定切替前のniho-2/6/10 draftを戻すことを検証",
-        "PR #74: #80 統合後に float-cube の変更を重ね、最終ハッシュを反映。"
+        "PR #74: #80 統合後に float-cube の変更を重ね、最終ハッシュを反映。",
+        "PR #90: rasterの相対WBをniho-13へ移し、新規編集の既定とsettings/UI契約を同期。"
       ]
     },
     {
@@ -531,7 +535,7 @@
         "path": "packages/photo-editing/src/develop-engine/develop-settings-draft.ts",
         "sha256": "32f698bb402dedb96f6011f0bc5edbd63e10db2249371ce7ed84911a7c683895"
       },
-      "outputSha256": "2ec36b9f0c4efcca9b3cc4ef2f646f95b04a27627f07fa2e25d112d953608653",
+      "outputSha256": "665599cdf0b76ee6a0c82e394394a74dee62486c47fb0e1fd3ac4d489659bf25",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
@@ -540,7 +544,8 @@
         "新しい色相保持エンジンと新旧バイナリの能力境界・数値回帰を整合。",
         "Issue #30 Oklch色ミキサーとengine 10/11対応を反映",
         "Issue #29: 既定切替前のniho-10未保存draftも旧数式のまま戻す",
-        "PR #74: #80 統合後に float-cube の変更を重ね、最終ハッシュを反映。"
+        "PR #74: #80 統合後に float-cube の変更を重ね、最終ハッシュを反映。",
+        "PR #90: rasterの相対WBをniho-13へ移し、新規編集の既定とsettings/UI契約を同期。"
       ]
     },
     {
@@ -562,13 +567,14 @@
         "path": "packages/photo-editing/src/develop-engine/develop-settings-preset.test.ts",
         "sha256": "7b25438501c00dfd642d94dde70245f9825d039f4b9a4e3ec40f6805fe37b623"
       },
-      "outputSha256": "b7d349ca32d935479ae4da724011f9ee6f0f824c3bf958a23d27ce3718f21609",
+      "outputSha256": "ee293c81978680aef4fdb6c6cd1822d59a38067aef2e2acad0f90a29d75a351d",
       "modifications": [
         "Issue #28の色相安定engine追加と互換回帰を反映。",
         "新しい色相保持エンジンと新旧バイナリの能力境界・数値回帰を整合。",
         "Issue #30 Oklch色ミキサーとengine 10/11対応を反映",
         "Issue #29: プリセットがniho-12とniho-10を保つことを検証",
-        "PR #74: #80 統合後に float-cube の変更を重ね、最終ハッシュを反映。"
+        "PR #74: #80 統合後に float-cube の変更を重ね、最終ハッシュを反映。",
+        "PR #90: rasterの相対WBをniho-13へ移し、新規編集の既定とsettings/UI契約を同期。"
       ]
     },
     {
@@ -579,7 +585,7 @@
         "path": "packages/photo-editing/src/develop-engine/develop-settings.test.ts",
         "sha256": "0ead17a941128da9f35266e10aec10dd9c1da7ea0afcd68b9e7cf5fcac3aab90"
       },
-      "outputSha256": "98b14f3d5b9c218d1329e54e6d93e30764728bdea6d0e3ff14d07f4c23533921",
+      "outputSha256": "3aec203ae822a3f77ec6ebfb2f62f594ab7c8ca058d40f29021fa4771e003599",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
@@ -592,7 +598,8 @@
         "Issue #32 detail v6 を、先行する masks v5 と #72 の histogram/Jキー契約に同期する。",
         "Issue #29: raster・unsigned RAW作業コピーの新規既定niho-12と保存済み版の維持を検証",
         "Issue #29: main のマスク契約（#71）ほかと niho-12 の変更を merge",
-        "PR #74: #80 統合後に float-cube の変更を重ね、最終ハッシュを反映。"
+        "PR #74: #80 統合後に float-cube の変更を重ね、最終ハッシュを反映。",
+        "PR #90: rasterの相対WBをniho-13へ移し、新規編集の既定とsettings/UI契約を同期。"
       ]
     },
     {
@@ -603,7 +610,7 @@
         "path": "packages/photo-editing/src/develop-engine/develop-settings.ts",
         "sha256": "b32fdf32b5eafb093a9691d609ae4719a576e662507776e6c409ab0e4c98722a"
       },
-      "outputSha256": "a06d79948e9035a0c9a78a2f1fd03fe3989ac19b31404e06553fa50006027e2f",
+      "outputSha256": "5c96f01b24b358578c840dad386163fd415a2aa87a14859a5cd03c7eaa2b555a",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
@@ -615,10 +622,12 @@
         "部分補正（マスク）#65: masksの版5導出・厳密読み取り・初期化とコピーの扱いを追加",
         "Issue #32 developSettings v5のdetailの読み・版・コピーを追加",
         "Issue #32 detail v6 を、先行する masks v5 と #72 の histogram/Jキー契約に同期する。",
-        "部分補正（マスク）#69: プリセットのマスクを写真の幾何で作業画像の座標へ写して置き換える第 3 引数を足す",
         "Issue #29: raster・unsigned RAW作業コピーの新規編集をniho-12にし、保存済みの版は昇格しない",
         "Issue #29: main のマスク契約（#71）ほかと niho-12 の変更を merge",
-        "PR #74: #80 統合後に float-cube の変更を重ね、最終ハッシュを反映。"
+        "PR #74: #80 統合後に float-cube の変更を重ね、最終ハッシュを反映。",
+        "PR #90: rasterの相対WBをniho-13へ移し、新規編集の既定とsettings/UI契約を同期。",
+        "部分補正（マスク）#69: プリセットのマスクを写真の幾何で作業画像の座標へ写して置き換える第 3 引数を足す",
+        "PR #90: 最新mainの#83統合後にXMP maskとWB設定を再統合する。"
       ]
     },
     {
@@ -1807,7 +1816,7 @@
         "path": "packages/photo-editing/src/editor/use-browser-photo-export-delete.ts",
         "sha256": "c1c209ddbe8cc049adb5c06c323c0f96e316cb28a8302293ca0f531f88d00592"
       },
-      "outputSha256": "3b6f5c773001bfacd965aefa17dd27200672496cf7ae42f439786030b3b271df",
+      "outputSha256": "2ab8593b904042a52272634fdab7c664077baf418b9b005cee42447f7d5f4680",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
@@ -1818,7 +1827,8 @@
         "原寸native書き出しの輝度互換性ガードと色相ホイール操作を修正。",
         "PR #80 のカラーグレーディングを最新HSL UIと統合。",
         "Issue #29: 未編集の原寸書き出しはniho-12でも従来のniho-2 neutralを渡す",
-        "PR #74: #80 統合後に float-cube の変更を重ね、最終ハッシュを反映。"
+        "PR #74: #80 統合後に float-cube の変更を重ね、最終ハッシュを反映。",
+        "PR #90: rasterの相対WBをniho-13へ移し、新規編集の既定とsettings/UI契約を同期。"
       ]
     },
     {
@@ -4801,7 +4811,7 @@
         "path": "packages/develop-engine/Cargo.lock",
         "sha256": "e7caae6825c3c4c50d7d593c35d7163de7d311357b81558d1ad1a009cbfafadc"
       },
-      "outputSha256": "6f86b0d3de37ce596dac69d735c7fdf66ae8ddd5b7ecc47ad769fe0dc627215e",
+      "outputSha256": "45b359677bf9b63915f6e718b9ef2616e0555aa43ed39b3e3c51dcbb05cac3f3",
       "modifications": [
         "新しい色相保持エンジンと新旧バイナリの能力境界・数値回帰を整合。",
         "現像workspaceだけを0.17.0へ更新し外部依存の固定版を維持。",
@@ -4812,7 +4822,8 @@
         "PR #81 のマスク描画を最新mainの変更と統合。",
         "niho-photo#39 の crate 版 0.19.0 に合わせて workspace の 8 crate の版を更新した。",
         "PR #80 のカラーグレーディングを最新HSL UIと統合。",
-        "Issue #29: niho-12公開物のためworkspace版を0.19.0へ更新"
+        "Issue #29: niho-12公開物のためworkspace版を0.19.0へ更新",
+        "PR #90: niho-13のWB先行適用とdetail連携cacheを#84後のmainへ統合。"
       ]
     },
     {
@@ -4823,7 +4834,7 @@
         "path": "packages/develop-engine/Cargo.toml",
         "sha256": "274ef616c08b9ade52276b660ea12ce836bc08f97e67dedcf163f76114dd4ab0"
       },
-      "outputSha256": "32beb9c5297b4b772ae0416360084f428dbc270c8f84f9b28540afe9e0deb96a",
+      "outputSha256": "c687718da930141136c58f3dfd6130bba6fbf03abf012e723e8d2ef36e043942",
       "modifications": [
         "新しい色相保持エンジンと新旧バイナリの能力境界・数値回帰を整合。",
         "Issue #30 Oklch色ミキサーとengine 10/11対応を反映",
@@ -4833,7 +4844,8 @@
         "PR #81 のマスク描画を最新mainの変更と統合。",
         "niho-photo#39 で中間調・全体の輝度を描くため crate の版を 0.19.0 に上げた。",
         "PR #80 のカラーグレーディングを最新HSL UIと統合。",
-        "Issue #29: niho-12公開物のためworkspace版を0.19.0へ更新"
+        "Issue #29: niho-12公開物のためworkspace版を0.19.0へ更新",
+        "PR #90: niho-13のWB先行適用とdetail連携cacheを#84後のmainへ統合。"
       ]
     },
     {
@@ -5537,7 +5549,7 @@
         "path": "packages/develop-engine/crates/niho-develop-render/src/lib.rs",
         "sha256": "a9ac3a784a2eb9250747dc2eaabc10c958c1a10d71c7ca16ffdd0d96b40456bc"
       },
-      "outputSha256": "bbce01448e57fc5dc6293114f5629036fa44daa423a0be65515426b3c8b81b0f",
+      "outputSha256": "748929983e0068db2030bf63de20b3945c71b8df2089e855adfe32078c2cc74a",
       "modifications": [
         "公開Issue #26/#27/#29: 旧版を保つfloat cube候補、研究用WB/H-Sプローブ、合成検証と計測契約を追加。",
         "Issue #28の色相安定engine追加と互換回帰を反映。",
@@ -5550,7 +5562,8 @@
         "PR #76 detailとPR #81 maskを統合し、公開出力ハッシュを更新。",
         "Issue #29: CLIのengine診断にniho-12を追加",
         "Issue #29: main のマスク契約（#71）ほかと niho-12 の変更を merge",
-        "PR #74: #80 統合後に float-cube の変更を重ね、最終ハッシュを反映。"
+        "PR #74: #80 統合後に float-cube の変更を重ね、最終ハッシュを反映。",
+        "PR #90: niho-13のWB先行適用とdetail連携cacheを#84後のmainへ統合。"
       ]
     },
     {
@@ -5572,7 +5585,7 @@
         "path": "packages/develop-engine/crates/niho-develop-render/tests/cli.rs",
         "sha256": "8ddf42804ccd8202fb8834bc499d2d03a331eb0ff96e020421a776f2286ef9bd"
       },
-      "outputSha256": "f8115cafbc5097e1c179100f8f3823a77e3c226f9fb89e5ce2259bbd657f7357",
+      "outputSha256": "3b449c41ba8be514bd9552165cd0a76e226a57b50133f9f0a54abc4bdc994836",
       "modifications": [
         "公開Issue #26/#27/#29: 旧版を保つfloat cube候補、研究用WB/H-Sプローブ、合成検証と計測契約を追加。",
         "新engine受入と未知版拒否の境界を更新し、既存wasm CIで候補のFinal/Interactive固定画素を検証する。",
@@ -5592,7 +5605,8 @@
         "PR #76 detailとPR #81 maskを統合し、公開出力ハッシュを更新。",
         "Issue #29: CLIの版表示とniho-12の読込・ルック拒否を検証",
         "Issue #29: main のマスク契約（#71）ほかと niho-12 の変更を merge",
-        "PR #74: #80 統合後に float-cube の変更を重ね、最終ハッシュを反映。"
+        "PR #74: #80 統合後に float-cube の変更を重ね、最終ハッシュを反映。",
+        "PR #90: niho-13のWB先行適用とdetail連携cacheを#84後のmainへ統合。"
       ]
     },
     {
@@ -5927,7 +5941,7 @@
         "path": "packages/develop-engine/crates/niho-develop/src/color_ops.rs",
         "sha256": "cd0c61a609a12094f4f95b019c1671187e1d320b95c36b34da5c87dc7c3835d1"
       },
-      "outputSha256": "7ea145142c714af23de48465d5c4e62346eaca53751c211ede13c64121d5d5b5",
+      "outputSha256": "d9aab4f99f22cc5847af59ff534e2ebb753a913a2e379d4882a9d5ddb43ffbfe",
       "modifications": [
         "公開Issue #26/#27/#29: 旧版を保つfloat cube候補、研究用WB/H-Sプローブ、合成検証と計測契約を追加。",
         "Issue #28の色相安定engine追加と互換回帰を反映。",
@@ -5940,7 +5954,8 @@
         "niho-photo#39 カラーグレーディングの中間調・全体の輝度の近似式（未校正）と正規化の単体テストを追加。",
         "PR #80 のカラーグレーディングを最新HSL UIと統合。",
         "Issue #29: niho-12のraster色段をniho-10と同じにし、旧RAWでは色相保持を当てない",
-        "PR #74: #80 統合後に float-cube の変更を重ね、最終ハッシュを反映。"
+        "PR #74: #80 統合後に float-cube の変更を重ね、最終ハッシュを反映。",
+        "PR #90: niho-13のWB先行適用とdetail連携cacheを#84後のmainへ統合。"
       ]
     },
     {
@@ -6013,8 +6028,10 @@
         "path": "packages/develop-engine/crates/niho-develop/src/fastmath.rs",
         "sha256": "638c3b0b38e6ffb51980b1923a29cb331249e8d8d1835a257f4ddfad7e524d87"
       },
-      "outputSha256": "638c3b0b38e6ffb51980b1923a29cb331249e8d8d1835a257f4ddfad7e524d87",
-      "modifications": []
+      "outputSha256": "75e1789cd4d522a58d992feffa05ae94d206a7331bc684638e3e36a4a538601b",
+      "modifications": [
+        "PR #90: niho-13のWB先行適用とdetail連携cacheを#84後のmainへ統合。"
+      ]
     },
     {
       "path": "packages/develop-engine/crates/niho-develop/src/frame.rs",
@@ -6057,8 +6074,10 @@
         "path": "packages/develop-engine/crates/niho-develop/src/jpeg_wb.rs",
         "sha256": "4fe79b68116637d257fd803fa01dccb38d506f2e33f346eae7238a0708c474be"
       },
-      "outputSha256": "4fe79b68116637d257fd803fa01dccb38d506f2e33f346eae7238a0708c474be",
-      "modifications": []
+      "outputSha256": "be4e46abbfaf47ad7bc5263de738e7ac30e938ab39731be8b3ca7f738bed7131",
+      "modifications": [
+        "PR #90: niho-13のWB先行適用とdetail連携cacheを#84後のmainへ統合。"
+      ]
     },
     {
       "path": "packages/develop-engine/crates/niho-develop/src/lib.rs",
@@ -6068,7 +6087,7 @@
         "path": "packages/develop-engine/crates/niho-develop/src/lib.rs",
         "sha256": "1591d49effaa779c8e23ad6877508ccf336565eec8336d5b4e6faa3b5d3846b0"
       },
-      "outputSha256": "bce3d8702dc048ece200aed8c97b0e9d42adb047eb0312ec9c3126a4c1627762",
+      "outputSha256": "ac92cb84cbcb061ac5ac973952aecf5376645f091a787ec84c40fb2af6ef5974",
       "modifications": [
         "公開Issue #26/#27/#29: 旧版を保つfloat cube候補、研究用WB/H-Sプローブ、合成検証と計測契約を追加。",
         "Issue #28の色相安定engine追加と互換回帰を反映。",
@@ -6091,7 +6110,9 @@
         "PR #76 detailとPR #81 maskを統合し、公開出力ハッシュを更新。",
         "Issue #29: reader capabilityをniho-12にし、signed RAWとcamera-linearを拒否",
         "Issue #29: main のマスク契約（#71）ほかと niho-12 の変更を merge",
-        "PR #74: #80 統合後に float-cube の変更を重ね、最終ハッシュを反映。"
+        "PR #74: #80 統合後に float-cube の変更を重ね、最終ハッシュを反映。",
+        "PR #90: niho-13のWB先行適用とdetail連携cacheを#84後のmainへ統合。",
+        "PR #90: NIHO6 master keyをmask layer判定と共有し、source/analysis WBを揃える。"
       ]
     },
     {
@@ -6113,11 +6134,12 @@
         "path": "packages/develop-engine/crates/niho-develop/src/lut.rs",
         "sha256": "d0b9d65a032d449a1f234d6e65ecc328dd44f6fe51ede51d602c5c58aae7e96e"
       },
-      "outputSha256": "171c263e2978ce26e7049232f80ee992330c307e613daa61a236f9e39f2e408a",
+      "outputSha256": "2a2cef6c571b9f8e815ec2ef5d1e3794e86447ed05b1832d38da9e1806b39ba7",
       "modifications": [
         "公開Issue #26/#27/#29: 旧版を保つfloat cube候補、研究用WB/H-Sプローブ、合成検証と計測契約を追加。",
         "Issue #30 Oklch色ミキサーとengine 10/11対応を反映",
-        "float LUT生成APIの重複定義を除去"
+        "float LUT生成APIの重複定義を除去",
+        "PR #90: niho-13のWB先行適用とdetail連携cacheを#84後のmainへ統合。"
       ]
     },
     {
@@ -6170,13 +6192,14 @@
         "path": "packages/develop-engine/crates/niho-develop/src/niho6.rs",
         "sha256": "6383017c670ab330829ebd61fde9e374e58f468440969b75cb64f1f4e8d376fd"
       },
-      "outputSha256": "10c64aef1c45c25c29e12d026cd7716f3054d62a3084be2b7a13ca9d00ab7e90",
+      "outputSha256": "c691e7527e201442bfecf8f21dbc7b32361ceaa30c8cd64e8e47f662479c4942",
       "modifications": [
         "公開Issue #26/#27/#29: 旧版を保つfloat cube候補、研究用WB/H-Sプローブ、合成検証と計測契約を追加。",
         "Issue #32 niho-6の準備keyにv5のNR量を含める",
         "Issue #32 detail v6 を、先行する masks v5 と #72 の histogram/Jキー契約に同期する。",
         "Issue #29: niho-12のrasterでniho-6応答を共有",
-        "PR #74: #80 統合後に float-cube の変更を重ね、最終ハッシュを反映。"
+        "PR #74: #80 統合後に float-cube の変更を重ね、最終ハッシュを反映。",
+        "PR #90: niho-13のWB先行適用とdetail連携cacheを#84後のmainへ統合。"
       ]
     },
     {
@@ -6231,7 +6254,7 @@
         "path": "packages/develop-engine/crates/niho-develop/src/pipeline.rs",
         "sha256": "d982d76cf1b5d34526f700e5edfcef00ae8647d22b845c0f7234ed340ba9d641"
       },
-      "outputSha256": "16306aae4e84e3bc1774a4ca0a3b25882d4b5808992868c5e8be8081855e9081",
+      "outputSha256": "3b1b4c4611c86a7f5f4e40966ab1c00e80a9bbe44925a33615ec6d728a9ffb85",
       "modifications": [
         "公開Issue #26/#27/#29: 旧版を保つfloat cube候補、研究用WB/H-Sプローブ、合成検証と計測契約を追加。",
         "Issue #28の色相安定engine追加と互換回帰を反映。",
@@ -6256,7 +6279,9 @@
         "niho-photo#39 中間調・全体の輝度を色の補正（出力変換の判定）に数えるようにした。",
         "PR #80 のカラーグレーディングを最新HSL UIと統合。",
         "Issue #29: niho-12のfloat cubeと旧RAW数式・JPEG増分WB判定を共通化し、RAW色取得を描画と同じ数式にする",
-        "PR #74: #80 統合後に float-cube の変更を重ね、最終ハッシュを反映。"
+        "PR #74: #80 統合後に float-cube の変更を重ね、最終ハッシュを反映。",
+        "PR #90: niho-13のWB先行適用とdetail連携cacheを#84後のmainへ統合。",
+        "PR #90: local passのcache regression fixtureにsource key引数を追加し、#74の契約へ接続。"
       ]
     },
     {
@@ -6370,7 +6395,7 @@
         "path": "packages/develop-engine/crates/niho-develop/src/settings.rs",
         "sha256": "756a24a09d738b2341974d92d89b82f55b42eb6060b6e0c99ee4a532947a1b47"
       },
-      "outputSha256": "ead554269a35c8b413b14c6664a5ff73c465fbfccb1563897552f2d86ea67554",
+      "outputSha256": "098353056a5194b6f7ac93010b865ea267b818d1d5ac28734a87e82ff78ed0d6",
       "modifications": [
         "公開Issue #26/#27/#29: 旧版を保つfloat cube候補、研究用WB/H-Sプローブ、合成検証と計測契約を追加。",
         "Issue #28の色相安定engine追加と互換回帰を反映。",
@@ -6385,7 +6410,8 @@
         "PR #80 のカラーグレーディングを最新HSL UIと統合。",
         "Issue #29: niho-12 engineとfloat cube判定を追加",
         "Issue #29: main のマスク契約（#71）ほかと niho-12 の変更を merge",
-        "PR #74: #80 統合後に float-cube の変更を重ね、最終ハッシュを反映。"
+        "PR #74: #80 統合後に float-cube の変更を重ね、最終ハッシュを反映。",
+        "PR #90: niho-13のWB先行適用とdetail連携cacheを#84後のmainへ統合。"
       ]
     },
     {
@@ -6407,14 +6433,15 @@
         "path": "packages/develop-engine/crates/niho-develop/src/tone_ops.rs",
         "sha256": "394b07235a9b58a8f3756a1391bcc1b286eeda30f348f3334ebc4db4c42a2ef8"
       },
-      "outputSha256": "8bcbfb89944c9fe6e5bcdfa293281faa55ff861425b928bf54f16eceb565a9ac",
+      "outputSha256": "1bcb4641bb7dfcbc7a90b4b6a400dbe8e5c1945bf98631cceeddc77589ab5163",
       "modifications": [
         "公開Issue #26/#27/#29: 旧版を保つfloat cube候補、研究用WB/H-Sプローブ、合成検証と計測契約を追加。",
         "Issue #28の色相安定engine追加と互換回帰を反映。",
         "新しい色相保持エンジンと新旧バイナリの能力境界・数値回帰を整合。",
         "Issue #30 Oklch色ミキサーとengine 10/11対応を反映",
         "Issue #29: niho-12のrasterで正のBlacksをniho-10と同じにする",
-        "PR #74: #80 統合後に float-cube の変更を重ね、最終ハッシュを反映。"
+        "PR #74: #80 統合後に float-cube の変更を重ね、最終ハッシュを反映。",
+        "PR #90: niho-13のWB先行適用とdetail連携cacheを#84後のmainへ統合。"
       ]
     },
     {
@@ -6436,7 +6463,7 @@
         "path": "packages/develop-engine/crates/niho-develop/src/xmp.rs",
         "sha256": "be5ddce69eceafb334c173ee92af3614c044039b103903ad1dfef24758f1ec45"
       },
-      "outputSha256": "5682a6510ce0aa2df5c76566ccee52dfdb1a579e0d0b9c67b2f537acbb72a9f5",
+      "outputSha256": "45de8911c55ebab00390fdb0b98711a48fe8dbf8a26b8d19150cdfdec8104e93",
       "modifications": [
         "公開Issue #26/#27/#29: 旧版を保つfloat cube候補、研究用WB/H-Sプローブ、合成検証と計測契約を追加。",
         "Issue #28の色相安定engine追加と互換回帰を反映。",
@@ -6449,10 +6476,12 @@
         "niho-photo#39 ColorGradeMidtoneLum / GlobalLum を unsupported から外し、0 は exact・それ以外は approximate と報告する。",
         "PR #80 のカラーグレーディングを最新HSL UIと統合。",
         "PR #80: Color Grading XMP を解析するため、既存の未対応XMPテストの期待値を更新。",
-        "部分補正（マスク）#69: 局所補正の一覧を要素の木として読み、入れ子の説明を Look.* に混ぜず、プリセットの結果に masks を足す",
         "Issue #29: プリセット適用でniho-12を保持",
         "Issue #29: main のマスク契約（#71）ほかと niho-12 の変更を merge",
-        "PR #74: #80 統合後に float-cube の変更を重ね、最終ハッシュを反映。"
+        "PR #74: #80 統合後に float-cube の変更を重ね、最終ハッシュを反映。",
+        "PR #90: niho-13のWB先行適用とdetail連携cacheを#84後のmainへ統合。",
+        "部分補正（マスク）#69: 局所補正の一覧を要素の木として読み、入れ子の説明を Look.* に混ぜず、プリセットの結果に masks を足す",
+        "PR #90: 最新mainの#83統合後にXMP maskとWB設定を再統合する。"
       ]
     },
     {
@@ -6481,7 +6510,7 @@
         "path": "packages/develop-engine/crates/niho-develop/src/xmp/write.rs",
         "sha256": "f583b51766c756fe31b623949a8174abd304ff660a7793e332b3153faf2aa749"
       },
-      "outputSha256": "1c0e9462135d1562fab749737694873fef4dc4211ee8cab5701182e92d6e88f1",
+      "outputSha256": "9b10f189c3af75136456221bf8c84ce6cdb879339650819b6b5a7b0a109d591f",
       "modifications": [
         "公開Issue #26/#27/#29: 旧版を保つfloat cube候補、研究用WB/H-Sプローブ、合成検証と計測契約を追加。",
         "Issue #28の色相安定engine追加と互換回帰を反映。",
@@ -6496,7 +6525,8 @@
         "PR #80 のカラーグレーディングを最新HSL UIと統合。",
         "Issue #29: niho-12の相対WBをXMPへ書き出す",
         "Issue #29: main のマスク契約（#71）ほかと niho-12 の変更を merge",
-        "PR #74: #80 統合後に float-cube の変更を重ね、最終ハッシュを反映。"
+        "PR #74: #80 統合後に float-cube の変更を重ね、最終ハッシュを反映。",
+        "PR #90: niho-13のWB先行適用とdetail連携cacheを#84後のmainへ統合。"
       ]
     },
     {
@@ -6818,7 +6848,7 @@
         "path": "packages/develop-engine/crates/niho-develop/tests/niho3.rs",
         "sha256": "0c94cb91fceaaac75533a3f3eea4aa5e8a620aba17050ac3373682c52ea4e6f6"
       },
-      "outputSha256": "d27113c3d17b8fee3a9d6704e5e47970cb2b3f61ac7b3775cb927fb0f61a091d",
+      "outputSha256": "1a063351038192a3a5aae5be400f27737f5c01b3aaf3b175b25ae1be2ed4eeb9",
       "modifications": [
         "Issue #28の色相安定engine追加と互換回帰を反映。",
         "新しい色相保持エンジンと新旧バイナリの能力境界・数値回帰を整合。",
@@ -6827,7 +6857,8 @@
         "Issue #32 detail uses v6 because Issue #31 masks already owns v5; synchronize the Rust and TypeScript contract, probe, tests, and documentation.",
         "Issue #32 detail v6 を、先行する masks v5 と #72 の histogram/Jキー契約に同期する。",
         "Issue #29: 未知engineの例をniho-13へ変え、niho-12のルック拒否を検証",
-        "PR #74: #80 統合後に float-cube の変更を重ね、最終ハッシュを反映。"
+        "PR #74: #80 統合後に float-cube の変更を重ね、最終ハッシュを反映。",
+        "PR #90: niho-13のWB先行適用とdetail連携cacheを#84後のmainへ統合。"
       ]
     },
     {
@@ -6876,12 +6907,13 @@
         "path": "packages/develop-engine/crates/niho-develop/tests/niho6_cross_target.rs",
         "sha256": "eba5bf799e46cf4c475d9d60d4a7092993dfbe766722b890f2f78e165a3f3da5"
       },
-      "outputSha256": "b1834f07d2cb08aa564b290d538e98f80dd55a79a0cc9a13d1afbafd971a544b",
+      "outputSha256": "d258acefcea2da7298f40aa7260c8aaee9d6c2a37f3e39d9974c06fb09d54763",
       "modifications": [
         "新engine受入と未知版拒否の境界を更新し、既存wasm CIで候補のFinal/Interactive固定画素を検証する。",
         "実測に基づくWB節点別fit、旧版を維持する候補のnative/wasm固定hashと再現可能な性能計測を整備。",
         "Issue #29: niho-12のraster・旧RAWのnative/wasm固定画素を追加",
-        "PR #74: #80 統合後に float-cube の変更を重ね、最終ハッシュを反映。"
+        "PR #74: #80 統合後に float-cube の変更を重ね、最終ハッシュを反映。",
+        "PR #90: niho-13のWB先行適用とdetail連携cacheを#84後のmainへ統合。"
       ]
     },
     {
@@ -9409,8 +9441,8 @@
     },
     {
       "path": "packages/develop-engine/README.md",
-      "sha256": "63c18a37ceebc5e96f0befe6e26d72d7e3535531b5443ed9a4a8bc7092ba699b",
-      "origin": "#9で独立作成。所有測定対・metadataを除いた所有RAW/参照画像、検証tool、公開build/test契約または第三者license全文。詳細はdocs/migration/raw-engine.mdと資産台帳に記録。\n変更理由: 公開Issue #26/#27/#29: 旧版を保つfloat cube候補、研究用WB/H-Sプローブ、合成検証と計測契約を追加。\n変更理由: Issue #29: niho-12を新規既定として案内し、忠実度に階調の段差と教師比較の数値を追記\n変更理由: PR #74: #80 統合後に float-cube の変更を重ね、最終ハッシュを反映。"
+      "sha256": "625d04b014e2a8a0466a6b8d12cda73e22f9097e43282239179a8fa65371d4dd",
+      "origin": "#9で独立作成。所有測定対・metadataを除いた所有RAW/参照画像、検証tool、公開build/test契約または第三者license全文。詳細はdocs/migration/raw-engine.mdと資産台帳に記録。\n変更理由: 公開Issue #26/#27/#29: 旧版を保つfloat cube候補、研究用WB/H-Sプローブ、合成検証と計測契約を追加。\n変更理由: Issue #29: niho-12を新規既定として案内し、忠実度に階調の段差と教師比較の数値を追記\n変更理由: PR #74: #80 統合後に float-cube の変更を重ね、最終ハッシュを反映。\n変更理由: PR #90: niho-13のWB先行適用とdetail連携cacheを#84後のmainへ統合。"
     },
     {
       "path": "packages/develop-engine/crates/niho-base-raw/README.md",
@@ -9669,8 +9701,8 @@
     },
     {
       "path": "packages/develop-engine/RESEARCH26-27.md",
-      "sha256": "8bdc5033f1a998907a8f329e33c9d30fa26b21092d8e883c0c94cce5118ce5ac",
-      "origin": "公開Issue #26/#27/#29 のため公開済み数式・既存primitiveから独立実装した研究用コード・合成テスト・日本語手順。非公開の写真・参照画素・パス・履歴・第三者ソースを含まない。\n変更理由: 暗所A/Bで現行niho-6を基準とし、H/S以外の色・黒レベル等を同じ数式で比較する。\n変更理由: 実測に基づくWB節点別fit、旧版を維持する候補のnative/wasm固定hashと再現可能な性能計測を整備。\n変更理由: 非公開出力をrepository外へ限定しsealed独立評価を拒否する、匿名集計の再現手順を追加。\n変更理由: Studio実測の段差・WB gate未達・wasm初期解析と継続編集の性能をsource SHA付きで記録。\n変更理由: 57場面のfloat対比較と6場面の原理式Bのgate未達を、匿名数値・残作業として記録。\n変更理由: 教師上の次候補fitとownerの撮影作業を区別し、独立評価前の未達判定であることを明確化。\n変更理由: PR #84: #74 squash後のmainへ解析候補を再統合し、公開ハッシュを更新。"
+      "sha256": "018ed40294479c336a58253a533133c9be139b17b46a5fa583405fe671cb0721",
+      "origin": "公開Issue #26/#27/#29 のため公開済み数式・既存primitiveから独立実装した研究用コード・合成テスト・日本語手順。非公開の写真・参照画素・パス・履歴・第三者ソースを含まない。\n変更理由: 暗所A/Bで現行niho-6を基準とし、H/S以外の色・黒レベル等を同じ数式で比較する。\n変更理由: 実測に基づくWB節点別fit、旧版を維持する候補のnative/wasm固定hashと再現可能な性能計測を整備。\n変更理由: 非公開出力をrepository外へ限定しsealed独立評価を拒否する、匿名集計の再現手順を追加。\n変更理由: Studio実測の段差・WB gate未達・wasm初期解析と継続編集の性能をsource SHA付きで記録。\n変更理由: 57場面のfloat対比較と6場面の原理式Bのgate未達を、匿名数値・残作業として記録。\n変更理由: 教師上の次候補fitとownerの撮影作業を区別し、独立評価前の未達判定であることを明確化。\n変更理由: PR #84: #74 squash後のmainへ解析候補を再統合し、公開ハッシュを更新。\n変更理由: PR #90: niho-13のWB先行適用とdetail連携cacheを#84後のmainへ統合。"
     },
     {
       "path": "packages/develop-engine/crates/niho-develop/examples/analytic_hs_probe.rs",
@@ -9709,8 +9741,8 @@
     },
     {
       "path": "packages/develop-engine/tools/color-review-wasm-bench.cjs",
-      "sha256": "3266333b1fd3d00f2f588fca334125fd7ff25d80aa359680429575b3fce55cf3",
-      "origin": "公開Issue #29 のため独立作成した合成1024×768 PNGとNode/wasm性能計測。Node標準ライブラリのみ、非公開写真・参照画素・依存を含まない。\n変更理由: Issue #29: engine指定・旧RAW作業コピー・確定Finalの計測を追加\n変更理由: PR #74: #80 統合後に float-cube の変更を重ね、最終ハッシュを反映。"
+      "sha256": "9b184c7a692f26ee7443c3edbd6b77a91acfb9282fd1d33933cf0bd01b072884",
+      "origin": "公開Issue #29 のため独立作成した合成1024×768 PNGとNode/wasm性能計測。Node標準ライブラリのみ、非公開写真・参照画素・依存を含まない。\n変更理由: Issue #29: engine指定・旧RAW作業コピー・確定Finalの計測を追加\n変更理由: PR #74: #80 統合後に float-cube の変更を重ね、最終ハッシュを反映。\n変更理由: PR #90: niho-13の再現可能な計測・検証記録を最新mainに統合。"
     },
     {
       "path": "packages/develop-engine/tools/color-review-teachers.py",
@@ -9754,8 +9786,8 @@
     },
     {
       "path": "docs/color-mixer.md",
-      "sha256": "a8b28f2015ba9c007da7dfb374d91ee8bdf4fa0594882f916a3ba84f199b6967",
-      "origin": "Issue #30の公開仕様だけから新規作成したOklch色ミキサーの保存・描画・picker・preset契約。非公開形式や私有データを含まない。\n変更理由: exact描画方式と比較実測値を追記\n変更理由: オーナーの長期品質方針と比較の限界を記録\n変更理由: 色テーブル量子化の実測と新engineの精度修正を記録\n変更理由: 描画精度・型・共有サンプル位置・キーボードの最終レビューを反映\n変更理由: Issue #30のpre-Q cube keyとSession plane cacheの依存・寿命・精度契約を追記。\n変更理由: 最終Qfloat後のLightroom比較実測値へ更新し再測定保留を解消。\n変更理由: 点補正の選択plane cacheと精度・依存関係・headroom回帰を整備\n変更理由: 色点のサンプル座標と回帰試験を整合し、操作中640pxと確定解像度を分ける\n変更理由: 最終Studio実測の連続dragと初回plane生成と確定描画の性能を分けて記録する\n変更理由: Issue #29: 色相補正とfloat格子の説明にniho-12を追記\n変更理由: PR #74: #80 統合後に float-cube の変更を重ね、最終ハッシュを反映。"
+      "sha256": "f7c9dbc6d53a2133d54e87d64687562e4735787cb728be8e8bd7c6ed99bbadd0",
+      "origin": "Issue #30の公開仕様だけから新規作成したOklch色ミキサーの保存・描画・picker・preset契約。非公開形式や私有データを含まない。\n変更理由: exact描画方式と比較実測値を追記\n変更理由: オーナーの長期品質方針と比較の限界を記録\n変更理由: 色テーブル量子化の実測と新engineの精度修正を記録\n変更理由: 描画精度・型・共有サンプル位置・キーボードの最終レビューを反映\n変更理由: Issue #30のpre-Q cube keyとSession plane cacheの依存・寿命・精度契約を追記。\n変更理由: 最終Qfloat後のLightroom比較実測値へ更新し再測定保留を解消。\n変更理由: 点補正の選択plane cacheと精度・依存関係・headroom回帰を整備\n変更理由: 色点のサンプル座標と回帰試験を整合し、操作中640pxと確定解像度を分ける\n変更理由: 最終Studio実測の連続dragと初回plane生成と確定描画の性能を分けて記録する\n変更理由: Issue #29: 色相補正とfloat格子の説明にniho-12を追記\n変更理由: PR #74: #80 統合後に float-cube の変更を重ね、最終ハッシュを反映。\n変更理由: PR #90: rasterの相対WBをniho-13へ移し、新規編集の既定とsettings/UI契約を同期。"
     },
     {
       "path": "packages/develop-engine/crates/niho-develop/tests/color_points.rs",
@@ -10209,8 +10241,8 @@
     },
     {
       "path": "packages/develop-engine/crates/niho-develop/src/mask_session.rs",
-      "sha256": "eb56f315f977910a11d34c02339ce3061c7e8c8be1f3ba1a1049cee4500ee2cc",
-      "origin": "Issue #66の公開仕様 docs/local-adjustments.md だけから新規作成した、Sessionの層の描画（層ごとのキャッシュの入れ替え・同じ画像の共有・結果の使い回し）とマスクの面の書き出しのRust実装。実写真・非公開コード・私有参照出力を含まない。\n変更理由: Final描画後に古いInteractiveマスクフレームを破棄し再描画する。\n変更理由: Final描画後に古いInteractiveマスクフレームを破棄し再描画する。"
+      "sha256": "e45ec81556b3850f60d59133ce73937773ccaf9def2fdff49da68c1e397f142f",
+      "origin": "Issue #66の公開仕様 docs/local-adjustments.md だけから新規作成した、Sessionの層の描画（層ごとのキャッシュの入れ替え・同じ画像の共有・結果の使い回し）とマスクの面の書き出しのRust実装。実写真・非公開コード・私有参照出力を含まない。\n変更理由: Final描画後に古いInteractiveマスクフレームを破棄し再描画する。\n変更理由: PR #90: niho-13のWB先行適用とdetail連携cacheを#84後のmainへ統合。\n変更理由: PR #90: mask layerのimage identityをNIHO6 masterのWB付きkeyへ統一。"
     },
     {
       "path": "packages/develop-engine/crates/niho-develop/tests/masks_render.rs",
@@ -10248,81 +10280,6 @@
       "origin": "Issue #66の公開仕様と公開関数だけから新規作成した、マスクの写像のfixtureをgeometryOutputToSourceから作り照合するTypeScript回帰。外部画像・非公開コード・個体metadataを含まない。"
     },
     {
-      "path": "packages/photo-editing/src/photo-editing-masks.ts",
-      "sha256": "8bdfbb29adc1c72bf83c06d158c2f38f6ff23fd91e98cd0b61a78bbfe7ec2e3b",
-      "origin": "Issue #67の公開仕様 docs/local-adjustments.md だけから新規作成した、部分補正（マスク）の画面の計算（既定の形・つまみの位置・つまみを動かした形・局所の差分・範囲の収め方）のTypeScript実装。外部画像・非公開コード・個体metadataを含まない。"
-    },
-    {
-      "path": "packages/photo-editing/src/photo-editing-masks.test.ts",
-      "sha256": "a1c0a5d757356e52f89fcb6e3b7427cbec5358265096eb3a9a55036b3e95483b",
-      "origin": "Issue #67の公開仕様と合成の値だけから新規作成した、部分補正の画面の計算（回転・反転・角度補正でつまみが形の上にあること・出す値が読める設定になること）の回帰。外部画像・非公開コード・個体metadataを含まない。"
-    },
-    {
-      "path": "packages/photo-editing/src/develop-engine/develop-geometry-source-to-output.test.ts",
-      "sha256": "c41dd14b667227d7a4f45e33847593536b6bb72885c7ee4b86e6708db3a0f9d6",
-      "origin": "Issue #67のため新規作成した、geometrySourceToOutput が geometryOutputToSource の逆写像であることの往復の回帰（合成の寸法と幾何だけ）。外部画像・非公開コード・個体metadataを含まない。"
-    },
-    {
-      "path": "packages/photo-editing/src/develop-engine/develop-frame.test.ts",
-      "sha256": "b1bc2ff6598d9ea428c25970e40340cbf7d9c4a578ba6113f5b09ff0897dc588",
-      "origin": "Issue #67のため新規作成した、操作中の小さな画を canvas の大きさのまま描く判定の回帰（合成の寸法だけ）。外部画像・非公開コード・個体metadataを含まない。"
-    },
-    {
-      "path": "packages/photo-editing/src/editor/browser-photo-editing-model-drag.test.ts",
-      "sha256": "8cbaa67b50579ebbc236ed9638664530f1c138a44d78bf01128c7aaa181b6f7e",
-      "origin": "Issue #67のため新規作成した、マスク・色ポイントがある間の drag の描画の長辺（640px）の回帰（合成の設定だけ）。外部画像・非公開コード・個体metadataを含まない。"
-    },
-    {
-      "path": "packages/photo-editing/src/editor/use-browser-photo-masks.ts",
-      "sha256": "6e4cac68db6e449789f5a4bb47aad4ff3e0fae21d701c577e10788c2affda1c3",
-      "origin": "Issue #67の公開仕様だけから新規作成した、マスクの道具の状態（出す条件・足す / 複製 / 削除 / 反転 / 目・局所の補正・形・初期化・キー）と範囲の重ね表示の面を取りに行く係のReact hook。外部画像・非公開コード・個体metadataを含まない。"
-    },
-    {
-      "path": "packages/photo-editing/src/editor/use-browser-photo-masks.test.tsx",
-      "sha256": "15f67ec17937599fac067c8ffdaa641c82c091c37c8e698a4a720c493c076434",
-      "origin": "Issue #67のため新規作成した、マスクの道具のhook（取り消しの1単位・読める設定・8枚と原寸の書き出しの理由・Esc / Delete）と重ね表示の面の係（rAFでまとめる・古い応答を捨てる）の回帰。外部画像・非公開コード・個体metadataを含まない。"
-    },
-    {
-      "path": "packages/photo-editing/src/editor/photo-editing-mask-overlay.tsx",
-      "sha256": "b5193a1f71ed9e3b0b06268f09e78288e08c7bab51c53daed56c90fae0a0d492",
-      "origin": "Issue #67の公開仕様だけから新規作成した、写真の上のマスクの操作（形の線・つまみのボタン・pointer capture・矢印キー・範囲の赤い重ね）のReact部品。外部画像・非公開コード・個体metadataを含まない。\n変更理由: overlay解除時にドラッグ中の形を確定し消えたマスクの復活を防ぐ"
-    },
-    {
-      "path": "packages/photo-editing/src/editor/photo-editing-mask-overlay.test.tsx",
-      "sha256": "2a2c74dfb35201c2bb8f33ac9e79159ba9941d7df0eb7a2f43072eca784bb648",
-      "origin": "Issue #67のため新規作成した、写真の上のマスクの操作（つまみの位置・drag と1回のcommit・矢印キー・選択・O）のjsdom回帰。外部画像・非公開コード・個体metadataを含まない。\n変更理由: overlay破棄時のマウス操作・キー操作の確定を回帰テストする"
-    },
-    {
-      "path": "packages/photo-editing/src/editor/photo-editing-mask-tools.tsx",
-      "sha256": "a0831a0b0c193cf1004324eb321e24871fccf048d9fec3435a7cee5ffc71f1c9",
-      "origin": "Issue #67の公開仕様だけから新規作成した、右パネルのマスクの面（足す・一覧・重ね表示の切り替え・局所のスライダー・ぼかし）のReact部品。外部画像・非公開コード・個体metadataを含まない。"
-    },
-    {
-      "path": "packages/photo-editing/src/editor/photo-editing-mask-tools.test.tsx",
-      "sha256": "fba02b81bbe32bae72421c35104a55dfc929c33cf90fe4ec93fae31365769a93",
-      "origin": "Issue #67のため新規作成した、右パネルのマスクの面（押せない理由・行の操作・drag / commit・相対の白の出し分け・ぼかし）のjsdom回帰。外部画像・非公開コード・個体metadataを含まない。"
-    },
-    {
-"path": "packages/develop-engine/crates/niho-develop/src/xmp/masks.rs",
-      "sha256": "4a7c843b409d92d6f391b3ac34b4df48460c2b67e3bd9de7896b73f78f12271a",
-      "origin": "Issue #69の公開仕様 docs/local-adjustments.md「Lightroom の XMP の読み」から新規作成した、XMPプリセットの局所補正（MaskGroupBasedCorrections）をNIHOのmasksへ読むRust実装。オーナーのLightroomデータで確かめた構造と単位だけを使い、実際の値・id・digest・非公開コードを含まない。"
-    },
-    {
-      "path": "packages/develop-engine/crates/niho-develop/tests/xmp_masks.rs",
-      "sha256": "24a1ca64669900b4f1be099a6af7d58e9e3a422db7d75adad961a55966f91615",
-      "origin": "Issue #69の公開仕様から新規作成した、合成XMP（構造だけLightroomに合わせ、数値・名前・sync idは架空）によるマスクの読み・知らせ・適用量のRust回帰。実写真・実XMP・私有参照出力を含まない。"
-    },
-    {
-      "path": "packages/photo-editing/src/develop-engine/develop-preset-masks.ts",
-      "sha256": "36b941df378d004d3209978932b909fda5f676d3df350646280a1d7589940c60",
-      "origin": "Issue #69の公開仕様から新規作成した、プリセットのマスク（見えている枠の座標）を写真の幾何で作業画像の座標へ写すTypeScript実装。外部画像・非公開コード・個体metadataを含まない。"
-    },
-    {
-      "path": "packages/photo-editing/src/develop-engine/develop-preset-masks.test.ts",
-      "sha256": "6502e5cc8cffcebf2355fec67676b8f22432edd97a76cf9ebd9bceb0c3412514",
-      "origin": "Issue #69の公開仕様から新規作成した、回転・反転・切り抜き・角度補正でのマスクの写し方とプリセット結果の読み方の合成テスト。外部画像・非公開コード・個体metadataを含まない。"
-    },
-    {
       "path": "docs/color-grading.md",
       "sha256": "f880ef36e95f7b1688b3de155028b141c11e4dbecfd44ad919b5a030a39e3712",
       "origin": "niho-photo#39 の公開仕様だけから新規作成したカラーグレーディング（中間調・全体の輝度の近似式と正規化、XMP・プリセット・画面の契約、合成画像での実測）の文書。非公開形式や私有データを含まない。"
@@ -10345,7 +10302,7 @@
     {
       "path": "packages/photo-editing/src/editor/photo-editing-color-wheel.tsx",
       "sha256": "bbbcef9169676e07d021b61747a7c6ad23befe294b34f6270698b969705cfdd9",
-      "origin": "niho-photo#39 のため新規作成。ドラッグとキーで色相と彩度を動かすカラーグレーディングの色相環の部品。外部コード・実データを含まない。\n変更理由: 原寸native書き出しの輝度互換性ガードと色相ホイール操作を修正。\n変更理由: 原寸native書き出しの輝度互換性ガードと色相ホイール操作を修正。"
+      "origin": "niho-photo#39 のため新規作成。ドラッグとキーで色相と彩度を動かすカラーグレーディングの色相環の部品。外部コード・実データを含まない。\n変更理由: 原寸native書き出しの輝度互換性ガードと色相ホイール操作を修正。"
     },
     {
       "path": "packages/photo-editing/src/editor/photo-editing-color-grading.tsx",
@@ -10369,8 +10326,8 @@
     },
     {
       "path": "packages/develop-engine/crates/niho-develop/tests/niho12.rs",
-      "sha256": "65171dce06c2e79cec6ee13e1b566ca74b0f91c6418002983072c0758a174e65",
-      "origin": "公開Issue #29 のため公開済み数式・既存primitiveから独立実装したengine・合成テスト・計測コード・日本語手順。非公開の写真・参照画素・パス・履歴・第三者ソースを含まない。"
+      "sha256": "9ee6e168385b32761e2d2659c7cf373c0b1266e46de6cb011aff136540fbd2f5",
+      "origin": "公開Issue #29 のため公開済み数式・既存primitiveから独立実装したengine・合成テスト・計測コード・日本語手順。非公開の写真・参照画素・パス・履歴・第三者ソースを含まない。\n変更理由: PR #90: niho-13のWB先行適用とdetail連携cacheを#84後のmainへ統合。"
     },
     {
       "path": "packages/develop-engine/fixtures/color/review-2026-10-21/niho12-public-measurement.json",
@@ -10389,8 +10346,8 @@
     },
     {
       "path": "packages/develop-engine/NIHO12.md",
-      "sha256": "588e23c2caec98a20d9307fbf435885cecf8d9ee3b8f02495b53d64025c0c93d",
-      "origin": "公開Issue #29 のため公開済み数式・既存primitiveから独立実装したengine・合成テスト・計測コード・日本語手順。非公開の写真・参照画素・パス・履歴・第三者ソースを含まない。"
+      "sha256": "34c99d15785449ad6b33f0ecdde6819a1fece63bca54a0fba0e3cab6e1516384",
+      "origin": "公開Issue #29 のため公開済み数式・既存primitiveから独立実装したengine・合成テスト・計測コード・日本語手順。非公開の写真・参照画素・パス・履歴・第三者ソースを含まない。\n変更理由: PR #90: niho-13への新規既定切替とniho-12互換の関係を記録。"
     },
     {
       "path": "packages/develop-engine/crates/niho-develop/examples/analytic_hs_calibrate.rs",
@@ -10461,6 +10418,156 @@
       "path": "packages/photo-editing/src/editor/use-browser-photo-versions.test.tsx",
       "sha256": "0a6167d7c317a53d009f136e5c84ad2e1c68e934bf806753fe8d4ebdf332782a",
       "origin": "niho-photo#42 のため新規作成。本物の編集内容と自動保存につないだ版の作成・切り替え・取り消し / やり直し・保存の順序・版の無い写真の互換の test。合成の値だけを使用。"
+    },
+    {
+      "path": "packages/develop-engine/crates/niho-develop/examples/round27_settings.rs",
+      "sha256": "a8874678fa79ee5e7ab57be349e88ebed29417d858ffbcbeb80aa4db4e4e1533",
+      "origin": "公開Issue #27 の計測用に独立実装したXMP→設定の変換example。合成色見本の設定だけを扱い、非公開の写真・参照画素・パス・第三者ソースを含まない。"
+    },
+    {
+      "path": "packages/develop-engine/crates/niho-develop/src/head_wb.rs",
+      "sha256": "a58d1041f7311cbc3519d6dab11da4911916a1d9511a0dfb753bcd13c6fe038d",
+      "origin": "公開Issue #27 のため公開済みの増分WB測定（jpeg-incremental-wb-v1.bin）と既存primitiveから独立実装したengine・合成テスト。非公開の写真・参照画素・パス・履歴・第三者ソースを含まない。"
+    },
+    {
+      "path": "packages/develop-engine/crates/niho-develop/tests/niho13.rs",
+      "sha256": "dbda531e080cb7e5b6a3a325a6c60bb8d46c4cf795d5750f5c44fa13b8abd4b7",
+      "origin": "公開Issue #27 のため公開済み数式・既存primitiveから独立実装したengine・合成テスト・計測コード・日本語手順。非公開の写真・参照画素・パス・履歴・第三者ソースを含まない。"
+    },
+    {
+      "path": "packages/develop-engine/fixtures/color/review-2026-10-21/round27-analysis-before-wb.json",
+      "sha256": "c6431b24a89be4425ac6f2649b828f56e28f00962ea18b219d4433389281269a",
+      "origin": "owner所有の既存非公開教師をStudioで比較した匿名集計のみ（niho-13と代案の描画差）。source commit・renderer hash・測定手順・cohort件数・判断の規則を記録し、写真・scene名・私有path・個別結果は公開しない。独立評価画像の参照は0枚。"
+    },
+    {
+      "path": "packages/develop-engine/fixtures/color/review-2026-10-21/round27-linear-3x3.json",
+      "sha256": "a5423e048c0723310f98b37adbdb6f36752d69256372c9648abdf6ec322832fe",
+      "origin": "2026-10-21のStudio実測。公開の増分WB測定（jpeg-incremental-wb-v1.bin）だけから線形3×3を当てはめた誤差の数値。実写真・非公開参照画素を含まない。"
+    },
+    {
+      "path": "packages/develop-engine/fixtures/color/review-2026-10-21/round27-niho-13.json",
+      "sha256": "dc1dc99de6becbe21f99be005995bee309043e000b023df18f99a04976cf9a2b",
+      "origin": "2026-10-21のStudio実測。合成17³色見本（人物写真なし）のLightroom書き出しとniho-12・niho-13・試作の描画をパッチ平均のCIEDE2000で比べた数値だけを、source commit・手順とともに記録。書き出し画像・私有パスを含まない。"
+    },
+    {
+      "path": "packages/develop-engine/fixtures/color/review-2026-10-21/round27-prototype-niho-10.json",
+      "sha256": "ea6b5b94a01e82b45873294d75f88ce45c8cf12515cc79dbc095719ec6dd21d1",
+      "origin": "2026-10-21のStudio実測。owner判断の根拠となった試作（合成17³色見本、人物写真なし）のLightroom比較の数値だけを記録。書き出し画像・私有パスを含まない。"
+    },
+    {
+      "path": "packages/develop-engine/fixtures/color/review-2026-10-21/round27-release-breakdown.json",
+      "sha256": "90b4a6c94919dad2aa08d680c67f5fc80fd72e700eed0cf6f62a7f8b67958da5",
+      "origin": "2026-10-21のStudio実測。独立した合成画像でwasmの確定描画の段ごとの時間を測った数値だけを、source commit・手順とともに記録。実写真・非公開参照画素を含まない。"
+    },
+    {
+      "path": "packages/develop-engine/fixtures/color/review-2026-10-21/round27-teacher-development.json",
+      "sha256": "6c8c54e1aac5726a1e5f6c3a99aa8a3ca0252140b771831256db57263f4e89fd",
+      "origin": "owner所有の既存非公開教師をStudioで比較した匿名集計のみ。source commit・renderer hash・測定手順・cohort件数を記録し、写真・scene名・私有path・manifestや入力のhash・参照画素・個別結果は公開しない。独立評価画像の参照は0枚。"
+    },
+    {
+      "path": "packages/develop-engine/fixtures/color/review-2026-10-21/round27-wasm-performance.json",
+      "sha256": "446fc3dc5765f78a850829807192daec81289a338646beb885d7da3358951e2b",
+      "origin": "2026-10-21のStudio実測。独立した合成画像から計測し、source commit・実行環境・適用範囲とともに数値だけを記録。実写真・非公開参照画素を含まない。\n変更理由: PR #90: niho-13の再現可能な計測・検証記録を最新mainに統合。"
+    },
+    {
+      "path": "packages/develop-engine/NIHO13.md",
+      "sha256": "26053ba59f79445c357e3c67a3fe17821f1484018a2e365c2bedf7759dd7d192",
+      "origin": "公開Issue #27 のため公開済み数式・既存primitiveから独立実装したengine・合成テスト・計測コード・日本語手順。非公開の写真・参照画素・パス・履歴・第三者ソースを含まない。\n変更理由: PR #90: niho-13のWB処理・性能結果・制約を記録。"
+    },
+    {
+      "path": "packages/develop-engine/tools/calibrate/fit_linear_wb_3x3.py",
+      "sha256": "740d52f608ef814fcbfde67e64bebd6246b4ff0b1c2beaf831484b929881bffb",
+      "origin": "公開Issue #27 のため独立実装した、公開の増分WB測定への線形3×3の当てはめ。公開測定だけを読む。"
+    },
+    {
+      "path": "packages/develop-engine/tools/calibrate/make_lr_round27.py",
+      "sha256": "a9559e4ff66939663a3f12054ee9bd0f1b0c9dfbf0ec606d09000dbb10acaa1a",
+      "origin": "公開Issue #27 の計測用に独立実装した合成17³色見本と埋め込み設定の生成。人物写真・非公開の参照画素・パスを含まない。"
+    },
+    {
+      "path": "packages/develop-engine/tools/calibrate/round27_measure.py",
+      "sha256": "34d943a06e78121cc8b177d0868f35d8451feb805e882e9ce98d6645fa5dbe83",
+      "origin": "公開Issue #27 の計測用に独立実装した、合成色見本のLightroom書き出しとNIHOの描画のCIEDE2000比較。書き出し・私有パスは引数で受け、公開物は匿名の集計だけ。"
+    },
+    {
+      "path": "packages/develop-engine/tools/color-review-build-diff.py",
+      "sha256": "d36b0c8f3c54b22d7fb786d25040860dc1d62a3f59776596048e667a0f566fbb",
+      "origin": "公開Issue #27 の計測用に独立実装した、開発用教師で2つのbuildの描画差を比べる道具。教師・私有パスは引数で受け、公開物は匿名の集計だけ。封印済みの独立cohortは読まない。"
+    },
+    {
+      "path": "packages/photo-editing/src/photo-editing-masks.ts",
+      "sha256": "8bdfbb29adc1c72bf83c06d158c2f38f6ff23fd91e98cd0b61a78bbfe7ec2e3b",
+      "origin": "Issue #67の公開仕様 docs/local-adjustments.md だけから新規作成した、部分補正（マスク）の画面の計算（既定の形・つまみの位置・つまみを動かした形・局所の差分・範囲の収め方）のTypeScript実装。外部画像・非公開コード・個体metadataを含まない。"
+    },
+    {
+      "path": "packages/photo-editing/src/photo-editing-masks.test.ts",
+      "sha256": "a1c0a5d757356e52f89fcb6e3b7427cbec5358265096eb3a9a55036b3e95483b",
+      "origin": "Issue #67の公開仕様と合成の値だけから新規作成した、部分補正の画面の計算（回転・反転・角度補正でつまみが形の上にあること・出す値が読める設定になること）の回帰。外部画像・非公開コード・個体metadataを含まない。"
+    },
+    {
+      "path": "packages/photo-editing/src/develop-engine/develop-geometry-source-to-output.test.ts",
+      "sha256": "c41dd14b667227d7a4f45e33847593536b6bb72885c7ee4b86e6708db3a0f9d6",
+      "origin": "Issue #67のため新規作成した、geometrySourceToOutput が geometryOutputToSource の逆写像であることの往復の回帰（合成の寸法と幾何だけ）。外部画像・非公開コード・個体metadataを含まない。"
+    },
+    {
+      "path": "packages/photo-editing/src/develop-engine/develop-frame.test.ts",
+      "sha256": "b1bc2ff6598d9ea428c25970e40340cbf7d9c4a578ba6113f5b09ff0897dc588",
+      "origin": "Issue #67のため新規作成した、操作中の小さな画を canvas の大きさのまま描く判定の回帰（合成の寸法だけ）。外部画像・非公開コード・個体metadataを含まない。"
+    },
+    {
+      "path": "packages/photo-editing/src/editor/browser-photo-editing-model-drag.test.ts",
+      "sha256": "8cbaa67b50579ebbc236ed9638664530f1c138a44d78bf01128c7aaa181b6f7e",
+      "origin": "Issue #67のため新規作成した、マスク・色ポイントがある間の drag の描画の長辺（640px）の回帰（合成の設定だけ）。外部画像・非公開コード・個体metadataを含まない。"
+    },
+    {
+      "path": "packages/photo-editing/src/editor/use-browser-photo-masks.ts",
+      "sha256": "6e4cac68db6e449789f5a4bb47aad4ff3e0fae21d701c577e10788c2affda1c3",
+      "origin": "Issue #67の公開仕様だけから新規作成した、マスクの道具の状態（出す条件・足す / 複製 / 削除 / 反転 / 目・局所の補正・形・初期化・キー）と範囲の重ね表示の面を取りに行く係のReact hook。外部画像・非公開コード・個体metadataを含まない。"
+    },
+    {
+      "path": "packages/photo-editing/src/editor/use-browser-photo-masks.test.tsx",
+      "sha256": "15f67ec17937599fac067c8ffdaa641c82c091c37c8e698a4a720c493c076434",
+      "origin": "Issue #67のため新規作成した、マスクの道具のhook（取り消しの1単位・読める設定・8枚と原寸の書き出しの理由・Esc / Delete）と重ね表示の面の係（rAFでまとめる・古い応答を捨てる）の回帰。外部画像・非公開コード・個体metadataを含まない。"
+    },
+    {
+      "path": "packages/photo-editing/src/editor/photo-editing-mask-overlay.tsx",
+      "sha256": "b5193a1f71ed9e3b0b06268f09e78288e08c7bab51c53daed56c90fae0a0d492",
+      "origin": "Issue #67の公開仕様だけから新規作成した、写真の上のマスクの操作（形の線・つまみのボタン・pointer capture・矢印キー・範囲の赤い重ね）のReact部品。外部画像・非公開コード・個体metadataを含まない。\n変更理由: overlay解除時にドラッグ中の形を確定し消えたマスクの復活を防ぐ"
+    },
+    {
+      "path": "packages/photo-editing/src/editor/photo-editing-mask-overlay.test.tsx",
+      "sha256": "2a2c74dfb35201c2bb8f33ac9e79159ba9941d7df0eb7a2f43072eca784bb648",
+      "origin": "Issue #67のため新規作成した、写真の上のマスクの操作（つまみの位置・drag と1回のcommit・矢印キー・選択・O）のjsdom回帰。外部画像・非公開コード・個体metadataを含まない。\n変更理由: overlay破棄時のマウス操作・キー操作の確定を回帰テストする"
+    },
+    {
+      "path": "packages/photo-editing/src/editor/photo-editing-mask-tools.tsx",
+      "sha256": "a0831a0b0c193cf1004324eb321e24871fccf048d9fec3435a7cee5ffc71f1c9",
+      "origin": "Issue #67の公開仕様だけから新規作成した、右パネルのマスクの面（足す・一覧・重ね表示の切り替え・局所のスライダー・ぼかし）のReact部品。外部画像・非公開コード・個体metadataを含まない。"
+    },
+    {
+      "path": "packages/photo-editing/src/editor/photo-editing-mask-tools.test.tsx",
+      "sha256": "fba02b81bbe32bae72421c35104a55dfc929c33cf90fe4ec93fae31365769a93",
+      "origin": "Issue #67のため新規作成した、右パネルのマスクの面（押せない理由・行の操作・drag / commit・相対の白の出し分け・ぼかし）のjsdom回帰。外部画像・非公開コード・個体metadataを含まない。"
+    },
+    {
+      "path": "packages/develop-engine/crates/niho-develop/src/xmp/masks.rs",
+      "sha256": "4a7c843b409d92d6f391b3ac34b4df48460c2b67e3bd9de7896b73f78f12271a",
+      "origin": "Issue #69の公開仕様 docs/local-adjustments.md「Lightroom の XMP の読み」から新規作成した、XMPプリセットの局所補正（MaskGroupBasedCorrections）をNIHOのmasksへ読むRust実装。オーナーのLightroomデータで確かめた構造と単位だけを使い、実際の値・id・digest・非公開コードを含まない。"
+    },
+    {
+      "path": "packages/develop-engine/crates/niho-develop/tests/xmp_masks.rs",
+      "sha256": "24a1ca64669900b4f1be099a6af7d58e9e3a422db7d75adad961a55966f91615",
+      "origin": "Issue #69の公開仕様から新規作成した、合成XMP（構造だけLightroomに合わせ、数値・名前・sync idは架空）によるマスクの読み・知らせ・適用量のRust回帰。実写真・実XMP・私有参照出力を含まない。"
+    },
+    {
+      "path": "packages/photo-editing/src/develop-engine/develop-preset-masks.ts",
+      "sha256": "36b941df378d004d3209978932b909fda5f676d3df350646280a1d7589940c60",
+      "origin": "Issue #69の公開仕様から新規作成した、プリセットのマスク（見えている枠の座標）を写真の幾何で作業画像の座標へ写すTypeScript実装。外部画像・非公開コード・個体metadataを含まない。"
+    },
+    {
+      "path": "packages/photo-editing/src/develop-engine/develop-preset-masks.test.ts",
+      "sha256": "6502e5cc8cffcebf2355fec67676b8f22432edd97a76cf9ebd9bceb0c3412514",
+      "origin": "Issue #69の公開仕様から新規作成した、回転・反転・切り抜き・角度補正でのマスクの写し方とプリセット結果の読み方の合成テスト。外部画像・非公開コード・個体metadataを含まない。"
     }
   ],
   "excludedSources": [

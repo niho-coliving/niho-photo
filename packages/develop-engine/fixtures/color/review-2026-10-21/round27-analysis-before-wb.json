@@ -1,0 +1,303 @@
+{
+  "kind": "development-teachers-build-difference-not-independent",
+  "question": "niho-13 with the niho-6 analysis read from the photo before its head white balance (pixels still balanced first) against niho-13 as defined (the analysis reads the balanced photo)",
+  "baseline": {
+    "definition": "niho-13: the niho-6 analysis reads the balanced photo",
+    "sourceCommit": "6a732893246551f001118c0dc459ea0a5fc4fed7",
+    "rendererSha256": "8522fda5e5c1ccde8999eef7c2d5f833020c02ffbb677e213669f3814b34a3cf"
+  },
+  "candidate": {
+    "definition": "alternative: the niho-6 analysis reads the photo before the head white balance; everything else as niho-13",
+    "sourceCommit": "6a732893246551f001118c0dc459ea0a5fc4fed7 with Session::ensure_niho6 asking the analysis of no head white balance (a measurement build, not committed)",
+    "rendererSha256": "a8d10d464c9eaf8fbc34e713bf724119e73659c51e124a3565893dbb5bfc7100"
+  },
+  "rule": {
+    "fixedBefore": "2026-10-21, before the measurement",
+    "adoptAlternativeIf": "the difference is mean <= 0.3 and p99 <= 1.5",
+    "readAs": "every pair (scene x preset x white balance); the averages per white balance x preset are reported as well"
+  },
+  "engine": "niho-13",
+  "cohortCounts": {
+    "teachers": 33,
+    "teachers2": 24
+  },
+  "blankExcluded": 2,
+  "independentImagesRead": 0,
+  "protocol": {
+    "renderLongEdge": 2048,
+    "compareLongEdge": 1500,
+    "blur": 2,
+    "flatPixels": true,
+    "alignment": true,
+    "presets": [
+      "preset_bluesky2",
+      "preset_pastel",
+      "preset_colorful"
+    ],
+    "whiteBalances": {
+      "tp30": {
+        "relativeTemperature": 30,
+        "relativeTint": 0
+      },
+      "tm30": {
+        "relativeTemperature": -30,
+        "relativeTint": 0
+      },
+      "gp20": {
+        "relativeTemperature": 0,
+        "relativeTint": 20
+      },
+      "gm20": {
+        "relativeTemperature": 0,
+        "relativeTint": -20
+      },
+      "warm": {
+        "relativeTemperature": 30,
+        "relativeTint": 20
+      }
+    }
+  },
+  "all": {
+    "pairs": 855,
+    "identical": 0,
+    "meanOfMeans": 0.18303286549707606,
+    "maxMean": 1.5046,
+    "meanOfP99": 0.5602741520467842,
+    "maxP99": 4.3422,
+    "maxMax": 7.8755
+  },
+  "byWhiteBalance": {
+    "tp30": {
+      "pairs": 171,
+      "identical": 0,
+      "meanOfMeans": 0.3387766081871345,
+      "maxMean": 1.5046,
+      "meanOfP99": 0.995176023391813,
+      "maxP99": 4.3422,
+      "maxMax": 7.8755
+    },
+    "tm30": {
+      "pairs": 171,
+      "identical": 0,
+      "meanOfMeans": 0.1442690058479532,
+      "maxMean": 0.4614,
+      "meanOfP99": 0.42484093567251446,
+      "maxP99": 1.6843,
+      "maxMax": 5.634
+    },
+    "gp20": {
+      "pairs": 171,
+      "identical": 0,
+      "meanOfMeans": 0.03704385964912282,
+      "maxMean": 0.1456,
+      "meanOfP99": 0.1600269005847953,
+      "maxP99": 0.7932,
+      "maxMax": 1.0375
+    },
+    "gm20": {
+      "pairs": 171,
+      "identical": 0,
+      "meanOfMeans": 0.08665672514619881,
+      "maxMean": 0.2933,
+      "meanOfP99": 0.30493450292397684,
+      "maxP99": 0.93,
+      "maxMax": 1.5075
+    },
+    "warm": {
+      "pairs": 171,
+      "identical": 0,
+      "meanOfMeans": 0.30841812865497065,
+      "maxMean": 1.3606,
+      "meanOfP99": 0.9163923976608196,
+      "maxP99": 4.3274,
+      "maxMax": 7.7394
+    }
+  },
+  "byPreset": {
+    "preset_bluesky2": {
+      "pairs": 285,
+      "identical": 0,
+      "meanOfMeans": 0.14542210526315785,
+      "maxMean": 0.7737,
+      "meanOfP99": 0.4502017543859651,
+      "maxP99": 2.2315,
+      "maxMax": 4.1905
+    },
+    "preset_pastel": {
+      "pairs": 285,
+      "identical": 0,
+      "meanOfMeans": 0.15587473684210518,
+      "maxMean": 0.962,
+      "meanOfP99": 0.47290877192982395,
+      "maxP99": 2.0965,
+      "maxMax": 5.634
+    },
+    "preset_colorful": {
+      "pairs": 285,
+      "identical": 0,
+      "meanOfMeans": 0.24780175438596494,
+      "maxMean": 1.5046,
+      "meanOfP99": 0.7577119298245616,
+      "maxP99": 4.3422,
+      "maxMax": 7.8755
+    }
+  },
+  "byWhiteBalanceAndPreset": {
+    "tp30/preset_bluesky2": {
+      "pairs": 57,
+      "identical": 0,
+      "meanOfMeans": 0.2664754385964913,
+      "maxMean": 0.7737,
+      "meanOfP99": 0.7778456140350876,
+      "maxP99": 2.1724,
+      "maxMax": 4.1905
+    },
+    "tp30/preset_pastel": {
+      "pairs": 57,
+      "identical": 0,
+      "meanOfMeans": 0.2899596491228071,
+      "maxMean": 0.962,
+      "meanOfP99": 0.8236631578947368,
+      "maxP99": 2.0461,
+      "maxMax": 3.8991
+    },
+    "tp30/preset_colorful": {
+      "pairs": 57,
+      "identical": 0,
+      "meanOfMeans": 0.45989473684210497,
+      "maxMean": 1.5046,
+      "meanOfP99": 1.3840192982456143,
+      "maxP99": 4.3422,
+      "maxMax": 7.8755
+    },
+    "tm30/preset_bluesky2": {
+      "pairs": 57,
+      "identical": 0,
+      "meanOfMeans": 0.11179298245614037,
+      "maxMean": 0.3167,
+      "meanOfP99": 0.33298771929824567,
+      "maxP99": 0.8222,
+      "maxMax": 2.6809
+    },
+    "tm30/preset_pastel": {
+      "pairs": 57,
+      "identical": 0,
+      "meanOfMeans": 0.1261280701754386,
+      "maxMean": 0.3311,
+      "meanOfP99": 0.3858087719298246,
+      "maxP99": 0.8035,
+      "maxMax": 5.634
+    },
+    "tm30/preset_colorful": {
+      "pairs": 57,
+      "identical": 0,
+      "meanOfMeans": 0.1948859649122807,
+      "maxMean": 0.4614,
+      "meanOfP99": 0.5557263157894737,
+      "maxP99": 1.6843,
+      "maxMax": 4.1112
+    },
+    "gp20/preset_bluesky2": {
+      "pairs": 57,
+      "identical": 0,
+      "meanOfMeans": 0.032736842105263154,
+      "maxMean": 0.1456,
+      "meanOfP99": 0.15311754385964907,
+      "maxP99": 0.7932,
+      "maxMax": 0.8293
+    },
+    "gp20/preset_pastel": {
+      "pairs": 57,
+      "identical": 0,
+      "meanOfMeans": 0.03015438596491228,
+      "maxMean": 0.0979,
+      "meanOfP99": 0.1396684210526316,
+      "maxP99": 0.7892,
+      "maxMax": 0.8473
+    },
+    "gp20/preset_colorful": {
+      "pairs": 57,
+      "identical": 0,
+      "meanOfMeans": 0.04824035087719298,
+      "maxMean": 0.1444,
+      "meanOfP99": 0.18729473684210524,
+      "maxP99": 0.5557,
+      "maxMax": 1.0375
+    },
+    "gm20/preset_bluesky2": {
+      "pairs": 57,
+      "identical": 0,
+      "meanOfMeans": 0.07254561403508773,
+      "maxMean": 0.2933,
+      "meanOfP99": 0.26254035087719296,
+      "maxP99": 0.7932,
+      "maxMax": 1.0485
+    },
+    "gm20/preset_pastel": {
+      "pairs": 57,
+      "identical": 0,
+      "meanOfMeans": 0.07059824561403509,
+      "maxMean": 0.2024,
+      "meanOfP99": 0.2584473684210527,
+      "maxP99": 0.8035,
+      "maxMax": 0.9227
+    },
+    "gm20/preset_colorful": {
+      "pairs": 57,
+      "identical": 0,
+      "meanOfMeans": 0.11682631578947368,
+      "maxMean": 0.2841,
+      "meanOfP99": 0.3938157894736843,
+      "maxP99": 0.93,
+      "maxMax": 1.5075
+    },
+    "warm/preset_bluesky2": {
+      "pairs": 57,
+      "identical": 0,
+      "meanOfMeans": 0.24355964912280706,
+      "maxMean": 0.728,
+      "meanOfP99": 0.7245175438596491,
+      "maxP99": 2.2315,
+      "maxMax": 4.0245
+    },
+    "warm/preset_pastel": {
+      "pairs": 57,
+      "identical": 0,
+      "meanOfMeans": 0.2625333333333334,
+      "maxMean": 0.8235,
+      "meanOfP99": 0.7569561403508772,
+      "maxP99": 2.0965,
+      "maxMax": 3.3668
+    },
+    "warm/preset_colorful": {
+      "pairs": 57,
+      "identical": 0,
+      "meanOfMeans": 0.4191614035087719,
+      "maxMean": 1.3606,
+      "meanOfP99": 1.26770350877193,
+      "maxP99": 4.3274,
+      "maxMax": 7.7394
+    }
+  },
+  "pairsOverRule": {
+    "meanOver0.3": 171,
+    "p99Over1.5": 40,
+    "either": 182,
+    "scenesWithAnyPairOver": 47
+  },
+  "distribution": {
+    "meanP50": 0.1223,
+    "meanP90": 0.4211,
+    "p99P50": 0.4149,
+    "p99P90": 1.2032
+  },
+  "decision": "not adopted: 182 of 855 pairs exceed the rule (and the averages of warm and temperature +30 with colorful exceed mean 0.3); niho-13 keeps the analysis of the balanced photo",
+  "measurementHost": "Mac Studio (M1 Max 64GB)",
+  "measurementDate": "2026-10-21",
+  "rustToolchain": "1.98.1",
+  "tool": "packages/develop-engine/tools/color-review-build-diff.py",
+  "scopeNotes": [
+    "Development teachers already used by the existing model; not independent evaluation (the sealed independent cohort was not opened)",
+    "Only anonymous aggregates are published; photos, scene names, private paths and per-pair rows stay private"
+  ]
+}

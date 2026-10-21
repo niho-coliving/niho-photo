@@ -1,0 +1,79 @@
+{
+  "kind": "wasm-release-breakdown",
+  "environment": "Node v24.18.0 wasm SIMD on Mac Studio (M1 Max); load average 12-14; browser/device performance remains separate",
+  "method": "A measurement build of each source with performance.now() spans around the Session stages (not committed: the spans only time, the pixels are the same). The bench scene at 1280x960 (color-review-wasm-bench.cjs), the same settings (exposure 0.2, highlights -75, shadows 55, blacks 40, vibrance 10, HSL), a contrast drag and its release, then 5 Interactive ticks of relativeTemperature 6..30 and their release (Final). Median of 3 processes.",
+  "stages": {
+    "balance": "the head white balance of the whole working source",
+    "features": "niho-6 features of the balanced whole photo",
+    "networks": "niho-6 networks at the exposure",
+    "gains": "niho-6 response gains at the frame size",
+    "master": "the response applied (the master)",
+    "cubes": "settings_cubes (baking the Final 64^3 cubes when not kept)",
+    "stats": "adaptive statistics of the local pass",
+    "ln0": "log luminance before the pass",
+    "local-pass": "the local pass (Final: full resolution)",
+    "rest": "the frame itself (per-pixel stages and output) and everything not spanned"
+  },
+  "niho13Before": {
+    "sourceCommit": "6a732893246551f001118c0dc459ea0a5fc4fed7",
+    "tick": {
+      "total": 106.4,
+      "balance": 55.4,
+      "master": 4.2,
+      "cubes": 0,
+      "rest": 46.8
+    },
+    "release": {
+      "total": 1754.2,
+      "features": 369.4,
+      "networks": 478.6,
+      "gains": 28,
+      "master": 4,
+      "cubes": 494,
+      "stats": 41.5,
+      "ln0": 7.6,
+      "local-pass": 115.5,
+      "rest": 215.6
+    }
+  },
+  "niho13After": {
+    "sourceCommit": "6ac20e682ac0f9da1890c500fb84405db6f8742b (this change: the released cubes kept through drag frames, two niho-6 analyses kept, gain resize columns once)",
+    "tick": {
+      "total": 105,
+      "balance": 55.4,
+      "master": 4.1,
+      "cubes": 0,
+      "rest": 45.5
+    },
+    "release": {
+      "total": 1247.8,
+      "features": 360.6,
+      "networks": 472.1,
+      "gains": 18.3,
+      "master": 4.1,
+      "cubes": 0,
+      "stats": 41,
+      "ln0": 7.7,
+      "local-pass": 113,
+      "rest": 231.0
+    }
+  },
+  "alternativeAnalysisBeforeWhiteBalance": {
+    "sourceCommit": "6a732893246551f001118c0dc459ea0a5fc4fed7 with the analysis of no head white balance (not adopted; without the kept cubes of 6ac20e6)",
+    "tick": {
+      "total": 103,
+      "balance": 54,
+      "master": 4,
+      "cubes": 0,
+      "rest": 45
+    },
+    "release": {
+      "total": 861.5,
+      "cubes": 484.4,
+      "stats": 41,
+      "ln0": 7.6,
+      "local-pass": 115.9,
+      "rest": 212.6
+    }
+  }
+}

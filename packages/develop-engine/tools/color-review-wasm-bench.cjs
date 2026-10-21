@@ -1,6 +1,7 @@
 // Synthetic, reproducible Node/wasm timing probe. No private photos or npm dependencies.
-// Usage: node color-review-wasm-bench.cjs /path/to/nodejs/niho_develop_wasm.js [raster-engines] [legacy-raw-engines]
+// Usage: node color-review-wasm-bench.cjs /path/to/nodejs/niho_develop_wasm.js [raster-engines] [legacy-raw-engines] [WIDTHxHEIGHT]
 //   raster-engines: comma-separated, default "niho-6,niho-8" (the 2026-10-20 run)
+//   Each row also drags the relative temperature (5 Interactive ticks) and releases it (#27).
 //   legacy-raw-engines: comma-separated engines for a legacy unsigned RAW working copy, default none
 // Node on Studio is a reference environment, not a browser/device performance claim.
 const zlib = require('node:zlib');
@@ -10,6 +11,8 @@ const path = require('node:path');
 const wasm = require(path.resolve(process.argv[2]));
 const rasterEngines = (process.argv[3] ?? 'niho-6,niho-8').split(',').filter(Boolean);
 const rawEngines = (process.argv[4] ?? '').split(',').filter(Boolean);
+//   WIDTHxHEIGHT: the synthetic scene's size, default 1024x768 (1280x960 is the editor's preview long edge)
+const [WIDTH, HEIGHT] = (process.argv[5] ?? '1024x768').split('x').map(Number);
 
 function crc32(bytes) {
   let crc = 0xffffffff;
@@ -31,7 +34,7 @@ function png(width, height, bitDepth, raw) {
   return Buffer.concat([Buffer.from([137,80,78,71,13,10,26,10]),chunk('IHDR',ihdr),chunk('IDAT',zlib.deflateSync(raw)),chunk('IEND',Buffer.alloc(0))]);
 }
 function photo() {
-  const width = 1024, height = 768;
+  const width = WIDTH, height = HEIGHT;
   const raw = Buffer.alloc(height * (1 + width * 3));
   for (let y = 0; y < height; y++) {
     for (let x = 0; x < width; x++) {
@@ -47,14 +50,14 @@ function photo() {
 // The same kind of scene as a legacy unsigned RAW working copy: 16-bit linear
 // ProPhoto encoded with gamma 1.8 over [0, 2] (`decode::encode_working_copy`).
 function legacyRawWorkingCopy() {
-  const width = 1024, height = 768;
+  const width = WIDTH, height = HEIGHT;
   const raw = Buffer.alloc(height * (1 + width * 6));
   const encode = (linear) => Math.round(Math.pow(Math.min(Math.max(linear / 2, 0), 1), 1 / 1.8) * 65535);
   for (let y = 0; y < height; y++) {
     for (let x = 0; x < width; x++) {
       const offset = y * (width * 6 + 1) + 1 + x * 6;
       const window = x > 640 && y < 320;
-      const rgb = window ? [0.85, 0.9, 0.95] : [0.01 + x / 1024 * 0.08, 0.012 + y / 768 * 0.06, 0.008];
+      const rgb = window ? [0.85, 0.9, 0.95] : [0.01 + x / WIDTH * 0.08, 0.012 + y / HEIGHT * 0.06, 0.008];
       rgb.forEach((value, channel) => raw.writeUInt16BE(encode(value), offset + channel * 2));
     }
   }
@@ -70,7 +73,7 @@ function bench(open, engine, source) {
     const start = performance.now();
     const frame = developer.render(JSON.stringify(settings),0,interactive);
     timings[name] = performance.now() - start;
-    if (frame.width !== 1024 || frame.height !== 768 || frame.rgba.length !== 1024*768*4) throw new Error('unexpected frame');
+    if (frame.width !== WIDTH || frame.height !== HEIGHT || frame.rgba.length !== WIDTH*HEIGHT*4) throw new Error('unexpected frame');
   }
   const warm = [];
   for (let i = 0; i < 5; i++) {
@@ -86,8 +89,25 @@ function bench(open, engine, source) {
   const start = performance.now();
   developer.render(JSON.stringify(settings),0,false);
   timings.releasedFinal = performance.now() - start;
+  // A drag of the relative temperature (#27: niho-13 balances the source, so
+  // every tick changes what the analysis, statistics and local pass read),
+  // then its release.
+  settings.whiteBalance = {mode:'relative'};
+  const wb = [];
+  for (let i = 0; i < 5; i++) {
+    settings.relativeTemperature = 6 * (i + 1);
+    const tick = performance.now();
+    developer.render(JSON.stringify(settings),0,true);
+    wb.push(performance.now()-tick);
+  }
+  wb.sort((a,b)=>a-b);
+  timings.whiteBalanceInteractiveMedian = wb[2];
+  timings.whiteBalanceInteractiveMax = wb[4];
+  const wbRelease = performance.now();
+  developer.render(JSON.stringify(settings),0,false);
+  timings.whiteBalanceReleasedFinal = performance.now() - wbRelease;
   developer.free();
-  return {source,engine,timingsMs:timings,interactive100ms:timings.editedInteractiveMax<=100,final1000ms:timings.coldFinal<=1000&&timings.releasedFinal<=1000};
+  return {source,engine,timingsMs:timings,interactive100ms:timings.editedInteractiveMax<=100,whiteBalanceInteractive100ms:timings.whiteBalanceInteractiveMax<=100,final1000ms:timings.coldFinal<=1000&&timings.releasedFinal<=1000&&timings.whiteBalanceReleasedFinal<=1000};
 }
 
 const input = photo();
@@ -96,4 +116,4 @@ const rows = [];
 for (const engine of rasterEngines) rows.push(bench(() => new wasm.Developer(input, 0), engine, 'raster'));
 for (const engine of rawEngines) rows.push(bench(() => wasm.Developer.openWorkingCopy(workingCopy, LEGACY_RAW_META), engine, 'legacyRaw'));
 const sha256 = (bytes) => crypto.createHash('sha256').update(bytes).digest('hex');
-console.log(JSON.stringify({schema:'niho.color-review-wasm-timing.v2',environment:'Node wasm SIMD on Studio; browser/device performance remains separate',node:process.version,engineBundle:wasm.version(),dimensions:[1024,768],inputSha256:sha256(input),legacyRawWorkingCopySha256:rawEngines.length?sha256(workingCopy):null,order:'engines run in the listed order within one process; cold values include process-wide caches of earlier rows',rows},null,2));
+console.log(JSON.stringify({schema:'niho.color-review-wasm-timing.v3',environment:'Node wasm SIMD on Studio; browser/device performance remains separate',node:process.version,engineBundle:wasm.version(),dimensions:[WIDTH,HEIGHT],inputSha256:sha256(input),legacyRawWorkingCopySha256:rawEngines.length?sha256(workingCopy):null,order:'engines run in the listed order within one process; cold values include process-wide caches of earlier rows',rows},null,2));
