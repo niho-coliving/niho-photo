@@ -105,6 +105,12 @@ export type ExportResult = { saved: false } | { saved: true; fileName: string };
 
 export type ExportFolder = { exportFolderId: string; name: string };
 
+/**
+ * 保存した部分補正のマスクの面（`camera_mask_surface_save`）。`id` は PNG の中身の SHA-256（16 進の小文字 64 文字）で、
+ * `width`・`height` と組で補正の `masks[].surface` に書く。
+ */
+export type SavedMaskSurface = { id: string; width: number; height: number };
+
 /** 端末への保存（`camera_save_file`）の結果。保存ダイアログを閉じたら `cancelled`。 */
 export type SaveFileResult = "saved" | "cancelled";
 
@@ -321,6 +327,26 @@ export function createCameraCommands(invoke: Invoke = tauriInvoke) {
         throw toCameraCommandError(error);
       }
     },
+    /**
+     * 開いた写真の部分補正のマスク（ブラシ・被写体・空）の面を保存する。`png` は 8bit グレーの PNG（8 MiB 以下・1〜4096 画素。
+     * wasm の `encodeMaskSurface` が作る形）。バイト列は raw IPC で送り、`photoId` は `x-niho-photo-id` に添える。同じ中身は
+     * 同じ `id`。失敗は `maskSurfaceInvalid`（形が違う）・`maskSurfaceQuota`（その写真の面が上限）・`notFound`。
+     */
+    saveMaskSurface: async (photoId: string, png: Uint8Array): Promise<SavedMaskSurface> => {
+      try {
+        return await invoke<SavedMaskSurface>("camera_mask_surface_save", png, {
+          headers: { "x-niho-photo-id": photoId },
+        });
+      } catch (error) {
+        throw toCameraCommandError(error);
+      }
+    },
+    /** 開いた写真のマスクの面の PNG（中身の SHA-256 を `surfaceId` と照らしたもの。無ければ `maskSurfaceMissing`）。 */
+    loadMaskSurface: async (photoId: string, surfaceId: string) =>
+      toBytes(await call<unknown>("camera_mask_surface_load", { photoId, surfaceId })),
+    /** `surfaceIds`（1〜64 個）のうち、開いた写真の置き場に無い面の id（渡した順）。 */
+    missingMaskSurfaces: async (photoId: string, surfaceIds: string[]) =>
+      (await call<{ missing: string[] }>("camera_mask_surface_exists", { photoId, surfaceIds })).missing,
     /** 旧 NIHO camera（Photo Bench）の保存した補正がこの Mac にあるか（写さない。初回の案内 1 行のため）。 */
     photoBenchEditsFound: async () => (await call<{ found: boolean }>("camera_photo_bench_edits")).found,
   };

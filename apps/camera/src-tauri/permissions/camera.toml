@@ -10,8 +10,8 @@ commands.allow = ["camera_library_add_folder", "camera_library_add_photos", "cam
 
 [[permission]]
 identifier = "allow-camera-photos"
-description = "Allows the bundled NIHO photo UI to open listed photos (reading their content SHA-256), close them, read an open photo's metadata for the info panel (camera, lens, exposure, capture date, dimensions and GPS position read with ImageIO; nothing is cached or written), save each photo's develop settings on this Mac with a revision check (Application Support/life.niho.camera/edits/<SHA-256>.json), and read or replace the photo's named and automatic develop versions with their own revision check in a separate file beside it (edits/<SHA-256>.versions.json; names, dates and develop settings only, no paths). Originals are never modified."
-commands.allow = ["camera_photo_open", "camera_photo_close", "camera_photo_info", "camera_photo_save_settings", "camera_photo_versions", "camera_photo_save_versions"]
+description = "Allows the bundled NIHO photo UI to open listed photos (reading their content SHA-256), close them, read an open photo's metadata for the info panel (camera, lens, exposure, capture date, dimensions and GPS position read with ImageIO; nothing is cached or written), save each photo's develop settings on this Mac with a revision check (Application Support/life.niho.camera/edits/<SHA-256>.json), save, read back and look up immutable mask surfaces for brush / subject / sky masks (8-bit grayscale PNGs up to 8 MiB, named by SHA-256, up to 64 per photo; Application Support/life.niho.camera/mask-surfaces/<photo SHA-256>/<surface SHA-256>.png), and read or replace named and automatic develop versions with their own revision check in a separate file (edits/<SHA-256>.versions.json; names, dates and develop settings only). No path is accepted or returned. Originals are never modified."
+commands.allow = ["camera_photo_open", "camera_photo_close", "camera_photo_info", "camera_photo_save_settings", "camera_mask_surface_save", "camera_mask_surface_load", "camera_mask_surface_exists", "camera_photo_versions", "camera_photo_save_versions"]
 
 [[permission]]
 identifier = "allow-camera-develop"

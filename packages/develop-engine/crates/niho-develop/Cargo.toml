@@ -17,6 +17,12 @@ image.workspace = true
 quick-xml.workspace = true
 moxcms.workspace = true
 jpeg-decoder.workspace = true
+# Mask surfaces (`mask_surface.rs`, docs/local-adjustments.md "面の受け渡し"):
+# the strict 8-bit gray PNG read/write (the png that image uses) and the
+# sha256 of the PNG bytes that names a surface (the sha2 that
+# niho-camera-profile uses). Neither adds a crate to Cargo.lock.
+png = "0.18"
+sha2 = "0.10"
 
 [dev-dependencies]
 wasm-bindgen-test = "=0.3.79"

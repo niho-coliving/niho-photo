@@ -23,6 +23,7 @@ mod dialog;
 mod e2e;
 mod error;
 mod library;
+mod mask_surfaces;
 mod photo_bench;
 mod photos;
 mod presets;
@@ -109,6 +110,9 @@ pub fn run() {
       photos::camera_photo_close,
       photos::camera_photo_info,
       photos::camera_photo_save_settings,
+      mask_surfaces::camera_mask_surface_save,
+      mask_surfaces::camera_mask_surface_load,
+      mask_surfaces::camera_mask_surface_exists,
       photos::camera_photo_versions,
       photos::camera_photo_save_versions,
       develop::camera_develop_status,

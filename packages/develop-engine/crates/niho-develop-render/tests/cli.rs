@@ -504,6 +504,247 @@ fn local_masks_match_the_crates_render() {
     }
 }
 
+/// A brush surface (a soft diagonal band) and its id.
+fn brush_surface() -> (String, Vec<u8>) {
+    use niho_develop::mask_surface::{encode_surface_png, surface_id, MaskSurface};
+    let (w, h) = (64u32, 40u32);
+    let data = (0..h)
+        .flat_map(|y| (0..w).map(move |x| (x, y)))
+        .map(|(x, y)| (255 - (x as i32 * 2 - y as i32 * 3).unsigned_abs().min(255)) as u8)
+        .collect();
+    let png = encode_surface_png(&MaskSurface::new(w, h, data).unwrap()).unwrap();
+    (surface_id(&png), png)
+}
+
+/// `settings` with a linear mask and a brush mask of `surface` (`v: 5`).
+fn with_brush(settings: &DevelopSettings, id: &str, height: u32) -> DevelopSettings {
+    let mut v = settings.to_value();
+    v["v"] = 5.into();
+    v["masks"] = serde_json::json!([
+        {
+            "id": "sky", "kind": "linear",
+            "zero": {"x": 0.5, "y": 0.6}, "full": {"x": 0.5, "y": 0.1},
+            "adjust": {"exposure": -0.8}
+        },
+        {
+            "id": "paint", "kind": "brush",
+            "surface": {"id": id, "width": 64, "height": height},
+            "adjust": {"exposure": 0.7, "saturation": -40}
+        }
+    ]);
+    DevelopSettings::from_json(&v.to_string()).unwrap()
+}
+
+#[test]
+fn mask_surfaces_render_like_the_crate_and_fail_with_fixed_codes() {
+    let dir = TempDir::new("mask-surfaces");
+    let (id, png) = brush_surface();
+    let surface_path = dir.write("surface.png", &png);
+    let surface_arg = format!("{id}={}", s(&surface_path));
+    // An original: the CLI opens it at --max-dimension and renders it at 0.
+    let raster_settings = with_brush(&settings(None), &id, 40);
+    let settings_path = dir.write("settings.json", raster_settings.to_json());
+    let out = dir.path("raster.png");
+    let result = run(&[
+        "render",
+        "--settings",
+        s(&settings_path),
+        "--raster",
+        s(&golden_jpeg()),
+        "--max-dimension",
+        "200",
+        "--mask-surface",
+        &surface_arg,
+        "--out",
+        s(&out),
+    ]);
+    assert_eq!(result.code, 0, "{}", result.stdout);
+    let input = fs::read(golden_jpeg()).unwrap();
+    let mut session = Session::open_raster(&input, 200, Filter::Lanczos3).unwrap();
+    session.set_mask_surface(&id, &png).unwrap();
+    let expected = session.render(&raster_settings, 0, Quality::Final).unwrap();
+    let (w, h, rgb) = read_png(&out);
+    assert_eq!((w, h), (expected.width, expected.height));
+    assert_eq!(rgb, rgb_of(&expected.rgba), "same pixels as the crate");
+    let mut without = raster_settings.clone();
+    without.masks.truncate(1);
+    let plain = Session::open_raster(&input, 200, Filter::Lanczos3)
+        .unwrap()
+        .render(&without, 0, Quality::Final)
+        .unwrap();
+    assert_ne!(plain.rgba, expected.rgba, "the brush changes the frame");
+
+    // A working copy, with the --name=value form.
+    let wc = working_copy();
+    let wc_settings = with_brush(&settings(Some(WC_BASE)), &id, 40);
+    let wc_settings_path = dir.write("settings-wc.json", wc_settings.to_json());
+    let wc_path = dir.write("working.png", &wc);
+    let meta_path = dir.write("working.json", META);
+    let wc_out = dir.path("wc.png");
+    let result = run(&[
+        "render",
+        "--settings",
+        s(&wc_settings_path),
+        "--working-copy",
+        s(&wc_path),
+        "--meta",
+        s(&meta_path),
+        "--base-version",
+        WC_BASE,
+        &format!("--mask-surface={surface_arg}"),
+        "--out",
+        s(&wc_out),
+    ]);
+    assert_eq!(result.code, 0, "{}", result.stdout);
+    let mut session = Session::open_working_copy(&wc, META, Filter::Lanczos3).unwrap();
+    session.set_mask_surface(&id, &png).unwrap();
+    let expected = session.render(&wc_settings, 0, Quality::Final).unwrap();
+    assert_eq!(read_png(&wc_out).2, rgb_of(&expected.rgba));
+
+    // Failures: one JSON line, the code and exit of the table.
+    let wrong_size = dir.write(
+        "wrong-size.json",
+        with_brush(&settings(None), &id, 41).to_json(),
+    );
+    let other_id = "0".repeat(64);
+    let other_settings = dir.write(
+        "other.json",
+        with_brush(&settings(None), &other_id, 40).to_json(),
+    );
+    let rgb_png = dir.write("rgb.png", fs::read(&out).unwrap());
+    let rgb_id = niho_develop::mask_surface::surface_id(&fs::read(&rgb_png).unwrap());
+    let rgb_settings = dir.write(
+        "rgb.json",
+        with_brush(&settings(None), &rgb_id, 40).to_json(),
+    );
+    let fail_out = dir.path("fail.png");
+    let jpeg = golden_jpeg();
+    let render = |settings: &Path, surfaces: &[&str]| {
+        let mut args = vec![
+            "render",
+            "--settings",
+            s(settings),
+            "--raster",
+            s(&jpeg),
+            "--max-dimension",
+            "64",
+            "--out",
+            s(&fail_out),
+        ];
+        for surface in surfaces {
+            args.extend(["--mask-surface", surface]);
+        }
+        run(&args)
+    };
+    let missing_file = format!("{id}={}", s(&dir.path("none.png")));
+    let wrong_hash = format!("{other_id}={}", s(&surface_path));
+    let rgb_arg = format!("{rgb_id}={}", s(&rgb_png));
+    let cases: Vec<(&str, Run, &str, i32)> = vec![
+        (
+            "no surface",
+            render(&settings_path, &[]),
+            "unsupported_settings",
+            2,
+        ),
+        (
+            "another surface",
+            render(&settings_path, &[&wrong_hash]),
+            "decode_failed",
+            5,
+        ),
+        (
+            "the settings' id is not given",
+            render(&other_settings, &[&surface_arg]),
+            "unsupported_settings",
+            2,
+        ),
+        (
+            "not 8-bit gray",
+            render(&rgb_settings, &[&rgb_arg]),
+            "decode_failed",
+            5,
+        ),
+        (
+            "another size",
+            render(&wrong_size, &[&surface_arg]),
+            "invalid_settings",
+            3,
+        ),
+        (
+            "missing file",
+            render(&settings_path, &[&missing_file]),
+            "input_not_found",
+            4,
+        ),
+        (
+            "no '='",
+            render(&settings_path, &[&id]),
+            "invalid_arguments",
+            1,
+        ),
+        (
+            "not an id",
+            render(&settings_path, &[&format!("ABC={}", s(&surface_path))]),
+            "invalid_arguments",
+            1,
+        ),
+        (
+            "no file",
+            render(&settings_path, &[&format!("{id}=")]),
+            "invalid_arguments",
+            1,
+        ),
+        (
+            "the same id twice",
+            render(&settings_path, &[&surface_arg, &surface_arg]),
+            "invalid_arguments",
+            1,
+        ),
+        (
+            "--out is a surface",
+            run(&[
+                "render",
+                "--settings",
+                s(&settings_path),
+                "--raster",
+                s(&golden_jpeg()),
+                "--mask-surface",
+                &surface_arg,
+                "--out",
+                s(&surface_path),
+            ]),
+            "invalid_arguments",
+            1,
+        ),
+    ];
+    for (name, result, code, exit) in cases {
+        let json = result.json();
+        assert_eq!(json["error"], code, "{name}: {}", result.stdout);
+        let message = json["message"].as_str().unwrap_or_default();
+        assert!(!message.is_empty(), "{name}");
+        assert_eq!(result.code, exit, "{name}");
+        match name {
+            "another surface" | "not 8-bit gray" => {
+                assert!(message.starts_with("maskSurfaceInvalid"), "{message}")
+            }
+            "no surface" | "the settings' id is not given" => {
+                assert!(message.starts_with("maskSurfaceMissing"), "{message}")
+            }
+            "another size" => assert!(message.starts_with("maskSurfaceMismatch"), "{message}"),
+            _ => {}
+        }
+    }
+    assert!(!fail_out.exists(), "no output after a failure");
+    // More surfaces than masks can use.
+    let many: Vec<String> = (0..9)
+        .map(|i| format!("{:064x}={}", i, s(&surface_path)))
+        .collect();
+    let many: Vec<&str> = many.iter().map(String::as_str).collect();
+    let result = render(&settings_path, &many);
+    assert_eq!(result.json()["error"], "invalid_arguments");
+    assert_eq!(result.code, 1);
+}
+
 #[test]
 fn a_different_base_is_rendered_and_reported() {
     let dir = TempDir::new("base-mismatch");
@@ -579,6 +820,8 @@ fn failures_are_one_json_line_with_a_fixed_exit_code() {
     let no_engine = with("no-engine.json", r#"{"v":1}"#);
     let v6 = with("v6.json", r#"{"v":6,"engine":"niho-1"}"#);
     let v6_out = dir.path("v6-out.png");
+    // A brush mask: valid (v 5), but its surface is not given
+    // (--mask-surface), so it is never drawn without the mask.
     let masks = with(
         "masks.json",
         &format!(

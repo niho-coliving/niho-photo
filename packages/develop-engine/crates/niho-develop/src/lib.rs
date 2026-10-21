@@ -28,6 +28,7 @@ pub mod local_render;
 pub mod look;
 pub mod lut;
 mod mask_session;
+pub mod mask_surface;
 mod niho3;
 mod niho4;
 #[allow(dead_code)] // Keep the frozen R317/R364 diagnostic surface intact.
@@ -64,7 +65,7 @@ pub use settings::{DevelopSettings, SettingsError};
 pub use spatial::Quality;
 
 use head_wb::HeadWhiteBalance;
-use std::{fmt, sync::Arc};
+use std::{collections::BTreeMap, fmt, sync::Arc};
 
 /// Latest formula version this bundle can render. Settings constructors keep
 /// their own compatibility defaults; this advertises reader capability.
@@ -87,9 +88,28 @@ pub enum Error {
     Niho6Prepare(String),
     Sample(String),
     /// An active `brush` / `subject` / `sky` mask (`masks`) whose surface
-    /// this build does not hold (the surface store is M4, #68). Holds the
-    /// mask id. A render fails instead of silently leaving the mask out.
+    /// was not set into the Session ([`Session::set_mask_surface`]; the
+    /// one-shot renders have none). Holds the mask id. A render fails
+    /// instead of silently leaving the mask out.
     MaskSurfaceMissing(String),
+    /// [`Session::set_mask_surface`] of bytes that are not the surface the
+    /// id names: a bad id, too large, another sha256, or not a still 8-bit
+    /// gray PNG of 1..=4096 pixels per side (`mask_surface.rs`). `id` is
+    /// the id given when it has the form of one.
+    MaskSurfaceInvalid {
+        id: Option<String>,
+        reason: mask_surface::SurfaceError,
+    },
+    /// A mask's `surface.width` / `surface.height` are not the size of the
+    /// surface set under its id.
+    MaskSurfaceMismatch {
+        mask: String,
+        surface: String,
+        /// The settings' size.
+        expected: (u32, u32),
+        /// The surface's size.
+        actual: (u32, u32),
+    },
     /// [`Session::mask_plane`] of an id the settings do not have.
     MaskNotFound(String),
 }
@@ -114,6 +134,22 @@ impl fmt::Display for Error {
                 f,
                 "{MASK_SURFACE_MISSING}: mask {id} needs its surface, which is not loaded"
             ),
+            Error::MaskSurfaceInvalid { id: Some(id), reason } => {
+                write!(f, "{MASK_SURFACE_INVALID}: surface {id}: {reason}")
+            }
+            Error::MaskSurfaceInvalid { id: None, reason } => {
+                write!(f, "{MASK_SURFACE_INVALID}: {reason}")
+            }
+            Error::MaskSurfaceMismatch {
+                mask,
+                surface,
+                expected,
+                actual,
+            } => write!(
+                f,
+                "{MASK_SURFACE_MISMATCH}: mask {mask} says its surface {surface} is {}x{}, but it is {}x{}",
+                expected.0, expected.1, actual.0, actual.1
+            ),
             Error::MaskNotFound(id) => write!(f, "{MASK_NOT_FOUND}: no mask {id}"),
         }
     }
@@ -123,6 +159,10 @@ impl std::error::Error for Error {}
 
 /// Stable code of [`Error::MaskSurfaceMissing`] (the start of its message).
 pub const MASK_SURFACE_MISSING: &str = "maskSurfaceMissing";
+/// Stable code of [`Error::MaskSurfaceInvalid`] (the start of its message).
+pub const MASK_SURFACE_INVALID: &str = "maskSurfaceInvalid";
+/// Stable code of [`Error::MaskSurfaceMismatch`] (the start of its message).
+pub const MASK_SURFACE_MISMATCH: &str = "maskSurfaceMismatch";
 /// Stable code of [`Error::MaskNotFound`] (the start of its message).
 pub const MASK_NOT_FOUND: &str = "maskNotFound";
 
@@ -393,7 +433,7 @@ pub fn export_jpeg(
     quality: u8,
 ) -> Result<Vec<u8>, Error> {
     let frame = render(input, settings_json, options)?;
-    encode::encode_jpeg(&frame.rgba, frame.width, frame.height, quality).map_err(Error::Encode)
+    encode_frame_jpeg(&frame, quality)
 }
 
 /// One-shot render encoded as PNG.
@@ -403,6 +443,17 @@ pub fn export_png(
     options: &RenderOptions,
 ) -> Result<Vec<u8>, Error> {
     let frame = render(input, settings_json, options)?;
+    encode_frame_png(&frame)
+}
+
+/// A frame as the exports' JPEG (`quality` 1..100; no EXIF, like
+/// [`export_jpeg`]).
+pub fn encode_frame_jpeg(frame: &Rendered, quality: u8) -> Result<Vec<u8>, Error> {
+    encode::encode_jpeg(&frame.rgba, frame.width, frame.height, quality).map_err(Error::Encode)
+}
+
+/// A frame as the exports' PNG (like [`export_png`]).
+pub fn encode_frame_png(frame: &Rendered) -> Result<Vec<u8>, Error> {
     encode::encode_png(&frame.rgba, frame.width, frame.height).map_err(Error::Encode)
 }
 
@@ -760,6 +811,11 @@ pub struct Session {
     /// The layers of local masks (`mask_session.rs`): `None` until a frame
     /// draws an active mask, dropped by the next frame without one.
     masks: Option<Box<mask_session::MaskLayers>>,
+    /// The surfaces of `brush` / `subject` / `sky` masks set with
+    /// [`Session::set_mask_surface`] (id → decoded surface), kept across
+    /// frames until dropped. Every Session starts without any (also one made
+    /// with [`Session::thumbnail`]).
+    mask_surfaces: BTreeMap<String, Arc<mask_surface::MaskSurface>>,
     /// While a mask's layer renders from the global frame's image: that
     /// frame's local pass, read when it is the layer's
     /// ([`pipeline::RenderCaches::sharing_local`]). `None` otherwise.
@@ -797,6 +853,7 @@ impl Session {
         Self {
             working_size,
             masks: None,
+            mask_surfaces: BTreeMap::new(),
             local_shared: None,
             niho6_analysis: Arc::default(),
             niho6_source: Arc::clone(&source),
@@ -835,6 +892,73 @@ impl Session {
 
     pub fn source_size(&self) -> (usize, usize) {
         self.source.size()
+    }
+
+    /// Sets the surface `id` of `brush` / `subject` / `sky` masks
+    /// (`docs/local-adjustments.md` "面の受け渡し"): `png` must be the
+    /// surface `id` names — `id` 64 lowercase hex digits and the sha256 of
+    /// `png`, at most 8 MiB, a still 8-bit grayscale PNG of 1..=4096 pixels
+    /// per side — else [`Error::MaskSurfaceInvalid`] and nothing changes.
+    /// The surface stays for every later frame until
+    /// [`Session::drop_mask_surface`]. Setting an id again only checks the
+    /// bytes' sha256 (the same id is the same pixels).
+    pub fn set_mask_surface(&mut self, id: &str, png: &[u8]) -> Result<(), Error> {
+        let invalid = |reason| Error::MaskSurfaceInvalid {
+            id: mask_surface::is_surface_id(id).then(|| id.to_string()),
+            reason,
+        };
+        if self.mask_surfaces.contains_key(id) {
+            return mask_surface::verify_surface_id(id, png).map_err(invalid);
+        }
+        let surface = mask_surface::load_surface(id, png).map_err(invalid)?;
+        self.mask_surfaces.insert(id.to_string(), Arc::new(surface));
+        Ok(())
+    }
+
+    /// Drops the surface `id` (whether it was set). The planes made from it
+    /// are dropped with it; a frame whose active mask needs it is
+    /// [`Error::MaskSurfaceMissing`] again.
+    pub fn drop_mask_surface(&mut self, id: &str) -> bool {
+        let dropped = self.mask_surfaces.remove(id).is_some();
+        if dropped {
+            if let Some(layers) = self.masks.as_mut() {
+                layers.forget_surface(id);
+            }
+        }
+        dropped
+    }
+
+    /// Whether the surface `id` is set.
+    pub fn has_mask_surface(&self, id: &str) -> bool {
+        self.mask_surfaces.contains_key(id)
+    }
+
+    /// The ids of the surfaces set, in order.
+    pub fn mask_surface_ids(&self) -> Vec<String> {
+        self.mask_surfaces.keys().cloned().collect()
+    }
+
+    /// [`Session::render`] of a released frame (`Quality::Final`) at
+    /// `max_dimension`, with this Session's surfaces and layers, encoded as
+    /// the one-shot [`export_jpeg`] encodes (`quality` 1..100, no EXIF).
+    pub fn export_jpeg(
+        &mut self,
+        settings: &DevelopSettings,
+        max_dimension: usize,
+        quality: u8,
+    ) -> Result<Vec<u8>, Error> {
+        let frame = self.render(settings, max_dimension, Quality::Final)?;
+        encode_frame_jpeg(&frame, quality)
+    }
+
+    /// [`Session::export_jpeg`] as the one-shot [`export_png`]'s PNG.
+    pub fn export_png(
+        &mut self,
+        settings: &DevelopSettings,
+        max_dimension: usize,
+    ) -> Result<Vec<u8>, Error> {
+        let frame = self.render(settings, max_dimension, Quality::Final)?;
+        encode_frame_png(&frame)
     }
 
     /// Returns the actual Oklch value at Stage Q after hue stabilization and
@@ -1013,7 +1137,9 @@ impl Session {
     /// this session (not reductions, statistics, local pass, cubes, masters
     /// or effects' planes), so
     /// drawing previews leaves the next drag frame as it was. Render it at
-    /// its own size (`max_dimension` 0).
+    /// its own size (`max_dimension` 0). It starts without mask surfaces:
+    /// settings with an active `brush` / `subject` / `sky` mask need them
+    /// set on it too ([`Session::set_mask_surface`]).
     pub fn thumbnail(&self, max_dimension: usize) -> Session {
         let limit = match max_dimension {
             0 => THUMBNAIL_MAX_DIMENSION,

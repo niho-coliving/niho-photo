@@ -74,7 +74,7 @@ Epic #31 の契約。線形・円形・ブラシ・被写体・空の「面」�
 
 - 線形: `Z = (zero.x·A, zero.y)`、`F = (full.x·A, full.y)`、`d = F − Z`、`t = ((X − Z.x)·d.x + (Y − Z.y)·d.y) / (d.x² + d.y²)`、`m = clamp(t, 0, 1)`。
 - 円形: 中心 `c = (center.x·A, center.y)`、半軸 `a = radius.x·A`、`b = radius.y`、`θ = angle`（時計回り）。`(dx, dy) = (X − c.x, Y − c.y)`、`p = (dx·cosθ + dy·sinθ, −dx·sinθ + dy·cosθ)`、`r = sqrt((p.x/a)² + (p.y/b)²)`、`f = feather/100`、`s = clamp((1 − r) / max(f, 0.002), 0, 1)`、`m = s²(3 − 2s)`。`feather = 0` は縁だけ約 1 画素でなじませた硬い縁、`100` は中心 1・縁 0。
-- 面（ブラシ・被写体・空）: `surface` の PNG（8bit グレー。値 `/255`）を、作業画像全体に重ねて双一次補間する。標本位置は `(u·width − 0.5, v·height − 0.5)`、端は端の値で延ばす（M4。M2 のエンジンには面の置き場が無いので、これらの種類の有効なマスクは `maskSurfaceMissing` で失敗する）。
+- 面（ブラシ・被写体・空）: `surface` の PNG（8bit グレー。値 `/255`）を、作業画像全体に重ねて双一次補間する（面の縦横比は作業画像と違ってよい。`A` は使わない）。標本位置は `(u·width − 0.5, v·height − 0.5)`、端は端の値で延ばす。実装（`mask_surface.rs` の `Sampler`）は f32 の `+ − × ÷` と `floor` だけで、`x = (u as f32)·width − 0.5`、`y = (v as f32)·height − 0.5`、`x0 = floor(x)`、`y0 = floor(y)`、`fx = x − x0`、`fy = y − y0`、近い 4 画素 `a (x0, y0)` `b (x0+1, y0)` `c (x0, y0+1)` `d (x0+1, y0+1)` の添字はそれぞれ `0..width−1` / `0..height−1` に収め（端の値で延ばす）、byte の値のまま `top = a + (b − a)·fx`、`bottom = c + (d − c)·fx`、`m = (top + (bottom − top)·fy) / 255`。`m` は 0〜1 に収まり、全部 255 の面はちょうど 1。
 - `invert` は最後に `m ← 1 − m`。
 
 ## 局所の補正
@@ -112,18 +112,33 @@ Session は次の描画のための 1 枠のキャッシュ（cube・局所階�
 
 ### 面の表示（エディタの重ね表示）
 
-`Session::mask_plane(settings, maskId, maxDimension)`・wasm の `Developer.maskPlane(settingsJson, maskId, maxDimension)` は、1 枚のマスクの面を `{ width, height, data }`（`data` は `width·height` byte。`round(w / 65536 · 255)`、行優先、`invert` 込み、`enabled` に依らない）で返す。寸法はその `maxDimension` の描画と同じ（幾何込み）、写像と面の計算も描画と同じで、Session の描画のキャッシュには触れない。面の種類（ブラシ・被写体・空）は `maskSurfaceMissing`、無い id は `maskNotFound`。
+`Session::mask_plane(settings, maskId, maxDimension)`・wasm の `Developer.maskPlane(settingsJson, maskId, maxDimension)` は、1 枚のマスクの面を `{ width, height, data }`（`data` は `width·height` byte。`round(w / 65536 · 255)`、行優先、`invert` 込み、`enabled` に依らない）で返す。寸法はその `maxDimension` の描画と同じ（幾何込み）、写像と面の計算も描画と同じで、Session の描画のキャッシュには触れない。面の種類（ブラシ・被写体・空）はその Session の面を読む（`enabled` に依らず面が要る。無ければ `maskSurfaceMissing`、寸法が `surface` と違えば `maskSurfaceMismatch`）。無い id は `maskNotFound`。
 
 ## 面の受け渡し
 
-- 面は PNG（8bit グレー・1〜4096 画素・8 MiB 以下）の**内容の sha256** で呼ぶ不変のファイルで、同じ `id` の中身は変わらない。エンジンは受け取るときに sha256 と寸法を `surface` と照合し、合わなければ拒む。
-- `Session::set_mask_surface(id, png)` / `drop_mask_surface(id)`、wasm の `Developer.setMaskSurface(id, png)` / `dropMaskSurface(id)`、書き出しの CLI の `--mask-surface <id>=<path>`（繰り返し可）が同じ口（M4）。設定が参照する面が無いときは、無言で飛ばさず `maskSurfaceMissing` で失敗する（M2 のエンジンは面の口を持たないので、ブラシ・被写体・空の有効なマスクは常にこれ。Rust の `Error::MaskSurfaceMissing`、CLI は `unsupported_settings`・exit 2）。
-- 保存先は M4（Mac は写真の隣のローカル保存、クラウドの写真は非公開側）。
+M4（#68）。エンジン（native・wasm）・書き出しの CLI・Mac の置き場が同じ口で面を受け渡す。
+
+- 面は PNG の**内容の sha256**（小文字 16 進 64 文字。設定の `surface.id`）で呼ぶ不変のファイルで、同じ `id` の中身は変わらない。エンジン（`mask_surface.rs`）が受け取る PNG は次の全部を満たすものだけ: 8 MiB 以下、sha256 が `id`、静止画の 8bit グレー（色の型 0・深さ 8。1 / 2 / 4 / 16bit のグレー・パレット・グレー＋α・RGB / RGBA は不可）、`tRNS`（透明）と `acTL`（アニメーション）が無い、1 辺 1〜4096 画素、最後まで読める（interlace は可）。値は `byte / 255`。
+- 失敗の code（メッセージの先頭。Rust の `Error`）:
+  - `maskSurfaceInvalid`（`Error::MaskSurfaceInvalid`）: 上の条件に合わない面を渡した（id の形・大きさ・sha256・形式・寸法）。Session は何も変えない。
+  - `maskSurfaceMissing`（`Error::MaskSurfaceMissing`。マスクの id を持つ）: 描かれる（`enabled` で `adjust` が 0 でない）面のマスクの `surface.id` の面を Session が持っていない。無言で飛ばさず失敗する。描かれないマスクの面は無くてよい。
+  - `maskSurfaceMismatch`（`Error::MaskSurfaceMismatch`）: Session の面の寸法が、マスクの `surface.width` / `surface.height` と違う。
+  - 描画はこれらを `R0` を描く前に確かめる。
+- Rust: `Session::set_mask_surface(id, png)` / `drop_mask_surface(id)` / `has_mask_surface(id)` / `mask_surface_ids()`、`Session::export_jpeg(settings, maxDimension, quality)` / `export_png(settings, maxDimension)`（その Session の面と層で released の描画をして、one-shot の `export_jpeg` / `export_png` と同じ符号化。`encode_frame_jpeg` / `encode_frame_png`）。面は落とすまで Session に残り、次の描画でも使う（復号した `width·height` byte を持つ）。同じ id をもう一度渡すと sha256 だけを照らす。落とすとその面から作った層の面（plane）も捨てる。`Session::thumbnail`（プリセットの見本）・自動補正・色の取得の Session と one-shot の `render` / `export_*` は面を持たずに始まる（見本で面のマスクを描くなら、見本の Session にも渡す）。
+- wasm: `Developer.setMaskSurface(id, png)` / `dropMaskSurface(id)`（持っていたら true）/ `hasMaskSurface(id)`、`Developer.exportJpeg(settingsJson, maxDimension, quality)` / `Developer.exportPng(settingsJson, maxDimension)`（その Developer の面と層で `render(settingsJson, maxDimension, false)` を描き、one-shot の `exportJpeg` / `exportPng` と同じ符号化。EXIF は `withCaptureExif` で足す。寸法は Developer の作業寸法まで）。補助の `encodeMaskSurface(width, height, data)`（`data` は `width·height` byte。上の形の非 interlace の PNG を返す。同じ画素は同じ byte＝同じ id で、native と wasm でも同じ byte。`tests/masks_cross_target.rs`）と `maskSurfaceId(png)`（sha256）。one-shot の `render` / `exportJpeg` / `exportPng` は面を持たないので、描かれる面のマスクがあると `maskSurfaceMissing`。
+- 書き出しの CLI（`niho-develop-render render`）: `--mask-surface <id>=<path>`（`--mask-surface=<id>=<path>` も可。繰り返し可・8 個まで・同じ id は 1 回）。ファイルは元の写真・作業コピーより先に 8 MiB + 1 byte まで読み、Session を開いた後・描く前に `set_mask_surface` へ渡す。exit code: 形の違う引数は `invalid_arguments`（1）、ファイルが無い・読めないは `input_not_found` / `read_failed`（4）、`maskSurfaceInvalid` は `decode_failed`（5）、`maskSurfaceMissing` は `unsupported_settings`（2。M2 と同じ）、`maskSurfaceMismatch` は `invalid_settings`（3）。`--out` は面のファイルも上書きしない。
+- Mac（NIHO camera）の置き場: `packages/desktop-photo` の `MaskSurfaceStore`（`mask_surfaces.rs`）。`~/Library/Application Support/life.niho.camera/mask-surfaces/<写真の中身の sha256>/<面の sha256>.png`（補正の `edits/<sha256>.json` と同じ写真のキー。フォルダ 0700・ファイル 0600・一時ファイル＋rename。キーと id の形を確かめてからパスを組み、シンボリックリンクのファイルは読まない）。
+  - 保存は署名・IHDR（CRC・深さ 8・色の型 0・1〜4096 画素）・最初の IDAT までに PLTE / tRNS / acTL が無いこと・8 MiB 以下を確かめ、sha256 を id にする（画素まで読むのはエンジン）。同じ中身は書き直さない。読み出しは 8 MiB までで、sha256 を名前と照らす（壊れた・置き換わったファイルは渡さない）。
+  - 上限は写真 1 枚 64 面・1 面 8 MiB（`MaskSurfaceLimits`）。上限で新しい面を保存するときは、その写真の保存した補正が参照する面（無効なマスクのものも）を残し、最後に使った（保存・読み出し＝ファイルの更新日時）のが古い面から消して空ける。空けられなければ `maskSurfaceQuota`。消した面を参照する undo の古い版に戻すと `maskSurfaceMissing` になる。
+  - 掃除: 補正（NIHO camera は利用者のデータそのものなので古さ・件数で消さない）と同じく、古さ・写真の数では消さない。一覧から写真を外しても補正と面は残る（写真ごとの上限が大きさを抑える。ふつうのブラシの面は数十 KB）。補正を消す口ができたら `MaskSurfaceStore::forget_photo` を一緒に呼ぶ。途中で落ちた一時ファイルは、その写真へ次に保存するときに 1 時間を過ぎたものを消す。
+  - コマンド（ACL は `allow-camera-photos`）: `camera_mask_surface_save`（raw IPC の PNG、`photoId` は header `x-niho-photo-id` → `{ id, width, height }`）、`camera_mask_surface_load`（`{ photoId, surfaceId }` → raw IPC の PNG）、`camera_mask_surface_exists`（`{ photoId, surfaceIds }`、1〜64 個 → `{ missing }`）。失敗は `maskSurfaceInvalid`・`maskSurfaceQuota`・`maskSurfaceMissing`・`notFound`・`invalidRequest`。TS は `apps/camera/src/local-library/commands.ts` の `saveMaskSurface` / `loadMaskSurface` / `missingMaskSurfaces`。
+  - 原寸の書き出し（`PhotoDevelop::export`）: 描かれる面のマスクの面を `DevelopPhotos::mask_surface`（camera は上の置き場。既定は無し）で読み、sha256 を照らして仕事の一時フォルダへ写し、`--mask-surface <id>=<path>` で sidecar へ渡す（描かれないマスクの面は渡さない）。無いときは作業コピーを作る前に `maskSurfaceMissing`（`develop_code::MASK_SURFACE_MISSING`）で断る。
+- クラウドの写真の面の置き場は非公開側（`niho-coliving/niho-app#19218`）。
 
 ## 版と互換
 
 - `masks` に 1 枚でもあれば `v = 5`（`MASKS_SETTINGS_VERSION`）を要求する。`detail`（#32）も 5 を使う予定で、先に merge された側が 5、後の側が 6 に振り直す。古い reader は `v` が未知のため設定を補正なしとして読み替えず、閲覧のみにする。
-- 能力の問い合わせ: `validateSettings` の probe は M1 の wasm（マスクを読めるが描かない）でも通るので使わない。wasm の `capabilities()`（`{"masks":{"kinds":["linear","radial"],"max":8,"maskPlane":true}}`）が描ける種類を返し、この口の無い古い wasm は描けない扱いにする（画面の扱いは M3）。Mac の書き出しは同梱の niho-develop-render が `MASKS_MIN_RENDER_VERSION`（0.19.0）以上のときだけ `masks` 付きの設定を渡し、それより古ければ作業コピーを作る前に `unsupportedSettings` で断る。NIHO camera の `camera_develop_status` は `masks`（`PhotoLibraryCapabilities.nativeExportMasks`）でこれを画面へ知らせる。sidecar の lock（`apps/camera/develop-sidecars.lock.json`）は repo の外の公開の手順で 0.19.0 に上げる。
+- 能力の問い合わせ: `validateSettings` の probe は M1 の wasm（マスクを読めるが描かない）でも通るので使わない。wasm の `capabilities()`（`{"masks":{"kinds":["linear","radial","brush","subject","sky"],"max":8,"maskPlane":true,"surfaces":true}}`）が描ける種類を返し、この口の無い古い wasm は描けない扱いにする（画面の扱いは M3）。`surfaces` の無い M2 の wasm（`kinds` が `linear` `radial` だけ）は面の口を持たない。Mac の書き出しは同梱の niho-develop-render が `MASKS_MIN_RENDER_VERSION`（0.19.0）以上のときだけ `masks` 付きの設定を渡し、それより古ければ作業コピーを作る前に `unsupportedSettings` で断る。0.19.0 は線形・円形（M2）と `--mask-surface`（M4）を同じ版で出す（どちらも公開前）ので、版の境は 1 つで、`camera_develop_status` の `masks` は面のマスクの書き出しも含む。NIHO camera の `camera_develop_status` は `masks`（`PhotoLibraryCapabilities.nativeExportMasks`）でこれを画面へ知らせる。sidecar の lock（`apps/camera/develop-sidecars.lock.json`）は repo の外の公開の手順で 0.19.0 に上げる。
 - 取り扱い: 「初期化」とプリセット適用前の比較は `masks` を除く。自動補正・設定のコピーは対象の `masks` を変えない（コピー元の `masks` も持ち出さない）。プリセット（XMP）の適用も `settings.masks` は当てる前の写真のままで、プリセット自身がマスクを持つときだけ、それを写真の座標へ写して置き換える（下の「Lightroom の XMP の読み」）。旧形式への変換 (`developSettingsToEditSettings`) は `masks` が有効なら null。XMP の書き出しは `masks` を書かず `notWritten: ["masks"]` を返す（Lightroom への書き出しは未対応のまま）。
 
 ## Lightroom の XMP の読み
@@ -234,6 +249,33 @@ drag 100ms／final 1 秒（マスク 3 枚まで）が目安。層は「描く�
 - memory（wasm の最大）: マスク無し 187〜192 MiB に対し、3 枚で 253〜390 MiB（自分の master を持つ層が多いほど大きい）。1 層あたり、結果 2 枚（quality ごと）・面（4 byte/画素）と、自分の画像を描く層は表示寸法の master・局所階調の pass を持つ。色ポイントが有効なら、その面（24 byte/画素。2048×1365 で約 64 MiB）も層ごとに持つ。
 
 この PR で入れた対策: 層ごとのキャッシュの入れ替えと結果の使い回し（`R0` と各層・quality ごと）、`R0` と同じ画像を描く層の master・縮小・窓・統計・局所階調の pass の共有、面が全部 0 の層・`L` が全体と同じ層を描かない、面の使い回し（形だけを動かす間は描画しない）、niho-6 の解析を露光量が同じなら final でも使い回す（共有の 1 枠を層と取り合わない）、離した final の前に `R0` の master をその描画のものにそろえる、離した final の原寸の master を層に持たせない。
+
+### drag を 640px で描くとき（M3 #67 の既定）
+
+エディタは、有効なマスクがある間の drag（スライダー・つまみ）を長辺 640px の interactive で描く（`developInteractiveMaxDimension`。色ポイントと同じ。離した final は 1280px のまま）。同じ入力で `mask_timing -- --drag 640` を native で測った（Mac Studio M1 Max・2026-10-21・エンジン 0.19.0・3 回のうち最も速いもの。**wasm は測っていない**。M2 の表の wasm / native の比（約 1.3〜1.6 倍）から、wasm は native の 1.3〜1.6 倍と見込む）。値は ms。
+
+| 元 | 局所の差分 | 枚数 | 初回 drag | drag（その 1 枚） | drag（全体） |
+| --- | --- | ---: | ---: | ---: | ---: |
+| JPEG 相当 | — | 0 | 67 | 27 | 25 |
+| JPEG 相当 | cube のみ | 1 | 103 | 30 | 70 |
+| JPEG 相当 | cube のみ | 3 | 170 | 32 | 118 |
+| JPEG 相当 | 露光量 | 1 | 139 | 28 | 52 |
+| JPEG 相当 | 露光量 | 3 | 273 | 27 | 103 |
+| JPEG 相当 | 局所階調 | 1 | 136 | 23 | 48 |
+| JPEG 相当 | 局所階調 | 3 | 280 | 24 | 93 |
+| signed RAW | — | 0 | 104 | 42 | 42 |
+| signed RAW | cube のみ | 1 | 151 | 49 | 91 |
+| signed RAW | cube のみ | 3 | 260 | 52 | 199 |
+| signed RAW | 露光量 | 1 | 210 | 49 | 90 |
+| signed RAW | 露光量 | 3 | 424 | 50 | 176 |
+| signed RAW | 局所階調 | 1 | 359 | 68 | 106 |
+| signed RAW | 局所階調 | 3 | 655 | 65 | 184 |
+
+- **1 枚のマスクのスライダー・つまみの drag は目安内**（JPEG 相当 23〜32 ms、RAW 49〜68 ms。wasm でも 100 ms 未満の見込み）。1280px の drag（M2 の表。wasm で 66〜199 ms）から大きく下がる。
+- **全体のスライダーの drag は、マスクが多いと目安に届かない**: JPEG 相当は 3 枚で 93〜118 ms（wasm では 130〜190 ms の見込み）、RAW は 3 枚で 176〜199 ms（同 230〜320 ms）。640px にしても 1280px の約 2.4 倍しか縮まない（cube の焼き直しなど、画素数に依らない費用が層ごとに残る）。
+- 初回 drag（その写真・その設定で最初の interactive）は 100 ms を超える（層ごとの cube・局所階調の pass を作るため）。
+
+全体のスライダーの drag を目安に収めるには、下の提案のうち 1（層を面の外接矩形の中だけ描く）か 2（cube だけが違う層を `R0` と同じ走査で描く）の描画の経路の変更が要る。3（drag 中だけ層の差分を前のフレームのものにする）は 1 層分の描画で済むが、drag 中の見え方が変わるので owner の判断が要る。
 
 目安に届かない所の次の対策（提案。どれもこの PR の外の、描画の経路の変更が要る）:
 
