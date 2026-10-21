@@ -167,6 +167,42 @@ function architecture(binary, env) {
   return value;
 }
 
+function systemRuntimePath(value) {
+  return value.startsWith("/usr/lib/") || value.startsWith("/System/");
+}
+
+export function nativeSearchPaths(binary, env) {
+  const lines = run("/usr/bin/otool", ["-l", binary], { env }).split("\n");
+  const values = [];
+  for (let i = 0; i < lines.length; i++) {
+    if (lines[i].trim() !== "cmd LC_RPATH") continue;
+    const record = lines.slice(i + 1, i + 4).map((line) => /^\s*path (.+) \(offset [0-9]+\)$/u.exec(line)).find(Boolean);
+    if (!record) throw new NativeBuildError("native toolのrpathを読めません");
+    values.push(record[1]);
+  }
+  return values;
+}
+
+export function assertSystemNativeSearchPaths(binary, env) {
+  const paths = nativeSearchPaths(binary, env);
+  if (paths.some((value) => !systemRuntimePath(value) || value.split("/").some((part) => part === "." || part === "..") || /[\x00-\x1f\x7f]/u.test(value))) throw new NativeBuildError("native toolにmacOS外の探索pathがあります");
+  return paths;
+}
+
+export function normalizeNativeSearchPaths(binary, env) {
+  // 全ての実dylibがOSの絶対pathである場合だけ、SwiftPMが残す未使用の探索pathを除く。
+  // @rpath依存を許可したり、必要なframeworkを別の場所へ向けたりしない。
+  systemDylibs(binary, env);
+  const remove = [...new Set(nativeSearchPaths(binary, env).filter((value) => !systemRuntimePath(value)))];
+  for (const value of remove) run("/usr/bin/install_name_tool", ["-delete_rpath", value, binary], { env });
+  if (remove.length) {
+    run("/usr/bin/codesign", ["--force", "--sign", "-", binary], { env });
+    run("/usr/bin/codesign", ["--verify", "--strict", binary], { env });
+  }
+  assertSystemNativeSearchPaths(binary, env);
+  return remove.length;
+}
+
 function copyCalibration(engineRoot, lock, outputDirectory) {
   const destination = path.join(outputDirectory, "develop-calibration");
   mkdirSync(destination, { recursive: true, mode: 0o755 });
@@ -249,6 +285,7 @@ export function buildMacosNative({ engineRoot, lockPath, outputDirectory, inputE
       const source = sourceByName[name];
       const stat = lstatSync(source, { throwIfNoEntry: false });
       if (!stat?.isFile() || stat.isSymbolicLink()) throw new NativeBuildError("native tool出力がありません");
+      normalizeNativeSearchPaths(source, runtimeEnv);
       const version = parseVersion(name, run(source, ["version"], { cwd: "/", env: runtimeEnv, timeout: 30_000 }));
       if (!version || version !== expectedByName[name]) throw new NativeBuildError("native tool versionがlockと一致しません");
       const target = path.join(outputDirectory, `${name}-${TARGET}`);

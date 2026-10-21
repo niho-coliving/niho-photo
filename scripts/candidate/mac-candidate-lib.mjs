@@ -17,6 +17,7 @@ import {
 import { tmpdir } from "node:os";
 import path from "node:path";
 
+import { assertSystemNativeSearchPaths } from "../../packages/develop-engine/build-macos-native.mjs";
 import { assertPublicBytes, createSbom, lockfiles } from "../ci/release-evidence-lib.mjs";
 import { normalizeArtifactDigest, validateReleaseManifest, verifyManifestPackageFiles } from "../sdk/verify-release-artifact.mjs";
 
@@ -422,6 +423,7 @@ export function verifyBuiltApp({ appPath, workspace, version, sdkManifest, nativ
     if (versionValue !== record.version) throw new CandidateError("bundled native tool versionがstage manifestと一致しません");
     const dylibs = run("otool", ["-L", bundled]).split("\n").slice(1).map((line) => line.trim().split(" (")[0]).filter(Boolean);
     if (dylibs.some((item) => !item.startsWith("/usr/lib/") && !item.startsWith("/System/"))) throw new CandidateError("bundled native toolがmacOS外のdylibを参照しています");
+    assertSystemNativeSearchPaths(bundled, { PATH: "/usr/bin:/bin", HOME: tmpdir() });
     const architecture = run("lipo", ["-archs", bundled]).trim();
     if (architecture !== "arm64" || record.architecture !== architecture) throw new CandidateError("bundled native toolがarm64 thin binaryではありません");
     return { name: record.name, version: versionValue, architecture, sourceSha256: record.sha256, sha256: sha256(bytes), bytes: bytes.length, dylibs };

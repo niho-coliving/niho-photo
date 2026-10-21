@@ -10164,8 +10164,8 @@
     },
     {
       "path": "packages/develop-engine/build-macos-native.mjs",
-      "sha256": "95191b32a82a3a2d979037dd9614392be215542d565f9323f9da2c6cfd7e1fdb",
-      "origin": "Issue #113のSDK native build closure用に公開sourceだけから独立作成。固定Rust/lock/target、隔離環境、3 native toolのversion・system dylib・calibration registry/hash検査を実装し、signing key・credential・private sourceを含まない。\n変更理由: native helperの実装レビューで不要importとindentを整理。\n変更理由: 独立native builderでSDK sourceとtool lockを事前照合し、既定Rust toolchainの保存先を隔離HOMEから独立して保持。\n変更理由: macOSの別名一時pathから実行してもnative CLIが起動するよう実pathでentrypointを照合。\n変更理由: Swift packageの製品buildでも解決されるtest targetとfixtureをSDK source closureに含める\n変更理由: Swiftのfile/debug prefix mapとRustの別名path・実path mapを追加し公開artifactからbuild pathを除く"
+      "sha256": "b0b4a3e63a4318c33b7df2ca47795e825fc241dfdd548c6c8bfe71b2a6988a51",
+      "origin": "Issue #113のSDK native build closure用に公開sourceだけから独立作成。固定Rust/lock/target、隔離環境、3 native toolのversion・system dylib・calibration registry/hash検査を実装し、signing key・credential・private sourceを含まない。\n変更理由: native helperの実装レビューで不要importとindentを整理。\n変更理由: 独立native builderでSDK sourceとtool lockを事前照合し、既定Rust toolchainの保存先を隔離HOMEから独立して保持。\n変更理由: macOSの別名一時pathから実行してもnative CLIが起動するよう実pathでentrypointを照合。\n変更理由: Swift packageの製品buildでも解決されるtest targetとfixtureをSDK source closureに含める\n変更理由: Swiftのfile/debug prefix mapとRustの別名path・実path mapを追加し公開artifactからbuild pathを除く\n変更理由: System絶対pathのdylibだけを使うnative toolから未使用のSwiftPM探索pathを削除しad-hoc再署名する"
     },
     {
       "path": "scripts/ci/scopes.mjs",
