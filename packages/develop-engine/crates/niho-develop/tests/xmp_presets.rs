@@ -145,19 +145,22 @@ fn builtin_presets_match_photo_bench_engine() {
             photo_bench_unsupported, want_unsupported,
             "{id} unsupported"
         );
+        // NIHO also renders the midtone / global luminance (niho-photo#39),
+        // which Photo Bench keeps only.
+        let niho_renders = |p: &str| {
+            xmp::effect_field(p).is_some()
+                || matches!(p, "ColorGradeMidtoneLum" | "ColorGradeGlobalLum")
+        };
         let niho_unsupported: Vec<String> = want_unsupported
             .iter()
-            .filter(|p| xmp::effect_field(p).is_none())
+            .filter(|p| !niho_renders(p))
             .cloned()
             .collect();
         assert_eq!(
             result.unsupported, niho_unsupported,
             "{id} NIHO unsupported"
         );
-        for p in want_unsupported
-            .iter()
-            .filter(|p| xmp::effect_field(p).is_some())
-        {
+        for p in want_unsupported.iter().filter(|p| niho_renders(p)) {
             let item = result.items.iter().find(|i| &i.property == p).unwrap();
             assert_eq!(item.level, xmp::Level::Exact, "{id} {p}");
         }

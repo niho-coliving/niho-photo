@@ -18,7 +18,9 @@
 //! `Tint` is Lightroom's fixed 5001 K / +10 ([`LIGHTROOM_CUSTOM_WHITE`]);
 //! Photo Bench renders it as shot.  When non-zero `IncrementalTemperature` /
 //! `IncrementalTint` are present instead, the converter produces calibrated
-//! `niho-2` relative white balance.
+//! `niho-2` relative white balance. Color grading's midtone / global
+//! luminance, which Photo Bench only keeps, render here (niho-photo#39):
+//! `exact` at 0, otherwise `approximate` (not calibrated against Lightroom).
 //!
 //! NIHO effects (#17120 E1: black & white, the post-crop vignette, grain;
 //! [`EFFECT_KEYS`]) are not in Photo Bench, so they bypass its parser and the
@@ -1580,6 +1582,8 @@ impl XmpDocument {
                     .optional_number(k)
                     .is_some_and(|number| number.is_finite());
             let effect = effect_field(k);
+            let graded_luminance_model =
+                matches!(k, "ColorGradeMidtoneLum" | "ColorGradeGlobalLum");
             let (mut pb, mut level, mut note): (Level, Level, String) = if k == "ToneCurveName2012"
                 && self.sequences.is_empty()
             {
@@ -1664,12 +1668,19 @@ impl XmpDocument {
                     Level::Unsupported,
                     "-100..100 の範囲外なので適用しない".into(),
                 )
-            } else if matches!(k, "ColorGradeMidtoneLum" | "ColorGradeGlobalLum") {
-                (
-                    Level::Unsupported,
-                    Level::Unsupported,
-                    "測定式が無いため値を保持するのみ".into(),
-                )
+            } else if graded_luminance_model {
+                // Photo Bench keeps the value only; NIHO renders it with an
+                // approximation not calibrated against Lightroom yet
+                // (niho-photo#39, `color_ops::LUM_MIDTONE` / `LUM_GLOBAL`).
+                if swift_double(value) == Some(0.0) {
+                    (Level::Unsupported, Level::Exact, NOTE_EFFECT_NONE.into())
+                } else {
+                    (
+                        Level::Unsupported,
+                        Level::Approximate,
+                        "NIHO の近似式（Lightroom の実測による校正は未実施）".into(),
+                    )
+                }
             } else if matches!(k, "Highlights2012" | "Shadows2012") {
                 (
                     Level::Exact,
@@ -1755,10 +1766,13 @@ impl XmpDocument {
                 level = Level::Unsupported;
                 note = "有限数として読めないため適用しない".into();
             }
-            // An effect in use is approximate already; its note still says
-            // the value was clamped.
+            // An effect or the midtone / global luminance in use is
+            // approximate already; its note still says the value was clamped.
             let clampable = match effect {
                 Some(_) => matches!(level, Level::Exact | Level::Approximate),
+                None if graded_luminance_model => {
+                    matches!(level, Level::Exact | Level::Approximate)
+                }
                 None => matches!(level, Level::Exact),
             };
             if let (Some(range), Some(v)) = (clamp_range(k), swift_double(value)) {
@@ -2147,6 +2161,16 @@ mod tests {
         assert!(!result.converted);
         let legacy = result.settings.legacy_settings.unwrap();
         assert!(legacy.contains_key("curveRefineSaturation"));
-        assert!(legacy.contains_key("colorGrading"));
+        // Midtone / global luminance render since niho-photo#39: they
+        // convert and are approximate, not unsupported.
+        assert!(!legacy.contains_key("colorGrading"));
+        let g = &result.settings.color_grading;
+        assert_eq!((g.midtone.luminance, g.global.luminance), (20.0, -10.0));
+        assert_eq!(result.unsupported, vec!["CurveRefineSaturation"]);
+        for key in ["ColorGradeMidtoneLum", "ColorGradeGlobalLum"] {
+            let item = result.items.iter().find(|i| i.property == key).unwrap();
+            assert_eq!(item.level, Level::Approximate, "{key}");
+            assert_eq!(item.photo_bench_level, Level::Unsupported, "{key}");
+        }
     }
 }

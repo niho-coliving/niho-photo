@@ -683,9 +683,11 @@ impl DevelopSettings {
             g.shadow.saturation,
             g.shadow.luminance,
             g.midtone.saturation,
+            g.midtone.luminance,
             g.highlight.saturation,
             g.highlight.luminance,
             g.global.saturation,
+            g.global.luminance,
         ];
         let white_balance_neutral = match self.white_balance.mode {
             WhiteBalanceMode::AsShot => true,

@@ -294,13 +294,14 @@
         "path": "packages/photo-editing/src/develop-engine/develop-engine-manifest.ts",
         "sha256": "5df5cda8a061155a614d1e60a1c263e0764c83978708cfcc16959905387d5e4f"
       },
-      "outputSha256": "9bb6d6fb02ed8d5dfe4e32845382f40fce3b344e122ce3fb09a87aeb19d849fc",
+      "outputSha256": "f0dfd3907dbbc02975c9e113ff8997cfe0adbbeda7d1c9be1860b6393e4cc179",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
         "Issue #28の色相安定engine追加と互換回帰を反映。",
         "新しい色相保持エンジンと新旧バイナリの能力境界・数値回帰を整合。",
-        "Issue #30 Oklch色ミキサーとengine 10/11対応を反映"
+        "Issue #30 Oklch色ミキサーとengine 10/11対応を反映",
+        "niho-photo#39 画面が読む crate 版を 0.19.0 に上げた。"
       ]
     },
     {
@@ -872,13 +873,14 @@
         "path": "packages/photo-editing/src/editor/browser-photo-editing-mobile-editor.tsx",
         "sha256": "cf0ebc1e3a23b7a2e8ecea7538cc6f2d9880cbf4e181d79db61f26dc293c3d1a"
       },
-      "outputSha256": "597e4c66707c13d05a0d9679a1e44fd4bbb3d15c597ba039bd2c292ca951ee33",
+      "outputSha256": "79c8b3886fff50886fac657c891599b23352af682917ec1292230a485cf4caee",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
         "Issue #30 Oklch色ミキサーとengine 10/11対応を反映",
         "niho-photo#41 スマホの層に補正前と補正後を上下に並べる切り替えを追加。",
-        "niho-photo#38 道具の帯にカラーミキサー（HSL）を足し、ポイントカラーへ改名。道具が多い幅では帯を横に送る。"
+        "niho-photo#38 道具の帯にカラーミキサー（HSL）を足し、ポイントカラーへ改名。道具が多い幅では帯を横に送る。",
+        "niho-photo#39 スマホの編集の層にカラーグレーディングの道具を足した。"
       ]
     },
     {
@@ -1058,7 +1060,7 @@
         "path": "packages/photo-editing/src/editor/browser-photo-editing-workbench.tsx",
         "sha256": "f655136ae0c985d793822ca8bef1668dba26ffd4bb8f13d2ba3d6c2ccb13ceb6"
       },
-      "outputSha256": "80d3be922a8b53c605bb3f3d98727165bf18be9136879ff7b768b28d8432c059",
+      "outputSha256": "56940d89333792605951e369288ee62b343b10909d4637b83b9775dda051bdb8",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
@@ -1096,7 +1098,8 @@
         "niho-photo#41 比較の状態・Y キー・補正前の描画先を組み込み。",
         "niho-photo#43 の右端の帯の下端に「情報」を置き、右パネルを情報の面にする。",
         "niho-photo#37 PC の wasm の写真で、ライトの群の下に「カーブ」の節を置く。",
-        "niho-photo#38 PC のカラーの群の下にカラーミキサーの節、スマホの層にカラーミキサーの道具を置く。Oklch の文言をポイントカラーへ改名。"
+        "niho-photo#38 PC のカラーの群の下にカラーミキサーの節、スマホの層にカラーミキサーの道具を置く。Oklch の文言をポイントカラーへ改名。",
+        "niho-photo#39 カラーミキサーの節の後ろにカラーグレーディングの節と、スマホの道具を渡した。"
       ]
     },
     {
@@ -2074,7 +2077,7 @@
         "path": "packages/photo-editing/src/photo-editing-copy.ts",
         "sha256": "1208d4124dca26c951d73f6f84c560879e69beddfb9a16426e1a9dcc9fd30c27"
       },
-      "outputSha256": "acccd7daf1b8d57d7b3fd07f28259740aa0011896aaf1949f6cfa9e1e90755c3",
+      "outputSha256": "6fa88973d2e57b2d001349307d2c0c4f70ca3d21dbd691e63655ce2fe8e3c37f",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
@@ -2088,7 +2091,8 @@
         "niho-photo#41 比較（並べる・分割・比較しない・補正後・境界）の文言を追加。",
         "niho-photo#43 の右パネルの「情報」の文言（道具の名前・群の見出し・行のラベル）を追加。",
         "niho-photo#37 「カーブ」の節・グラフ・点の読み上げの文言を追加。",
-        "niho-photo#38 カラーミキサー（HSL）の文言を追加し、Oklch の補正と Lightroom の PointColors の名前を「ポイントカラー」に改める。"
+        "niho-photo#38 カラーミキサー（HSL）の文言を追加し、Oklch の補正と Lightroom の PointColors の名前を「ポイントカラー」に改める。",
+        "niho-photo#39 カラーグレーディングの文言を足し、使えない項目からカラーグレーディングの輝度を外した。"
       ]
     },
     {
@@ -2592,10 +2596,11 @@
         "path": "packages/photo-editing/src/photo-preset-xmp-support.test.ts",
         "sha256": "9dc9314d099eee0f638329346395101c9bd22a540fb0163935a530ececa99a6d"
       },
-      "outputSha256": "83ea29e64a4220f8c7d841571708a2d3008f7113d3415ef7009fa8cdb0468f81",
+      "outputSha256": "d29417af930fff21de6644a337086526215e56fef9e2a2491f3523431036f109",
       "modifications": [
         "Issue #30 Oklch色ミキサーとengine 10/11対応を反映",
-        "niho-photo#38 PointColors の使えない項目の名前を「Lightroom のポイントカラー」に改めたことに期待値を合わせる。"
+        "niho-photo#38 PointColors の使えない項目の名前を「Lightroom のポイントカラー」に改めたことに期待値を合わせる。",
+        "niho-photo#39 使えない項目の表からカラーグレーディングの輝度を外した test に直した。"
       ]
     },
     {
@@ -2606,11 +2611,12 @@
         "path": "packages/photo-editing/src/photo-preset-xmp-support.ts",
         "sha256": "af143f7fb0e786764ed6959aa7e32a1567e88aff4f71f7f53e7d11bd066fda57"
       },
-      "outputSha256": "b0d3996ba2978a3e69c46c03640aca643b34149f28a851bd1fc3b9f45a4ef322",
+      "outputSha256": "51babcec7e364807ab002a69616a8259d19865b22932e52ebb092691e5031cfa",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
-        "Issue #30 Oklch色ミキサーとengine 10/11対応を反映"
+        "Issue #30 Oklch色ミキサーとengine 10/11対応を反映",
+        "niho-photo#39 中間調・全体の輝度を描けるようになったので、使えない項目の表から外した。"
       ]
     },
     {
@@ -4550,11 +4556,12 @@
         "path": "packages/develop-engine/Cargo.lock",
         "sha256": "e7caae6825c3c4c50d7d593c35d7163de7d311357b81558d1ad1a009cbfafadc"
       },
-      "outputSha256": "0c288a25c7ee3c5936aaa1f6a7d843289f810251b02b4e75db0856321ee26a32",
+      "outputSha256": "6f86b0d3de37ce596dac69d735c7fdf66ae8ddd5b7ecc47ad769fe0dc627215e",
       "modifications": [
         "新しい色相保持エンジンと新旧バイナリの能力境界・数値回帰を整合。",
         "現像workspaceだけを0.17.0へ更新し外部依存の固定版を維持。",
-        "Issue #30 Oklch色ミキサーとengine 10/11対応を反映"
+        "Issue #30 Oklch色ミキサーとengine 10/11対応を反映",
+        "niho-photo#39 の crate 版 0.19.0 に合わせて workspace の 8 crate の版を更新した。"
       ]
     },
     {
@@ -4565,10 +4572,11 @@
         "path": "packages/develop-engine/Cargo.toml",
         "sha256": "274ef616c08b9ade52276b660ea12ce836bc08f97e67dedcf163f76114dd4ab0"
       },
-      "outputSha256": "e90bc3821569982de08b01b8ec025ec1503f6697c660deb6a53aae1633bbad96",
+      "outputSha256": "32beb9c5297b4b772ae0416360084f428dbc270c8f84f9b28540afe9e0deb96a",
       "modifications": [
         "新しい色相保持エンジンと新旧バイナリの能力境界・数値回帰を整合。",
-        "Issue #30 Oklch色ミキサーとengine 10/11対応を反映"
+        "Issue #30 Oklch色ミキサーとengine 10/11対応を反映",
+        "niho-photo#39 で中間調・全体の輝度を描くため crate の版を 0.19.0 に上げた。"
       ]
     },
     {
@@ -5640,7 +5648,7 @@
         "path": "packages/develop-engine/crates/niho-develop/src/color_ops.rs",
         "sha256": "cd0c61a609a12094f4f95b019c1671187e1d320b95c36b34da5c87dc7c3835d1"
       },
-      "outputSha256": "0e77f950ede48fa86a032a5cf3da7b09fdd1420bd1806cc92d054ee4167c842b",
+      "outputSha256": "49ec4c43c3599d34285c07238b7658090ce291786993b02e220c58949dc14a06",
       "modifications": [
         "公開Issue #26/#27/#29: 旧版を保つfloat cube候補、研究用WB/H-Sプローブ、合成検証と計測契約を追加。",
         "Issue #28の色相安定engine追加と互換回帰を反映。",
@@ -5649,7 +5657,8 @@
         "色ポイントを画素単位で適用する後段処理を分離",
         "Issue #30のactive-point画素cache向けf32 OKLCH kernelとf64参照比較を追加。",
         "点補正の選択plane cacheと精度・依存関係・headroom回帰を整備",
-        "灰色近傍の色相数値誤差をplane生成時だけf64参照で抑えて最小範囲の選択精度を守る"
+        "灰色近傍の色相数値誤差をplane生成時だけf64参照で抑えて最小範囲の選択精度を守る",
+        "niho-photo#39 カラーグレーディングの中間調・全体の輝度の近似式（未校正）と正規化の単体テストを追加。"
       ]
     },
     {
@@ -5660,8 +5669,10 @@
         "path": "packages/develop-engine/crates/niho-develop/src/convert.rs",
         "sha256": "5d3c870deecd99a37a9c9b1da08438ac31b8869411f49c2cd7ffeb69cb68c576"
       },
-      "outputSha256": "5d3c870deecd99a37a9c9b1da08438ac31b8869411f49c2cd7ffeb69cb68c576",
-      "modifications": []
+      "outputSha256": "60c3fceb9f4dbba432faebfd76971cda4ba0c078340c3c79ce3acc27ca6812d0",
+      "modifications": [
+        "niho-photo#39 中間調・全体の輝度を変換するよう規則を改め、変換器を v4 にした。"
+      ]
     },
     {
       "path": "packages/develop-engine/crates/niho-develop/src/decode.rs",
@@ -5914,7 +5925,7 @@
         "path": "packages/develop-engine/crates/niho-develop/src/pipeline.rs",
         "sha256": "d982d76cf1b5d34526f700e5edfcef00ae8647d22b845c0f7234ed340ba9d641"
       },
-      "outputSha256": "b4a66a14a851f417912689f430dc605d6a8b36d70231e32056d604e0ec465053",
+      "outputSha256": "22c851dca5156242ecd566985a1f0c466b1d081f3a0f99a1064f14c685e5f5e7",
       "modifications": [
         "公開Issue #26/#27/#29: 旧版を保つfloat cube候補、研究用WB/H-Sプローブ、合成検証と計測契約を追加。",
         "Issue #28の色相安定engine追加と互換回帰を反映。",
@@ -5929,7 +5940,8 @@
         "点補正の選択plane cacheと精度・依存関係・headroom回帰を整備",
         "色サンプルの有効点有無で共通のf32選択座標を使い、段の依存参照を構造体で共有する",
         "色点のサンプル座標と回帰試験を整合し、操作中640pxと確定解像度を分ける",
-        "niho-8と色ポイントのcube統合を修正"
+        "niho-8と色ポイントのcube統合を修正",
+        "niho-photo#39 中間調・全体の輝度を色の補正（出力変換の判定）に数えるようにした。"
       ]
     },
     {
@@ -6039,12 +6051,13 @@
         "path": "packages/develop-engine/crates/niho-develop/src/settings.rs",
         "sha256": "756a24a09d738b2341974d92d89b82f55b42eb6060b6e0c99ee4a532947a1b47"
       },
-      "outputSha256": "4773baf8a0b8972c92d802654c21cf36299fcde28801232e33cf3615851e4b45",
+      "outputSha256": "84ed91dca05d1e8b2afdebb890d786aa3a36e6a1c78031c55938f7af6ac1b701",
       "modifications": [
         "公開Issue #26/#27/#29: 旧版を保つfloat cube候補、研究用WB/H-Sプローブ、合成検証と計測契約を追加。",
         "Issue #28の色相安定engine追加と互換回帰を反映。",
         "新しい色相保持エンジンと新旧バイナリの能力境界・数値回帰を整合。",
-        "Issue #30 Oklch色ミキサーとengine 10/11対応を反映"
+        "Issue #30 Oklch色ミキサーとengine 10/11対応を反映",
+        "niho-photo#39 中間調・全体の輝度を is_neutral の判定に含めた。"
       ]
     },
     {
@@ -6093,12 +6106,13 @@
         "path": "packages/develop-engine/crates/niho-develop/src/xmp.rs",
         "sha256": "be5ddce69eceafb334c173ee92af3614c044039b103903ad1dfef24758f1ec45"
       },
-      "outputSha256": "c87a70e901090b2725f0a014d48077b8a975144be217c9ab6c3d832388c7dc25",
+      "outputSha256": "2ac85bf69bcfaf69551ee14d55588642512d4bc8a3b82528a3f6ae182daf4ecf",
       "modifications": [
         "公開Issue #26/#27/#29: 旧版を保つfloat cube候補、研究用WB/H-Sプローブ、合成検証と計測契約を追加。",
         "Issue #28の色相安定engine追加と互換回帰を反映。",
         "新しい色相保持エンジンと新旧バイナリの能力境界・数値回帰を整合。",
-        "Issue #30 Oklch色ミキサーとengine 10/11対応を反映"
+        "Issue #30 Oklch色ミキサーとengine 10/11対応を反映",
+        "niho-photo#39 ColorGradeMidtoneLum / GlobalLum を unsupported から外し、0 は exact・それ以外は approximate と報告する。"
       ]
     },
     {
@@ -6122,12 +6136,13 @@
         "path": "packages/develop-engine/crates/niho-develop/src/xmp/write.rs",
         "sha256": "f583b51766c756fe31b623949a8174abd304ff660a7793e332b3153faf2aa749"
       },
-      "outputSha256": "f810d0b4872607dc6ea6528ffd995dda10a63e7de331abb15e61504568bd02d1",
+      "outputSha256": "efd038f0d80cafcffdbe162490557578b4b9c80c9daeebccdb17fb3caf33fba4",
       "modifications": [
         "公開Issue #26/#27/#29: 旧版を保つfloat cube候補、研究用WB/H-Sプローブ、合成検証と計測契約を追加。",
         "Issue #28の色相安定engine追加と互換回帰を反映。",
         "新しい色相保持エンジンと新旧バイナリの能力境界・数値回帰を整合。",
-        "Issue #30 Oklch色ミキサーとengine 10/11対応を反映"
+        "Issue #30 Oklch色ミキサーとengine 10/11対応を反映",
+        "niho-photo#39 中間調・全体の輝度を 0 も含めてプリセットに書くようにした。"
       ]
     },
     {
@@ -6576,8 +6591,10 @@
         "path": "packages/develop-engine/crates/niho-develop/tests/preset_amount.rs",
         "sha256": "97ecf2f9a119356b13f60a0eb0d33bfdd5fc93a2a22d1d4419dcedefa74bead3"
       },
-      "outputSha256": "97ecf2f9a119356b13f60a0eb0d33bfdd5fc93a2a22d1d4419dcedefa74bead3",
-      "modifications": []
+      "outputSha256": "662e714b7c5f6bc41d416facd080b41d3c32982f51cf1dd9263a6e66e470ca5c",
+      "modifications": [
+        "niho-photo#39 中間調・全体の輝度に適用量が掛かる test を追加。"
+      ]
     },
     {
       "path": "packages/develop-engine/crates/niho-develop/tests/saturated.rs",
@@ -6644,8 +6661,10 @@
         "path": "packages/develop-engine/crates/niho-develop/tests/xmp_presets.rs",
         "sha256": "423ce05a729e0968f3936e28924db3b09b2095cf879875beaa21bd17fdd2b72b"
       },
-      "outputSha256": "423ce05a729e0968f3936e28924db3b09b2095cf879875beaa21bd17fdd2b72b",
-      "modifications": []
+      "outputSha256": "c2248c383593e7c979472b216cb3c50f8f6e5765a84ef30a672e294f1f0181ef",
+      "modifications": [
+        "niho-photo#39 NIHO が中間調・全体の輝度を描く前提に同梱プリセットの判定を合わせた。"
+      ]
     },
     {
       "path": "packages/develop-engine/crates/niho-develop/tests/xmp_write.rs",
@@ -6655,8 +6674,10 @@
         "path": "packages/develop-engine/crates/niho-develop/tests/xmp_write.rs",
         "sha256": "ed8beb33fdf73d50fd11850f3da66d1c5f95cf3157ceafa71a8f24760c597f10"
       },
-      "outputSha256": "ed8beb33fdf73d50fd11850f3da66d1c5f95cf3157ceafa71a8f24760c597f10",
-      "modifications": []
+      "outputSha256": "1cc432040e3edb221a78037d35bfa86731633c93033547d68bc484ed7ba117a0",
+      "modifications": [
+        "niho-photo#39 中間調・全体の輝度の書き出しと読み戻しの test を追加した。"
+      ]
     },
     {
       "path": "packages/develop-engine/crates/niho-quality-probe/Cargo.toml",
@@ -9545,8 +9566,8 @@
     },
     {
       "path": "packages/photo-editing/src/photo-editing-advanced-sections-state.ts",
-      "sha256": "7cd43531502334202e06905617ad6a6f46abf0d334f457416d4ad07444d9d593",
-      "origin": "niho-photo#37 のため新規作成。右パネルの既定で閉じた節の開閉を端末に覚えるフック（開いた節の id の配列）。外部コード・実データを含まない。\n変更理由: niho-photo#38 既定で閉じた節に「カラーミキサー」（colorMixer）を追加。"
+      "sha256": "6d052751e45f581ba60b2406a293a837611d872386aca5eaf15eac71f9cf9892",
+      "origin": "niho-photo#37 のため新規作成。右パネルの既定で閉じた節の開閉を端末に覚えるフック（開いた節の id の配列）。外部コード・実データを含まない。\n変更理由: niho-photo#38 既定で閉じた節に「カラーミキサー」（colorMixer）を追加。\n変更理由: niho-photo#39 既定で閉じた節にカラーグレーディングの id を足した。"
     },
     {
       "path": "packages/photo-editing/src/editor/photo-editing-advanced-section.tsx",
@@ -9597,6 +9618,46 @@
       "path": "packages/photo-editing/src/editor/browser-photo-editing-mobile-editor-hsl.test.tsx",
       "sha256": "3be8e64b6a48171b386f39d30596bbbfc7860e8768d884857cd9af6bcdc2c4fd",
       "origin": "niho-photo#38 のため新規作成。スマホの編集の層の道具の帯（カラーミキサー → ポイントカラー）とカラーミキサーの段の操作の test。合成の値だけを使用。"
+    },
+    {
+      "path": "docs/color-grading.md",
+      "sha256": "f880ef36e95f7b1688b3de155028b141c11e4dbecfd44ad919b5a030a39e3712",
+      "origin": "niho-photo#39 の公開仕様だけから新規作成したカラーグレーディング（中間調・全体の輝度の近似式と正規化、XMP・プリセット・画面の契約、合成画像での実測）の文書。非公開形式や私有データを含まない。"
+    },
+    {
+      "path": "packages/develop-engine/crates/niho-develop/tests/color_grading.rs",
+      "sha256": "5ee737be8994e20643e9c4620fb46728f3bcffbdab68475d9d4c75a7bb69307f",
+      "origin": "niho-photo#39 のため新規作成。中間調・全体の輝度が輝度の項だけを足すこと、合成の灰色の階調での単調性・端の保持、シャドウに青・ハイライトに橙が乗ることの test。合成の値・合成画像だけを使用。"
+    },
+    {
+      "path": "packages/photo-editing/src/photo-editing-color-grading.ts",
+      "sha256": "eb972420815b11f6558bbe1f598202621c30332adb80304527a0e00f5db4b77a",
+      "origin": "niho-photo#39 のため新規作成。developSettings.colorGrading（4 ゾーン × 色相・彩度・輝度とブレンド・バランス）の読み書きの純関数と、crate の grade_direction・PROPHOTO_TO_SRGB から移植した色相環の色。外部コード・実データを含まない。"
+    },
+    {
+      "path": "packages/photo-editing/src/photo-editing-color-grading.test.ts",
+      "sha256": "f9f6b1e53822315b507331e3cb5dd26608c819cd61d0b5c6467fc6a716098bd3",
+      "origin": "niho-photo#39 のため新規作成。カラーグレーディングの読み書き・既定のときのキーの削除・色相環の色と、補正のコピー・貼り付け・取り消しの履歴・プリセットの既定の群に colorGrading が入ることの test。合成の値だけを使用。"
+    },
+    {
+      "path": "packages/photo-editing/src/editor/photo-editing-color-wheel.tsx",
+      "sha256": "e4bd24d129e57126335513c3beeeefef26a8cc21160617638c2af01a1c8e9c05",
+      "origin": "niho-photo#39 のため新規作成。ドラッグとキーで色相と彩度を動かすカラーグレーディングの色相環の部品。外部コード・実データを含まない。"
+    },
+    {
+      "path": "packages/photo-editing/src/editor/photo-editing-color-grading.tsx",
+      "sha256": "346920929aa496fd1d71e4f482bf4374690bce8d25db0f536d0f821ce9269ad0",
+      "origin": "niho-photo#39 のため新規作成。カラーミキサーの下の「カラーグレーディング」の節と、PC・スマホ共通の帯の 4 択・色相環・スライダーの部品。外部コード・実データを含まない。"
+    },
+    {
+      "path": "packages/photo-editing/src/editor/photo-editing-color-grading.test.tsx",
+      "sha256": "b91a427065317b2909733217d5c553a471f04603db121e40c9838a1295710d64",
+      "origin": "niho-photo#39 のため新規作成。帯の 4 択・色相環のドラッグ / キー / ダブルクリック・スライダー・初期化・節の開閉と、カラーの下の並び（カラーミキサー → カラーグレーディング → ポイントカラー）の test。合成の値だけを使用。"
+    },
+    {
+      "path": "packages/photo-editing/src/editor/browser-photo-editing-mobile-editor-color-grading.test.tsx",
+      "sha256": "93806337576c84fa8ec9e5d8b193416805e49503f3f3a1f3197f89497d33f768",
+      "origin": "niho-photo#39 のため新規作成。スマホの編集の層の道具の帯のカラーグレーディング（並び・段・値の書き込み・調整ありの点）の test。合成の値だけを使用。"
     }
   ],
   "excludedSources": [

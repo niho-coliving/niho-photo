@@ -152,6 +152,49 @@ export function photoEditingHslSlidersLabel(axisLabel: string): string {
 /** 写真から色を拾って、その色だけを整える Oklch の補正（#30。Lightroom の「ポイントカラー」に当たる）。 */
 export const PHOTO_EDITING_POINT_COLOR_TITLE = "ポイントカラー";
 
+/**
+ * カラーミキサーの下の「カラーグレーディング」の節（niho-photo#39。Lightroom のカラーグレーディング。PC の右パネルで wasm が描いている
+ * 写真だけ。スマホは編集の層の道具）。既定は閉じる。見出しの横の「初期化」は 4 つの帯の色・輝度とブレンド・バランスを既定に戻す
+ * （読み上げ名は「カラーグレーディングを初期化」）。
+ */
+export const PHOTO_EDITING_COLOR_GRADING_TITLE = "カラーグレーディング";
+export const PHOTO_EDITING_COLOR_GRADING_RESET_LABEL = "カラーグレーディングを初期化";
+/** 色を乗せる明るさの帯の 4 択（選んだ帯の色相環とスライダーを出す）。 */
+export const PHOTO_EDITING_COLOR_GRADING_ZONES_LABEL = "明るさの帯";
+export const PHOTO_EDITING_COLOR_GRADING_ZONE_LABELS = {
+  shadow: "シャドウ",
+  midtone: "中間調",
+  highlight: "ハイライト",
+  global: "全体",
+} as const;
+/** 既定でない値がある帯の 4 択のボタンに添える読み上げ（見た目は小さな点）。 */
+export const PHOTO_EDITING_COLOR_GRADING_ZONE_EDITED_TEXT = "調整あり";
+/** 選んだ帯の 3 本のスライダー（色相環の数値の入力を兼ねる）。 */
+export const PHOTO_EDITING_COLOR_GRADING_AXIS_LABELS = {
+  hue: "色相",
+  saturation: "彩度",
+  luminance: "輝度",
+} as const;
+export const PHOTO_EDITING_COLOR_GRADING_BLENDING_LABEL = "ブレンド";
+export const PHOTO_EDITING_COLOR_GRADING_BALANCE_LABEL = "バランス";
+/** 色相環の読み上げの種類（つまみの役割）。 */
+export const PHOTO_EDITING_COLOR_GRADING_WHEEL_ROLE = "色相環";
+/** 色相環の操作の説明（つまみの読み上げに添える）。 */
+export const PHOTO_EDITING_COLOR_GRADING_WHEEL_HELP =
+  "ドラッグで色相と彩度を動かします。左右の矢印キーで色相、上下で彩度（Shift で大きく）。Delete で彩度を 0 に戻します";
+/** 色相環の値（例「色相 210°、彩度 40」）。 */
+export function photoEditingColorGradingWheelValueText(hue: number, saturation: number): string {
+  return `色相 ${hue}°、彩度 ${saturation}`;
+}
+/** 色相環のつまみの読み上げ名（例「シャドウの色（色相 210°、彩度 40）」）。 */
+export function photoEditingColorGradingWheelLabel(zoneLabel: string, hue: number, saturation: number): string {
+  return `${zoneLabel}の色（${photoEditingColorGradingWheelValueText(hue, saturation)}）`;
+}
+/** 選んだ帯の 3 本のスライダーの群の読み上げ名（例「シャドウの色と輝度」）。 */
+export function photoEditingColorGradingSlidersLabel(zoneLabel: string): string {
+  return `${zoneLabel}の色と輝度`;
+}
+
 /** 効果の群名の横の ⓘ（押すと群の先頭に項目ごとの説明を出す）。 */
 export const PHOTO_EDITING_EFFECTS_INFO_LABEL = "効果の説明";
 export const PHOTO_EDITING_TEXTURE_DESCRIPTION = "細かな質感を強めたり、和らげたりします";
@@ -443,7 +486,6 @@ export const PHOTO_EDITING_PRESET_UNSUPPORTED_LABELS = {
   blackAndWhite: "白黒",
   vignette: "周辺光量補正",
   grain: "粒子",
-  colorGradeLuminance: "カラーグレーディングの輝度",
   curveSaturation: "トーンカーブの彩度",
   pointColors: "Lightroom のポイントカラー",
   transform: "変形",

@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 
+import { PHOTO_EDITING_PRESET_UNSUPPORTED_LABELS } from "./photo-editing-copy";
 import {
   describeUnsupportedPresetItems,
   presetUsesLightroomColorTable,
@@ -43,10 +44,14 @@ describe("summarizeUnsupportedPresetItems", () => {
         "PostCropVignetteMidpoint",
         "GrainAmount",
         "GrainSize",
-        "ColorGradeGlobalLum",
         "CurveRefineSaturation",
       ]).labels,
-    ).toEqual(["白黒", "周辺光量補正", "粒子", "カラーグレーディングの輝度", "トーンカーブの彩度"]);
+    ).toEqual(["白黒", "周辺光量補正", "粒子", "トーンカーブの彩度"]);
+  });
+
+  it("カラーグレーディングの中間調・全体の輝度は描ける（エンジン 0.19.0〜。niho-photo#39）ので、知らせの名前を持たない", () => {
+    expect(Object.values(PHOTO_EDITING_PRESET_UNSUPPORTED_LABELS)).not.toContain("カラーグレーディングの輝度");
+    expect(Object.keys(PHOTO_EDITING_PRESET_UNSUPPORTED_LABELS)).not.toContain("colorGradeLuminance");
   });
 
   it("表に無い項目は数だけ数える（同じ項目は 1 回）。埋め込みの Look は数えない", () => {

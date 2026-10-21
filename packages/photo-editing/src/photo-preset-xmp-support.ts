@@ -60,7 +60,8 @@ const UNSUPPORTED_GROUPS: readonly UnsupportedGroup[] = [
     masters: ["PostCropVignetteAmount", "VignetteAmount"],
   },
   { label: LABELS.grain, prefixes: ["Grain"], masters: ["GrainAmount"] },
-  { label: LABELS.colorGradeLuminance, keys: ["ColorGradeMidtoneLum", "ColorGradeGlobalLum"] },
+  // カラーグレーディングの中間調・全体の輝度（`ColorGradeMidtoneLum` / `ColorGradeGlobalLum`）は、エンジン 0.19.0 から描く
+  // （niho-photo#39。crate は `unsupported` に入れない）ので、ここには置かない
   { label: LABELS.curveSaturation, keys: ["CurveRefineSaturation"], always: true },
   { label: LABELS.pointColors, keys: ["PointColors"], always: true },
   {
