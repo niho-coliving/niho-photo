@@ -49,6 +49,7 @@ import { DEVELOP_WEB_IMAGE_JPEG_QUALITY, loadPhotoLibraryRenderInput } from "../
 import {
   DEVELOP_SETTINGS_ENGINE,
   NIHO10_DEVELOP_SETTINGS_ENGINE,
+  NIHO12_DEVELOP_SETTINGS_ENGINE,
   NIHO2_DEVELOP_SETTINGS_ENGINE,
   developSettingsKey,
   developSettingsOnWorkingCopy,
@@ -409,11 +410,13 @@ export function useBrowserPhotoExportAndDelete(params: {
     if (folderId === undefined && viewModeRef.current === "loupe" && current?.key === target.key && current.mode === "wasm") {
       developSettings = settingsRef.current;
       // 開いただけの写真（保存したことが無く何も当てていない）は、下の未編集の写真と同じく niho-2 の neutral で渡す。raster の
-      // neutral は cube を通らないので niho-10 / niho-12 と同じ画。unsigned RAW は niho-12 の float の look+ACR3 と 8bit の丸め分
-      // だけ違うが、niho-12 を知らない古い native でも描ける既存の書き出しの画を保つ
+      // neutral は cube を通らず相対 WB も無いので niho-10 / niho-12 / niho-13 と同じ画。unsigned RAW は niho-12 / niho-13 の float の
+      // look+ACR3 と 8bit の丸め分だけ違うが、niho-12 / niho-13 を知らない古い native でも描ける既存の書き出しの画を保つ
       if (
         !hasSaved &&
-        (developSettings.engine === DEVELOP_SETTINGS_ENGINE || developSettings.engine === NIHO10_DEVELOP_SETTINGS_ENGINE) &&
+        (developSettings.engine === DEVELOP_SETTINGS_ENGINE ||
+          developSettings.engine === NIHO12_DEVELOP_SETTINGS_ENGINE ||
+          developSettings.engine === NIHO10_DEVELOP_SETTINGS_ENGINE) &&
         isNeutralDevelopSettings(developSettings)
       ) {
         developSettings = { ...developSettings, engine: NIHO2_DEVELOP_SETTINGS_ENGINE };

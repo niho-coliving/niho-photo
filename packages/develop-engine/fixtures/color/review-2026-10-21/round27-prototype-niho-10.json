@@ -1,0 +1,1324 @@
+{
+  "kind": "synthetic-chart-lightroom-round27",
+  "engine": "niho-10",
+  "toolCommit": "828bbae7ae91409f5130ac6c46ff0be193455c4a",
+  "renderer": "niho-develop-render with engine niho-10 (saved niho-10 pixels are frozen, so any later build draws the same)",
+  "measurementHost": "Mac Studio (M1 Max 64GB)",
+  "measurementDate": "2026-10-21",
+  "rustToolchain": "1.98.1",
+  "tool": "packages/develop-engine/tools/calibrate/round27_measure.py --engine niho-10 (the version of 828bbae: tail and head columns only)",
+  "columns": {
+    "tail": "niho-10: the calibrated delta LUT on the 8-bit output",
+    "head": "prototype: the same delta added in float to Pillow's decode of the chart, written as 16-bit PNG, rendered by niho-10 with the white balance zeroed"
+  },
+  "scopeNotes": [
+    "The prototype measurement behind the owner decision of 2026-10-21 (Issue #27); niho-13 reproduces its head column (round27-niho-13.json)",
+    "Synthetic 17^3 sRGB chart exported by Lightroom; no photographs"
+  ],
+  "protocol": {
+    "patch": 12,
+    "inner": 6,
+    "metric": "CIEDE2000 of patch-mean sRGB",
+    "patches": 4913
+  },
+  "rows": [
+    {
+      "variant": "w0__e0",
+      "whiteBalance": "w0",
+      "edit": "e0",
+      "temperature": 0.0,
+      "tint": 0.0,
+      "tail": {
+        "mean": 0.0397,
+        "p99": 0.2256,
+        "max": 0.483
+      },
+      "head": {
+        "mean": 0.0392,
+        "p99": 0.22,
+        "max": 0.483
+      }
+    },
+    {
+      "variant": "w0__hsl",
+      "whiteBalance": "w0",
+      "edit": "hsl",
+      "temperature": 0.0,
+      "tint": 0.0,
+      "tail": {
+        "mean": 1.1696,
+        "p99": 7.4582,
+        "max": 9.8092
+      },
+      "head": {
+        "mean": 1.1696,
+        "p99": 7.4582,
+        "max": 9.8092
+      }
+    },
+    {
+      "variant": "w0__param",
+      "whiteBalance": "w0",
+      "edit": "param",
+      "temperature": 0.0,
+      "tint": 0.0,
+      "tail": {
+        "mean": 2.4589,
+        "p99": 5.713,
+        "max": 9.5835
+      },
+      "head": {
+        "mean": 2.4586,
+        "p99": 5.713,
+        "max": 9.5835
+      }
+    },
+    {
+      "variant": "w0__grade",
+      "whiteBalance": "w0",
+      "edit": "grade",
+      "temperature": 0.0,
+      "tint": 0.0,
+      "tail": {
+        "mean": 2.2969,
+        "p99": 6.3331,
+        "max": 9.843
+      },
+      "head": {
+        "mean": 2.2971,
+        "p99": 6.3331,
+        "max": 9.843
+      }
+    },
+    {
+      "variant": "w0__sat",
+      "whiteBalance": "w0",
+      "edit": "sat",
+      "temperature": 0.0,
+      "tint": 0.0,
+      "tail": {
+        "mean": 1.6523,
+        "p99": 6.4194,
+        "max": 11.9626
+      },
+      "head": {
+        "mean": 1.6527,
+        "p99": 6.4194,
+        "max": 11.9626
+      }
+    },
+    {
+      "variant": "w0__vib",
+      "whiteBalance": "w0",
+      "edit": "vib",
+      "temperature": 0.0,
+      "tint": 0.0,
+      "tail": {
+        "mean": 1.335,
+        "p99": 5.1953,
+        "max": 5.8535
+      },
+      "head": {
+        "mean": 1.3346,
+        "p99": 5.1953,
+        "max": 5.8535
+      }
+    },
+    {
+      "variant": "w0__contrast",
+      "whiteBalance": "w0",
+      "edit": "contrast",
+      "temperature": 0.0,
+      "tint": 0.0,
+      "tail": {
+        "mean": 1.5707,
+        "p99": 5.1157,
+        "max": 5.8535
+      },
+      "head": {
+        "mean": 1.5703,
+        "p99": 5.1157,
+        "max": 5.8535
+      }
+    },
+    {
+      "variant": "w0__exposure",
+      "whiteBalance": "w0",
+      "edit": "exposure",
+      "temperature": 0.0,
+      "tint": 0.0,
+      "tail": {
+        "mean": 2.1222,
+        "p99": 4.296,
+        "max": 5.5357
+      },
+      "head": {
+        "mean": 2.1227,
+        "p99": 4.296,
+        "max": 5.5357
+      }
+    },
+    {
+      "variant": "w0__preset_bluesky2",
+      "whiteBalance": "w0",
+      "edit": "preset_bluesky2",
+      "temperature": 0.0,
+      "tint": 0.0,
+      "tail": {
+        "mean": 2.8681,
+        "p99": 9.3162,
+        "max": 14.3958
+      },
+      "head": {
+        "mean": 2.8681,
+        "p99": 9.3162,
+        "max": 14.3958
+      }
+    },
+    {
+      "variant": "w0__preset_pastel",
+      "whiteBalance": "w0",
+      "edit": "preset_pastel",
+      "temperature": 0.0,
+      "tint": 0.0,
+      "tail": {
+        "mean": 2.6426,
+        "p99": 6.9321,
+        "max": 19.0483
+      },
+      "head": {
+        "mean": 2.643,
+        "p99": 6.9321,
+        "max": 19.0483
+      }
+    },
+    {
+      "variant": "w0__preset_colorful",
+      "whiteBalance": "w0",
+      "edit": "preset_colorful",
+      "temperature": 0.0,
+      "tint": 0.0,
+      "tail": {
+        "mean": 3.3879,
+        "p99": 8.311,
+        "max": 8.8345
+      },
+      "head": {
+        "mean": 3.3883,
+        "p99": 8.311,
+        "max": 8.8345
+      }
+    },
+    {
+      "variant": "tp30__e0",
+      "whiteBalance": "tp30",
+      "edit": "e0",
+      "temperature": 30.0,
+      "tint": 0.0,
+      "tail": {
+        "mean": 0.4925,
+        "p99": 2.0528,
+        "max": 8.6328
+      },
+      "head": {
+        "mean": 0.1745,
+        "p99": 0.6592,
+        "max": 1.1525
+      }
+    },
+    {
+      "variant": "tp30__hsl",
+      "whiteBalance": "tp30",
+      "edit": "hsl",
+      "temperature": 30.0,
+      "tint": 0.0,
+      "tail": {
+        "mean": 3.3892,
+        "p99": 11.1141,
+        "max": 12.5156
+      },
+      "head": {
+        "mean": 1.0412,
+        "p99": 5.122,
+        "max": 7.6469
+      }
+    },
+    {
+      "variant": "tp30__param",
+      "whiteBalance": "tp30",
+      "edit": "param",
+      "temperature": 30.0,
+      "tint": 0.0,
+      "tail": {
+        "mean": 3.0066,
+        "p99": 6.215,
+        "max": 10.8298
+      },
+      "head": {
+        "mean": 2.3162,
+        "p99": 5.0951,
+        "max": 8.2351
+      }
+    },
+    {
+      "variant": "tp30__grade",
+      "whiteBalance": "tp30",
+      "edit": "grade",
+      "temperature": 30.0,
+      "tint": 0.0,
+      "tail": {
+        "mean": 2.619,
+        "p99": 6.2158,
+        "max": 11.0954
+      },
+      "head": {
+        "mean": 2.3618,
+        "p99": 6.5049,
+        "max": 11.5187
+      }
+    },
+    {
+      "variant": "tp30__sat",
+      "whiteBalance": "tp30",
+      "edit": "sat",
+      "temperature": 30.0,
+      "tint": 0.0,
+      "tail": {
+        "mean": 3.6042,
+        "p99": 9.9449,
+        "max": 12.8658
+      },
+      "head": {
+        "mean": 1.975,
+        "p99": 8.7569,
+        "max": 12.7503
+      }
+    },
+    {
+      "variant": "tp30__vib",
+      "whiteBalance": "tp30",
+      "edit": "vib",
+      "temperature": 30.0,
+      "tint": 0.0,
+      "tail": {
+        "mean": 2.0849,
+        "p99": 8.0698,
+        "max": 10.914
+      },
+      "head": {
+        "mean": 1.3352,
+        "p99": 3.0409,
+        "max": 3.7447
+      }
+    },
+    {
+      "variant": "tp30__contrast",
+      "whiteBalance": "tp30",
+      "edit": "contrast",
+      "temperature": 30.0,
+      "tint": 0.0,
+      "tail": {
+        "mean": 1.733,
+        "p99": 7.3834,
+        "max": 10.8298
+      },
+      "head": {
+        "mean": 1.4336,
+        "p99": 2.8038,
+        "max": 5.801
+      }
+    },
+    {
+      "variant": "tp30__exposure",
+      "whiteBalance": "tp30",
+      "edit": "exposure",
+      "temperature": 30.0,
+      "tint": 0.0,
+      "tail": {
+        "mean": 2.0937,
+        "p99": 4.8047,
+        "max": 6.0938
+      },
+      "head": {
+        "mean": 2.1048,
+        "p99": 4.4066,
+        "max": 5.4717
+      }
+    },
+    {
+      "variant": "tp30__preset_bluesky2",
+      "whiteBalance": "tp30",
+      "edit": "preset_bluesky2",
+      "temperature": 30.0,
+      "tint": 0.0,
+      "tail": {
+        "mean": 3.6573,
+        "p99": 11.4213,
+        "max": 24.9262
+      },
+      "head": {
+        "mean": 2.8425,
+        "p99": 8.4218,
+        "max": 15.4489
+      }
+    },
+    {
+      "variant": "tp30__preset_pastel",
+      "whiteBalance": "tp30",
+      "edit": "preset_pastel",
+      "temperature": 30.0,
+      "tint": 0.0,
+      "tail": {
+        "mean": 3.8092,
+        "p99": 11.8177,
+        "max": 27.6492
+      },
+      "head": {
+        "mean": 2.3987,
+        "p99": 7.2832,
+        "max": 9.0023
+      }
+    },
+    {
+      "variant": "tp30__preset_colorful",
+      "whiteBalance": "tp30",
+      "edit": "preset_colorful",
+      "temperature": 30.0,
+      "tint": 0.0,
+      "tail": {
+        "mean": 5.247,
+        "p99": 10.5777,
+        "max": 17.9918
+      },
+      "head": {
+        "mean": 3.5459,
+        "p99": 7.7734,
+        "max": 8.821
+      }
+    },
+    {
+      "variant": "tm30__e0",
+      "whiteBalance": "tm30",
+      "edit": "e0",
+      "temperature": -30.0,
+      "tint": 0.0,
+      "tail": {
+        "mean": 0.5357,
+        "p99": 2.2659,
+        "max": 4.3467
+      },
+      "head": {
+        "mean": 0.1718,
+        "p99": 0.6415,
+        "max": 1.0048
+      }
+    },
+    {
+      "variant": "tm30__hsl",
+      "whiteBalance": "tm30",
+      "edit": "hsl",
+      "temperature": -30.0,
+      "tint": 0.0,
+      "tail": {
+        "mean": 4.4103,
+        "p99": 11.1131,
+        "max": 17.7582
+      },
+      "head": {
+        "mean": 1.9189,
+        "p99": 10.5945,
+        "max": 13.5849
+      }
+    },
+    {
+      "variant": "tm30__param",
+      "whiteBalance": "tm30",
+      "edit": "param",
+      "temperature": -30.0,
+      "tint": 0.0,
+      "tail": {
+        "mean": 3.0708,
+        "p99": 6.4426,
+        "max": 8.0282
+      },
+      "head": {
+        "mean": 2.2582,
+        "p99": 5.4453,
+        "max": 8.5659
+      }
+    },
+    {
+      "variant": "tm30__grade",
+      "whiteBalance": "tm30",
+      "edit": "grade",
+      "temperature": -30.0,
+      "tint": 0.0,
+      "tail": {
+        "mean": 2.3057,
+        "p99": 6.7394,
+        "max": 12.2514
+      },
+      "head": {
+        "mean": 2.3804,
+        "p99": 6.4977,
+        "max": 9.784
+      }
+    },
+    {
+      "variant": "tm30__sat",
+      "whiteBalance": "tm30",
+      "edit": "sat",
+      "temperature": -30.0,
+      "tint": 0.0,
+      "tail": {
+        "mean": 4.0762,
+        "p99": 11.758,
+        "max": 13.3552
+      },
+      "head": {
+        "mean": 1.6256,
+        "p99": 5.9077,
+        "max": 8.9487
+      }
+    },
+    {
+      "variant": "tm30__vib",
+      "whiteBalance": "tm30",
+      "edit": "vib",
+      "temperature": -30.0,
+      "tint": 0.0,
+      "tail": {
+        "mean": 2.8588,
+        "p99": 7.5756,
+        "max": 9.677
+      },
+      "head": {
+        "mean": 1.6532,
+        "p99": 5.527,
+        "max": 5.8535
+      }
+    },
+    {
+      "variant": "tm30__contrast",
+      "whiteBalance": "tm30",
+      "edit": "contrast",
+      "temperature": -30.0,
+      "tint": 0.0,
+      "tail": {
+        "mean": 2.0912,
+        "p99": 5.4897,
+        "max": 7.0159
+      },
+      "head": {
+        "mean": 1.497,
+        "p99": 5.1432,
+        "max": 5.8431
+      }
+    },
+    {
+      "variant": "tm30__exposure",
+      "whiteBalance": "tm30",
+      "edit": "exposure",
+      "temperature": -30.0,
+      "tint": 0.0,
+      "tail": {
+        "mean": 2.2229,
+        "p99": 4.5442,
+        "max": 5.546
+      },
+      "head": {
+        "mean": 2.001,
+        "p99": 3.7862,
+        "max": 5.0381
+      }
+    },
+    {
+      "variant": "tm30__preset_bluesky2",
+      "whiteBalance": "tm30",
+      "edit": "preset_bluesky2",
+      "temperature": -30.0,
+      "tint": 0.0,
+      "tail": {
+        "mean": 5.3456,
+        "p99": 18.4656,
+        "max": 27.5418
+      },
+      "head": {
+        "mean": 3.89,
+        "p99": 20.7401,
+        "max": 28.559
+      }
+    },
+    {
+      "variant": "tm30__preset_pastel",
+      "whiteBalance": "tm30",
+      "edit": "preset_pastel",
+      "temperature": -30.0,
+      "tint": 0.0,
+      "tail": {
+        "mean": 4.6971,
+        "p99": 10.9737,
+        "max": 16.4995
+      },
+      "head": {
+        "mean": 2.3244,
+        "p99": 7.1093,
+        "max": 22.6622
+      }
+    },
+    {
+      "variant": "tm30__preset_colorful",
+      "whiteBalance": "tm30",
+      "edit": "preset_colorful",
+      "temperature": -30.0,
+      "tint": 0.0,
+      "tail": {
+        "mean": 4.2829,
+        "p99": 9.2937,
+        "max": 11.844
+      },
+      "head": {
+        "mean": 3.086,
+        "p99": 6.9445,
+        "max": 8.2061
+      }
+    },
+    {
+      "variant": "gp20__e0",
+      "whiteBalance": "gp20",
+      "edit": "e0",
+      "temperature": 0.0,
+      "tint": 20.0,
+      "tail": {
+        "mean": 0.4549,
+        "p99": 1.7098,
+        "max": 4.8965
+      },
+      "head": {
+        "mean": 0.1136,
+        "p99": 0.4028,
+        "max": 0.8558
+      }
+    },
+    {
+      "variant": "gp20__hsl",
+      "whiteBalance": "gp20",
+      "edit": "hsl",
+      "temperature": 0.0,
+      "tint": 20.0,
+      "tail": {
+        "mean": 1.4553,
+        "p99": 7.7761,
+        "max": 9.8983
+      },
+      "head": {
+        "mean": 1.2583,
+        "p99": 8.0417,
+        "max": 10.8214
+      }
+    },
+    {
+      "variant": "gp20__param",
+      "whiteBalance": "gp20",
+      "edit": "param",
+      "temperature": 0.0,
+      "tint": 20.0,
+      "tail": {
+        "mean": 2.5512,
+        "p99": 5.7836,
+        "max": 9.1123
+      },
+      "head": {
+        "mean": 2.4114,
+        "p99": 5.5933,
+        "max": 9.2424
+      }
+    },
+    {
+      "variant": "gp20__grade",
+      "whiteBalance": "gp20",
+      "edit": "grade",
+      "temperature": 0.0,
+      "tint": 20.0,
+      "tail": {
+        "mean": 2.3303,
+        "p99": 6.5011,
+        "max": 9.5336
+      },
+      "head": {
+        "mean": 2.3569,
+        "p99": 6.3647,
+        "max": 9.5058
+      }
+    },
+    {
+      "variant": "gp20__sat",
+      "whiteBalance": "gp20",
+      "edit": "sat",
+      "temperature": 0.0,
+      "tint": 20.0,
+      "tail": {
+        "mean": 1.9708,
+        "p99": 6.0681,
+        "max": 9.6383
+      },
+      "head": {
+        "mean": 1.7002,
+        "p99": 6.5589,
+        "max": 10.5195
+      }
+    },
+    {
+      "variant": "gp20__vib",
+      "whiteBalance": "gp20",
+      "edit": "vib",
+      "temperature": 0.0,
+      "tint": 20.0,
+      "tail": {
+        "mean": 1.6628,
+        "p99": 4.3243,
+        "max": 5.4916
+      },
+      "head": {
+        "mean": 1.3974,
+        "p99": 5.2152,
+        "max": 5.8536
+      }
+    },
+    {
+      "variant": "gp20__contrast",
+      "whiteBalance": "gp20",
+      "edit": "contrast",
+      "temperature": 0.0,
+      "tint": 20.0,
+      "tail": {
+        "mean": 1.6738,
+        "p99": 4.3722,
+        "max": 5.4916
+      },
+      "head": {
+        "mean": 1.5795,
+        "p99": 5.0309,
+        "max": 5.8984
+      }
+    },
+    {
+      "variant": "gp20__exposure",
+      "whiteBalance": "gp20",
+      "edit": "exposure",
+      "temperature": 0.0,
+      "tint": 20.0,
+      "tail": {
+        "mean": 2.0633,
+        "p99": 3.9843,
+        "max": 5.3434
+      },
+      "head": {
+        "mean": 2.068,
+        "p99": 4.0363,
+        "max": 4.8806
+      }
+    },
+    {
+      "variant": "gp20__preset_bluesky2",
+      "whiteBalance": "gp20",
+      "edit": "preset_bluesky2",
+      "temperature": 0.0,
+      "tint": 20.0,
+      "tail": {
+        "mean": 3.1404,
+        "p99": 10.8311,
+        "max": 17.4044
+      },
+      "head": {
+        "mean": 2.9145,
+        "p99": 10.7903,
+        "max": 18.4587
+      }
+    },
+    {
+      "variant": "gp20__preset_pastel",
+      "whiteBalance": "gp20",
+      "edit": "preset_pastel",
+      "temperature": 0.0,
+      "tint": 20.0,
+      "tail": {
+        "mean": 2.8214,
+        "p99": 7.2564,
+        "max": 19.1748
+      },
+      "head": {
+        "mean": 2.5437,
+        "p99": 6.9597,
+        "max": 21.2487
+      }
+    },
+    {
+      "variant": "gp20__preset_colorful",
+      "whiteBalance": "gp20",
+      "edit": "preset_colorful",
+      "temperature": 0.0,
+      "tint": 20.0,
+      "tail": {
+        "mean": 3.2984,
+        "p99": 7.5648,
+        "max": 8.9838
+      },
+      "head": {
+        "mean": 3.327,
+        "p99": 7.977,
+        "max": 8.4752
+      }
+    },
+    {
+      "variant": "warm__e0",
+      "whiteBalance": "warm",
+      "edit": "e0",
+      "temperature": 30.0,
+      "tint": 20.0,
+      "tail": {
+        "mean": 0.4708,
+        "p99": 1.8834,
+        "max": 7.782
+      },
+      "head": {
+        "mean": 0.1251,
+        "p99": 0.446,
+        "max": 0.9102
+      }
+    },
+    {
+      "variant": "warm__hsl",
+      "whiteBalance": "warm",
+      "edit": "hsl",
+      "temperature": 30.0,
+      "tint": 20.0,
+      "tail": {
+        "mean": 3.375,
+        "p99": 10.4231,
+        "max": 11.7338
+      },
+      "head": {
+        "mean": 1.0093,
+        "p99": 4.9339,
+        "max": 7.586
+      }
+    },
+    {
+      "variant": "warm__param",
+      "whiteBalance": "warm",
+      "edit": "param",
+      "temperature": 30.0,
+      "tint": 20.0,
+      "tail": {
+        "mean": 2.9415,
+        "p99": 6.2433,
+        "max": 9.5562
+      },
+      "head": {
+        "mean": 2.3538,
+        "p99": 5.2169,
+        "max": 8.9034
+      }
+    },
+    {
+      "variant": "warm__grade",
+      "whiteBalance": "warm",
+      "edit": "grade",
+      "temperature": 30.0,
+      "tint": 20.0,
+      "tail": {
+        "mean": 2.6226,
+        "p99": 6.4334,
+        "max": 10.1286
+      },
+      "head": {
+        "mean": 2.3439,
+        "p99": 6.4254,
+        "max": 11.1128
+      }
+    },
+    {
+      "variant": "warm__sat",
+      "whiteBalance": "warm",
+      "edit": "sat",
+      "temperature": 30.0,
+      "tint": 20.0,
+      "tail": {
+        "mean": 3.4798,
+        "p99": 9.6761,
+        "max": 12.805
+      },
+      "head": {
+        "mean": 2.0109,
+        "p99": 8.7601,
+        "max": 13.3283
+      }
+    },
+    {
+      "variant": "warm__vib",
+      "whiteBalance": "warm",
+      "edit": "vib",
+      "temperature": 30.0,
+      "tint": 20.0,
+      "tail": {
+        "mean": 2.0229,
+        "p99": 7.1632,
+        "max": 9.6526
+      },
+      "head": {
+        "mean": 1.3532,
+        "p99": 3.0896,
+        "max": 3.9197
+      }
+    },
+    {
+      "variant": "warm__contrast",
+      "whiteBalance": "warm",
+      "edit": "contrast",
+      "temperature": 30.0,
+      "tint": 20.0,
+      "tail": {
+        "mean": 1.7007,
+        "p99": 6.8401,
+        "max": 9.5664
+      },
+      "head": {
+        "mean": 1.4813,
+        "p99": 2.852,
+        "max": 5.8535
+      }
+    },
+    {
+      "variant": "warm__exposure",
+      "whiteBalance": "warm",
+      "edit": "exposure",
+      "temperature": 30.0,
+      "tint": 20.0,
+      "tail": {
+        "mean": 2.0593,
+        "p99": 4.5944,
+        "max": 6.0792
+      },
+      "head": {
+        "mean": 2.0842,
+        "p99": 4.3809,
+        "max": 5.1463
+      }
+    },
+    {
+      "variant": "warm__preset_bluesky2",
+      "whiteBalance": "warm",
+      "edit": "preset_bluesky2",
+      "temperature": 30.0,
+      "tint": 20.0,
+      "tail": {
+        "mean": 3.6171,
+        "p99": 11.392,
+        "max": 23.244
+      },
+      "head": {
+        "mean": 2.8028,
+        "p99": 8.6424,
+        "max": 15.8266
+      }
+    },
+    {
+      "variant": "warm__preset_pastel",
+      "whiteBalance": "warm",
+      "edit": "preset_pastel",
+      "temperature": 30.0,
+      "tint": 20.0,
+      "tail": {
+        "mean": 3.7245,
+        "p99": 11.6747,
+        "max": 27.3058
+      },
+      "head": {
+        "mean": 2.3914,
+        "p99": 7.1508,
+        "max": 9.5236
+      }
+    },
+    {
+      "variant": "warm__preset_colorful",
+      "whiteBalance": "warm",
+      "edit": "preset_colorful",
+      "temperature": 30.0,
+      "tint": 20.0,
+      "tail": {
+        "mean": 4.9692,
+        "p99": 11.06,
+        "max": 19.0533
+      },
+      "head": {
+        "mean": 3.4935,
+        "p99": 7.7462,
+        "max": 8.4576
+      }
+    }
+  ],
+  "interaction": [
+    {
+      "edit": "e0",
+      "whiteBalance": "tp30",
+      "tailMeanIncrease": 0.4528,
+      "headMeanIncrease": 0.1353,
+      "tailP99": 2.0528,
+      "headP99": 0.6592
+    },
+    {
+      "edit": "e0",
+      "whiteBalance": "tm30",
+      "tailMeanIncrease": 0.496,
+      "headMeanIncrease": 0.1326,
+      "tailP99": 2.2659,
+      "headP99": 0.6415
+    },
+    {
+      "edit": "e0",
+      "whiteBalance": "gp20",
+      "tailMeanIncrease": 0.4152,
+      "headMeanIncrease": 0.0744,
+      "tailP99": 1.7098,
+      "headP99": 0.4028
+    },
+    {
+      "edit": "e0",
+      "whiteBalance": "warm",
+      "tailMeanIncrease": 0.4311,
+      "headMeanIncrease": 0.0859,
+      "tailP99": 1.8834,
+      "headP99": 0.446
+    },
+    {
+      "edit": "hsl",
+      "whiteBalance": "tp30",
+      "tailMeanIncrease": 2.2196,
+      "headMeanIncrease": -0.1284,
+      "tailP99": 11.1141,
+      "headP99": 5.122
+    },
+    {
+      "edit": "hsl",
+      "whiteBalance": "tm30",
+      "tailMeanIncrease": 3.2407,
+      "headMeanIncrease": 0.7493,
+      "tailP99": 11.1131,
+      "headP99": 10.5945
+    },
+    {
+      "edit": "hsl",
+      "whiteBalance": "gp20",
+      "tailMeanIncrease": 0.2857,
+      "headMeanIncrease": 0.0887,
+      "tailP99": 7.7761,
+      "headP99": 8.0417
+    },
+    {
+      "edit": "hsl",
+      "whiteBalance": "warm",
+      "tailMeanIncrease": 2.2054,
+      "headMeanIncrease": -0.1603,
+      "tailP99": 10.4231,
+      "headP99": 4.9339
+    },
+    {
+      "edit": "param",
+      "whiteBalance": "tp30",
+      "tailMeanIncrease": 0.5477,
+      "headMeanIncrease": -0.1424,
+      "tailP99": 6.215,
+      "headP99": 5.0951
+    },
+    {
+      "edit": "param",
+      "whiteBalance": "tm30",
+      "tailMeanIncrease": 0.6119,
+      "headMeanIncrease": -0.2004,
+      "tailP99": 6.4426,
+      "headP99": 5.4453
+    },
+    {
+      "edit": "param",
+      "whiteBalance": "gp20",
+      "tailMeanIncrease": 0.0923,
+      "headMeanIncrease": -0.0472,
+      "tailP99": 5.7836,
+      "headP99": 5.5933
+    },
+    {
+      "edit": "param",
+      "whiteBalance": "warm",
+      "tailMeanIncrease": 0.4826,
+      "headMeanIncrease": -0.1048,
+      "tailP99": 6.2433,
+      "headP99": 5.2169
+    },
+    {
+      "edit": "grade",
+      "whiteBalance": "tp30",
+      "tailMeanIncrease": 0.3221,
+      "headMeanIncrease": 0.0647,
+      "tailP99": 6.2158,
+      "headP99": 6.5049
+    },
+    {
+      "edit": "grade",
+      "whiteBalance": "tm30",
+      "tailMeanIncrease": 0.0088,
+      "headMeanIncrease": 0.0833,
+      "tailP99": 6.7394,
+      "headP99": 6.4977
+    },
+    {
+      "edit": "grade",
+      "whiteBalance": "gp20",
+      "tailMeanIncrease": 0.0334,
+      "headMeanIncrease": 0.0598,
+      "tailP99": 6.5011,
+      "headP99": 6.3647
+    },
+    {
+      "edit": "grade",
+      "whiteBalance": "warm",
+      "tailMeanIncrease": 0.3257,
+      "headMeanIncrease": 0.0468,
+      "tailP99": 6.4334,
+      "headP99": 6.4254
+    },
+    {
+      "edit": "sat",
+      "whiteBalance": "tp30",
+      "tailMeanIncrease": 1.9519,
+      "headMeanIncrease": 0.3223,
+      "tailP99": 9.9449,
+      "headP99": 8.7569
+    },
+    {
+      "edit": "sat",
+      "whiteBalance": "tm30",
+      "tailMeanIncrease": 2.4239,
+      "headMeanIncrease": -0.0271,
+      "tailP99": 11.758,
+      "headP99": 5.9077
+    },
+    {
+      "edit": "sat",
+      "whiteBalance": "gp20",
+      "tailMeanIncrease": 0.3185,
+      "headMeanIncrease": 0.0475,
+      "tailP99": 6.0681,
+      "headP99": 6.5589
+    },
+    {
+      "edit": "sat",
+      "whiteBalance": "warm",
+      "tailMeanIncrease": 1.8275,
+      "headMeanIncrease": 0.3582,
+      "tailP99": 9.6761,
+      "headP99": 8.7601
+    },
+    {
+      "edit": "vib",
+      "whiteBalance": "tp30",
+      "tailMeanIncrease": 0.7499,
+      "headMeanIncrease": 0.0006,
+      "tailP99": 8.0698,
+      "headP99": 3.0409
+    },
+    {
+      "edit": "vib",
+      "whiteBalance": "tm30",
+      "tailMeanIncrease": 1.5238,
+      "headMeanIncrease": 0.3186,
+      "tailP99": 7.5756,
+      "headP99": 5.527
+    },
+    {
+      "edit": "vib",
+      "whiteBalance": "gp20",
+      "tailMeanIncrease": 0.3278,
+      "headMeanIncrease": 0.0628,
+      "tailP99": 4.3243,
+      "headP99": 5.2152
+    },
+    {
+      "edit": "vib",
+      "whiteBalance": "warm",
+      "tailMeanIncrease": 0.6879,
+      "headMeanIncrease": 0.0186,
+      "tailP99": 7.1632,
+      "headP99": 3.0896
+    },
+    {
+      "edit": "contrast",
+      "whiteBalance": "tp30",
+      "tailMeanIncrease": 0.1623,
+      "headMeanIncrease": -0.1367,
+      "tailP99": 7.3834,
+      "headP99": 2.8038
+    },
+    {
+      "edit": "contrast",
+      "whiteBalance": "tm30",
+      "tailMeanIncrease": 0.5205,
+      "headMeanIncrease": -0.0733,
+      "tailP99": 5.4897,
+      "headP99": 5.1432
+    },
+    {
+      "edit": "contrast",
+      "whiteBalance": "gp20",
+      "tailMeanIncrease": 0.1031,
+      "headMeanIncrease": 0.0092,
+      "tailP99": 4.3722,
+      "headP99": 5.0309
+    },
+    {
+      "edit": "contrast",
+      "whiteBalance": "warm",
+      "tailMeanIncrease": 0.13,
+      "headMeanIncrease": -0.089,
+      "tailP99": 6.8401,
+      "headP99": 2.852
+    },
+    {
+      "edit": "exposure",
+      "whiteBalance": "tp30",
+      "tailMeanIncrease": -0.0285,
+      "headMeanIncrease": -0.0179,
+      "tailP99": 4.8047,
+      "headP99": 4.4066
+    },
+    {
+      "edit": "exposure",
+      "whiteBalance": "tm30",
+      "tailMeanIncrease": 0.1007,
+      "headMeanIncrease": -0.1217,
+      "tailP99": 4.5442,
+      "headP99": 3.7862
+    },
+    {
+      "edit": "exposure",
+      "whiteBalance": "gp20",
+      "tailMeanIncrease": -0.0589,
+      "headMeanIncrease": -0.0547,
+      "tailP99": 3.9843,
+      "headP99": 4.0363
+    },
+    {
+      "edit": "exposure",
+      "whiteBalance": "warm",
+      "tailMeanIncrease": -0.0629,
+      "headMeanIncrease": -0.0385,
+      "tailP99": 4.5944,
+      "headP99": 4.3809
+    },
+    {
+      "edit": "preset_bluesky2",
+      "whiteBalance": "tp30",
+      "tailMeanIncrease": 0.7892,
+      "headMeanIncrease": -0.0256,
+      "tailP99": 11.4213,
+      "headP99": 8.4218
+    },
+    {
+      "edit": "preset_bluesky2",
+      "whiteBalance": "tm30",
+      "tailMeanIncrease": 2.4775,
+      "headMeanIncrease": 1.0219,
+      "tailP99": 18.4656,
+      "headP99": 20.7401
+    },
+    {
+      "edit": "preset_bluesky2",
+      "whiteBalance": "gp20",
+      "tailMeanIncrease": 0.2723,
+      "headMeanIncrease": 0.0464,
+      "tailP99": 10.8311,
+      "headP99": 10.7903
+    },
+    {
+      "edit": "preset_bluesky2",
+      "whiteBalance": "warm",
+      "tailMeanIncrease": 0.749,
+      "headMeanIncrease": -0.0653,
+      "tailP99": 11.392,
+      "headP99": 8.6424
+    },
+    {
+      "edit": "preset_pastel",
+      "whiteBalance": "tp30",
+      "tailMeanIncrease": 1.1666,
+      "headMeanIncrease": -0.2443,
+      "tailP99": 11.8177,
+      "headP99": 7.2832
+    },
+    {
+      "edit": "preset_pastel",
+      "whiteBalance": "tm30",
+      "tailMeanIncrease": 2.0545,
+      "headMeanIncrease": -0.3186,
+      "tailP99": 10.9737,
+      "headP99": 7.1093
+    },
+    {
+      "edit": "preset_pastel",
+      "whiteBalance": "gp20",
+      "tailMeanIncrease": 0.1788,
+      "headMeanIncrease": -0.0993,
+      "tailP99": 7.2564,
+      "headP99": 6.9597
+    },
+    {
+      "edit": "preset_pastel",
+      "whiteBalance": "warm",
+      "tailMeanIncrease": 1.0819,
+      "headMeanIncrease": -0.2516,
+      "tailP99": 11.6747,
+      "headP99": 7.1508
+    },
+    {
+      "edit": "preset_colorful",
+      "whiteBalance": "tp30",
+      "tailMeanIncrease": 1.8591,
+      "headMeanIncrease": 0.1576,
+      "tailP99": 10.5777,
+      "headP99": 7.7734
+    },
+    {
+      "edit": "preset_colorful",
+      "whiteBalance": "tm30",
+      "tailMeanIncrease": 0.895,
+      "headMeanIncrease": -0.3023,
+      "tailP99": 9.2937,
+      "headP99": 6.9445
+    },
+    {
+      "edit": "preset_colorful",
+      "whiteBalance": "gp20",
+      "tailMeanIncrease": -0.0895,
+      "headMeanIncrease": -0.0613,
+      "tailP99": 7.5648,
+      "headP99": 7.977
+    },
+    {
+      "edit": "preset_colorful",
+      "whiteBalance": "warm",
+      "tailMeanIncrease": 1.5813,
+      "headMeanIncrease": 0.1052,
+      "tailP99": 11.06,
+      "headP99": 7.7462
+    }
+  ],
+  "withWhiteBalance": {
+    "variants": 44,
+    "tailMeanOfMeans": 2.7736,
+    "headMeanOfMeans": 1.9876,
+    "tailP99Max": 18.4656,
+    "headP99Max": 20.7401,
+    "headBetterMean": 38,
+    "headBetterP99": 36
+  }
+}

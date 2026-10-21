@@ -1,0 +1,3592 @@
+{
+  "kind": "synthetic-chart-lightroom-round27",
+  "engine": "niho-13",
+  "tailEngine": "niho-12",
+  "headSource": "engine",
+  "measurementSourceCommit": "7ba870647415de42920216a4c96849ed9056040c",
+  "measurementHost": "Mac Studio (M1 Max 64GB)",
+  "measurementDate": "2026-10-21",
+  "rustToolchain": "1.98.1",
+  "tool": "packages/develop-engine/tools/calibrate/round27_measure.py --engine niho-13 --tail-engine niho-12 --head-source engine",
+  "columns": {
+    "tail": "niho-12: the relative white balance in its settings, applied by the engine on the 8-bit output (calibrated delta LUT)",
+    "engine": "niho-13: the relative white balance in its settings, applied by the engine to the source (head_wb.rs)",
+    "head": "prototype: the same delta added in float to NIHO's own decode of the chart, written as 16-bit PNG, rendered with the white balance zeroed",
+    "faces/interior": "patches with a channel at 0 or 255 (1538) / the others"
+  },
+  "scopeNotes": [
+    "Synthetic 17^3 sRGB chart exported by Lightroom; no photographs. Lightroom exports and private paths are not published",
+    "Development measurement, not an independent evaluation"
+  ],
+  "protocol": {
+    "patch": 12,
+    "inner": 6,
+    "metric": "CIEDE2000 of patch-mean sRGB",
+    "patches": 4913,
+    "facePatches": 1538
+  },
+  "rows": [
+    {
+      "variant": "w0__e0",
+      "whiteBalance": "w0",
+      "edit": "e0",
+      "temperature": 0.0,
+      "tint": 0.0,
+      "tail": {
+        "mean": 0.0397,
+        "p99": 0.2256,
+        "max": 0.483
+      },
+      "head": {
+        "mean": 0.0397,
+        "p99": 0.2256,
+        "max": 0.483
+      },
+      "engine": {
+        "mean": 0.0397,
+        "p99": 0.2256,
+        "max": 0.483
+      },
+      "engineVsHead": {
+        "mean": 0.0,
+        "p99": 0.0,
+        "max": 0.0
+      },
+      "faces": {
+        "tail": {
+          "mean": 0.038,
+          "p99": 0.2366,
+          "max": 0.4203
+        },
+        "engine": {
+          "mean": 0.038,
+          "p99": 0.2366,
+          "max": 0.4203
+        }
+      },
+      "interior": {
+        "tail": {
+          "mean": 0.0405,
+          "p99": 0.2215,
+          "max": 0.483
+        },
+        "engine": {
+          "mean": 0.0405,
+          "p99": 0.2215,
+          "max": 0.483
+        }
+      }
+    },
+    {
+      "variant": "w0__hsl",
+      "whiteBalance": "w0",
+      "edit": "hsl",
+      "temperature": 0.0,
+      "tint": 0.0,
+      "tail": {
+        "mean": 1.1696,
+        "p99": 7.4582,
+        "max": 9.8092
+      },
+      "head": {
+        "mean": 1.1696,
+        "p99": 7.4582,
+        "max": 9.8092
+      },
+      "engine": {
+        "mean": 1.1696,
+        "p99": 7.4582,
+        "max": 9.8092
+      },
+      "engineVsHead": {
+        "mean": 0.0,
+        "p99": 0.0,
+        "max": 0.0
+      },
+      "faces": {
+        "tail": {
+          "mean": 1.8185,
+          "p99": 8.965,
+          "max": 9.8092
+        },
+        "engine": {
+          "mean": 1.8185,
+          "p99": 8.965,
+          "max": 9.8092
+        }
+      },
+      "interior": {
+        "tail": {
+          "mean": 0.8739,
+          "p99": 5.7102,
+          "max": 7.1906
+        },
+        "engine": {
+          "mean": 0.8739,
+          "p99": 5.7102,
+          "max": 7.1906
+        }
+      }
+    },
+    {
+      "variant": "w0__param",
+      "whiteBalance": "w0",
+      "edit": "param",
+      "temperature": 0.0,
+      "tint": 0.0,
+      "tail": {
+        "mean": 2.4445,
+        "p99": 5.6998,
+        "max": 9.4649
+      },
+      "head": {
+        "mean": 2.4445,
+        "p99": 5.6998,
+        "max": 9.4649
+      },
+      "engine": {
+        "mean": 2.4445,
+        "p99": 5.6998,
+        "max": 9.4649
+      },
+      "engineVsHead": {
+        "mean": 0.0,
+        "p99": 0.0,
+        "max": 0.0
+      },
+      "faces": {
+        "tail": {
+          "mean": 2.5406,
+          "p99": 6.3143,
+          "max": 9.4649
+        },
+        "engine": {
+          "mean": 2.5406,
+          "p99": 6.3143,
+          "max": 9.4649
+        }
+      },
+      "interior": {
+        "tail": {
+          "mean": 2.4007,
+          "p99": 4.9646,
+          "max": 6.4165
+        },
+        "engine": {
+          "mean": 2.4007,
+          "p99": 4.9646,
+          "max": 6.4165
+        }
+      }
+    },
+    {
+      "variant": "w0__grade",
+      "whiteBalance": "w0",
+      "edit": "grade",
+      "temperature": 0.0,
+      "tint": 0.0,
+      "tail": {
+        "mean": 2.2969,
+        "p99": 6.3331,
+        "max": 9.843
+      },
+      "head": {
+        "mean": 2.2969,
+        "p99": 6.3331,
+        "max": 9.843
+      },
+      "engine": {
+        "mean": 2.2969,
+        "p99": 6.3331,
+        "max": 9.843
+      },
+      "engineVsHead": {
+        "mean": 0.0,
+        "p99": 0.0,
+        "max": 0.0
+      },
+      "faces": {
+        "tail": {
+          "mean": 2.0296,
+          "p99": 6.3452,
+          "max": 9.843
+        },
+        "engine": {
+          "mean": 2.0296,
+          "p99": 6.3452,
+          "max": 9.843
+        }
+      },
+      "interior": {
+        "tail": {
+          "mean": 2.4187,
+          "p99": 6.2969,
+          "max": 8.395
+        },
+        "engine": {
+          "mean": 2.4187,
+          "p99": 6.2969,
+          "max": 8.395
+        }
+      }
+    },
+    {
+      "variant": "w0__sat",
+      "whiteBalance": "w0",
+      "edit": "sat",
+      "temperature": 0.0,
+      "tint": 0.0,
+      "tail": {
+        "mean": 1.6523,
+        "p99": 6.4194,
+        "max": 11.9626
+      },
+      "head": {
+        "mean": 1.6523,
+        "p99": 6.4194,
+        "max": 11.9626
+      },
+      "engine": {
+        "mean": 1.6523,
+        "p99": 6.4194,
+        "max": 11.9626
+      },
+      "engineVsHead": {
+        "mean": 0.0,
+        "p99": 0.0,
+        "max": 0.0
+      },
+      "faces": {
+        "tail": {
+          "mean": 2.1035,
+          "p99": 8.2176,
+          "max": 11.9626
+        },
+        "engine": {
+          "mean": 2.1035,
+          "p99": 8.2176,
+          "max": 11.9626
+        }
+      },
+      "interior": {
+        "tail": {
+          "mean": 1.4467,
+          "p99": 4.5514,
+          "max": 6.668
+        },
+        "engine": {
+          "mean": 1.4467,
+          "p99": 4.5514,
+          "max": 6.668
+        }
+      }
+    },
+    {
+      "variant": "w0__vib",
+      "whiteBalance": "w0",
+      "edit": "vib",
+      "temperature": 0.0,
+      "tint": 0.0,
+      "tail": {
+        "mean": 1.335,
+        "p99": 5.1953,
+        "max": 5.8535
+      },
+      "head": {
+        "mean": 1.335,
+        "p99": 5.1953,
+        "max": 5.8535
+      },
+      "engine": {
+        "mean": 1.335,
+        "p99": 5.1953,
+        "max": 5.8535
+      },
+      "engineVsHead": {
+        "mean": 0.0,
+        "p99": 0.0,
+        "max": 0.0
+      },
+      "faces": {
+        "tail": {
+          "mean": 1.7056,
+          "p99": 5.5607,
+          "max": 5.8535
+        },
+        "engine": {
+          "mean": 1.7056,
+          "p99": 5.5607,
+          "max": 5.8535
+        }
+      },
+      "interior": {
+        "tail": {
+          "mean": 1.1661,
+          "p99": 3.0036,
+          "max": 5.7371
+        },
+        "engine": {
+          "mean": 1.1661,
+          "p99": 3.0036,
+          "max": 5.7371
+        }
+      }
+    },
+    {
+      "variant": "w0__contrast",
+      "whiteBalance": "w0",
+      "edit": "contrast",
+      "temperature": 0.0,
+      "tint": 0.0,
+      "tail": {
+        "mean": 1.5657,
+        "p99": 5.1765,
+        "max": 5.8535
+      },
+      "head": {
+        "mean": 1.5657,
+        "p99": 5.1765,
+        "max": 5.8535
+      },
+      "engine": {
+        "mean": 1.5657,
+        "p99": 5.1765,
+        "max": 5.8535
+      },
+      "engineVsHead": {
+        "mean": 0.0,
+        "p99": 0.0,
+        "max": 0.0
+      },
+      "faces": {
+        "tail": {
+          "mean": 1.6135,
+          "p99": 5.7081,
+          "max": 5.8535
+        },
+        "engine": {
+          "mean": 1.6135,
+          "p99": 5.7081,
+          "max": 5.8535
+        }
+      },
+      "interior": {
+        "tail": {
+          "mean": 1.5439,
+          "p99": 2.8357,
+          "max": 5.7471
+        },
+        "engine": {
+          "mean": 1.5439,
+          "p99": 2.8357,
+          "max": 5.7471
+        }
+      }
+    },
+    {
+      "variant": "w0__exposure",
+      "whiteBalance": "w0",
+      "edit": "exposure",
+      "temperature": 0.0,
+      "tint": 0.0,
+      "tail": {
+        "mean": 2.1255,
+        "p99": 4.2936,
+        "max": 5.5357
+      },
+      "head": {
+        "mean": 2.1255,
+        "p99": 4.2936,
+        "max": 5.5357
+      },
+      "engine": {
+        "mean": 2.1255,
+        "p99": 4.2936,
+        "max": 5.5357
+      },
+      "engineVsHead": {
+        "mean": 0.0,
+        "p99": 0.0,
+        "max": 0.0
+      },
+      "faces": {
+        "tail": {
+          "mean": 2.245,
+          "p99": 4.8083,
+          "max": 5.5357
+        },
+        "engine": {
+          "mean": 2.245,
+          "p99": 4.8083,
+          "max": 5.5357
+        }
+      },
+      "interior": {
+        "tail": {
+          "mean": 2.071,
+          "p99": 3.9835,
+          "max": 4.5173
+        },
+        "engine": {
+          "mean": 2.071,
+          "p99": 3.9835,
+          "max": 4.5173
+        }
+      }
+    },
+    {
+      "variant": "w0__preset_bluesky2",
+      "whiteBalance": "w0",
+      "edit": "preset_bluesky2",
+      "temperature": 0.0,
+      "tint": 0.0,
+      "tail": {
+        "mean": 2.868,
+        "p99": 9.3289,
+        "max": 14.3958
+      },
+      "head": {
+        "mean": 2.868,
+        "p99": 9.3289,
+        "max": 14.3958
+      },
+      "engine": {
+        "mean": 2.868,
+        "p99": 9.3289,
+        "max": 14.3958
+      },
+      "engineVsHead": {
+        "mean": 0.0,
+        "p99": 0.0,
+        "max": 0.0
+      },
+      "faces": {
+        "tail": {
+          "mean": 3.8619,
+          "p99": 11.509,
+          "max": 14.3958
+        },
+        "engine": {
+          "mean": 3.8619,
+          "p99": 11.509,
+          "max": 14.3958
+        }
+      },
+      "interior": {
+        "tail": {
+          "mean": 2.4151,
+          "p99": 6.946,
+          "max": 13.434
+        },
+        "engine": {
+          "mean": 2.4151,
+          "p99": 6.946,
+          "max": 13.434
+        }
+      }
+    },
+    {
+      "variant": "w0__preset_pastel",
+      "whiteBalance": "w0",
+      "edit": "preset_pastel",
+      "temperature": 0.0,
+      "tint": 0.0,
+      "tail": {
+        "mean": 2.6431,
+        "p99": 6.9332,
+        "max": 17.8387
+      },
+      "head": {
+        "mean": 2.6431,
+        "p99": 6.9332,
+        "max": 17.8387
+      },
+      "engine": {
+        "mean": 2.6431,
+        "p99": 6.9332,
+        "max": 17.8387
+      },
+      "engineVsHead": {
+        "mean": 0.0,
+        "p99": 0.0,
+        "max": 0.0
+      },
+      "faces": {
+        "tail": {
+          "mean": 2.7819,
+          "p99": 7.4328,
+          "max": 17.8387
+        },
+        "engine": {
+          "mean": 2.7819,
+          "p99": 7.4328,
+          "max": 17.8387
+        }
+      },
+      "interior": {
+        "tail": {
+          "mean": 2.5799,
+          "p99": 6.3122,
+          "max": 15.327
+        },
+        "engine": {
+          "mean": 2.5799,
+          "p99": 6.3122,
+          "max": 15.327
+        }
+      }
+    },
+    {
+      "variant": "w0__preset_colorful",
+      "whiteBalance": "w0",
+      "edit": "preset_colorful",
+      "temperature": 0.0,
+      "tint": 0.0,
+      "tail": {
+        "mean": 3.3835,
+        "p99": 8.2779,
+        "max": 8.8345
+      },
+      "head": {
+        "mean": 3.3835,
+        "p99": 8.2779,
+        "max": 8.8345
+      },
+      "engine": {
+        "mean": 3.3835,
+        "p99": 8.2779,
+        "max": 8.8345
+      },
+      "engineVsHead": {
+        "mean": 0.0,
+        "p99": 0.0,
+        "max": 0.0
+      },
+      "faces": {
+        "tail": {
+          "mean": 3.8166,
+          "p99": 8.5696,
+          "max": 8.8345
+        },
+        "engine": {
+          "mean": 3.8166,
+          "p99": 8.5696,
+          "max": 8.8345
+        }
+      },
+      "interior": {
+        "tail": {
+          "mean": 3.1862,
+          "p99": 7.915,
+          "max": 8.5448
+        },
+        "engine": {
+          "mean": 3.1862,
+          "p99": 7.915,
+          "max": 8.5448
+        }
+      }
+    },
+    {
+      "variant": "tp30__e0",
+      "whiteBalance": "tp30",
+      "edit": "e0",
+      "temperature": 30.0,
+      "tint": 0.0,
+      "tail": {
+        "mean": 0.4925,
+        "p99": 2.0528,
+        "max": 8.6328
+      },
+      "head": {
+        "mean": 0.175,
+        "p99": 0.6592,
+        "max": 1.1525
+      },
+      "engine": {
+        "mean": 0.1759,
+        "p99": 0.6592,
+        "max": 1.1525
+      },
+      "engineVsHead": {
+        "mean": 0.0049,
+        "p99": 0.2062,
+        "max": 0.8667
+      },
+      "faces": {
+        "tail": {
+          "mean": 0.9896,
+          "p99": 3.0787,
+          "max": 8.6328
+        },
+        "engine": {
+          "mean": 0.1652,
+          "p99": 0.5803,
+          "max": 0.8764
+        }
+      },
+      "interior": {
+        "tail": {
+          "mean": 0.266,
+          "p99": 1.109,
+          "max": 1.5195
+        },
+        "engine": {
+          "mean": 0.1808,
+          "p99": 0.6732,
+          "max": 1.1525
+        }
+      }
+    },
+    {
+      "variant": "tp30__hsl",
+      "whiteBalance": "tp30",
+      "edit": "hsl",
+      "temperature": 30.0,
+      "tint": 0.0,
+      "tail": {
+        "mean": 3.3892,
+        "p99": 11.1141,
+        "max": 12.5156
+      },
+      "head": {
+        "mean": 1.0414,
+        "p99": 5.122,
+        "max": 7.6469
+      },
+      "engine": {
+        "mean": 1.0415,
+        "p99": 5.122,
+        "max": 7.6469
+      },
+      "engineVsHead": {
+        "mean": 0.0006,
+        "p99": 0.0,
+        "max": 0.3716
+      },
+      "faces": {
+        "tail": {
+          "mean": 3.2478,
+          "p99": 11.4558,
+          "max": 12.5156
+        },
+        "engine": {
+          "mean": 1.4925,
+          "p99": 6.7065,
+          "max": 7.6469
+        }
+      },
+      "interior": {
+        "tail": {
+          "mean": 3.4536,
+          "p99": 10.8727,
+          "max": 11.9373
+        },
+        "engine": {
+          "mean": 0.8359,
+          "p99": 3.3804,
+          "max": 5.255
+        }
+      }
+    },
+    {
+      "variant": "tp30__param",
+      "whiteBalance": "tp30",
+      "edit": "param",
+      "temperature": 30.0,
+      "tint": 0.0,
+      "tail": {
+        "mean": 2.9924,
+        "p99": 6.2318,
+        "max": 10.8298
+      },
+      "head": {
+        "mean": 2.3041,
+        "p99": 5.0999,
+        "max": 8.1947
+      },
+      "engine": {
+        "mean": 2.3042,
+        "p99": 5.0999,
+        "max": 8.1947
+      },
+      "engineVsHead": {
+        "mean": 0.001,
+        "p99": 0.0,
+        "max": 0.6151
+      },
+      "faces": {
+        "tail": {
+          "mean": 3.057,
+          "p99": 9.2885,
+          "max": 10.8298
+        },
+        "engine": {
+          "mean": 2.2807,
+          "p99": 5.5666,
+          "max": 8.1947
+        }
+      },
+      "interior": {
+        "tail": {
+          "mean": 2.9629,
+          "p99": 5.2985,
+          "max": 9.6197
+        },
+        "engine": {
+          "mean": 2.3149,
+          "p99": 4.9701,
+          "max": 6.3871
+        }
+      }
+    },
+    {
+      "variant": "tp30__grade",
+      "whiteBalance": "tp30",
+      "edit": "grade",
+      "temperature": 30.0,
+      "tint": 0.0,
+      "tail": {
+        "mean": 2.619,
+        "p99": 6.2158,
+        "max": 11.0954
+      },
+      "head": {
+        "mean": 2.3617,
+        "p99": 6.5049,
+        "max": 11.5187
+      },
+      "engine": {
+        "mean": 2.3617,
+        "p99": 6.5049,
+        "max": 11.5187
+      },
+      "engineVsHead": {
+        "mean": 0.0005,
+        "p99": 0.0,
+        "max": 0.453
+      },
+      "faces": {
+        "tail": {
+          "mean": 2.2557,
+          "p99": 6.1662,
+          "max": 8.8397
+        },
+        "engine": {
+          "mean": 2.0801,
+          "p99": 6.3411,
+          "max": 11.5187
+        }
+      },
+      "interior": {
+        "tail": {
+          "mean": 2.7846,
+          "p99": 6.3599,
+          "max": 11.0954
+        },
+        "engine": {
+          "mean": 2.49,
+          "p99": 6.5383,
+          "max": 8.085
+        }
+      }
+    },
+    {
+      "variant": "tp30__sat",
+      "whiteBalance": "tp30",
+      "edit": "sat",
+      "temperature": 30.0,
+      "tint": 0.0,
+      "tail": {
+        "mean": 3.6042,
+        "p99": 9.9449,
+        "max": 12.8658
+      },
+      "head": {
+        "mean": 1.9749,
+        "p99": 8.7569,
+        "max": 12.7503
+      },
+      "engine": {
+        "mean": 1.9748,
+        "p99": 8.7569,
+        "max": 12.7503
+      },
+      "engineVsHead": {
+        "mean": 0.0006,
+        "p99": 0.0,
+        "max": 0.4468
+      },
+      "faces": {
+        "tail": {
+          "mean": 3.6264,
+          "p99": 10.702,
+          "max": 12.8658
+        },
+        "engine": {
+          "mean": 2.2779,
+          "p99": 10.1819,
+          "max": 12.7503
+        }
+      },
+      "interior": {
+        "tail": {
+          "mean": 3.5941,
+          "p99": 9.5466,
+          "max": 12.1596
+        },
+        "engine": {
+          "mean": 1.8366,
+          "p99": 7.6101,
+          "max": 10.3979
+        }
+      }
+    },
+    {
+      "variant": "tp30__vib",
+      "whiteBalance": "tp30",
+      "edit": "vib",
+      "temperature": 30.0,
+      "tint": 0.0,
+      "tail": {
+        "mean": 2.0849,
+        "p99": 8.0698,
+        "max": 10.914
+      },
+      "head": {
+        "mean": 1.3359,
+        "p99": 3.0409,
+        "max": 3.7447
+      },
+      "engine": {
+        "mean": 1.3356,
+        "p99": 3.0409,
+        "max": 3.7447
+      },
+      "engineVsHead": {
+        "mean": 0.0012,
+        "p99": 0.0,
+        "max": 0.7846
+      },
+      "faces": {
+        "tail": {
+          "mean": 2.4458,
+          "p99": 9.7062,
+          "max": 10.914
+        },
+        "engine": {
+          "mean": 1.5999,
+          "p99": 3.4303,
+          "max": 3.7447
+        }
+      },
+      "interior": {
+        "tail": {
+          "mean": 1.9205,
+          "p99": 5.2004,
+          "max": 10.2463
+        },
+        "engine": {
+          "mean": 1.2151,
+          "p99": 2.4646,
+          "max": 3.1799
+        }
+      }
+    },
+    {
+      "variant": "tp30__contrast",
+      "whiteBalance": "tp30",
+      "edit": "contrast",
+      "temperature": 30.0,
+      "tint": 0.0,
+      "tail": {
+        "mean": 1.7199,
+        "p99": 7.418,
+        "max": 10.8298
+      },
+      "head": {
+        "mean": 1.429,
+        "p99": 2.7999,
+        "max": 4.6954
+      },
+      "engine": {
+        "mean": 1.429,
+        "p99": 2.7964,
+        "max": 4.6954
+      },
+      "engineVsHead": {
+        "mean": 0.001,
+        "p99": 0.0,
+        "max": 0.5143
+      },
+      "faces": {
+        "tail": {
+          "mean": 1.988,
+          "p99": 9.8468,
+          "max": 10.8298
+        },
+        "engine": {
+          "mean": 1.3589,
+          "p99": 2.6825,
+          "max": 4.6954
+        }
+      },
+      "interior": {
+        "tail": {
+          "mean": 1.5978,
+          "p99": 5.1093,
+          "max": 9.353
+        },
+        "engine": {
+          "mean": 1.4609,
+          "p99": 2.8312,
+          "max": 3.4824
+        }
+      }
+    },
+    {
+      "variant": "tp30__exposure",
+      "whiteBalance": "tp30",
+      "edit": "exposure",
+      "temperature": 30.0,
+      "tint": 0.0,
+      "tail": {
+        "mean": 2.1017,
+        "p99": 4.768,
+        "max": 6.0938
+      },
+      "head": {
+        "mean": 2.1054,
+        "p99": 4.4604,
+        "max": 5.4
+      },
+      "engine": {
+        "mean": 2.1055,
+        "p99": 4.4604,
+        "max": 5.4
+      },
+      "engineVsHead": {
+        "mean": 0.001,
+        "p99": 0.0,
+        "max": 0.4462
+      },
+      "faces": {
+        "tail": {
+          "mean": 2.2868,
+          "p99": 4.8746,
+          "max": 6.0938
+        },
+        "engine": {
+          "mean": 2.1053,
+          "p99": 4.7615,
+          "max": 5.4
+        }
+      },
+      "interior": {
+        "tail": {
+          "mean": 2.0173,
+          "p99": 4.5104,
+          "max": 5.3559
+        },
+        "engine": {
+          "mean": 2.1056,
+          "p99": 4.2636,
+          "max": 4.8975
+        }
+      }
+    },
+    {
+      "variant": "tp30__preset_bluesky2",
+      "whiteBalance": "tp30",
+      "edit": "preset_bluesky2",
+      "temperature": 30.0,
+      "tint": 0.0,
+      "tail": {
+        "mean": 3.6543,
+        "p99": 11.5172,
+        "max": 24.1572
+      },
+      "head": {
+        "mean": 2.8374,
+        "p99": 8.4791,
+        "max": 15.4489
+      },
+      "engine": {
+        "mean": 2.8373,
+        "p99": 8.4791,
+        "max": 15.4489
+      },
+      "engineVsHead": {
+        "mean": 0.0008,
+        "p99": 0.0,
+        "max": 0.4858
+      },
+      "faces": {
+        "tail": {
+          "mean": 4.6412,
+          "p99": 14.1316,
+          "max": 22.3185
+        },
+        "engine": {
+          "mean": 3.6179,
+          "p99": 10.3007,
+          "max": 15.4489
+        }
+      },
+      "interior": {
+        "tail": {
+          "mean": 3.2046,
+          "p99": 10.5164,
+          "max": 24.1572
+        },
+        "engine": {
+          "mean": 2.4816,
+          "p99": 6.7806,
+          "max": 9.5565
+        }
+      }
+    },
+    {
+      "variant": "tp30__preset_pastel",
+      "whiteBalance": "tp30",
+      "edit": "preset_pastel",
+      "temperature": 30.0,
+      "tint": 0.0,
+      "tail": {
+        "mean": 3.8041,
+        "p99": 11.8166,
+        "max": 26.3053
+      },
+      "head": {
+        "mean": 2.3962,
+        "p99": 7.1692,
+        "max": 9.3471
+      },
+      "engine": {
+        "mean": 2.3963,
+        "p99": 7.1692,
+        "max": 9.3471
+      },
+      "engineVsHead": {
+        "mean": 0.0005,
+        "p99": 0.0,
+        "max": 0.4936
+      },
+      "faces": {
+        "tail": {
+          "mean": 3.5997,
+          "p99": 11.1408,
+          "max": 26.3053
+        },
+        "engine": {
+          "mean": 2.6968,
+          "p99": 8.0906,
+          "max": 9.3471
+        }
+      },
+      "interior": {
+        "tail": {
+          "mean": 3.8972,
+          "p99": 12.0322,
+          "max": 24.1005
+        },
+        "engine": {
+          "mean": 2.2594,
+          "p99": 6.0822,
+          "max": 7.3197
+        }
+      }
+    },
+    {
+      "variant": "tp30__preset_colorful",
+      "whiteBalance": "tp30",
+      "edit": "preset_colorful",
+      "temperature": 30.0,
+      "tint": 0.0,
+      "tail": {
+        "mean": 5.2483,
+        "p99": 10.5742,
+        "max": 17.9918
+      },
+      "head": {
+        "mean": 3.5416,
+        "p99": 7.7762,
+        "max": 8.5709
+      },
+      "engine": {
+        "mean": 3.5415,
+        "p99": 7.7762,
+        "max": 8.5709
+      },
+      "engineVsHead": {
+        "mean": 0.0004,
+        "p99": 0.0,
+        "max": 0.4296
+      },
+      "faces": {
+        "tail": {
+          "mean": 5.1356,
+          "p99": 10.2717,
+          "max": 11.51
+        },
+        "engine": {
+          "mean": 3.6938,
+          "p99": 7.9835,
+          "max": 8.3582
+        }
+      },
+      "interior": {
+        "tail": {
+          "mean": 5.2996,
+          "p99": 11.1421,
+          "max": 17.9918
+        },
+        "engine": {
+          "mean": 3.4721,
+          "p99": 7.6123,
+          "max": 8.5709
+        }
+      }
+    },
+    {
+      "variant": "tm30__e0",
+      "whiteBalance": "tm30",
+      "edit": "e0",
+      "temperature": -30.0,
+      "tint": 0.0,
+      "tail": {
+        "mean": 0.5357,
+        "p99": 2.2659,
+        "max": 4.3467
+      },
+      "head": {
+        "mean": 0.1723,
+        "p99": 0.6415,
+        "max": 1.0048
+      },
+      "engine": {
+        "mean": 0.1725,
+        "p99": 0.6314,
+        "max": 1.0048
+      },
+      "engineVsHead": {
+        "mean": 0.0071,
+        "p99": 0.2765,
+        "max": 1.0837
+      },
+      "faces": {
+        "tail": {
+          "mean": 1.0692,
+          "p99": 2.495,
+          "max": 4.3467
+        },
+        "engine": {
+          "mean": 0.1728,
+          "p99": 0.6525,
+          "max": 0.9026
+        }
+      },
+      "interior": {
+        "tail": {
+          "mean": 0.2926,
+          "p99": 1.6036,
+          "max": 2.0836
+        },
+        "engine": {
+          "mean": 0.1724,
+          "p99": 0.6166,
+          "max": 1.0048
+        }
+      }
+    },
+    {
+      "variant": "tm30__hsl",
+      "whiteBalance": "tm30",
+      "edit": "hsl",
+      "temperature": -30.0,
+      "tint": 0.0,
+      "tail": {
+        "mean": 4.4103,
+        "p99": 11.1131,
+        "max": 17.7582
+      },
+      "head": {
+        "mean": 1.919,
+        "p99": 10.5945,
+        "max": 13.5849
+      },
+      "engine": {
+        "mean": 1.919,
+        "p99": 10.5945,
+        "max": 13.5849
+      },
+      "engineVsHead": {
+        "mean": 0.001,
+        "p99": 0.0,
+        "max": 0.8231
+      },
+      "faces": {
+        "tail": {
+          "mean": 4.253,
+          "p99": 11.1241,
+          "max": 11.6864
+        },
+        "engine": {
+          "mean": 2.5163,
+          "p99": 12.4276,
+          "max": 13.5849
+        }
+      },
+      "interior": {
+        "tail": {
+          "mean": 4.4819,
+          "p99": 10.8591,
+          "max": 17.7582
+        },
+        "engine": {
+          "mean": 1.6468,
+          "p99": 8.3541,
+          "max": 10.6123
+        }
+      }
+    },
+    {
+      "variant": "tm30__param",
+      "whiteBalance": "tm30",
+      "edit": "param",
+      "temperature": -30.0,
+      "tint": 0.0,
+      "tail": {
+        "mean": 3.0566,
+        "p99": 6.409,
+        "max": 7.9564
+      },
+      "head": {
+        "mean": 2.241,
+        "p99": 5.4153,
+        "max": 8.4384
+      },
+      "engine": {
+        "mean": 2.241,
+        "p99": 5.4153,
+        "max": 8.4384
+      },
+      "engineVsHead": {
+        "mean": 0.0007,
+        "p99": 0.0,
+        "max": 0.6996
+      },
+      "faces": {
+        "tail": {
+          "mean": 3.3258,
+          "p99": 7.0491,
+          "max": 7.9564
+        },
+        "engine": {
+          "mean": 2.3436,
+          "p99": 5.7637,
+          "max": 8.4384
+        }
+      },
+      "interior": {
+        "tail": {
+          "mean": 2.9339,
+          "p99": 5.3461,
+          "max": 6.7186
+        },
+        "engine": {
+          "mean": 2.1942,
+          "p99": 5.0938,
+          "max": 5.869
+        }
+      }
+    },
+    {
+      "variant": "tm30__grade",
+      "whiteBalance": "tm30",
+      "edit": "grade",
+      "temperature": -30.0,
+      "tint": 0.0,
+      "tail": {
+        "mean": 2.3057,
+        "p99": 6.7394,
+        "max": 12.2514
+      },
+      "head": {
+        "mean": 2.3803,
+        "p99": 6.4977,
+        "max": 9.784
+      },
+      "engine": {
+        "mean": 2.3803,
+        "p99": 6.4977,
+        "max": 9.784
+      },
+      "engineVsHead": {
+        "mean": 0.001,
+        "p99": 0.0,
+        "max": 0.5078
+      },
+      "faces": {
+        "tail": {
+          "mean": 2.0311,
+          "p99": 7.2632,
+          "max": 12.2514
+        },
+        "engine": {
+          "mean": 2.557,
+          "p99": 7.0224,
+          "max": 9.784
+        }
+      },
+      "interior": {
+        "tail": {
+          "mean": 2.4308,
+          "p99": 6.5637,
+          "max": 9.5739
+        },
+        "engine": {
+          "mean": 2.2997,
+          "p99": 6.3917,
+          "max": 7.2873
+        }
+      }
+    },
+    {
+      "variant": "tm30__sat",
+      "whiteBalance": "tm30",
+      "edit": "sat",
+      "temperature": -30.0,
+      "tint": 0.0,
+      "tail": {
+        "mean": 4.0762,
+        "p99": 11.758,
+        "max": 13.3552
+      },
+      "head": {
+        "mean": 1.6255,
+        "p99": 5.9077,
+        "max": 8.9487
+      },
+      "engine": {
+        "mean": 1.6256,
+        "p99": 5.9077,
+        "max": 8.9487
+      },
+      "engineVsHead": {
+        "mean": 0.0007,
+        "p99": 0.0,
+        "max": 0.8238
+      },
+      "faces": {
+        "tail": {
+          "mean": 4.3879,
+          "p99": 12.4526,
+          "max": 13.3552
+        },
+        "engine": {
+          "mean": 1.9777,
+          "p99": 6.8761,
+          "max": 8.9487
+        }
+      },
+      "interior": {
+        "tail": {
+          "mean": 3.9342,
+          "p99": 11.0176,
+          "max": 13.066
+        },
+        "engine": {
+          "mean": 1.4651,
+          "p99": 4.5092,
+          "max": 6.6061
+        }
+      }
+    },
+    {
+      "variant": "tm30__vib",
+      "whiteBalance": "tm30",
+      "edit": "vib",
+      "temperature": -30.0,
+      "tint": 0.0,
+      "tail": {
+        "mean": 2.8588,
+        "p99": 7.5756,
+        "max": 9.677
+      },
+      "head": {
+        "mean": 1.6537,
+        "p99": 5.527,
+        "max": 5.8535
+      },
+      "engine": {
+        "mean": 1.6536,
+        "p99": 5.527,
+        "max": 5.8535
+      },
+      "engineVsHead": {
+        "mean": 0.0011,
+        "p99": 0.0,
+        "max": 0.8332
+      },
+      "faces": {
+        "tail": {
+          "mean": 3.1961,
+          "p99": 8.8246,
+          "max": 9.677
+        },
+        "engine": {
+          "mean": 1.9245,
+          "p99": 5.7368,
+          "max": 5.8535
+        }
+      },
+      "interior": {
+        "tail": {
+          "mean": 2.7051,
+          "p99": 6.1921,
+          "max": 8.6288
+        },
+        "engine": {
+          "mean": 1.5302,
+          "p99": 5.3074,
+          "max": 5.8535
+        }
+      }
+    },
+    {
+      "variant": "tm30__contrast",
+      "whiteBalance": "tm30",
+      "edit": "contrast",
+      "temperature": -30.0,
+      "tint": 0.0,
+      "tail": {
+        "mean": 2.0865,
+        "p99": 5.4701,
+        "max": 7.0159
+      },
+      "head": {
+        "mean": 1.4952,
+        "p99": 5.1432,
+        "max": 5.8431
+      },
+      "engine": {
+        "mean": 1.4953,
+        "p99": 5.1432,
+        "max": 5.8431
+      },
+      "engineVsHead": {
+        "mean": 0.001,
+        "p99": 0.0,
+        "max": 0.4328
+      },
+      "faces": {
+        "tail": {
+          "mean": 2.2677,
+          "p99": 6.183,
+          "max": 7.0159
+        },
+        "engine": {
+          "mean": 1.4691,
+          "p99": 5.5476,
+          "max": 5.8431
+        }
+      },
+      "interior": {
+        "tail": {
+          "mean": 2.004,
+          "p99": 4.5539,
+          "max": 6.159
+        },
+        "engine": {
+          "mean": 1.5072,
+          "p99": 3.78,
+          "max": 5.723
+        }
+      }
+    },
+    {
+      "variant": "tm30__exposure",
+      "whiteBalance": "tm30",
+      "edit": "exposure",
+      "temperature": -30.0,
+      "tint": 0.0,
+      "tail": {
+        "mean": 2.2312,
+        "p99": 4.6232,
+        "max": 5.7045
+      },
+      "head": {
+        "mean": 2.0055,
+        "p99": 3.7826,
+        "max": 5.0319
+      },
+      "engine": {
+        "mean": 2.0054,
+        "p99": 3.7826,
+        "max": 5.0319
+      },
+      "engineVsHead": {
+        "mean": 0.0005,
+        "p99": 0.0,
+        "max": 0.259
+      },
+      "faces": {
+        "tail": {
+          "mean": 2.3661,
+          "p99": 4.932,
+          "max": 5.7045
+        },
+        "engine": {
+          "mean": 1.8631,
+          "p99": 3.8256,
+          "max": 5.0319
+        }
+      },
+      "interior": {
+        "tail": {
+          "mean": 2.1698,
+          "p99": 3.7789,
+          "max": 4.7967
+        },
+        "engine": {
+          "mean": 2.0703,
+          "p99": 3.777,
+          "max": 4.0616
+        }
+      }
+    },
+    {
+      "variant": "tm30__preset_bluesky2",
+      "whiteBalance": "tm30",
+      "edit": "preset_bluesky2",
+      "temperature": -30.0,
+      "tint": 0.0,
+      "tail": {
+        "mean": 5.3459,
+        "p99": 18.5095,
+        "max": 27.7964
+      },
+      "head": {
+        "mean": 3.8881,
+        "p99": 20.7897,
+        "max": 28.7094
+      },
+      "engine": {
+        "mean": 3.888,
+        "p99": 20.7897,
+        "max": 28.7094
+      },
+      "engineVsHead": {
+        "mean": 0.0009,
+        "p99": 0.0,
+        "max": 0.5619
+      },
+      "faces": {
+        "tail": {
+          "mean": 5.8384,
+          "p99": 22.7343,
+          "max": 27.7964
+        },
+        "engine": {
+          "mean": 5.2833,
+          "p99": 25.2024,
+          "max": 28.7094
+        }
+      },
+      "interior": {
+        "tail": {
+          "mean": 5.1214,
+          "p99": 15.0786,
+          "max": 21.1224
+        },
+        "engine": {
+          "mean": 3.2521,
+          "p99": 16.0211,
+          "max": 24.1619
+        }
+      }
+    },
+    {
+      "variant": "tm30__preset_pastel",
+      "whiteBalance": "tm30",
+      "edit": "preset_pastel",
+      "temperature": -30.0,
+      "tint": 0.0,
+      "tail": {
+        "mean": 4.6994,
+        "p99": 10.9515,
+        "max": 16.9502
+      },
+      "head": {
+        "mean": 2.3208,
+        "p99": 7.217,
+        "max": 21.2484
+      },
+      "engine": {
+        "mean": 2.3208,
+        "p99": 7.217,
+        "max": 21.2484
+      },
+      "engineVsHead": {
+        "mean": 0.0007,
+        "p99": 0.0,
+        "max": 0.4121
+      },
+      "faces": {
+        "tail": {
+          "mean": 4.3865,
+          "p99": 11.0827,
+          "max": 15.0594
+        },
+        "engine": {
+          "mean": 2.5817,
+          "p99": 7.5589,
+          "max": 20.998
+        }
+      },
+      "interior": {
+        "tail": {
+          "mean": 4.842,
+          "p99": 10.9016,
+          "max": 16.9502
+        },
+        "engine": {
+          "mean": 2.2019,
+          "p99": 6.8015,
+          "max": 21.2484
+        }
+      }
+    },
+    {
+      "variant": "tm30__preset_colorful",
+      "whiteBalance": "tm30",
+      "edit": "preset_colorful",
+      "temperature": -30.0,
+      "tint": 0.0,
+      "tail": {
+        "mean": 4.2839,
+        "p99": 9.2237,
+        "max": 11.844
+      },
+      "head": {
+        "mean": 3.0777,
+        "p99": 6.9346,
+        "max": 8.3274
+      },
+      "engine": {
+        "mean": 3.0778,
+        "p99": 6.9346,
+        "max": 8.3274
+      },
+      "engineVsHead": {
+        "mean": 0.0005,
+        "p99": 0.0,
+        "max": 0.3446
+      },
+      "faces": {
+        "tail": {
+          "mean": 4.1024,
+          "p99": 9.8228,
+          "max": 11.4502
+        },
+        "engine": {
+          "mean": 3.5573,
+          "p99": 7.2773,
+          "max": 8.3274
+        }
+      },
+      "interior": {
+        "tail": {
+          "mean": 4.3667,
+          "p99": 9.0185,
+          "max": 11.844
+        },
+        "engine": {
+          "mean": 2.8592,
+          "p99": 6.5418,
+          "max": 7.1896
+        }
+      }
+    },
+    {
+      "variant": "gp20__e0",
+      "whiteBalance": "gp20",
+      "edit": "e0",
+      "temperature": 0.0,
+      "tint": 20.0,
+      "tail": {
+        "mean": 0.4549,
+        "p99": 1.7098,
+        "max": 4.8965
+      },
+      "head": {
+        "mean": 0.1139,
+        "p99": 0.403,
+        "max": 0.8558
+      },
+      "engine": {
+        "mean": 0.1132,
+        "p99": 0.3992,
+        "max": 0.8079
+      },
+      "engineVsHead": {
+        "mean": 0.0041,
+        "p99": 0.1916,
+        "max": 0.8605
+      },
+      "faces": {
+        "tail": {
+          "mean": 0.9344,
+          "p99": 2.2912,
+          "max": 4.8965
+        },
+        "engine": {
+          "mean": 0.0993,
+          "p99": 0.3645,
+          "max": 0.6932
+        }
+      },
+      "interior": {
+        "tail": {
+          "mean": 0.2363,
+          "p99": 1.1803,
+          "max": 1.448
+        },
+        "engine": {
+          "mean": 0.1195,
+          "p99": 0.4081,
+          "max": 0.8079
+        }
+      }
+    },
+    {
+      "variant": "gp20__hsl",
+      "whiteBalance": "gp20",
+      "edit": "hsl",
+      "temperature": 0.0,
+      "tint": 20.0,
+      "tail": {
+        "mean": 1.4553,
+        "p99": 7.7761,
+        "max": 9.8983
+      },
+      "head": {
+        "mean": 1.2583,
+        "p99": 8.0417,
+        "max": 10.8214
+      },
+      "engine": {
+        "mean": 1.2582,
+        "p99": 8.0417,
+        "max": 10.8214
+      },
+      "engineVsHead": {
+        "mean": 0.0006,
+        "p99": 0.0,
+        "max": 0.392
+      },
+      "faces": {
+        "tail": {
+          "mean": 2.0481,
+          "p99": 9.1825,
+          "max": 9.8983
+        },
+        "engine": {
+          "mean": 1.9479,
+          "p99": 9.9337,
+          "max": 10.8214
+        }
+      },
+      "interior": {
+        "tail": {
+          "mean": 1.1852,
+          "p99": 5.3132,
+          "max": 7.0666
+        },
+        "engine": {
+          "mean": 0.944,
+          "p99": 5.9462,
+          "max": 7.6309
+        }
+      }
+    },
+    {
+      "variant": "gp20__param",
+      "whiteBalance": "gp20",
+      "edit": "param",
+      "temperature": 0.0,
+      "tint": 20.0,
+      "tail": {
+        "mean": 2.5335,
+        "p99": 5.762,
+        "max": 8.991
+      },
+      "head": {
+        "mean": 2.3969,
+        "p99": 5.6196,
+        "max": 9.2424
+      },
+      "engine": {
+        "mean": 2.3971,
+        "p99": 5.6213,
+        "max": 9.2424
+      },
+      "engineVsHead": {
+        "mean": 0.0009,
+        "p99": 0.0,
+        "max": 0.7507
+      },
+      "faces": {
+        "tail": {
+          "mean": 2.6528,
+          "p99": 6.4637,
+          "max": 8.991
+        },
+        "engine": {
+          "mean": 2.4871,
+          "p99": 6.191,
+          "max": 9.2424
+        }
+      },
+      "interior": {
+        "tail": {
+          "mean": 2.4792,
+          "p99": 5.0261,
+          "max": 6.3409
+        },
+        "engine": {
+          "mean": 2.3562,
+          "p99": 4.8843,
+          "max": 6.2827
+        }
+      }
+    },
+    {
+      "variant": "gp20__grade",
+      "whiteBalance": "gp20",
+      "edit": "grade",
+      "temperature": 0.0,
+      "tint": 20.0,
+      "tail": {
+        "mean": 2.3303,
+        "p99": 6.5011,
+        "max": 9.5336
+      },
+      "head": {
+        "mean": 2.3567,
+        "p99": 6.3647,
+        "max": 9.5058
+      },
+      "engine": {
+        "mean": 2.3566,
+        "p99": 6.3647,
+        "max": 9.5058
+      },
+      "engineVsHead": {
+        "mean": 0.0006,
+        "p99": 0.0,
+        "max": 0.4853
+      },
+      "faces": {
+        "tail": {
+          "mean": 2.035,
+          "p99": 6.5533,
+          "max": 9.5336
+        },
+        "engine": {
+          "mean": 2.1762,
+          "p99": 6.3645,
+          "max": 9.5058
+        }
+      },
+      "interior": {
+        "tail": {
+          "mean": 2.4649,
+          "p99": 6.4814,
+          "max": 8.6706
+        },
+        "engine": {
+          "mean": 2.4388,
+          "p99": 6.3625,
+          "max": 7.875
+        }
+      }
+    },
+    {
+      "variant": "gp20__sat",
+      "whiteBalance": "gp20",
+      "edit": "sat",
+      "temperature": 0.0,
+      "tint": 20.0,
+      "tail": {
+        "mean": 1.9708,
+        "p99": 6.0681,
+        "max": 9.6383
+      },
+      "head": {
+        "mean": 1.7,
+        "p99": 6.5589,
+        "max": 10.5195
+      },
+      "engine": {
+        "mean": 1.7002,
+        "p99": 6.5589,
+        "max": 10.5195
+      },
+      "engineVsHead": {
+        "mean": 0.0004,
+        "p99": 0.0,
+        "max": 0.4428
+      },
+      "faces": {
+        "tail": {
+          "mean": 2.4787,
+          "p99": 7.621,
+          "max": 9.6383
+        },
+        "engine": {
+          "mean": 2.1432,
+          "p99": 8.2436,
+          "max": 10.5195
+        }
+      },
+      "interior": {
+        "tail": {
+          "mean": 1.7394,
+          "p99": 4.6316,
+          "max": 6.7581
+        },
+        "engine": {
+          "mean": 1.4983,
+          "p99": 5.0621,
+          "max": 7.6751
+        }
+      }
+    },
+    {
+      "variant": "gp20__vib",
+      "whiteBalance": "gp20",
+      "edit": "vib",
+      "temperature": 0.0,
+      "tint": 20.0,
+      "tail": {
+        "mean": 1.6628,
+        "p99": 4.3243,
+        "max": 5.4916
+      },
+      "head": {
+        "mean": 1.3978,
+        "p99": 5.2152,
+        "max": 5.8536
+      },
+      "engine": {
+        "mean": 1.3978,
+        "p99": 5.2152,
+        "max": 5.8536
+      },
+      "engineVsHead": {
+        "mean": 0.0003,
+        "p99": 0.0,
+        "max": 0.4047
+      },
+      "faces": {
+        "tail": {
+          "mean": 2.0904,
+          "p99": 4.8273,
+          "max": 5.4916
+        },
+        "engine": {
+          "mean": 1.8087,
+          "p99": 5.6752,
+          "max": 5.8536
+        }
+      },
+      "interior": {
+        "tail": {
+          "mean": 1.468,
+          "p99": 3.4606,
+          "max": 5.1709
+        },
+        "engine": {
+          "mean": 1.2105,
+          "p99": 3.3471,
+          "max": 5.8458
+        }
+      }
+    },
+    {
+      "variant": "gp20__contrast",
+      "whiteBalance": "gp20",
+      "edit": "contrast",
+      "temperature": 0.0,
+      "tint": 20.0,
+      "tail": {
+        "mean": 1.6692,
+        "p99": 4.3318,
+        "max": 5.4916
+      },
+      "head": {
+        "mean": 1.5737,
+        "p99": 5.0352,
+        "max": 5.8984
+      },
+      "engine": {
+        "mean": 1.5736,
+        "p99": 5.0352,
+        "max": 5.8984
+      },
+      "engineVsHead": {
+        "mean": 0.0005,
+        "p99": 0.0,
+        "max": 0.4563
+      },
+      "faces": {
+        "tail": {
+          "mean": 1.795,
+          "p99": 5.122,
+          "max": 5.4916
+        },
+        "engine": {
+          "mean": 1.5955,
+          "p99": 5.6237,
+          "max": 5.8964
+        }
+      },
+      "interior": {
+        "tail": {
+          "mean": 1.6119,
+          "p99": 3.2658,
+          "max": 5.3509
+        },
+        "engine": {
+          "mean": 1.5637,
+          "p99": 2.9331,
+          "max": 5.8984
+        }
+      }
+    },
+    {
+      "variant": "gp20__exposure",
+      "whiteBalance": "gp20",
+      "edit": "exposure",
+      "temperature": 0.0,
+      "tint": 20.0,
+      "tail": {
+        "mean": 2.0703,
+        "p99": 3.9995,
+        "max": 5.1393
+      },
+      "head": {
+        "mean": 2.0703,
+        "p99": 4.0384,
+        "max": 5.0444
+      },
+      "engine": {
+        "mean": 2.0702,
+        "p99": 4.0384,
+        "max": 5.0444
+      },
+      "engineVsHead": {
+        "mean": 0.0005,
+        "p99": 0.0,
+        "max": 0.4946
+      },
+      "faces": {
+        "tail": {
+          "mean": 2.112,
+          "p99": 4.3272,
+          "max": 5.1393
+        },
+        "engine": {
+          "mean": 2.0648,
+          "p99": 4.3005,
+          "max": 5.0444
+        }
+      },
+      "interior": {
+        "tail": {
+          "mean": 2.0513,
+          "p99": 3.6304,
+          "max": 4.087
+        },
+        "engine": {
+          "mean": 2.0726,
+          "p99": 3.8581,
+          "max": 4.2357
+        }
+      }
+    },
+    {
+      "variant": "gp20__preset_bluesky2",
+      "whiteBalance": "gp20",
+      "edit": "preset_bluesky2",
+      "temperature": 0.0,
+      "tint": 20.0,
+      "tail": {
+        "mean": 3.1399,
+        "p99": 10.9143,
+        "max": 17.4044
+      },
+      "head": {
+        "mean": 2.9133,
+        "p99": 10.9452,
+        "max": 18.4587
+      },
+      "engine": {
+        "mean": 2.9135,
+        "p99": 10.9452,
+        "max": 18.4587
+      },
+      "engineVsHead": {
+        "mean": 0.0005,
+        "p99": 0.0,
+        "max": 0.6298
+      },
+      "faces": {
+        "tail": {
+          "mean": 4.0065,
+          "p99": 13.0046,
+          "max": 17.4044
+        },
+        "engine": {
+          "mean": 3.941,
+          "p99": 13.819,
+          "max": 18.4587
+        }
+      },
+      "interior": {
+        "tail": {
+          "mean": 2.7451,
+          "p99": 8.4696,
+          "max": 12.6012
+        },
+        "engine": {
+          "mean": 2.4453,
+          "p99": 7.838,
+          "max": 11.0478
+        }
+      }
+    },
+    {
+      "variant": "gp20__preset_pastel",
+      "whiteBalance": "gp20",
+      "edit": "preset_pastel",
+      "temperature": 0.0,
+      "tint": 20.0,
+      "tail": {
+        "mean": 2.8234,
+        "p99": 7.2517,
+        "max": 18.1092
+      },
+      "head": {
+        "mean": 2.5445,
+        "p99": 6.8864,
+        "max": 22.7479
+      },
+      "engine": {
+        "mean": 2.5445,
+        "p99": 6.8864,
+        "max": 22.7479
+      },
+      "engineVsHead": {
+        "mean": 0.0006,
+        "p99": 0.0,
+        "max": 0.4775
+      },
+      "faces": {
+        "tail": {
+          "mean": 2.949,
+          "p99": 7.8223,
+          "max": 18.1092
+        },
+        "engine": {
+          "mean": 2.7535,
+          "p99": 7.8764,
+          "max": 22.7479
+        }
+      },
+      "interior": {
+        "tail": {
+          "mean": 2.7662,
+          "p99": 6.7409,
+          "max": 15.2927
+        },
+        "engine": {
+          "mean": 2.4493,
+          "p99": 6.344,
+          "max": 18.2942
+        }
+      }
+    },
+    {
+      "variant": "gp20__preset_colorful",
+      "whiteBalance": "gp20",
+      "edit": "preset_colorful",
+      "temperature": 0.0,
+      "tint": 20.0,
+      "tail": {
+        "mean": 3.2969,
+        "p99": 7.5732,
+        "max": 8.9838
+      },
+      "head": {
+        "mean": 3.3238,
+        "p99": 7.9921,
+        "max": 8.4262
+      },
+      "engine": {
+        "mean": 3.3239,
+        "p99": 7.9921,
+        "max": 8.4262
+      },
+      "engineVsHead": {
+        "mean": 0.0003,
+        "p99": 0.0,
+        "max": 0.4337
+      },
+      "faces": {
+        "tail": {
+          "mean": 3.6492,
+          "p99": 7.7684,
+          "max": 8.8157
+        },
+        "engine": {
+          "mean": 3.7579,
+          "p99": 8.1956,
+          "max": 8.4262
+        }
+      },
+      "interior": {
+        "tail": {
+          "mean": 3.1364,
+          "p99": 7.3291,
+          "max": 8.9838
+        },
+        "engine": {
+          "mean": 3.1261,
+          "p99": 7.6239,
+          "max": 8.2742
+        }
+      }
+    },
+    {
+      "variant": "warm__e0",
+      "whiteBalance": "warm",
+      "edit": "e0",
+      "temperature": 30.0,
+      "tint": 20.0,
+      "tail": {
+        "mean": 0.4708,
+        "p99": 1.8834,
+        "max": 7.782
+      },
+      "head": {
+        "mean": 0.1256,
+        "p99": 0.4491,
+        "max": 0.9102
+      },
+      "engine": {
+        "mean": 0.1253,
+        "p99": 0.4398,
+        "max": 0.8583
+      },
+      "engineVsHead": {
+        "mean": 0.0048,
+        "p99": 0.2223,
+        "max": 1.1116
+      },
+      "faces": {
+        "tail": {
+          "mean": 0.9921,
+          "p99": 2.8816,
+          "max": 7.782
+        },
+        "engine": {
+          "mean": 0.1129,
+          "p99": 0.4253,
+          "max": 0.8147
+        }
+      },
+      "interior": {
+        "tail": {
+          "mean": 0.2333,
+          "p99": 1.0568,
+          "max": 1.5126
+        },
+        "engine": {
+          "mean": 0.1309,
+          "p99": 0.4438,
+          "max": 0.8583
+        }
+      }
+    },
+    {
+      "variant": "warm__hsl",
+      "whiteBalance": "warm",
+      "edit": "hsl",
+      "temperature": 30.0,
+      "tint": 20.0,
+      "tail": {
+        "mean": 3.375,
+        "p99": 10.4231,
+        "max": 11.7338
+      },
+      "head": {
+        "mean": 1.0094,
+        "p99": 4.9339,
+        "max": 7.586
+      },
+      "engine": {
+        "mean": 1.0095,
+        "p99": 4.9339,
+        "max": 7.586
+      },
+      "engineVsHead": {
+        "mean": 0.0005,
+        "p99": 0.0,
+        "max": 0.3174
+      },
+      "faces": {
+        "tail": {
+          "mean": 3.1493,
+          "p99": 10.5223,
+          "max": 11.3668
+        },
+        "engine": {
+          "mean": 1.5002,
+          "p99": 6.6617,
+          "max": 7.586
+        }
+      },
+      "interior": {
+        "tail": {
+          "mean": 3.4778,
+          "p99": 10.3596,
+          "max": 11.7338
+        },
+        "engine": {
+          "mean": 0.7858,
+          "p99": 3.1487,
+          "max": 5.0416
+        }
+      }
+    },
+    {
+      "variant": "warm__param",
+      "whiteBalance": "warm",
+      "edit": "param",
+      "temperature": 30.0,
+      "tint": 20.0,
+      "tail": {
+        "mean": 2.9284,
+        "p99": 6.2386,
+        "max": 9.5562
+      },
+      "head": {
+        "mean": 2.3374,
+        "p99": 5.26,
+        "max": 8.9034
+      },
+      "engine": {
+        "mean": 2.3374,
+        "p99": 5.26,
+        "max": 8.9034
+      },
+      "engineVsHead": {
+        "mean": 0.0006,
+        "p99": 0.0,
+        "max": 0.4416
+      },
+      "faces": {
+        "tail": {
+          "mean": 2.9674,
+          "p99": 8.6901,
+          "max": 9.5562
+        },
+        "engine": {
+          "mean": 2.2738,
+          "p99": 5.5143,
+          "max": 8.9034
+        }
+      },
+      "interior": {
+        "tail": {
+          "mean": 2.9106,
+          "p99": 5.3197,
+          "max": 8.9422
+        },
+        "engine": {
+          "mean": 2.3665,
+          "p99": 5.0993,
+          "max": 6.4709
+        }
+      }
+    },
+    {
+      "variant": "warm__grade",
+      "whiteBalance": "warm",
+      "edit": "grade",
+      "temperature": 30.0,
+      "tint": 20.0,
+      "tail": {
+        "mean": 2.6226,
+        "p99": 6.4334,
+        "max": 10.1286
+      },
+      "head": {
+        "mean": 2.3438,
+        "p99": 6.4254,
+        "max": 11.1128
+      },
+      "engine": {
+        "mean": 2.3439,
+        "p99": 6.4254,
+        "max": 11.1128
+      },
+      "engineVsHead": {
+        "mean": 0.0005,
+        "p99": 0.0,
+        "max": 0.3692
+      },
+      "faces": {
+        "tail": {
+          "mean": 2.3065,
+          "p99": 6.5441,
+          "max": 9.0892
+        },
+        "engine": {
+          "mean": 2.0778,
+          "p99": 6.3359,
+          "max": 11.1128
+        }
+      },
+      "interior": {
+        "tail": {
+          "mean": 2.7667,
+          "p99": 6.292,
+          "max": 10.1286
+        },
+        "engine": {
+          "mean": 2.4651,
+          "p99": 6.4367,
+          "max": 8.1892
+        }
+      }
+    },
+    {
+      "variant": "warm__sat",
+      "whiteBalance": "warm",
+      "edit": "sat",
+      "temperature": 30.0,
+      "tint": 20.0,
+      "tail": {
+        "mean": 3.4798,
+        "p99": 9.6761,
+        "max": 12.805
+      },
+      "head": {
+        "mean": 2.0109,
+        "p99": 8.7601,
+        "max": 13.3283
+      },
+      "engine": {
+        "mean": 2.0108,
+        "p99": 8.7601,
+        "max": 13.3283
+      },
+      "engineVsHead": {
+        "mean": 0.0009,
+        "p99": 0.0,
+        "max": 0.418
+      },
+      "faces": {
+        "tail": {
+          "mean": 3.5017,
+          "p99": 10.609,
+          "max": 12.805
+        },
+        "engine": {
+          "mean": 2.2778,
+          "p99": 9.855,
+          "max": 13.3283
+        }
+      },
+      "interior": {
+        "tail": {
+          "mean": 3.4698,
+          "p99": 9.2257,
+          "max": 12.5538
+        },
+        "engine": {
+          "mean": 1.8891,
+          "p99": 7.7169,
+          "max": 10.6467
+        }
+      }
+    },
+    {
+      "variant": "warm__vib",
+      "whiteBalance": "warm",
+      "edit": "vib",
+      "temperature": 30.0,
+      "tint": 20.0,
+      "tail": {
+        "mean": 2.0229,
+        "p99": 7.1632,
+        "max": 9.6526
+      },
+      "head": {
+        "mean": 1.3538,
+        "p99": 3.0896,
+        "max": 3.9197
+      },
+      "engine": {
+        "mean": 1.3538,
+        "p99": 3.0896,
+        "max": 3.9197
+      },
+      "engineVsHead": {
+        "mean": 0.0006,
+        "p99": 0.0,
+        "max": 0.7137
+      },
+      "faces": {
+        "tail": {
+          "mean": 2.3393,
+          "p99": 8.6146,
+          "max": 9.6526
+        },
+        "engine": {
+          "mean": 1.627,
+          "p99": 3.5316,
+          "max": 3.9197
+        }
+      },
+      "interior": {
+        "tail": {
+          "mean": 1.8787,
+          "p99": 5.4236,
+          "max": 8.8617
+        },
+        "engine": {
+          "mean": 1.2292,
+          "p99": 2.5608,
+          "max": 3.2672
+        }
+      }
+    },
+    {
+      "variant": "warm__contrast",
+      "whiteBalance": "warm",
+      "edit": "contrast",
+      "temperature": 30.0,
+      "tint": 20.0,
+      "tail": {
+        "mean": 1.6871,
+        "p99": 6.875,
+        "max": 9.5664
+      },
+      "head": {
+        "mean": 1.4805,
+        "p99": 2.8682,
+        "max": 5.8535
+      },
+      "engine": {
+        "mean": 1.4805,
+        "p99": 2.8682,
+        "max": 5.8535
+      },
+      "engineVsHead": {
+        "mean": 0.0005,
+        "p99": 0.0,
+        "max": 0.3952
+      },
+      "faces": {
+        "tail": {
+          "mean": 1.9169,
+          "p99": 8.866,
+          "max": 9.5664
+        },
+        "engine": {
+          "mean": 1.4255,
+          "p99": 2.739,
+          "max": 5.8535
+        }
+      },
+      "interior": {
+        "tail": {
+          "mean": 1.5824,
+          "p99": 4.739,
+          "max": 8.8608
+        },
+        "engine": {
+          "mean": 1.5056,
+          "p99": 2.9372,
+          "max": 3.6008
+        }
+      }
+    },
+    {
+      "variant": "warm__exposure",
+      "whiteBalance": "warm",
+      "edit": "exposure",
+      "temperature": 30.0,
+      "tint": 20.0,
+      "tail": {
+        "mean": 2.0646,
+        "p99": 4.5949,
+        "max": 6.2618
+      },
+      "head": {
+        "mean": 2.0853,
+        "p99": 4.5061,
+        "max": 5.2189
+      },
+      "engine": {
+        "mean": 2.0855,
+        "p99": 4.5061,
+        "max": 5.2189
+      },
+      "engineVsHead": {
+        "mean": 0.0006,
+        "p99": 0.0,
+        "max": 0.6215
+      },
+      "faces": {
+        "tail": {
+          "mean": 2.2596,
+          "p99": 4.8086,
+          "max": 6.2618
+        },
+        "engine": {
+          "mean": 2.0579,
+          "p99": 4.7723,
+          "max": 5.2189
+        }
+      },
+      "interior": {
+        "tail": {
+          "mean": 1.9757,
+          "p99": 4.3559,
+          "max": 5.0541
+        },
+        "engine": {
+          "mean": 2.098,
+          "p99": 4.2562,
+          "max": 4.8962
+        }
+      }
+    },
+    {
+      "variant": "warm__preset_bluesky2",
+      "whiteBalance": "warm",
+      "edit": "preset_bluesky2",
+      "temperature": 30.0,
+      "tint": 20.0,
+      "tail": {
+        "mean": 3.6137,
+        "p99": 11.3824,
+        "max": 22.5067
+      },
+      "head": {
+        "mean": 2.7949,
+        "p99": 8.6424,
+        "max": 15.5872
+      },
+      "engine": {
+        "mean": 2.7948,
+        "p99": 8.6424,
+        "max": 15.5872
+      },
+      "engineVsHead": {
+        "mean": 0.0005,
+        "p99": 0.0,
+        "max": 0.3731
+      },
+      "faces": {
+        "tail": {
+          "mean": 4.5175,
+          "p99": 13.7897,
+          "max": 20.4648
+        },
+        "engine": {
+          "mean": 3.5398,
+          "p99": 10.4977,
+          "max": 15.5872
+        }
+      },
+      "interior": {
+        "tail": {
+          "mean": 3.2019,
+          "p99": 10.2223,
+          "max": 22.5067
+        },
+        "engine": {
+          "mean": 2.4553,
+          "p99": 6.6662,
+          "max": 10.0339
+        }
+      }
+    },
+    {
+      "variant": "warm__preset_pastel",
+      "whiteBalance": "warm",
+      "edit": "preset_pastel",
+      "temperature": 30.0,
+      "tint": 20.0,
+      "tail": {
+        "mean": 3.7228,
+        "p99": 11.4935,
+        "max": 25.7337
+      },
+      "head": {
+        "mean": 2.3876,
+        "p99": 7.1544,
+        "max": 9.324
+      },
+      "engine": {
+        "mean": 2.3875,
+        "p99": 7.1544,
+        "max": 9.324
+      },
+      "engineVsHead": {
+        "mean": 0.0004,
+        "p99": 0.0,
+        "max": 0.3628
+      },
+      "faces": {
+        "tail": {
+          "mean": 3.5568,
+          "p99": 10.9313,
+          "max": 25.7337
+        },
+        "engine": {
+          "mean": 2.6636,
+          "p99": 8.1066,
+          "max": 9.324
+        }
+      },
+      "interior": {
+        "tail": {
+          "mean": 3.7985,
+          "p99": 11.7143,
+          "max": 23.4158
+        },
+        "engine": {
+          "mean": 2.2616,
+          "p99": 6.1713,
+          "max": 7.7579
+        }
+      }
+    },
+    {
+      "variant": "warm__preset_colorful",
+      "whiteBalance": "warm",
+      "edit": "preset_colorful",
+      "temperature": 30.0,
+      "tint": 20.0,
+      "tail": {
+        "mean": 4.9687,
+        "p99": 11.1189,
+        "max": 19.15
+      },
+      "head": {
+        "mean": 3.4883,
+        "p99": 7.7408,
+        "max": 8.2289
+      },
+      "engine": {
+        "mean": 3.4882,
+        "p99": 7.7408,
+        "max": 8.2289
+      },
+      "engineVsHead": {
+        "mean": 0.0008,
+        "p99": 0.0,
+        "max": 0.7519
+      },
+      "faces": {
+        "tail": {
+          "mean": 4.92,
+          "p99": 9.9466,
+          "max": 12.0629
+        },
+        "engine": {
+          "mean": 3.662,
+          "p99": 7.8922,
+          "max": 8.2289
+        }
+      },
+      "interior": {
+        "tail": {
+          "mean": 4.9909,
+          "p99": 11.9928,
+          "max": 19.15
+        },
+        "engine": {
+          "mean": 3.4089,
+          "p99": 7.5929,
+          "max": 8.199
+        }
+      }
+    }
+  ],
+  "interaction": [
+    {
+      "edit": "e0",
+      "whiteBalance": "tp30",
+      "tailMeanIncrease": 0.4528,
+      "headMeanIncrease": 0.1353,
+      "engineMeanIncrease": 0.1362,
+      "tailP99": 2.0528,
+      "headP99": 0.6592,
+      "engineP99": 0.6592
+    },
+    {
+      "edit": "e0",
+      "whiteBalance": "tm30",
+      "tailMeanIncrease": 0.496,
+      "headMeanIncrease": 0.1326,
+      "engineMeanIncrease": 0.1328,
+      "tailP99": 2.2659,
+      "headP99": 0.6415,
+      "engineP99": 0.6314
+    },
+    {
+      "edit": "e0",
+      "whiteBalance": "gp20",
+      "tailMeanIncrease": 0.4152,
+      "headMeanIncrease": 0.0742,
+      "engineMeanIncrease": 0.0735,
+      "tailP99": 1.7098,
+      "headP99": 0.403,
+      "engineP99": 0.3992
+    },
+    {
+      "edit": "e0",
+      "whiteBalance": "warm",
+      "tailMeanIncrease": 0.4311,
+      "headMeanIncrease": 0.0859,
+      "engineMeanIncrease": 0.0856,
+      "tailP99": 1.8834,
+      "headP99": 0.4491,
+      "engineP99": 0.4398
+    },
+    {
+      "edit": "hsl",
+      "whiteBalance": "tp30",
+      "tailMeanIncrease": 2.2196,
+      "headMeanIncrease": -0.1282,
+      "engineMeanIncrease": -0.1281,
+      "tailP99": 11.1141,
+      "headP99": 5.122,
+      "engineP99": 5.122
+    },
+    {
+      "edit": "hsl",
+      "whiteBalance": "tm30",
+      "tailMeanIncrease": 3.2407,
+      "headMeanIncrease": 0.7494,
+      "engineMeanIncrease": 0.7494,
+      "tailP99": 11.1131,
+      "headP99": 10.5945,
+      "engineP99": 10.5945
+    },
+    {
+      "edit": "hsl",
+      "whiteBalance": "gp20",
+      "tailMeanIncrease": 0.2857,
+      "headMeanIncrease": 0.0887,
+      "engineMeanIncrease": 0.0886,
+      "tailP99": 7.7761,
+      "headP99": 8.0417,
+      "engineP99": 8.0417
+    },
+    {
+      "edit": "hsl",
+      "whiteBalance": "warm",
+      "tailMeanIncrease": 2.2054,
+      "headMeanIncrease": -0.1602,
+      "engineMeanIncrease": -0.1601,
+      "tailP99": 10.4231,
+      "headP99": 4.9339,
+      "engineP99": 4.9339
+    },
+    {
+      "edit": "param",
+      "whiteBalance": "tp30",
+      "tailMeanIncrease": 0.5479,
+      "headMeanIncrease": -0.1404,
+      "engineMeanIncrease": -0.1403,
+      "tailP99": 6.2318,
+      "headP99": 5.0999,
+      "engineP99": 5.0999
+    },
+    {
+      "edit": "param",
+      "whiteBalance": "tm30",
+      "tailMeanIncrease": 0.6121,
+      "headMeanIncrease": -0.2035,
+      "engineMeanIncrease": -0.2035,
+      "tailP99": 6.409,
+      "headP99": 5.4153,
+      "engineP99": 5.4153
+    },
+    {
+      "edit": "param",
+      "whiteBalance": "gp20",
+      "tailMeanIncrease": 0.089,
+      "headMeanIncrease": -0.0476,
+      "engineMeanIncrease": -0.0474,
+      "tailP99": 5.762,
+      "headP99": 5.6196,
+      "engineP99": 5.6213
+    },
+    {
+      "edit": "param",
+      "whiteBalance": "warm",
+      "tailMeanIncrease": 0.4839,
+      "headMeanIncrease": -0.1071,
+      "engineMeanIncrease": -0.1071,
+      "tailP99": 6.2386,
+      "headP99": 5.26,
+      "engineP99": 5.26
+    },
+    {
+      "edit": "grade",
+      "whiteBalance": "tp30",
+      "tailMeanIncrease": 0.3221,
+      "headMeanIncrease": 0.0648,
+      "engineMeanIncrease": 0.0648,
+      "tailP99": 6.2158,
+      "headP99": 6.5049,
+      "engineP99": 6.5049
+    },
+    {
+      "edit": "grade",
+      "whiteBalance": "tm30",
+      "tailMeanIncrease": 0.0088,
+      "headMeanIncrease": 0.0834,
+      "engineMeanIncrease": 0.0834,
+      "tailP99": 6.7394,
+      "headP99": 6.4977,
+      "engineP99": 6.4977
+    },
+    {
+      "edit": "grade",
+      "whiteBalance": "gp20",
+      "tailMeanIncrease": 0.0334,
+      "headMeanIncrease": 0.0598,
+      "engineMeanIncrease": 0.0597,
+      "tailP99": 6.5011,
+      "headP99": 6.3647,
+      "engineP99": 6.3647
+    },
+    {
+      "edit": "grade",
+      "whiteBalance": "warm",
+      "tailMeanIncrease": 0.3257,
+      "headMeanIncrease": 0.0469,
+      "engineMeanIncrease": 0.047,
+      "tailP99": 6.4334,
+      "headP99": 6.4254,
+      "engineP99": 6.4254
+    },
+    {
+      "edit": "sat",
+      "whiteBalance": "tp30",
+      "tailMeanIncrease": 1.9519,
+      "headMeanIncrease": 0.3226,
+      "engineMeanIncrease": 0.3225,
+      "tailP99": 9.9449,
+      "headP99": 8.7569,
+      "engineP99": 8.7569
+    },
+    {
+      "edit": "sat",
+      "whiteBalance": "tm30",
+      "tailMeanIncrease": 2.4239,
+      "headMeanIncrease": -0.0268,
+      "engineMeanIncrease": -0.0267,
+      "tailP99": 11.758,
+      "headP99": 5.9077,
+      "engineP99": 5.9077
+    },
+    {
+      "edit": "sat",
+      "whiteBalance": "gp20",
+      "tailMeanIncrease": 0.3185,
+      "headMeanIncrease": 0.0477,
+      "engineMeanIncrease": 0.0479,
+      "tailP99": 6.0681,
+      "headP99": 6.5589,
+      "engineP99": 6.5589
+    },
+    {
+      "edit": "sat",
+      "whiteBalance": "warm",
+      "tailMeanIncrease": 1.8275,
+      "headMeanIncrease": 0.3586,
+      "engineMeanIncrease": 0.3585,
+      "tailP99": 9.6761,
+      "headP99": 8.7601,
+      "engineP99": 8.7601
+    },
+    {
+      "edit": "vib",
+      "whiteBalance": "tp30",
+      "tailMeanIncrease": 0.7499,
+      "headMeanIncrease": 0.0009,
+      "engineMeanIncrease": 0.0006,
+      "tailP99": 8.0698,
+      "headP99": 3.0409,
+      "engineP99": 3.0409
+    },
+    {
+      "edit": "vib",
+      "whiteBalance": "tm30",
+      "tailMeanIncrease": 1.5238,
+      "headMeanIncrease": 0.3187,
+      "engineMeanIncrease": 0.3186,
+      "tailP99": 7.5756,
+      "headP99": 5.527,
+      "engineP99": 5.527
+    },
+    {
+      "edit": "vib",
+      "whiteBalance": "gp20",
+      "tailMeanIncrease": 0.3278,
+      "headMeanIncrease": 0.0628,
+      "engineMeanIncrease": 0.0628,
+      "tailP99": 4.3243,
+      "headP99": 5.2152,
+      "engineP99": 5.2152
+    },
+    {
+      "edit": "vib",
+      "whiteBalance": "warm",
+      "tailMeanIncrease": 0.6879,
+      "headMeanIncrease": 0.0188,
+      "engineMeanIncrease": 0.0188,
+      "tailP99": 7.1632,
+      "headP99": 3.0896,
+      "engineP99": 3.0896
+    },
+    {
+      "edit": "contrast",
+      "whiteBalance": "tp30",
+      "tailMeanIncrease": 0.1542,
+      "headMeanIncrease": -0.1367,
+      "engineMeanIncrease": -0.1367,
+      "tailP99": 7.418,
+      "headP99": 2.7999,
+      "engineP99": 2.7964
+    },
+    {
+      "edit": "contrast",
+      "whiteBalance": "tm30",
+      "tailMeanIncrease": 0.5208,
+      "headMeanIncrease": -0.0705,
+      "engineMeanIncrease": -0.0704,
+      "tailP99": 5.4701,
+      "headP99": 5.1432,
+      "engineP99": 5.1432
+    },
+    {
+      "edit": "contrast",
+      "whiteBalance": "gp20",
+      "tailMeanIncrease": 0.1035,
+      "headMeanIncrease": 0.008,
+      "engineMeanIncrease": 0.0079,
+      "tailP99": 4.3318,
+      "headP99": 5.0352,
+      "engineP99": 5.0352
+    },
+    {
+      "edit": "contrast",
+      "whiteBalance": "warm",
+      "tailMeanIncrease": 0.1214,
+      "headMeanIncrease": -0.0852,
+      "engineMeanIncrease": -0.0852,
+      "tailP99": 6.875,
+      "headP99": 2.8682,
+      "engineP99": 2.8682
+    },
+    {
+      "edit": "exposure",
+      "whiteBalance": "tp30",
+      "tailMeanIncrease": -0.0238,
+      "headMeanIncrease": -0.0201,
+      "engineMeanIncrease": -0.02,
+      "tailP99": 4.768,
+      "headP99": 4.4604,
+      "engineP99": 4.4604
+    },
+    {
+      "edit": "exposure",
+      "whiteBalance": "tm30",
+      "tailMeanIncrease": 0.1057,
+      "headMeanIncrease": -0.12,
+      "engineMeanIncrease": -0.1201,
+      "tailP99": 4.6232,
+      "headP99": 3.7826,
+      "engineP99": 3.7826
+    },
+    {
+      "edit": "exposure",
+      "whiteBalance": "gp20",
+      "tailMeanIncrease": -0.0552,
+      "headMeanIncrease": -0.0552,
+      "engineMeanIncrease": -0.0553,
+      "tailP99": 3.9995,
+      "headP99": 4.0384,
+      "engineP99": 4.0384
+    },
+    {
+      "edit": "exposure",
+      "whiteBalance": "warm",
+      "tailMeanIncrease": -0.0609,
+      "headMeanIncrease": -0.0402,
+      "engineMeanIncrease": -0.04,
+      "tailP99": 4.5949,
+      "headP99": 4.5061,
+      "engineP99": 4.5061
+    },
+    {
+      "edit": "preset_bluesky2",
+      "whiteBalance": "tp30",
+      "tailMeanIncrease": 0.7863,
+      "headMeanIncrease": -0.0306,
+      "engineMeanIncrease": -0.0307,
+      "tailP99": 11.5172,
+      "headP99": 8.4791,
+      "engineP99": 8.4791
+    },
+    {
+      "edit": "preset_bluesky2",
+      "whiteBalance": "tm30",
+      "tailMeanIncrease": 2.4779,
+      "headMeanIncrease": 1.0201,
+      "engineMeanIncrease": 1.02,
+      "tailP99": 18.5095,
+      "headP99": 20.7897,
+      "engineP99": 20.7897
+    },
+    {
+      "edit": "preset_bluesky2",
+      "whiteBalance": "gp20",
+      "tailMeanIncrease": 0.2719,
+      "headMeanIncrease": 0.0453,
+      "engineMeanIncrease": 0.0455,
+      "tailP99": 10.9143,
+      "headP99": 10.9452,
+      "engineP99": 10.9452
+    },
+    {
+      "edit": "preset_bluesky2",
+      "whiteBalance": "warm",
+      "tailMeanIncrease": 0.7457,
+      "headMeanIncrease": -0.0731,
+      "engineMeanIncrease": -0.0732,
+      "tailP99": 11.3824,
+      "headP99": 8.6424,
+      "engineP99": 8.6424
+    },
+    {
+      "edit": "preset_pastel",
+      "whiteBalance": "tp30",
+      "tailMeanIncrease": 1.161,
+      "headMeanIncrease": -0.2469,
+      "engineMeanIncrease": -0.2468,
+      "tailP99": 11.8166,
+      "headP99": 7.1692,
+      "engineP99": 7.1692
+    },
+    {
+      "edit": "preset_pastel",
+      "whiteBalance": "tm30",
+      "tailMeanIncrease": 2.0563,
+      "headMeanIncrease": -0.3223,
+      "engineMeanIncrease": -0.3223,
+      "tailP99": 10.9515,
+      "headP99": 7.217,
+      "engineP99": 7.217
+    },
+    {
+      "edit": "preset_pastel",
+      "whiteBalance": "gp20",
+      "tailMeanIncrease": 0.1803,
+      "headMeanIncrease": -0.0986,
+      "engineMeanIncrease": -0.0986,
+      "tailP99": 7.2517,
+      "headP99": 6.8864,
+      "engineP99": 6.8864
+    },
+    {
+      "edit": "preset_pastel",
+      "whiteBalance": "warm",
+      "tailMeanIncrease": 1.0797,
+      "headMeanIncrease": -0.2555,
+      "engineMeanIncrease": -0.2556,
+      "tailP99": 11.4935,
+      "headP99": 7.1544,
+      "engineP99": 7.1544
+    },
+    {
+      "edit": "preset_colorful",
+      "whiteBalance": "tp30",
+      "tailMeanIncrease": 1.8648,
+      "headMeanIncrease": 0.1581,
+      "engineMeanIncrease": 0.158,
+      "tailP99": 10.5742,
+      "headP99": 7.7762,
+      "engineP99": 7.7762
+    },
+    {
+      "edit": "preset_colorful",
+      "whiteBalance": "tm30",
+      "tailMeanIncrease": 0.9004,
+      "headMeanIncrease": -0.3058,
+      "engineMeanIncrease": -0.3057,
+      "tailP99": 9.2237,
+      "headP99": 6.9346,
+      "engineP99": 6.9346
+    },
+    {
+      "edit": "preset_colorful",
+      "whiteBalance": "gp20",
+      "tailMeanIncrease": -0.0866,
+      "headMeanIncrease": -0.0597,
+      "engineMeanIncrease": -0.0596,
+      "tailP99": 7.5732,
+      "headP99": 7.9921,
+      "engineP99": 7.9921
+    },
+    {
+      "edit": "preset_colorful",
+      "whiteBalance": "warm",
+      "tailMeanIncrease": 1.5852,
+      "headMeanIncrease": 0.1048,
+      "engineMeanIncrease": 0.1047,
+      "tailP99": 11.1189,
+      "headP99": 7.7408,
+      "engineP99": 7.7408
+    }
+  ],
+  "withWhiteBalance": {
+    "variants": 44,
+    "tailMeanOfMeans": 2.7719,
+    "tailP99Mean": 7.6786,
+    "tailP99Max": 18.5095,
+    "headMeanOfMeans": 1.9852,
+    "headP99Mean": 6.0284,
+    "headP99Max": 20.7897,
+    "engineMeanOfMeans": 1.9852,
+    "engineP99Mean": 6.0278,
+    "engineP99Max": 20.7897,
+    "headBetterMean": 38,
+    "headBetterP99": 35,
+    "engineBetterMean": 39,
+    "engineBetterP99": 35,
+    "engineWorseP99": [
+      {
+        "variant": "tp30__grade",
+        "tailP99": 6.2158,
+        "engineP99": 6.5049,
+        "facesP99": [
+          6.1662,
+          6.3411
+        ],
+        "interiorP99": [
+          6.3599,
+          6.5383
+        ]
+      },
+      {
+        "variant": "tm30__preset_bluesky2",
+        "tailP99": 18.5095,
+        "engineP99": 20.7897,
+        "facesP99": [
+          22.7343,
+          25.2024
+        ],
+        "interiorP99": [
+          15.0786,
+          16.0211
+        ]
+      },
+      {
+        "variant": "gp20__hsl",
+        "tailP99": 7.7761,
+        "engineP99": 8.0417,
+        "facesP99": [
+          9.1825,
+          9.9337
+        ],
+        "interiorP99": [
+          5.3132,
+          5.9462
+        ]
+      },
+      {
+        "variant": "gp20__sat",
+        "tailP99": 6.0681,
+        "engineP99": 6.5589,
+        "facesP99": [
+          7.621,
+          8.2436
+        ],
+        "interiorP99": [
+          4.6316,
+          5.0621
+        ]
+      },
+      {
+        "variant": "gp20__vib",
+        "tailP99": 4.3243,
+        "engineP99": 5.2152,
+        "facesP99": [
+          4.8273,
+          5.6752
+        ],
+        "interiorP99": [
+          3.4606,
+          3.3471
+        ]
+      },
+      {
+        "variant": "gp20__contrast",
+        "tailP99": 4.3318,
+        "engineP99": 5.0352,
+        "facesP99": [
+          5.122,
+          5.6237
+        ],
+        "interiorP99": [
+          3.2658,
+          2.9331
+        ]
+      },
+      {
+        "variant": "gp20__exposure",
+        "tailP99": 3.9995,
+        "engineP99": 4.0384,
+        "facesP99": [
+          4.3272,
+          4.3005
+        ],
+        "interiorP99": [
+          3.6304,
+          3.8581
+        ]
+      },
+      {
+        "variant": "gp20__preset_bluesky2",
+        "tailP99": 10.9143,
+        "engineP99": 10.9452,
+        "facesP99": [
+          13.0046,
+          13.819
+        ],
+        "interiorP99": [
+          8.4696,
+          7.838
+        ]
+      },
+      {
+        "variant": "gp20__preset_colorful",
+        "tailP99": 7.5732,
+        "engineP99": 7.9921,
+        "facesP99": [
+          7.7684,
+          8.1956
+        ],
+        "interiorP99": [
+          7.3291,
+          7.6239
+        ]
+      }
+    ],
+    "engineBetterInteriorP99": 37
+  },
+  "groups": {
+    "whiteBalanceAlone": {
+      "variants": 4,
+      "tailMeanOfMeans": 0.4885,
+      "tailP99Mean": 1.978,
+      "tailP99Max": 2.2659,
+      "headMeanOfMeans": 0.1467,
+      "headP99Mean": 0.5382,
+      "headP99Max": 0.6592,
+      "engineMeanOfMeans": 0.1467,
+      "engineP99Mean": 0.5324,
+      "engineP99Max": 0.6592,
+      "headBetterMean": 4,
+      "headBetterP99": 4,
+      "engineBetterMean": 4,
+      "engineBetterP99": 4,
+      "engineWorseP99": [],
+      "engineBetterInteriorP99": 4
+    },
+    "whiteBalanceWithEdit": {
+      "variants": 28,
+      "tailMeanOfMeans": 2.5503,
+      "tailP99Mean": 7.0578,
+      "tailP99Max": 11.758,
+      "headMeanOfMeans": 1.8303,
+      "headP99Mean": 5.5489,
+      "headP99Max": 10.5945,
+      "engineMeanOfMeans": 1.8303,
+      "engineP99Mean": 5.5489,
+      "engineP99Max": 10.5945,
+      "headBetterMean": 23,
+      "headBetterP99": 22,
+      "engineBetterMean": 24,
+      "engineBetterP99": 22,
+      "engineWorseP99": [
+        {
+          "variant": "tp30__grade",
+          "tailP99": 6.2158,
+          "engineP99": 6.5049,
+          "facesP99": [
+            6.1662,
+            6.3411
+          ],
+          "interiorP99": [
+            6.3599,
+            6.5383
+          ]
+        },
+        {
+          "variant": "gp20__hsl",
+          "tailP99": 7.7761,
+          "engineP99": 8.0417,
+          "facesP99": [
+            9.1825,
+            9.9337
+          ],
+          "interiorP99": [
+            5.3132,
+            5.9462
+          ]
+        },
+        {
+          "variant": "gp20__sat",
+          "tailP99": 6.0681,
+          "engineP99": 6.5589,
+          "facesP99": [
+            7.621,
+            8.2436
+          ],
+          "interiorP99": [
+            4.6316,
+            5.0621
+          ]
+        },
+        {
+          "variant": "gp20__vib",
+          "tailP99": 4.3243,
+          "engineP99": 5.2152,
+          "facesP99": [
+            4.8273,
+            5.6752
+          ],
+          "interiorP99": [
+            3.4606,
+            3.3471
+          ]
+        },
+        {
+          "variant": "gp20__contrast",
+          "tailP99": 4.3318,
+          "engineP99": 5.0352,
+          "facesP99": [
+            5.122,
+            5.6237
+          ],
+          "interiorP99": [
+            3.2658,
+            2.9331
+          ]
+        },
+        {
+          "variant": "gp20__exposure",
+          "tailP99": 3.9995,
+          "engineP99": 4.0384,
+          "facesP99": [
+            4.3272,
+            4.3005
+          ],
+          "interiorP99": [
+            3.6304,
+            3.8581
+          ]
+        }
+      ],
+      "engineBetterInteriorP99": 23
+    },
+    "presetWithWhiteBalance": {
+      "variants": 12,
+      "tailMeanOfMeans": 4.0501,
+      "tailP99Mean": 11.0272,
+      "tailP99Max": 18.5095,
+      "headMeanOfMeans": 2.9595,
+      "headP99Mean": 8.9773,
+      "headP99Max": 20.7897,
+      "engineMeanOfMeans": 2.9595,
+      "engineP99Mean": 8.9773,
+      "engineP99Max": 20.7897,
+      "headBetterMean": 11,
+      "headBetterP99": 9,
+      "engineBetterMean": 11,
+      "engineBetterP99": 9,
+      "engineWorseP99": [
+        {
+          "variant": "tm30__preset_bluesky2",
+          "tailP99": 18.5095,
+          "engineP99": 20.7897,
+          "facesP99": [
+            22.7343,
+            25.2024
+          ],
+          "interiorP99": [
+            15.0786,
+            16.0211
+          ]
+        },
+        {
+          "variant": "gp20__preset_bluesky2",
+          "tailP99": 10.9143,
+          "engineP99": 10.9452,
+          "facesP99": [
+            13.0046,
+            13.819
+          ],
+          "interiorP99": [
+            8.4696,
+            7.838
+          ]
+        },
+        {
+          "variant": "gp20__preset_colorful",
+          "tailP99": 7.5732,
+          "engineP99": 7.9921,
+          "facesP99": [
+            7.7684,
+            8.1956
+          ],
+          "interiorP99": [
+            7.3291,
+            7.6239
+          ]
+        }
+      ],
+      "engineBetterInteriorP99": 10
+    }
+  },
+  "engineVsHead": {
+    "meanOfMeans": 0.0009,
+    "max": 1.1116
+  }
+}
