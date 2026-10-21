@@ -918,12 +918,13 @@ describe("右端の道具の帯（niho-photo#51）", () => {
     expect(byLabel("補正", rail)?.getAttribute("aria-pressed")).toBe("false");
     expect(developVersions).toHaveBeenCalledWith("p1", expect.objectContaining({ signal: expect.any(AbortSignal) }));
     expect(face.querySelector('ul[aria-label="版の一覧"]')?.textContent).toContain("明るめ");
-    // 写真を開いている途中（直せない間）は、切り替え・作成を押せない。版の面には ↶ ↷ と補正の群を出さない
+    // 写真を開いている途中（直せない間）は、切り替え・作成を押せない。版の面には ↶ ↷ を出す（押せない）が、補正の群は出さない
     const createButton = Array.from(face.querySelectorAll("button")).find(
       (button) => button.textContent?.trim() === "今の補正を版にする",
     );
     expect(createButton?.disabled).toBe(true);
-    expect(byLabel("取り消す", face)).toBeNull();
+    expect(byLabel("取り消す", face)?.disabled).toBe(true);
+    expect(byLabel("やり直す", face)?.disabled).toBe(true);
     expect(face.querySelector('input[type="range"]')).toBeNull();
     expect(saveDevelopVersions).not.toHaveBeenCalled();
 
