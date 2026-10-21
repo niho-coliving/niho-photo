@@ -9604,13 +9604,13 @@
     },
     {
       "path": "packages/develop-engine/crates/niho-develop/src/mask_session.rs",
-      "sha256": "6dbd33fcbcb95a777f5de4f2988a3d3371a351a8a6f9e6a47c9395cfaefc28f0",
-      "origin": "Issue #66の公開仕様 docs/local-adjustments.md だけから新規作成した、Sessionの層の描画（層ごとのキャッシュの入れ替え・同じ画像の共有・結果の使い回し）とマスクの面の書き出しのRust実装。実写真・非公開コード・私有参照出力を含まない。"
+      "sha256": "eb56f315f977910a11d34c02339ce3061c7e8c8be1f3ba1a1049cee4500ee2cc",
+      "origin": "Issue #66の公開仕様 docs/local-adjustments.md だけから新規作成した、Sessionの層の描画（層ごとのキャッシュの入れ替え・同じ画像の共有・結果の使い回し）とマスクの面の書き出しのRust実装。実写真・非公開コード・私有参照出力を含まない。\n変更理由: Final描画後に古いInteractiveマスクフレームを破棄し再描画する。\n変更理由: Final描画後に古いInteractiveマスクフレームを破棄し再描画する。"
     },
     {
       "path": "packages/develop-engine/crates/niho-develop/tests/masks_render.rs",
-      "sha256": "57fd18586356d240b5a932f99bddfe6a49962e74c049bdc23386d03e312863bd",
-      "origin": "Issue #66の公開仕様と合成画像だけから新規作成した、部分補正の層の描画（面1でR_k・面0でR0・幾何への追従・順序非依存・無効なマスクのbit一致）のRust回帰。実写真・非公開コード・私有参照出力を含まない。"
+      "sha256": "cb06453d883fcc9e63751f776cf727e0d97535bc719d9aa01cd4bfee83927ddc",
+      "origin": "Issue #66の公開仕様と合成画像だけから新規作成した、部分補正の層の描画（面1でR_k・面0でR0・幾何への追従・順序非依存・無効なマスクのbit一致）のRust回帰。実写真・非公開コード・私有参照出力を含まない。\n変更理由: niho-6 Final解析後に古いInteractiveマスクフレームを再利用しない回帰テスト。\n変更理由: niho-6 Final解析後にInteractiveマスクフレームを再利用しない回帰テスト。"
     },
     {
       "path": "packages/develop-engine/crates/niho-develop/tests/masks_geometry_map.rs",

@@ -36,8 +36,10 @@
 //!   they were drawn from, so dragging one mask's slider renders that layer
 //!   only, dragging a global slider renders them all, and releasing a mask's
 //!   slider (Final) renders only that layer when the other layers' Final
-//!   frames are still those settings'. A plane is kept per layer while the
-//!   mask's shape, the geometry and the size stay.
+//!   frames are still those settings'. A Final render invalidates all
+//!   Interactive frames because it can refresh the frozen `niho-6` analysis
+//!   used by drag renders. A plane is kept per layer while the mask's shape,
+//!   the geometry and the size stay.
 //!
 //! The layers of masks that are gone or no longer active are dropped at the
 //! next frame; a frame without an active mask drops them all.
@@ -59,6 +61,15 @@ pub(crate) struct MaskLayers {
     /// `R0`'s last frame at each quality.
     base: FrameSlots,
     layers: Vec<MaskLayer>,
+}
+
+impl MaskLayers {
+    fn invalidate_interactive(&mut self) {
+        self.base.interactive = None;
+        for layer in &mut self.layers {
+            layer.frames.interactive = None;
+        }
+    }
 }
 
 /// A frame per quality with the key it was drawn for.
@@ -226,6 +237,9 @@ impl Session {
         max_dimension: usize,
         quality: Quality,
     ) -> Result<Rendered, Error> {
+        if quality == Quality::Final {
+            state.invalidate_interactive();
+        }
         let global = local_render::without_masks(settings);
         let base_key = frame_key(&global, max_dimension, quality);
         // Whether R0's source caches are of this frame (its size and
@@ -640,9 +654,15 @@ mod tests {
         session.render(&global, 64, q).unwrap();
         assert_ne!(base_of(&session, q).0, r0.0);
         assert_ne!(frame_of(&session, "b", q).0, b.0);
-        // Releasing keeps the drag frames beside the released ones.
+        // A Final render can refresh the frozen niho-6 analysis used by
+        // Interactive frames, so the next drag must render them again.
         session.render(&global, 64, Quality::Final).unwrap();
-        let b_drag = frame_of(&session, "b", q);
+        let state = session.masks.as_ref().unwrap();
+        assert!(state.base.interactive.is_none());
+        assert!(state
+            .layers
+            .iter()
+            .all(|layer| layer.frames.interactive.is_none()));
         let b_final = frame_of(&session, "b", Quality::Final);
         let released_a = with(
             json!({"exposure": -0.7}),
@@ -651,7 +671,12 @@ mod tests {
         );
         session.render(&released_a, 64, Quality::Final).unwrap();
         assert_eq!(frame_of(&session, "b", Quality::Final), b_final);
-        assert_eq!(frame_of(&session, "b", q), b_drag);
+        let state = session.masks.as_ref().unwrap();
+        assert!(state.base.interactive.is_none());
+        assert!(state
+            .layers
+            .iter()
+            .all(|layer| layer.frames.interactive.is_none()));
         // A mask that goes away takes its layer; no mask takes them all.
         let mut one = released_a.clone();
         one.masks.remove(0);

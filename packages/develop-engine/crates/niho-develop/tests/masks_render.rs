@@ -205,6 +205,53 @@ fn a_full_plane_draws_the_local_frame_and_an_empty_one_the_global() {
 }
 
 #[test]
+fn a_final_render_invalidates_interactive_frames_from_frozen_niho6_analysis() {
+    let photo = Photo::all()
+        .into_iter()
+        .find_map(|(name, photo)| (name == "legacy RAW").then_some(photo))
+        .unwrap();
+    let base = photo.base();
+    let masked = |exposure: f64, saturation: f64| {
+        settings(
+            &base,
+            json!({
+                "exposure": exposure,
+                "masks": [{
+                    "id": "color", "kind": "radial",
+                    "center": {"x": 0.4, "y": 0.5}, "radius": {"x": 0.3, "y": 0.4},
+                    "angle": 15, "feather": 60, "adjust": {"saturation": saturation}
+                }]
+            }),
+        )
+    };
+    let mut session = photo.open();
+    session
+        .render(&masked(0.4, 25.0), 64, Quality::Interactive)
+        .unwrap();
+    session
+        .render(&masked(-0.8, 25.0), 64, Quality::Interactive)
+        .unwrap();
+    session
+        .render(&masked(-0.8, 25.0), 64, Quality::Final)
+        .unwrap();
+    let actual = session
+        .render(&masked(-0.8, 40.0), 64, Quality::Interactive)
+        .unwrap();
+
+    let mut fresh = photo.open();
+    fresh
+        .render(&masked(-0.8, 25.0), 64, Quality::Final)
+        .unwrap();
+    let expected = fresh
+        .render(&masked(-0.8, 40.0), 64, Quality::Interactive)
+        .unwrap();
+    assert!(
+        actual.rgba == expected.rgba,
+        "interactive masked output must use the analysis refreshed by the Final render"
+    );
+}
+
+#[test]
 fn a_linear_exposure_mask_darkens_only_past_its_ramp() {
     let png = photo_png(120, 80);
     let base = json!({"v": 5, "engine": "niho-10", "look": "niho-standard-1", "base": null});
