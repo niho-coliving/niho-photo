@@ -10480,8 +10480,8 @@
     },
     {
       "path": "packages/develop-engine/crates/niho-develop/src/local_render.rs",
-      "sha256": "f86a2da8245acac80c9ac196052ad9d2967623f74d1fcb701d96d0fa605fce48",
-      "origin": "Issue #66の公開仕様 docs/local-adjustments.md だけから新規作成した部分補正（マスク）の面の式・出力から作業画像への写像・局所の設定・固定小数点の合算のRust実装。実写真・非公開コード・私有参照出力を含まない。\n変更理由: 部分補正（マスク）#68: 面の双一次補間の面と、その寸法の照合を足す"
+      "sha256": "e2ef256adbb5ca2a74be03bdfadb61a0ff27323a1203bbd94876b32d133ab6e9",
+      "origin": "Issue #66の公開仕様 docs/local-adjustments.md だけから新規作成した部分補正（マスク）の面の式・出力から作業画像への写像・局所の設定・固定小数点の合算のRust実装。実写真・非公開コード・私有参照出力を含まない。\n変更理由: 部分補正（マスク）#68: 面の双一次補間の面と、その寸法の照合を足す\n変更理由: 部分補正（マスク）#66: 遠近（perspective）のあるジオメトリでも、マスクの出力→作業画像の写像を描画と TS にそろえる。"
     },
     {
       "path": "packages/develop-engine/crates/niho-develop/src/mask_session.rs",
@@ -10495,8 +10495,8 @@
     },
     {
       "path": "packages/develop-engine/crates/niho-develop/tests/masks_geometry_map.rs",
-      "sha256": "3a039e0e4933e058a6082770dbde3f26565f2710f635641ecd9bb5baa4fdbb88",
-      "origin": "Issue #66の公開仕様と合成fixtureだけから新規作成した、マスクの写像がTypeScriptのgeometryOutputToSourceと一致するRust回帰（native/wasm）。実写真・非公開コード・私有参照出力を含まない。"
+      "sha256": "28df8a0900448f495fd19857c4af1dfffac4478411ff803eacc244b4d39dddd2",
+      "origin": "Issue #66の公開仕様と合成fixtureだけから新規作成した、マスクの写像がTypeScriptのgeometryOutputToSourceと一致するRust回帰（native/wasm）。実写真・非公開コード・私有参照出力を含まない。\n変更理由: 部分補正（マスク）#66: 遠近（perspective）のあるジオメトリでも、マスクの出力→作業画像の写像を描画と TS にそろえる。"
     },
     {
       "path": "packages/develop-engine/crates/niho-develop/tests/masks_cross_target.rs",
@@ -10505,8 +10505,8 @@
     },
     {
       "path": "packages/develop-engine/crates/niho-develop/tests/fixtures/masks/geometry-map-cases.json",
-      "sha256": "295fdcb7afd0d648cae82e46d2c44c0fbcb0849a5599fdac1a689321e522cc7a",
-      "origin": "Issue #66の公開仕様から、公開TypeScript関数geometryOutputToSourceで合成した出力→作業画像の写像の値（RustとTypeScriptで共有）。実写真・利用者データ・私有参照出力を含まない。"
+      "sha256": "422bd60e89723991ee70d5cee2d400f0d843f34c41550e140d514885d7587397",
+      "origin": "Issue #66の公開仕様から、公開TypeScript関数geometryOutputToSourceで合成した出力→作業画像の写像の値（RustとTypeScriptで共有）。実写真・利用者データ・私有参照出力を含まない。\n変更理由: 部分補正（マスク）#66: 遠近（perspective）のあるジオメトリでも、マスクの出力→作業画像の写像を描画と TS にそろえる。"
     },
     {
       "path": "packages/develop-engine/crates/niho-develop/examples/mask_timing.rs",
@@ -10520,8 +10520,8 @@
     },
     {
       "path": "packages/photo-editing/src/develop-engine/develop-masks-geometry-map.test.ts",
-      "sha256": "12e6cbfe9f755ab7f5b51c2398b16f39130db5c3f035b92d95a68e01cfefcb2b",
-      "origin": "Issue #66の公開仕様と公開関数だけから新規作成した、マスクの写像のfixtureをgeometryOutputToSourceから作り照合するTypeScript回帰。外部画像・非公開コード・個体metadataを含まない。"
+      "sha256": "08a68566446c700c1447f2cc9d9e8254c55516932daf20ca2920f40d5fe51668",
+      "origin": "Issue #66の公開仕様と公開関数だけから新規作成した、マスクの写像のfixtureをgeometryOutputToSourceから作り照合するTypeScript回帰。外部画像・非公開コード・個体metadataを含まない。\n変更理由: 部分補正（マスク）#66: 遠近（perspective）のあるジオメトリでも、マスクの出力→作業画像の写像を描画と TS にそろえる。"
     },
     {
       "path": "docs/color-grading.md",
@@ -10885,8 +10885,8 @@
     },
     {
       "path": "docs/geometry-perspective.md",
-      "sha256": "be6def6631b46c0c4883deb45ec9049cdd8d92c0e4b99ac3954b4ea6add060bd",
-      "origin": "niho-photo#46 の公開仕様だけから新規作成したジオメトリ（遠近の手動補正）の文書。保存形 v7、NIHO の近似モデルの式と定数、描画・余白を埋める・XMP・画面の契約。Lightroom の実測による校正は未実施と明記。非公開形式や私有データを含まない。\n変更理由: niho-photo#46 後半の Upright（推定の手順・公開面・画面・制限）を追記した。\n変更理由: Upright自動推定機能を現行main統合後のcrate v0.23.0へ追加\n変更理由: Upright後半のエンジン版を前半v0.22に続くv0.23と明記\n変更理由: Upright自動推定を作者更新後の遠近crate v0.23.0へ統合"
+      "sha256": "3a27ff7c954f2ebc2e5ff834d7a0ef332e8777c99b31c1ea7eab83391a671f27",
+      "origin": "niho-photo#46 の公開仕様だけから新規作成したジオメトリ（遠近の手動補正）の文書。保存形 v7、NIHO の近似モデルの式と定数、描画・余白を埋める・XMP・画面の契約。Lightroom の実測による校正は未実施と明記。非公開形式や私有データを含まない。\n変更理由: niho-photo#46 後半の Upright（推定の手順・公開面・画面・制限）を追記した。\n変更理由: Upright自動推定機能を現行main統合後のcrate v0.23.0へ追加\n変更理由: Upright後半のエンジン版を前半v0.22に続くv0.23と明記\n変更理由: Upright自動推定を作者更新後の遠近crate v0.23.0へ統合\n変更理由: 遠近のあるジオメトリでもマスクが同じ写像を使うことを 1 行足す（#31）。"
     },
     {
       "path": "packages/develop-engine/crates/niho-develop/src/upright.rs",
