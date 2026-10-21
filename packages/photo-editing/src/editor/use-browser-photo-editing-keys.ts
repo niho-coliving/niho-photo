@@ -18,13 +18,24 @@ import {
  * - `\`（JIS 配列では `¥` で来る）を押している間だけ補正前を見せる。押しっぱなしの繰り返しは無視し、離したら・窓がフォーカスを
  *   失ったら戻す。切り抜きの道具の間（`compareEnabled` が false）は効かない
  * - `R` = 「補正」と「切り抜き」の道具を切り替える（F3b 移行元設計。切り替えを出していない間〔`onToggleTool` が無い〕は扱わない）
+ * - `J` = 黒つぶれ・白飛びの印を写真に重ねる / 外す（niho-photo#36。Lightroom と同じ。修飾キー〔⇧ を含む〕つきは扱わない。
+ *   ヒストグラムを出していない間・切り抜き / 背景除去の道具の間〔`onToggleClipping` が無い〕は扱わない）
  * - 切り抜きの道具の間（`onCropDone` / `onCropCancel` がある間。#52）: Enter =［完了］、Esc =［キャンセル］。ボタンの上の Enter も
  *   ［完了］（自分の Enter を使う部品は `preventDefault` する: 値の直接入力の欄・［キャンセル］）
  *
  * 画面の中か、どこにもフォーカスが無いときだけ扱う。文字を打つ欄（値の直接入力の欄など）・IME の変換中・ほかの処理が既に
  * 使ったキー（`defaultPrevented`。開いているメニューの Esc など）は扱わない。
  */
-export type BrowserPhotoEditingKey = "undo" | "redo" | "compare" | "tool" | "copy" | "paste" | "cropDone" | "cropCancel";
+export type BrowserPhotoEditingKey =
+  | "undo"
+  | "redo"
+  | "compare"
+  | "tool"
+  | "clip"
+  | "copy"
+  | "paste"
+  | "cropDone"
+  | "cropCancel";
 
 const COMPARE_KEYS: ReadonlySet<string> = new Set(["\\", "¥"]);
 
@@ -46,18 +57,21 @@ export function resolveBrowserPhotoEditingKey(
   if (event.altKey) return null;
   if (event.key === "Enter") return event.shiftKey ? null : "cropDone";
   if (event.key === "Escape") return "cropCancel";
+  if (event.key === "j" || event.key === "J") return event.shiftKey ? null : "clip";
   return event.key === "r" || event.key === "R" ? "tool" : null;
 }
 
 /**
- * `enabled` は補正操作全般、`clipboardEnabled` はコピー / 貼り付け用キーを聞く条件（閲覧のみのコピーを含む）。どちらも無効なら
- * listener を外す。補正操作をやめたとき、補正前を見せていれば戻す。
+ * `enabled` は補正操作全般、`clipboardEnabled` はコピー / 貼り付け用キー、`clippingEnabled` は J キーを聞く条件（閲覧のみの表示切替を含む）。
+ * どれも無効なら listener を外す。補正操作をやめたとき、補正前を見せていれば戻す。
  */
 export function useBrowserPhotoEditingKeys(options: {
   rootRef: RefObject<HTMLElement | null>;
   enabled: boolean;
   /** コピー / 貼り付け用キーは閲覧のみでもコピーできるため編集操作とは別に有効化する */
   clipboardEnabled?: boolean;
+  /** 写真への表示切替である J は、閲覧専用でもヒストグラム操作と同じ条件で有効化できる */
+  clippingEnabled?: boolean;
   onUndo: () => void;
   onRedo: () => void;
   /** 補正をコピー / 貼り付け（F5a-2 移行元設計。写せない・当てられないときは呼ばれた側が何もしない） */
@@ -68,18 +82,20 @@ export function useBrowserPhotoEditingKeys(options: {
   compareEnabled?: boolean;
   /** `R` で道具を切り替える（切り替えを出していない間は null。省くと扱わない） */
   onToggleTool?: (() => void) | null;
+  /** `J` で黒つぶれ・白飛びの印を写真に重ねる / 外す（出していない間は null。省くと扱わない） */
+  onToggleClipping?: (() => void) | null;
   /** 切り抜きの道具の間の Enter =［完了］・Esc =［キャンセル］（ほかの間は null。省くと扱わない） */
   onCropDone?: (() => void) | null;
   onCropCancel?: (() => void) | null;
 }): void {
-  const { rootRef, enabled, clipboardEnabled = false } = options;
+  const { rootRef, enabled, clipboardEnabled = false, clippingEnabled = enabled } = options;
   const callbacksRef = useRef(options);
   useEffect(() => {
     callbacksRef.current = options;
   });
 
   useEffect(() => {
-    if (!enabled && !clipboardEnabled) return;
+    if (!enabled && !clipboardEnabled && !clippingEnabled) return;
     let comparing = false;
     const release = () => {
       if (!comparing) return;
@@ -97,6 +113,14 @@ export function useBrowserPhotoEditingKeys(options: {
         if (event.repeat) return;
         if (key === "copy") callbacksRef.current.onCopy();
         else callbacksRef.current.onPaste();
+        return;
+      }
+      if (key === "clip") {
+        if (!(callbacksRef.current.clippingEnabled ?? callbacksRef.current.enabled)) return;
+        const toggleClipping = callbacksRef.current.onToggleClipping;
+        if (!toggleClipping) return;
+        event.preventDefault();
+        if (!event.repeat) toggleClipping();
         return;
       }
       if (!callbacksRef.current.enabled) return;
@@ -138,5 +162,5 @@ export function useBrowserPhotoEditingKeys(options: {
       window.removeEventListener("blur", release);
       release();
     };
-  }, [enabled, clipboardEnabled, rootRef]);
+  }, [enabled, clipboardEnabled, clippingEnabled, rootRef]);
 }

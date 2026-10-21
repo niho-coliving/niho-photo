@@ -31,6 +31,8 @@ import { useBrowserPhotoOpen, type BrowserPhotoOpen } from "./use-browser-photo-
 
 const engineFactory = vi.hoisted(() => vi.fn());
 const paintFrame = vi.hoisted(() => vi.fn());
+/** 描いた画を右パネルのヒストグラムへ渡す口（niho-photo#36）の代わり */
+const framePainted = vi.hoisted(() => vi.fn());
 
 vi.mock("../develop-engine/develop-engine-client", async (importOriginal) => {
   const actual = await importOriginal<typeof import("../develop-engine/develop-engine-client")>();
@@ -310,6 +312,7 @@ function Harness(props: { library: PhotoLibrary; items: BrowserItem[] }) {
   const allItemsRef = useRef(props.items);
   allItemsRef.current = props.items;
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const framePaintedRef = useRef<((key: string, frame: DevelopFrame) => void) | null>(framePainted);
   const [viewMode, setViewMode] = useState<BrowserViewMode>("grid");
   const [place, setPlace] = useState<BrowserCloudPlace>("photos");
   currentViewMode = viewMode;
@@ -353,6 +356,7 @@ function Harness(props: { library: PhotoLibrary; items: BrowserItem[] }) {
     busy: false,
     saveGenerationRef,
     setStatus: vi.fn(),
+    onFramePaintedRef: framePaintedRef,
   });
   return <canvas ref={canvasRef} />;
 }
@@ -387,6 +391,7 @@ beforeEach(() => {
   (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
   engineFactory.mockReset();
   paintFrame.mockReset();
+  framePainted.mockReset();
   container = document.createElement("div");
   document.body.appendChild(container);
   root = createRoot(container);
@@ -551,6 +556,41 @@ describe("useBrowserPhotoOpen progressive RAW integration", () => {
     expect(current.settings).toMatchObject({ base: BASE_VERSION, contrast: 65 });
     await run(() => current.undo());
     expect(current.settings).toMatchObject({ base: BASE_VERSION, contrast: 40 });
+  });
+
+  it("canvas に描いた画を、写真の key と一緒にヒストグラムの口へ渡す（仮の画 → canonical の画の差し替え・補正前の画も）", async () => {
+    const firstCanonical = deferred<DevelopFrame | null>();
+    const provisional = createEngine({ marker: 1 });
+    const canonical = createEngine({
+      marker: 9,
+      render: async (_settings, call) => call === 1 ? firstCanonical.promise : frame(9),
+    });
+    engineFactory.mockImplementationOnce(() => provisional).mockImplementationOnce(() => canonical);
+    const fixture = createLibrary(async () => readyWork());
+    const target = item("histogram");
+    await mount(fixture.library, [target]);
+
+    await run(() => {
+      void current.openItem(target);
+    });
+    await settleUntil(() => current.opened?.input?.kind === "provisional", "provisional open");
+    await settleUntil(() => framePainted.mock.calls.length > 0, "provisional frame painted");
+    // 仮の画も、描いた画として渡す（canvas に描いたのと同じ画・同じ key）
+    expect(framePainted.mock.calls[0]?.[0]).toBe(target.key);
+    expect((framePainted.mock.calls[0]?.[1] as DevelopFrame).rgba[0]).toBe(1);
+
+    await run(() => firstCanonical.resolve(frame(8)));
+    await settleUntil(() => current.opened?.input?.kind === "workingCopy", "canonical handoff");
+    expect(framePainted).toHaveBeenLastCalledWith(target.key, expect.objectContaining({ rgba: frame(8).rgba }));
+    // 渡した回数は canvas に描いた回数と同じ（描いていない画は渡さない）
+    expect(framePainted).toHaveBeenCalledTimes(paintFrame.mock.calls.length);
+
+    // 補正前を押している間は、補正前の画を渡す
+    await run(() => current.setCompareOriginal(true));
+    await settleUntil(() => paintFrame.mock.calls.length === framePainted.mock.calls.length && framePainted.mock.calls.length > 2, "compare frame painted");
+    const comparing = framePainted.mock.calls.at(-1);
+    expect(comparing?.[0]).toBe(target.key);
+    expect(comparing?.[1]).toBe(paintFrame.mock.calls.at(-1)?.[1]);
   });
 
   it("暫定previewを取得できないRAWも正規入力で開き、補正と通常保存を続ける", async () => {

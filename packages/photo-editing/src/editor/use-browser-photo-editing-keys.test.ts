@@ -48,6 +48,19 @@ describe("resolveBrowserPhotoEditingKey", () => {
     expect(resolveBrowserPhotoEditingKey(keyEvent({ key: "r", altKey: true }), { typing: false })).toBeNull();
   });
 
+  it("J は黒つぶれ・白飛びの印の切り替え（niho-photo#36）。修飾キーつき・文字を打つ欄・IME の変換中・ほかが扱ったキーは扱わない", () => {
+    expect(resolveBrowserPhotoEditingKey(keyEvent({ key: "j" }), { typing: false })).toBe("clip");
+    // CapsLock で大文字になっても Shift を押していなければ同じ
+    expect(resolveBrowserPhotoEditingKey(keyEvent({ key: "J" }), { typing: false })).toBe("clip");
+    expect(resolveBrowserPhotoEditingKey(keyEvent({ key: "J", shiftKey: true }), { typing: false })).toBeNull();
+    expect(resolveBrowserPhotoEditingKey(keyEvent({ key: "j", altKey: true }), { typing: false })).toBeNull();
+    expect(resolveBrowserPhotoEditingKey(keyEvent({ key: "j", metaKey: true }), { typing: false })).toBeNull();
+    expect(resolveBrowserPhotoEditingKey(keyEvent({ key: "j", ctrlKey: true }), { typing: false })).toBeNull();
+    expect(resolveBrowserPhotoEditingKey(keyEvent({ key: "j" }), { typing: true })).toBeNull();
+    expect(resolveBrowserPhotoEditingKey(keyEvent({ key: "j", isComposing: true }), { typing: false })).toBeNull();
+    expect(resolveBrowserPhotoEditingKey(keyEvent({ key: "j", defaultPrevented: true }), { typing: false })).toBeNull();
+  });
+
   it("\\ と ¥ は補正前。文字を打つ欄・IME の変換中・ほかが扱ったキーは扱わない", () => {
     expect(resolveBrowserPhotoEditingKey(keyEvent({ key: "\\" }), { typing: false })).toBe("compare");
     expect(resolveBrowserPhotoEditingKey(keyEvent({ key: "¥" }), { typing: false })).toBe("compare");
