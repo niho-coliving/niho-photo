@@ -558,3 +558,15 @@ test("実DMGをreadonlyで開き、梱包時の改変・追加・実行属性の
   put(stage, "NIHO photo.app/Contents/MacOS/niho-camera", "changed after verifyBuiltApp\n");
   assert.throws(() => packDmg(app, path.join(stage, "changed.dmg"), expected), /DMG.*inventory/u);
 });
+
+test("app inventoryは実行bitが同じでもSUID/SGID/stickyを拒否する", () => {
+  const app = temp("niho-photo-permission-fixture-");
+  put(app, "Contents/MacOS/niho-camera", "synthetic bytes; never executed\n");
+  const binary = path.join(app, "Contents/MacOS/niho-camera");
+  chmodSync(binary, 0o755);
+  assert.doesNotThrow(() => inventoryTree(app));
+  for (const mode of [0o4755, 0o2755, 0o1755]) {
+    chmodSync(binary, mode);
+    assert.throws(() => inventoryTree(app), /SUID\/SGID\/sticky/u);
+  }
+});

@@ -309,7 +309,7 @@ export function inventoryTree(root, { allowedPublicFirebaseKey } = {}) {
       const relative = prefix ? `${prefix}/${entry.name}` : entry.name;
       const full = path.join(directory, entry.name);
       const stat = lstatSync(full);
-      if (stat.isSymbolicLink() || (!stat.isDirectory() && !stat.isFile())) throw new CandidateError("candidate treeのsymlink・特殊fileは禁止です");
+      if (stat.isSymbolicLink() || (!stat.isDirectory() && !stat.isFile()) || (stat.mode & 0o7000)) throw new CandidateError("candidate treeのsymlink・特殊file・SUID/SGID/stickyは禁止です");
       if (/(?:^|\/)(?:\.git|node_modules|target|\.DS_Store|\.env[^/]*|logs?)(?:\/|$)|\.(?:map|dSYM|p8|p12|pem|key|log)$/iu.test(relative)) throw new CandidateError("candidate treeに禁止fileがあります");
       if (stat.isDirectory()) visit(full, relative);
       else {
