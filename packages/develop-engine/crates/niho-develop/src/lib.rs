@@ -620,10 +620,7 @@ fn most_recent<K: PartialEq + Clone, V: Clone>(
     key: K,
     make: impl FnOnce() -> V,
 ) -> V {
-    if let Some(index) = slots
-        .iter()
-        .position(|(cached_key, _)| cached_key == &key)
-    {
+    if let Some(index) = slots.iter().position(|(cached_key, _)| cached_key == &key) {
         let entry = slots.remove(index);
         let value = entry.1.clone();
         slots.insert(0, entry);
@@ -1098,11 +1095,7 @@ impl Session {
                     {
                         None
                     }
-                    Some(white) => Some(
-                        white
-                            .prepare()
-                            .apply_image(whole.image(), whole.space()),
-                    ),
+                    Some(white) => Some(white.prepare().apply_image(whole.image(), whole.space())),
                 };
                 let source = match balanced.as_ref() {
                     Some(image) => image,
@@ -1562,7 +1555,8 @@ impl Session {
                 })
             });
             let unscaled = filtered_source.as_ref().unwrap_or(self.source.as_ref());
-            let reduced = target.map(|target| unscaled.reduced(target.width, target.height, target.filter));
+            let reduced =
+                target.map(|target| unscaled.reduced(target.width, target.height, target.filter));
             let base = reduced.as_ref().unwrap_or(unscaled);
             let gains_key = format!(
                 "{w}x{h}|{}|{}",
