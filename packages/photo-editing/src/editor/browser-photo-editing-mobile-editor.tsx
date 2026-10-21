@@ -17,6 +17,7 @@ import {
   ChevronLeft,
   Droplet,
   Grid2x2,
+  Palette,
   Pipette,
   Redo2,
   Rows2,
@@ -45,10 +46,12 @@ import {
   PHOTO_EDITING_COMPARE_ORIGINAL_LABEL,
   PHOTO_EDITING_COMPARE_STACKED_LABEL,
   PHOTO_EDITING_EXPORT_LABEL,
+  PHOTO_EDITING_HSL_TITLE,
   PHOTO_EDITING_MOBILE_BACK_LABEL,
   PHOTO_EDITING_MOBILE_EDITOR_LABEL,
   PHOTO_EDITING_MOBILE_PRESETS_LABEL,
   PHOTO_EDITING_MOBILE_TOOLS_LABEL,
+  PHOTO_EDITING_POINT_COLOR_TITLE,
   PHOTO_EDITING_REDO_LABEL,
   PHOTO_EDITING_RESET_LABEL,
   PHOTO_EDITING_RESET_WHITE_BALANCE_LABEL,
@@ -56,6 +59,7 @@ import {
   PHOTO_EDITING_UNDO_LABEL,
   photoEditingMobileItemsLabel,
 } from "../photo-editing-copy";
+import { hasPhotoEditingHslEdits } from "../photo-editing-hsl";
 import type { PhotoSaveRoute } from "../save-photos-to-device";
 import type { DevelopGeometry, DevelopSize } from "../develop-engine/develop-geometry";
 import { usePhotoEditingLayerHistory } from "../use-photo-editing-layer-history";
@@ -86,7 +90,7 @@ import { usePhotoEditingZoom } from "./use-photo-editing-zoom";
 /**
  * スマホ（1024px 未満）の 1 枚の編集の層（NIHO Photo 段 1 F6c 移行元設計・モック `idea/mock/photo-editing-mobile-v1.html`）。
  * host のヘッダーとサブタブを隠す全画面の層で、上から 上の帯（‹・取り消す・やり直す／♥・補正前・書き出す）→ 写真（残り全部）
- * → 状態の 1 行 → 道具別の操作段 → 道具の帯（プリセット／自動／ライト／カラー／効果／切り抜き）。
+ * → 状態の 1 行 → 道具別の操作段 → 道具の帯（プリセット／自動／ライト／カラー／効果／カラーミキサー／ポイントカラー／切り抜き）。
  *
  * - 層の地は白 1 色（帯・写真・段・書き出すのシートを塗り分けない。owner 決定 2026-10-01）。PC の 1 枚の面と同じ地で、
  *   肌色は白の見え方を寄せるので敷かない。地を持つのは層だけで、帯と写真の面は塗らない。
@@ -109,8 +113,16 @@ const PRESETS_TOOL_ID = "presets";
 const AUTO_TOOL_ID = "auto";
 const CROP_TOOL_ID = "crop";
 const COLOR_MIXER_TOOL_ID = "color-mixer";
-/** 道具の帯の道具（プリセット・自動・補正の群・切り抜き） */
-type MobileToolId = typeof PRESETS_TOOL_ID | typeof AUTO_TOOL_ID | typeof CROP_TOOL_ID | typeof COLOR_MIXER_TOOL_ID | PhotoEditingAdjustmentGroupId;
+/** カラーミキサー（HSL。niho-photo#38）の道具（`COLOR_MIXER_TOOL_ID` は Oklch の「ポイントカラー」） */
+const HSL_MIXER_TOOL_ID = "hsl-mixer";
+/** 道具の帯の道具（プリセット・自動・補正の群・カラーミキサー・ポイントカラー・切り抜き） */
+type MobileToolId =
+  | typeof PRESETS_TOOL_ID
+  | typeof AUTO_TOOL_ID
+  | typeof CROP_TOOL_ID
+  | typeof COLOR_MIXER_TOOL_ID
+  | typeof HSL_MIXER_TOOL_ID
+  | PhotoEditingAdjustmentGroupId;
 
 const TOOL_ICONS: Record<MobileToolId, LucideIcon> = {
   presets: Grid2x2,
@@ -121,6 +133,7 @@ const TOOL_ICONS: Record<MobileToolId, LucideIcon> = {
   // ディテール（Issue #32。Lightroom のディテールの道具と同じ三角）。帯の幅が足りないので、今のスマホの面には出さない
   detail: Triangle,
   crop: Crop,
+  "hsl-mixer": Palette,
   "color-mixer": Pipette,
 };
 
@@ -155,8 +168,13 @@ export function BrowserPhotoEditingMobileEditor(props: {
    * `useBrowserPhotoPresets`）
    */
   presets?: BrowserPhotoEditingMobilePresetsProps;
-  /** 対応する wasm の Oklch 色ミキサー。 */
+  /** 対応する wasm の Oklch 色ミキサー（道具の名前は「ポイントカラー」）。 */
   colorMixer?: ReactNode;
+  /**
+   * カラーミキサー（HSL。niho-photo#38。段 2 の wasm で開いた写真だけ）。渡したときだけ道具の帯の「ポイントカラー」の前に出し、
+   * 道具の段に「調整」の切り替えと 8 色のスライダーを縦に並べる（段の高さに収まらない分は段の中で送る）
+   */
+  hslMixer?: ReactNode;
   colorPicking?: boolean;
   /** 段 2 の既存の自動補正（口のある wasm だけ）。 */
   auto?: { pressed: boolean; disabled: boolean; onToggle: () => void; onWarm?: () => void };
@@ -229,6 +247,7 @@ export function BrowserPhotoEditingMobileEditor(props: {
   );
   const rootRef = useRef<HTMLDivElement | null>(null);
   const stripRef = useRef<HTMLDivElement | null>(null);
+  const toolStripRef = useRef<HTMLElement | null>(null);
   const exportButtonRef = useRef<HTMLButtonElement | null>(null);
   // 今の道具（null はまだ選んでいない: プリセットがあればプリセット、無ければ先頭の補正の群）
   const [toolId, setToolId] = useState<MobileToolId | null>(null);
@@ -241,11 +260,15 @@ export function BrowserPhotoEditingMobileEditor(props: {
   const auto = props.auto ?? null;
   const crop = props.crop ?? null;
   const colorMixer = props.colorMixer ?? null;
+  const hslMixer = props.hslMixer ?? null;
   const groups = useMemo(() => visiblePhotoEditingAdjustmentGroups(props.visibleKeys), [props.visibleKeys]);
   const presetsCurrent = presets !== null && (toolId === null || toolId === PRESETS_TOOL_ID);
   const autoCurrent = !presetsCurrent && auto !== null && toolId === AUTO_TOOL_ID;
   const cropCurrent = !presetsCurrent && crop !== null && toolId === CROP_TOOL_ID;
   const colorMixerCurrent = !presetsCurrent && colorMixer !== null && toolId === COLOR_MIXER_TOOL_ID;
+  const hslMixerCurrent = !presetsCurrent && hslMixer !== null && toolId === HSL_MIXER_TOOL_ID;
+  // カラーミキサーに調整が入っている（道具の帯のカラーミキサーに点を添える。プリセット・自動の点と同じ）
+  const hslEdited = hslMixer !== null && hasPhotoEditingHslEdits(props.settings);
   // 「自動」の道具に入った時点で結果の計算を始める（ボタンを押すまでの間に終える。押して 300ms 以内に画を変える）
   const onAutoWarmRef = useRef(auto?.onWarm);
   onAutoWarmRef.current = auto?.onWarm;
@@ -253,12 +276,13 @@ export function BrowserPhotoEditingMobileEditor(props: {
   useEffect(() => {
     if (autoWarmable) onAutoWarmRef.current?.();
   }, [autoWarmable, auto?.pressed]);
-  const group = presetsCurrent || autoCurrent || cropCurrent || colorMixerCurrent ? null : (groups.find((candidate) => candidate.id === toolId) ?? groups[0] ?? null);
-  // 道具の帯（プリセットは先頭）
+  const group = presetsCurrent || autoCurrent || cropCurrent || colorMixerCurrent || hslMixerCurrent ? null : (groups.find((candidate) => candidate.id === toolId) ?? groups[0] ?? null);
+  // 道具の帯（プリセットは先頭。カラーミキサー → ポイントカラーは補正の群の後ろ。Lightroom と同じくカラーの続き）
   const tools: { id: MobileToolId; title: string }[] = groups.map((candidate) => ({ id: candidate.id, title: candidate.title }));
   if (presets) tools.unshift({ id: PRESETS_TOOL_ID, title: PHOTO_EDITING_MOBILE_PRESETS_LABEL });
   if (auto) tools.splice(presets ? 1 : 0, 0, { id: AUTO_TOOL_ID, title: "自動" });
-  if (colorMixer) tools.push({ id: COLOR_MIXER_TOOL_ID, title: "色ミキサー" });
+  if (hslMixer) tools.push({ id: HSL_MIXER_TOOL_ID, title: PHOTO_EDITING_HSL_TITLE });
+  if (colorMixer) tools.push({ id: COLOR_MIXER_TOOL_ID, title: PHOTO_EDITING_POINT_COLOR_TITLE });
   if (crop) tools.push({ id: CROP_TOOL_ID, title: "切り抜き" });
   const currentToolId: MobileToolId | null = presetsCurrent
     ? PRESETS_TOOL_ID
@@ -268,7 +292,9 @@ export function BrowserPhotoEditingMobileEditor(props: {
         ? CROP_TOOL_ID
         : colorMixerCurrent
           ? COLOR_MIXER_TOOL_ID
-        : (group?.id ?? null);
+          : hslMixerCurrent
+            ? HSL_MIXER_TOOL_ID
+            : (group?.id ?? null);
   const control = group
     ? (group.controls.find((candidate) => candidate.key === itemByTool[group.id]) ?? group.controls[0] ?? null)
     : null;
@@ -318,6 +344,14 @@ export function BrowserPhotoEditingMobileEditor(props: {
     if (!strip || !chip) return;
     strip.scrollLeft = Math.max(0, chip.offsetLeft - (strip.clientWidth - chip.offsetWidth) / 2);
   }, [groupId, controlKey]);
+
+  // 道具の帯が収まらない幅では、選んだ道具を帯の見える位置（中央）へ送る（収まる幅では動かさない）
+  useEffect(() => {
+    const strip = toolStripRef.current;
+    const tool = strip?.querySelector<HTMLElement>('[aria-current="true"]');
+    if (!strip || !tool || strip.scrollWidth <= strip.clientWidth) return;
+    strip.scrollLeft = Math.max(0, tool.offsetLeft - (strip.clientWidth - tool.offsetWidth) / 2);
+  }, [currentToolId]);
 
   // 写真が替わったらシートを閉じる
   const photoKey = props.photoKey;
@@ -606,6 +640,14 @@ export function BrowserPhotoEditingMobileEditor(props: {
         )
       ) : colorMixerCurrent && colorMixer ? (
         <div className={cn(BAND_CLASS_NAME, "max-h-[17rem] overflow-y-auto")}>{colorMixer}</div>
+      ) : hslMixerCurrent && hslMixer ? (
+        // 「調整」の切り替えと 8 本のスライダーを縦に（段の高さを超える分は段の中で送る。帯と写真は動かさない）
+        <div
+          data-testid="photo-editing-mobile-hsl"
+          className={cn(BAND_CLASS_NAME, "max-h-[17rem] overflow-y-auto overscroll-y-contain px-3 pb-2 pt-1")}
+        >
+          {hslMixer}
+        </div>
       ) : group && slider ? (
         <div className={BAND_CLASS_NAME}>
           {/* 段 A: 今の道具の項目のチップ（横に送れる帯） */}
@@ -673,37 +715,48 @@ export function BrowserPhotoEditingMobileEditor(props: {
         </div>
       ) : null}
 
-      {/* 道具の帯: 今ある道具だけ（名前の長さに合わせた幅で 1 行）。現在地は墨の文字と下線 */}
+      {/* 道具の帯: 今ある道具だけ（名前の長さに合わせた幅で 1 行）。現在地は墨の文字と下線。収まる幅では均等に並べ、道具が多くて
+          収まらない幅（カラーミキサー・ポイントカラーまで出る写真の狭い幅）は横に送る（選んだ道具を見える位置へ寄せる） */}
       {tools.length > 0 ? (
-        <nav aria-label={PHOTO_EDITING_MOBILE_TOOLS_LABEL} className={cn(BAND_CLASS_NAME, "flex h-14 items-stretch justify-around px-1")}>
-          {tools.map((candidate) => {
-            const Icon = TOOL_ICONS[candidate.id];
-            const current = candidate.id === currentToolId;
-            return (
-              <button
-                key={candidate.id}
-                type="button"
-                aria-current={current ? "true" : undefined}
-                disabled={(candidate.id === AUTO_TOOL_ID && auto?.disabled) || (candidate.id === CROP_TOOL_ID && crop?.disabled)}
-                onClick={() => selectTool(candidate.id)}
-                className={cn(
-                  "relative flex min-w-11 flex-col items-center justify-center gap-0.5 whitespace-nowrap rounded-xl px-1.5 pb-1 text-xs transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-niho-accent-ink disabled:cursor-not-allowed disabled:opacity-40",
-                  // 12px の文字なので、現在地でない道具も muted にしない（コントラスト）。現在地は太字と下線で分ける
-                  current ? "font-bold text-niho-text" : "font-medium text-niho-text-sub",
-                )}
-              >
-                <Icon className="h-[22px] w-[22px]" aria-hidden />
-                {candidate.title}
-                {(candidate.id === AUTO_TOOL_ID && auto?.pressed) ||
-                (candidate.id === PRESETS_TOOL_ID && presets?.appliedPresetKey !== null) ? (
-                  <span aria-hidden className="absolute right-1.5 top-1.5 h-1.5 w-1.5 rounded-full bg-niho-text" />
-                ) : null}
-                {current ? (
-                  <span aria-hidden className="absolute bottom-1 left-1/2 h-0.5 w-[22px] -translate-x-1/2 rounded-full bg-niho-text" />
-                ) : null}
-              </button>
-            );
-          })}
+        <nav
+          ref={toolStripRef}
+          aria-label={PHOTO_EDITING_MOBILE_TOOLS_LABEL}
+          className={cn(
+            BAND_CLASS_NAME,
+            "relative h-14 overflow-x-auto overscroll-x-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
+          )}
+        >
+          <div className="flex h-full w-max min-w-full items-stretch justify-around px-1">
+            {tools.map((candidate) => {
+              const Icon = TOOL_ICONS[candidate.id];
+              const current = candidate.id === currentToolId;
+              return (
+                <button
+                  key={candidate.id}
+                  type="button"
+                  aria-current={current ? "true" : undefined}
+                  disabled={(candidate.id === AUTO_TOOL_ID && auto?.disabled) || (candidate.id === CROP_TOOL_ID && crop?.disabled)}
+                  onClick={() => selectTool(candidate.id)}
+                  className={cn(
+                    "relative flex min-w-11 shrink-0 flex-col items-center justify-center gap-0.5 whitespace-nowrap rounded-xl px-1.5 pb-1 text-xs transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-niho-accent-ink disabled:cursor-not-allowed disabled:opacity-40",
+                    // 12px の文字なので、現在地でない道具も muted にしない（コントラスト）。現在地は太字と下線で分ける
+                    current ? "font-bold text-niho-text" : "font-medium text-niho-text-sub",
+                  )}
+                >
+                  <Icon className="h-[22px] w-[22px]" aria-hidden />
+                  {candidate.title}
+                  {(candidate.id === AUTO_TOOL_ID && auto?.pressed) ||
+                  (candidate.id === PRESETS_TOOL_ID && presets?.appliedPresetKey !== null) ||
+                  (candidate.id === HSL_MIXER_TOOL_ID && hslEdited) ? (
+                    <span aria-hidden className="absolute right-1.5 top-1.5 h-1.5 w-1.5 rounded-full bg-niho-text" />
+                  ) : null}
+                  {current ? (
+                    <span aria-hidden className="absolute bottom-1 left-1/2 h-0.5 w-[22px] -translate-x-1/2 rounded-full bg-niho-text" />
+                  ) : null}
+                </button>
+              );
+            })}
+          </div>
         </nav>
       ) : null}
 

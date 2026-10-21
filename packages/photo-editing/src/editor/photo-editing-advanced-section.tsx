@@ -1,13 +1,20 @@
 "use client";
 
 import { useId, type ReactNode } from "react";
+import { cn } from "niho-ui/cn";
 
 import {
   usePhotoEditingAdvancedSectionOpen,
   type PhotoEditingAdvancedSectionId,
 } from "../photo-editing-advanced-sections-state";
 
-import { AdjustmentGroup } from "./photo-editing-adjustment-controls";
+import { AdjustmentGroup, GROUP_ACCESSORY_BUTTON_CLASS_NAME } from "./photo-editing-adjustment-controls";
+
+/** 節の見出しの横の「初期化」（カーブ・カラーミキサー）。戻すものが無い・押せない間は薄くして押せない表示にする。 */
+export const PHOTO_EDITING_SECTION_RESET_BUTTON_CLASS_NAME = cn(
+  GROUP_ACCESSORY_BUTTON_CLASS_NAME,
+  "disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent",
+);
 
 /**
  * 右パネルの群の間に差し込む「既定で閉じた節」（カーブなど。niho-photo#37）。見た目は群と同じ（見出しの開閉のボタン・見出しの横の

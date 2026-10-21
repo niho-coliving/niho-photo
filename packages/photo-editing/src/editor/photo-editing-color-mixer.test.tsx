@@ -50,7 +50,7 @@ describe("color point schema and picker", () => {
     expect(appendDevelopColorPoint(eight, target, "ninth")).toBe(eight);
     expect(appendDevelopColorPoint(base, { ...target, lightness: -0.1 }, "hdr")).toBe(base);
     expect(appendDevelopColorPoint(base, { ...target, chroma: 5.1 }, "wide")).toBe(base);
-    expect(photoEditingPresetNotWrittenError(["colorPoints"])).toContain("色ミキサー");
+    expect(photoEditingPresetNotWrittenError(["colorPoints"])).toContain("ポイントカラー");
   });
 
   it("非同期採取中に写真・設定・compare状態が変わった結果は確定しない", () => {
@@ -120,7 +120,7 @@ describe("PhotoEditingColorMixer desktop/mobile common UI", () => {
   it("320px の共通 UI に見出し・カード・6本・削除/初期化を出し、更新を履歴用 phase で返す", () => {
     const initial = appendDevelopColorPoint(base, target, "skin");
     act(() => root.render(<Harness initial={initial} />));
-    expect(container.textContent).toContain("色ミキサー");
+    expect(container.textContent).toContain("ポイントカラー");
     expect(container.querySelectorAll('input[type="range"]')).toHaveLength(6);
     expect(container.querySelector('button[aria-label="色 1 を初期化"]')?.className).toContain("h-6");
     expect(container.querySelector('button[aria-label="色 1 を削除"]')?.className).toContain("h-6");

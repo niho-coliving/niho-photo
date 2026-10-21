@@ -479,6 +479,6 @@ describe("developSettings への取り込み（部分補正は写真自身の編
 
   it("プリセットに保存できない項目の表示に「部分補正（マスク）」がある", () => {
     expect(photoEditingPresetNotWrittenError(["masks"])).toContain("部分補正（マスク）");
-    expect(photoEditingPresetNotWrittenError(["masks", "colorPoints"])).toContain("部分補正（マスク）・色ミキサー");
+    expect(photoEditingPresetNotWrittenError(["masks", "colorPoints"])).toContain("部分補正（マスク）・ポイントカラー");
   });
 });

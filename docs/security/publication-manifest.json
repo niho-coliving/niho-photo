@@ -693,7 +693,7 @@
         "path": "packages/photo-editing/src/editor/browser-photo-editing-adjustments.tsx",
         "sha256": "2473ef7ca64f61e5ce7a72efb21f436f799f04a90a3a73b114cba15b7b5d23b1"
       },
-      "outputSha256": "64b1aaf9a4be01419a4f63dceed851a1165af313f22ae3fd3df4b0edd441ee7c",
+      "outputSha256": "06c8b5146ced5a6497a89caa0cdc357255b9a948dbd3d1ac8eda9d34b278ab3b",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
@@ -708,7 +708,10 @@
         "PR #77 の情報paneをmainの公開UI変更と統合。",
         "niho-photo#37 補正の面で群の直後に節を差し込む口（afterGroup）を追加。",
         "PR #78 のトーンカーブを最新情報paneと統合。",
-        "Detail群とtone curve後置sectionを同じ調整面に統合する"
+        "Detail群とtone curve後置sectionを同じ調整面に統合する",
+        "niho-photo#38 ポイントカラー（Oklch）を群の後ろから、カラーの群の直後（カラーミキサーの節の下）へ移す。",
+        "PR #79 のHSL mixerを最新tone curveとinfo UIへ統合。",
+        "PR #79のHSL mixerを最新mainから取り込み、公開出力ハッシュを更新。"
       ]
     },
     {
@@ -916,7 +919,7 @@
         "path": "packages/photo-editing/src/editor/browser-photo-editing-mobile-editor.tsx",
         "sha256": "cf0ebc1e3a23b7a2e8ecea7538cc6f2d9880cbf4e181d79db61f26dc293c3d1a"
       },
-      "outputSha256": "e0d40dc0d242edd75a124386abffc690f9e83aaab554af1d95caa7aed5f65ad9",
+      "outputSha256": "56de76699f12f1fb1bb690ced766b29f4e06429a731c4a6e4b97a23327d37d8e",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
@@ -925,7 +928,10 @@
         "Issue #32 detail v6 を、先行する masks v5 と #72 の histogram/Jキー契約に同期する。",
         "Issue #32: main（#72・#75・#77）とディテールの変更を merge",
         "niho-photo#41 スマホの層に補正前と補正後を上下に並べる切り替えを追加。",
-        "niho-photo#41 の比較UIを #72 のヒストグラム・Jキー契約と併存するようmainへ積み直した。"
+        "niho-photo#41 の比較UIを #72 のヒストグラム・Jキー契約と併存するようmainへ積み直した。",
+        "niho-photo#38 道具の帯にカラーミキサー（HSL）を足し、ポイントカラーへ改名。道具が多い幅では帯を横に送る。",
+        "PR #79 のHSL mixerを最新tone curveとinfo UIへ統合。",
+        "PR #79のHSL mixerを最新mainから取り込み、公開出力ハッシュを更新。"
       ]
     },
     {
@@ -1116,7 +1122,7 @@
         "path": "packages/photo-editing/src/editor/browser-photo-editing-workbench.tsx",
         "sha256": "f655136ae0c985d793822ca8bef1668dba26ffd4bb8f13d2ba3d6c2ccb13ceb6"
       },
-      "outputSha256": "3e8765e62941cccd1f2529466ef341f0428aa705c4e98f11ec70ec0ed4429349",
+      "outputSha256": "1324f749a29f6bb4291127e9a522e2b3b871a033b6e4a6244ced52b6f2124426",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
@@ -1165,7 +1171,10 @@
         "PR #77 の情報paneをmainの公開UI変更と統合。",
         "niho-photo#37 PC の wasm の写真で、ライトの群の下に「カーブ」の節を置く。",
         "PR #78 のトーンカーブを最新情報paneと統合。",
-        "Detail controlsとtone curve sectionの表示条件を共存させる"
+        "Detail controlsとtone curve sectionの表示条件を共存させる",
+        "niho-photo#38 PC のカラーの群の下にカラーミキサーの節、スマホの層にカラーミキサーの道具を置く。Oklch の文言をポイントカラーへ改名。",
+        "PR #79 のHSL mixerを最新tone curveとinfo UIへ統合。",
+        "PR #79のHSL mixerを最新mainから取り込み、公開出力ハッシュを更新。"
       ]
     },
     {
@@ -1554,11 +1563,14 @@
         "path": "packages/photo-editing/src/editor/photo-editing-slider.tsx",
         "sha256": "af79b8b767d17781a3371b87d40c6214eaac5e45a06709964252103f1ee9dfd4"
       },
-      "outputSha256": "e9ea9e7cab07c969db5f34ce062779a898d7345dbffd4d3e59c98f0492ae07dc",
+      "outputSha256": "d7419e33353fca619c6ec97a08184deccd22a381f0ea79cda79d3c3be3871665",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
-        "公開repoでの機能変更（#55）: スライダーを Lightroom の見た目（細い線・白い丸・色温度 / 色かぶり補正の帯・変更ありの太字）にした。"
+        "公開repoでの機能変更（#55）: スライダーを Lightroom の見た目（細い線・白い丸・色温度 / 色かぶり補正の帯・変更ありの太字）にした。",
+        "niho-photo#38 名前の前に飾り（カラーミキサーの色の丸）を置ける labelPrefix を追加。",
+        "PR #79 のHSL mixerを最新tone curveとinfo UIへ統合。",
+        "PR #79のHSL mixerを最新mainから取り込み、公開出力ハッシュを更新。"
       ]
     },
     {
@@ -2160,7 +2172,7 @@
         "path": "packages/photo-editing/src/photo-editing-copy.ts",
         "sha256": "1208d4124dca26c951d73f6f84c560879e69beddfb9a16426e1a9dcc9fd30c27"
       },
-      "outputSha256": "640cc20581412c11a2f192545d5055cec884d327665b290adb2eb5869ffd2155",
+      "outputSha256": "1eaba9c2ad4f7dd21ff0cc93c0b72d255eccafbcf42fee179d55010258f25009",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
@@ -2183,7 +2195,12 @@
         "PR #77 の情報paneをmainの公開UI変更と統合。",
         "niho-photo#37 「カーブ」の節・グラフ・点の読み上げの文言を追加。",
         "PR #78 のトーンカーブを最新情報paneと統合。",
-        "Detailとtone curveの利用者向け文言を両方保持する"
+        "Detailとtone curveの利用者向け文言を両方保持する",
+        "niho-photo#38 カラーミキサー（HSL）の文言を追加し、Oklch の補正と Lightroom の PointColors の名前を「ポイントカラー」に改める。",
+        "PR #79 のHSL mixerを最新tone curveとinfo UIへ統合。",
+        "PR #79のプリセット警告をHSLミキサーの表示名に合わせる。",
+        "PR #79のプリセット保存対象外表示を実UIの項目名に揃える。",
+        "PR #79のHSL mixerを最新mainから取り込み、公開出力ハッシュを更新。"
       ]
     },
     {
@@ -2688,11 +2705,14 @@
         "path": "packages/photo-editing/src/photo-preset-xmp-support.test.ts",
         "sha256": "9dc9314d099eee0f638329346395101c9bd22a540fb0163935a530ececa99a6d"
       },
-      "outputSha256": "d72e98b5adceda77a32b965c7d3781bac516db01075f0b79a59eeb1ee86546b9",
+      "outputSha256": "9d37ff1ee9aed352909aabba5fa45685e816e31c5f3aa66bbdb977ac80871c59",
       "modifications": [
         "Issue #30 Oklch色ミキサーとengine 10/11対応を反映",
         "Issue #32 シャープ・ノイズ軽減はapproximateになり細かな項目だけを知らせることを検証する",
-        "Issue #32 detail v6 を、先行する masks v5 と #72 の histogram/Jキー契約に同期する。"
+        "Issue #32 detail v6 を、先行する masks v5 と #72 の histogram/Jキー契約に同期する。",
+        "niho-photo#38 PointColors の使えない項目の名前を「Lightroom のポイントカラー」に改めたことに期待値を合わせる。",
+        "PR #79 のHSL mixerを最新tone curveとinfo UIへ統合。",
+        "PR #79のHSL mixerを最新mainから取り込み、公開出力ハッシュを更新。"
       ]
     },
     {
@@ -9553,13 +9573,13 @@
     },
     {
       "path": "packages/photo-editing/src/editor/photo-editing-color-mixer.test.tsx",
-      "sha256": "6e970dc5a9cc094c03e49584afa2c36d439fcdff89aa0a6f8cd8fceebb44e94f",
-      "origin": "Issue #30の公開仕様だけから新規作成した色ミキサーschema・座標・320px UI・keyboard回帰。合成値だけを使用。\n変更理由: deferred pickerの写真切替回帰を追加\n変更理由: 描画精度・型・共有サンプル位置・キーボードの最終レビューを反映\n変更理由: 部分補正（マスク）#65: 未知版の確認をv6へ更新\n変更理由: Issue #32 v5を読む版に合わせ未知の版を6にする\n変更理由: Issue #32 detail uses v6 because Issue #31 masks already owns v5; synchronize the Rust and TypeScript contract, probe, tests, and documentation.\n変更理由: Issue #32 detail v6 を、先行する masks v5 と #72 の histogram/Jキー契約に同期する。"
+      "sha256": "76d691d86931c67b2e8ca5cc9f173648a631e2d546e9896fbff43b4547373477",
+      "origin": "Issue #30の公開仕様だけから新規作成した色ミキサーschema・座標・320px UI・keyboard回帰。合成値だけを使用。\n変更理由: deferred pickerの写真切替回帰を追加\n変更理由: 描画精度・型・共有サンプル位置・キーボードの最終レビューを反映\n変更理由: 部分補正（マスク）#65: 未知版の確認をv6へ更新\n変更理由: Issue #32 v5を読む版に合わせ未知の版を6にする\n変更理由: Issue #32 detail uses v6 because Issue #31 masks already owns v5; synchronize the Rust and TypeScript contract, probe, tests, and documentation.\n変更理由: Issue #32 detail v6 を、先行する masks v5 と #72 の histogram/Jキー契約に同期する。\n変更理由: niho-photo#38 Oklch の補正の画面の名前を「ポイントカラー」に改めたことに期待値を合わせる。\n変更理由: PR #79 のHSL mixerを最新tone curveとinfo UIへ統合。\n変更理由: PR #79のHSL mixerを最新mainから取り込み、公開出力ハッシュを更新。"
     },
     {
       "path": "packages/photo-editing/src/editor/photo-editing-color-mixer.tsx",
-      "sha256": "6732771be6b4b2233b568ac31306fc4099c0e2857b5ce1f731141d64e4f6e97c",
-      "origin": "Issue #30の公開仕様だけから新規作成したMac/ブラウザ共通色ミキサーUI。公開semantic tokenと既存公開sliderだけを利用。\n変更理由: 彩度範囲sliderを保存契約の全域へ対応\n変更理由: 非同期pickerの最新context確認helperを追加"
+      "sha256": "c2c07ab0cdc62a51c96132b7065d541fd5f4f1fa7eee5ddceb63936bec010f33",
+      "origin": "Issue #30の公開仕様だけから新規作成したMac/ブラウザ共通色ミキサーUI。公開semantic tokenと既存公開sliderだけを利用。\n変更理由: 彩度範囲sliderを保存契約の全域へ対応\n変更理由: 非同期pickerの最新context確認helperを追加\n変更理由: niho-photo#38 Oklch の補正の見出しを「ポイントカラー」に改める（中身・挙動は同じ）。\n変更理由: PR #79 のHSL mixerを最新tone curveとinfo UIへ統合。\n変更理由: PR #79のHSL mixerを最新mainから取り込み、公開出力ハッシュを更新。"
     },
     {
       "path": "packages/photo-editing/src/editor/browser-photo-editing-filmstrip.tsx",
@@ -9723,8 +9743,8 @@
     },
     {
       "path": "packages/photo-editing/src/develop-engine/develop-masks.test.ts",
-      "sha256": "8c1b0528ed8e679198daf49b1b389ea7d733479dbd297b20bddf8e79d7eb3e04",
-      "origin": "Issue #65の公開仕様と合成fixtureだけから新規作成した、マスク設定のRust共有fixture照合と設定関数の回帰。外部画像・非公開コード・個体metadataを含まない。\n変更理由: 線形マスクの最小距離保持と上限超過の拒否を検証する。\n変更理由: Issue #32 detail uses v6 because Issue #31 masks already owns v5; synchronize the Rust and TypeScript contract, probe, tests, and documentation.\n変更理由: Issue #32 detail v6 を、先行する masks v5 と #72 の histogram/Jキー契約に同期する。"
+      "sha256": "6183b8ffebb19412c7e00d0d284337cfbb825cb1d70f27150fd365be3d06f0e5",
+      "origin": "Issue #65の公開仕様と合成fixtureだけから新規作成した、マスク設定のRust共有fixture照合と設定関数の回帰。外部画像・非公開コード・個体metadataを含まない。\n変更理由: 線形マスクの最小距離保持と上限超過の拒否を検証する。\n変更理由: Issue #32 detail uses v6 because Issue #31 masks already owns v5; synchronize the Rust and TypeScript contract, probe, tests, and documentation.\n変更理由: Issue #32 detail v6 を、先行する masks v5 と #72 の histogram/Jキー契約に同期する。\n変更理由: PR #79のマスクと色ポイントの保存対象外表示テストを実UIの項目名に揃える。\n変更理由: PR #79のHSL mixerを最新mainから取り込み、公開出力ハッシュを更新。"
     },
     {
       "path": "packages/photo-editing/src/photo-editing-histogram.ts",
@@ -9933,8 +9953,8 @@
     },
     {
       "path": "packages/photo-editing/src/editor/photo-editing-advanced-section.tsx",
-      "sha256": "d8e5789688be8f64192ad0f7d68102d080e3217b9374c95848c09ca9d807de89",
-      "origin": "niho-photo#37 のため新規作成。補正の群の間に差し込む、既定で閉じた節の見出しの部品。外部コード・実データを含まない。"
+      "sha256": "44c95f3fead87fd2f6807ada2a481220c6093d204652032b5bc88c8b402c7289",
+      "origin": "niho-photo#37 のため新規作成。補正の群の間に差し込む、既定で閉じた節の見出しの部品。外部コード・実データを含まない。\n変更理由: niho-photo#38 節の見出しの横の「初期化」の class をカーブとカラーミキサーで共有する。\n変更理由: PR #79 のHSL mixerを最新tone curveとinfo UIへ統合。\n変更理由: PR #79のHSL mixerを最新mainから取り込み、公開出力ハッシュを更新。"
     },
     {
       "path": "packages/photo-editing/src/editor/photo-editing-tone-curve.test.tsx",
@@ -9943,13 +9963,13 @@
     },
     {
       "path": "packages/photo-editing/src/editor/photo-editing-tone-curve.tsx",
-      "sha256": "b04fd7a242eaa842d8969db41ee5a5b6efc876c3b5e1df91210fb4ed86150933",
-      "origin": "niho-photo#37 のため新規作成。右パネルの「カーブ」の節とトーンカーブのグラフ（SVG、点のドラッグ・キー操作、チャンネルの切り替え、曲線だけの初期化）。外部コード・実データを含まない。\n変更理由: commit active tone curve drag on close"
+      "sha256": "000c38780cf480e9627f3d864469d41536939a99e67158f32d0ed7fddd0715ad",
+      "origin": "niho-photo#37 のため新規作成。右パネルの「カーブ」の節とトーンカーブのグラフ（SVG、点のドラッグ・キー操作、チャンネルの切り替え、曲線だけの初期化）。外部コード・実データを含まない。\n変更理由: commit active tone curve drag on close\n変更理由: niho-photo#38 節の「初期化」の class を共通部品から読む（見た目は同じ）。\n変更理由: PR #79 のHSL mixerを最新tone curveとinfo UIへ統合。\n変更理由: PR #79のHSL mixerを最新mainから取り込み、公開出力ハッシュを更新。"
     },
     {
       "path": "packages/photo-editing/src/photo-editing-advanced-sections-state.ts",
-      "sha256": "aa20a28c9f5eadf7c8bfe1b4096354424fe228e58b1357747e8bb425f3dd77da",
-      "origin": "niho-photo#37 のため新規作成。右パネルの既定で閉じた節の開閉を端末に覚えるフック（開いた節の id の配列）。外部コード・実データを含まない。"
+      "sha256": "7cd43531502334202e06905617ad6a6f46abf0d334f457416d4ad07444d9d593",
+      "origin": "niho-photo#37 のため新規作成。右パネルの既定で閉じた節の開閉を端末に覚えるフック（開いた節の id の配列）。外部コード・実データを含まない。\n変更理由: niho-photo#38 既定で閉じた節に「カラーミキサー」（colorMixer）を追加。\n変更理由: PR #79 のHSL mixerを最新tone curveとinfo UIへ統合。\n変更理由: PR #79のHSL mixerを最新mainから取り込み、公開出力ハッシュを更新。"
     },
     {
       "path": "packages/photo-editing/src/photo-editing-tone-curve.test.ts",
@@ -9960,6 +9980,31 @@
       "path": "packages/photo-editing/src/photo-editing-tone-curve.ts",
       "sha256": "846e69b14a8373f3c07299d555baa0376d59c8f90fc174658b8a466fab6b8394",
       "origin": "niho-photo#37 のため新規作成。トーンカーブ（ポイントカーブ・RGB 別）の developSettings.toneCurves の読み書き、点の追加・移動・削除、曲線の値（crate の DngSpline と同じ式）、グラフの背後の輝度の度数の純関数。外部コード・実データを含まない。"
+    },
+    {
+      "path": "packages/photo-editing/src/photo-editing-hsl.ts",
+      "sha256": "101b2b86a8be44b3825fe6d8d52cefac294499f368f850e17cabed069cae3b71",
+      "origin": "niho-photo#38 のため新規作成。カラーミキサー（HSL 8 色の色相・彩度・輝度）の developSettings.hsl の読み書き（crate と同じ交互の配列・オブジェクトの両方を読み、交互の配列で書く）の純関数。外部コード・実データを含まない。"
+    },
+    {
+      "path": "packages/photo-editing/src/photo-editing-hsl.test.ts",
+      "sha256": "f07547666eacd1607456ecbb66920fd63184e9dcc308237ae0aabf036da951c1",
+      "origin": "niho-photo#38 のため新規作成。HSL の読み書きの純関数と、補正のコピー・貼り付け・取り消しの履歴・プリセットの既定の群に hsl が入ることの test。合成の値だけを使用。"
+    },
+    {
+      "path": "packages/photo-editing/src/editor/photo-editing-hsl-mixer.tsx",
+      "sha256": "1beacebdcdf8ff6c3f556b1e1fa092b8f1f8bacf04d95e0458891b8ba8e6016d",
+      "origin": "niho-photo#38 のため新規作成。右パネルのカラーの群の下の「カラーミキサー」の節と、PC・スマホ共通の「調整」の切り替えと 8 色のスライダーの部品。外部コード・実データを含まない。\n変更理由: disable HSL controls during monochrome mode"
+    },
+    {
+      "path": "packages/photo-editing/src/editor/photo-editing-hsl-mixer.test.tsx",
+      "sha256": "b558ce78c2ff2a3a7fc4c2dc7a4f1d8f7f486a0b4bc1880c2ff4f3e0cf187ffc",
+      "origin": "niho-photo#38 のため新規作成。カラーミキサーの切り替え・スライダーの drag / commit / リセット・初期化・節の開閉と、カラーの群の下の並び（カラーミキサー → ポイントカラー）の test。合成の値だけを使用。\n変更理由: cover inactive HSL controls in monochrome mode"
+    },
+    {
+      "path": "packages/photo-editing/src/editor/browser-photo-editing-mobile-editor-hsl.test.tsx",
+      "sha256": "3be8e64b6a48171b386f39d30596bbbfc7860e8768d884857cd9af6bcdc2c4fd",
+      "origin": "niho-photo#38 のため新規作成。スマホの編集の層の道具の帯（カラーミキサー → ポイントカラー）とカラーミキサーの段の操作の test。合成の値だけを使用。"
     }
   ],
   "excludedSources": [

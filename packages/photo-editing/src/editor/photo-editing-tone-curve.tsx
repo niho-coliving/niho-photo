@@ -40,12 +40,11 @@ import {
 } from "../photo-editing-tone-curve";
 import type { PhotoEditingSettings } from "../photo-editing-types";
 
+import type { PhotoEditingSettingsUpdate, PhotoEditingSliderPhase } from "./photo-editing-adjustment-controls";
 import {
-  GROUP_ACCESSORY_BUTTON_CLASS_NAME,
-  type PhotoEditingSettingsUpdate,
-  type PhotoEditingSliderPhase,
-} from "./photo-editing-adjustment-controls";
-import { PhotoEditingAdvancedSection } from "./photo-editing-advanced-section";
+  PHOTO_EDITING_SECTION_RESET_BUTTON_CLASS_NAME as RESET_BUTTON_CLASS_NAME,
+  PhotoEditingAdvancedSection,
+} from "./photo-editing-advanced-section";
 
 /** 押した位置から点をつかめる距離（画面の px） */
 const HIT_RADIUS_PX = 10;
@@ -74,10 +73,6 @@ const CHANNEL_BUTTON_CLASS_NAME =
   "inline-flex h-7 min-w-9 items-center justify-center gap-1 rounded-lg border border-niho-border px-2 text-xs font-bold text-niho-text-sub transition hover:bg-niho-pale/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-niho-accent-ink aria-pressed:border-transparent aria-pressed:bg-niho-accent-soft aria-pressed:text-niho-accent-ink";
 const POINT_CLASS_NAME =
   "absolute h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-niho-accent-ink focus-visible:ring-offset-1 disabled:cursor-not-allowed";
-const RESET_BUTTON_CLASS_NAME = cn(
-  GROUP_ACCESSORY_BUTTON_CLASS_NAME,
-  "disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent",
-);
 
 /** 0〜1 の値の見せ方（0〜100 の整数） */
 function percent(value: number): number {
