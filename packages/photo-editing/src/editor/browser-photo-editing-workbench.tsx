@@ -1042,6 +1042,9 @@ export function BrowserPhotoEditingWorkbench(props: {
 
   // 1 枚の編集のキー（`useBrowserPhotoEditingKeys`）を聞いている（PC で補正を開けている。書き出しのシート・操作中は聞かない）
   const editingKeysEnabled = props.active && wide && !controlsDisabled && !exportSheetOpen;
+  // J は写真への表示切替だけなので、閲覧専用でも押せるヒストグラムのボタンと同じ条件で聞く。
+  const clippingKeysEnabled =
+    props.active && wide && !exportSheetOpen && histogramAvailable && !clipUnavailable && histogram.histogram !== null;
 
   // Esc（シート → 1 枚 → 一覧の選択）・Enter・← →・⌫ / Delete・G / E。設定サブタブで隠している間は効かせない
   usePhotoEditingShortcuts({
@@ -1129,6 +1132,7 @@ export function BrowserPhotoEditingWorkbench(props: {
   useBrowserPhotoEditingKeys({
     rootRef,
     enabled: editingKeysEnabled,
+    clippingEnabled: clippingKeysEnabled,
     clipboardEnabled:
       props.active &&
       wide &&

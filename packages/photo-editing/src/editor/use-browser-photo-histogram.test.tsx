@@ -208,16 +208,23 @@ describe("useBrowserPhotoHistogram", () => {
 });
 
 describe("J キー（useBrowserPhotoEditingKeys の onToggleClipping）", () => {
-  function KeyProbe(props: { onToggleClipping: (() => void) | null; enabled?: boolean }) {
+  function KeyProbe(props: {
+    onToggleClipping: (() => void) | null;
+    onToggleTool?: (() => void) | null;
+    enabled?: boolean;
+    clippingEnabled?: boolean;
+  }) {
     const rootRef = useRef<HTMLElement | null>(null);
     useBrowserPhotoEditingKeys({
       rootRef,
       enabled: props.enabled ?? true,
+      clippingEnabled: props.clippingEnabled,
       onUndo: vi.fn(),
       onRedo: vi.fn(),
       onCopy: vi.fn(),
       onPaste: vi.fn(),
       onCompareOriginalChange: vi.fn(),
+      onToggleTool: props.onToggleTool,
       onToggleClipping: props.onToggleClipping,
     });
     return <main ref={rootRef}><input aria-label="値" /><button type="button">ボタン</button></main>;
@@ -229,7 +236,12 @@ describe("J キー（useBrowserPhotoEditingKeys の onToggleClipping）", () => 
     return event;
   }
 
-  async function renderKeys(props: { onToggleClipping: (() => void) | null; enabled?: boolean }) {
+  async function renderKeys(props: {
+    onToggleClipping: (() => void) | null;
+    onToggleTool?: (() => void) | null;
+    enabled?: boolean;
+    clippingEnabled?: boolean;
+  }) {
     await act(async () => {
       root.render(<KeyProbe {...props} />);
     });
@@ -268,5 +280,20 @@ describe("J キー（useBrowserPhotoEditingKeys の onToggleClipping）", () => 
     await renderKeys({ onToggleClipping: toggle, enabled: false });
     press(container.querySelector("button"), { key: "j" });
     expect(toggle).not.toHaveBeenCalled();
+  });
+
+  it("閲覧専用でも、表示切替の J だけを有効にできる", async () => {
+    const toggle = vi.fn();
+    const toggleTool = vi.fn();
+    await renderKeys({ onToggleClipping: toggle, onToggleTool: toggleTool, enabled: false, clippingEnabled: true });
+    const button = container.querySelector("button");
+
+    const clipping = press(button, { key: "j" });
+    expect(clipping.defaultPrevented).toBe(true);
+    expect(toggle).toHaveBeenCalledTimes(1);
+
+    const editing = press(button, { key: "r" });
+    expect(editing.defaultPrevented).toBe(false);
+    expect(toggleTool).not.toHaveBeenCalled();
   });
 });

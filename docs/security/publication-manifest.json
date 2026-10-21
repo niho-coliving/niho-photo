@@ -1063,7 +1063,7 @@
         "path": "packages/photo-editing/src/editor/browser-photo-editing-workbench.tsx",
         "sha256": "f655136ae0c985d793822ca8bef1668dba26ffd4bb8f13d2ba3d6c2ccb13ceb6"
       },
-      "outputSha256": "c3c0d45a1d814a19a845273e5cbb7c53e01133b5e4cee70730c6fd15188dcd4b",
+      "outputSha256": "d96dec3449d60107a97d5a3bef6bb7663d5b8003d1eba0cc3094a79472e898c6",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
@@ -1099,7 +1099,8 @@
         "Integrate filmstrip with progressive RAW open",
         "Issue #49の統合確認: 下段を中央の列の下だけに置き、プリセットの⋯の受け口を渡す。",
         "可変高のフッター行と中幅画面の折返しに対応する。",
-        "niho-photo#36 ヒストグラムとクリップ表示とJキーを組み込み。"
+        "niho-photo#36 ヒストグラムとクリップ表示とJキーを組み込み。",
+        "閲覧専用のヒストグラムで、Jキーを操作ボタンと同じ条件で有効にする。"
       ]
     },
     {
@@ -1629,12 +1630,13 @@
         "path": "packages/photo-editing/src/editor/use-browser-photo-editing-keys.ts",
         "sha256": "869fc1769c085f4affe0fb260ad2cc9c0df21bd16c3e893ce65f015da29ce2fa"
       },
-      "outputSha256": "4d7fc50a4877c78376831726cc88eb6e9908f7518dcff777e5bade352975725a",
+      "outputSha256": "e0163e86442b89070a88672f4fd81e3cd3ce5afff1121e77b67d549e0308143a",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
         "PR #61 の切り抜きUI・完了/取消操作と回帰検証を公開repoで実装。",
-        "niho-photo#36 黒つぶれ白飛び表示の J キーを追加。"
+        "niho-photo#36 黒つぶれ白飛び表示の J キーを追加。",
+        "Jキーの有効条件を他の編集ショートカットから独立させる。"
       ]
     },
     {
@@ -9572,8 +9574,8 @@
     },
     {
       "path": "packages/photo-editing/src/editor/use-browser-photo-histogram.test.tsx",
-      "sha256": "49d9e15c48cea9f98efa9434e2df63b18755babc91a635ee1578c6973a40acfd",
-      "origin": "niho-photo#36 のため新規作成。右パネル上端のヒストグラム（RGB の度数・黒つぶれ/白飛びの割合・クリップ領域の印）の計算・表示・test。合成の画素だけを使用。"
+      "sha256": "1ea9e873931c8086be3d111df779d6673f5f376867e33b5cd1ac9896d8d4be75",
+      "origin": "niho-photo#36 のため新規作成。右パネル上端のヒストグラム（RGB の度数・黒つぶれ/白飛びの割合・クリップ領域の印）の計算・表示・test。合成の画素だけを使用。\n変更理由: 閲覧専用ではJだけが有効なキーボード契約を検証する。"
     },
     {
       "path": "packages/photo-editing/src/editor/browser-photo-editing-loupe-clip.test.tsx",
