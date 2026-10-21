@@ -24,7 +24,8 @@
         "matrix": "${{ steps.scope.outputs.matrix }}",
         "has-native": "${{ steps.scope.outputs.has-native }}",
         "has-swift": "${{ steps.scope.outputs.has-swift }}",
-        "photo-editing": "${{ steps.scope.outputs.photo-editing }}"
+        "photo-editing": "${{ steps.scope.outputs.photo-editing }}",
+        "photo-sdk": "${{ steps.scope.outputs.photo-sdk }}"
       },
       "steps": [
         {
@@ -163,6 +164,53 @@
         },
         {
           "run": "node scripts/ci/run-scope.mjs photo-editing"
+        },
+        {
+          "run": "npm run sdk:test"
+        }
+      ]
+    },
+    "photo-sdk": {
+      "name": "Photo SDK real build",
+      "needs": [
+        "plan",
+        "publication"
+      ],
+      "if": "needs.plan.outputs.photo-sdk == 'true'",
+      "runs-on": "ubuntu-24.04",
+      "timeout-minutes": 30,
+      "env": {
+        "CI": "true"
+      },
+      "steps": [
+        {
+          "uses": "actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683",
+          "with": {
+            "persist-credentials": false,
+            "fetch-depth": 0
+          }
+        },
+        {
+          "uses": "actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020",
+          "with": {
+            "node-version": "24.15.0"
+          }
+        },
+        {
+          "run": "npm ci --ignore-scripts --no-audit --no-fund"
+        },
+        {
+          "name": "固定Rust/WASM toolchainを準備",
+          "run": "rustup toolchain install 1.98.1 --profile minimal --target wasm32-unknown-unknown\ncargo +1.98.1 install wasm-bindgen-cli --version 0.2.129 --locked"
+        },
+        {
+          "name": "実WASM・pack・repo外consumerを検証",
+          "env": {
+            "SDK_RELEASE_DIR": "${{ runner.temp }}/photo-sdk-release",
+            "SDK_RUNTIME_DIR": "${{ runner.temp }}/photo-sdk-runtime",
+            "SDK_SOURCE_SHA": "${{ github.sha }}"
+          },
+          "run": "set -euo pipefail\nnpm run sdk:build-engine-runtime -- --output \"$SDK_RUNTIME_DIR\"\nnpm run sdk:pack -- --output \"$SDK_RELEASE_DIR\" --source \"$SDK_SOURCE_SHA\" --engine-assets \"$SDK_RUNTIME_DIR\"\nmanifest=\"$SDK_RELEASE_DIR/niho-photo-sdk-$(node -p 'require(\"./sdk/release-set.json\").version')-$SDK_SOURCE_SHA.json\"\nnpm run sdk:smoke -- --manifest \"$manifest\"\nnpm run sdk:smoke-real-engine -- --manifest \"$manifest\"\nnode scripts/sdk/verify-release-artifact.mjs --directory \"$SDK_RELEASE_DIR\" --expected-source \"$SDK_SOURCE_SHA\""
         }
       ]
     },
@@ -274,6 +322,7 @@
         "secrets",
         "dependencies",
         "photo-editing",
+        "photo-sdk",
         "native",
         "swift"
       ],

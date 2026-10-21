@@ -27,6 +27,12 @@ export function workflowFailures(workflow) {
     "retry-on-snapshot-warnings-timeout": 120,
   };
   if (dependencyReview.length !== 1 || JSON.stringify(dependencyReview[0].with) !== JSON.stringify(reviewInputs)) fail("依存レビューの検査範囲・例外は監査済み設定に固定する");
+  const sdkTests = workflow.jobs?.["photo-editing"]?.steps?.filter((step) => step.run === "npm run sdk:test") ?? [];
+  if (sdkTests.length !== 1 || sdkTests[0]["continue-on-error"]) fail("SDK packageとrepo外consumer smokeの検証が必要");
+  const sdkBuild = workflow.jobs?.["photo-sdk"];
+  const sdkBuildCommand = "set -euo pipefail\nnpm run sdk:build-engine-runtime -- --output \"$SDK_RUNTIME_DIR\"\nnpm run sdk:pack -- --output \"$SDK_RELEASE_DIR\" --source \"$SDK_SOURCE_SHA\" --engine-assets \"$SDK_RUNTIME_DIR\"\nmanifest=\"$SDK_RELEASE_DIR/niho-photo-sdk-$(node -p 'require(\"./sdk/release-set.json\").version')-$SDK_SOURCE_SHA.json\"\nnpm run sdk:smoke -- --manifest \"$manifest\"\nnpm run sdk:smoke-real-engine -- --manifest \"$manifest\"\nnode scripts/sdk/verify-release-artifact.mjs --directory \"$SDK_RELEASE_DIR\" --expected-source \"$SDK_SOURCE_SHA\"";
+  const sdkBuildSteps = sdkBuild?.steps?.filter((step) => step.name === "実WASM・pack・repo外consumerを検証") ?? [];
+  if (sdkBuild?.if !== "needs.plan.outputs.photo-sdk == 'true'" || JSON.stringify(sdkBuild?.needs) !== JSON.stringify(["plan", "publication"]) || sdkBuild?.["runs-on"] !== "ubuntu-24.04" || sdkBuild?.["timeout-minutes"] !== 30 || sdkBuildSteps.length !== 1 || sdkBuildSteps[0].run !== sdkBuildCommand || sdkBuildSteps[0].env?.SDK_SOURCE_SHA !== "${{ github.sha }}") fail("SDK所有source変更はrequired CIで実WASM→pack→consumerを検証する必要があります");
   const evidenceCondition = "matrix.scope == 'camera' && github.event_name == 'push' && github.ref == 'refs/heads/main' && github.repository == 'niho-coliving/niho-photo'";
   const evidence = workflow.jobs?.native?.steps?.filter((step) => step.id === "release-evidence") ?? [];
   const uploads = Object.entries(workflow.jobs ?? {}).flatMap(([job, value]) => (value.steps ?? []).filter((step) => step.uses?.startsWith("actions/upload-artifact@")).map((step) => ({ job, step })));

@@ -1,0 +1,136 @@
+{
+  "schemaVersion": 1,
+  "version": "0.1.0",
+  "repository": "niho-coliving/niho-photo",
+  "packages": [
+    {
+      "id": "ui",
+      "name": "niho-photo-ui",
+      "sourceRoot": "packages/ui",
+      "kind": "typescript",
+      "include": [
+        "package.json",
+        "tailwind-theme.cjs",
+        "src/**"
+      ],
+      "exclude": [
+        "**/*.test.*"
+      ]
+    },
+    {
+      "id": "photo-editing",
+      "name": "niho-photo-editing",
+      "sourceRoot": "packages/photo-editing",
+      "kind": "typescript",
+      "include": [
+        "package.json",
+        "src/**"
+      ],
+      "exclude": [
+        "**/*.test.*"
+      ],
+      "rewritePackageImports": {
+        "niho-ui": "niho-photo-ui"
+      },
+      "rewriteSpecifiers": {
+        "../../niho-cloud-contract/src/mock.js": "niho-photo-cloud-contract/mock",
+        "../../niho-cloud-contract/src/v1.js": "niho-photo-cloud-contract/v1"
+      }
+    },
+    {
+      "id": "cloud-contract",
+      "name": "niho-photo-cloud-contract",
+      "sourceRoot": "packages/niho-cloud-contract",
+      "kind": "typescript",
+      "include": [
+        "package.json",
+        "README.md",
+        "src/**"
+      ],
+      "exclude": []
+    },
+    {
+      "id": "photo-contract",
+      "name": "niho-photo-contract",
+      "sourceRoot": "packages/photo-editing",
+      "kind": "node-contract",
+      "entry": "src/develop-engine/develop-settings.ts",
+      "include": [
+        "src/develop-engine/develop-settings.ts"
+      ],
+      "exclude": []
+    },
+    {
+      "id": "develop-engine-source",
+      "name": "niho-photo-develop-engine-source",
+      "sourceRoot": "packages/develop-engine",
+      "kind": "rust-source",
+      "include": [
+        ".cargo/config.toml",
+        "Cargo.lock",
+        "Cargo.toml",
+        "LICENSES.md",
+        "README.md",
+        "licenses/**",
+        "rust-toolchain.toml",
+        "calibration/jpeg-incremental-wb-v1.bin",
+        "crates/*/Cargo.toml",
+        "crates/*/src/**",
+        "crates/niho-base-raw/profiles/**",
+        "crates/niho-develop/looks/**",
+        "crates/niho-develop/niho3/**",
+        "crates/niho-develop/niho4/**",
+        "crates/niho-develop/niho6/**",
+        "crates/niho-develop/presets/**"
+      ],
+      "exclude": []
+    }
+  ],
+  "ownedSourcePaths": [
+    "packages/photo-editing",
+    "packages/ui",
+    "packages/niho-cloud-contract",
+    "packages/develop-engine",
+    "packages/desktop-photo",
+    "sdk",
+    "scripts/sdk",
+    "scripts/ci/cloud-contract-sync.mjs",
+    "scripts/ci/image-metadata.mjs",
+    "scripts/ci/photo-sdk-workflow-lib.mjs",
+    "scripts/ci/publication-lib.mjs",
+    "scripts/ci/release-evidence-lib.mjs",
+    "scripts/ci/workflow-lib.mjs",
+    "LICENSE.md",
+    "ASSET_LICENSE.md",
+    "TRADEMARKS.md",
+    "THIRD_PARTY_NOTICES.md"
+  ],
+  "buildToolingPaths": [
+    "package.json",
+    "package-lock.json"
+  ],
+  "engine": {
+    "version": "niho-13",
+    "crateVersion": "0.25.0",
+    "runtimePackageName": "niho-photo-develop-engine-runtime",
+    "assetDirectory": "packages/develop-engine/public/develop-engine/niho-13",
+    "manifestName": "manifest-0.25.0.json",
+    "requiredExtensions": [
+      ".js",
+      ".wasm",
+      ".d.ts"
+    ],
+    "contractPaths": [
+      "packages/photo-editing/src/develop-engine/develop-engine-manifest.ts",
+      "packages/photo-editing/src/develop-engine/develop-settings.ts",
+      "packages/develop-engine/crates/niho-develop/src/settings.rs"
+    ],
+    "buildInputs": [
+      "packages/develop-engine/Cargo.lock",
+      "packages/develop-engine/Cargo.toml",
+      "packages/develop-engine/rust-toolchain.toml",
+      "packages/develop-engine/crates/niho-develop-wasm/Cargo.toml",
+      "packages/develop-engine/crates/niho-develop-wasm/src/lib.rs"
+    ]
+  }
+}
