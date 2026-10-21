@@ -8,7 +8,8 @@ import {
 } from "../browser-photo-source";
 import { DevelopEngineError } from "../develop-engine/develop-engine-client";
 import type { DevelopOpenSettingsSource } from "../develop-engine/develop-open-settings";
-import type { DevelopSettings } from "../develop-engine/develop-settings";
+import { hasActiveDevelopMasks } from "../develop-engine/develop-masks";
+import { developColorPoints, type DevelopSettings } from "../develop-engine/develop-settings";
 import type { DevelopSettingsSaver } from "../develop-engine/develop-settings-autosave";
 import {
   copyDevelopWorkingCopyInput,
@@ -197,8 +198,11 @@ export type BrowserPhotoOperationKind = "export" | "delete" | "bulk" | "copy";
 
 export type BrowserViewMode = "grid" | "loupe";
 
-/** 右パネルの道具（補正 / 切り抜き。F3b 移行元設計。背景除去は NIHO camera だけ。C4 移行元設計）。 */
-export type BrowserPhotoTool = "adjust" | "crop" | "cutout";
+/**
+ * 右パネルの道具（補正 / 切り抜き。F3b 移行元設計。背景除去は NIHO camera だけ。C4 移行元設計。マスクは部分補正を描ける wasm の
+ * PC の面だけ。M3 #67）。
+ */
+export type BrowserPhotoTool = "adjust" | "crop" | "cutout" | "mask";
 
 /**
  * 道具が「補正」の間に右パネルに出す面（niho-photo#51）。`adjust` は自動 / 白黒・プリセットの行・補正の群、`presets` はプリセットの
@@ -241,6 +245,18 @@ export const DISCARD_DESCRIPTION = "書き出していない補正は失われ�
 export const DEVELOP_PREVIEW_MAX_DIMENSION = BROWSER_PHOTO_PREVIEW_LONG_EDGE;
 /** 独立点のexact計算を保つ操作中の一時プレビュー。確定時は通常サイズへ戻す。 */
 export const DEVELOP_COLOR_POINT_DRAG_MAX_DIMENSION = 640;
+/**
+ * 操作中（drag・interactive）の描画の長辺。色ポイントか、画を変えるマスク（部分補正。M3 #67）がある間は
+ * {@link DEVELOP_COLOR_POINT_DRAG_MAX_DIMENSION}（640px）、ほかは {@link DEVELOP_PREVIEW_MAX_DIMENSION}。マスクは層ごとに描くので、
+ * M2 の実測で 3 枚の 1280px の drag は 240〜390 ms（目安 100 ms を超える）。640px でおよそ 1/4 になる。離した後（final）・色の
+ * 取得・保存のプレビュー・書き出しはこの大きさを使わない。
+ */
+export function developInteractiveMaxDimension(settings: object): number {
+  const activePoints = developColorPoints(settings).some(
+    (point) => point.delta.hue !== 0 || point.delta.chromaScale !== 1 || point.delta.lightness !== 0,
+  );
+  return activePoints || hasActiveDevelopMasks(settings) ? DEVELOP_COLOR_POINT_DRAG_MAX_DIMENSION : DEVELOP_PREVIEW_MAX_DIMENSION;
+}
 /** 切り抜きのある写真のオリジナルを開く作業サイズの上限（crate の一発の描画の既定 `decodeCap` と同じ 4096px） */
 export const DEVELOP_GEOMETRY_WORKING_CAP = 4096;
 export const DEVELOP_SAVE_FAILED_TEXT = "保存できませんでした";

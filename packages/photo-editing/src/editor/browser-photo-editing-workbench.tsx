@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState, type MutableRefObject, type ReactElement, type ReactNode } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { Contrast, Crop, FolderOpen, Info, Laptop, Plus, Scissors, SlidersHorizontal, Trash2 } from "lucide-react";
+import { CircleDashed, Contrast, Crop, FolderOpen, Info, Laptop, Plus, Scissors, SlidersHorizontal, Trash2 } from "lucide-react";
 
 import { formatPhotoCloudUsage } from "../photo-library-usage";
 import { inertAttribute } from "niho-ui/inert-attribute";
@@ -60,6 +60,7 @@ import {
   PHOTO_EDITING_TOOL_CROP_LABEL,
   PHOTO_EDITING_TOOL_CUTOUT_LABEL,
   PHOTO_EDITING_TOOL_INFO_LABEL,
+  PHOTO_EDITING_TOOL_MASK_LABEL,
 } from "../photo-editing-copy";
 import { movePhotoEditingPhotoId } from "../photo-editing-selection";
 import { photoEditingTileGeometry } from "../photo-editing-tile-geometry";
@@ -155,6 +156,8 @@ import {
 } from "./photo-editing-button-classes";
 import { PhotoEditingCropTools } from "./photo-editing-crop-tools";
 import { PhotoEditingCutoutTools } from "./photo-editing-cutout-tools";
+import { BrowserPhotoEditingMaskLayer } from "./photo-editing-mask-overlay";
+import { PhotoEditingMaskTools } from "./photo-editing-mask-tools";
 import { PhotoEditingDropOverlay } from "./photo-editing-drop-overlay";
 import { PhotoEditingAddFolderEmptyState, PhotoEditingAddPhotosEmptyState } from "./photo-editing-empty-states";
 import { PhotoEditingGrid, countPhotoEditingGridColumns, type PhotoEditingGridItem } from "./photo-editing-grid";
@@ -179,6 +182,7 @@ import {
   useBrowserPhotoDetailSupport,
   useBrowserPhotoEffectsSupport,
 } from "./use-browser-photo-effects";
+import { photoEditingMaskExportBlocked, useBrowserPhotoMasks, useBrowserPhotoMasksSupport } from "./use-browser-photo-masks";
 import { useBrowserPhotoExportAndDelete } from "./use-browser-photo-export-delete";
 import { useBrowserPhotoFolders } from "./use-browser-photo-folders";
 import { useBrowserPhotoHistogram, type PhotoEditingFrameSink } from "./use-browser-photo-histogram";
@@ -562,6 +566,8 @@ export function BrowserPhotoEditingWorkbench(props: {
     photoKey: wasmPhotoKey,
   });
   const detailSupported = detailWasmSupported && detailControlsAvailable(opened?.input);
+  // 部分補正（マスク。M3 #67）を描ける wasm か（`capabilities()`。同じく 1 回確かめて覚える）
+  const masksSupport = useBrowserPhotoMasksSupport({ mountedRef, engineRef: develop.engineRef, photoKey: wasmPhotoKey });
   // プリセットの適用量・今の補正の保存・見本を出せる wasm か（同じく 1 回確かめて覚える。右パネルを閉じても行の形を変えない）
   const presetSupport = useBrowserPhotoPresetSupport({ mountedRef, engineRef: develop.engineRef, photoKey: wasmPhotoKey });
   const mobilePresetThumbnails = useBrowserPresetThumbnails({
@@ -810,18 +816,51 @@ export function BrowserPhotoEditingWorkbench(props: {
     crop.leave();
     setCropBlockedKey(wasmPhotoKey);
   }, [crop, cropping, cutoutBlocksCrop, wasmPhotoKey]);
+  // マスクの道具（部分補正。M3 #67。PC の面で、描ける wasm の写真を 1 枚で見ている間だけ。切り抜き・背景除去とは同時に使わない）
+  const maskTool = useBrowserPhotoMasks({
+    mountedRef,
+    engineRef: develop.engineRef,
+    developSessionRef: develop.developSessionRef,
+    wide,
+    photoKey: wasmPhotoKey,
+    support: masksSupport,
+    exportBlocked: photoEditingMaskExportBlocked(capabilities),
+    otherToolActive: cropping || cutoutActive,
+    disabled: controlsDisabled,
+    settings,
+    settingsRef: open.settingsRef,
+    changeSettings: open.changeSettings,
+    commitEdit: open.commitEdit,
+  });
   /** 右パネルの今の道具（理由だけを出している「切り抜き」も「切り抜き」） */
-  const toolValue: BrowserPhotoTool = cropping ? "crop" : cutoutActive ? "cutout" : cropBlocked ? "crop" : "adjust";
+  const toolValue: BrowserPhotoTool = cropping
+    ? "crop"
+    : cutoutActive
+      ? "cutout"
+      : cropBlocked
+        ? "crop"
+        : maskTool.active
+          ? "mask"
+          : "adjust";
   /** 道具が「補正」の間に右パネルに出す面（右端の帯の「プリセット」「補正」。写真を替えても保つ。niho-photo#51） */
   const [adjustPanel, setAdjustPanel] = useState<BrowserPhotoAdjustPanel>("adjust");
   /** この写真で使える道具（右端の帯に並べる） */
   const tools: BrowserPhotoTool[] = ["adjust"];
   if (crop.available) tools.push("crop");
   if (cutout.available) tools.push("cutout");
+  if (maskTool.available) tools.push("mask");
   /** 道具を選ぶ（切り替え・R・Esc）。背景除去の推論の途中は替えない */
   const chooseTool = (next: BrowserPhotoTool) => {
     if (cutout.running) return;
     open.clearResetDone();
+    if (next === "mask") {
+      cutout.leave();
+      crop.leave();
+      setCropBlockedKey(null);
+      maskTool.enter();
+      return;
+    }
+    maskTool.leave();
     if (next === "cutout") {
       crop.leave();
       setCropBlockedKey(null);
@@ -841,7 +880,10 @@ export function BrowserPhotoEditingWorkbench(props: {
   // 「初期化」は色だけを戻す（切り抜き・回転は戻さない）ので、色の補正があるときだけ押せる。切り抜きの間は切り抜きだけを戻すので、
   // 幾何が恒等でないときだけ押せる。背景除去の間・理由だけの「切り抜き」の間は出さない
   const canReset =
-    editable && !cutoutActive && !cropBlocked && (cropping ? hasDevelopGeometry(settings) : !isNeutralDevelopColors(settings));
+    editable &&
+    !cutoutActive &&
+    !cropBlocked &&
+    (cropping ? hasDevelopGeometry(settings) : maskTool.active ? maskTool.canReset : !isNeutralDevelopColors(settings));
   // 「自動」（F4b 移行元設計）: wasm で開いた写真を 1 枚で見ている間だけ。押せない間・切り抜き / 背景除去の道具の間は押せない
   const auto = useBrowserPhotoAuto({
     mountedRef,
@@ -888,11 +930,11 @@ export function BrowserPhotoEditingWorkbench(props: {
     setColorPickError(null);
   }, [wasmPhotoKey]);
   useEffect(() => {
-    if (compareOriginal || cropping || cutoutActive || opened?.previewPending || presets.previewName !== null) {
+    if (compareOriginal || cropping || cutoutActive || maskTool.active || opened?.previewPending || presets.previewName !== null) {
       colorPickGenerationRef.current += 1;
       setColorPicking(false);
     }
-  }, [compareOriginal, cropping, cutoutActive, opened?.previewPending, presets.previewName]);
+  }, [compareOriginal, cropping, cutoutActive, maskTool.active, opened?.previewPending, presets.previewName]);
   const colorMixerAvailable = wasmPhotoKey !== null && !canvasOnly && colorPointsSupported;
   const colorMixerDisabled = controlsDisabled || cropping || cutoutActive || compareOriginal || opened?.previewPending === true || presets.previewName !== null;
   const latestColorPickContextRef = useRef({
@@ -1023,6 +1065,16 @@ export function BrowserPhotoEditingWorkbench(props: {
       onSelect: () => chooseTool("crop"),
     });
   }
+  if (tools.includes("mask")) {
+    toolRailItems.push({
+      key: "mask",
+      label: PHOTO_EDITING_TOOL_MASK_LABEL,
+      icon: CircleDashed,
+      pressed: toolValue === "mask",
+      disabled: toolSwitchDisabled,
+      onSelect: () => chooseTool("mask"),
+    });
+  }
   if (tools.includes("cutout")) {
     toolRailItems.push({
       key: "cutout",
@@ -1111,6 +1163,8 @@ export function BrowserPhotoEditingWorkbench(props: {
         }
         return;
       }
+      // マスクの道具の間は Esc（選択を外す）と ⌫ / Delete（選んだマスクを削除。写真は消さない）を先に扱う
+      if (viewModeRef.current === "loupe" && toolValue === "mask" && maskTool.handleShortcut(shortcut, event)) return;
       switch (shortcut) {
         case "grid":
           event.preventDefault();
@@ -1129,7 +1183,7 @@ export function BrowserPhotoEditingWorkbench(props: {
           event.preventDefault();
           // 切り抜き・背景除去の間は「補正」に戻る（もう一度で一覧へ。一覧では選択をすべて解く）
           if (viewModeRef.current === "loupe" && cropping) crop.leave();
-          else if (viewModeRef.current === "loupe" && (cutoutActive || cropBlocked)) chooseTool("adjust");
+          else if (viewModeRef.current === "loupe" && (cutoutActive || cropBlocked || toolValue === "mask")) chooseTool("adjust");
           else if (viewModeRef.current === "loupe") showGrid();
           // 書き出し・一括の補正の途中は選択を解かない（［キャンセル］と同じく止める）
           else if (!operationRef.current) selection.clear();
@@ -2032,6 +2086,9 @@ export function BrowserPhotoEditingWorkbench(props: {
                       }
                     : null
                 }
+                maskOverlay={
+                  toolValue === "mask" ? <BrowserPhotoEditingMaskLayer tool={maskTool} targetRef={canvasRef} /> : undefined
+                }
                 canvasRef={canvasRef}
                 colorPicker={colorMixerAvailable ? {
                   active: colorPicking,
@@ -2366,6 +2423,9 @@ export function BrowserPhotoEditingWorkbench(props: {
                 />
               ) : undefined
             }
+            maskTools={
+              toolValue === "mask" ? <PhotoEditingMaskTools {...maskTool} disabled={controlsDisabled} /> : undefined
+            }
             clipboard={
               // 別の端末の補正を読み直している間は当てない（読み直した補正が入る）。写すのは閲覧のみでもできる。切り抜き・背景除去の
               // 道具の間は出さない（写す・当てるのは色の補正）
@@ -2378,7 +2438,7 @@ export function BrowserPhotoEditingWorkbench(props: {
                     onPaste: open.clipboard.paste,
                   }
             }
-            onReset={cropping ? crop.reset : open.resetSettings}
+            onReset={cropping ? crop.reset : toolValue === "mask" ? maskTool.reset : open.resetSettings}
             onUndo={cutoutActive ? cutout.undo : open.undo}
             onRedo={cutoutActive ? cutout.redo : open.redo}
             onRetryWork={() => void open.retryWork()}

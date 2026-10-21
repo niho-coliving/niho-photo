@@ -638,3 +638,49 @@ export function geometryOutputToSource(
   }
   return [sx / source.width, sy / source.height];
 }
+
+/**
+ * {@link geometryOutputToSource} の逆: 作業画像の位置 `(sx, sy)`（0〜1）が出力（切り抜いた結果。左上 0,0・右下 1,1）のどこに見えるか。
+ * 回転を戻す → 反転を戻す → 切り抜き枠の自分の軸へ射影する（角が枠から出る角度つきの切り抜きは、描き方と同じく中心の回りに縮めた
+ * 枠で）。出力の外の点もそのまま返す（0〜1 の外）。順方向が null を返す切り抜き（長方形にならない・角度つきで中心が枠の外）は null。
+ * 部分補正（マスク）の画面のつまみを、写真の上の見えている位置に置くために使う。
+ */
+export function geometrySourceToOutput(
+  geometry: DevelopGeometry,
+  source: DevelopSize,
+  sx: number,
+  sy: number,
+): [number, number] | null {
+  const frame = developFrameSize(source, geometry.rotate);
+  let box = cropBoxFromGeometry(geometry, frame);
+  if (!box) return null;
+  if (geometry.angle !== 0) {
+    if (!(box.cx > 0 && box.cx < frame.width && box.cy > 0 && box.cy < frame.height)) return null;
+    const scale = inscribedScale(box, geometry.angle, frame);
+    if (scale < 1) box = { ...box, width: box.width * scale, height: box.height * scale };
+  }
+  const px = sx * source.width;
+  const py = sy * source.height;
+  let x: number;
+  let y: number;
+  switch (geometry.rotate) {
+    case 90:
+      [x, y] = [source.height - py, px];
+      break;
+    case 180:
+      [x, y] = [source.width - px, source.height - py];
+      break;
+    case 270:
+      [x, y] = [py, source.width - px];
+      break;
+    default:
+      [x, y] = [px, py];
+  }
+  if (geometry.flipH) x = frame.width - x;
+  if (geometry.flipV) y = frame.height - y;
+  // u・v は正規直交なので、枠の中心からのずれを軸へ射影すれば切り抜きの自分の座標になる
+  const { u, v } = axes(geometry.angle);
+  const dx = x - box.cx;
+  const dy = y - box.cy;
+  return [(dx * u[0] + dy * u[1]) / box.width + 0.5, (dx * v[0] + dy * v[1]) / box.height + 0.5];
+}

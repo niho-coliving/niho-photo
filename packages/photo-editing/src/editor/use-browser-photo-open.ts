@@ -29,7 +29,6 @@ import type {
 import { usePhotoLibrary } from "../library/photo-library-context";
 import {
   developSettingsKey,
-  developColorPoints,
   hasSavedDevelopSettings,
   isNeutralDevelopSettings,
   neutralDevelopSettings,
@@ -56,10 +55,10 @@ import { appDialog } from "niho-ui/app-dialog";
 
 import {
   DEVELOP_PREVIEW_MAX_DIMENSION,
-  DEVELOP_COLOR_POINT_DRAG_MAX_DIMENSION,
   DISCARD_DESCRIPTION,
   cloudKey,
   developBaseVersion,
+  developInteractiveMaxDimension,
   rebindDevelopSettings,
   workPreviewOpened,
   type BrowserItem,
@@ -451,9 +450,10 @@ export function useBrowserPhotoOpen(params: {
     const timelineGeneration = timelineRef.current?.generation ?? null;
     const order = paintOrderRef.current;
     const paintGeneration = order.generation;
-    const paint = (target: HTMLCanvasElement, frame: DevelopFrame, final: boolean, raw = false) => {
+    const paint = (target: HTMLCanvasElement, frame: DevelopFrame, final: boolean, raw = false, keepSize = false) => {
       if (engineRef.current !== engine || order.generation !== paintGeneration) return;
-      paintDevelopFrame(target, frame);
+      // 操作中の小さな画（色ポイント・マスクの 640px）は、今の canvas の大きさのまま描く（写真の大きさを跳ねさせない）
+      paintDevelopFrame(target, frame, { keepSize });
       const postProcess = framePostProcessRef?.current ?? null;
       if (postProcess) {
         if (!raw) postProcess(target);
@@ -562,12 +562,11 @@ export function useBrowserPhotoOpen(params: {
     }
     const sequence = ++order.requested;
     const interactive = provisionalQuality || (previewing ? previewInteractive : dragging);
-    // Point selections stay exact while dragging; only the temporary preview
-    // is smaller. Final render, sampling, saved previews and export keep their size.
-    const activePoints = developColorPoints(shownSettings).some((point) =>
-      point.delta.hue !== 0 || point.delta.chromaScale !== 1 || point.delta.lightness !== 0);
-    const maxDimension = interactive && activePoints
-      ? DEVELOP_COLOR_POINT_DRAG_MAX_DIMENSION : DEVELOP_PREVIEW_MAX_DIMENSION;
+    // Point selections stay exact while dragging; only the temporary preview of an operation (a slider / handle drag,
+    // an interactive preset preview) is smaller with active color points or masks, painted at the canvas' current size.
+    // Final render, provisional-quality display, sampling, saved previews and export keep their size.
+    const operating = previewing ? previewInteractive : dragging;
+    const maxDimension = operating ? developInteractiveMaxDimension(shownSettings) : DEVELOP_PREVIEW_MAX_DIMENSION;
     const renderRequestedAt = photoDevelopDiagnosticsEnabled() ? performance.now() : null;
     void engine
       .render(shownSettings, { maxDimension, interactive })
@@ -580,7 +579,7 @@ export function useBrowserPhotoOpen(params: {
         const paintedCanvas = canvasRef.current;
         order.painted = sequence;
         if (!interactive && !previewing) frameCacheRef.current = { key, settingsJson, frame };
-        paint(paintedCanvas, frame, (provisionalQuality || !interactive) && !previewing);
+        paint(paintedCanvas, frame, (provisionalQuality || !interactive) && !previewing, false, maxDimension < DEVELOP_PREVIEW_MAX_DIMENSION);
         if (renderRequestedAt !== null) {
           requestAnimationFrame(() => requestAnimationFrame(() => {
             if (engineRef.current !== engine || order.generation !== paintGeneration ||

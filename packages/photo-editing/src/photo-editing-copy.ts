@@ -605,6 +605,85 @@ export function photoEditingCropSizeText(width: number, height: number): string 
   return `切り抜き ${formatPhotoEditingPixels(width)} × ${formatPhotoEditingPixels(height)}`;
 }
 
+// ---------------------------------------------------------------------------
+// 部分補正（マスク。Epic #31 M3 #67）。右端の道具の帯の「マスク」・右パネルのマスクの面・写真の上のつまみ。
+// ここより上の定数の並びは変えない（ほかの道具の PR と衝突させない）。
+
+/** 右端の道具の帯と、右パネルの見出しの名前。 */
+export const PHOTO_EDITING_TOOL_MASK_LABEL = "マスク";
+export const PHOTO_EDITING_MASK_ADD_TITLE = "マスクを追加";
+export const PHOTO_EDITING_MASK_ADD_LINEAR_LABEL = "線形グラデーション";
+export const PHOTO_EDITING_MASK_ADD_RADIAL_LABEL = "円形グラデーション";
+export const PHOTO_EDITING_MASK_LIST_TITLE = "マスク";
+export const PHOTO_EDITING_MASK_LIST_EMPTY_TEXT = "まだマスクはありません。上のボタンで追加すると、写真の一部だけを補正できます。";
+/** 8 枚に届いたとき（足すボタンを押せない理由）。 */
+export function photoEditingMaskLimitText(max: number): string {
+  return `マスクは ${max} 枚までです。使わないマスクを削除すると追加できます。`;
+}
+/** 原寸の書き出しの描画（この Mac のアプリ）がマスクを描けないとき（足すボタンを押せない理由と次の一歩）。 */
+export const PHOTO_EDITING_MASK_EXPORT_UNSUPPORTED_TEXT =
+  "このアプリの原寸の書き出しはマスクに対応していません。アプリを更新するとマスクを追加できます。";
+/** 描けない種類のマスク（ブラシなど。別の端末で作ったもの）を選んだとき。 */
+export const PHOTO_EDITING_MASK_SURFACE_TEXT = "このマスクの範囲は、この画面ではまだ動かせません。補正と表示の切り替え・削除はできます。";
+export const PHOTO_EDITING_MASK_OVERLAY_LABEL = "マスクの範囲を表示";
+export const PHOTO_EDITING_MASK_OVERLAY_KEY_HINT = "O";
+export const PHOTO_EDITING_MASK_FEATHER_LABEL = "ぼかし";
+export const PHOTO_EDITING_MASK_SHAPE_TITLE = "形";
+export const PHOTO_EDITING_MASK_HINT_TEXT =
+  "写真の上のつまみで位置・幅・向きを変えます。矢印キーで少しずつ（⇧ で大きく）動かし、⌫ で削除、esc で選択を外します。";
+/** 写真の上のマスクの操作の面（つまみの入れ物）の読み上げ名。 */
+export const PHOTO_EDITING_MASK_OVERLAY_AREA_LABEL = "マスクの操作";
+
+const PHOTO_EDITING_MASK_KIND_LABELS: Readonly<Record<string, string>> = {
+  linear: "線形",
+  radial: "円形",
+  brush: "ブラシ",
+  subject: "被写体",
+  sky: "空",
+};
+
+/** マスクの名前（種類と、一覧の上からの番号。例「線形 1」「円形 2」）。 */
+export function photoEditingMaskLabel(kind: string, index: number): string {
+  return `${PHOTO_EDITING_MASK_KIND_LABELS[kind] ?? "マスク"} ${index + 1}`;
+}
+export function photoEditingMaskSelectLabel(name: string): string {
+  return `${name} を選ぶ`;
+}
+/** 目のボタン（`aria-pressed` が当てているか。外しても編集は残る）。 */
+export function photoEditingMaskEnabledLabel(name: string): string {
+  return `${name} を当てる`;
+}
+export function photoEditingMaskInvertLabel(name: string): string {
+  return `${name} を反転`;
+}
+export function photoEditingMaskDuplicateLabel(name: string): string {
+  return `${name} を複製`;
+}
+export function photoEditingMaskDeleteLabel(name: string): string {
+  return `${name} を削除`;
+}
+/** 選んだマスクの局所の補正の見出し。 */
+export function photoEditingMaskAdjustTitle(name: string): string {
+  return `${name} の補正`;
+}
+
+/** 写真の上のつまみの読み上げ名。 */
+export const PHOTO_EDITING_MASK_HANDLE_LABELS = {
+  linear: {
+    zero: "線形グラデーションの終点（効果 0%）",
+    full: "線形グラデーションの始点（効果 100%）",
+    center: "線形グラデーションの中央（全体を動かす）",
+  },
+  radial: {
+    center: "円形グラデーションの中心（全体を動かす）",
+    right: "円形グラデーションの幅（右）",
+    left: "円形グラデーションの幅（左）",
+    bottom: "円形グラデーションの高さ（下）",
+    top: "円形グラデーションの高さ（上）",
+    rotate: "円形グラデーションの回転",
+  },
+} as const;
+
 /**
  * ブラウザ版の一覧の複数選択（F5a-2 移行元設計）。スマホの上の行の「選択」ボタンと、複数を選んでいる間の選択バー
  * （「N 枚を選択」・［すべて］・［キャンセル］）。
