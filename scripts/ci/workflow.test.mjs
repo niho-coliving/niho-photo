@@ -35,3 +35,18 @@ for (const [name, mutate] of [
   mutate(changed);
   assert.ok(workflowFailures(changed).length > 0);
 });
+
+for (const [name, mutate] of [
+  ["PR artifact upload", (w) => { delete w.jobs.native.steps.find((step) => step.id === "upload-release-evidence").if; }],
+  ["unverified artifact path", (w) => { w.jobs.native.steps.find((step) => step.id === "upload-release-evidence").with.path = "."; }],
+  ["missing artifact tolerated", (w) => { w.jobs.native.steps.find((step) => step.id === "upload-release-evidence").with["if-no-files-found"] = "warn"; }],
+  ["upload ID not retained", (w) => { delete w.jobs.native.steps.find((step) => step.id === "upload-release-evidence").id; }],
+  ["artifact digest not recorded", (w) => { delete w.jobs.native.steps.find((step) => step.id === "release-artifact-receipt").env.RELEASE_ARTIFACT_DIGEST; }],
+  ["receipt failure ignored", (w) => { w.jobs.native.steps.find((step) => step.id === "release-artifact-receipt")["continue-on-error"] = true; }],
+  ["evidence failure ignored", (w) => { w.jobs.native.steps.find((step) => step.id === "release-evidence")["continue-on-error"] = true; }],
+  ["release guard bypassed", (w) => { w.jobs.native.steps.find((step) => step.id === "release-evidence").run = "npm run build"; }],
+]) test(`release evidenceの危険な変更を拒否: ${name}`, () => {
+  const changed = structuredClone(workflow);
+  mutate(changed);
+  assert.ok(workflowFailures(changed).length > 0);
+});
