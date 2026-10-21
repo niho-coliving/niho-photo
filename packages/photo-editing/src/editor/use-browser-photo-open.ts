@@ -100,6 +100,38 @@ export function provisionalDevelopSettings(settings: DevelopSettings): DevelopSe
 }
 
 /**
+ * 描いた順（古い描画の結果で新しい画を上書きしない）。`requested` は描画の要求の通し番号、`painted` は最後に描いた要求の番号、
+ * `valid` は描いてよい要求の下限（元に戻した・覚えている画を描いた・写真の入力を差し替えた・流れが変わったときに上げ、進行中の
+ * 古い描画を画面へ出さない）。`stream` は、直前の要求がつまみを動かしている間の描画だったときの流れ（写真・道具・作業サイズ。
+ * それ以外は null）。`generation` は写真の入力（エンジン）の世代
+ */
+type PaintOrder = { generation: number; requested: number; painted: number; valid: number; stream: string | null };
+
+/** 進行中の描画をすべて無効にする（以後に描いてよいのは、返した番号以降の要求だけ） */
+function invalidatePaints(order: PaintOrder): number {
+  order.valid = ++order.requested;
+  order.stream = null;
+  return order.valid;
+}
+
+/**
+ * 描画を 1 つ要求する。つまみを動かしている間の同じ流れの続き（離したときの丁寧な 1 枚を含む）なら、進行中の途中の画を無効に
+ * しない（描き終えた順に描き、操作が描画より速くても画面を止めない）。流れが変わる（写真・道具・補正前・プリセットの仮の表示が
+ * 変わる、つまみを動かしていない間の変更）なら、それより前の描画を無効にする
+ */
+function requestPaint(order: PaintOrder, stream: string, operating: boolean): number {
+  const sequence = ++order.requested;
+  if (order.stream !== stream) order.valid = sequence;
+  order.stream = operating ? stream : null;
+  return sequence;
+}
+
+/** 描き終えた要求を描いてよいか（無効にされておらず、すでに描いた画より新しい。描いた順を戻さない） */
+function paintable(order: PaintOrder, sequence: number): boolean {
+  return sequence >= order.valid && sequence > order.painted;
+}
+
+/**
  * 1 枚を開く（読み込みの世代・中止・作業コピーを待つ間の確かめ直し・URL で開く）と、開いた写真の描画・場所の切り替え。
  * 補正の状態（`developSettings`）と取り消しの履歴は `useBrowserPhotoEditSettings`、wasm の session と自動保存・離れるときの
  * 処理は {@link BrowserPhotoDevelop} が持つ。別の端末で直した補正の読み直し（版の照合 移行元設計）は `useBrowserPhotoDevelopReload`、
@@ -416,8 +448,8 @@ export function useBrowserPhotoOpen(params: {
   viewModeRef.current = viewMode;
   const editingAllowedRef = useRef(editingAllowed);
   editingAllowedRef.current = editingAllowed;
-  /** 描いた順（古い描画の結果で新しい画を上書きしない） */
-  const paintOrderRef = useRef({ generation: 0, requested: 0, painted: 0 });
+  /** 描いた順（{@link PaintOrder}） */
+  const paintOrderRef = useRef<PaintOrder>({ generation: 0, requested: 0, painted: 0, valid: 0, stream: null });
   /** 開いた時点の Final 画と設定。古い補正後プレビューを直すアップロードはこの画から行う。 */
   const initialFrameRef = useRef<{ key: string; settingsJson: string; session: NonNullable<OpenResult["session"]> } | null>(null);
   /** 切り抜きの道具の間に描いた枠全体の画（同じ設定なら描き直さない。切り抜きを動かしても設定は変わらない） */
@@ -500,24 +532,30 @@ export function useBrowserPhotoOpen(params: {
     // `canvasSurface`: スマホの層 ⇄ PC の面で canvas が付け替わる（新しい canvas は空）ので、同じ写真・同じ補正でも描き直す
   }, [canvasRef, canvasSurface, compareOriginal, opened, settings, viewMode]);
 
-  // 段 2 の wasm で描く（移行元設計）。最新の要求だけを描き（古い描画の結果で新しい画を上書きしない）、つまみを動かしている間は
-  // 速い描き方、離したら丁寧に 1 回描き直す。「補正前」は切り抜いた枠のまま色だけ補正前にした設定で描いて持つ（F3 移行元設計。幾何の
-  // 無い写真は neutral そのもので、写真ごとに 1 回だけ描く）。プリセットを仮に見せている間（F2b 移行元設計）は、その編集内容を丁寧に
+  // 段 2 の wasm で描く（移行元設計）。古い描画の結果で新しい画を上書きしない（{@link PaintOrder}）。つまみを動かしている間は速い
+  // 描き方で、描き終えた途中の画も順に描き（最新の要求だけを描くと、操作が描画より速い間は 1 枚も描けない）、離したら丁寧に 1 回
+  // 描き直す（その丁寧な画が最後）。「補正前」は切り抜いた枠のまま色だけ補正前にした設定で描いて持つ（F3 移行元設計。幾何の無い
+  // 写真は neutral そのもので、写真ごとに 1 回だけ描く）。プリセットを仮に見せている間（F2b 移行元設計）は、その編集内容を丁寧に
   // 描く（覚えている丁寧な画は今の編集内容のまま残し、離れたらすぐ戻せるようにする。適用量を動かしている間は速い描き方）。wasm の
   // 写真を開き直したら（`workingEpoch`）描き直す。切り抜きの道具の間（F3b 移行元設計）は、切り抜きと角度を外した枠全体を描く（枠と
   // 回転は画面が CSS で重ねるので、切り抜きを動かしても描き直さない）。「補正」に戻った直後は、作業サイズを合わせ終えてから
   // 切り抜いた画を描く
   useEffect(() => {
+    const order = paintOrderRef.current;
     const activeOpened = openedRef.current;
-    if (viewMode !== "loupe" || !activeOpened || activeOpened.mode !== "wasm") return;
     const canvas = canvasRef.current;
     const engine = engineRef.current;
-    if (!canvas || !engine) return;
+    if (viewMode !== "loupe" || !activeOpened || activeOpened.mode !== "wasm" || !canvas || !engine) {
+      // 描かない間は流れを切る（戻った後の要求で、前の操作の途中の画を描かない）
+      order.stream = null;
+      return;
+    }
     const key = activeOpened.key;
     const provisionalQuality = activeOpened.input?.kind === "provisional";
     const timelineGeneration = timelineRef.current?.generation ?? null;
-    const order = paintOrderRef.current;
     const paintGeneration = order.generation;
+    /** 描画の流れ（同じ写真・同じ作業サイズの、同じ道具の画。つまみを動かしている間の続きの判定に使う） */
+    const streamOf = (lane: "crop" | "heal" | "compare" | "settings" | "preview") => `${lane}\n${workingEpoch}\n${key}`;
     const paint = (target: HTMLCanvasElement, frame: DevelopFrame, final: boolean, raw = false, keepSize = false) => {
       if (engineRef.current !== engine || order.generation !== paintGeneration) return;
       // 操作中の小さな画（色ポイント・マスクの 640px）は、今の canvas の大きさのまま描く（写真の大きさを跳ねさせない）
@@ -565,11 +603,11 @@ export function useBrowserPhotoOpen(params: {
       const frameJson = JSON.stringify(frameSettings);
       const cachedFrame = cropFrameCacheRef.current;
       if (cachedFrame?.key === key && cachedFrame.settingsJson === frameJson && cachedFrame.epoch === workingEpoch) {
-        order.painted = ++order.requested;
+        order.painted = invalidatePaints(order);
         paint(canvas, cachedFrame.frame, true, true);
         return;
       }
-      const sequence = ++order.requested;
+      const sequence = requestPaint(order, streamOf("crop"), dragging);
       // ジオメトリの節（遠近。niho-photo#46）のスライダーを動かしている間は速い描き方にし、その画は覚えない（離したら丁寧に描く）
       void engine
         .render(frameSettings, { maxDimension: DEVELOP_PREVIEW_MAX_DIMENSION, interactive: provisionalQuality || dragging })
@@ -577,7 +615,7 @@ export function useBrowserPhotoOpen(params: {
           if (!frame) return;
           if (engineRef.current !== engine || order.generation !== paintGeneration) return;
           if (openedRef.current?.key !== key || !cropActiveRef.current) return;
-          if (sequence !== order.requested || !canvasRef.current) return;
+          if (!paintable(order, sequence) || !canvasRef.current) return;
           order.painted = sequence;
           if (!dragging) cropFrameCacheRef.current = { key, settingsJson: frameJson, epoch: workingEpoch, frame };
           paint(canvasRef.current, frame, !dragging, true);
@@ -589,7 +627,10 @@ export function useBrowserPhotoOpen(params: {
         });
       return;
     }
-    if (cropSettling) return;
+    if (cropSettling) {
+      order.stream = null;
+      return;
+    }
     if (healActive) {
       // 修復の道具の間（niho-photo#44）は幾何を全部外した画（色・修復の印は当てる）。重ねる係は当てない。描いた画に入っている印を
       // 道具に知らせる（まだ入っていない印は、写真の上で濃い赤のまま待つ）
@@ -597,12 +638,12 @@ export function useBrowserPhotoOpen(params: {
       const frameJson = JSON.stringify(frameSettings);
       const cachedFrame = healFrameCacheRef.current;
       if (cachedFrame?.key === key && cachedFrame.settingsJson === frameJson && cachedFrame.epoch === workingEpoch) {
-        order.painted = ++order.requested;
+        order.painted = invalidatePaints(order);
         paint(canvas, cachedFrame.frame, true, true);
         healFramePainted(key, cachedFrame.frame, frameSettings);
         return;
       }
-      const sequence = ++order.requested;
+      const sequence = requestPaint(order, streamOf("heal"), dragging);
       // ブラシの大きさ・写し元を動かしている間は速い描き方にし、その画は覚えない（離したら丁寧に描く）
       void engine
         .render(frameSettings, { maxDimension: DEVELOP_PREVIEW_MAX_DIMENSION, interactive: provisionalQuality || dragging })
@@ -610,7 +651,7 @@ export function useBrowserPhotoOpen(params: {
           if (!frame) return;
           if (engineRef.current !== engine || order.generation !== paintGeneration) return;
           if (openedRef.current?.key !== key || !healActiveRef.current) return;
-          if (sequence !== order.requested || !canvasRef.current) return;
+          if (!paintable(order, sequence) || !canvasRef.current) return;
           order.painted = sequence;
           if (!dragging) healFrameCacheRef.current = { key, settingsJson: frameJson, epoch: workingEpoch, frame };
           paint(canvasRef.current, frame, !dragging, true);
@@ -624,11 +665,12 @@ export function useBrowserPhotoOpen(params: {
       const beforeJson = JSON.stringify(beforeSettings);
       const before = beforeFrameRef.current;
       if (before?.key === key && before.settingsJson === beforeJson) {
-        order.painted = ++order.requested;
+        order.painted = invalidatePaints(order);
         paint(canvas, before.frame, true, true);
         return;
       }
-      const sequence = ++order.requested;
+      // 押している間に動かすつまみは無い（続きの流れを作らない。押す前の途中の画は描かない）
+      const sequence = requestPaint(order, streamOf("compare"), false);
       void engine
         .render(beforeSettings, { maxDimension: DEVELOP_PREVIEW_MAX_DIMENSION, interactive: provisionalQuality })
         .then((frame) => {
@@ -637,7 +679,7 @@ export function useBrowserPhotoOpen(params: {
           if (openedRef.current?.key !== key) return;
           beforeFrameRef.current = { key, settingsJson: beforeJson, frame };
           if (!compareOriginalRef.current || cropActiveRef.current) return;
-          if (sequence !== order.requested || !canvasRef.current) return;
+          if (!paintable(order, sequence) || !canvasRef.current) return;
           order.painted = sequence;
           paint(canvasRef.current, frame, true, true);
         })
@@ -652,22 +694,24 @@ export function useBrowserPhotoOpen(params: {
     // 重ねる係が描かせた（`forcedPaintKey`）写真は、クラウドのプレビューのままにせず描く（背景除去を重ねる）
     if (activeOpened.previewPending && activeOpened.previewCurrent && !previewing &&
       initial?.key === key && initial.settingsJson === settingsJson && forcedPaintKey !== key) {
-      ++order.requested; // 変更を元に戻したとき、進行中の古い描画を画面へ出さない。
+      invalidatePaints(order); // 変更を元に戻したとき、進行中の古い描画を画面へ出さない。
       return;
     }
     const cached = frameCacheRef.current;
     // 同じ設定の丁寧な画があれば描き直さない（つまみを押しただけ・離しただけのとき）
     if (cached?.key === key && cached.settingsJson === settingsJson) {
-      order.painted = ++order.requested;
+      order.painted = invalidatePaints(order);
       paint(canvas, cached.frame, true);
       return;
     }
-    const sequence = ++order.requested;
     const interactive = provisionalQuality || (previewing ? previewInteractive : dragging);
     // Point selections stay exact while dragging; only the temporary preview of an operation (a slider / handle drag,
     // an interactive preset preview) is smaller with active color points or masks, painted at the canvas' current size.
     // Final render, provisional-quality display, sampling, saved previews and export keep their size.
     const operating = previewing ? previewInteractive : dragging;
+    // 補正のつまみ・適用量を動かしている間（と離した直後の丁寧な 1 枚）は、描き終えた途中の画も描く。行に載せただけの仮の表示は
+    // つまみの流れではない（前の仮の表示・補正の途中の画を描かない）
+    const sequence = requestPaint(order, streamOf(previewing ? "preview" : "settings"), operating);
     const maxDimension = operating ? developInteractiveMaxDimension(shownSettings) : DEVELOP_PREVIEW_MAX_DIMENSION;
     const renderRequestedAt = photoDevelopDiagnosticsEnabled() ? performance.now() : null;
     void engine
@@ -678,7 +722,7 @@ export function useBrowserPhotoOpen(params: {
         clearMaskSurfaceIssue(key);
         if (!interactive && !previewing) uploadInitial(settingsJson, frame);
         if (openedRef.current?.key !== key || compareOriginalRef.current || cropActiveRef.current || healActiveRef.current) return;
-        if (sequence !== order.requested || !canvasRef.current) return;
+        if (!paintable(order, sequence) || !canvasRef.current) return;
         const paintedCanvas = canvasRef.current;
         order.painted = sequence;
         if (!interactive && !previewing) frameCacheRef.current = { key, settingsJson, frame };
@@ -1071,8 +1115,7 @@ export function useBrowserPhotoOpen(params: {
     const oldEngine = engineRef.current;
     const paintOrder = paintOrderRef.current;
     paintOrder.generation += 1;
-    paintOrder.requested += 1;
-    paintOrder.painted = paintOrder.requested;
+    paintOrder.painted = invalidatePaints(paintOrder);
     engineRef.current = canonicalEngine;
     const nextSettings = rebaseSettings((value) => rebindDevelopSettings(value, result.settings));
     presets.rebaseSettings((value) => rebindDevelopSettings(value, result.settings));
