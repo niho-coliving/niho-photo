@@ -12,6 +12,8 @@
 // are checked). cases.json (kept outside the repo with the photos):
 //   [{ "id": "...", "png": "<working copy .png>", "meta": "<metadata .json>",
 //      "settings": { developSettings } | "<settings .json>" }]
+// or, for a JPEG / PNG original opened like the editor's `open`:
+//   [{ "id": "...", "raster": "<photo .jpg>", "workingMaxDimension": 2560, "settings": ... }]
 // The settings are given whole (not built from a preset) so both builds
 // render the same JSON.
 //
@@ -22,6 +24,14 @@
 //         releasePrep (Final) -> reopen (free, open, Final 1280 again).
 //         Each release becomes the next step's current settings; reopen keeps both edits.
 //   full: open -> first (Final at the working size) -> reopen.
+//   detail: open -> Final 2048 (the case's settings, cold) -> six
+//         Interactive 1280 sharpening drags -> Final 2048 with detail ->
+//         six Interactive 1280 luminance-NR drags (the NR source is rebuilt
+//         every frame) -> Final 2048 with that NR -> Final 2048 without
+//         detail -> Final 2048 with only Contrast changed (the same
+//         session's no-detail baseline on warm caches). Intended for
+//         the Issue #32 Studio 1-second gate; it reports measurements only
+//         and never turns an unmeasured run green.
 //   editor: what the editor's worker does after opening: open -> first ->
 //         thumbnails (the bundled presets at 96px on thumbnail(256), as
 //         use-browser-preset-thumbnails.ts) -> auto (autoSettings, warmed
@@ -56,8 +66,7 @@ function readCases(path) {
   const base = dirname(resolve(path));
   return JSON.parse(readFileSync(path, "utf8")).map((c) => ({
     ...c,
-    png: resolve(base, c.png),
-    meta: resolve(base, c.meta),
+    ...(c.raster ? { raster: resolve(base, c.raster) } : { png: resolve(base, c.png), meta: resolve(base, c.meta) }),
     settings:
       typeof c.settings === "string" ? JSON.parse(readFileSync(resolve(base, c.settings), "utf8")) : c.settings,
   }));
@@ -96,8 +105,10 @@ async function run() {
   const kase = readCases(flag("--cases")).find((c) => c.id === flag("--case"));
   if (!kase) throw new Error(`no case ${flag("--case")}`);
   const { pkg, exports, initMs, wasmSha256 } = await loadBuild(resolve(flag("--pkg")));
-  const png = readFileSync(kase.png);
-  const meta = readFileSync(kase.meta, "utf8");
+  const png = readFileSync(kase.raster ?? kase.png);
+  const meta = kase.raster ? null : readFileSync(kase.meta, "utf8");
+  const open = () =>
+    kase.raster ? new pkg.Developer(png, kase.workingMaxDimension ?? 0) : pkg.Developer.openWorkingCopy(png, meta);
   const steps = [{ step: "init", ms: initMs, memory: exports.memory.buffer.byteLength }];
   const cpu = () => {
     const { user, system } = process.cpuUsage();
@@ -123,9 +134,9 @@ async function run() {
   const sum = (a, b) => [a[0] + b[0], a[1] + b[1]];
   let currentSettings = { ...kase.settings };
   const json = (overrides = {}) => JSON.stringify({ ...currentSettings, ...overrides });
-  const firstMax = scenario === "full" ? 0 : UI_MAX;
+  const firstMax = scenario === "full" ? 0 : scenario === "detail" ? 2048 : UI_MAX;
 
-  let [developer, ms] = timed(() => pkg.Developer.openWorkingCopy(png, meta));
+  let [developer, ms] = timed(open);
   record("open", ms);
   let [frame, firstMs] = timed(() => developer.render(json(), firstMax, false));
   record("first", firstMs, [frame]);
@@ -157,7 +168,56 @@ async function run() {
     steps.at(-1).autoSha256 = sha256(auto);
     thumbnail.free();
   }
-  if (scenario === "ui" || scenario === "editor") {
+  if (scenario === "detail") {
+    const baseDetail = currentSettings.detail ?? {
+      sharpening: { amount: 70, radius: 1, detail: 25, masking: 20 },
+      luminanceNoiseReduction: 40,
+      colorNoiseReduction: 25,
+    };
+    const frames = [];
+    const times = [];
+    for (let i = 0; i < DRAG_FRAMES; i++) {
+      const settings = {
+        ...currentSettings,
+        v: Math.max(6, currentSettings.v ?? 1),
+        detail: { ...baseDetail, sharpening: { ...baseDetail.sharpening, amount: 40 + i * 10 } },
+      };
+      const [value, timing] = timed(() => developer.render(JSON.stringify(settings), UI_MAX, true));
+      frames.push(value);
+      times.push(timing);
+      currentSettings = settings;
+    }
+    const total = times.reduce(sum);
+    record("detailDrag1280", [total[0] / times.length, total[1] / times.length], frames);
+    steps.at(-1).frameMs = times.map((timing) => timing[0]);
+    [frame, ms] = timed(() => developer.render(json(), 2048, false));
+    record("detailFinal2048", ms, [frame]);
+    const noiseFrames = [];
+    const noiseTimes = [];
+    for (let i = 0; i < DRAG_FRAMES; i++) {
+      const settings = {
+        ...currentSettings,
+        detail: { ...currentSettings.detail, luminanceNoiseReduction: 30 + i * 10 },
+      };
+      const [value, timing] = timed(() => developer.render(JSON.stringify(settings), UI_MAX, true));
+      noiseFrames.push(value);
+      noiseTimes.push(timing);
+      currentSettings = settings;
+    }
+    const noiseTotal = noiseTimes.reduce(sum);
+    record("noiseDrag1280", [noiseTotal[0] / noiseTimes.length, noiseTotal[1] / noiseTimes.length], noiseFrames);
+    steps.at(-1).frameMs = noiseTimes.map((timing) => timing[0]);
+    [frame, ms] = timed(() => developer.render(json(), 2048, false));
+    record("noiseFinal2048", ms, [frame]);
+    const { detail: _detail, ...plain } = currentSettings;
+    const plainSettings = { ...plain, v: kase.settings.v ?? 1 };
+    [frame, ms] = timed(() => developer.render(JSON.stringify(plainSettings), 2048, false));
+    record("plainFinal2048", ms, [frame]);
+    // A tail-only change on the same source: what a Final costs without detail.
+    const tailSettings = { ...plainSettings, contrast: (plainSettings.contrast ?? 0) + 10 };
+    [frame, ms] = timed(() => developer.render(JSON.stringify(tailSettings), 2048, false));
+    record("plainTailFinal2048", ms, [frame]);
+  } else if (scenario === "ui" || scenario === "editor") {
     for (const [name, key] of [
       ["Tail", "contrast"],
       ["Prep", "highlights"],
@@ -184,11 +244,11 @@ async function run() {
     throw new Error(`unknown scenario ${scenario}`);
   }
   developer.free();
-  [developer, ms] = timed(() => pkg.Developer.openWorkingCopy(png, meta));
+  [developer, ms] = timed(open);
   [frame, firstMs] = timed(() => developer.render(json(), firstMax, false));
   record("reopen", sum(ms, firstMs), [frame]);
   developer.free();
-  const result = { case: kase.id, scenario, version: pkg.version(), wasmSha256, pngSha256: sha256(png), steps };
+  const result = { case: kase.id, scenario, version: pkg.version(), wasmSha256, inputSha256: sha256(png), steps };
   process.stdout.write(`${JSON.stringify(result)}\n`);
 }
 

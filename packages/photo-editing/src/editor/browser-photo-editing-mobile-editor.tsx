@@ -13,6 +13,7 @@ import {
 import { createPortal } from "react-dom";
 import {
   Aperture,
+  Blend,
   Crop,
   ChevronLeft,
   Droplet,
@@ -24,6 +25,7 @@ import {
   SquareSplitHorizontal,
   Sparkles,
   Sun,
+  Triangle,
   Undo2,
   type LucideIcon,
 } from "lucide-react";
@@ -42,6 +44,7 @@ import {
 } from "../photo-editing-adjustments";
 import {
   BROWSER_PHOTO_EDITING_READ_ONLY_TEXT,
+  PHOTO_EDITING_COLOR_GRADING_TITLE,
   PHOTO_EDITING_COMPARE_ORIGINAL_LABEL,
   PHOTO_EDITING_COMPARE_STACKED_LABEL,
   PHOTO_EDITING_EXPORT_LABEL,
@@ -58,6 +61,7 @@ import {
   PHOTO_EDITING_UNDO_LABEL,
   photoEditingMobileItemsLabel,
 } from "../photo-editing-copy";
+import { hasPhotoEditingColorGradingEdits } from "../photo-editing-color-grading";
 import { hasPhotoEditingHslEdits } from "../photo-editing-hsl";
 import type { PhotoSaveRoute } from "../save-photos-to-device";
 import type { DevelopGeometry, DevelopSize } from "../develop-engine/develop-geometry";
@@ -89,7 +93,8 @@ import { usePhotoEditingZoom } from "./use-photo-editing-zoom";
 /**
  * スマホ（1024px 未満）の 1 枚の編集の層（NIHO Photo 段 1 F6c 移行元設計・モック `idea/mock/photo-editing-mobile-v1.html`）。
  * host のヘッダーとサブタブを隠す全画面の層で、上から 上の帯（‹・取り消す・やり直す／♥・補正前・書き出す）→ 写真（残り全部）
- * → 状態の 1 行 → 道具別の操作段 → 道具の帯（プリセット／自動／ライト／カラー／効果／カラーミキサー／ポイントカラー／切り抜き）。
+ * → 状態の 1 行 → 道具別の操作段 → 道具の帯（プリセット／自動／ライト／カラー／効果／カラーミキサー／カラーグレーディング／
+ * ポイントカラー／切り抜き）。
  *
  * - 層の地は白 1 色（帯・写真・段・書き出すのシートを塗り分けない。owner 決定 2026-10-01）。PC の 1 枚の面と同じ地で、
  *   肌色は白の見え方を寄せるので敷かない。地を持つのは層だけで、帯と写真の面は塗らない。
@@ -114,13 +119,16 @@ const CROP_TOOL_ID = "crop";
 const COLOR_MIXER_TOOL_ID = "color-mixer";
 /** カラーミキサー（HSL。niho-photo#38）の道具（`COLOR_MIXER_TOOL_ID` は Oklch の「ポイントカラー」） */
 const HSL_MIXER_TOOL_ID = "hsl-mixer";
-/** 道具の帯の道具（プリセット・自動・補正の群・カラーミキサー・ポイントカラー・切り抜き） */
+/** カラーグレーディング（niho-photo#39）の道具 */
+const COLOR_GRADING_TOOL_ID = "color-grading";
+/** 道具の帯の道具（プリセット・自動・補正の群・カラーミキサー・カラーグレーディング・ポイントカラー・切り抜き） */
 type MobileToolId =
   | typeof PRESETS_TOOL_ID
   | typeof AUTO_TOOL_ID
   | typeof CROP_TOOL_ID
   | typeof COLOR_MIXER_TOOL_ID
   | typeof HSL_MIXER_TOOL_ID
+  | typeof COLOR_GRADING_TOOL_ID
   | PhotoEditingAdjustmentGroupId;
 
 const TOOL_ICONS: Record<MobileToolId, LucideIcon> = {
@@ -129,8 +137,11 @@ const TOOL_ICONS: Record<MobileToolId, LucideIcon> = {
   light: Sun,
   color: Droplet,
   effects: Aperture,
+  // ディテール（Issue #32。Lightroom のディテールの道具と同じ三角）。帯の幅が足りないので、今のスマホの面には出さない
+  detail: Triangle,
   crop: Crop,
   "hsl-mixer": Palette,
+  "color-grading": Blend,
   "color-mixer": Pipette,
 };
 
@@ -172,6 +183,11 @@ export function BrowserPhotoEditingMobileEditor(props: {
    * 道具の段に「調整」の切り替えと 8 色のスライダーを縦に並べる（段の高さに収まらない分は段の中で送る）
    */
   hslMixer?: ReactNode;
+  /**
+   * カラーグレーディング（niho-photo#39。カラーミキサーと同じ写真だけ）。渡したときだけ道具の帯の「カラーミキサー」の後ろに出し、
+   * 道具の段に帯の 4 択・色相環・スライダーを縦に並べる（段の高さに収まらない分は段の中で送る）
+   */
+  colorGrading?: ReactNode;
   colorPicking?: boolean;
   /** 段 2 の既存の自動補正（口のある wasm だけ）。 */
   auto?: { pressed: boolean; disabled: boolean; onToggle: () => void; onWarm?: () => void };
@@ -258,14 +274,17 @@ export function BrowserPhotoEditingMobileEditor(props: {
   const crop = props.crop ?? null;
   const colorMixer = props.colorMixer ?? null;
   const hslMixer = props.hslMixer ?? null;
+  const colorGrading = props.colorGrading ?? null;
   const groups = useMemo(() => visiblePhotoEditingAdjustmentGroups(props.visibleKeys), [props.visibleKeys]);
   const presetsCurrent = presets !== null && (toolId === null || toolId === PRESETS_TOOL_ID);
   const autoCurrent = !presetsCurrent && auto !== null && toolId === AUTO_TOOL_ID;
   const cropCurrent = !presetsCurrent && crop !== null && toolId === CROP_TOOL_ID;
   const colorMixerCurrent = !presetsCurrent && colorMixer !== null && toolId === COLOR_MIXER_TOOL_ID;
   const hslMixerCurrent = !presetsCurrent && hslMixer !== null && toolId === HSL_MIXER_TOOL_ID;
-  // カラーミキサーに調整が入っている（道具の帯のカラーミキサーに点を添える。プリセット・自動の点と同じ）
+  const colorGradingCurrent = !presetsCurrent && colorGrading !== null && toolId === COLOR_GRADING_TOOL_ID;
+  // カラーミキサー・カラーグレーディングに調整が入っている（道具の帯のその道具に点を添える。プリセット・自動の点と同じ）
   const hslEdited = hslMixer !== null && hasPhotoEditingHslEdits(props.settings);
+  const colorGradingEdited = colorGrading !== null && hasPhotoEditingColorGradingEdits(props.settings);
   // 「自動」の道具に入った時点で結果の計算を始める（ボタンを押すまでの間に終える。押して 300ms 以内に画を変える）
   const onAutoWarmRef = useRef(auto?.onWarm);
   onAutoWarmRef.current = auto?.onWarm;
@@ -273,12 +292,16 @@ export function BrowserPhotoEditingMobileEditor(props: {
   useEffect(() => {
     if (autoWarmable) onAutoWarmRef.current?.();
   }, [autoWarmable, auto?.pressed]);
-  const group = presetsCurrent || autoCurrent || cropCurrent || colorMixerCurrent || hslMixerCurrent ? null : (groups.find((candidate) => candidate.id === toolId) ?? groups[0] ?? null);
-  // 道具の帯（プリセットは先頭。カラーミキサー → ポイントカラーは補正の群の後ろ。Lightroom と同じくカラーの続き）
+  const group =
+    presetsCurrent || autoCurrent || cropCurrent || colorMixerCurrent || hslMixerCurrent || colorGradingCurrent
+      ? null
+      : (groups.find((candidate) => candidate.id === toolId) ?? groups[0] ?? null);
+  // 道具の帯（プリセットは先頭。カラーミキサー → カラーグレーディング → ポイントカラーは補正の群の後ろ。Lightroom と同じくカラーの続き）
   const tools: { id: MobileToolId; title: string }[] = groups.map((candidate) => ({ id: candidate.id, title: candidate.title }));
   if (presets) tools.unshift({ id: PRESETS_TOOL_ID, title: PHOTO_EDITING_MOBILE_PRESETS_LABEL });
   if (auto) tools.splice(presets ? 1 : 0, 0, { id: AUTO_TOOL_ID, title: "自動" });
   if (hslMixer) tools.push({ id: HSL_MIXER_TOOL_ID, title: PHOTO_EDITING_HSL_TITLE });
+  if (colorGrading) tools.push({ id: COLOR_GRADING_TOOL_ID, title: PHOTO_EDITING_COLOR_GRADING_TITLE });
   if (colorMixer) tools.push({ id: COLOR_MIXER_TOOL_ID, title: PHOTO_EDITING_POINT_COLOR_TITLE });
   if (crop) tools.push({ id: CROP_TOOL_ID, title: "切り抜き" });
   const currentToolId: MobileToolId | null = presetsCurrent
@@ -291,7 +314,9 @@ export function BrowserPhotoEditingMobileEditor(props: {
           ? COLOR_MIXER_TOOL_ID
           : hslMixerCurrent
             ? HSL_MIXER_TOOL_ID
-            : (group?.id ?? null);
+            : colorGradingCurrent
+              ? COLOR_GRADING_TOOL_ID
+              : (group?.id ?? null);
   const control = group
     ? (group.controls.find((candidate) => candidate.key === itemByTool[group.id]) ?? group.controls[0] ?? null)
     : null;
@@ -645,6 +670,14 @@ export function BrowserPhotoEditingMobileEditor(props: {
         >
           {hslMixer}
         </div>
+      ) : colorGradingCurrent && colorGrading ? (
+        // 帯の 4 択・色相環・スライダーを縦に（段の高さを超える分は段の中で送る。帯と写真は動かさない）
+        <div
+          data-testid="photo-editing-mobile-color-grading"
+          className={cn(BAND_CLASS_NAME, "max-h-[17rem] overflow-y-auto overscroll-y-contain px-3 pb-2 pt-1")}
+        >
+          {colorGrading}
+        </div>
       ) : group && slider ? (
         <div className={BAND_CLASS_NAME}>
           {/* 段 A: 今の道具の項目のチップ（横に送れる帯） */}
@@ -744,7 +777,8 @@ export function BrowserPhotoEditingMobileEditor(props: {
                   {candidate.title}
                   {(candidate.id === AUTO_TOOL_ID && auto?.pressed) ||
                   (candidate.id === PRESETS_TOOL_ID && presets?.appliedPresetKey !== null) ||
-                  (candidate.id === HSL_MIXER_TOOL_ID && hslEdited) ? (
+                  (candidate.id === HSL_MIXER_TOOL_ID && hslEdited) ||
+                  (candidate.id === COLOR_GRADING_TOOL_ID && colorGradingEdited) ? (
                     <span aria-hidden className="absolute right-1.5 top-1.5 h-1.5 w-1.5 rounded-full bg-niho-text" />
                   ) : null}
                   {current ? (

@@ -132,27 +132,35 @@ fn engine_look_pairs_fail_closed() {
         "invalid_settings: look (engineLookMismatch): niho-3 requires niho-standard-2, and niho-standard-2 requires niho-3"
     );
     assert!(parse_settings(r#"{"engine":"niho-2","look":"niho-standard-2"}"#).is_err());
-    assert!(parse_settings(r#"{"engine":"niho-12"}"#).is_err());
+    assert!(parse_settings(r#"{"engine":"niho-13"}"#).is_err());
+    assert!(parse_settings(r#"{"engine":"niho-12","look":"niho-standard-2"}"#).is_err());
 }
 
 #[test]
-fn xmp_cnr_is_applied_only_to_explicit_niho3_and_blends_continuously() {
+fn xmp_cnr_reaches_rasters_through_detail_and_keeps_the_niho3_field() {
     let preset = xmp::builtin_preset("niho-colorful").unwrap().xmp;
-    let legacy_result = xmp::preset_settings(preset, None).unwrap();
-    let legacy_cnr = legacy_result
+    // Without a base (neutral niho-1, a raster engine) the preset's CNR 25
+    // and Sharpness 40 render through v6 detail (Issue #32); the legacy
+    // top-level field, which rasters ignore, stays untouched.
+    let raster_result = xmp::preset_settings(preset, None).unwrap();
+    let raster_cnr = raster_result
         .items
         .iter()
         .find(|item| item.property == "ColorNoiseReduction")
         .unwrap();
-    assert_eq!(legacy_cnr.level, xmp::Level::Unsupported);
-    assert_eq!(legacy_cnr.photo_bench_level, xmp::Level::Unsupported);
-    let legacy = legacy_result.settings;
-    assert_eq!(legacy.color_noise_reduction, 0.0);
-    assert!(!legacy
+    assert_eq!(raster_cnr.level, xmp::Level::Approximate);
+    assert_eq!(raster_cnr.photo_bench_level, xmp::Level::Unsupported);
+    let raster = raster_result.settings;
+    assert_eq!(raster.color_noise_reduction, 0.0);
+    assert!(!raster
         .to_value()
         .as_object()
         .unwrap()
         .contains_key("colorNoiseReduction"));
+    let detail = raster.detail.expect("v6 detail");
+    assert_eq!(detail.color_noise_reduction, Some(25.0));
+    assert_eq!(detail.sharpening.amount, 40.0);
+    assert_eq!(raster.v, 6);
 
     let base = niho3();
     let result = xmp::preset_settings(preset, Some(&base)).unwrap();
@@ -163,25 +171,46 @@ fn xmp_cnr_is_applied_only_to_explicit_niho3_and_blends_continuously() {
         .unwrap();
     assert_eq!(cnr.level, xmp::Level::Approximate);
     assert_eq!(cnr.photo_bench_level, xmp::Level::Unsupported);
+    // Camera Raw's default sub-controls (50) are the frozen CNR's own.
     for property in ["ColorNoiseReductionDetail", "ColorNoiseReductionSmoothness"] {
         let item = result
             .items
             .iter()
             .find(|item| item.property == property)
             .unwrap();
-        assert_eq!(item.level, xmp::Level::Unsupported);
+        assert_eq!(item.level, xmp::Level::Approximate);
         assert_eq!(item.photo_bench_level, xmp::Level::Unsupported);
     }
     let full = result.settings;
     assert_eq!(full.color_noise_reduction, 25.0);
     assert_eq!(full.color_noise_reduction_detail, 50.0);
     assert_eq!(full.color_noise_reduction_smoothness, 50.0);
+    // Sharpening needs the detail object, which then owns the color amount
+    // explicitly (0..50 is the same R209 operation).
+    assert_eq!(full.detail.unwrap().color_noise_reduction, Some(25.0));
     let half = xmp::apply_preset(preset, &base, 0.5, None)
         .unwrap()
         .settings;
     assert_eq!(half.color_noise_reduction, 12.5);
+    assert_eq!(half.detail.unwrap().color_noise_reduction, Some(12.5));
+    assert_eq!(half.detail.unwrap().sharpening.amount, 20.0);
     assert_eq!(half.engine, ENGINE_NIHO_3);
     assert_eq!(half.look, LOOK_NIHO_STANDARD_2);
+
+    // A signed-RAW preset with only R209's range keeps the old shape: no
+    // detail object, no version bump, the same pixels as before.
+    let cnr_only = r#"<x:xmpmeta xmlns:x="adobe:ns:meta/"><rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"><rdf:Description rdf:about="" xmlns:crs="http://ns.adobe.com/camera-raw-settings/1.0/" crs:Sharpness="0" crs:LuminanceSmoothing="0" crs:ColorNoiseReduction="31"/></rdf:RDF></x:xmpmeta>"#;
+    let kept = xmp::preset_settings(cnr_only, Some(&base))
+        .unwrap()
+        .settings;
+    assert_eq!(kept.detail, None);
+    assert_eq!(kept.color_noise_reduction, 31.0);
+    assert_eq!(kept.v, base.v);
+    // Above 50 the legacy field saturates, so the value moves into detail.
+    let strong = cnr_only.replace("\"31\"", "\"80\"");
+    let extended = xmp::preset_settings(&strong, Some(&base)).unwrap().settings;
+    assert_eq!(extended.detail.unwrap().color_noise_reduction, Some(80.0));
+    assert_eq!(extended.v, 6);
 }
 
 #[test]

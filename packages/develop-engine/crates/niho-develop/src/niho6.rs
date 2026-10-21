@@ -31,14 +31,16 @@ pub const ANALYSIS_LONG_EDGE: usize = 750;
 pub const LEGACY_SHARE: f64 = 0.5;
 
 /// Engines that use the frozen `niho-6` formula on raster sources. `niho-8`
-/// changes cube entry precision and `niho-10` adds hue-stable saturation;
-/// both deliberately reuse this response.
+/// changes cube entry precision, `niho-10` adds hue-stable saturation and
+/// `niho-12` is `niho-10` with float cubes; all deliberately reuse this
+/// response.
 pub fn uses_raster_formula(settings: &DevelopSettings) -> bool {
     matches!(
         settings.engine.as_str(),
         crate::settings::ENGINE_NIHO_6
             | crate::settings::ENGINE_NIHO_8
             | crate::settings::ENGINE_NIHO_10
+            | crate::settings::ENGINE_NIHO_12
     )
 }
 
@@ -198,15 +200,25 @@ fn luminance_weights(space: SourceSpace) -> [f32; 3] {
 
 /// The cache key of an image prepared from a `width x height` source for
 /// `settings` with an analysis made at `analysis_exposure_ev` (only the
-/// amounts the response uses and that exposure change it).
+/// amounts the response uses, its preprocessed source, and that exposure
+/// change it).
 pub fn preparation_key(
     width: usize,
     height: usize,
     settings: &DevelopSettings,
     analysis_exposure_ev: f64,
 ) -> String {
+    let detail = settings.detail.map_or_else(
+        || "none".to_string(),
+        |detail| {
+            format!(
+                "{}|{:?}",
+                detail.luminance_noise_reduction, detail.color_noise_reduction
+            )
+        },
+    );
     format!(
-        "niho6|{width}x{height}|{}|{}|{analysis_exposure_ev}",
+        "niho6|{width}x{height}|{detail}|{}|{}|{analysis_exposure_ev}",
         settings.highlights.min(0.0),
         settings.shadows.max(0.0),
     )

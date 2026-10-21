@@ -46,6 +46,7 @@ function choices(overrides: Partial<Omit<ExportInput, "photo">> & { photo?: Expo
     wide: overrides.wide ?? true,
     engineUsable: overrides.engineUsable ?? true,
     desktopFullSize: overrides.desktopFullSize,
+    nativeFullSizeUnsupported: overrides.nativeFullSizeUnsupported,
     ...(overrides.desktopFullSizeRaster ? { desktopFullSizeRaster: overrides.desktopFullSizeRaster } : {}),
     ...(overrides.cutout ? { cutout: overrides.cutout } : {}),
   });
@@ -143,7 +144,7 @@ describe("resolveBrowserPhotoExportChoices: JPEG の経路の優先順", () => {
     // wasm を使えない写真は S1 の canvas で描けるときだけ（1 枚で開くと書き出せる）
     expect(choices({ engineUsable: false }).jpeg).toEqual(disabled("1 枚で開くと書き出せます"));
     // 新しい版の NIHO で補正された写真・1 枚で開いて直せないと分かった写真は wasm で描かない（押せない）
-    expect(choices({ photo: photo({ hasDevelopSettings: true, developSettings: { v: 1, engine: "niho-12" } }) }).jpeg).toEqual(
+    expect(choices({ photo: photo({ hasDevelopSettings: true, developSettings: { v: 1, engine: "niho-13" } }) }).jpeg).toEqual(
       disabled("ページを読み込み直すと書き出せます"),
     );
     expect(choices({ loupe: true, locked: true }).jpeg).toEqual(disabled("ページを読み込み直すと書き出せます"));
@@ -190,7 +191,7 @@ describe("resolveBrowserPhotoExportChoices: JPEG の経路の優先順", () => {
     expect(choices({ photo: { ...RAW, hasWebImage: false, workStatus: "ready" }, loupe: true, locked: true }).jpeg).toEqual(reason);
     expect(choices({ photo: photo({ hasDevelopSettings: true, hasWebImage: false }), loupe: true, locked: true }).jpeg).toEqual(reason);
     expect(
-      choices({ photo: photo({ hasDevelopSettings: true, hasWebImage: false, developSettings: { v: 1, engine: "niho-12" } }) }).jpeg,
+      choices({ photo: photo({ hasDevelopSettings: true, hasWebImage: false, developSettings: { v: 1, engine: "niho-13" } }) }).jpeg,
     ).toEqual(reason);
     // オリジナルも記事用の画像も無い写真
     expect(choices({ photo: photo({ hasOriginal: false, hasWebImage: false }) }).jpeg).toEqual(disabled("書き出せる画像がありません"));
@@ -426,6 +427,26 @@ describe("大きさの「原寸」（NIHO Desktop の口。K2-3a #17148）", () 
       "撮影日時を付けます。位置情報は付けません。",
     );
   });
+
+  it("中間調・全体の輝度を使う間は、保存済み・編集中どちらの原寸カードも押せない", () => {
+    expect(
+      choices({
+        desktopFullSize: true,
+        photo: photo({ developSettings: { v: 1, engine: "niho-1", colorGrading: { midtone: { luminance: 25 } } } }),
+      }).jpeg.fullSize,
+    ).toEqual({ enabled: false, detail: "原寸は中間調・全体の輝度に未対応です" });
+    expect(choices({ desktopFullSize: true, nativeFullSizeUnsupported: true }).jpeg.fullSize).toEqual({
+      enabled: false,
+      detail: "原寸は中間調・全体の輝度に未対応です",
+    });
+    // 中間調・全体以外のゾーンの輝度は native renderer で描ける。
+    expect(
+      choices({
+        desktopFullSize: true,
+        photo: photo({ developSettings: { v: 1, engine: "niho-1", colorGrading: { shadow: { luminance: 25 } } } }),
+      }).jpeg.fullSize,
+    ).toEqual(FULL);
+  });
 });
 
 describe("複数枚のフォルダへの書き出し（NIHO Desktop の口。K2-3b #17148）", () => {
@@ -503,6 +524,11 @@ describe("背景除去を反映した書き出し（NIHO camera。C4 #18392）",
     expect(effectiveBrowserPhotoExportSizeOption(result, "width1080")).toBe("width1080");
     expect(defaultBrowserPhotoExportFormat(result)).toBe("jpeg");
     expect(browserPhotoExportChoice(result, "png")).toEqual({ enabled: true, detail: "背景除去を反映" });
+  });
+
+  it("背景除去の原寸も中間調・全体の輝度が native 未対応なら押せない", () => {
+    const result = choices({ ...LOUPE, cutout: { ...TRANSPARENT, fullSize: true }, nativeFullSizeUnsupported: true });
+    expect(result.jpeg.fullSize).toEqual({ enabled: false, detail: "原寸は中間調・全体の輝度に未対応です" });
   });
 
   it("原寸は camera の口（fullSize）があるときだけ。NIHO Desktop の原寸は出さない", () => {

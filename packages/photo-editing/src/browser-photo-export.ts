@@ -13,6 +13,7 @@ import {
   PHOTO_EDITING_EXPORT_ENGINE_UNAVAILABLE_TEXT,
   PHOTO_EDITING_EXPORT_FULL_SIZE_DETAIL,
   PHOTO_EDITING_EXPORT_FULL_SIZE_TEXT,
+  PHOTO_EDITING_EXPORT_FULL_SIZE_COLOR_GRADING_UNSUPPORTED_TEXT,
   PHOTO_EDITING_EXPORT_FULL_SIZE_UNSUPPORTED_SOURCE_TEXT,
   PHOTO_EDITING_EXPORT_ORIGINAL_TEXT,
   PHOTO_EDITING_EXPORT_PNG_NO_EXIF_TEXT,
@@ -20,6 +21,7 @@ import {
   photoEditingBatchFolderExportText,
 } from "./photo-editing-copy";
 import { photoEditingFileStem } from "./photo-editing-file-names";
+import { hasPhotoEditingColorGradingNativeExportUnsupportedLuminance } from "./photo-editing-color-grading";
 
 /**
  * ブラウザ版の写真編集の「書き出す」（移行元設計・F7b 移行元設計・移行時の設計文書「書き出す」）。下段の主ボタンを
@@ -319,6 +321,8 @@ export function resolveBrowserPhotoExportChoices(input: {
   desktopFullSize?: boolean;
   /** 原寸の書き出しで HEIC / HEIF・TIFF も描ける（`capabilities.nativeExportRaster`。NIHO camera。省略 = 描けない） */
   desktopFullSizeRaster?: boolean;
+  /** 現在の補正に native renderer が描けない中間調・全体の輝度がある（省略時は保存済み設定から判定） */
+  nativeFullSizeUnsupported?: boolean;
   /**
    * 書き出す写真に背景除去を重ねている（NIHO camera だけ。C4 移行元設計。省略 = 無い）。`transparent` は背景が透明、`fullSize` は
    * camera の原寸の書き出しの口がある
@@ -326,6 +330,8 @@ export function resolveBrowserPhotoExportChoices(input: {
   cutout?: { transparent: boolean; fullSize: boolean };
 }): BrowserPhotoExportChoices {
   const { photo, locked } = input;
+  const nativeFullSizeUnsupported =
+    input.nativeFullSizeUnsupported ?? hasPhotoEditingColorGradingNativeExportUnsupportedLuminance(photo.developSettings ?? {});
 
   let jpeg: BrowserPhotoExportJpegChoice;
   if (input.editing === "wasm") {
@@ -374,7 +380,9 @@ export function resolveBrowserPhotoExportChoices(input: {
 
   if (input.cutout && input.editing === "wasm") {
     const fullSize: BrowserPhotoExportChoice | undefined = input.cutout.fullSize
-      ? { enabled: true, detail: PHOTO_EDITING_EXPORT_FULL_SIZE_DETAIL }
+      ? nativeFullSizeUnsupported
+        ? { enabled: false, detail: PHOTO_EDITING_EXPORT_FULL_SIZE_COLOR_GRADING_UNSUPPORTED_TEXT }
+        : { enabled: true, detail: PHOTO_EDITING_EXPORT_FULL_SIZE_DETAIL }
       : undefined;
     return {
       jpeg: { ...jpeg, detail: PHOTO_EDITING_EXPORT_CUTOUT_DETAIL, ...(fullSize ? { fullSize } : {}) },
@@ -385,7 +393,12 @@ export function resolveBrowserPhotoExportChoices(input: {
   }
 
   if (input.desktopFullSize) {
-    jpeg = { ...jpeg, fullSize: fullSizeChoice(photo, jpeg, original, input.desktopFullSizeRaster === true) };
+    jpeg = {
+      ...jpeg,
+      fullSize: nativeFullSizeUnsupported
+        ? { enabled: false, detail: PHOTO_EDITING_EXPORT_FULL_SIZE_COLOR_GRADING_UNSUPPORTED_TEXT }
+        : fullSizeChoice(photo, jpeg, original, input.desktopFullSizeRaster === true),
+    };
   }
 
   return { jpeg, original };

@@ -32,6 +32,7 @@ import {
   type PhotoEditingControlKey,
 } from "../photo-editing-adjustments";
 import { PHOTO_EDITING_RESET_WHITE_BALANCE_LABEL } from "../photo-editing-copy";
+import { formatDetailValue, isInertDetailControl, readDetailValue, writeDetailValue } from "../photo-editing-detail";
 import {
   formatEffectUnsignedValue,
   readEffectValue,
@@ -132,7 +133,9 @@ export function AdjustmentGroup(props: {
 }
 
 function controlLabel(control: PhotoEditingAdjustmentControl): string {
-  return control.kind === "adjustment" || control.kind === "effect" ? control.definition.label : control.label;
+  return control.kind === "adjustment" || control.kind === "effect" || control.kind === "detail"
+    ? control.definition.label
+    : control.label;
 }
 
 /**
@@ -252,6 +255,25 @@ export function resolvePhotoEditingControlSliders(props: {
         isDefault: value === 0,
       };
     }
+    if (control.kind === "detail") {
+      // ディテール（Issue #32）。シャープが 0 の間の半径・ディテール・マスクは効かないので押せなくする（行は出したまま）
+      const definition = control.definition;
+      const value = readDetailValue(settings, definition.key);
+      return {
+        key: definition.key,
+        id: `${idPrefix}-${definition.key}`,
+        label: definition.label,
+        min: definition.min,
+        max: definition.max,
+        step: definition.step,
+        value,
+        valueText: formatDetailValue(definition.key, value),
+        disabled: disabled || isInertDetailControl(settings, definition.key),
+        onChange: (next, phase) => change((current) => writeDetailValue(current, definition.key, next), phase),
+        onReset: () => change((current) => writeDetailValue(current, definition.key, definition.defaultValue), "commit"),
+        isDefault: value === definition.defaultValue,
+      };
+    }
     if (control.kind === "toggle" || control.kind === "effect") {
       throw new Error("toggle/effect controls do not have a PhotoEditingSlider representation");
     }
@@ -354,6 +376,9 @@ export function resolvePhotoEditingControlSliders(props: {
  * 効果の項目（白黒・周辺光量補正・粒子・粒子のサイズ。E1b 移行元設計）は `visibleKeys` に入れた面にだけ出る（省いた面＝NIHO Desktop
  * には出ない）。「白黒」はカラーの先頭の切り替え（押すたびに `commit`）で、オンの間は自然な彩度・彩度を薄くして押せなくする
  * （値は保つ）。「粒子のサイズ」は粒子が 0 の間は薄くして押せない（行は出したまま）。
+ *
+ * ディテール（シャープ・ノイズ軽減。Issue #32）も `visibleKeys` に入れた面だけに、効果の後ろの群として出る。シャープが 0 の間の
+ * 半径・ディテール・マスクは薄くして押せない（行は出したまま）。
  *
  * `lightAccessory` を渡した面だけ、ライトの群の見出しの横に置く（ブラウザ版の「自動」。F4b 移行元設計）。見出しの兄弟に置くので、群を
  * 閉じていても出る。省いた面（NIHO Desktop）は今のまま。

@@ -140,11 +140,11 @@ impl From<niho_develop::Error> for CliError {
         match e {
             niho_develop::Error::Decode(d) => d.into(),
             niho_develop::Error::Encode(m) => Self::new(ErrorCode::EncodeFailed, m),
-            // A shape (`masks`) this build saves but does not draw yet.
-            niho_develop::Error::MasksNotRendered => Self::new(
-                ErrorCode::UnsupportedSettings,
-                niho_develop::MASKS_NOT_RENDERED,
-            ),
+            // A `brush` / `subject` / `sky` mask: this build has no surface
+            // store (M4, #68), so it cannot draw these settings.
+            e @ niho_develop::Error::MaskSurfaceMissing(_) => {
+                Self::new(ErrorCode::UnsupportedSettings, e.to_string())
+            }
             other => Self::new(ErrorCode::InvalidSettings, other.to_string()),
         }
     }
@@ -376,12 +376,12 @@ pub fn load_settings(text: &str) -> Result<DevelopSettings, CliError> {
         Some(Value::String(e)) if niho_develop::settings::is_known_engine(e) => {}
         Some(e) => {
             return Err(unsupported(format!(
-                "developSettings engine {e} is not supported (this build renders niho-1 through niho-8, niho-10, and niho-11)"
+                "developSettings engine {e} is not supported (this build renders niho-1 through niho-8, niho-10, niho-11, and niho-12)"
             )))
         }
         None => {
             return Err(unsupported(
-                "developSettings has no engine (this build renders niho-1 through niho-8, niho-10, and niho-11)".to_owned(),
+                "developSettings has no engine (this build renders niho-1 through niho-8, niho-10, niho-11, and niho-12)".to_owned(),
             ))
         }
     }

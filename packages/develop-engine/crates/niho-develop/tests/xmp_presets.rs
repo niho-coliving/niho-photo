@@ -145,9 +145,16 @@ fn builtin_presets_match_photo_bench_engine() {
             photo_bench_unsupported, want_unsupported,
             "{id} unsupported"
         );
+        // NIHO renders effects, the graded-luminance approximation, and the
+        // Detail panel; Photo Bench keeps these values unsupported.
+        let niho_renders = |p: &str| {
+            xmp::effect_field(p).is_some()
+                || matches!(p, "ColorGradeMidtoneLum" | "ColorGradeGlobalLum")
+                || xmp::DETAIL_KEYS.contains(&p)
+        };
         let niho_unsupported: Vec<String> = want_unsupported
             .iter()
-            .filter(|p| xmp::effect_field(p).is_none())
+            .filter(|p| !niho_renders(p))
             .cloned()
             .collect();
         assert_eq!(
@@ -160,6 +167,27 @@ fn builtin_presets_match_photo_bench_engine() {
         {
             let item = result.items.iter().find(|i| &i.property == p).unwrap();
             assert_eq!(item.level, xmp::Level::Exact, "{id} {p}");
+        }
+        for p in want_unsupported
+            .iter()
+            .filter(|p| matches!(p.as_str(), "ColorGradeMidtoneLum" | "ColorGradeGlobalLum"))
+        {
+            let item = result.items.iter().find(|i| &i.property == p).unwrap();
+            let expected = if item.value.parse::<f64>().ok() == Some(0.0) {
+                xmp::Level::Exact
+            } else {
+                xmp::Level::Approximate
+            };
+            assert_eq!(item.level, expected, "{id} {p}");
+        }
+        // The bundled presets carry Camera Raw's default sub-controls, so
+        // every Detail-panel key is rendered (exact at 0, else approximate).
+        for p in want_unsupported
+            .iter()
+            .filter(|p| xmp::DETAIL_KEYS.contains(&p.as_str()))
+        {
+            let item = result.items.iter().find(|i| &i.property == p).unwrap();
+            assert_ne!(item.level, xmp::Level::Unsupported, "{id} {p}");
         }
         assert!(result.converted, "{id}: {:?}", result.convert_issues);
         assert!(

@@ -727,6 +727,42 @@ const LUM_HIGHLIGHT: Beta = Beta {
     q: 0.36475501165219637,
 };
 
+// Midtone / global luminance (niho-photo#39): NIHO's approximation. There
+// is no Lightroom calibration for these yet (no reference export measures
+// them); the calibration procedure is to be added as a new round under
+// `tools/calibrate` (`make_lr_round*.py`), and these constants refitted then.
+//
+// The model keeps the fitted bands' form: `beta_weight(Y) * (lum / 50)`
+// added to R, G and B, positive brightening.
+// - Shape: the Lightroom-fitted saturation band of the same zone
+//   (`BAND_MIDTONE`'s / `BAND_GLOBAL`'s `p`, `q`), so both vanish at black
+//   and white (the global band is ~4Y(1-Y): it lifts the whole range but
+//   keeps the black and white points, and stays monotonic at +/-100).
+// - Size: at +/-100 the band moves the luminance at its peak by
+//   `LUM_PEAK_RELATIVE` of that luminance, the mean of the fitted shadow
+//   (+100: 0.0546 at Y 0.2097, 26.05%) and highlight (+100: 0.2301 at Y
+//   0.8085, 28.47%) luminance bands' relative peak change (~ +0.35 EV).
+//   Absolute peaks would differ 4x between those two bands; relative ones
+//   agree within 10%. `a = LUM_PEAK_RELATIVE * y* / 2 / (y*^p (1-y*)^q)`
+//   with `y* = p / (p + q)` (the `luminance_band_normalization` test
+//   recomputes them).
+// - Balance only moves the shadow / highlight split, so it does not scale
+//   these two bands (blending does not either, like the fitted ones).
+#[cfg(test)]
+const LUM_PEAK_RELATIVE: f64 = 0.27256592762777143;
+#[allow(clippy::excessive_precision)]
+const LUM_MIDTONE: Beta = Beta {
+    a: 1.4839676056718991,
+    p: BAND_MIDTONE.p,
+    q: BAND_MIDTONE.q,
+};
+#[allow(clippy::excessive_precision)]
+const LUM_GLOBAL: Beta = Beta {
+    a: 0.27059503718397543,
+    p: BAND_GLOBAL.p,
+    q: BAND_GLOBAL.q,
+};
+
 fn beta_weight(y: f64, band: Beta) -> f64 {
     let yy = y.clamp(1e-6, 1.0 - 1e-6);
     band.a * pow(yy, band.p) * pow(1.0 - yy, band.q)
@@ -790,12 +826,16 @@ pub fn needs_color_grading(s: &ColorGradingSettings) -> bool {
     s.shadow.saturation != 0.0
         || s.shadow.luminance != 0.0
         || s.midtone.saturation != 0.0
+        || s.midtone.luminance != 0.0
         || s.highlight.saturation != 0.0
         || s.highlight.luminance != 0.0
         || s.global.saturation != 0.0
+        || s.global.luminance != 0.0
 }
 
-/// `color_model.apply_color_grading` (midtone/global luminance unused).
+/// `color_model.apply_color_grading`, plus NIHO's midtone / global
+/// luminance (`LUM_MIDTONE` / `LUM_GLOBAL`, not calibrated against
+/// Lightroom yet; at 0 the result is Photo Bench's bit for bit).
 pub fn color_grading(value: Rgb, s: &ColorGradingSettings) -> Rgb {
     color_grading_with(value, s, &GradeDirections::new(s))
 }
@@ -883,9 +923,13 @@ fn color_grading_with(value: Rgb, s: &ColorGradingSettings, directions: &GradeDi
         delta[1] += w * dir[1];
         delta[2] += w * dir[2];
     }
+    // Midtone / global come last and skip at 0, so a photo without them
+    // renders exactly as before.
     let lum_bands = [
         (LUM_SHADOW, -1.0, s.shadow.luminance, shadow_scale),
         (LUM_HIGHLIGHT, 1.0, s.highlight.luminance, highlight_scale),
+        (LUM_MIDTONE, 1.0, s.midtone.luminance, 1.0),
+        (LUM_GLOBAL, 1.0, s.global.luminance, 1.0),
     ];
     for (band, sign, lum, scale) in lum_bands {
         if lum == 0.0 {
@@ -1066,6 +1110,7 @@ impl PreparedColorOps {
                     crate::settings::ENGINE_NIHO_6
                         | crate::settings::ENGINE_NIHO_8
                         | crate::settings::ENGINE_NIHO_10
+                        | crate::settings::ENGINE_NIHO_12
                 )
             ),
             raster_niho6: !toned
@@ -1074,10 +1119,16 @@ impl PreparedColorOps {
                     crate::settings::ENGINE_NIHO_6
                         | crate::settings::ENGINE_NIHO_8
                         | crate::settings::ENGINE_NIHO_10
+                        | crate::settings::ENGINE_NIHO_12
                 ),
+            // `niho-12` is the `niho-10` formula on raster input only; its
+            // legacy RAW path is the `niho-2` formula (no hue restoration).
             hue_stable_saturation: matches!(
-                settings.engine.as_str(),
-                crate::settings::ENGINE_NIHO_10 | crate::settings::ENGINE_NIHO_11
+                (toned, settings.engine.as_str()),
+                (
+                    _,
+                    crate::settings::ENGINE_NIHO_10 | crate::settings::ENGINE_NIHO_11
+                ) | (false, crate::settings::ENGINE_NIHO_12)
             ),
         }
     }
@@ -1409,5 +1460,63 @@ mod tests {
                 );
             }
         }
+    }
+
+    /// The peak luminance and peak weight of a band.
+    fn band_peak(band: Beta) -> (f64, f64) {
+        let y = band.p / (band.p + band.q);
+        (y, beta_weight(y, band))
+    }
+
+    #[test]
+    fn luminance_band_normalization() {
+        // The fitted shadow / highlight luminance bands move their peak by
+        // ~26% / ~28.5% of its luminance at 100 (`lum / 50` = 2).
+        let relative = |band: Beta| {
+            let (y, w) = band_peak(band);
+            2.0 * w / y
+        };
+        let shadow = relative(LUM_SHADOW);
+        let highlight = relative(LUM_HIGHLIGHT);
+        assert!((shadow - 0.2605).abs() < 1e-3, "{shadow}");
+        assert!((highlight - 0.2847).abs() < 1e-3, "{highlight}");
+        let mean = (shadow + highlight) / 2.0;
+        assert!((LUM_PEAK_RELATIVE - mean).abs() < 1e-15, "{mean}");
+        // Midtone / global: the same relative peak change, on the shape of
+        // the zone's fitted saturation band.
+        for (name, lum, shape) in [
+            ("midtone", LUM_MIDTONE, BAND_MIDTONE),
+            ("global", LUM_GLOBAL, BAND_GLOBAL),
+        ] {
+            assert_eq!((lum.p, lum.q), (shape.p, shape.q), "{name}");
+            let (y, w) = band_peak(lum);
+            let a = LUM_PEAK_RELATIVE * y / 2.0 / (pow(y, lum.p) * pow(1.0 - y, lum.q));
+            assert!((lum.a - a).abs() < 1e-12 * a, "{name}: {} vs {a}", lum.a);
+            assert!((2.0 * w / y - LUM_PEAK_RELATIVE).abs() < 1e-12, "{name}");
+        }
+    }
+
+    #[test]
+    fn midtone_and_global_luminance_tone_response() {
+        let gray = |y: f64, grading: &ColorGradingSettings| color_grading([y; 3], grading)[0];
+        let with = |midtone: f64, global: f64| {
+            let mut g = ColorGradingSettings::default();
+            g.midtone.luminance = midtone;
+            g.global.luminance = global;
+            g
+        };
+        for (midtone, global) in [(100.0, 0.0), (-100.0, 0.0), (0.0, 100.0), (0.0, -100.0)] {
+            let g = with(midtone, global);
+            assert!(needs_color_grading(&g));
+            // Black and white stay; the tone response stays monotonic.
+            assert!(gray(0.0, &g) < 1e-5 && gray(1.0, &g) > 1.0 - 1e-5);
+            let mut previous = gray(0.0, &g);
+            for i in 1..=1000 {
+                let next = gray(i as f64 / 1000.0, &g);
+                assert!(next >= previous, "{midtone} {global} at {i}");
+                previous = next;
+            }
+        }
+        assert!(!needs_color_grading(&with(0.0, 0.0)));
     }
 }

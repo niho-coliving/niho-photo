@@ -3,11 +3,30 @@
 Requires the existing colorcheck Python environment (numpy/Pillow/OpenCV).
 Usage: color-review-teachers.py --repo <checkout> --work <private-outside-repo>
 The work directory contains data/teachers and data/teachers2, each with the
-existing manifest/inputs/lr-export structure. Full rows and images stay private;
-only teacher-summary-sanitized.json contains the anonymous aggregate report.
+existing manifest/inputs/lr-export structure. Full rows, manifest hashes and
+images stay private; only teacher-summary-sanitized.json contains the anonymous
+aggregate report (the first engine is the baseline of every comparison).
 """
 import argparse, concurrent.futures, hashlib, json, subprocess, sys, time
 from pathlib import Path
+
+# Pair-wise differences up to this ΔE00 are rounding noise of the protocol;
+# a mean increase of half a just-noticeable difference (1.0) is a regression.
+NOISE = 0.02
+HALF_JND = 0.5
+
+def compare_pairs(rows, baseline):
+    """Matched-pair regressions of `rows` against `baseline[(cohort, scene, variant)]`."""
+    pairs=[(x,baseline[x['cohort'],x['scene'],x['variant']]) for x in rows]
+    mean_increase=[x['mean']-b['mean'] for x,b in pairs]
+    p99_increase=[x['p99']-b['p99'] for x,b in pairs]
+    return {'pairs':len(pairs),'meanRegressions':sum(d>0 for d in mean_increase),'p99Regressions':sum(d>0 for d in p99_increase),
+            'meanRegressionsOverNoise':sum(d>NOISE for d in mean_increase),'p99RegressionsOverNoise':sum(d>NOISE for d in p99_increase),
+            'meanIncreaseAtLeastHalfJnd':sum(d>=HALF_JND for d in mean_increase),
+            'maxMeanIncrease':max(mean_increase),'maxP99Increase':max(p99_increase),
+            'maxMeanDecrease':-min(mean_increase),'maxP99Decrease':-min(p99_increase),
+            'baselineP99Over8':sum(b['p99']>8 for _,b in pairs),'p99Over8':sum(x['p99']>8 for x,_ in pairs),
+            'newP99Over8':sum(x['p99']>8 and b['p99']<=8 for x,b in pairs)}
 
 def digest(p):
     with open(p, 'rb') as f: return hashlib.file_digest(f, 'sha256').hexdigest()
@@ -101,8 +120,10 @@ def main():
     comparisons=[]
     for engine in engines[1:]:
         r=[x for x in rows if x['engine']==engine]
-        comparisons.append({'engine':engine,'baseline':engines[0],'meanRegressions':sum(x['mean']>baseline[x['cohort'],x['scene'],x['variant']]['mean'] for x in r),'p99Regressions':sum(x['p99']>baseline[x['cohort'],x['scene'],x['variant']]['p99'] for x in r),'maxMeanIncrease':max(x['mean']-baseline[x['cohort'],x['scene'],x['variant']]['mean'] for x in r),'maxP99Increase':max(x['p99']-baseline[x['cohort'],x['scene'],x['variant']]['p99'] for x in r)})
+        comparisons.append({'engine':engine,'baseline':engines[0],**compare_pairs(r,baseline),
+                            'byVariant':{v:compare_pairs([x for x in r if x['variant']==v],baseline) for v in variants}})
     commit=subprocess.check_output(['git','-C',str(args.repo),'rev-parse','HEAD'],text=True).strip()
-    result={'kind':'development-teachers-not-independent','commit':commit,'rendererSha256':digest(args.repo/'packages/develop-engine/target/release/niho-develop-render'),'manifestSha256':manifest_hashes,'cohortCounts':counts,'analyticSubsetScenes':analytic_scenes,'analyticSubsetSelection':'metadata-only low/median/high ISO per teacher cohort','blankExcluded':skipped,'independentImagesRead':0,'protocol':{'renderLongEdge':2048,'compareLongEdge':1500,'blur':2,'flatPixels':True,'alignment':True},'summary':summary,'comparisons':comparisons,'seconds':time.monotonic()-start}
+    (args.work/'teacher-manifest-private.json').write_text(json.dumps({'manifestSha256':manifest_hashes},indent=2))
+    result={'kind':'development-teachers-not-independent','commit':commit,'rendererSha256':digest(args.repo/'packages/develop-engine/target/release/niho-develop-render'),'cohortCounts':counts,'noiseTolerance':NOISE,'halfJnd':HALF_JND,'analyticSubsetScenes':analytic_scenes,'analyticSubsetSelection':'metadata-only low/median/high ISO per teacher cohort','blankExcluded':skipped,'independentImagesRead':0,'protocol':{'renderLongEdge':2048,'compareLongEdge':1500,'blur':2,'flatPixels':True,'alignment':True},'summary':summary,'comparisons':comparisons,'seconds':time.monotonic()-start}
     (args.work/'teacher-summary-sanitized.json').write_text(json.dumps(result,indent=2));print(json.dumps(result,indent=2))
 if __name__=='__main__': main()
