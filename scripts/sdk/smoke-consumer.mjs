@@ -73,15 +73,18 @@ export function smokeConsumer(manifestPath) {
     mkdirSync(path.join(consumer, "src"));
     writeFileSync(path.join(consumer, "src/main.tsx"), `
 import { BrowserPhotoEditingWorkbench } from "niho-photo-editing/editor/browser-photo-editing-workbench";
+import { PHOTO_EDITING_PRIMARY_BUTTON_CLASS_NAME } from "niho-photo-editing/editor/photo-editing-button-classes";
 import { createDevelopEngine } from "niho-photo-editing/develop-engine/develop-engine-client";
 import type { DevelopSettings } from "niho-photo-editing/develop-engine/develop-settings";
 import type { PhotoLibrary } from "niho-photo-editing/library/photo-library";
 import { PhotoEditingDialogHost } from "niho-photo-editing/sdk-dialog-host";
+import { readDevelopSettings, type DevelopSettings as NodeDevelopSettings } from "niho-photo-contract";
 import "niho-photo-ui/styles/tokens.css";
 
 const engine = createDevelopEngine();
 const recipe: DevelopSettings = { v: 1, engine: "niho-13" };
-const sdk = { BrowserPhotoEditingWorkbench, PhotoEditingDialogHost, engine, recipe };
+const nodeRecipe: NodeDevelopSettings | null = readDevelopSettings(recipe);
+const sdk = { BrowserPhotoEditingWorkbench, PhotoEditingDialogHost, engine, recipe, nodeRecipe, PHOTO_EDITING_PRIMARY_BUTTON_CLASS_NAME };
 document.body.dataset.sdkExports = Object.keys(sdk).sort().join(",");
 export type PhotoLibraryContract = PhotoLibrary;
 `);
@@ -101,6 +104,46 @@ export type PhotoLibraryContract = PhotoLibrary;
       include: ["src"],
     }, null, 2)}\n`);
     writeFileSync(path.join(consumer, "vite.config.mjs"), `export default { build: { outDir: "dist", emptyOutDir: true } };\n`);
+    writeFileSync(path.join(consumer, "contract-smoke.mjs"), `
+import assert from "node:assert/strict";
+import {
+  DEVELOP_SETTINGS_LOOKS,
+  NIHO6_DEVELOP_SETTINGS_LOOKS,
+  developSettingsEngineIdentifiers,
+  developSettingsOnWorkingCopy,
+  isEditableDevelopSettings,
+  newDevelopSettingsEngine,
+  neutralDevelopSettings,
+  readDevelopSettings,
+  signedWorkingCopyState,
+  supportedDevelopSettingsVersions,
+} from "niho-photo-contract";
+
+assert.deepEqual([...supportedDevelopSettingsVersions], [1, 2, 3, 4, 5, 6, 7, 8, 9]);
+assert.ok(developSettingsEngineIdentifiers.includes("niho-13"));
+assert.ok(DEVELOP_SETTINGS_LOOKS.includes("niho-standard-1"));
+assert.ok(NIHO6_DEVELOP_SETTINGS_LOOKS.includes("niho-interim-1"));
+assert.equal(newDevelopSettingsEngine("raster.d1"), "niho-13");
+assert.equal(neutralDevelopSettings("raster.d1").engine, "niho-13");
+assert.equal(signedWorkingCopyState("raster.d1", null), "unsigned");
+for (const v of supportedDevelopSettingsVersions) assert.ok(readDevelopSettings({ v, engine: "niho-1" }));
+const unknown = { v: 1, engine: "niho-1", futureTopLevel: { keep: true } };
+assert.deepEqual(readDevelopSettings(unknown), unknown);
+for (const invalid of [
+  { v: 10, engine: "niho-1" },
+  { v: 4, engine: "niho-1", colorPoints: [{ id: "broken" }] },
+  { v: 5, engine: "niho-1", masks: [{ id: "broken" }] },
+  { v: 6, engine: "niho-1", detail: { sharpening: {} } },
+  { v: 8, engine: "niho-1", heal: [{ id: "broken" }] },
+  { v: 9, engine: "niho-1", lens: { unsupported: true } },
+]) {
+  assert.equal(readDevelopSettings(invalid), null);
+  assert.equal(isEditableDevelopSettings(invalid), false);
+}
+const existing = developSettingsOnWorkingCopy({ v: 1, engine: "niho-1", futureTopLevel: 1 }, "raster.d1");
+assert.equal(existing.engine, "niho-1");
+assert.equal(existing.futureTopLevel, 1);
+`);
     writeFileSync(path.join(consumer, "src/dialog-singleton.test.tsx"), `
 import { act } from "react";
 import { createRoot } from "react-dom/client";
@@ -133,6 +176,7 @@ test("SDK dialog host uses the SDK UI store and not the app niho-ui store", asyn
 
     run(process.execPath, [path.join(repoRoot, "node_modules/typescript/bin/tsc"), "-p", path.join(consumer, "tsconfig.json")], consumer);
     run(process.execPath, [path.join(repoRoot, "node_modules/vite/bin/vite.js"), "build", "--config", path.join(consumer, "vite.config.mjs")], consumer);
+    run(process.execPath, [path.join(consumer, "contract-smoke.mjs")], consumer);
     run(process.execPath, [path.join(repoRoot, "node_modules/vitest/vitest.mjs"), "run", "src/dialog-singleton.test.tsx", "--environment", "jsdom"], consumer);
     const files = outputFiles(path.join(consumer, "dist"));
     if (!files.some((file) => file.endsWith(".css"))) throw new SdkReleaseError("consumer bundle に UI CSS がありません");

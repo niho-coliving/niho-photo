@@ -68,9 +68,9 @@ export function rewriteVersionedRuntimeReferences(name, bytes, version) {
 // ビルド結果へ実行hostの絶対pathや任意のCargo設定を混入させない。
 // CARGO_ENCODED_RUSTFLAGSはrepositoryのwasm SIMD設定を明示的に再現する。
 export function runtimeBuildEnvironment(input, scratch) {
-  const required = ["home", "temporary", "target"];
+  const required = ["home", "cargoHome", "temporary", "target"];
   if (required.some((name) => !path.isAbsolute(scratch?.[name] ?? ""))) throw new SdkReleaseError("隔離した engine runtime build path が必要です");
-  const cargoHome = input.CARGO_HOME || (input.HOME ? path.join(input.HOME, ".cargo") : undefined);
+  const cargoHome = scratch.cargoHome;
   const rustupHome = input.RUSTUP_HOME || (input.HOME ? path.join(input.HOME, ".rustup") : undefined);
   for (const [label, value] of [["CARGO_HOME", cargoHome], ["RUSTUP_HOME", rustupHome]]) {
     if (value && !path.isAbsolute(value)) throw new SdkReleaseError(`${label} は絶対pathが必要です`);
@@ -122,6 +122,7 @@ export function buildDevelopEngineRuntime(outputDirectory) {
   try {
     const isolated = {
       home: path.join(scratch, "home"),
+      cargoHome: path.join(scratch, "cargo-home"),
       temporary: path.join(scratch, "tmp"),
       target: path.join(scratch, "target"),
     };

@@ -50,6 +50,17 @@
       "exclude": []
     },
     {
+      "id": "photo-contract",
+      "name": "niho-photo-contract",
+      "sourceRoot": "packages/photo-editing",
+      "kind": "node-contract",
+      "entry": "src/develop-engine/develop-settings.ts",
+      "include": [
+        "src/develop-engine/develop-settings.ts"
+      ],
+      "exclude": []
+    },
+    {
       "id": "develop-engine-source",
       "name": "niho-photo-develop-engine-source",
       "sourceRoot": "packages/develop-engine",
@@ -74,6 +85,23 @@
       ],
       "exclude": []
     }
+  ],
+  "ownedSourcePaths": [
+    "packages/photo-editing",
+    "packages/ui",
+    "packages/niho-cloud-contract",
+    "packages/develop-engine",
+    "packages/desktop-photo",
+    "sdk",
+    "scripts/sdk",
+    "LICENSE.md",
+    "ASSET_LICENSE.md",
+    "TRADEMARKS.md",
+    "THIRD_PARTY_NOTICES.md"
+  ],
+  "buildToolingPaths": [
+    "package.json",
+    "package-lock.json"
   ],
   "engine": {
     "version": "niho-13",

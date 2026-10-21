@@ -31,6 +31,7 @@ for (const [name, mutate] of [
   ["unreviewed advisory exception", (w) => { w.jobs.dependencies.steps[1].with["allow-ghsas"] += ",GHSA-0000-0000-0000"; }],
   ["weaker vulnerability threshold", (w) => { w.jobs.dependencies.steps[1].with["fail-on-severity"] = "high"; }],
   ["SDK consumer smoke omitted", (w) => { w.jobs["photo-editing"].steps = w.jobs["photo-editing"].steps.filter((step) => step.run !== "npm run sdk:test"); }],
+  ["SDK real engine smoke omitted", (w) => { w.jobs["photo-sdk"].steps.find((step) => step.name === "実WASM・pack・repo外consumerを検証").run = "npm run sdk:smoke"; }],
 ]) test(`workflowの危険な変更を拒否: ${name}`, () => {
   const changed = structuredClone(workflow);
   mutate(changed);

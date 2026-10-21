@@ -3,6 +3,7 @@ import { execFileSync } from "node:child_process";
 import { lstat, readFile } from "node:fs/promises";
 import path from "node:path";
 import { workflowFailures } from "./workflow-lib.mjs";
+import { photoSdkWorkflowFailures } from "./photo-sdk-workflow-lib.mjs";
 import { imageMetadataFailures } from "./image-metadata.mjs";
 
 export const digest = (bytes) => createHash("sha256").update(bytes).digest("hex");
@@ -197,7 +198,11 @@ export async function verifyPublication(root) {
     if (text !== undefined && /^packages\/develop-engine\//.test(name) && /\.(?:rs|py|json|mjs)$/.test(name) && containsExcludedMatrix(text)) fail("除外済み行列の転記", name);
     if (text !== undefined && containsPrivateReference(text)) fail("非公開参照検出（値は非表示）", name);
     if (/^\.github\/workflows\/[^/]+\.ya?ml$/.test(name)) {
-      try { for (const violation of workflowFailures(JSON.parse(text))) fail(violation, name); }
+      try {
+        const validator = name === ".github/workflows/public-ci.yml" ? workflowFailures : name === ".github/workflows/photo-sdk-release.yml" ? photoSdkWorkflowFailures : null;
+        if (!validator) throw new Error();
+        for (const violation of validator(JSON.parse(text))) fail(violation, name);
+      }
       catch { fail("workflowは構造検査可能なJSON形式で記述", name); }
     }
     if (name.endsWith("package.json")) {

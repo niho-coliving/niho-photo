@@ -20,6 +20,7 @@ import {
 } from "./release-set-lib.mjs";
 import { smokeConsumer } from "./smoke-consumer.mjs";
 import { rewriteVersionedRuntimeReferences, runtimeBuildEnvironment, versionedRuntimeFileName } from "./build-develop-engine-runtime.mjs";
+import { normalizeArtifactDigest, verifyReleaseArtifact } from "./verify-release-artifact.mjs";
 
 const realRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 const temporary = [];
@@ -76,7 +77,9 @@ function runtimeFixture(root, config, source = { commit: "a".repeat(40), tree: "
 function createFixture() {
   const root = temp("niho-photo-sdk-repo-");
   const config = JSON.parse(readFileSync(path.join(realRoot, "sdk/release-set.json"), "utf8"));
+  config.version = "0.1.0+001";
   runGit(root, ["init", "--quiet"]);
+  for (const name of ["package.json", "package-lock.json"]) put(root, name, readFileSync(path.join(realRoot, name)));
   for (const name of ["LICENSE.md", "ASSET_LICENSE.md", "TRADEMARKS.md", "THIRD_PARTY_NOTICES.md"]) put(root, name, readFileSync(path.join(realRoot, name)));
   put(root, "sdk/release-set.json", `${JSON.stringify(config, null, 2)}\n`);
   for (const definition of config.packages) {
@@ -86,6 +89,8 @@ function createFixture() {
       if (matchesPackagePath(relative, definition)) put(root, name, readFileSync(path.join(realRoot, name)));
     }
   }
+  put(root, "packages/desktop-photo/ownership-fixture.txt", "owned\n");
+  put(root, "scripts/sdk/ownership-fixture.mjs", "export {};\n");
   commit(root, "fixture");
   const source = { commit: runGit(root, ["rev-parse", "HEAD"]).trim(), tree: runGit(root, ["rev-parse", "HEAD^{tree}"]).trim() };
   const assets = runtimeFixture(temp("niho-photo-sdk-runtime-"), { engine: { ...config.engine, assetDirectory: "assets" } }, source);
@@ -98,6 +103,13 @@ test("strict semver と安全な相対 path だけを受け入れる", () => {
   for (const value of ["v1.2.3", "1.2", "01.2.3", "1.2.3-01"]) assert.throws(() => assertStrictSemver(value));
   assert.equal(assertRelativePath("packages/photo-editing"), "packages/photo-editing");
   for (const value of ["../private", "/tmp/source", "a/../../b", "a\\b"]) assert.throws(() => assertRelativePath(value));
+});
+
+test("Actions/REST artifact digestをcanonical SHA-256へ揃える", () => {
+  const digest = "d".repeat(64);
+  assert.equal(normalizeArtifactDigest(digest), `sha256:${digest}`);
+  assert.equal(normalizeArtifactDigest(`sha256:${digest}`), `sha256:${digest}`);
+  assert.throws(() => normalizeArtifactDigest("sha256:broken"));
 });
 
 test("wasm-bindgen の出力名と JS/d.ts 内部参照を同じ crate version へ固定する", () => {
@@ -119,17 +131,18 @@ test("engine runtime build は外部Cargo設定を捨てpathをremapする", () 
     RUSTUP_HOME: "/synthetic/rustup",
     RUSTFLAGS: "unapproved",
     CARGO_TARGET_DIR: "/unapproved/target",
-  }, { home: "/isolated/home", temporary: "/isolated/tmp", target: "/isolated/target" });
+  }, { home: "/isolated/home", cargoHome: "/isolated/cargo", temporary: "/isolated/tmp", target: "/isolated/target" });
   assert.equal(env.HOME, "/isolated/home");
   assert.equal(env.CARGO_TARGET_DIR, "/isolated/target");
   assert.equal(env.RUSTFLAGS, undefined);
   assert.match(env.CARGO_ENCODED_RUSTFLAGS, /target-feature=\+simd128/);
-  for (const prefix of [realRoot, "/synthetic/home", "/synthetic/cargo", "/synthetic/rustup", "/isolated/tmp"]) assert.ok(env.CARGO_ENCODED_RUSTFLAGS.includes(`--remap-path-prefix=${prefix}=`));
-  const defaults = runtimeBuildEnvironment({ PATH: "/bin", HOME: "/default/home" }, { home: "/isolated/home", temporary: "/isolated/tmp", target: "/isolated/target" });
-  assert.equal(defaults.CARGO_HOME, "/default/home/.cargo");
+  for (const prefix of [realRoot, "/synthetic/home", "/isolated/cargo", "/synthetic/rustup", "/isolated/tmp"]) assert.ok(env.CARGO_ENCODED_RUSTFLAGS.includes(`--remap-path-prefix=${prefix}=`));
+  assert.equal(env.CARGO_ENCODED_RUSTFLAGS.includes("/synthetic/cargo"), false);
+  const defaults = runtimeBuildEnvironment({ PATH: "/bin", HOME: "/default/home", CARGO_HOME: "/unapproved/cargo" }, { home: "/isolated/home", cargoHome: "/isolated/cargo", temporary: "/isolated/tmp", target: "/isolated/target" });
+  assert.equal(defaults.CARGO_HOME, "/isolated/cargo");
   assert.equal(defaults.RUSTUP_HOME, "/default/home/.rustup");
   assert.ok(defaults.CARGO_ENCODED_RUSTFLAGS.includes("--remap-path-prefix=/default/home/.rustup=toolchain"));
-  assert.throws(() => runtimeBuildEnvironment({ HOME: "/default/home", CARGO_HOME: "relative" }, { home: "/isolated/home", temporary: "/isolated/tmp", target: "/isolated/target" }), /絶対path/);
+  assert.throws(() => runtimeBuildEnvironment({ HOME: "/default/home" }, { home: "/isolated/home", cargoHome: "relative", temporary: "/isolated/tmp", target: "/isolated/target" }), /隔離/);
 });
 
 test("release-set 定義は package/path/version の改変を拒否する", () => {
@@ -174,7 +187,9 @@ test("clean Git object から決定的 tarball を作り repo 外 consumer で T
   assert.equal(one.manifest.releaseReady, true);
   assert.deepEqual(one.manifest.recipeCompatibility.supportedVersions, [1, 2, 3, 4, 5, 6, 7, 8, 9]);
   assert.ok(one.manifest.recipeCompatibility.engineIdentifiers.includes("niho-13"));
-  assert.equal(one.manifest.recipeCompatibility.nodeRuntimeValidator, false);
+  assert.equal(one.manifest.recipeCompatibility.nodeRuntimeValidator, true);
+  assert.equal(one.manifest.recipeCompatibility.package, "niho-photo-contract");
+  assert.equal(one.manifest.sourceOwnership.paths.length, 11);
   assert.equal(one.manifest.uiSingleton.hostExport, "niho-photo-editing/sdk-dialog-host");
   for (const item of one.manifest.packages) {
     const entries = execFileSync("tar", ["-tzf", path.join(first, item.file)], { encoding: "utf8" });
@@ -183,9 +198,39 @@ test("clean Git object から決定的 tarball を作り repo 外 consumer で T
       assert.match(entries, /LICENSES\.md/);
       assert.match(entries, /Adobe-DNG-SDK-LICENSE\.txt/);
     }
+    if (item.id === "develop-engine-runtime") {
+      const packageJson = JSON.parse(execFileSync("tar", ["-xOzf", path.join(first, item.file), "package/package.json"], { encoding: "utf8" }));
+      assert.equal(packageJson.type, "module");
+    }
   }
   const manifestPath = path.join(first, one.manifestName);
   assert.deepEqual(verifyReleaseManifestFiles(manifestPath).packages, one.manifest.packages);
+  const manifestSha256 = sha256(readFileSync(manifestPath));
+  assert.equal(verifyReleaseArtifact({ directory: first, expectedSource: fixture.source.commit, expectedManifestSha256: manifestSha256 }).manifestSha256, manifestSha256);
+  assert.throws(() => verifyReleaseArtifact({ directory: first, expectedSource: fixture.source.commit, expectedManifestSha256: "f".repeat(64) }), /輸送hash/);
+  const verifierSource = readFileSync(path.join(realRoot, "scripts/sdk/verify-release-artifact.mjs"), "utf8");
+  assert.deepEqual([...verifierSource.matchAll(/from\s+["']([^"']+)["']/gu)].map((match) => match[1]).filter((name) => !name.startsWith("node:")), []);
+  const receiptPath = path.join(temp("niho-photo-sdk-receipt-"), "receipt.json");
+  execFileSync(process.execPath, [
+    path.join(realRoot, "scripts/sdk/verify-release-artifact.mjs"),
+    "--directory", first,
+    "--expected-source", fixture.source.commit,
+    "--expected-manifest-sha256", manifestSha256,
+    "--receipt", receiptPath,
+    "--artifact-id", "123",
+    "--artifact-digest", "d".repeat(64),
+    "--artifact-name", `niho-photo-sdk-${fixture.source.commit}-run-456-attempt-1`,
+    "--run-id", "456",
+    "--run-attempt", "1",
+  ]);
+  const receipt = JSON.parse(readFileSync(receiptPath, "utf8"));
+  assert.equal(receipt.releaseManifest.sha256, manifestSha256);
+  assert.equal(receipt.sourceOwnershipDigest, one.manifest.sourceOwnership.digest);
+  assert.equal(receipt.artifact.digest, `sha256:${"d".repeat(64)}`);
+  const secondManifestPath = path.join(second, two.manifestName);
+  verifyReleaseArtifact({ directory: second, expectedSource: fixture.source.commit, expectedManifestSha256: sha256(readFileSync(secondManifestPath)) });
+  writeFileSync(path.join(second, "unlisted.tgz"), "unexpected");
+  assert.throws(() => verifyReleaseArtifact({ directory: second, expectedSource: fixture.source.commit }), /集合/);
   for (const [name, mutate] of [
     ["empty-packages", (value) => { value.packages = []; }],
     ["wrong-repository", (value) => { value.repository = "other/repository"; }],
@@ -194,6 +239,9 @@ test("clean Git object から決定的 tarball を作り repo 外 consumer で T
     ["bad-integrity", (value) => { value.packages[0].integrity = "sha256-invalid"; }],
     ["missing-recipe", (value) => { delete value.recipeCompatibility; }],
     ["missing-ui-singleton", (value) => { delete value.uiSingleton; }],
+    ["missing-owned-source", (value) => { delete value.sourceOwnership; }],
+    ["changed-owned-source", (value) => { value.sourceOwnership.paths[0].sha256 = "c".repeat(64); }],
+    ["node-contract-disabled", (value) => { value.recipeCompatibility.nodeRuntimeValidator = false; }],
   ]) {
     const changed = structuredClone(one.manifest);
     mutate(changed);

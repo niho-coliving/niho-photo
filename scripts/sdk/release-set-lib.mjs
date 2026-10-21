@@ -16,13 +16,16 @@ import { execFileSync } from "node:child_process";
 import ts from "typescript";
 
 import { assertPublicBytes, guardBundle } from "../ci/release-evidence-lib.mjs";
+import { validateReleaseManifest, verifyManifestPackageFiles } from "./verify-release-artifact.mjs";
 
 const SEMVER = /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-([0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?(?:\+([0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?$/;
 const PACKAGE_NAME = /^(?:@[a-z0-9][a-z0-9._-]*\/[a-z0-9][a-z0-9._-]*|[a-z0-9][a-z0-9._-]*)$/;
 const SHA256 = /^[a-f0-9]{64}$/;
-const SIMPLE_ASSET = /^[A-Za-z0-9][A-Za-z0-9._-]*$/;
+const SIMPLE_ASSET = /^[A-Za-z0-9][A-Za-z0-9._+-]*$/;
 const ROOT_NOTICE_FILES = ["LICENSE.md", "ASSET_LICENSE.md", "TRADEMARKS.md", "THIRD_PARTY_NOTICES.md"];
 const ENGINE_NOTICE_FILES = ["LICENSES.md", "licenses/Adobe-DNG-SDK-LICENSE.txt"];
+const OWNED_SOURCE_PATHS = ["packages/photo-editing", "packages/ui", "packages/niho-cloud-contract", "packages/develop-engine", "packages/desktop-photo", "sdk", "scripts/sdk", ...ROOT_NOTICE_FILES];
+const BUILD_TOOLING_PATHS = ["package.json", "package-lock.json"];
 
 export class SdkReleaseError extends Error {}
 
@@ -93,17 +96,18 @@ export function matchesPackagePath(relative, definition) {
 export function validateConfig(config) {
   if (!config || config.schemaVersion !== 1 || config.repository !== "niho-coliving/niho-photo") throw new SdkReleaseError("release-set の基本契約が不正です");
   assertStrictSemver(config.version);
-  if (!Array.isArray(config.packages) || config.packages.length !== 4) throw new SdkReleaseError("release-set は UI/editor/cloud contract/engine source の 4 package が必要です");
+  if (!Array.isArray(config.packages) || config.packages.length !== 5) throw new SdkReleaseError("release-set は UI/editor/cloud contract/Node contract/engine source の 5 package が必要です");
   const ids = new Set();
   const names = new Set();
   for (const definition of config.packages) {
-    if (!definition || !["typescript", "rust-source"].includes(definition.kind) || !/^[a-z][a-z0-9-]*$/.test(definition.id ?? "") || !PACKAGE_NAME.test(definition.name ?? "")) throw new SdkReleaseError("package 定義が不正です");
+    if (!definition || !["typescript", "node-contract", "rust-source"].includes(definition.kind) || !/^[a-z][a-z0-9-]*$/.test(definition.id ?? "") || !PACKAGE_NAME.test(definition.name ?? "")) throw new SdkReleaseError("package 定義が不正です");
     if (ids.has(definition.id) || names.has(definition.name)) throw new SdkReleaseError("package id/name が重複しています");
     ids.add(definition.id);
     names.add(definition.name);
     assertRelativePath(definition.sourceRoot, "sourceRoot");
     if (!Array.isArray(definition.include) || !definition.include.length || !Array.isArray(definition.exclude)) throw new SdkReleaseError("package include/exclude が不正です");
     for (const pattern of [...definition.include, ...definition.exclude]) globRegex(pattern);
+    if (definition.kind === "node-contract" && (definition.id !== "photo-contract" || definition.name !== "niho-photo-contract" || !assertRelativePath(definition.entry, "Node contract entry") || !definition.include.some((pattern) => globRegex(pattern).test(definition.entry)))) throw new SdkReleaseError("Node contract 定義が不正です");
     for (const [from, to] of Object.entries(definition.rewritePackageImports ?? {})) {
       if (!PACKAGE_NAME.test(from) || !PACKAGE_NAME.test(to) || from === to) throw new SdkReleaseError("package import rewrite が不正です");
     }
@@ -112,11 +116,14 @@ export function validateConfig(config) {
       if (typeof from !== "string" || !from || from.includes("\\") || from.includes("\0") || !PACKAGE_NAME.test(dependency)) throw new SdkReleaseError("module specifier rewrite が不正です");
     }
   }
-  if (!ids.has("ui") || !ids.has("photo-editing") || !ids.has("cloud-contract") || !ids.has("develop-engine-source")) throw new SdkReleaseError("必須 package がありません");
+  if (!ids.has("ui") || !ids.has("photo-editing") || !ids.has("cloud-contract") || !ids.has("photo-contract") || !ids.has("develop-engine-source")) throw new SdkReleaseError("必須 package がありません");
+  if (JSON.stringify(config.ownedSourcePaths) !== JSON.stringify(OWNED_SOURCE_PATHS)) throw new SdkReleaseError("SDK owned source path が不正です");
+  if (JSON.stringify(config.buildToolingPaths) !== JSON.stringify(BUILD_TOOLING_PATHS)) throw new SdkReleaseError("SDK build tooling path が不正です");
   const engineSource = config.packages.find(({ id }) => id === "develop-engine-source");
   if (!ENGINE_NOTICE_FILES.every((file) => engineSource.include.some((pattern) => globRegex(pattern).test(file)))) throw new SdkReleaseError("engine source の license/notice closure が不足しています");
   const engine = config.engine;
   if (!engine || !/^niho-[1-9]\d*$/.test(engine.version ?? "") || !SEMVER.test(engine.crateVersion ?? "") || !PACKAGE_NAME.test(engine.runtimePackageName ?? "")) throw new SdkReleaseError("engine pin が不正です");
+  assertStrictSemver(engine.crateVersion);
   assertRelativePath(engine.assetDirectory, "engine assetDirectory");
   if (engine.manifestName !== `manifest-${engine.crateVersion}.json`) throw new SdkReleaseError("engine manifest 名と crate version が一致しません");
   for (const item of [...engine.contractPaths, ...engine.buildInputs]) assertRelativePath(item, "engine input");
@@ -195,6 +202,18 @@ function rewriteImports(bytes, rewrites, specifierRewrites, file) {
 
 function packageManifest(definition, original, config) {
   const rootNotices = ROOT_NOTICE_FILES;
+  if (definition.kind === "node-contract") {
+    return {
+      name: definition.name,
+      version: config.version,
+      description: "NIHO photo recipe contract for plain Node.js ESM consumers",
+      type: "module",
+      license: "UNLICENSED",
+      files: ["dist", ...rootNotices],
+      exports: { ".": { types: "./dist/index.d.ts", import: "./dist/index.js" }, "./package.json": "./package.json" },
+      engines: { node: "24.x" },
+    };
+  }
   if (definition.kind === "rust-source") {
     return {
       name: definition.name,
@@ -223,7 +242,6 @@ function packageManifest(definition, original, config) {
     manifest.exports = {
       ...(manifest.exports ?? {}),
       "./develop-engine/*": "./src/develop-engine/*.ts",
-      "./editor/*": "./src/editor/*.tsx",
       "./library/*": "./src/library/*.ts",
       "./sdk-dialog-host": "./src/sdk-dialog-host.tsx",
     };
@@ -319,6 +337,110 @@ function stageSourcePackage({ repoRoot, commit, config, definition, stage, rootN
   return manifest;
 }
 
+function rewriteNodeImportSpecifiers(text) {
+  let rewritten = text;
+  for (const { fileName } of ts.preProcessFile(text, true, true).importedFiles.filter(({ fileName }) => fileName.startsWith("."))) {
+    const specifier = fileName.replace(/\.(?:[cm]?[jt]sx?)$/u, "");
+    const replacement = `${specifier}.js`;
+    rewritten = rewritten.replaceAll(`"${fileName}"`, `"${replacement}"`).replaceAll(`'${fileName}'`, `'${replacement}'`);
+  }
+  return rewritten;
+}
+
+function collectNodeContractSources(repoRoot, commit, definition) {
+  const entries = treeEntries(repoRoot, commit, definition.sourceRoot);
+  const byRelativePath = new Map(entries.map((entry) => [entry.file.slice(definition.sourceRoot.length + 1), entry]));
+  const selected = new Map();
+  const queue = [definition.entry];
+  while (queue.length) {
+    const relative = queue.shift();
+    if (selected.has(relative)) continue;
+    const entry = byRelativePath.get(relative);
+    if (!entry || !relative.endsWith(".ts") || relative.endsWith(".d.ts")) throw new SdkReleaseError("Node contract の純粋TypeScript closureが不正です");
+    const bytes = gitBytes(repoRoot, commit, entry.file);
+    const text = bytes.toString("utf8");
+    selected.set(relative, rewriteNodeImportSpecifiers(text));
+    for (const { fileName: specifier } of ts.preProcessFile(text, true, true).importedFiles) {
+      if (!specifier.startsWith(".")) throw new SdkReleaseError("Node contract に外部runtime dependencyがあります");
+      const dependency = resolveRelativeImport(new Set(byRelativePath.keys()), relative, specifier);
+      if (!dependency) throw new SdkReleaseError("Node contract dependency closureに欠落があります");
+      queue.push(dependency);
+    }
+  }
+  return selected;
+}
+
+function stageNodeContractPackage({ repoRoot, commit, config, definition, stage, rootNotices, recipe }) {
+  const buildRoot = path.join(stage, ".contract-build");
+  const sourceRoot = path.join(buildRoot, "source");
+  const outputRoot = path.join(stage, "dist");
+  mkdirSync(sourceRoot, { recursive: true, mode: 0o755 });
+  put(buildRoot, "package.json", jsonBytes({ type: "module" }));
+  for (const [relative, text] of collectNodeContractSources(repoRoot, commit, definition)) put(sourceRoot, relative, Buffer.from(text));
+  const entry = [
+    "export {",
+    "  DEVELOP_SETTINGS_ENGINE, DEVELOP_SETTINGS_LOOK, DEVELOP_SETTINGS_LOOKS, DEVELOP_SETTINGS_LOOK_WHEN_MISSING,",
+    "  LEGACY_DEVELOP_SETTINGS_ENGINE, NIHO2_DEVELOP_SETTINGS_ENGINE,",
+    "  NIHO4_DEVELOP_SETTINGS_ENGINE, NIHO4_DEVELOP_SETTINGS_LOOK,",
+    "  NIHO6_DEVELOP_SETTINGS_ENGINE, NIHO6_DEVELOP_SETTINGS_LOOKS, NIHO7_DEVELOP_SETTINGS_ENGINE, NIHO7_DEVELOP_SETTINGS_LOOK,",
+    "  NIHO10_DEVELOP_SETTINGS_ENGINE, NIHO11_DEVELOP_SETTINGS_ENGINE, NIHO11_DEVELOP_SETTINGS_LOOK,",
+    "  NIHO12_DEVELOP_SETTINGS_ENGINE, SIGNED_DEVELOP_SETTINGS_ENGINE, SIGNED_DEVELOP_SETTINGS_LOOK, SIGNED_WORKING_COPY_ENCODING,",
+    "  DevelopSettingsBaseMismatchError, developSettingsOnWorkingCopy, hasNullDevelopGeometryField, isEditableDevelopSettings,",
+    "  neutralDevelopSettings, newDevelopSettingsEngine, readDevelopSettings, signedNeutralDevelopSettings, signedWorkingCopyState,",
+    "  supportsNiho4SignedRaw, supportsNiho7SignedRaw,",
+    '} from "./src/develop-engine/develop-settings.js";',
+    'export type { DevelopSettings, DevelopSettingsVersion, NewDevelopSettingsEngineOptions, SignedWorkingCopyState } from "./src/develop-engine/develop-settings.js";',
+    `export const supportedDevelopSettingsVersions = ${JSON.stringify(recipe.supportedVersions)} as const;`,
+    `export const developSettingsEngineIdentifiers = ${JSON.stringify(recipe.engineIdentifiers)} as const;`,
+    "",
+  ].join("\n");
+  put(sourceRoot, "index.ts", Buffer.from(entry));
+  const rootNames = ["index.ts", ...collectFiles(sourceRoot).filter((name) => name.endsWith(".ts"))]
+    .filter((name, index, values) => values.indexOf(name) === index)
+    .map((name) => path.join(sourceRoot, name));
+  const program = ts.createProgram({
+    rootNames,
+    options: {
+      declaration: true,
+      esModuleInterop: false,
+      lib: ["lib.es2022.d.ts"],
+      module: ts.ModuleKind.NodeNext,
+      moduleResolution: ts.ModuleResolutionKind.NodeNext,
+      newLine: ts.NewLineKind.LineFeed,
+      noEmitOnError: true,
+      outDir: outputRoot,
+      rootDir: sourceRoot,
+      skipLibCheck: true,
+      sourceMap: false,
+      strict: true,
+      target: ts.ScriptTarget.ES2022,
+      types: [],
+    },
+  });
+  const emitted = program.emit();
+  const diagnostics = ts.getPreEmitDiagnostics(program).filter(({ category }) => category === ts.DiagnosticCategory.Error);
+  if (emitted.emitSkipped || diagnostics.length) throw new SdkReleaseError(`Node contract のJavaScript/declaration生成に失敗しました: ${diagnostics.slice(0, 4).map(({ messageText }) => ts.flattenDiagnosticMessageText(messageText, " ")).join(" / ")}`);
+  rmSync(buildRoot, { recursive: true, force: true });
+  const outputs = collectFiles(outputRoot);
+  if (!outputs.includes("index.js") || !outputs.includes("index.d.ts") || outputs.some((name) => !/\.(?:js|d\.ts)$/u.test(name))) throw new SdkReleaseError("Node contract の生成物closureが不正です");
+  for (const name of outputs) {
+    const text = readFileSync(path.join(outputRoot, name), "utf8");
+    if (/sourceMappingURL/u.test(text) || (/\.js$/u.test(name) && ts.preProcessFile(text, true, true).importedFiles.some(({ fileName }) => fileName.startsWith(".") && !fileName.endsWith(".js")))) throw new SdkReleaseError("Node contract のESM specifier/source mapが不正です");
+  }
+  const manifest = packageManifest(definition, {}, config);
+  put(stage, "package.json", jsonBytes(manifest));
+  for (const [name, bytes] of Object.entries(rootNotices)) put(stage, name, bytes);
+  auditTypeScriptClosure(stage, manifest);
+  return manifest;
+}
+
+function collectFiles(root, prefix = "") {
+  return readdirSync(root, { withFileTypes: true }).flatMap((entry) => {
+    const relative = prefix ? `${prefix}/${entry.name}` : entry.name;
+    return entry.isDirectory() ? collectFiles(path.join(root, entry.name), relative) : [relative];
+  }).sort();
+}
+
 export function validateRuntimeAssets({ assetDirectory, engine, expectedSource }) {
   if (!path.isAbsolute(assetDirectory)) throw new SdkReleaseError("engine asset 入力は絶対 path で指定してください");
   let directoryStat;
@@ -381,6 +503,7 @@ function stageRuntimePackage({ stage, config, runtime, rootNotices, engineNotice
   const manifest = {
     name: config.engine.runtimePackageName,
     version: config.version,
+    type: "module",
     description: "NIHO photo develop engine immutable wasm runtime",
     license: "UNLICENSED",
     files: ["develop-engine", ...ROOT_NOTICE_FILES, ...ENGINE_NOTICE_FILES],
@@ -447,6 +570,25 @@ function sourceRecords(repoRoot, commit, paths) {
   });
 }
 
+function ownershipDigest(records) {
+  return sha256(Buffer.from(records.map(({ path: ownedPath, sha256: digest, files }) => `${ownedPath}\0${digest}\0${files}\n`).join("")));
+}
+
+function ownedSourceRecords(repoRoot, commit, paths) {
+  const records = paths.map((ownedPath) => {
+    const entries = treeEntries(repoRoot, commit, ownedPath).sort((left, right) => left.file.localeCompare(right.file, "en"));
+    const digest = createHash("sha256");
+    for (const entry of entries) {
+      const bytes = gitBytes(repoRoot, commit, entry.file);
+      digest.update(`${entry.mode}\0${entry.file}\0${bytes.length}\0`);
+      digest.update(bytes);
+      digest.update("\0");
+    }
+    return { path: ownedPath, sha256: digest.digest("hex"), files: entries.length };
+  });
+  return { algorithm: "sha256-git-file-set-v1", digest: ownershipDigest(records), paths: records };
+}
+
 function verifyEnginePins(repoRoot, commit, config) {
   const client = gitBytes(repoRoot, commit, "packages/photo-editing/src/develop-engine/develop-engine-manifest.ts").toString("utf8");
   const engineVersion = /export const DEVELOP_ENGINE_VERSION = "([^"]+)";/.exec(client)?.[1];
@@ -466,11 +608,12 @@ function recipeCompatibility(repoRoot, commit) {
     .sort((a, b) => Number(a.slice(5)) - Number(b.slice(5)));
   if (JSON.stringify(versions) !== JSON.stringify([1, 2, 3, 4, 5, 6, 7, 8, 9]) || !engines.includes("niho-13")) throw new SdkReleaseError("recipe compatibility を source から確定できません");
   return {
-    format: "typescript-source",
+    format: "javascript-esm-with-declarations",
     supportedVersions: versions,
     engineIdentifiers: engines,
-    nodeRuntimeValidator: false,
-    limitation: "A plain Node.js API requires a generated JavaScript and declaration contract package in a later release slice.",
+    nodeRuntimeValidator: true,
+    package: "niho-photo-contract",
+    export: ".",
   };
 }
 
@@ -492,13 +635,15 @@ export async function packReleaseSet({ repoRoot, configPath = "sdk/release-set.j
   const runtime = validateRuntimeAssets({ assetDirectory: assets, engine: config.engine, expectedSource: { commit, tree } });
   const rootNotices = Object.fromEntries(ROOT_NOTICE_FILES.map((name) => [name, gitBytes(repoRoot, commit, name)]));
   const engineNotices = Object.fromEntries(ENGINE_NOTICE_FILES.map((name) => [name, gitBytes(repoRoot, commit, `packages/develop-engine/${name}`)]));
+  const recipe = recipeCompatibility(repoRoot, commit);
   const scratch = mkdtempSync(path.join(tmpdir(), "niho-photo-sdk-pack-"));
   try {
     const packages = [];
     for (const definition of config.packages) {
       const stage = path.join(scratch, `stage-${definition.id}`);
       mkdirSync(stage, { mode: 0o755 });
-      stageSourcePackage({ repoRoot, commit, config, definition, stage, rootNotices });
+      if (definition.kind === "node-contract") stageNodeContractPackage({ repoRoot, commit, config, definition, stage, rootNotices, recipe });
+      else stageSourcePackage({ repoRoot, commit, config, definition, stage, rootNotices });
       await guardBundle(stage, [repoRoot]);
       const packed = npmPackDeterministic(stage, scratch);
       packages.push({ id: definition.id, name: definition.name, ...packed });
@@ -517,6 +662,8 @@ export async function packReleaseSet({ repoRoot, configPath = "sdk/release-set.j
       repository: config.repository,
       version: config.version,
       source: { commit, tree },
+      sourceOwnership: ownedSourceRecords(repoRoot, commit, config.ownedSourcePaths),
+      buildTooling: { node: "24.x", files: sourceRecords(repoRoot, commit, config.buildToolingPaths) },
       packages: packages.map(({ id, name, filename, bytes }) => ({ id, name, file: filename, sha256: sha256(bytes), integrity: sri(bytes), size: bytes.length })),
       engine: {
         version: config.engine.version,
@@ -531,7 +678,7 @@ export async function packReleaseSet({ repoRoot, configPath = "sdk/release-set.j
         contracts: sourceRecords(repoRoot, commit, config.engine.contractPaths),
         buildInputs: sourceRecords(repoRoot, commit, config.engine.buildInputs),
       },
-      recipeCompatibility: recipeCompatibility(repoRoot, commit),
+      recipeCompatibility: recipe,
       uiSingleton: {
         package: "niho-photo-ui",
         hostExport: "niho-photo-editing/sdk-dialog-host",
@@ -552,86 +699,9 @@ export async function packReleaseSet({ repoRoot, configPath = "sdk/release-set.j
 export function verifyReleaseManifestFiles(manifestPath) {
   const manifestStat = lstatSync(manifestPath);
   if (!manifestStat.isFile() || manifestStat.isSymbolicLink()) throw new SdkReleaseError("SDK release manifest は通常ファイルが必要です");
-  const manifest = JSON.parse(readFileSync(manifestPath, "utf8"));
-  assertStrictSemver(manifest.version);
-  if (
-    manifest.schemaVersion !== 1 ||
-    manifest.releaseReady !== true ||
-    manifest.repository !== "niho-coliving/niho-photo" ||
-    !/^[a-f0-9]{40}$/.test(manifest.source?.commit ?? "") ||
-    !/^[a-f0-9]{40}$/.test(manifest.source?.tree ?? "")
-  ) throw new SdkReleaseError("SDK release manifest が不正です");
-  const requiredPackages = new Map([
-    ["ui", "niho-photo-ui"],
-    ["photo-editing", "niho-photo-editing"],
-    ["cloud-contract", "niho-photo-cloud-contract"],
-    ["develop-engine-source", "niho-photo-develop-engine-source"],
-    ["develop-engine-runtime", "niho-photo-develop-engine-runtime"],
-  ]);
-  if (!Array.isArray(manifest.packages) || manifest.packages.length !== requiredPackages.size) throw new SdkReleaseError("SDK package 集合が不正です");
-  const ids = new Set();
-  const names = new Set();
-  const filenames = new Set();
-  const directory = path.dirname(manifestPath);
-  for (const item of manifest.packages) {
-    if (
-      requiredPackages.get(item.id) !== item.name ||
-      ids.has(item.id) ||
-      names.has(item.name) ||
-      filenames.has(item.file) ||
-      !SIMPLE_ASSET.test(item.file ?? "") ||
-      !item.file.endsWith(".tgz") ||
-      !SHA256.test(item.sha256 ?? "") ||
-      item.integrity !== `sha256-${Buffer.from(item.sha256, "hex").toString("base64")}` ||
-      !Number.isSafeInteger(item.size) ||
-      item.size <= 0
-    ) throw new SdkReleaseError("SDK package record が不正です");
-    ids.add(item.id);
-    names.add(item.name);
-    filenames.add(item.file);
-    const packagePath = path.join(directory, item.file);
-    const packageStat = lstatSync(packagePath);
-    if (!packageStat.isFile() || packageStat.isSymbolicLink()) throw new SdkReleaseError("SDK package は通常ファイルが必要です");
-    const bytes = readFileSync(packagePath);
-    if (bytes.length !== item.size || sha256(bytes) !== item.sha256 || sri(bytes) !== item.integrity) throw new SdkReleaseError(`SDK package hash が一致しません: ${item.name}`);
-    tarEntries(packagePath);
-  }
-  if ([...requiredPackages.keys()].some((id) => !ids.has(id))) throw new SdkReleaseError("SDK package の必須集合が不足しています");
-  const engine = manifest.engine;
-  if (!engine || !/^niho-[1-9]\d*$/.test(engine.version ?? "")) throw new SdkReleaseError("SDK engine 契約が不正です");
-  assertStrictSemver(engine.crateVersion);
-  const recordsValid = (records, expectedPaths) => {
-    if (!Array.isArray(records) || records.length !== expectedPaths.length) return false;
-    const recordPaths = new Set();
-    for (const record of records) {
-      if (!expectedPaths.includes(record.path) || recordPaths.has(record.path) || !SHA256.test(record.sha256 ?? "") || record.integrity !== `sha256-${Buffer.from(record.sha256, "hex").toString("base64")}` || !Number.isSafeInteger(record.size) || record.size <= 0) return false;
-      recordPaths.add(record.path);
-    }
-    return expectedPaths.every((item) => recordPaths.has(item));
-  };
-  const expectedContracts = [
-    "packages/photo-editing/src/develop-engine/develop-engine-manifest.ts",
-    "packages/photo-editing/src/develop-engine/develop-settings.ts",
-    "packages/develop-engine/crates/niho-develop/src/settings.rs",
-  ];
-  const expectedBuildInputs = [
-    "packages/develop-engine/Cargo.lock",
-    "packages/develop-engine/Cargo.toml",
-    "packages/develop-engine/rust-toolchain.toml",
-    "packages/develop-engine/crates/niho-develop-wasm/Cargo.toml",
-    "packages/develop-engine/crates/niho-develop-wasm/src/lib.rs",
-  ];
-  if (!recordsValid(engine.contracts, expectedContracts) || !recordsValid(engine.buildInputs, expectedBuildInputs)) throw new SdkReleaseError("SDK engine source pin が不正です");
-  if (engine.manifest?.file !== `manifest-${engine.crateVersion}.json` || !SHA256.test(engine.manifest?.sha256 ?? "") || engine.manifest?.integrity !== `sha256-${Buffer.from(engine.manifest.sha256, "hex").toString("base64")}` || !Number.isSafeInteger(engine.manifest?.size) || engine.manifest.size <= 0) throw new SdkReleaseError("SDK engine manifest record が不正です");
-  const runtimeFiles = engine.runtimeFiles;
-  if (!Array.isArray(runtimeFiles) || ![".js", ".wasm", ".d.ts"].every((extension) => runtimeFiles.some((file) => file.name?.endsWith(extension)))) throw new SdkReleaseError("SDK engine runtime closure が不正です");
-  const runtimeNames = new Set();
-  for (const file of runtimeFiles) {
-    if (!SIMPLE_ASSET.test(file.name ?? "") || runtimeNames.has(file.name) || !SHA256.test(file.sha256 ?? "") || file.integrity !== `sha256-${Buffer.from(file.sha256, "hex").toString("base64")}` || !Number.isSafeInteger(file.size) || file.size <= 0) throw new SdkReleaseError("SDK engine runtime record が不正です");
-    runtimeNames.add(file.name);
-  }
-  const recipe = manifest.recipeCompatibility;
-  if (recipe?.format !== "typescript-source" || JSON.stringify(recipe.supportedVersions) !== JSON.stringify([1, 2, 3, 4, 5, 6, 7, 8, 9]) || !Array.isArray(recipe.engineIdentifiers) || new Set(recipe.engineIdentifiers).size !== recipe.engineIdentifiers.length || !recipe.engineIdentifiers.includes(engine.version) || recipe.nodeRuntimeValidator !== false || typeof recipe.limitation !== "string" || recipe.limitation.length < 16) throw new SdkReleaseError("SDK recipe compatibility 契約が不正です");
-  if (manifest.uiSingleton?.package !== "niho-photo-ui" || manifest.uiSingleton?.hostExport !== "niho-photo-editing/sdk-dialog-host" || typeof manifest.uiSingleton?.requirement !== "string" || manifest.uiSingleton.requirement.length < 16) throw new SdkReleaseError("SDK UI singleton 契約が不正です");
+  let manifest;
+  try { manifest = JSON.parse(readFileSync(manifestPath, "utf8")); } catch { throw new SdkReleaseError("SDK release manifest がJSONではありません"); }
+  validateReleaseManifest(manifest, manifest.source?.commit);
+  verifyManifestPackageFiles({ manifest, directory: path.dirname(manifestPath) });
   return manifest;
 }

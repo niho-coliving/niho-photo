@@ -21,6 +21,7 @@
     "sdk:build-engine-runtime": "node scripts/sdk/build-develop-engine-runtime.mjs",
     "sdk:test": "node --test scripts/sdk/*.test.mjs",
     "sdk:smoke": "node scripts/sdk/smoke-consumer.mjs",
+    "sdk:smoke-real-engine": "node scripts/sdk/smoke-real-engine.mjs",
     "release:evidence": "node scripts/ci/release-evidence.mjs"
   },
   "engines": {
