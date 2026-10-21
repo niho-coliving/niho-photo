@@ -6,6 +6,8 @@ import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { DevelopEngine, DevelopFrame } from "../develop-engine/develop-engine-client";
+import { writeDevelopGeometry } from "../develop-engine/develop-geometry";
+import { addDevelopHealMark } from "../develop-engine/develop-heal-editing";
 import { neutralDevelopSettings, type DevelopSettings } from "../develop-engine/develop-settings";
 import type { BrowserCloudPlace } from "../browser-photo-cloud-source";
 import type {
@@ -185,6 +187,9 @@ function createEngine(options: EngineOptions): DevelopEngine {
     supportsGeometry: vi.fn(async () => true),
     supportsPerspective: vi.fn(async () => true),
     supportsEffects: vi.fn(async () => true),
+    supportsColorPoints: vi.fn(async () => false),
+    supportsDetail: vi.fn(async () => false),
+    supportsHeal: vi.fn(async () => true),
     imageSize: vi.fn(async () => ({ width: 3000, height: 2000 })),
     rasterDecodeSize: vi.fn(async () => 1280),
     geometryOutputSize: vi.fn(async () => ({ width: 1280, height: 853 })),
@@ -354,6 +359,7 @@ function Harness(props: { library: PhotoLibrary; items: BrowserItem[] }) {
     viewMode,
     setViewMode,
     cropRollout: true,
+    healAllowed: true,
     editingAllowed: true,
     canvasSurface: "page",
     setExportSheetOpen: vi.fn(),
@@ -774,6 +780,114 @@ describe("useBrowserPhotoOpen progressive RAW integration", () => {
     await settleUntil(() => current.opened?.input?.kind === "workingCopy", "canonical retry");
     expect(current.settings).toMatchObject({ base: BASE_VERSION, exposure: 0.7 });
     expect(current.canUndo).toBe(true);
+  });
+
+  it("修復の道具（niho-photo#44）は仮の入力の間は出さず、正式な入力で幾何を外した画（色・印は当てる）を描き、抜けると幾何のある画に戻る", async () => {
+    const firstCanonical = deferred<DevelopFrame | null>();
+    const provisional = createEngine({ marker: 1 });
+    const canonical = createEngine({
+      marker: 9,
+      render: async (_settings, call) => call === 1 ? firstCanonical.promise : frame(9),
+    });
+    engineFactory.mockImplementationOnce(() => provisional).mockImplementationOnce(() => canonical);
+    const fixture = createLibrary(async () => readyWork());
+    const target = item("heal");
+    await mount(fixture.library, [target]);
+    await run(() => {
+      void current.openItem(target);
+    });
+    await settleUntil(() => current.opened?.input?.kind === "provisional", "provisional open");
+    await act(async () => Promise.resolve());
+    expect(current.heal.available).toBe(false);
+
+    await run(() => firstCanonical.resolve(frame(8)));
+    await settleUntil(() => current.opened?.input?.kind === "workingCopy" && current.heal.available, "heal available");
+    const geometry = {
+      rotate: 90 as const,
+      flipH: true,
+      flipV: false,
+      angle: 3,
+      crop: { left: 0.1, top: 0.1, right: 0.9, bottom: 0.9 },
+    };
+    await run(() =>
+      current.changeSettings((settings) => writeDevelopGeometry({ ...(settings as DevelopSettings), exposure: 0.5 }, geometry), "commit"),
+    );
+    const lastRender = () => vi.mocked(canonical.render).mock.calls.at(-1)?.[0] as DevelopSettings;
+    await settleUntil(() => lastRender().geometry !== undefined, "edited render");
+
+    await run(() => current.heal.enter());
+    await settleUntil(() => current.heal.ready, "heal frame painted");
+    // 幾何を全部外し、色は当てる（ポインタの位置 = 印の座標）
+    expect(lastRender().geometry).toBeUndefined();
+    expect(lastRender().exposure).toBe(0.5);
+    expect(framePainted).toHaveBeenLastCalledWith(target.key, expect.objectContaining({ rgba: frame(9).rgba }));
+
+    await run(() => {
+      current.heal.addMark(
+        [
+          [0.2, 0.3],
+          [0.4, 0.3],
+        ],
+        { width: 3000, height: 2000 },
+      );
+    });
+    expect(current.canUndo).toBe(true);
+    await settleUntil(() => Array.isArray(lastRender().heal), "healed render");
+    expect(lastRender().geometry).toBeUndefined();
+    expect(lastRender().v).toBe(8);
+    await settleUntil(() => current.heal.paintedMarks.size === 1, "mark painted");
+    // 編集内容の幾何はそのまま
+    expect(current.settings).toMatchObject({ geometry: expect.objectContaining({ rotate: 90, angle: 3 }) });
+
+    await run(() => current.heal.leave());
+    await settleUntil(() => lastRender().geometry !== undefined, "geometry render");
+    expect(Array.isArray(lastRender().heal)).toBe(true);
+    // 取り消すと印も消える
+    await run(() => current.undo());
+    expect(current.settings.heal).toBeUndefined();
+  });
+
+  it("「補正前」と比較の補正前は、修復の印を外して描く（幾何は保つ。niho-photo#44）", async () => {
+    const canonical = createEngine({ marker: 9 });
+    engineFactory.mockReturnValue(canonical);
+    const fixture = createLibrary(async () => readyWork());
+    vi.mocked(fixture.library.loadInteractivePreview!).mockRejectedValue(new Error("preview unavailable"));
+    const target = item("heal-before");
+    await mount(fixture.library, [target]);
+    await run(() => current.openItem(target));
+    await run(() =>
+      current.changeSettings(
+        (settings) =>
+          addDevelopHealMark(
+            writeDevelopGeometry(settings as DevelopSettings, {
+              rotate: 90,
+              flipH: false,
+              flipV: false,
+              angle: 0,
+              crop: { left: 0, top: 0, right: 1, bottom: 1 },
+            }),
+            { id: "h1", mode: "remove", radius: 0.02, feather: 0.5, points: [[0.5, 0.5]] },
+          ),
+        "commit",
+      ),
+    );
+    expect(current.settings.heal).toBeDefined();
+    // 比較の補正前（2 枚目の canvas。background の描画は 5 の画）
+    vi.mocked(canonical.render).mockImplementation(async (_settings, options) => frame(options.priority === "background" ? 5 : 9));
+    const compareCanvas = () => container.querySelector<HTMLCanvasElement>('[data-testid="compare-before"]');
+    await run(() => setHarnessCompare(true));
+    await settleUntil(() => paintFrame.mock.calls.some(([canvas]) => canvas === compareCanvas()), "compare before painted");
+    const compareBefore = vi.mocked(canonical.render).mock.calls.find(([, options]) => options.priority === "background")?.[0];
+    expect((compareBefore as DevelopSettings).heal).toBeUndefined();
+    expect((compareBefore as DevelopSettings).geometry).toMatchObject({ rotate: 90 });
+    expect((compareBefore as DevelopSettings).v).toBe(2);
+    await run(() => setHarnessCompare(false));
+
+    // 「補正前」（押している間）も同じ設定（印を外し、幾何は保つ）なので、覚えている補正前の画をそのまま描く
+    const rendersBefore = vi.mocked(canonical.render).mock.calls.length;
+    await run(() => current.setCompareOriginal(true));
+    await settleUntil(() => (paintFrame.mock.calls.at(-1)?.[1] as DevelopFrame | undefined)?.rgba[0] === 5, "before painted");
+    expect(vi.mocked(canonical.render).mock.calls.length).toBe(rendersBefore);
   });
 
   it("写真切替で前のpreview/canonical生成をabortし、遅れて返った結果を開かない", async () => {

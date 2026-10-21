@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { photoEditingPresetNotWrittenError } from "../photo-editing-copy";
 
 import {
   HEAL_SETTINGS_VERSION,
@@ -24,6 +25,10 @@ const mark = (id: string, extra: Record<string, unknown> = {}) => ({
 });
 
 describe("readDevelopHealMarks（crate の heal.rs と同じ形）", () => {
+  it("プリセットに含められない修復の印を表示する", () => {
+    expect(photoEditingPresetNotWrittenError(["heal"])).toContain("修復");
+  });
+
   it("無い・null は空、描ける印はそのまま読む（写し元は無い・null・-1〜1）", () => {
     expect(HEAL_SETTINGS_VERSION).toBe(8);
     expect(readDevelopHealMarks(undefined)).toEqual([]);

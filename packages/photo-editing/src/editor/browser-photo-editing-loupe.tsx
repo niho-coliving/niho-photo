@@ -12,6 +12,8 @@ import {
 
 import { Spinner } from "niho-ui/components/spinner";
 import type { DevelopGeometry, DevelopSize } from "../develop-engine/develop-geometry";
+import type { DevelopHealPoint } from "../develop-engine/develop-heal";
+import type { DevelopHealImageSize, DevelopHealMarkView } from "../develop-engine/develop-heal-editing";
 import type { CutoutPoint } from "../photo-cutout";
 import {
   PHOTO_EDITING_COMPARE_AFTER_LABEL,
@@ -27,6 +29,7 @@ import { PhotoEditingClipOverlay } from "./photo-editing-clip-overlay";
 import { PhotoEditingCompareSplit } from "./photo-editing-compare-split";
 import { PhotoEditingCropOverlay } from "./photo-editing-crop-overlay";
 import { PhotoEditingCutoutBrushOverlay } from "./photo-editing-cutout-brush-overlay";
+import { PhotoEditingHealOverlay } from "./photo-editing-heal-overlay";
 import { canvasNormalizedPoint } from "./photo-editing-color-mixer";
 
 /** 写真の左上の札（「補正前」・プリセットの仮の表示）。 */
@@ -75,6 +78,9 @@ const CUTOUT_CHECKERBOARD_STYLE: CSSProperties = {
  * （`side`）は、この面を半分（右 / 下）にし、残りの半分（左 / 上）に補正前の canvas の面を足す。どちらの画も同じ縦横比・中央寄せ
  * で、拡大（スマホの層）も同じ値を読むので揃う。分割（`split`）は、補正後の canvas に補正前の canvas を重ねて境界から左だけ見せる。
  * クリップ領域の印は補正後の側にだけ掛かる。`compare` が無い間の DOM は今までと同じ。
+ *
+ * 修復の道具の間（`heal`。niho-photo#44。PC の面だけ）は、canvas（面が幾何を全部外した画を描く）を修復のブラシの部品の中に置く
+ * （道具を切り替えると canvas は置き直され、面が描き終えるまで前の道具の画を見せない）。
  */
 export function BrowserPhotoEditingLoupe(props: {
   opened: OpenedSource | null;
@@ -109,6 +115,19 @@ export function BrowserPhotoEditingLoupe(props: {
     disabled: boolean;
     onLiveStroke: (points: CutoutPoint[] | null) => void;
     onCommitStroke: (points: CutoutPoint[]) => void;
+  } | null;
+  /** 修復の道具の間の、写真の上のブラシに渡す値（開いていなければ null。niho-photo#44） */
+  heal?: {
+    disabled: boolean;
+    marks: readonly DevelopHealMarkView[];
+    paintedMarks: ReadonlySet<string>;
+    selectedId: string | null;
+    showMarks: boolean;
+    brush: { radius: number; feather: number };
+    pointLimit: number;
+    onCommitStroke: (points: readonly DevelopHealPoint[], size: DevelopHealImageSize) => void;
+    onSelect: (id: string | null) => void;
+    onSourceChange: (id: string, source: DevelopHealPoint, phase: "drag" | "commit") => void;
   } | null;
   /**
    * 写真の上に重ねるクリップ領域の印（niho-photo#36。黒つぶれ = 青 / 白飛び = 赤。PC の右パネルのヒストグラムで押したとき）。
@@ -163,6 +182,7 @@ export function BrowserPhotoEditingLoupe(props: {
   const drawn = openedVisible && opened !== null && (Boolean(opened.decoded) || opened.mode === "wasm");
   const crop = props.crop ?? null;
   const cutout = props.cutout ?? null;
+  const heal = props.heal ?? null;
   // 見比べる（niho-photo#41）。切り抜きの道具の間・写真が無い間は使わない
   const compare = opened && !crop ? (props.compare ?? null) : null;
   const sideCompare = compare?.mode === "side" ? compare : null;
@@ -274,7 +294,12 @@ export function BrowserPhotoEditingLoupe(props: {
           <canvas ref={props.canvasRef} aria-label={`${opened.fileName} のプレビュー`} className={cn("block h-full w-full", opened.previewPending && "invisible")} />
         </PhotoEditingCropOverlay>
       ) : null}
-      {drawn && canvas && cutout ? (
+      {drawn && canvas && heal ? (
+        <PhotoEditingHealOverlay targetRef={props.canvasRef} {...heal}>
+          {canvas}
+        </PhotoEditingHealOverlay>
+      ) : null}
+      {drawn && canvas && cutout && !heal ? (
         <PhotoEditingCutoutBrushOverlay
           enabled={cutout.brushing}
           radius={cutout.radius}
@@ -286,7 +311,7 @@ export function BrowserPhotoEditingLoupe(props: {
           {canvas}
         </PhotoEditingCutoutBrushOverlay>
       ) : null}
-      {drawn && canvas && !cutout ? canvas : null}
+      {drawn && canvas && !cutout && !heal ? canvas : null}
       {drawn && colorPicker?.active && props.canvasRef.current ? (() => {
         const rect = props.canvasRef.current.getBoundingClientRect();
         return (

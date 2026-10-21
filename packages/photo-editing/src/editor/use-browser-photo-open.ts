@@ -34,7 +34,6 @@ import {
   neutralDevelopSettings,
   readDevelopSettings,
   readBrowserAdjustmentsFromDevelopSettings,
-  resetDevelopSettingsColors,
   sameDevelopSettings,
   type DevelopSettings,
 } from "../develop-engine/develop-settings";
@@ -51,6 +50,7 @@ import {
 } from "../develop-engine/develop-work-wait";
 import { useDevelopWorkPoll } from "../develop-engine/use-develop-work-poll";
 import { cropFrameDevelopSettings } from "../photo-editing-crop";
+import { compareBeforeDevelopSettings, healFrameDevelopSettings } from "../photo-editing-heal";
 import { appDialog } from "niho-ui/app-dialog";
 
 import {
@@ -79,6 +79,7 @@ import { readCropSource, useBrowserPhotoCrop } from "./use-browser-photo-crop";
 import type { BrowserPhotoDevelop } from "./use-browser-photo-develop";
 import { useBrowserPhotoDevelopReload } from "./use-browser-photo-develop-reload";
 import { useBrowserPhotoEditSettings } from "./use-browser-photo-edit-settings";
+import { useBrowserPhotoHeal } from "./use-browser-photo-heal";
 import type { BrowserPhotoItems } from "./use-browser-photo-items";
 import { useBrowserPhotoPresets } from "./use-browser-photo-presets";
 import { useBrowserPhotoSettingsClipboard } from "./use-browser-photo-settings-clipboard";
@@ -121,6 +122,8 @@ export function useBrowserPhotoOpen(params: {
   setViewMode: (viewMode: BrowserViewMode) => void;
   /** 切り抜きの道具を出す拠点か（受入まで拠点を絞るフラグ。`usePhotoEditingRollout(spotId).crop`） */
   cropRollout: boolean;
+  /** 修復の道具（niho-photo#44）を出せる面か（PC の面だけ。スマホの層は false。省略は false） */
+  healAllowed?: boolean;
   /** 1 枚で開くと補正の入力を読む（1024px 以上か、スマホで直せる拠点。F6c 移行元設計） */
   editingAllowed: boolean;
   /** 1 枚の canvas を置いている場所（PC の面かスマホの層）。替わったら canvas が付け替わるので、今の画を描き直す */
@@ -243,6 +246,7 @@ export function useBrowserPhotoOpen(params: {
   const cropResetRef = useRef<(() => void) | null>(null);
   // 「自動」（F4b 移行元設計）は面が `useBrowserPhotoAuto` で持ち、捨てる係だけここで分配する
   const autoResetRef = useRef<(() => void) | null>(null);
+  const healResetRef = useRef<(() => void) | null>(null);
   const crop = useBrowserPhotoCrop({
     mountedRef,
     engineRef,
@@ -264,6 +268,24 @@ export function useBrowserPhotoOpen(params: {
   const cropActiveRef = useRef(cropActive);
   cropActiveRef.current = cropActive;
   const cropSettling = crop.settling;
+  // 修復の道具（niho-photo#44）。道具の間は、幾何を全部外した画を描く（ポインタの位置 = 印の座標）
+  const heal = useBrowserPhotoHeal({
+    mountedRef,
+    engineRef,
+    allowed: params.healAllowed === true && canEdit,
+    photoKey: wasmPhotoKey,
+    provisional: opened?.input?.kind === "provisional",
+    settings,
+    settingsRef: edit.settingsRef,
+    commitEdit: edit.commitEdit,
+    changeSettings: edit.changeSettings,
+    setCompareOriginal,
+    editResetHandlerRef: healResetRef,
+  });
+  const healActive = heal.active;
+  const healActiveRef = useRef(healActive);
+  healActiveRef.current = healActive;
+  const healFramePainted = heal.framePainted;
   const presets = useBrowserPhotoPresets({
     mountedRef,
     engineRef,
@@ -290,6 +312,7 @@ export function useBrowserPhotoOpen(params: {
     presetsResetRef.current?.();
     cropResetRef.current?.();
     autoResetRef.current?.();
+    healResetRef.current?.();
   };
   const previewSettings = presets.previewSettings;
   const previewSettingsRef = useRef(previewSettings);
@@ -394,6 +417,8 @@ export function useBrowserPhotoOpen(params: {
   const initialFrameRef = useRef<{ key: string; settingsJson: string; session: NonNullable<OpenResult["session"]> } | null>(null);
   /** 切り抜きの道具の間に描いた枠全体の画（同じ設定なら描き直さない。切り抜きを動かしても設定は変わらない） */
   const cropFrameCacheRef = useRef<{ key: string; settingsJson: string; epoch: number; frame: DevelopFrame } | null>(null);
+  /** 修復の道具の間に描いた幾何なしの画（同じ設定なら描き直さない。niho-photo#44） */
+  const healFrameCacheRef = useRef<{ key: string; settingsJson: string; epoch: number; frame: DevelopFrame } | null>(null);
   const framePostProcessRef = params.framePostProcessRef;
   const onFramePaintedRef = params.onFramePaintedRef;
   /**
@@ -526,8 +551,37 @@ export function useBrowserPhotoOpen(params: {
       return;
     }
     if (cropSettling) return;
+    if (healActive) {
+      // 修復の道具の間（niho-photo#44）は幾何を全部外した画（色・修復の印は当てる）。重ねる係は当てない。描いた画に入っている印を
+      // 道具に知らせる（まだ入っていない印は、写真の上で濃い赤のまま待つ）
+      const frameSettings = healFrameDevelopSettings(settings);
+      const frameJson = JSON.stringify(frameSettings);
+      const cachedFrame = healFrameCacheRef.current;
+      if (cachedFrame?.key === key && cachedFrame.settingsJson === frameJson && cachedFrame.epoch === workingEpoch) {
+        order.painted = ++order.requested;
+        paint(canvas, cachedFrame.frame, true, true);
+        healFramePainted(key, cachedFrame.frame, frameSettings);
+        return;
+      }
+      const sequence = ++order.requested;
+      // ブラシの大きさ・写し元を動かしている間は速い描き方にし、その画は覚えない（離したら丁寧に描く）
+      void engine
+        .render(frameSettings, { maxDimension: DEVELOP_PREVIEW_MAX_DIMENSION, interactive: provisionalQuality || dragging })
+        .then((frame) => {
+          if (!frame) return;
+          if (engineRef.current !== engine || order.generation !== paintGeneration) return;
+          if (openedRef.current?.key !== key || !healActiveRef.current) return;
+          if (sequence !== order.requested || !canvasRef.current) return;
+          order.painted = sequence;
+          if (!dragging) healFrameCacheRef.current = { key, settingsJson: frameJson, epoch: workingEpoch, frame };
+          paint(canvasRef.current, frame, !dragging, true);
+          healFramePainted(key, frame, frameSettings);
+        })
+        .catch(() => failInitial(sequence));
+      return;
+    }
     if (compareOriginal) {
-      const beforeSettings = resetDevelopSettingsColors(settings, developBaseVersion(activeOpened.input));
+      const beforeSettings = compareBeforeDevelopSettings(settings, developBaseVersion(activeOpened.input));
       const beforeJson = JSON.stringify(beforeSettings);
       const before = beforeFrameRef.current;
       if (before?.key === key && before.settingsJson === beforeJson) {
@@ -583,7 +637,7 @@ export function useBrowserPhotoOpen(params: {
         if (!frame) return;
         if (engineRef.current !== engine || order.generation !== paintGeneration) return;
         if (!interactive && !previewing) uploadInitial(settingsJson, frame);
-        if (openedRef.current?.key !== key || compareOriginalRef.current || cropActiveRef.current) return;
+        if (openedRef.current?.key !== key || compareOriginalRef.current || cropActiveRef.current || healActiveRef.current) return;
         if (sequence !== order.requested || !canvasRef.current) return;
         const paintedCanvas = canvasRef.current;
         order.painted = sequence;
@@ -616,6 +670,8 @@ export function useBrowserPhotoOpen(params: {
     developSessionRef,
     mountedRef,
     forcedPaintKey,
+    healActive,
+    healFramePainted,
     framePostProcessRef,
     frameCacheRef,
     onFramePaintedRef,
@@ -642,7 +698,7 @@ export function useBrowserPhotoOpen(params: {
   const compareBeforeSettings = useMemo(
     () =>
       compareCanvas && opened?.mode === "wasm"
-        ? resetDevelopSettingsColors(settings, developBaseVersion(opened.input))
+        ? compareBeforeDevelopSettings(settings, developBaseVersion(opened.input))
         : null,
     [compareCanvas, opened?.input, opened?.mode, settings],
   );
@@ -872,7 +928,7 @@ export function useBrowserPhotoOpen(params: {
         const rebound = rebindDevelopSettings(source, result.settings);
         return {
           kind: "compare",
-          settings: resetDevelopSettingsColors(rebound, developBaseVersion(result.opened.input)),
+          settings: compareBeforeDevelopSettings(rebound, developBaseVersion(result.opened.input)),
         };
       }
       const preview = previewSettingsRef.current;
@@ -1716,7 +1772,7 @@ export function useBrowserPhotoOpen(params: {
     previewAccurate: Boolean(opened?.previewPending && opened.previewCurrent &&
       initialFrameRef.current?.key === opened.key &&
       initialFrameRef.current.settingsJson === JSON.stringify(settings) &&
-      previewSettings === null && !compareOriginal && !cropActive),
+      previewSettings === null && !compareOriginal && !cropActive && !healActive),
     retryWork,
     retryCanonical,
     showGrid,
@@ -1737,6 +1793,7 @@ export function useBrowserPhotoOpen(params: {
     cropSettling,
     presets,
     crop,
+    heal,
     autoResetRef,
     clipboard,
     ensureDevelopWorkingSize,
