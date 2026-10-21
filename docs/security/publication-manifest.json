@@ -664,7 +664,7 @@
         "path": "packages/photo-editing/src/editor/browser-photo-editing-adjustments.tsx",
         "sha256": "2473ef7ca64f61e5ce7a72efb21f436f799f04a90a3a73b114cba15b7b5d23b1"
       },
-      "outputSha256": "1121b2f13775469d583e4dc3653bb5e59154a8ab88158a42fde5276b47d81ce6",
+      "outputSha256": "e61cf99983580b03f0eb5a0542a93fdb32656779823f7466883d3d982f42df67",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
@@ -674,7 +674,9 @@
         "Issue #30 Oklch色ミキサーとengine 10/11対応を反映",
         "最新mainの認証・形式能力・共通UI変更とOklch/ディテールの変更を両立して統合。",
         "Issue #49の統合確認: プリセットの面の見出し行の⋯をプリセットのメニューにし（⋯を2段に並べない）、右パネルを2段に貫いて窓の底まで伸ばす。",
-        "niho-photo#36 ヒストグラムの枠を右パネル最上段に差し込む口を追加。"
+        "niho-photo#36 ヒストグラムの枠を右パネル最上段に差し込む口を追加。",
+        "niho-photo#43 の右パネルの「情報」の面（見出し行と情報の群。↶ ↷・初期化は出さない）を追加。",
+        "PR #77 の情報paneをmainの公開UI変更と統合。"
       ]
     },
     {
@@ -927,7 +929,7 @@
         "path": "packages/photo-editing/src/editor/browser-photo-editing-model.ts",
         "sha256": "98c0a3ee8ff431c0f6f0b63a9666b1e5f723e75c5b9e2d33f17199f40f69c41d"
       },
-      "outputSha256": "284750cd51bb21171e4ae94d78faca465f339ee75c389a7301f3c6858fab0cba",
+      "outputSha256": "b02cc6b5295afefe78b41f430d32e82c43610e2767d2de7d2839cf1d88f1cefa",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
@@ -938,7 +940,9 @@
         "Allow guarded leave to retain edit session",
         "Issue #13の段階表示、provisional draft、canonical handoffと書き出し境界を実装。",
         "Issue 13 progressive RAW open implementation",
-        "右パネルの補正・プリセット面の切替と段階RAW openを統合し、暫定中の見本生成停止を保つ。"
+        "右パネルの補正・プリセット面の切替と段階RAW openを統合し、暫定中の見本生成停止を保つ。",
+        "niho-photo#43 の右パネルの面に「情報」を追加。",
+        "PR #77 の情報paneをmainの公開UI変更と統合。"
       ]
     },
     {
@@ -1044,7 +1048,7 @@
         "path": "packages/photo-editing/src/editor/browser-photo-editing-workbench-folders.test.tsx",
         "sha256": "2466702c26e46adadb579736eb8edef22cc420e4b0189283fd7d4b762a62869e"
       },
-      "outputSha256": "3540735d2da28bdcfc266fada37501c6c54bfe446844092941fb13245e49e1ef",
+      "outputSha256": "39d1d80c963958a43e2f05c1d05d259b8283e62e07f7b9acbf9357cf7067c511",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
@@ -1059,7 +1063,9 @@
         "PR #59 の main 競合解消と切替拒否時のフォーカス復元",
         "PR #59 のフィルムストリップと共有UIの統合",
         "Issue #49の統合確認: 下段の列と左右のパネルの2段の合成テストを追加。",
-        "左右パネル表示時のフッターと自動高レイアウトを検証する。"
+        "左右パネル表示時のフッターと自動高レイアウトを検証する。",
+        "niho-photo#43 の「情報」の帯の項目と情報の面の切り替えの test を追加。",
+        "PR #77 の情報paneをmainの公開UI変更と統合。"
       ]
     },
     {
@@ -1070,7 +1076,7 @@
         "path": "packages/photo-editing/src/editor/browser-photo-editing-workbench.tsx",
         "sha256": "f655136ae0c985d793822ca8bef1668dba26ffd4bb8f13d2ba3d6c2ccb13ceb6"
       },
-      "outputSha256": "40154ebf388eec52902826ad75af4eccbff822ce26eba8c44f37d54d8b6bfbb3",
+      "outputSha256": "b0dcaca1880cf850ae373cdc848c74fdc6ed7ad778424371c5ff74caa37d2a7d",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
@@ -1109,7 +1115,9 @@
         "niho-photo#36 ヒストグラムとクリップ表示とJキーを組み込み。",
         "閲覧専用のヒストグラムで、Jキーを操作ボタンと同じ条件で有効にする。",
         "niho-photo#41 比較の状態・Y キー・補正前の描画先を組み込み。",
-        "niho-photo#41 の比較UIを #72 のヒストグラム・Jキー契約と併存するようmainへ積み直した。"
+        "niho-photo#41 の比較UIを #72 のヒストグラム・Jキー契約と併存するようmainへ積み直した。",
+        "niho-photo#43 の右端の帯の下端に「情報」を置き、右パネルを情報の面にする。",
+        "PR #77 の情報paneをmainの公開UI変更と統合。"
       ]
     },
     {
@@ -1935,13 +1943,15 @@
         "path": "packages/photo-editing/src/library/photo-library.ts",
         "sha256": "d11aab9b360ff3a54e1b82c7c013729cc5044a2051b421b695c1847446a2ccbc"
       },
-      "outputSha256": "03a024723dc2a2da3edb952374a7f89c6110249fa80e5bb5235ea36d70a82809",
+      "outputSha256": "225b51e514b71780ce4de6c7194c992d4a6c99b4f006310e0515e13bc86116c2",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
         "任意の個別写真ソース契約と選んだ写真のUI、復元、取消、再試行、失敗時参照保持を追加",
         "Issue #13の段階表示、provisional draft、canonical handoffと書き出し境界を実装。",
-        "Issue 13 progressive RAW open implementation"
+        "Issue 13 progressive RAW open implementation",
+        "niho-photo#43 の写真の情報の型 PhotoLibraryPhotoInfo・info・capabilities.info を追加。",
+        "PR #77 の情報paneをmainの公開UI変更と統合。"
       ]
     },
     {
@@ -2090,7 +2100,7 @@
         "path": "packages/photo-editing/src/photo-editing-copy.ts",
         "sha256": "1208d4124dca26c951d73f6f84c560879e69beddfb9a16426e1a9dcc9fd30c27"
       },
-      "outputSha256": "c22695d1f01f5172c9d9433741ff2060d615ce0590aa225f0ebce1b7849301dd",
+      "outputSha256": "d7ddd783c81d3ee3aa28f45e5068010de82db5802d86747778c47b9ec229f9d9",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
@@ -2103,7 +2113,9 @@
         "部分補正（マスク）#65: XMP未書き込み項目に部分補正の表示名を追加",
         "niho-photo#36 ヒストグラムと黒つぶれ白飛び表示の文言を追加。",
         "niho-photo#41 比較（並べる・分割・比較しない・補正後・境界）の文言を追加。",
-        "niho-photo#41 の比較UIを #72 のヒストグラム・Jキー契約と併存するようmainへ積み直した。"
+        "niho-photo#41 の比較UIを #72 のヒストグラム・Jキー契約と併存するようmainへ積み直した。",
+        "niho-photo#43 の右パネルの「情報」の文言（道具の名前・群の見出し・行のラベル）を追加。",
+        "PR #77 の情報paneをmainの公開UI変更と統合。"
       ]
     },
     {
@@ -2255,13 +2267,15 @@
         "path": "packages/photo-editing/src/photo-editing-query-keys.ts",
         "sha256": "b0873ce957f9eca6dd2451b13e87d38e52e28d08ab5fbc5c31c6ebf6e94c0248"
       },
-      "outputSha256": "aeeba9917099875bd9bc82a1442520a2ec6d4bb67bc1e5bdbdea24410260783f",
+      "outputSha256": "a46e2d2e7655369fcbb1bb578e54afd6b103e38b369ce50727227b56dcd686eb",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
         "任意の個別写真ソース契約と選んだ写真のUI、復元、取消、再試行、失敗時参照保持を追加",
         "個人クラウドの明示binding、保存先切替、単一写真コピーと公開境界を追加。",
-        "個人クラウドnamespaceと写真ソース境界の説明を明確化。"
+        "個人クラウドnamespaceと写真ソース境界の説明を明確化。",
+        "niho-photo#43 の写真の情報の react-query の鍵を追加。",
+        "PR #77 の情報paneをmainの公開UI変更と統合。"
       ]
     },
     {
@@ -3447,12 +3461,14 @@
         "path": "apps/camera/src-tauri/permissions/camera.toml",
         "sha256": "3dabde32b43f01f12b93d48f2000a51a55abf48cc5866df2daa6dda9f31edae0"
       },
-      "outputSha256": "c103bef54c6c0b1dc46d90edace0cb53aae27ca45c450d059727fc23f3214b89",
+      "outputSha256": "5de8e21b7bd224c522005177d247f263192794e44f49c71b2ffe268c484b3b96",
       "modifications": [
         "共有形式フィルターを使う複数写真pickerと参照削除コマンドを同梱UIの権限内に追加 / 選択写真専用commandのbundle permissionを追加。",
         "Issue #3のpublic OAuth/PKCE、ローカル専用UI、安全契約と公開依存を新規接続。実issuer・署名検証器が未契約のため本番接続は無効。",
         "Issue #13の段階表示、provisional draft、canonical handoffと書き出し境界を実装。",
-        "Issue 13 progressive RAW open implementation"
+        "Issue 13 progressive RAW open implementation",
+        "niho-photo#43 の写真の情報（camera_photo_info）を同梱の画面にだけ許可する permission を追加。",
+        "PR #77 の情報paneをmainの公開UI変更と統合。"
       ]
     },
     {
@@ -3629,14 +3645,16 @@
         "path": "apps/camera/src-tauri/src/lib.rs",
         "sha256": "e6415b3d0633bb4753761b89f8860fffcfa9b67f95832ab971bd9b13eebaaffc"
       },
-      "outputSha256": "7ebedc3d6b6f9689cf97f6d72c17802732ffa42ade059ea7c2c37e3537f7ff19",
+      "outputSha256": "6ff4964831b9bcf8486793673b25b898f9795c793752452f560b97ad864f855f",
       "modifications": [
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
         "共有形式フィルターを使う複数写真pickerと参照削除コマンドを同梱UIの権限内に追加 / 選択写真専用commandをinvoke handlerへ登録。",
         "Issue #3のpublic OAuth/PKCE、ローカル専用UI、安全契約と公開依存を新規接続。実issuer・署名検証器が未契約のため本番接続は無効。",
         "Issue #3の公式NIHO app-connect v1契約へ適合。deep link・NIHO接続token/Firebase交換・FileSecretStore・取消と再起動を独立実装し、安全契約をv2へ改版。",
         "Issue #13の段階表示、provisional draft、canonical handoffと書き出し境界を実装。",
-        "Issue 13 progressive RAW open implementation"
+        "Issue 13 progressive RAW open implementation",
+        "niho-photo#43 の写真の情報のコマンド camera_photo_info を登録。",
+        "PR #77 の情報paneをmainの公開UI変更と統合。"
       ]
     },
     {
@@ -3689,13 +3707,15 @@
         "path": "apps/camera/src-tauri/src/photos.rs",
         "sha256": "c4a821c9654687fc6f2ab7304d9d7e1b3d8baeb3b5245b12816408bb405b7090"
       },
-      "outputSha256": "49d9f6d946eb852b0664ac852d4f3c7e76d188e1b49c78e029359384f7d57089",
+      "outputSha256": "601889dc10eab9a54baf05b1da33593ccd4312f654d5252f0378d0e5bb7586b1",
       "modifications": [
         "Issue #5の共有入力能力レジストリ、段階別検証、公開回帰契約に合わせて更新。",
         "Issue #5親レビューに従い形式検査・エラー保持・実decoder公開CI回帰を補強。",
         "存在しない写真は形式判定より先にnotFoundを返し、従来のエラー契約を保つ。",
         "Issue #13の段階RAW open、競合回帰、匿名の区間計測を追加。正規producerの数式と成果物は維持。",
-        "最新mainのUI・共有機能と段階RAW openを統合し、既存の境界と補正保持を両立する。"
+        "最新mainのUI・共有機能と段階RAW openを統合し、既存の境界と補正保持を両立する。",
+        "niho-photo#43 の写真の情報（ImageIO で読んだ撮影条件・カメラ・レンズ・撮影日時・寸法・場所）を返すコマンドを追加。",
+        "PR #77 の情報paneをmainの公開UI変更と統合。"
       ]
     },
     {
@@ -3706,10 +3726,12 @@
         "path": "apps/camera/src-tauri/src/photos_tests.rs",
         "sha256": "c329e74686abd160a1d785c59f1499f23c85299ba83d2971dd5f0671dc5f43ad"
       },
-      "outputSha256": "555555a269036abd8d9e42e0a9d14e8a6dc5ec6166416917a4afb85fafb9f34d",
+      "outputSha256": "526bfe6196800a9f62185be1ba5aa6678c6a1b8f1ec6b1a93d9af3a4fe2fa6d9",
       "modifications": [
         "Issue #5の共有入力能力レジストリ、段階別検証、公開回帰契約に合わせて更新。",
-        "Issue #5親レビューに従い形式検査・エラー保持・実decoder公開CI回帰を補強。"
+        "Issue #5親レビューに従い形式検査・エラー保持・実decoder公開CI回帰を補強。",
+        "niho-photo#43 の写真の情報の返す形と、読めないファイル・開いていない写真の test を追加。合成の入力だけを使用。",
+        "PR #77 の情報paneをmainの公開UI変更と統合。"
       ]
     },
     {
@@ -3890,14 +3912,16 @@
         "path": "apps/camera/src/local-library/commands.test.ts",
         "sha256": "4d35f3d9038ba356958dceed47cfe690ee9def1d3746964d2da42f40c43d681f"
       },
-      "outputSha256": "07b3fb20b3561ef01bf3e0b9f4efa372aa418176c6bffbd8253bde5a0adc5a1e",
+      "outputSha256": "9360d360b69a1d937874055a84b661b6a8f8e84f0ba44df2b2226cef1c9c41b4",
       "modifications": [
         "個別写真の追加・件数・一覧・参照削除を不透明なentryIdの既存経路へ接続",
         "Issue #5の形式不一致、未取得、対象外形式をTS adapterが保持する回帰テストを追加。",
         "Issue #5親レビューに従い形式検査・エラー保持・実decoder公開CI回帰を補強。",
         "Issue #13の段階表示、provisional draft、canonical handoffと書き出し境界を実装。",
         "Issue 13 progressive RAW open implementation",
-        "最新mainのUI・共有機能と段階RAW openを統合し、既存の境界と補正保持を両立する。"
+        "最新mainのUI・共有機能と段階RAW openを統合し、既存の境界と補正保持を両立する。",
+        "niho-photo#43 の photoInfo の呼び出しの test を追加。",
+        "PR #77 の情報paneをmainの公開UI変更と統合。"
       ]
     },
     {
@@ -3908,12 +3932,14 @@
         "path": "apps/camera/src/local-library/commands.ts",
         "sha256": "6aa0e7cc890a164709ed5274f020d5070d85b69e9b01f8562ae772a8ba2c57f1"
       },
-      "outputSha256": "006612da9cabe10512be3cd4de86d93dcfcc6e7d954be20f77572f235d928203",
+      "outputSha256": "1463a91df2d42161d39f27e953f94d951a044391b0c235e52de56ea3c659f536",
       "modifications": [
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
         "個別写真の追加・件数・一覧・参照削除を不透明なentryIdの既存経路へ接続 / 選択写真一覧を専用IPC commandへ分離。",
         "Issue #13の段階表示、provisional draft、canonical handoffと書き出し境界を実装。",
-        "Issue 13 progressive RAW open implementation"
+        "Issue 13 progressive RAW open implementation",
+        "niho-photo#43 の写真の情報を読む native の口 photoInfo を追加。",
+        "PR #77 の情報paneをmainの公開UI変更と統合。"
       ]
     },
     {
@@ -3957,7 +3983,7 @@
         "path": "apps/camera/src/local-library/local-photo-library.test.ts",
         "sha256": "e86937a17a1b2655448cdcf9d43313df2d5b53c37ec16172b6eaa81371d4e1aa"
       },
-      "outputSha256": "eaaeb8c15464d00efab8854a84c7c33987fbac4f1f0426b4389a8628884ac40f",
+      "outputSha256": "f0b1cae8a44ddf810b48742f657b7a5616484c2e1327fb9d39de086f3a8c857f",
       "modifications": [
         "個別写真の追加・件数・一覧・参照削除を不透明なentryIdの既存経路へ接続 / 選択写真取得の専用IPC経路をテスト。",
         "Issue #5親レビューに従い形式検査・エラー保持・実decoder公開CI回帰を補強。",
@@ -3969,7 +3995,9 @@
         "Issue #13の段階RAW open、競合回帰、匿名の区間計測を追加。正規producerの数式と成果物は維持。",
         "abort直後の同一写真再選択が新native要求を発行する回帰を追加。",
         "最新mainのUI・共有機能と段階RAW openを統合し、既存の境界と補正保持を両立する。",
-        "選択済みhandleの再利用と未open近隣先読みの抑止を回帰検証"
+        "選択済みhandleの再利用と未open近隣先読みの抑止を回帰検証",
+        "niho-photo#43 の写真の情報の読み出し・形の検査・開き直しの test を追加。合成の値だけを使用。",
+        "PR #77 の情報paneをmainの公開UI変更と統合。"
       ]
     },
     {
@@ -3980,7 +4008,7 @@
         "path": "apps/camera/src/local-library/local-photo-library.ts",
         "sha256": "bda72efc4c68731a2695be4906aedba55368d065dafbad6d577906ffa8441ed8"
       },
-      "outputSha256": "a7c3a1007ea585e55110ddf2f0a9f1cf74d874b606133319238035ab62e245d9",
+      "outputSha256": "677a3e78064840d7dacdd896d57c2f8cc044662f9946d520e51b530211e21c13",
       "modifications": [
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
         "個別写真の追加・件数・一覧・参照削除を不透明なentryIdの既存経路へ接続 / 選択写真一覧でフォルダ再走査commandを呼ばない。",
@@ -3990,7 +4018,9 @@
         "Issue #13の段階RAW open、競合回帰、匿名の区間計測を追加。正規producerの数式と成果物は維持。",
         "最後のconsumer中止時にjobを外し、直後の同じ写真の再選択へcancel済みPromiseを渡さない。",
         "最新mainのUI・共有機能と段階RAW openを統合し、既存の境界と補正保持を両立する。",
-        "プレビュー照会で開いた写真のhandleを再利用し不要なRAW再hashを避ける"
+        "プレビュー照会で開いた写真のhandleを再利用し不要なRAW再hashを避ける",
+        "niho-photo#43 の写真の情報（info）と capabilities.info をこの Mac の実装に追加。",
+        "PR #77 の情報paneをmainの公開UI変更と統合。"
       ]
     },
     {
@@ -4195,11 +4225,13 @@
         "path": "packages/desktop-photo/src/image_info.rs",
         "sha256": "7cad0cf1b01e454c141f0eea845c5d3603db6b5a4bcd401714dab42c84eb1574"
       },
-      "outputSha256": "88e3731ed7d68e2a45109ed930bc46d86ca5ce5fa79cd7f31a53b639fac97551",
+      "outputSha256": "b85e3aa9bffb6a367130ca3209f46ec41b4eb79159822c2f6f68d7d64566fd0a",
       "modifications": [
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
         "Issue #5の共有入力能力レジストリ、段階別検証、公開回帰契約に合わせて更新。",
-        "Issue #5親レビューに従い形式検査・エラー保持・実decoder公開CI回帰を補強。"
+        "Issue #5親レビューに従い形式検査・エラー保持・実decoder公開CI回帰を補強。",
+        "niho-photo#43 の写真の情報（撮影条件・カメラ・レンズ・撮影日時・寸法・GPS）を ImageIO で読む関数と、合成の JPEG / PNG による test を追加。",
+        "PR #77 の情報paneをmainの公開UI変更と統合。"
       ]
     },
     {
@@ -9264,13 +9296,13 @@
     },
     {
       "path": "packages/photo-editing/src/editor/browser-photo-editing-tool-rail.test.tsx",
-      "sha256": "54c4be84eb0c7d03fb1911047741a582e95fea6c8212254c5c740b61d71c3663",
-      "origin": "niho-photo#51 のため新規作成。右端の道具の帯と右パネルの面の部品・test。"
+      "sha256": "813c0113285fda902ac8b23b637c86269eb6f372519455526ce286f4cf7a39fd",
+      "origin": "niho-photo#51 のため新規作成。右端の道具の帯と右パネルの面の部品・test。\n変更理由: niho-photo#43 の帯の下端の道具ともう一度押すと戻る道具の test を追加。\n変更理由: PR #77 の情報paneをmainの公開UI変更と統合。"
     },
     {
       "path": "packages/photo-editing/src/editor/browser-photo-editing-tool-rail.tsx",
-      "sha256": "9f19cae2c0f4c83f0475406981e127d0637d5eaee8669fd257f2ddafa956e418",
-      "origin": "niho-photo#51 のため新規作成。右端の道具の帯と右パネルの面の部品・test。\n変更理由: Issue #49の統合確認: 道具の帯をPCの幅で2段に貫いて窓の底まで伸ばす。"
+      "sha256": "cd82dc717737879bbb5de233709174cb3496c5af824877ee01bfddf3027f97e6",
+      "origin": "niho-photo#51 のため新規作成。右端の道具の帯と右パネルの面の部品・test。\n変更理由: Issue #49の統合確認: 道具の帯をPCの幅で2段に貫いて窓の底まで伸ばす。\n変更理由: niho-photo#43 の道具の帯に、下端に置く道具ともう一度押すと戻る道具を追加。\n変更理由: PR #77 の情報paneをmainの公開UI変更と統合。"
     },
     {
       "path": "packages/photo-editing/src/editor/photo-editing-presets-panel-variants.test.tsx",
@@ -9636,6 +9668,26 @@
       "path": "packages/photo-editing/src/editor/browser-photo-editing-mobile-editor-compare.test.tsx",
       "sha256": "b291c03b646a80b68e6904b3e86017dff6da1bd55ab027cd62595f64da838e7e",
       "origin": "niho-photo#41 のため新規作成。補正前と補正後を並べて見比べる表示（並べる・分割・戻す、境界のドラッグとキー操作、Y / Shift+Y、スマホの上下）の test。合成の DOM と画素だけを使用。\n変更理由: niho-photo#41 の比較UIを #72 のヒストグラム・Jキー契約と併存するようmainへ積み直した。\n変更理由: niho-photo#41 の比較pane追加時に拡大位置を再clampする回帰を検証する。"
+    },
+    {
+      "path": "packages/photo-editing/src/photo-editing-info.ts",
+      "sha256": "e91d4a05e8c769a6179e8beba3d7b38ec1d176812ae7cc1297c92bbf26d91f39",
+      "origin": "niho-photo#43 のため新規作成。右パネルの「情報」の値の整形（ISO・シャッター速度・絞り・焦点距離・寸法・ファイルの大きさ・形式・撮影日時・場所）と群の組み立て。外部コード・実データを含まない。"
+    },
+    {
+      "path": "packages/photo-editing/src/photo-editing-info.test.ts",
+      "sha256": "7810342fe89d332f084574cc34ec47dfe44555985b0dc2eba09815d2af3320a3",
+      "origin": "niho-photo#43 のため新規作成。右パネルの「情報」の値の整形と群の組み立ての test。合成の値だけを使用。"
+    },
+    {
+      "path": "packages/photo-editing/src/editor/browser-photo-editing-info.tsx",
+      "sha256": "d77392f9b5da851901bab26a6c665ecbea38d6f2c166f20fc1d40c041ef2b5c8",
+      "origin": "niho-photo#43 のため新規作成。右パネルの「情報」の面（群の見出しとラベル・値の 2 列の dl、写真の情報の読み出し）。外部コード・実データを含まない。"
+    },
+    {
+      "path": "packages/photo-editing/src/editor/browser-photo-editing-info.test.tsx",
+      "sha256": "ba7f5c6ca9d63f620cc061e8528d9c0711b5f829ebcd03601a4e47ec7d76ac73",
+      "origin": "niho-photo#43 のため新規作成。右パネルの「情報」の面の dl の構造・読み出し・読めないときの表示・情報の面の見出し行の test。合成の値だけを使用。"
     }
   ],
   "excludedSources": [

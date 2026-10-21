@@ -12,6 +12,7 @@ use crate::library::library;
 use niho_desktop_photo::capabilities::{validate_photo, CapabilityStage};
 use niho_desktop_photo::common::{code, new_opaque_id, PageError};
 use niho_desktop_photo::develop::{DevelopPhotos, OpenPhoto};
+use niho_desktop_photo::image_info::{read_photo_info, PhotoInfo};
 use niho_desktop_photo::library::{is_valid_id, iso8601_utc, photo_kind, LISTED_PHOTO_NOT_FOUND_MESSAGE};
 use niho_desktop_photo::saved_settings::{
   content_digest, epoch_ms, ContentDigest, RecordSource, SaveRevision, SavedRecord, SavedSettingsStore, StoreLimits,
@@ -202,6 +203,15 @@ impl CameraPhotos {
     })
   }
 
+  /// 開いた写真の情報（{@link info_json}。右パネルの「情報」。niho-photo#43）。元ファイルの EXIF などを都度読む（覚えない）。
+  /// 読めない項目は null で、読めないファイルも失敗にしない。開いていない写真は `notFound`（画面は開き直す）。
+  pub fn info(&self, photo_id: &str) -> Result<Value, CameraError> {
+    let photo = self
+      .get(photo_id)
+      .ok_or_else(|| CameraError::from(PageError::new(code::NOT_FOUND, LISTED_PHOTO_NOT_FOUND_MESSAGE)))?;
+    Ok(info_json(&read_photo_info(&photo.path)))
+  }
+
   /// 保存した補正（無い・読めないときは None）。
   pub fn saved(&self, key: &str) -> Option<SavedRecord> {
     self.edits.as_ref()?.load_record(key)
@@ -338,6 +348,13 @@ pub struct CloseRequest {
   pub photo_ids: Vec<String>,
 }
 
+/// `camera_photo_info` の引数。
+#[derive(Debug, Clone, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct InfoRequest {
+  pub photo_id: String,
+}
+
 /// `camera_photo_save_settings` の引数。`expectedRevision` は画面が知っている版（保存したことが無ければ 0）。
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
@@ -383,6 +400,23 @@ pub fn opened_json(photo_id: &str, photo: &OpenedPhoto, saved: Option<SavedRecor
       "revision": record.revision,
       "updatedAtMs": record.updated_at_ms,
     })),
+  })
+}
+
+/// 写真の情報を画面へ返す形（接続口 `PhotoLibrary.info` の `PhotoLibraryPhotoInfo`）。読めなかった項目は null。`capturedAt` は
+/// 撮影した場所の時計のまま（時差なし）、`width`・`height` は向きを反映した寸法、`gps` は 10 進の度（南緯・西経は負）。
+pub fn info_json(info: &PhotoInfo) -> Value {
+  json!({
+    "camera": (info.make.is_some() || info.model.is_some()).then(|| json!({ "make": info.make, "model": info.model })),
+    "lens": info.lens,
+    "iso": info.iso,
+    "exposureTimeSeconds": info.exposure_time_seconds,
+    "fNumber": info.f_number,
+    "focalLengthMm": info.focal_length_mm,
+    "capturedAt": info.captured_at,
+    "width": info.dimensions.map(|(width, _)| width),
+    "height": info.dimensions.map(|(_, height)| height),
+    "gps": info.gps.map(|gps| json!({ "latitude": gps.latitude, "longitude": gps.longitude })),
   })
 }
 
@@ -442,6 +476,15 @@ pub async fn camera_photo_close(app: tauri::AppHandle, request: Option<Value>) -
   }
   photos(&app)?.close(&request.photo_ids);
   Ok(json!({}))
+}
+
+/// 開いた写真の情報（`{ info }`。右パネルの「情報」。niho-photo#43）。元ファイルを ImageIO で読む（画素は展開しない・書かない）。
+#[tauri::command]
+pub async fn camera_photo_info(app: tauri::AppHandle, request: Option<Value>) -> Result<Value, CameraError> {
+  let request: InfoRequest = parse_request(request)?;
+  check_photo_id(&request.photo_id)?;
+  let photos = photos(&app)?;
+  run_blocking(move || Ok(json!({ "info": photos.info(&request.photo_id)? }))).await
 }
 
 /// 補正を保存する（`{ revision }`）。画面が知っている版と違えば `revisionConflict`（`currentRevision` に今の版）。
