@@ -75,7 +75,7 @@ import {
   resolveWorkOutcome,
   type BrowserPhotoOpenFlowContext,
 } from "./browser-photo-editing-open-flow";
-import { useBrowserPhotoCrop } from "./use-browser-photo-crop";
+import { readCropSource, useBrowserPhotoCrop } from "./use-browser-photo-crop";
 import type { BrowserPhotoDevelop } from "./use-browser-photo-develop";
 import { useBrowserPhotoDevelopReload } from "./use-browser-photo-develop-reload";
 import { useBrowserPhotoEditSettings } from "./use-browser-photo-edit-settings";
@@ -276,6 +276,13 @@ export function useBrowserPhotoOpen(params: {
     dragging,
     compareOriginal,
     editResetHandlerRef: presetsResetRef,
+    // マスクを持つプリセットは、切り抜きと同じ作業画像の大きさで写真の座標へ写す
+    readSourceSize: async () => {
+      const engine = engineRef.current;
+      const session = developSessionRef.current;
+      if (!engine || !session) return null;
+      return (await readCropSource(engine, session))?.source ?? null;
+    },
   });
   // 編集内容がまるごと入れ替わった・写真を離れたら、覚えているプリセット・「自動」を捨て、切り抜きの道具を閉じる
   editResetHandlerRef.current = () => {
