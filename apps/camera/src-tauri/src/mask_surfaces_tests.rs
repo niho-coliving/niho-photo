@@ -188,7 +188,7 @@ fn an_open_photo_saves_loads_and_exports_its_surfaces() {
 }
 
 #[test]
-fn a_full_photo_keeps_the_surfaces_its_saved_edits_use() {
+fn a_full_photo_keeps_the_surfaces_its_saved_edits_and_versions_use() {
   let temp = TempDir::new("quota");
   let photos = camera_photos(
     &temp,
@@ -213,22 +213,27 @@ fn a_full_photo_keeps_the_surfaces_its_saved_edits_use() {
   let third = photos
     .save_mask_surface(&photo_id, &surface_png(2, 0, 3), at(20))
     .unwrap();
-  let missing = photos
-    .missing_mask_surfaces(&photo_id, &[first.id.clone(), second.id.clone(), third.id.clone()])
+  let versions = json!([{
+    "id": "v1",
+    "name": "版 1",
+    "createdAt": "2026-10-21T01:32:00.000Z",
+    "kind": "named",
+    "developSettings": {
+      "v": 5,
+      "masks": [{ "id": "m3", "kind": "brush", "surface": { "id": third.id, "width": 2, "height": 2 }, "adjust": { "exposure": 1 } }]
+    }
+  }]);
+  photos
+    .save_versions(&photo_id, &versions, 0, SystemTime::now())
     .unwrap();
-  assert_eq!(missing, vec![second.id.clone()]);
-  // Both kept ones are in use: nothing can make room.
-  let both = json!({
-    "v": 5,
-    "masks": [
-      { "id": "m1", "kind": "brush", "surface": { "id": first.id, "width": 2, "height": 2 }, "adjust": { "exposure": 1 } },
-      { "id": "m2", "kind": "brush", "surface": { "id": third.id, "width": 2, "height": 2 }, "adjust": { "exposure": 1 } }
-    ]
-  });
-  photos.save(&photo_id, &both, 1, SystemTime::now()).unwrap();
+  // The current saved edit and named/auto versions are protected; an unreferenced surface was evicted above.
   let error = photos
     .save_mask_surface(&photo_id, &surface_png(2, 0, 4), at(30))
     .unwrap_err();
   assert_eq!(error.code, camera_code::MASK_SURFACE_QUOTA);
+  let missing = photos
+    .missing_mask_surfaces(&photo_id, &[first.id.clone(), second.id.clone(), third.id.clone()])
+    .unwrap();
+  assert_eq!(missing, vec![second.id.clone()]);
   assert!(!error.message.is_empty());
 }

@@ -6,8 +6,8 @@
 //! - 補正は `~/Library/Application Support/life.niho.camera/edits/<SHA-256>.json`（crate の `SavedSettingsStore`。版
 //!   `revision`・写真の名前・大きさ・更新時刻つき）。NIHO photo では補正が利用者のデータそのものなので、古さ・件数では消さない。
 //! - 部分補正のマスク（ブラシ・被写体・空）の面は `~/Library/Application Support/life.niho.camera/mask-surfaces/<写真の SHA-256>/
-//!   <面の SHA-256>.png`（crate の `MaskSurfaceStore`。写真 1 枚あたり 64 面まで、上限では保存した補正が参照しない面のうち
-//!   最後に使ったのが古いものから空ける。補正と同じく古さ・写真の数では消さない）。コマンドは `mask_surfaces.rs`。
+//!   <面の SHA-256>.png`（crate の `MaskSurfaceStore`。写真 1 枚あたり 64 面まで、上限では保存した補正と名前付き・自動版が参照する面を
+//!   残し、参照されない面のうち最後に使ったのが古いものから空ける。補正と同じく古さ・写真の数では消さない）。コマンドは `mask_surfaces.rs`。
 //! - 補正の版（niho-photo#42。名前を付けて残した補正と自動の版）は同じフォルダの `<SHA-256>.versions.json`（crate の
 //!   `saved_versions.rs`。補正の記録とは別のファイル・別の `revision`）。`camera_photo_versions` で読み、`camera_photo_save_versions`
 //!   で配列をまるごと書く。
@@ -48,7 +48,7 @@ const SAVE_FAILED_MESSAGE: &str = "補正を保存できませんでした。";
 pub(crate) const MASK_SURFACE_INVALID_MESSAGE: &str = "マスクを保存できませんでした。もう一度描いてください。";
 const MASK_SURFACE_MISSING_MESSAGE: &str = "マスクの面が見つかりません。マスクを描き直してください。";
 const MASK_SURFACE_QUOTA_MESSAGE: &str =
-  "この写真にはこれ以上マスクを保存できません。使わないマスクを消してからもう一度お試しください。";
+  "この写真にはこれ以上マスクを保存できません。使わないマスクや保存版を整理してからもう一度お試しください。";
 const MASK_SURFACE_SAVE_FAILED_MESSAGE: &str = "マスクを保存できませんでした。";
 const VERSIONS_SAVE_FAILED_MESSAGE: &str = "版を保存できませんでした。";
 
@@ -347,17 +347,28 @@ impl CameraPhotos {
       .ok_or_else(|| CameraError::new(code::INTERNAL, MASK_SURFACE_SAVE_FAILED_MESSAGE))
   }
 
-  /// 開いた写真のマスクの面を保存する（`png` は 8bit グレーの PNG。id は中身の SHA-256）。上限では、保存した補正が参照する面を
-  /// 残して最後に使ったのが古い面から空ける。
+  /// 開いた写真のマスクの面を保存する（`png` は 8bit グレーの PNG。id は中身の SHA-256）。上限では、現在の保存済み補正と名前付き・
+  /// 自動版が参照する面を残して、最後に使ったのが古い面から空ける。
   pub fn save_mask_surface(&self, photo_id: &str, png: &[u8], now: SystemTime) -> Result<MaskSurfaceInfo, CameraError> {
     let photo = self.opened_photo(photo_id)?;
     let store = self.surface_store()?;
-    let keep = self
+    let mut keep: std::collections::BTreeSet<String> = self
       .saved(&photo.digest.key)
       .map(|record| mask_surface_ids(&record.settings, false))
       .unwrap_or_default()
       .into_iter()
       .collect();
+    if let Some(versions) = self
+      .edits
+      .as_ref()
+      .and_then(|store| store.load_versions(&photo.digest.key))
+    {
+      if let Some(items) = versions.versions.as_array() {
+        for version in items {
+          keep.extend(mask_surface_ids(&version["developSettings"], false));
+        }
+      }
+    }
     store
       .save(&photo.digest.key, png, &keep, now)
       .map_err(mask_surface_error)

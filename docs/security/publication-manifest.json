@@ -313,7 +313,7 @@
         "path": "packages/photo-editing/src/develop-engine/develop-engine-manifest.ts",
         "sha256": "5df5cda8a061155a614d1e60a1c263e0764c83978708cfcc16959905387d5e4f"
       },
-      "outputSha256": "38dbe2d61f2f8ea29f0004d72b6137416ab60345bd4bac9c7decbed6b6c225ec",
+      "outputSha256": "f10904415c03872393b1b9bcec3cad9e9e64839f239cd18638d80cd1e1e8f5b4",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
@@ -328,7 +328,8 @@
         "PR #80 のカラーグレーディングを最新HSL UIと統合。",
         "Issue #29: wasm公開物をniho-12・0.19.0へ更新",
         "PR #74: #80 統合後に float-cube の変更を重ね、最終ハッシュを反映。",
-        "PR #90: rasterの相対WBをniho-13へ移し、新規編集の既定とsettings/UI契約を同期。"
+        "PR #90: rasterの相対WBをniho-13へ移し、新規編集の既定とsettings/UI契約を同期。",
+        "Bump crate version for mask surface WASM"
       ]
     },
     {
@@ -3902,7 +3903,7 @@
         "path": "apps/camera/src-tauri/src/photos.rs",
         "sha256": "c4a821c9654687fc6f2ab7304d9d7e1b3d8baeb3b5245b12816408bb405b7090"
       },
-      "outputSha256": "71c3ee8ef8ea4bf8af31cf52525af0035e3c656f89549fcb7d8859e17997ba9e",
+      "outputSha256": "78a27290148478c4a65ae575ff70ac4340c2be4010165aae0d5f02a13d410644",
       "modifications": [
         "Issue #5の共有入力能力レジストリ、段階別検証、公開回帰契約に合わせて更新。",
         "Issue #5親レビューに従い形式検査・エラー保持・実decoder公開CI回帰を補強。",
@@ -3913,7 +3914,8 @@
         "PR #77 の情報paneをmainの公開UI変更と統合。",
         "squash済みPR #77のmainをマスク描画へ同期する。",
         "部分補正（マスク）#68: 写真ごとのマスクの面の置き場と、書き出しへの面の受け渡しを足す",
-        "PR #82: #74 squash merge後に版機能の変更をmainへ積み直し、最終ハッシュを反映。"
+        "PR #82: #74 squash merge後に版機能の変更をmainへ積み直し、最終ハッシュを反映。",
+        "Preserve mask surfaces in saved versions"
       ]
     },
     {
@@ -4822,7 +4824,7 @@
         "path": "packages/develop-engine/Cargo.lock",
         "sha256": "e7caae6825c3c4c50d7d593c35d7163de7d311357b81558d1ad1a009cbfafadc"
       },
-      "outputSha256": "19030f4b0e570769ce2a44a8c60eaa015a651a74ae2cf041950534a9a500b07a",
+      "outputSha256": "576aac8e70dc5e17b072d0a19a6b910333ea902309d78dc23cce21ae93891121",
       "modifications": [
         "新しい色相保持エンジンと新旧バイナリの能力境界・数値回帰を整合。",
         "現像workspaceだけを0.17.0へ更新し外部依存の固定版を維持。",
@@ -4835,7 +4837,8 @@
         "PR #80 のカラーグレーディングを最新HSL UIと統合。",
         "Issue #29: niho-12公開物のためworkspace版を0.19.0へ更新",
         "部分補正（マスク）#68: niho-develop の直接依存に png・sha2 を足す（crate は増えない）",
-        "PR #90: niho-13のWB先行適用とdetail連携cacheを#84後のmainへ統合。"
+        "PR #90: niho-13のWB先行適用とdetail連携cacheを#84後のmainへ統合。",
+        "Bump crate version for mask surface WASM"
       ]
     },
     {
@@ -4846,7 +4849,7 @@
         "path": "packages/develop-engine/Cargo.toml",
         "sha256": "274ef616c08b9ade52276b660ea12ce836bc08f97e67dedcf163f76114dd4ab0"
       },
-      "outputSha256": "c687718da930141136c58f3dfd6130bba6fbf03abf012e723e8d2ef36e043942",
+      "outputSha256": "53b1dd415da5c6df69d3bdf993c7bf373f47798926ed59b09b2b37519e68c75e",
       "modifications": [
         "新しい色相保持エンジンと新旧バイナリの能力境界・数値回帰を整合。",
         "Issue #30 Oklch色ミキサーとengine 10/11対応を反映",
@@ -4857,7 +4860,8 @@
         "niho-photo#39 で中間調・全体の輝度を描くため crate の版を 0.19.0 に上げた。",
         "PR #80 のカラーグレーディングを最新HSL UIと統合。",
         "Issue #29: niho-12公開物のためworkspace版を0.19.0へ更新",
-        "PR #90: niho-13のWB先行適用とdetail連携cacheを#84後のmainへ統合。"
+        "PR #90: niho-13のWB先行適用とdetail連携cacheを#84後のmainへ統合。",
+        "Bump crate version for mask surface WASM"
       ]
     },
     {
@@ -10409,8 +10413,8 @@
     },
     {
       "path": "packages/desktop-photo/src/mask_surfaces.rs",
-      "sha256": "d3965a0e67233dda889d1dec9cca70a824d927052ee04724116f861eefe84782",
-      "origin": "Issue #68の公開仕様 docs/local-adjustments.md だけから新規作成した、Macの写真ごとのマスクの面の置き場（ヘッダー検査・sha256・原子的な書き込み・上限と掃除）のRust実装。実写真・非公開コード・私有参照出力を含まない。\n変更理由: 部分補正（マスク）#68: 局所の値が全体で潰れて描かれない層は、その面も要らない（Codex 指摘）。"
+      "sha256": "ea1606bb1fd2948dceff6eef3166f264daeb5490f5c931199309b914477bf8b1",
+      "origin": "Issue #68の公開仕様 docs/local-adjustments.md だけから新規作成した、Macの写真ごとのマスクの面の置き場（ヘッダー検査・sha256・原子的な書き込み・上限と掃除）のRust実装。実写真・非公開コード・私有参照出力を含まない。\n変更理由: 部分補正（マスク）#68: 局所の値が全体で潰れて描かれない層は、その面も要らない（Codex 指摘）。\n変更理由: Preserve mask surfaces in saved versions"
     },
     {
       "path": "packages/desktop-photo/src/mask_surfaces_tests.rs",
@@ -10424,8 +10428,8 @@
     },
     {
       "path": "apps/camera/src-tauri/src/mask_surfaces_tests.rs",
-      "sha256": "e820057398b8a431eee5364d9033cf45b11ffd224d51b189af10894c77700ffa",
-      "origin": "Issue #68の公開仕様と手作りの合成PNGだけから新規作成した、マスクの面のコマンドの引数・開いた写真ごとの往復・上限の回帰。実写真・非公開コード・私有参照出力を含まない。"
+      "sha256": "0a8fa2d3f0bde3cf0cbaca99eb31973d36ed9a473c1419c9120702746cc2a2c9",
+      "origin": "Issue #68の公開仕様と手作りの合成PNGだけから新規作成した、マスクの面のコマンドの引数・開いた写真ごとの往復・上限の回帰。実写真・非公開コード・私有参照出力を含まない。\n変更理由: Preserve mask surfaces in saved versions"
     },
     {
       "path": "packages/desktop-photo/src/saved_versions.rs",
@@ -10479,8 +10483,8 @@
     },
     {
       "path": "packages/develop-engine/crates/niho-develop/tests/niho13.rs",
-      "sha256": "dbda531e080cb7e5b6a3a325a6c60bb8d46c4cf795d5750f5c44fa13b8abd4b7",
-      "origin": "公開Issue #27 のため公開済み数式・既存primitiveから独立実装したengine・合成テスト・計測コード・日本語手順。非公開の写真・参照画素・パス・履歴・第三者ソースを含まない。"
+      "sha256": "0693c51413b0843c08946875e450bd145ae5a6fa241174b7cdfe59d3cc273a8a",
+      "origin": "公開Issue #27 のため公開済み数式・既存primitiveから独立実装したengine・合成テスト・計測コード・日本語手順。非公開の写真・参照画素・パス・履歴・第三者ソースを含まない。\n変更理由: Bump crate version for mask surface WASM"
     },
     {
       "path": "packages/develop-engine/fixtures/color/review-2026-10-21/round27-analysis-before-wb.json",
@@ -10519,8 +10523,8 @@
     },
     {
       "path": "packages/develop-engine/NIHO13.md",
-      "sha256": "26053ba59f79445c357e3c67a3fe17821f1484018a2e365c2bedf7759dd7d192",
-      "origin": "公開Issue #27 のため公開済み数式・既存primitiveから独立実装したengine・合成テスト・計測コード・日本語手順。非公開の写真・参照画素・パス・履歴・第三者ソースを含まない。\n変更理由: PR #90: niho-13のWB処理・性能結果・制約を記録。"
+      "sha256": "67ebac9f2245cec95160cc1889937c23321e4e818bc91e8567fbcfb944a9393c",
+      "origin": "公開Issue #27 のため公開済み数式・既存primitiveから独立実装したengine・合成テスト・計測コード・日本語手順。非公開の写真・参照画素・パス・履歴・第三者ソースを含まない。\n変更理由: PR #90: niho-13のWB処理・性能結果・制約を記録。\n変更理由: Bump crate version for mask surface WASM"
     },
     {
       "path": "packages/develop-engine/tools/calibrate/fit_linear_wb_3x3.py",
