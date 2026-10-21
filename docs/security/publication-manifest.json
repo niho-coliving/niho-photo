@@ -271,7 +271,7 @@
         "path": "packages/photo-editing/src/develop-engine/develop-engine-client.test.ts",
         "sha256": "ab57eb9cc53aee5fc1ca937830d4eb7c979bf9da92b32c220bdeab772e8db065"
       },
-      "outputSha256": "268839a0c7dd22cd0bd985d908fff3d457a2fea5d54d0ca526629989327f91b1",
+      "outputSha256": "328c9d969a97eb3a0704568ca8b23fe0d1128f6ae390a21ae59141abd4dcf3d6",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
@@ -280,7 +280,8 @@
         "Issue #32 detail capabilityと作業コピーのプレビューからdetailを外す挙動を検証する",
         "owner判断2026-10-21: 作業コピーのdrag中・確定描画・detail無しの設定JSONを検証する",
         "Issue #32 detail uses v6 because Issue #31 masks already owns v5; synchronize the Rust and TypeScript contract, probe, tests, and documentation.",
-        "Issue #32 detail v6 を、先行する masks v5 と #72 の histogram/Jキー契約に同期する。"
+        "Issue #32 detail v6 を、先行する masks v5 と #72 の histogram/Jキー契約に同期する。",
+        "部分補正（マスク）#67: supportsMasks と maskPlane（最新の 1 つにまとめる・描画の枠を使わない・開き直しで捨てる）を検証する"
       ]
     },
     {
@@ -291,7 +292,7 @@
         "path": "packages/photo-editing/src/develop-engine/develop-engine-client.ts",
         "sha256": "d734116dcc1e882d2e3debedb7d79fb892915571f6b59965886464cc933c022f"
       },
-      "outputSha256": "77eaa399c0301edd71292ce064b1fdf02f3e4ac76c65ba6858d19a42007711b1",
+      "outputSha256": "abd6ded776cf167b4e84de302dd62960df1a14358accd6a4e261c28053c17d8c",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
@@ -300,7 +301,8 @@
         "Issue #32 supportsDetailと作業コピーのプレビューでdetailを外す方針を追加",
         "owner判断2026-10-21: 作業コピーはdrag中だけNRを計算し直さず、確定描画・見本・色取得は今のdetailを送る",
         "Issue #32 detail uses v6 because Issue #31 masks already owns v5; synchronize the Rust and TypeScript contract, probe, tests, and documentation.",
-        "Issue #32 detail v6 を、先行する masks v5 と #72 の histogram/Jキー契約に同期する。"
+        "Issue #32 detail v6 を、先行する masks v5 と #72 の histogram/Jキー契約に同期する。",
+        "部分補正（マスク）#67: wasm の capabilities() の masks を supportsMasks で公開し、1 枚のマスクの面を同時に 1 つまでの maskPlane で取りに行く"
       ]
     },
     {
@@ -352,14 +354,15 @@
         "path": "packages/photo-editing/src/develop-engine/develop-engine-worker-core.test.ts",
         "sha256": "eb20b196dd11f240e0944d79d51244a1951536f264a1aa7c1fcb06180f86d26b"
       },
-      "outputSha256": "fe27707a99c377f47d75f09d63a8a75ca876b1365d0a96f56af5ecb2172515ef",
+      "outputSha256": "c8b3b35268bdd4ee4a18bf607812af01ccfbc890b4b24bb7e9fff335c9f23775",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
         "Issue #30 Oklch色ミキサーとengine 10/11対応を反映",
         "Issue #32 v5 detailのcapability確認を検証する",
         "Issue #32 detail uses v6 because Issue #31 masks already owns v5; synchronize the Rust and TypeScript contract, probe, tests, and documentation.",
-        "Issue #32 detail v6 を、先行する masks v5 と #72 の histogram/Jキー契約に同期する。"
+        "Issue #32 detail v6 を、先行する masks v5 と #72 の histogram/Jキー契約に同期する。",
+        "部分補正（マスク）#67: capabilities() の読み方（古い glue・壊れた応答）と maskPlane の応答・transfer・順序を検証する"
       ]
     },
     {
@@ -370,14 +373,15 @@
         "path": "packages/photo-editing/src/develop-engine/develop-engine-worker-core.ts",
         "sha256": "460e15bb7865292233cc8baf9864ede3d31d47158aff084415364fa1495cb776"
       },
-      "outputSha256": "85e8dfe3551a8852c2c6fcd5b0fa60eecec851513a208635e66a1fbf38294af8",
+      "outputSha256": "01f2d2a1eb76152b0b21a8dc10c05be485fee5d8efbaa15053d2ce58f348a5e6",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
         "Issue #30 Oklch色ミキサーとengine 10/11対応を反映",
         "Issue #32 v5 detailのcapability確認と解析keyへのNRを追加",
         "Issue #32 detail uses v6 because Issue #31 masks already owns v5; synchronize the Rust and TypeScript contract, probe, tests, and documentation.",
-        "Issue #32 detail v6 を、先行する masks v5 と #72 の histogram/Jキー契約に同期する。"
+        "Issue #32 detail v6 を、先行する masks v5 と #72 の histogram/Jキー契約に同期する。",
+        "部分補正（マスク）#67: 起こしたときに capabilities() を 1 回読んで ready に masks を付け、maskPlane の要求を通常の列で処理する"
       ]
     },
     {
@@ -402,10 +406,11 @@
         "path": "packages/photo-editing/src/develop-engine/develop-frame.ts",
         "sha256": "3cf113f4ef8a075279fdfe28f92214fb0d388760d234a09a43154d54ee9fa137"
       },
-      "outputSha256": "22eee3be4ff2185a0037f238c8d466cd8bb1de4f382583e4da710f700ec4411a",
+      "outputSha256": "18954c94fbf4dec96c2d24a2240afbdf76d7bec392ac36cb40c994cd5f1673be",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
-        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。"
+        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
+        "部分補正（マスク）#67: 操作中の 640px の画を canvas の大きさのまま描き、drag の間に写真とつまみが縮まないようにする"
       ]
     },
     {
@@ -429,11 +434,12 @@
         "path": "packages/photo-editing/src/develop-engine/develop-geometry.ts",
         "sha256": "ccb700dcbc95759de670ce6dae1ea52deeb57fe06b533cdda4101192b38339f5"
       },
-      "outputSha256": "d5b4391bf5da154190bb2075c283e9fd9c579065455ee81f0576c66c7d08ba68",
+      "outputSha256": "74fd124b42ab87d3fd66222bc75bc66a06e37c3d582eea53795808284168c62b",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
-        "PR #61 の切り抜きUI・完了/取消操作と回帰検証を公開repoで実装。"
+        "PR #61 の切り抜きUI・完了/取消操作と回帰検証を公開repoで実装。",
+        "部分補正（マスク）#67: geometryOutputToSource の逆写像 geometrySourceToOutput を足し、つまみを見えている位置に置く"
       ]
     },
     {
@@ -731,7 +737,7 @@
         "path": "packages/photo-editing/src/editor/browser-photo-editing-adjustments.tsx",
         "sha256": "2473ef7ca64f61e5ce7a72efb21f436f799f04a90a3a73b114cba15b7b5d23b1"
       },
-      "outputSha256": "cadaefb8f666ec88d7722a8b536e05f133eb8181a9cb408683aa7c28f062f6bb",
+      "outputSha256": "9057b9aed6c3697f8feaa1e837d2a8f134c96e70a75f0693cb68f7be87e28e89",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
@@ -751,6 +757,7 @@
         "PR #79 のHSL mixerを最新tone curveとinfo UIへ統合。",
         "PR #79のHSL mixerを最新mainから取り込み、公開出力ハッシュを更新。",
         "squash済みPR #77のmainをマスク描画へ同期する。",
+        "部分補正（マスク）#67: 右パネルに「マスク」の道具の面（見出しと maskTools）を足す",
         "PR #82: #74 squash merge後に版機能の変更をmainへ積み直し、最終ハッシュを反映。"
       ]
     },
@@ -933,7 +940,7 @@
         "path": "packages/photo-editing/src/editor/browser-photo-editing-loupe.tsx",
         "sha256": "51859688628c86e65c882ff94a59b6324ecb621ac9f759121c7c3d7ed4ccc35a"
       },
-      "outputSha256": "e64ca7850aaf64ab4e89ddb733b34f433d724d0116ae9c567efed93d50f6ca46",
+      "outputSha256": "eea120061156f38076a7e05fcd0e74aa9cba5a0a94fdd002d166fd8884ea58fa",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
@@ -948,7 +955,8 @@
         "niho-photo#36 クリップ領域の印を写真に重ねる口を追加。",
         "niho-photo#41 補正前と補正後を並べる・分割する表示（補正前の面・分割の重ね・札）を追加。",
         "niho-photo#41 の比較UIを #72 のヒストグラム・Jキー契約と併存するようmainへ積み直した。",
-        "niho-photo#41 の左右比較で両canvasに同じPC余白とfitを適用する。"
+        "niho-photo#41 の左右比較で両canvasに同じPC余白とfitを適用する。",
+        "部分補正（マスク）#67: 写真の canvas の上にマスクの操作を重ねる口（maskOverlay）を足す"
       ]
     },
     {
@@ -1012,7 +1020,7 @@
         "path": "packages/photo-editing/src/editor/browser-photo-editing-model.ts",
         "sha256": "98c0a3ee8ff431c0f6f0b63a9666b1e5f723e75c5b9e2d33f17199f40f69c41d"
       },
-      "outputSha256": "1a80d5f10a892ff7cf62cb1010603dd83ab0e1c7a3d91360394bf269e2438b5b",
+      "outputSha256": "ec37f74ef6acfd03c750b64d92d857645398f61e4bbe9b928deec2fd166fab2c",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
@@ -1032,6 +1040,7 @@
         "niho-photo#43 の右パネルの面に「情報」を追加。",
         "PR #77 の情報paneをmainの公開UI変更と統合。",
         "squash済みPR #77のmainをマスク描画へ同期する。",
+        "部分補正（マスク）#67: 道具に mask を足し、画を変えるマスクがある間の drag の長辺を色ポイントと同じ 640px にする",
         "PR #82: #74 squash merge後に版機能の変更をmainへ積み直し、最終ハッシュを反映。"
       ]
     },
@@ -1168,7 +1177,7 @@
         "path": "packages/photo-editing/src/editor/browser-photo-editing-workbench.tsx",
         "sha256": "f655136ae0c985d793822ca8bef1668dba26ffd4bb8f13d2ba3d6c2ccb13ceb6"
       },
-      "outputSha256": "c3b74459699e0855268b5b14c23aa96015236730a4651c6d4297e8cdd9d3e6d4",
+      "outputSha256": "90172c2418e2208c8cdaf80764c4aedc4074a7c996628ac1690e26f3ff2d8066",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
@@ -1222,6 +1231,7 @@
         "PR #79 のHSL mixerを最新tone curveとinfo UIへ統合。",
         "PR #79のHSL mixerを最新mainから取り込み、公開出力ハッシュを更新。",
         "squash済みPR #77のmainをマスク描画へ同期する。",
+        "部分補正（マスク）#67: 右端の帯の「マスク」・道具の切り替え・Esc と Delete・初期化・写真の上の操作をつなぐ",
         "niho-photo#39 カラーミキサーの節の後ろにカラーグレーディングの節と、スマホの道具を渡した。",
         "原寸native書き出しの輝度互換性ガードと色相ホイール操作を修正。",
         "PR #80 のカラーグレーディングを最新HSL UIと統合。",
@@ -1292,7 +1302,7 @@
         "path": "packages/photo-editing/src/editor/photo-editing-adjustment-controls.tsx",
         "sha256": "f8950078f7342eb7a6c6f6dfb026828a94f33b8355427d1485ce18a6cbb73773"
       },
-      "outputSha256": "22158e58a16aaf04b173f0065346b00f832fd940d216445e65c466dc23382d71",
+      "outputSha256": "69ea825c354922d3835cacc6d9e22cfc46f9c55f4787da0f2cc366fb9360016d",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
@@ -1304,7 +1314,8 @@
         "niho-photo#37 群の見出しの部品を節にも使えるよう公開し、群の直後に差し込む口（afterGroup）を追加。",
         "afterGroup の有無に依らず群をFragmentで包み、差し込みの出入りで群を作り直さない。",
         "PR #78 のトーンカーブを最新情報paneと統合。",
-        "Detail調整群とtone curve後置sectionを共存させる"
+        "Detail調整群とtone curve後置sectionを共存させる",
+        "部分補正（マスク）#67: 色温度・色かぶり補正の線の色の帯をマスクの局所のスライダーでも使えるよう公開する"
       ]
     },
     {
@@ -1675,11 +1686,12 @@
         "path": "packages/photo-editing/src/editor/use-browser-photo-crop.ts",
         "sha256": "42a650250b0a21968956fb2f055e87c59b6706e3730c2ef037c5775241e0a7df"
       },
-      "outputSha256": "e7ad7ee7f1ec195f04d1b38b1ba193e7f09e421615644fc78ac5d4a4170f30c0",
+      "outputSha256": "5a93920aee6558c2b40e249ae853006fd5ee438df5c921f1901bece3aac4a353",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
         "PR #61 の切り抜きUI・完了/取消操作と回帰検証を公開repoで実装。",
+        "部分補正（マスク）#67: 切り抜きの座標の基準を読む readCropSource をマスクの座標の基準にも使えるよう公開する",
         "部分補正（マスク）#69: 作業画像の大きさの読み方をプリセットのマスクの配置でも使えるよう公開する"
       ]
     },
@@ -1873,7 +1885,7 @@
         "path": "packages/photo-editing/src/editor/use-browser-photo-open.ts",
         "sha256": "2755ea206c0fe9edc8df05ff40d78326310449cb9d509e75a291fdc3822a1d2e"
       },
-      "outputSha256": "637e20d8781048c1e7928ef48faf09d9b61955610af390ae02334c9d0073a163",
+      "outputSha256": "72dcf9e4f1ddfcd35fb56611d4fbefb8c843df2f780d7234b71175a0a2f337b8",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
@@ -1891,6 +1903,7 @@
         "niho-photo#36 描いた画をヒストグラムへ渡す口を追加。",
         "niho-photo#41 比較の間に補正前の画を2枚目のcanvasへ描く口を追加。",
         "niho-photo#41 の比較UIを #72 のヒストグラム・Jキー契約と併存するようmainへ積み直した。",
+        "部分補正（マスク）#67: drag の長辺を developInteractiveMaxDimension で決め、操作中の小さな画は canvas の大きさのまま描く",
         "部分補正（マスク）#69: プリセットのマスクの配置に開いている写真の作業画像の大きさを渡す"
       ]
     },
@@ -2237,7 +2250,7 @@
         "path": "packages/photo-editing/src/photo-editing-copy.ts",
         "sha256": "1208d4124dca26c951d73f6f84c560879e69beddfb9a16426e1a9dcc9fd30c27"
       },
-      "outputSha256": "c9a98b277443e73c10acad1ad296bfb11fbd49e54d7b7d2126733dfa3a5c7c01",
+      "outputSha256": "0fdbc515b23289180bb27ba6adc6af128cf4f52ea44da47102017354ebe3bc98",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
@@ -2267,6 +2280,7 @@
         "PR #79のプリセット保存対象外表示を実UIの項目名に揃える。",
         "PR #79のHSL mixerを最新mainから取り込み、公開出力ハッシュを更新。",
         "squash済みPR #77のmainをマスク描画へ同期する。",
+        "部分補正（マスク）#67: マスクの道具・一覧・つまみの日本語の文言を区切った 1 つの塊で足す",
         "部分補正（マスク）#69: 読めなかったマスクの種類の日本語の名前を足す",
         "niho-photo#39 カラーグレーディングの文言を足し、使えない項目からカラーグレーディングの輝度を外した。",
         "原寸native書き出しの輝度互換性ガードと色相ホイール操作を修正。",
@@ -9685,7 +9699,7 @@
     },
     {
       "path": "packages/photo-editing/src/editor/browser-photo-editing-tool-rail.test.tsx",
-      "sha256": "813c0113285fda902ac8b23b637c86269eb6f372519455526ce286f4cf7a39fd",
+      "sha256": "37449a341f9edc1df06aa4088f6cd69d67a2d342477e7f4a4ff7f09338315df9",
       "origin": "niho-photo#51 のため新規作成。右端の道具の帯と右パネルの面の部品・test。\n変更理由: niho-photo#43 の帯の下端の道具ともう一度押すと戻る道具の test を追加。\n変更理由: PR #77 の情報paneをmainの公開UI変更と統合。\n変更理由: squash済みPR #77のmainをマスク描画へ同期する。"
     },
     {
@@ -10527,6 +10541,61 @@
       "path": "packages/develop-engine/tools/color-review-build-diff.py",
       "sha256": "d36b0c8f3c54b22d7fb786d25040860dc1d62a3f59776596048e667a0f566fbb",
       "origin": "公開Issue #27 の計測用に独立実装した、開発用教師で2つのbuildの描画差を比べる道具。教師・私有パスは引数で受け、公開物は匿名の集計だけ。封印済みの独立cohortは読まない。"
+    },
+    {
+      "path": "packages/photo-editing/src/photo-editing-masks.ts",
+      "sha256": "8bdfbb29adc1c72bf83c06d158c2f38f6ff23fd91e98cd0b61a78bbfe7ec2e3b",
+      "origin": "Issue #67の公開仕様 docs/local-adjustments.md だけから新規作成した、部分補正（マスク）の画面の計算（既定の形・つまみの位置・つまみを動かした形・局所の差分・範囲の収め方）のTypeScript実装。外部画像・非公開コード・個体metadataを含まない。"
+    },
+    {
+      "path": "packages/photo-editing/src/photo-editing-masks.test.ts",
+      "sha256": "a1c0a5d757356e52f89fcb6e3b7427cbec5358265096eb3a9a55036b3e95483b",
+      "origin": "Issue #67の公開仕様と合成の値だけから新規作成した、部分補正の画面の計算（回転・反転・角度補正でつまみが形の上にあること・出す値が読める設定になること）の回帰。外部画像・非公開コード・個体metadataを含まない。"
+    },
+    {
+      "path": "packages/photo-editing/src/develop-engine/develop-geometry-source-to-output.test.ts",
+      "sha256": "c41dd14b667227d7a4f45e33847593536b6bb72885c7ee4b86e6708db3a0f9d6",
+      "origin": "Issue #67のため新規作成した、geometrySourceToOutput が geometryOutputToSource の逆写像であることの往復の回帰（合成の寸法と幾何だけ）。外部画像・非公開コード・個体metadataを含まない。"
+    },
+    {
+      "path": "packages/photo-editing/src/develop-engine/develop-frame.test.ts",
+      "sha256": "b1bc2ff6598d9ea428c25970e40340cbf7d9c4a578ba6113f5b09ff0897dc588",
+      "origin": "Issue #67のため新規作成した、操作中の小さな画を canvas の大きさのまま描く判定の回帰（合成の寸法だけ）。外部画像・非公開コード・個体metadataを含まない。"
+    },
+    {
+      "path": "packages/photo-editing/src/editor/browser-photo-editing-model-drag.test.ts",
+      "sha256": "8cbaa67b50579ebbc236ed9638664530f1c138a44d78bf01128c7aaa181b6f7e",
+      "origin": "Issue #67のため新規作成した、マスク・色ポイントがある間の drag の描画の長辺（640px）の回帰（合成の設定だけ）。外部画像・非公開コード・個体metadataを含まない。"
+    },
+    {
+      "path": "packages/photo-editing/src/editor/use-browser-photo-masks.ts",
+      "sha256": "6e4cac68db6e449789f5a4bb47aad4ff3e0fae21d701c577e10788c2affda1c3",
+      "origin": "Issue #67の公開仕様だけから新規作成した、マスクの道具の状態（出す条件・足す / 複製 / 削除 / 反転 / 目・局所の補正・形・初期化・キー）と範囲の重ね表示の面を取りに行く係のReact hook。外部画像・非公開コード・個体metadataを含まない。"
+    },
+    {
+      "path": "packages/photo-editing/src/editor/use-browser-photo-masks.test.tsx",
+      "sha256": "15f67ec17937599fac067c8ffdaa641c82c091c37c8e698a4a720c493c076434",
+      "origin": "Issue #67のため新規作成した、マスクの道具のhook（取り消しの1単位・読める設定・8枚と原寸の書き出しの理由・Esc / Delete）と重ね表示の面の係（rAFでまとめる・古い応答を捨てる）の回帰。外部画像・非公開コード・個体metadataを含まない。"
+    },
+    {
+      "path": "packages/photo-editing/src/editor/photo-editing-mask-overlay.tsx",
+      "sha256": "b5193a1f71ed9e3b0b06268f09e78288e08c7bab51c53daed56c90fae0a0d492",
+      "origin": "Issue #67の公開仕様だけから新規作成した、写真の上のマスクの操作（形の線・つまみのボタン・pointer capture・矢印キー・範囲の赤い重ね）のReact部品。外部画像・非公開コード・個体metadataを含まない。\n変更理由: overlay解除時にドラッグ中の形を確定し消えたマスクの復活を防ぐ"
+    },
+    {
+      "path": "packages/photo-editing/src/editor/photo-editing-mask-overlay.test.tsx",
+      "sha256": "2a2c74dfb35201c2bb8f33ac9e79159ba9941d7df0eb7a2f43072eca784bb648",
+      "origin": "Issue #67のため新規作成した、写真の上のマスクの操作（つまみの位置・drag と1回のcommit・矢印キー・選択・O）のjsdom回帰。外部画像・非公開コード・個体metadataを含まない。\n変更理由: overlay破棄時のマウス操作・キー操作の確定を回帰テストする"
+    },
+    {
+      "path": "packages/photo-editing/src/editor/photo-editing-mask-tools.tsx",
+      "sha256": "a0831a0b0c193cf1004324eb321e24871fccf048d9fec3435a7cee5ffc71f1c9",
+      "origin": "Issue #67の公開仕様だけから新規作成した、右パネルのマスクの面（足す・一覧・重ね表示の切り替え・局所のスライダー・ぼかし）のReact部品。外部画像・非公開コード・個体metadataを含まない。"
+    },
+    {
+      "path": "packages/photo-editing/src/editor/photo-editing-mask-tools.test.tsx",
+      "sha256": "fba02b81bbe32bae72421c35104a55dfc929c33cf90fe4ec93fae31365769a93",
+      "origin": "Issue #67のため新規作成した、右パネルのマスクの面（押せない理由・行の操作・drag / commit・相対の白の出し分け・ぼかし）のjsdom回帰。外部画像・非公開コード・個体metadataを含まない。"
     },
     {
       "path": "packages/develop-engine/crates/niho-develop/src/xmp/masks.rs",

@@ -1,5 +1,9 @@
 import { developEngineManifestPath } from "./develop-engine-manifest";
-import type { DevelopEngineWorkerRequest, DevelopEngineWorkerResponse } from "./develop-engine-worker-core";
+import type {
+  DevelopEngineWorkerRequest,
+  DevelopEngineWorkerResponse,
+  DevelopMaskCapabilities,
+} from "./develop-engine-worker-core";
 import {
   BROKEN_CONVERSION,
   readBuiltinPresets,
@@ -19,6 +23,8 @@ import {
   type DevelopDetailNoise,
 } from "./develop-detail-preview";
 import { readDevelopSettings, type DevelopSettings } from "./develop-settings";
+
+export type { DevelopMaskCapabilities } from "./develop-engine-worker-core";
 
 export {
   DEVELOP_XMP_DEFAULT_GROUPS,
@@ -65,6 +71,10 @@ export {
  * - 開いている写真なしでプリセットを当てる（一覧の一括。F5a-2 移行元設計）: `applyPreset` に `{ workMetaJson }` を渡すと、撮影時の白を
  *   開いている写真ではなく作業コピーのメタ（JPEG / PNG は null）から引く。口（`asShotWhiteFromMeta`）が wasm にあるとき
  *   （`supportsPresetFromMeta()`）だけ使える。省けば今までどおり開いている写真の白
+ * - 部分補正（マスク。`docs/local-adjustments.md`）: `supportsMasks()` は Worker が起こした wasm の `capabilities()`（描ける種類・
+ *   枚数・面の口。口の無い古い wasm は null）。`maskPlane` は 1 枚のマスクの面（重ね表示）で、Worker へ出すのは同時に 1 つまで、
+ *   出している間に来た要求は「次の 1 つ」として持ち（さらに新しい要求が来たら古い「次」は null）、描画の枠は使わない（描画を
+ *   取り消さない・追い越さない）。写真を開き直す・閉じると、出している面の結果は捨て、「次」は null で終える
  */
 
 /** `applyPreset` の撮影時の白の出どころ（省くと開いている写真）。 */
@@ -75,6 +85,8 @@ export type DevelopPresetAsShotSource = {
 
 export type DevelopFrame = { width: number; height: number; rgba: Uint8ClampedArray<ArrayBuffer> };
 export type DevelopSampledColor = { lightness: number; chroma: number; hue: number };
+/** 1 枚のマスクの面（`width·height` byte。`round(重み / 65536 · 255)`、行優先、`invert` 込み、`enabled` に依らない）。 */
+export type DevelopMaskPlane = { width: number; height: number; data: Uint8Array<ArrayBuffer> };
 
 /**
  * 描画の優先度。`drag`（つまみを動かしている間の速い描き方）と `final`（離した後の丁寧な 1 枚）は編集の 1 枠、`preview`（一覧の
@@ -207,6 +219,16 @@ export type DevelopEngine = {
   /** ディテール（シャープ・ノイズ軽減。`developSettings` v6。Issue #32）を読んで描ける wasm か。throw しない */
   supportsDetail: () => Promise<boolean>;
   /**
+   * 部分補正（マスク）を描ける種類と枚数（wasm の `capabilities()`。口の無い古い wasm・使えない engine は null。throw しない）。
+   * テスト用の engine には無いことがある（無い＝描けない）
+   */
+  supportsMasks?: () => Promise<DevelopMaskCapabilities | null>;
+  /**
+   * 持っている写真の 1 枚のマスクの面（`maxDimension` の描画と同じ寸法。幾何込み）。同時に 1 つまで出し、出している間の新しい要求に
+   * 追い越された「次」・開き直し・閉じたときは null。面の口の無い wasm・知らない id は reject
+   */
+  maskPlane?: (settings: object, maskId: string, options: { maxDimension: number }) => Promise<DevelopMaskPlane | null>;
+  /**
    * JPEG / PNG の寸法（EXIF の向きを反映。ヘッダーだけ読む）。bytes は Worker へコピーで渡す（呼び出し側の ArrayBuffer はそのまま
    * 使える。`open` / `exportJpeg` は手放す）。wasm に無ければ reject
    */
@@ -307,12 +329,33 @@ type RenderRequest = {
 
 type InFlightRender = RenderRequest & { id: number; stale: boolean };
 
+/** マスクの面の要求（同時に 1 つまで出し、「次」は 1 つだけ持つ）。 */
+type MaskPlaneRequest = {
+  settingsJson: string;
+  maskId: string;
+  maxDimension: number;
+  resolve: (plane: DevelopMaskPlane | null) => void;
+  reject: (error: unknown) => void;
+};
+
+type InFlightMaskPlane = MaskPlaneRequest & { id: number; stale: boolean };
+
 /** 「次」を持つ枠（drag と final は編集の 1 枠）。並びは Worker が空いたときに出す順。 */
 type RenderSlot = "edit" | "preview" | "background";
 const RENDER_SLOT_ORDER: readonly RenderSlot[] = ["edit", "preview", "background"];
 
 function renderSlotOf(priority: DevelopRenderPriority): RenderSlot {
   return priority === "drag" || priority === "final" ? "edit" : priority;
+}
+
+/** `ready` の `masks`（Worker が読んだ `capabilities()`）を写す。形が違えば null（描けない扱い）。 */
+function readMaskCapabilitiesResponse(value: unknown): DevelopMaskCapabilities | null {
+  if (typeof value !== "object" || value === null) return null;
+  const { kinds, max, maskPlane } = value as Record<string, unknown>;
+  if (!Array.isArray(kinds) || typeof max !== "number" || !Number.isInteger(max) || max <= 0) return null;
+  const readKinds = kinds.filter((kind): kind is string => typeof kind === "string");
+  if (readKinds.length === 0) return null;
+  return { kinds: readKinds, max, maskPlane: maskPlane === true };
 }
 
 /** プリセットを当てた結果を読む（`settings` が v1 の形でなければ throw）。 */
@@ -414,6 +457,11 @@ export function createDevelopEngine(options: CreateDevelopEngineOptions = {}): D
   let autoSupported = false;
   // 開いている写真なしでプリセットを当てる口（`asShotWhiteFromMeta`）が wasm にある（`ready` の応答で分かる）
   let presetFromMetaSupported = false;
+  // 描ける部分補正（`ready` の応答の `masks`。無ければ null）
+  let maskCapabilities: DevelopMaskCapabilities | null = null;
+  // 出しているマスクの面と、その間に来た「次」（描画の枠とは別）
+  let inFlightMaskPlane: InFlightMaskPlane | null = null;
+  let queuedMaskPlane: MaskPlaneRequest | null = null;
 
   const unavailableError = () =>
     new DevelopEngineError(status === "disposed" ? "develop engine is disposed" : "develop engine is unavailable");
@@ -465,6 +513,43 @@ export function createDevelopEngine(options: CreateDevelopEngineOptions = {}): D
     if (inFlightRender && !inFlightRender.stale) inFlightRender.resolve(null);
     inFlightRender = null;
     dropQueuedRenders();
+    dropMaskPlanes();
+  };
+
+  /** 出しているマスクの面の結果は捨て（null）、「次」は null で終える（写真が変わる・止める）。 */
+  const dropMaskPlanes = () => {
+    if (inFlightMaskPlane && !inFlightMaskPlane.stale) {
+      inFlightMaskPlane.stale = true;
+      inFlightMaskPlane.resolve(null);
+    }
+    const queued = queuedMaskPlane;
+    queuedMaskPlane = null;
+    queued?.resolve(null);
+  };
+
+  const sendMaskPlane = (request: MaskPlaneRequest) => {
+    const id = nextId++;
+    inFlightMaskPlane = { ...request, id, stale: false };
+    try {
+      post({
+        type: "maskPlane",
+        id,
+        settingsJson: request.settingsJson,
+        maskId: request.maskId,
+        maxDimension: request.maxDimension,
+      });
+    } catch (error) {
+      inFlightMaskPlane = null;
+      request.reject(error);
+    }
+  };
+
+  /** 出していた面が終わったら、持っていた「次」を出す。 */
+  const finishMaskPlane = () => {
+    inFlightMaskPlane = null;
+    const next = queuedMaskPlane;
+    queuedMaskPlane = null;
+    if (next) sendMaskPlane(next);
   };
 
   const sendRender = (request: RenderRequest) => {
@@ -508,6 +593,7 @@ export function createDevelopEngine(options: CreateDevelopEngineOptions = {}): D
       inFlightRender.resolve(null);
     }
     dropQueuedRenders();
+    dropMaskPlanes();
   };
 
   const onResponse = (response: DevelopEngineWorkerResponse) => {
@@ -529,6 +615,7 @@ export function createDevelopEngine(options: CreateDevelopEngineOptions = {}): D
         presetThumbnailsSupported = response.presetThumbnails === true;
         autoSupported = response.auto === true;
         presetFromMetaSupported = response.presetFromMeta === true;
+        maskCapabilities = readMaskCapabilitiesResponse(response.masks);
         status = "ready";
         settleReady?.(true);
         settleReady = null;
@@ -549,6 +636,20 @@ export function createDevelopEngine(options: CreateDevelopEngineOptions = {}): D
         }
       }
       finishRender();
+      return;
+    }
+    if (inFlightMaskPlane && response.id === inFlightMaskPlane.id) {
+      const entry = inFlightMaskPlane;
+      if (!entry.stale) {
+        if (response.type === "maskPlane") {
+          entry.resolve({ width: response.width, height: response.height, data: new Uint8Array(response.data) });
+        } else if (response.type === "error") {
+          entry.reject(new DevelopEngineError(response.message));
+        } else {
+          entry.reject(new DevelopEngineError("develop engine returned no mask plane"));
+        }
+      }
+      finishMaskPlane();
       return;
     }
     const entry = pending.get(response.id);
@@ -664,6 +765,34 @@ export function createDevelopEngine(options: CreateDevelopEngineOptions = {}): D
 
     async supportsDetail() {
       return (await ready()) && detailSupported;
+    },
+
+    async supportsMasks() {
+      if (!(await ready()) || !maskCapabilities) return null;
+      return { ...maskCapabilities, kinds: [...maskCapabilities.kinds] };
+    },
+
+    maskPlane(settings, maskId, planeOptions) {
+      if (status !== "ready" || terminateWhenIdle) return Promise.reject(unavailableError());
+      if (!maskCapabilities?.maskPlane) {
+        return Promise.reject(new DevelopEngineError("develop engine cannot draw mask planes"));
+      }
+      return new Promise<DevelopMaskPlane | null>((resolve, reject) => {
+        const next: MaskPlaneRequest = {
+          settingsJson: JSON.stringify(settings),
+          maskId,
+          maxDimension: planeOptions.maxDimension,
+          resolve,
+          reject,
+        };
+        if (inFlightMaskPlane === null) {
+          sendMaskPlane(next);
+          return;
+        }
+        // 古い「次」は null で終える（新しい形だけを描く）
+        queuedMaskPlane?.resolve(null);
+        queuedMaskPlane = next;
+      });
     },
 
     async sampleColor(settings, options) {
