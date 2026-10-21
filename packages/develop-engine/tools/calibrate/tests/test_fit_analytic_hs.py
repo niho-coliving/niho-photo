@@ -245,6 +245,42 @@ class ModelTests(unittest.TestCase):
             self.assertFalse(np.array_equal(reordered, changed_input))
 
 
+class TargetCacheTests(unittest.TestCase):
+    def test_target_cache_is_bound_to_the_plan_and_photo_inputs(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            plan_path = root / "plan.json"
+            config_path = root / "server-config.json"
+            calibrate = root / "analytic_hs_calibrate"
+            source = root / "input.jpg"
+            settings = root / "settings.json"
+            reference = root / "reference.jpg"
+            for path in (calibrate, source, settings, reference):
+                path.write_bytes(b"initial")
+            plan_path.write_text(json.dumps({"scenes": [{"scene": "a"}], "items": [{"scene": 0}]}))
+            config_path.write_text(json.dumps({
+                "scenes": [{"input": str(source)}],
+                "items": [{"settings": str(settings), "reference": str(reference)}],
+            }))
+            cache = root / "photo-targets.json"
+            fingerprint = F.target_cache_fingerprint("C", plan_path, config_path, calibrate, 60)
+            F.write_target_cache(cache, "C", fingerprint, 60, {"0": {"theta": [1.0]}})
+            self.assertEqual(F.read_target_cache(cache, "C", plan_path, config_path, calibrate, 60),
+                             {"0": {"theta": [1.0]}})
+            fold_fingerprint = F.cv_fold_fingerprint("C", plan_path, config_path, calibrate,
+                                                     cache, "dates", 0, 100)
+
+            plan_path.write_text(json.dumps({"scenes": [{"scene": "b"}], "items": [{"scene": 0}]}))
+            self.assertIsNone(F.read_target_cache(cache, "C", plan_path, config_path, calibrate, 60))
+            self.assertNotEqual(fold_fingerprint, F.cv_fold_fingerprint(
+                "C", plan_path, config_path, calibrate, cache, "dates", 0, 100))
+            plan_path.write_text(json.dumps({"scenes": [{"scene": "a"}], "items": [{"scene": 0}]}))
+            source.write_bytes(b"changed photo at the same path")
+            self.assertIsNone(F.read_target_cache(cache, "C", plan_path, config_path, calibrate, 60))
+            self.assertNotEqual(fold_fingerprint, F.cv_fold_fingerprint(
+                "C", plan_path, config_path, calibrate, cache, "dates", 0, 100))
+
+
 class CandidateCTests(unittest.TestCase):
     def test_ridge_recovers_a_linear_relation_and_clips_inputs(self):
         rng = np.random.default_rng(26)
@@ -260,6 +296,10 @@ class CandidateCTests(unittest.TestCase):
         z = F.z_of(features, model["mean"], model["scale"])
         prediction = model["bias"][0] + z @ model["weights"][0]
         self.assertLess(float(np.abs(prediction - targets[:, 0]).mean()), 0.1)
+        strong = F.fit_ridge(features, targets, dates, F.CP_LAMBDAS)
+        self.assertTrue(all(lam in F.CP_LAMBDAS for lam in strong["lambdas"]))
+        self.assertEqual(set(F.VARIANTS_C), {"C", "CP"})
+        self.assertNotEqual(F.VARIANTS_C["C"]["targets"], F.VARIANTS_C["CP"]["targets"])
         far = F.z_of(np.full((1, F.C_FEATURES), 1e9), model["mean"], model["scale"])
         self.assertTrue(np.all(np.abs(far) <= F.C_Z_CLIP))
 
