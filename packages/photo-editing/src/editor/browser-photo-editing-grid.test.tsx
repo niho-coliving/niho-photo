@@ -241,6 +241,40 @@ describe("BrowserPhotoEditingGrid", () => {
     for (const word of ["queued", "rendering"]) expect(container.textContent).not.toContain(word);
   });
 
+  it("選別（niho-photo#47）: 採用・却下の印を右下に出し（読み上げ「採用」「却下」）、却下した写真は画だけ薄くする。♥ と並んでも出す", async () => {
+    await renderGrid({
+      items: [
+        gridItem("p1", "2026-10-01T01:00:00.000Z", { flag: "pick", favorite: true }),
+        gridItem("r1", "2026-10-01T00:30:00.000Z", { flag: "reject" }),
+        gridItem("n1", "2026-10-01T00:00:00.000Z", { flag: null }),
+        gridItem("n2", "2026-09-30T23:00:00.000Z"),
+      ],
+      selectedKeys: ["r1"],
+    });
+    const mark = (fileName: string) =>
+      Array.from(tile(fileName).querySelectorAll<HTMLElement>("span.absolute")).find((span) =>
+        span.className.includes("bottom-[5px] right-[5px]"),
+      );
+    expect(mark("p1.JPG")?.textContent).toBe("採用");
+    expect(mark("r1.JPG")?.textContent).toBe("却下");
+    expect(mark("n1.JPG")).toBeUndefined();
+    expect(mark("n2.JPG")).toBeUndefined();
+    // ♥ と採用は別の印（両方付いてよい）
+    expect(tile("p1.JPG").textContent).toContain("お気に入り");
+    expect(tile("p1.JPG").textContent).toContain("採用");
+    // 薄くするのは画だけ（選んだ印・枠・読み上げは落とさない）
+    const image = (fileName: string) => tile(fileName).querySelector("img")?.parentElement;
+    expect(image("r1.JPG")?.className).toContain("opacity-40");
+    expect(image("p1.JPG")?.className).not.toContain("opacity-40");
+    expect(image("n2.JPG")?.className).not.toContain("opacity-40");
+    expect(tile("r1.JPG").className).not.toContain("opacity");
+    expect(tile("r1.JPG").getAttribute("aria-pressed")).toBe("true");
+    expect(tile("r1.JPG").querySelector(".niho-accent-surface")).not.toBeNull();
+    expect(mark("r1.JPG")?.closest(".opacity-40")).toBeNull();
+    // 却下しても押せる（開ける・選べる）
+    expect(tile("r1.JPG").disabled).toBe(false);
+  });
+
   it("追加している途中の写真は押せず、日時が無ければ「今日」に入れる。押す・ダブルクリック・キーは画面へ伝える", async () => {
     await renderGrid({
       items: [gridItem("adding", null, { adding: { fraction: 0.5 } }), ...ITEMS],

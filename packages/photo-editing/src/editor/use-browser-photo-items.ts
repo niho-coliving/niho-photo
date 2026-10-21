@@ -29,7 +29,7 @@ import {
  * 並びはこの端末に覚える（`usePhotoEditingListSort`）。絞り込みの条件（種類・補正済み。F5b 移行元設計）は覚えない（ページを閉じたら
  * 消える）。条件は「写真」「お気に入り」だけに掛け、「記事の画像」を見ている間は掛けない（選んだ条件は残り、戻るとまた掛かる）。
  *
- * - `filter` は今の場所で掛けている条件、`filterCount` はその数（0〜2。state にしない）
+ * - `filter` は今の場所で掛けている条件、`filterCount` はその数（0〜3。選別は niho-photo#47。state にしない）
  * - `listKey` は一覧の中身（場所・並び・掛けている条件）。替わったらグリッドを先頭へ戻す
  */
 export function useBrowserPhotoListView() {
@@ -39,13 +39,15 @@ export function useBrowserPhotoListView() {
   const changeFilter = useCallback((patch: Partial<BrowserCloudListFilter>) => {
     setChosenFilter((current) => {
       const next = { ...current, ...patch };
-      return next.kind === current.kind && next.edited === current.edited ? current : next;
+      return next.kind === current.kind && next.edited === current.edited && (next.flag ?? null) === (current.flag ?? null)
+        ? current
+        : next;
     });
   }, []);
   const clearFilter = useCallback(() => setChosenFilter(BROWSER_CLOUD_NO_LIST_FILTER), []);
   const filter = appliedBrowserCloudListFilter(place, chosenFilter);
   const filterCount = countBrowserCloudListFilter(filter);
-  const listKey = `${place}:${sort}:${filter.kind ?? ""}:${filter.edited ?? ""}`;
+  const listKey = `${place}:${sort}:${filter.kind ?? ""}:${filter.edited ?? ""}:${filter.flag ?? ""}`;
   return { place, setPlace, sort, setSort, filter, filterCount, changeFilter, clearFilter, listKey };
 }
 
@@ -124,9 +126,10 @@ export function useBrowserPhotoItems(
     [commitAddedPhotos],
   );
 
-  // 一覧の外の手元の写真（URL で開いた・このタブで追加した）の行も、一覧と同じく書き換える（お気に入りの付け外し。持ち方は変えない）
+  // 一覧の外の手元の写真（URL で開いた・このタブで追加した）の行も、一覧と同じく書き換える（お気に入り・選別のフラグの付け外し。
+  // 持ち方は変えない）
   const patchLocalPhoto = useCallback(
-    (photoId: string, patch: Pick<PhotoLibraryItem, "favorite">) => {
+    (photoId: string, patch: Partial<Pick<PhotoLibraryItem, "favorite" | "flag">>) => {
       setDeepLinkedPhoto((current) => (current?.id === photoId ? { ...current, ...patch } : current));
       const current = addedPhotosRef.current;
       if (!current.some((entry) => entry.photo.id === photoId)) return;

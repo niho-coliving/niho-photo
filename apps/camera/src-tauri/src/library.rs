@@ -4,9 +4,11 @@
 //! 走査・不透明な `folderId` / `entryId`・サムネイル（QuickLook / sips・キャッシュ）・覚えたフォルダの本体は
 //! `packages/desktop-photo`（NIHO Desktop と同じ関数）。ここはコマンドとその引数の確かめ、フォルダの選択ダイアログ、
 //! 置き場（`~/Library/Caches/life.niho.camera/photo-thumbnails/`・`~/Library/Application Support/life.niho.camera/
-//! photo-editing/remembered.json`）の解決だけを持つ。パスは画面へ渡さない。
+//! photo-editing/remembered.json`）の解決だけを持つ。パスは画面へ渡さない。一覧の写真には「補正済み」（`hasEdits`。`photos.rs`）と
+//! 選別のフラグ（`flag`。`flags.rs`。niho-photo#47）を付けて返す。
 
 use crate::error::{invalid_request, parse_request, run_blocking, CameraError};
+use crate::flags::{flags, CameraFlags};
 use crate::photos::{photos, CameraPhotos};
 use crate::{app_log, dialog};
 use niho_desktop_photo::library::{
@@ -135,9 +137,18 @@ pub fn validate_interactive_preview_request(request: &InteractivePreviewRequest)
   Ok(())
 }
 
+/// 一覧の写真に「補正済み」（`hasEdits`）と選別のフラグ（`flag`。niho-photo#47。付いた写真だけ）を付ける。
+fn annotate_listing(photos: &CameraPhotos, flags: Option<&CameraFlags>, value: &mut Value) {
+  photos.annotate_has_edits(value);
+  if let Some(flags) = flags {
+    flags.annotate(value);
+  }
+}
+
 fn added_photos_value(
   library: &PhotoLibrary,
   photo_state: &CameraPhotos,
+  flags: Option<&CameraFlags>,
   picked: &[std::path::PathBuf],
 ) -> Result<Value, CameraError> {
   let selected = library.add_photos(picked);
@@ -147,9 +158,9 @@ fn added_photos_value(
       INVALID_PHOTOS_MESSAGE,
     ));
   }
-  // annotate_has_edits は `photos` を持つオブジェクトを辿る。同じ応答オブジェクトをそのまま返し、パスは足さない。
+  // annotate_listing は `photos` を持つオブジェクトを辿る。同じ応答オブジェクトをそのまま返し、パスは足さない。
   let mut value = json!({ "photos": selected });
-  photo_state.annotate_has_edits(&mut value);
+  annotate_listing(photo_state, flags, &mut value);
   Ok(value)
 }
 
@@ -159,13 +170,13 @@ fn added_photos_value(
 /// フォルダの選択ダイアログで選んだフォルダを覚え、その木と写真の一覧を返す（`{ folder }`。閉じたら `{ folder: null }`）。
 #[tauri::command]
 pub async fn camera_library_add_folder(app: tauri::AppHandle) -> Result<Value, CameraError> {
-  let (library, photos) = (library(&app)?, photos(&app)?);
+  let (library, photos, flags) = (library(&app)?, photos(&app)?, flags(&app));
   let Some(picked) = dialog::pick_folder("フォルダを追加").await? else {
     return Ok(json!({ "folder": null }));
   };
   run_blocking(move || {
     let mut folder = library.add_folder(&picked)?;
-    photos.annotate_has_edits(&mut folder);
+    annotate_listing(&photos, flags.as_deref(), &mut folder);
     Ok(json!({ "folder": folder }))
   })
   .await
@@ -179,17 +190,17 @@ pub async fn camera_library_add_photos(app: tauri::AppHandle) -> Result<Value, C
   if picked.is_empty() {
     return Ok(json!({ "photos": [] }));
   }
-  let (library, photo_state) = (library(&app)?, photos(&app)?);
-  run_blocking(move || added_photos_value(&library, &photo_state, &picked)).await
+  let (library, photo_state, flags) = (library(&app)?, photos(&app)?, flags(&app));
+  run_blocking(move || added_photos_value(&library, &photo_state, flags.as_deref(), &picked)).await
 }
 
 /// 覚えたフォルダ・写真のうち、いまあるもの（`{ folders, photos }`）。見つからないものは黙って出さない（覚えたまま）。
 #[tauri::command]
 pub async fn camera_library_remembered(app: tauri::AppHandle) -> Result<Value, CameraError> {
-  let (library, photos) = (library(&app)?, photos(&app)?);
+  let (library, photos, flags) = (library(&app)?, photos(&app)?, flags(&app));
   run_blocking(move || {
     let mut remembered = library.remembered();
-    photos.annotate_has_edits(&mut remembered);
+    annotate_listing(&photos, flags.as_deref(), &mut remembered);
     Ok(remembered)
   })
   .await
@@ -198,10 +209,10 @@ pub async fn camera_library_remembered(app: tauri::AppHandle) -> Result<Value, C
 /// 「選んだ写真」だけを読み直す。覚えたフォルダの再走査は行わない（`{ photos }`）。
 #[tauri::command]
 pub async fn camera_library_selected_photos(app: tauri::AppHandle) -> Result<Value, CameraError> {
-  let (library, photos) = (library(&app)?, photos(&app)?);
+  let (library, photos, flags) = (library(&app)?, photos(&app)?, flags(&app));
   run_blocking(move || {
     let mut selected = json!({ "photos": library.selected_photos() });
-    photos.annotate_has_edits(&mut selected);
+    annotate_listing(&photos, flags.as_deref(), &mut selected);
     Ok(selected)
   })
   .await
@@ -212,10 +223,10 @@ pub async fn camera_library_selected_photos(app: tauri::AppHandle) -> Result<Val
 pub async fn camera_library_list_folder(app: tauri::AppHandle, request: Option<Value>) -> Result<Value, CameraError> {
   let request: FolderRequest = parse_request(request)?;
   validate_folder_request(&request)?;
-  let (library, photos) = (library(&app)?, photos(&app)?);
+  let (library, photos, flags) = (library(&app)?, photos(&app)?, flags(&app));
   run_blocking(move || {
     let mut folder = library.list_folder(&request.folder_id)?;
-    photos.annotate_has_edits(&mut folder);
+    annotate_listing(&photos, flags.as_deref(), &mut folder);
     Ok(json!({ "folder": folder }))
   })
   .await
@@ -368,14 +379,48 @@ mod tests {
       .save(&photo_id, &json!({ "exposure": 0.3 }), 0, SystemTime::now())
       .unwrap();
 
-    let value = added_photos_value(&fixture.library(), &photo_state, std::slice::from_ref(&path)).unwrap();
+    let value = added_photos_value(&fixture.library(), &photo_state, None, std::slice::from_ref(&path)).unwrap();
     assert_eq!(value["photos"][0]["hasEdits"], json!(true));
+    assert!(value["photos"][0].get("flag").is_none());
     assert!(!value.to_string().contains(fixture.dir.to_string_lossy().as_ref()));
     assert_eq!(
-      added_photos_value(&fixture.library(), &photo_state, &[fixture.dir.join("missing.jpg")])
-        .unwrap_err()
-        .message,
+      added_photos_value(
+        &fixture.library(),
+        &photo_state,
+        None,
+        &[fixture.dir.join("missing.jpg")]
+      )
+      .unwrap_err()
+      .message,
       INVALID_PHOTOS_MESSAGE
     );
+  }
+
+  #[test]
+  fn added_photos_response_marks_flags_from_the_flag_store() {
+    use crate::flags::CameraFlags;
+    use niho_desktop_photo::saved_flags::{flags_path, FlagLimits, FlagStore};
+
+    let fixture = Fixture::new("camera-add-photos-flags");
+    let path = fixture.file("picked.jpg");
+    let photo_state = CameraPhotos::new(None);
+    let flags = CameraFlags::new(Some(FlagStore::new(
+      flags_path(&fixture.app_data()),
+      FlagLimits::default(),
+    )));
+    let library = fixture.library();
+    let first = added_photos_value(&library, &photo_state, Some(&flags), std::slice::from_ref(&path)).unwrap();
+    assert!(first["photos"][0].get("flag").is_none());
+    let entry_id = first["photos"][0]["entryId"].as_str().unwrap().to_string();
+    flags
+      .set(
+        &library,
+        vec![entry_id],
+        Some(niho_desktop_photo::saved_flags::PhotoFlag::Pick),
+        SystemTime::now(),
+      )
+      .unwrap();
+    let value = added_photos_value(&library, &photo_state, Some(&flags), std::slice::from_ref(&path)).unwrap();
+    assert_eq!(value["photos"][0]["flag"], json!("pick"));
   }
 }

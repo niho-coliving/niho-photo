@@ -6,7 +6,8 @@
 //!   だけで、画面から外へは通信できない。
 //! - コマンドは `generate_handler!` に登録し、`permissions/camera.toml` の permission と capability で許可する。
 //! - この Mac の `PhotoLibrary`（spec「接続口 PhotoLibrary」）: フォルダ（`library.rs`）・写真を開く・補正の保存（`photos.rs`）・
-//!   現像と原寸の書き出し（`develop.rs`）。本体は `packages/desktop-photo`（NIHO Desktop と同じ関数）。この Mac のプリセット（`presets.rs`）。
+//!   現像と原寸の書き出し（`develop.rs`）・選別のフラグ（`flags.rs`。niho-photo#47）。本体は `packages/desktop-photo`（NIHO Desktop と
+//!   同じ関数）。この Mac のプリセット（`presets.rs`）。
 //!   一覧のサムネイルは URI scheme `niho-thumb://`（`thumbnail_scheme.rs`）、端末への保存とオリジナルの書き出しは `save.rs`。
 //! - 受入用の E2E（feature `e2e`。配布の build には入らない）は `e2e.rs`。
 //! - 自動更新（`updater.rs`。C5 #18393）: 起動時に 1 回、Rust の側で更新フィードを見て、次に開いたときに新しい版になる
@@ -22,6 +23,7 @@ mod dialog;
 #[cfg(feature = "e2e")]
 mod e2e;
 mod error;
+mod flags;
 mod library;
 mod mask_surfaces;
 mod photo_bench;
@@ -79,6 +81,7 @@ pub fn run() {
       account::install(app.handle());
       library::install(app.handle());
       photos::install(app.handle());
+      flags::install(app.handle());
       develop::install(app.handle());
       cutout_commands::install(app.handle());
       presets::install(app.handle());
@@ -104,6 +107,7 @@ pub fn run() {
       library::camera_library_list_folder,
       library::camera_library_forget_folder,
       library::camera_library_forget_photos,
+      flags::camera_library_set_flags,
       library::camera_photo_interactive_preview,
       library::camera_photo_cancel_interactive_preview,
       photos::camera_photo_open,

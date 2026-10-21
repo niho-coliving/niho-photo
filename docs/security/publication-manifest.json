@@ -107,11 +107,13 @@
         "path": "packages/photo-editing/src/browser-photo-cloud-source.test.ts",
         "sha256": "73f11fab7530c3dc6f23114d2e7518f48c7a39c998a5096a293a19cc8eb23d91"
       },
-      "outputSha256": "8152b91dd1fbe3c1531841f1aab8675ea1947f1d4b73f4179570aa55f3c293cb",
+      "outputSha256": "bee30698c082873465da58b795c28bcd68a0461ec051cab29342f9026cb372ba",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
-        "任意の個別写真ソース契約と選んだ写真のUI、復元、取消、再試行、失敗時参照保持を追加"
+        "任意の個別写真ソース契約と選んだ写真のUI、復元、取消、再試行、失敗時参照保持を追加",
+        "PR #98を#91マージ後の最新mainへ積み直し、選別保存中の二重操作ガードを保持。",
+        "PR #98で選別フラグの保存経路とUIを更新する。"
       ]
     },
     {
@@ -122,12 +124,14 @@
         "path": "packages/photo-editing/src/browser-photo-cloud-source.ts",
         "sha256": "ebfa29ade40c103e39f3ef888ca5d0ac2871fc0f8e16bc85a65e16a30fb83832"
       },
-      "outputSha256": "1ff5cbb1a15fe2797aa7c8698a6568e6fc5b24d06a7002e9ac2228e4266645cc",
+      "outputSha256": "43fc8e1836a90d9ebdcde8ffec728ad9b2367a42f11c6c9d09ea436b7f7552b4",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "行末空白と余分な末尾空行を整理。",
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
-        "任意の個別写真ソース契約と選んだ写真のUI、復元、取消、再試行、失敗時参照保持を追加"
+        "任意の個別写真ソース契約と選んだ写真のUI、復元、取消、再試行、失敗時参照保持を追加",
+        "PR #98を#91マージ後の最新mainへ積み直し、選別保存中の二重操作ガードを保持。",
+        "PR #98で選別フラグの保存経路とUIを更新する。"
       ]
     },
     {
@@ -188,10 +192,12 @@
         "path": "packages/photo-editing/src/browser-photo-export-render.ts",
         "sha256": "5439449d2a25e316c7bbf45530b66af7cd74d7725a93edc57380a1f50918de2b"
       },
-      "outputSha256": "6f8eca20176656c6676865ffdd59ce92317902612828bc1e2a8825243b5ba158",
+      "outputSha256": "b535b7570228a279e626a06eb7d929c2451be26e766e2c6903a491466043def5",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
-        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。"
+        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
+        "PR #99を#91マージ後のmainへ積み直し、遠近補正後のブラシ半径を局所ヤコビアンで写す。",
+        "PR #99のマスク面の描画・読み書きと遠近対応の変更を反映する。"
       ]
     },
     {
@@ -304,7 +310,7 @@
         "path": "packages/photo-editing/src/develop-engine/develop-engine-client.ts",
         "sha256": "d734116dcc1e882d2e3debedb7d79fb892915571f6b59965886464cc933c022f"
       },
-      "outputSha256": "4575d8d3a620b71bcb9a1666f9c9d1cc6da6b76fb7e6fba4f796a322c804441c",
+      "outputSha256": "1e65e98b186b009eef059f85067fa9a7c8d26bdb98bd1c6aded321a3ac4d8eb0",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
@@ -320,7 +326,10 @@
         "niho-photo#46 で wasm が遠近（v7）を描けるかを返す supportsPerspective を足した。",
         "niho-photo#46 後半で Upright の推定（estimateUpright）と使えるかの確かめ（supportsUpright）を足した。",
         "niho-photo#44 前半で修復の印を描ける wasm か（supportsHeal）を足した。",
-        "PR #96統合でcrate 0.24・v8対応"
+        "PR #96統合でcrate 0.24・v8対応",
+        "PR #99を#91マージ後のmainへ積み直し、遠近補正後のブラシ半径を局所ヤコビアンで写す。",
+        "PR #99のマスク面の描画・読み書きと遠近対応の変更を反映する。",
+        "修復とマスク面の能力説明を同じworker契約へ統合する。"
       ]
     },
     {
@@ -406,7 +415,7 @@
         "path": "packages/photo-editing/src/develop-engine/develop-engine-worker-core.ts",
         "sha256": "460e15bb7865292233cc8baf9864ede3d31d47158aff084415364fa1495cb776"
       },
-      "outputSha256": "0aedd2d7ed42f58f6257eb8f5217ff0fc240ecb95adbc2b0a7b82dcb45255e56",
+      "outputSha256": "27d30ef26b1ea475c9f777ef16903ad89097a99986a27f722bb39847dd058abc",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
@@ -420,7 +429,9 @@
         "niho-photo#46 で小さな v7 の設定で遠近の能力を確かめるようにした。",
         "niho-photo#46 後半で Developer.estimateUpright を呼ぶ要求と ready の upright を足した。",
         "niho-photo#44 前半で v8 の修復の印を読める wasm を確かめる能力プローブと ready の heal を足した。",
-        "PR #96統合でcrate 0.24・v8対応"
+        "PR #96統合でcrate 0.24・v8対応",
+        "PR #99を#91マージ後のmainへ積み直し、遠近補正後のブラシ半径を局所ヤコビアンで写す。",
+        "PR #99のマスク面の描画・読み書きと遠近対応の変更を反映する。"
       ]
     },
     {
@@ -534,10 +545,12 @@
         "path": "packages/photo-editing/src/develop-engine/develop-render-input.ts",
         "sha256": "2bf80fc37dca969e4c3fbf812b5f2d22950188b7993d0a1f5feb5cd205783bea"
       },
-      "outputSha256": "77bee07617a081b3dd5173a31bcf8ed33b1cec43fc7b32579b32af0e44a0de7b",
+      "outputSha256": "68c164b18caa134211adfa98f99e6bdd7531787d14be67d7a44ec99afe144ab1",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
-        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。"
+        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
+        "PR #99を#91マージ後のmainへ積み直し、遠近補正後のブラシ半径を局所ヤコビアンで写す。",
+        "PR #99のマスク面の描画・読み書きと遠近対応の変更を反映する。"
       ]
     },
     {
@@ -890,10 +903,12 @@
         "path": "packages/photo-editing/src/editor/browser-photo-editing-filter.test.tsx",
         "sha256": "128f065a40821e3e48d90ee3e753a254f34cb0e538d9ca05225ff39b4a0d4118"
       },
-      "outputSha256": "5974c5cfa7767081e90f7ef91a7c6adf0876dac95d27c45f73ce5b0874c16757",
+      "outputSha256": "ae4ef7e4cd7985c9362828474247f553f68a0de7b1884b2cf9cd04de73b5a46b",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
-        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。"
+        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
+        "PR #98を#91マージ後の最新mainへ積み直し、選別保存中の二重操作ガードを保持。",
+        "PR #98で選別フラグの保存経路とUIを更新する。"
       ]
     },
     {
@@ -904,10 +919,12 @@
         "path": "packages/photo-editing/src/editor/browser-photo-editing-filter.tsx",
         "sha256": "5f636ad660c5ec4e507f1f3463a5070ce9fdf8a744ba5425db5cbb9038da00da"
       },
-      "outputSha256": "34acee0954a5cd63dc20533aff800e6edc66ae83488885a481211b8eee307c04",
+      "outputSha256": "e43a0d5f35fddc624fef6bf94cd1bd999e04e49ae4f08b96d362010176d20b8e",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
-        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。"
+        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
+        "PR #98を#91マージ後の最新mainへ積み直し、選別保存中の二重操作ガードを保持。",
+        "PR #98で選別フラグの保存経路とUIを更新する。"
       ]
     },
     {
@@ -935,9 +952,11 @@
         "path": "packages/photo-editing/src/editor/browser-photo-editing-footer.test.tsx",
         "sha256": "a33628b1d33fd18b2ea082a0640a652b8ec54054e3077ca6256664c6194cd398"
       },
-      "outputSha256": "86de1d5d430c03b1609b14d8fb9ae7ab858cf49353e0e5e1219ef875d35949df",
+      "outputSha256": "51e1bd20ee067a9ea3ff0664e407e36c1d35855189c3900632ebf8573a4f8980",
       "modifications": [
-        "中幅画面のフッター折返しクラスを検証する。"
+        "中幅画面のフッター折返しクラスを検証する。",
+        "PR #98を#91マージ後の最新mainへ積み直し、選別保存中の二重操作ガードを保持。",
+        "PR #98で選別フラグの保存経路とUIを更新する。"
       ]
     },
     {
@@ -948,7 +967,7 @@
         "path": "packages/photo-editing/src/editor/browser-photo-editing-footer.tsx",
         "sha256": "448c53cf1da0a5f3b41e1d507d2ac5d618a39c0b300571ad95a670bdba86bca0"
       },
-      "outputSha256": "ede08df70a1a76cc301f714c85dc9f7eabade5f1ecf75d1289af8490ce9284f0",
+      "outputSha256": "9128a00c929f63f527d5bf0682951443432d740a2903ff76a509435696040faa",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
@@ -957,7 +976,9 @@
         "Issue #49の統合確認: 置く列をclassNameで受け取る（PCの幅は中央の列の下だけ）。",
         "1024〜1279px幅で操作ボタンが重ならないよう折り返す。",
         "niho-photo#41 下段の「補正前」の右に「比較」のメニュー（並べる・分割・比較しない）を追加。",
-        "niho-photo#41 の比較UIを #72 のヒストグラム・Jキー契約と併存するようmainへ積み直した。"
+        "niho-photo#41 の比較UIを #72 のヒストグラム・Jキー契約と併存するようmainへ積み直した。",
+        "PR #98を#91マージ後の最新mainへ積み直し、選別保存中の二重操作ガードを保持。",
+        "PR #98で選別フラグの保存経路とUIを更新する。"
       ]
     },
     {
@@ -968,8 +989,11 @@
         "path": "packages/photo-editing/src/editor/browser-photo-editing-grid.test.tsx",
         "sha256": "461607ff32d404244e05580f488b08697367d658dcc52fbc89a00a36bab9e4e8"
       },
-      "outputSha256": "461607ff32d404244e05580f488b08697367d658dcc52fbc89a00a36bab9e4e8",
-      "modifications": []
+      "outputSha256": "313781b8a60f4950247f2d369b326b346b7557a2a1848cb8ec0b1de7a18d5a8b",
+      "modifications": [
+        "PR #98を#91マージ後の最新mainへ積み直し、選別保存中の二重操作ガードを保持。",
+        "PR #98で選別フラグの保存経路とUIを更新する。"
+      ]
     },
     {
       "path": "packages/photo-editing/src/editor/browser-photo-editing-grid.tsx",
@@ -979,11 +1003,13 @@
         "path": "packages/photo-editing/src/editor/browser-photo-editing-grid.tsx",
         "sha256": "2284b5463f202d550fc6ba7d65147b994badecdb28ee3b0bccefb70d7e90ad2d"
       },
-      "outputSha256": "aa219e8943b2cb1546b86e49ba29495eb8cf305a591fcefecaaee4328ebe7f03",
+      "outputSha256": "940e84a19d4cc874ebe5bf51c5f70eeda406a26738d3820d485aee1e4cef1991",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
-        "Issue #50のMac画面配置・表示色・パネル・版位置の変更。"
+        "Issue #50のMac画面配置・表示色・パネル・版位置の変更。",
+        "PR #98を#91マージ後の最新mainへ積み直し、選別保存中の二重操作ガードを保持。",
+        "PR #98で選別フラグの保存経路とUIを更新する。"
       ]
     },
     {
@@ -1233,7 +1259,6 @@
         "path": "packages/photo-editing/src/editor/browser-photo-editing-workbench.tsx",
         "sha256": "f655136ae0c985d793822ca8bef1668dba26ffd4bb8f13d2ba3d6c2ccb13ceb6"
       },
-      "outputSha256": "e2709532b6787684762e43bedbcbed75798de888c087fb6b8cedc69b7563541d",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
@@ -1297,8 +1322,13 @@
         "niho-photo#42 の右端の帯の「版」と版の面・版の見本をつないだ。",
         "niho-photo#46 で切り抜きの道具にジオメトリの節を渡した。",
         "niho-photo#46 後半で切り抜きの道具に Upright のボタンの状態を渡した。",
-        "PR #97の修復UIを#96の部分補正マスクUIと統合。"
-      ]
+        "PR #97の修復UIを#96の部分補正マスクUIと統合。",
+        "PR #98を#91マージ後の最新mainへ積み直し、選別保存中の二重操作ガードを保持。",
+        "PR #98で選別フラグの保存経路とUIを更新する。",
+        "PR #99を#91マージ後のmainへ積み直し、遠近補正後のブラシ半径を局所ヤコビアンで写す。",
+        "PR #99のマスク面の描画・読み書きと遠近対応の変更を反映する。"
+      ],
+      "outputSha256": "0551db733032aa51da575d53fe91da74bbff99b9b62250ef4997b710a021d304"
     },
     {
       "path": "packages/photo-editing/src/editor/photo-editing-adjustment-controls-effects.test.tsx",
@@ -1805,12 +1835,14 @@
         "path": "packages/photo-editing/src/editor/use-browser-photo-develop.ts",
         "sha256": "491153dcf3675cfd0b822a008f101a77125411c9e18966ea7b7fb96e18ce8228"
       },
-      "outputSha256": "ff1fea5a6ad3489ae598b191f49395b394e20d3c616e856c5ea224c57aa68e53",
+      "outputSha256": "1d71bb3d7ea6897e6ea155c537bf978e767989cc4d59e3533ad58b86c1ee37ed",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
         "Issue #13の段階表示、provisional draft、canonical handoffと書き出し境界を実装。",
-        "Issue 13 progressive RAW open implementation"
+        "Issue 13 progressive RAW open implementation",
+        "PR #99を#91マージ後のmainへ積み直し、遠近補正後のブラシ半径を局所ヤコビアンで写す。",
+        "PR #99のマスク面の描画・読み書きと遠近対応の変更を反映する。"
       ]
     },
     {
@@ -1890,7 +1922,7 @@
         "path": "packages/photo-editing/src/editor/use-browser-photo-export-delete.ts",
         "sha256": "c1c209ddbe8cc049adb5c06c323c0f96e316cb28a8302293ca0f531f88d00592"
       },
-      "outputSha256": "2ab8593b904042a52272634fdab7c664077baf418b9b005cee42447f7d5f4680",
+      "outputSha256": "9537886344814cb620ce24b129ded5ed73ac661b22d1fa5369d3aaf42ee1996a",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
@@ -1902,7 +1934,9 @@
         "PR #80 のカラーグレーディングを最新HSL UIと統合。",
         "Issue #29: 未編集の原寸書き出しはniho-12でも従来のniho-2 neutralを渡す",
         "PR #74: #80 統合後に float-cube の変更を重ね、最終ハッシュを反映。",
-        "PR #90: rasterの相対WBをniho-13へ移し、新規編集の既定とsettings/UI契約を同期。"
+        "PR #90: rasterの相対WBをniho-13へ移し、新規編集の既定とsettings/UI契約を同期。",
+        "PR #99を#91マージ後のmainへ積み直し、遠近補正後のブラシ半径を局所ヤコビアンで写す。",
+        "PR #99のマスク面の描画・読み書きと遠近対応の変更を反映する。"
       ]
     },
     {
@@ -1930,11 +1964,13 @@
         "path": "packages/photo-editing/src/editor/use-browser-photo-items.ts",
         "sha256": "23d0caf41f3bddbb7d3ab7d63c5a1a6f14faa86a8978fbefdb42fb34f9cb21fb"
       },
-      "outputSha256": "7dff03d10c7a19790e5b7d26f0b36ce1671bafb22091dc029d654762493b8067",
+      "outputSha256": "f8722cc603d7b8873f1a03872a3053c84fc1c37b19d67d3082e0b77a56fdf016",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
-        "任意の個別写真ソース契約と選んだ写真のUI、復元、取消、再試行、失敗時参照保持を追加"
+        "任意の個別写真ソース契約と選んだ写真のUI、復元、取消、再試行、失敗時参照保持を追加",
+        "PR #98を#91マージ後の最新mainへ積み直し、選別保存中の二重操作ガードを保持。",
+        "PR #98で選別フラグの保存経路とUIを更新する。"
       ]
     },
     {
@@ -1959,7 +1995,6 @@
         "path": "packages/photo-editing/src/editor/use-browser-photo-open.ts",
         "sha256": "2755ea206c0fe9edc8df05ff40d78326310449cb9d509e75a291fdc3822a1d2e"
       },
-      "outputSha256": "b80b849f5803cb63744369fcad094f5fad18db9733a7c5e7d7168efa5d000a2d",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
@@ -1981,8 +2016,11 @@
         "部分補正（マスク）#69: プリセットのマスクの配置に開いている写真の作業画像の大きさを渡す",
         "PR #88 main rebase and perspective integration with develop engine 0.22.0",
         "niho-photo#46 で切り抜きの間にジオメトリのスライダーを動かす間は速い描き方にした。",
-        "PR #97を最新の#96エンジンと遠近表示の契約へ積み直し。"
-      ]
+        "PR #97を最新の#96エンジンと遠近表示の契約へ積み直し。",
+        "PR #99を#91マージ後のmainへ積み直し、遠近補正後のブラシ半径を局所ヤコビアンで写す。",
+        "PR #99のマスク面の描画・読み書きと遠近対応の変更を反映する。"
+      ],
+      "outputSha256": "f5983a991145457d44b55a1ce73cb97a9ae44127a6b027d35393b6a7bc6206e9"
     },
     {
       "path": "packages/photo-editing/src/editor/use-browser-photo-preset-support.ts",
@@ -2162,7 +2200,6 @@
         "path": "packages/photo-editing/src/library/photo-library.ts",
         "sha256": "d11aab9b360ff3a54e1b82c7c013729cc5044a2051b421b695c1847446a2ccbc"
       },
-      "outputSha256": "650e4a5819267d77f7b4fbb9c5d6225157c86c46245138c33670f6cb3adb792b",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
@@ -2175,8 +2212,13 @@
         "PR #81 のマスク描画を最新mainの変更と統合。",
         "squash済みPR #77のmainをマスク描画へ同期する。",
         "PR #76 detailとPR #81 maskを統合し、公開出力ハッシュを更新。",
-        "PR #82: #74 squash merge後に版機能の変更をmainへ積み直し、最終ハッシュを反映。"
-      ]
+        "PR #82: #74 squash merge後に版機能の変更をmainへ積み直し、最終ハッシュを反映。",
+        "PR #98を#91マージ後の最新mainへ積み直し、選別保存中の二重操作ガードを保持。",
+        "PR #98で選別フラグの保存経路とUIを更新する。",
+        "PR #99を#91マージ後のmainへ積み直し、遠近補正後のブラシ半径を局所ヤコビアンで写す。",
+        "PR #99のマスク面の描画・読み書きと遠近対応の変更を反映する。"
+      ],
+      "outputSha256": "efa1d5da97e0598828294521cf02b3f86a3cb02faca43deb0c9cd5d363a94609"
     },
     {
       "path": "packages/photo-editing/src/photo-cloud-add-queue.ts",
@@ -2327,7 +2369,6 @@
         "path": "packages/photo-editing/src/photo-editing-copy.ts",
         "sha256": "1208d4124dca26c951d73f6f84c560879e69beddfb9a16426e1a9dcc9fd30c27"
       },
-      "outputSha256": "23c2f0b9793cc0ba959ac16069626799d24ee92e9bc9c080e598f6c93768819f",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
@@ -2368,8 +2409,13 @@
         "niho-photo#42 の「版」の面の文言を追加。",
         "niho-photo#46 のジオメトリの節の文言と、使えない項目の Upright の名前を足した。",
         "niho-photo#46 後半で Upright のボタンと知らせの文言を足した。",
-        "niho-photo#44の修復印をXMPに保存できない場合の利用者向け通知を追加。"
-      ]
+        "niho-photo#44の修復印をXMPに保存できない場合の利用者向け通知を追加。",
+        "PR #98を#91マージ後の最新mainへ積み直し、選別保存中の二重操作ガードを保持。",
+        "PR #98で選別フラグの保存経路とUIを更新する。",
+        "PR #99を#91マージ後のmainへ積み直し、遠近補正後のブラシ半径を局所ヤコビアンで写す。",
+        "PR #99のマスク面の描画・読み書きと遠近対応の変更を反映する。"
+      ],
+      "outputSha256": "3efde850848fca52fa92f96e1c50b76145defd10f182474e28976c0037e1b68d"
     },
     {
       "path": "packages/photo-editing/src/photo-editing-crop.test.ts",
@@ -2524,7 +2570,7 @@
         "path": "packages/photo-editing/src/photo-editing-query-keys.ts",
         "sha256": "b0873ce957f9eca6dd2451b13e87d38e52e28d08ab5fbc5c31c6ebf6e94c0248"
       },
-      "outputSha256": "a46e2d2e7655369fcbb1bb578e54afd6b103e38b369ce50727227b56dcd686eb",
+      "outputSha256": "55f0f57dac6ecf90423a58cda680ecfc8afb2bcd0977aab4214d39f128cab872",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
@@ -2533,7 +2579,9 @@
         "個人クラウドnamespaceと写真ソース境界の説明を明確化。",
         "niho-photo#43 の写真の情報の react-query の鍵を追加。",
         "PR #77 の情報paneをmainの公開UI変更と統合。",
-        "squash済みPR #77のmainをマスク描画へ同期する。"
+        "squash済みPR #77のmainをマスク描画へ同期する。",
+        "PR #98を#91マージ後の最新mainへ積み直し、選別保存中の二重操作ガードを保持。",
+        "PR #98で選別フラグの保存経路とUIを更新する。"
       ]
     },
     {
@@ -3010,11 +3058,13 @@
         "path": "packages/photo-editing/src/use-photo-cloud-photos.ts",
         "sha256": "64637052f98098cf6bb7baf600a253f0291d7a912acbada410f12f6539843e97"
       },
-      "outputSha256": "7cf5bd15a62f7b93a3dbae713a329aa487029cd1ee4b83ca2091f97951d1896e",
+      "outputSha256": "6231ae2feb799d2fc45788e556666f785b04ec1cd4068b4ce9be0b1ead3d63a9",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
-        "任意の個別写真ソース契約と選んだ写真のUI、復元、取消、再試行、失敗時参照保持を追加"
+        "任意の個別写真ソース契約と選んだ写真のUI、復元、取消、再試行、失敗時参照保持を追加",
+        "PR #98を#91マージ後の最新mainへ積み直し、選別保存中の二重操作ガードを保持。",
+        "PR #98で選別フラグの保存経路とUIを更新する。"
       ]
     },
     {
@@ -3745,7 +3795,7 @@
         "path": "apps/camera/src-tauri/permissions/camera.toml",
         "sha256": "3dabde32b43f01f12b93d48f2000a51a55abf48cc5866df2daa6dda9f31edae0"
       },
-      "outputSha256": "ac9d052bb87cfa554774a081dab483dccd9b14bf025ae67b60c478fdf510dc70",
+      "outputSha256": "03abc6cd5d78b1c18c7af6629b4c581f9b97c90bc729d381cd76dfb79db8d24f",
       "modifications": [
         "共有形式フィルターを使う複数写真pickerと参照削除コマンドを同梱UIの権限内に追加 / 選択写真専用commandのbundle permissionを追加。",
         "Issue #3のpublic OAuth/PKCE、ローカル専用UI、安全契約と公開依存を新規接続。実issuer・署名検証器が未契約のため本番接続は無効。",
@@ -3755,7 +3805,9 @@
         "PR #77 の情報paneをmainの公開UI変更と統合。",
         "squash済みPR #77のmainをマスク描画へ同期する。",
         "部分補正（マスク）#68: マスクの面の保存・読み出し・有無のコマンドを allow-camera-photos に足す",
-        "PR #82: #74 squash merge後に版機能の変更をmainへ積み直し、最終ハッシュを反映。"
+        "PR #82: #74 squash merge後に版機能の変更をmainへ積み直し、最終ハッシュを反映。",
+        "PR #98を#91マージ後の最新mainへ積み直し、選別保存中の二重操作ガードを保持。",
+        "PR #98で選別フラグの保存経路とUIを更新する。"
       ]
     },
     {
@@ -3937,7 +3989,7 @@
         "path": "apps/camera/src-tauri/src/lib.rs",
         "sha256": "e6415b3d0633bb4753761b89f8860fffcfa9b67f95832ab971bd9b13eebaaffc"
       },
-      "outputSha256": "b01634adfb145b7e9723645f081bdbe07babfb0ef2af40bc2f87226f4f0ba46a",
+      "outputSha256": "cc3d9beaeec8bf968c6c05898b4ff6983f68c1833ee8312bbdab4384ae278d8e",
       "modifications": [
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
         "共有形式フィルターを使う複数写真pickerと参照削除コマンドを同梱UIの権限内に追加 / 選択写真専用commandをinvoke handlerへ登録。",
@@ -3949,7 +4001,9 @@
         "PR #77 の情報paneをmainの公開UI変更と統合。",
         "squash済みPR #77のmainをマスク描画へ同期する。",
         "部分補正（マスク）#68: マスクの面のコマンドを登録する",
-        "PR #82: #74 squash merge後に版機能の変更をmainへ積み直し、最終ハッシュを反映。"
+        "PR #82: #74 squash merge後に版機能の変更をmainへ積み直し、最終ハッシュを反映。",
+        "PR #98を#91マージ後の最新mainへ積み直し、選別保存中の二重操作ガードを保持。",
+        "PR #98で選別フラグの保存経路とUIを更新する。"
       ]
     },
     {
@@ -3960,14 +4014,16 @@
         "path": "apps/camera/src-tauri/src/library.rs",
         "sha256": "9eb5d2b4b57fe4f281e7ce187561efb3d3d6c05c54f00d0043f05d8913d50d9d"
       },
-      "outputSha256": "410d95a69d6bc00e1ca67982a7b1ac11bd067f96b707a1fb7f9f44be5797861a",
+      "outputSha256": "2f9acfb716f5db6ed7c4b5196b69d512b60c3b2915e25276ebac874e844a6deb",
       "modifications": [
         "private絶対path guardに合わせ、合成テスト用のpathを予約済み/test-data配下へ正規化。実装の挙動は変更しない。",
         "公開現像workspace向けにLibRaw由来値と参照を除去。独立測定DCP・合成テスト・metadata正規化・公開契約と書式へ調整。",
         "公開CIのRust 1.98.1 rustfmt書式に合わせる。挙動は変更しない。",
         "共有形式フィルターを使う複数写真pickerと参照削除コマンドを同梱UIの権限内に追加 / 選択写真だけを再読込するnative commandを追加。",
         "Issue #13の段階表示、provisional draft、canonical handoffと書き出し境界を実装。",
-        "Issue 13 progressive RAW open implementation"
+        "Issue 13 progressive RAW open implementation",
+        "PR #98を#91マージ後の最新mainへ積み直し、選別保存中の二重操作ガードを保持。",
+        "PR #98で選別フラグの保存経路とUIを更新する。"
       ]
     },
     {
@@ -4213,7 +4269,7 @@
         "path": "apps/camera/src/local-library/commands.test.ts",
         "sha256": "4d35f3d9038ba356958dceed47cfe690ee9def1d3746964d2da42f40c43d681f"
       },
-      "outputSha256": "812e621f10244ab04a7b4d0cfe6eda5e15b7cfd0b55258efd75b5629ba3abadf",
+      "outputSha256": "48317e1737ab804c9dc2460a38fdd396c2188ddf6eb47188e9f4f96e8fd1abb5",
       "modifications": [
         "個別写真の追加・件数・一覧・参照削除を不透明なentryIdの既存経路へ接続",
         "Issue #5の形式不一致、未取得、対象外形式をTS adapterが保持する回帰テストを追加。",
@@ -4225,7 +4281,9 @@
         "PR #77 の情報paneをmainの公開UI変更と統合。",
         "squash済みPR #77のmainをマスク描画へ同期する。",
         "部分補正（マスク）#68: マスクの面のコマンドの口の回帰を足す",
-        "PR #82: #74 squash merge後に版機能の変更をmainへ積み直し、最終ハッシュを反映。"
+        "PR #82: #74 squash merge後に版機能の変更をmainへ積み直し、最終ハッシュを反映。",
+        "PR #98を#91マージ後の最新mainへ積み直し、選別保存中の二重操作ガードを保持。",
+        "PR #98で選別フラグの保存経路とUIを更新する。"
       ]
     },
     {
@@ -4236,7 +4294,7 @@
         "path": "apps/camera/src/local-library/commands.ts",
         "sha256": "6aa0e7cc890a164709ed5274f020d5070d85b69e9b01f8562ae772a8ba2c57f1"
       },
-      "outputSha256": "934a25de6399b57e32df3e76e4bb49c8a30bc6b5b169b349e93236bc4906db91",
+      "outputSha256": "234e6a55a4060adfab6be64856c1931f867240ca0c4a6f740c0f75eba111e4f2",
       "modifications": [
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
         "個別写真の追加・件数・一覧・参照削除を不透明なentryIdの既存経路へ接続 / 選択写真一覧を専用IPC commandへ分離。",
@@ -4249,7 +4307,9 @@
         "squash済みPR #77のmainをマスク描画へ同期する。",
         "PR #76 detailとPR #81 maskを統合し、公開出力ハッシュを更新。",
         "部分補正（マスク）#68: マスクの面の保存・読み出し・有無の型つきの口を足す",
-        "PR #82: #74 squash merge後に版機能の変更をmainへ積み直し、最終ハッシュを反映。"
+        "PR #82: #74 squash merge後に版機能の変更をmainへ積み直し、最終ハッシュを反映。",
+        "PR #98を#91マージ後の最新mainへ積み直し、選別保存中の二重操作ガードを保持。",
+        "PR #98で選別フラグの保存経路とUIを更新する。"
       ]
     },
     {
@@ -4293,7 +4353,6 @@
         "path": "apps/camera/src/local-library/local-photo-library.test.ts",
         "sha256": "e86937a17a1b2655448cdcf9d43313df2d5b53c37ec16172b6eaa81371d4e1aa"
       },
-      "outputSha256": "06e572afd2ce3c1c998efefff32e88ace379f6899619028fca1bfd08a7e43208",
       "modifications": [
         "個別写真の追加・件数・一覧・参照削除を不透明なentryIdの既存経路へ接続 / 選択写真取得の専用IPC経路をテスト。",
         "Issue #5親レビューに従い形式検査・エラー保持・実decoder公開CI回帰を補強。",
@@ -4312,8 +4371,13 @@
         "PR #81 のマスク描画を最新mainの変更と統合。",
         "squash済みPR #77のmainをマスク描画へ同期する。",
         "PR #76 detailとPR #81 maskを統合し、公開出力ハッシュを更新。",
-        "PR #82: #74 squash merge後に版機能の変更をmainへ積み直し、最終ハッシュを反映。"
-      ]
+        "PR #82: #74 squash merge後に版機能の変更をmainへ積み直し、最終ハッシュを反映。",
+        "PR #98を#91マージ後の最新mainへ積み直し、選別保存中の二重操作ガードを保持。",
+        "PR #98で選別フラグの保存経路とUIを更新する。",
+        "PR #99を#91マージ後のmainへ積み直し、遠近補正後のブラシ半径を局所ヤコビアンで写す。",
+        "PR #99のマスク面の描画・読み書きと遠近対応の変更を反映する。"
+      ],
+      "outputSha256": "029c14ac3738fd35179fe8b66cb69adc3510cc54f4a89cbd22501c61e2faca86"
     },
     {
       "path": "apps/camera/src/local-library/local-photo-library.ts",
@@ -4323,7 +4387,6 @@
         "path": "apps/camera/src/local-library/local-photo-library.ts",
         "sha256": "bda72efc4c68731a2695be4906aedba55368d065dafbad6d577906ffa8441ed8"
       },
-      "outputSha256": "bcf0bce32dcdc49fb0a84543c8864a61b99c99ef5c7c9315c699f684125f7086",
       "modifications": [
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
         "個別写真の追加・件数・一覧・参照削除を不透明なentryIdの既存経路へ接続 / 選択写真一覧でフォルダ再走査commandを呼ばない。",
@@ -4340,8 +4403,13 @@
         "PR #81 のマスク描画を最新mainの変更と統合。",
         "squash済みPR #77のmainをマスク描画へ同期する。",
         "PR #76 detailとPR #81 maskを統合し、公開出力ハッシュを更新。",
-        "PR #82: #74 squash merge後に版機能の変更をmainへ積み直し、最終ハッシュを反映。"
-      ]
+        "PR #82: #74 squash merge後に版機能の変更をmainへ積み直し、最終ハッシュを反映。",
+        "PR #98を#91マージ後の最新mainへ積み直し、選別保存中の二重操作ガードを保持。",
+        "PR #98で選別フラグの保存経路とUIを更新する。",
+        "PR #99を#91マージ後のmainへ積み直し、遠近補正後のブラシ半径を局所ヤコビアンで写す。",
+        "PR #99のマスク面の描画・読み書きと遠近対応の変更を反映する。"
+      ],
+      "outputSha256": "7149d6a6cc14341ed7d05fa17957af493b9ba67fb9f15c97398fc789bebc2d9c"
     },
     {
       "path": "apps/camera/src/main.tsx",
@@ -4571,12 +4639,14 @@
         "path": "packages/desktop-photo/src/lib.rs",
         "sha256": "1a92d8609a630c62643da3fe4a53adaf3b86ef3704edc287d7a0d4c32227618e"
       },
-      "outputSha256": "7ba706a7dc150a6f51ba45114f4d90a95e2b98376ad0fcb9663c3b18004e1ce2",
+      "outputSha256": "1f60b5eb9728a586a2b8f0507a73b1fd042f492e4fae688a46cf5f2f1978c567",
       "modifications": [
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
         "Issue #5の共有入力能力レジストリ、段階別検証、公開回帰契約に合わせて更新。",
         "Issue #5親レビューに従い形式検査・エラー保持・実decoder公開CI回帰を補強。",
-        "部分補正（マスク）#68: マスクの面の置き場の module を公開する"
+        "部分補正（マスク）#68: マスクの面の置き場の module を公開する",
+        "PR #98を#91マージ後の最新mainへ積み直し、選別保存中の二重操作ガードを保持。",
+        "PR #98で選別フラグの保存経路とUIを更新する。"
       ]
     },
     {
@@ -9985,13 +10055,13 @@
     },
     {
       "path": "packages/photo-editing/src/editor/browser-photo-editing-filmstrip.tsx",
-      "sha256": "b03f56b4aaec23c0871f4d0c4b1135f0c2193159e79dba3590802d1d5c69ff58",
-      "origin": "公開repoで新規作成（#54）: 1 枚の面の下のフィルムストリップ（今の一覧のサムネイルの帯）。既存の公開部品（PhotoEditingTileImage・niho-ui の cn）だけを使い、非公開ソース・実写真を含まない。\n変更理由: PR #59 の main 競合解消と切替拒否時のフォーカス復元"
+      "sha256": "ef3a11992aa1af37e1a14ae5e043edc1696c46bd2244a17c168ff41a5b494a86",
+      "origin": "公開repoで新規作成（#54）: 1 枚の面の下のフィルムストリップ（今の一覧のサムネイルの帯）。既存の公開部品（PhotoEditingTileImage・niho-ui の cn）だけを使い、非公開ソース・実写真を含まない。\n変更理由: PR #59 の main 競合解消と切替拒否時のフォーカス復元\n変更理由: PR #98を#91マージ後の最新mainへ積み直し、選別保存中の二重操作ガードを保持。\n変更理由: PR #98で選別フラグの保存経路とUIを更新する。"
     },
     {
       "path": "packages/photo-editing/src/editor/browser-photo-editing-filmstrip.test.tsx",
-      "sha256": "b593231648719b6e3557f36fb11ba2555612d234c5694cca0ef9cdc381862b26",
-      "origin": "公開repoで新規作成（#54）: フィルムストリップの合成テスト（予約済み .test ドメインの URL と架空の写真名だけを使う）。\n変更理由: PR #59 の main 競合解消と切替拒否時のフォーカス復元"
+      "sha256": "91aab03e9e0390c14a52c5e22158fd611fff50a32b2e18d6a00e0f2748e10213",
+      "origin": "公開repoで新規作成（#54）: フィルムストリップの合成テスト（予約済み .test ドメインの URL と架空の写真名だけを使う）。\n変更理由: PR #59 の main 競合解消と切替拒否時のフォーカス復元\n変更理由: PR #98を#91マージ後の最新mainへ積み直し、選別保存中の二重操作ガードを保持。\n変更理由: PR #98で選別フラグの保存経路とUIを更新する。"
     },
     {
       "path": "apps/camera/src/use-guarded-cloud-binding.test.tsx",
@@ -10410,7 +10480,7 @@
     },
     {
       "path": "packages/develop-engine/crates/niho-develop/src/local_render.rs",
-      "sha256": "7a121562f6231875f376b32553279578c34a84aee4f049aee339c3a4db6e419a",
+      "sha256": "5d4f593c92cfdecdc9269f541bc633de42c8cb6a18b5f4ff136370256d7dbf69",
       "origin": "Issue #66の公開仕様 docs/local-adjustments.md だけから新規作成した部分補正（マスク）の面の式・出力から作業画像への写像・局所の設定・固定小数点の合算のRust実装。実写真・非公開コード・私有参照出力を含まない。\n変更理由: 部分補正（マスク）#68: 面の双一次補間の面と、その寸法の照合を足す\n変更理由: 部分補正（マスク）#92: 全体のスライダーの drag 中は層の差分（起点の合算の項）を使い回し、R0 だけを描く。final は変えない。"
     },
     {
@@ -10425,8 +10495,8 @@
     },
     {
       "path": "packages/develop-engine/crates/niho-develop/tests/masks_geometry_map.rs",
-      "sha256": "3a039e0e4933e058a6082770dbde3f26565f2710f635641ecd9bb5baa4fdbb88",
-      "origin": "Issue #66の公開仕様と合成fixtureだけから新規作成した、マスクの写像がTypeScriptのgeometryOutputToSourceと一致するRust回帰（native/wasm）。実写真・非公開コード・私有参照出力を含まない。"
+      "sha256": "28df8a0900448f495fd19857c4af1dfffac4478411ff803eacc244b4d39dddd2",
+      "origin": "Issue #66の公開仕様と合成fixtureだけから新規作成した、マスクの写像がTypeScriptのgeometryOutputToSourceと一致するRust回帰（native/wasm）。実写真・非公開コード・私有参照出力を含まない。\n変更理由: 部分補正（マスク）#66: 遠近（perspective）のあるジオメトリでも、マスクの出力→作業画像の写像を描画と TS にそろえる。"
     },
     {
       "path": "packages/develop-engine/crates/niho-develop/tests/masks_cross_target.rs",
@@ -10435,8 +10505,8 @@
     },
     {
       "path": "packages/develop-engine/crates/niho-develop/tests/fixtures/masks/geometry-map-cases.json",
-      "sha256": "295fdcb7afd0d648cae82e46d2c44c0fbcb0849a5599fdac1a689321e522cc7a",
-      "origin": "Issue #66の公開仕様から、公開TypeScript関数geometryOutputToSourceで合成した出力→作業画像の写像の値（RustとTypeScriptで共有）。実写真・利用者データ・私有参照出力を含まない。"
+      "sha256": "422bd60e89723991ee70d5cee2d400f0d843f34c41550e140d514885d7587397",
+      "origin": "Issue #66の公開仕様から、公開TypeScript関数geometryOutputToSourceで合成した出力→作業画像の写像の値（RustとTypeScriptで共有）。実写真・利用者データ・私有参照出力を含まない。\n変更理由: 部分補正（マスク）#66: 遠近（perspective）のあるジオメトリでも、マスクの出力→作業画像の写像を描画と TS にそろえる。"
     },
     {
       "path": "packages/develop-engine/crates/niho-develop/examples/mask_timing.rs",
@@ -10450,8 +10520,8 @@
     },
     {
       "path": "packages/photo-editing/src/develop-engine/develop-masks-geometry-map.test.ts",
-      "sha256": "12e6cbfe9f755ab7f5b51c2398b16f39130db5c3f035b92d95a68e01cfefcb2b",
-      "origin": "Issue #66の公開仕様と公開関数だけから新規作成した、マスクの写像のfixtureをgeometryOutputToSourceから作り照合するTypeScript回帰。外部画像・非公開コード・個体metadataを含まない。"
+      "sha256": "08a68566446c700c1447f2cc9d9e8254c55516932daf20ca2920f40d5fe51668",
+      "origin": "Issue #66の公開仕様と公開関数だけから新規作成した、マスクの写像のfixtureをgeometryOutputToSourceから作り照合するTypeScript回帰。外部画像・非公開コード・個体metadataを含まない。\n変更理由: 部分補正（マスク）#66: 遠近（perspective）のあるジオメトリでも、マスクの出力→作業画像の写像を描画と TS にそろえる。"
     },
     {
       "path": "docs/color-grading.md",
@@ -10730,8 +10800,8 @@
     },
     {
       "path": "packages/photo-editing/src/editor/use-browser-photo-masks.ts",
-      "sha256": "6e4cac68db6e449789f5a4bb47aad4ff3e0fae21d701c577e10788c2affda1c3",
-      "origin": "Issue #67の公開仕様だけから新規作成した、マスクの道具の状態（出す条件・足す / 複製 / 削除 / 反転 / 目・局所の補正・形・初期化・キー）と範囲の重ね表示の面を取りに行く係のReact hook。外部画像・非公開コード・個体metadataを含まない。"
+      "sha256": "f8e56ca9527f2c0bde6ea26ece14e2089678283411b997c828ab5622d783cfa8",
+      "origin": "Issue #67の公開仕様だけから新規作成した、マスクの道具の状態（出す条件・足す / 複製 / 削除 / 反転 / 目・局所の補正・形・初期化・キー）と範囲の重ね表示の面を取りに行く係のReact hook。外部画像・非公開コード・個体metadataを含まない。\n変更理由: PR #99を#91マージ後のmainへ積み直し、遠近補正後のブラシ半径を局所ヤコビアンで写す。\n変更理由: PR #99のマスク面の描画・読み書きと遠近対応の変更を反映する。"
     },
     {
       "path": "packages/photo-editing/src/editor/use-browser-photo-masks.test.tsx",
@@ -10740,8 +10810,8 @@
     },
     {
       "path": "packages/photo-editing/src/editor/photo-editing-mask-overlay.tsx",
-      "sha256": "b5193a1f71ed9e3b0b06268f09e78288e08c7bab51c53daed56c90fae0a0d492",
-      "origin": "Issue #67の公開仕様だけから新規作成した、写真の上のマスクの操作（形の線・つまみのボタン・pointer capture・矢印キー・範囲の赤い重ね）のReact部品。外部画像・非公開コード・個体metadataを含まない。\n変更理由: overlay解除時にドラッグ中の形を確定し消えたマスクの復活を防ぐ"
+      "sha256": "6b2a22c266ee25e802b7b0eb12b420026877695d41952f1ea1f34ba20e422c56",
+      "origin": "Issue #67の公開仕様だけから新規作成した、写真の上のマスクの操作（形の線・つまみのボタン・pointer capture・矢印キー・範囲の赤い重ね）のReact部品。外部画像・非公開コード・個体metadataを含まない。\n変更理由: overlay解除時にドラッグ中の形を確定し消えたマスクの復活を防ぐ\n変更理由: PR #99を#91マージ後のmainへ積み直し、遠近補正後のブラシ半径を局所ヤコビアンで写す。\n変更理由: PR #99のマスク面の描画・読み書きと遠近対応の変更を反映する。"
     },
     {
       "path": "packages/photo-editing/src/editor/photo-editing-mask-overlay.test.tsx",
@@ -10750,8 +10820,8 @@
     },
     {
       "path": "packages/photo-editing/src/editor/photo-editing-mask-tools.tsx",
-      "sha256": "a0831a0b0c193cf1004324eb321e24871fccf048d9fec3435a7cee5ffc71f1c9",
-      "origin": "Issue #67の公開仕様だけから新規作成した、右パネルのマスクの面（足す・一覧・重ね表示の切り替え・局所のスライダー・ぼかし）のReact部品。外部画像・非公開コード・個体metadataを含まない。"
+      "sha256": "4784cefd178786976cb2415b079b4d707465d18f5e7187c0f99f13c520d667d8",
+      "origin": "Issue #67の公開仕様だけから新規作成した、右パネルのマスクの面（足す・一覧・重ね表示の切り替え・局所のスライダー・ぼかし）のReact部品。外部画像・非公開コード・個体metadataを含まない。\n変更理由: PR #99を#91マージ後のmainへ積み直し、遠近補正後のブラシ半径を局所ヤコビアンで写す。\n変更理由: PR #99のマスク面の描画・読み書きと遠近対応の変更を反映する。"
     },
     {
       "path": "packages/photo-editing/src/editor/photo-editing-mask-tools.test.tsx",
@@ -10815,8 +10885,8 @@
     },
     {
       "path": "docs/geometry-perspective.md",
-      "sha256": "be6def6631b46c0c4883deb45ec9049cdd8d92c0e4b99ac3954b4ea6add060bd",
-      "origin": "niho-photo#46 の公開仕様だけから新規作成したジオメトリ（遠近の手動補正）の文書。保存形 v7、NIHO の近似モデルの式と定数、描画・余白を埋める・XMP・画面の契約。Lightroom の実測による校正は未実施と明記。非公開形式や私有データを含まない。\n変更理由: niho-photo#46 後半の Upright（推定の手順・公開面・画面・制限）を追記した。\n変更理由: Upright自動推定機能を現行main統合後のcrate v0.23.0へ追加\n変更理由: Upright後半のエンジン版を前半v0.22に続くv0.23と明記\n変更理由: Upright自動推定を作者更新後の遠近crate v0.23.0へ統合"
+      "sha256": "3a27ff7c954f2ebc2e5ff834d7a0ef332e8777c99b31c1ea7eab83391a671f27",
+      "origin": "niho-photo#46 の公開仕様だけから新規作成したジオメトリ（遠近の手動補正）の文書。保存形 v7、NIHO の近似モデルの式と定数、描画・余白を埋める・XMP・画面の契約。Lightroom の実測による校正は未実施と明記。非公開形式や私有データを含まない。\n変更理由: niho-photo#46 後半の Upright（推定の手順・公開面・画面・制限）を追記した。\n変更理由: Upright自動推定機能を現行main統合後のcrate v0.23.0へ追加\n変更理由: Upright後半のエンジン版を前半v0.22に続くv0.23と明記\n変更理由: Upright自動推定を作者更新後の遠近crate v0.23.0へ統合\n変更理由: 遠近のあるジオメトリでもマスクが同じ写像を使うことを 1 行足す（#31）。"
     },
     {
       "path": "packages/develop-engine/crates/niho-develop/src/upright.rs",
@@ -10937,6 +11007,161 @@
       "path": "packages/photo-editing/src/editor/browser-photo-editing-workbench-heal.test.tsx",
       "sha256": "00648959462eb50e321256fdd126d04374666738407a45d34cb3e08fb6eb976b",
       "origin": "niho-photo#44 後半のため新規作成。編集面の修復の道具の結合の test（偽の写真の出どころ・偽の wasm・合成の JPEG のヘッダだけを使用）。\n変更理由: PR #97積み直し後の現行develop engine能力stubに更新。"
+    },
+    {
+      "path": "apps/camera/src-tauri/src/flags.rs",
+      "sha256": "f794312361eb352e19498d3da7d2fb6c3ebcb29555bfce35cd6ca75e4a6fd7f5",
+      "origin": "niho-photo#47 のため新規作成。この Mac の選別のフラグの Tauri コマンド（entryId で付け外し）と一覧の写真への印。外部コード・実データを含まない。"
+    },
+    {
+      "path": "apps/camera/src-tauri/src/flags_tests.rs",
+      "sha256": "9a0c6c37940c91a45f7b6f596472d112779640965a54f9afc9846792e3625583",
+      "origin": "niho-photo#47 のため新規作成。選別のフラグのコマンドと一覧の印の test（一時フォルダと合成のファイルだけを使用）。"
+    },
+    {
+      "path": "packages/desktop-photo/src/saved_flags.rs",
+      "sha256": "60ecdca5cdeb7afd21d4b3c4428abad9d7cdb6816a3808b1bc5f2fbd71dc2850",
+      "origin": "niho-photo#47 のため新規作成。選別のフラグ（採用 / 却下）の置き場（名前・大きさ・更新日時の SHA-256 を鍵にした 1 つの JSON。フォルダ 0700・ファイル 0600・一時ファイル＋rename・上限）。外部コード・実データを含まない。"
+    },
+    {
+      "path": "packages/desktop-photo/src/saved_flags_tests.rs",
+      "sha256": "5be4ccf4e08c7a4270f021f842508b3699d722a8e6bb86e6cfe1d514172de8f6",
+      "origin": "niho-photo#47 のため新規作成。選別のフラグの置き場の test（一時フォルダと合成のファイルだけを使用）。"
+    },
+    {
+      "path": "packages/photo-editing/src/editor/browser-photo-editing-flags.test.tsx",
+      "sha256": "2a6b9495a5625e65501c354a37bafa878fd2caf11cdc4a9e3493e9e8ed8b0e84",
+      "origin": "niho-photo#47 のため新規作成。選別のボタンと印の test。"
+    },
+    {
+      "path": "packages/photo-editing/src/editor/browser-photo-editing-flags.tsx",
+      "sha256": "ed87f5d84eb4f9832f833c90784b4b4eb7a3f7527e3c18c507d32d75c2544216",
+      "origin": "niho-photo#47 のため新規作成。下段の選別のボタン（採用 / 却下 / 外す）とタイル・帯の升の印。外部コードを含まない。"
+    },
+    {
+      "path": "packages/photo-editing/src/editor/browser-photo-editing-workbench-flags.test.tsx",
+      "sha256": "b727c9afecd7d475b2ba1a7b471d08a5dde386506004be10ec8d41adec7f9c16",
+      "origin": "niho-photo#47 のため新規作成。編集面の選別の結合の test（偽の写真の出どころ・合成の行だけを使用）。\n変更理由: PR #98を#91マージ後の最新mainへ積み直し、選別保存中の二重操作ガードを保持。"
+    },
+    {
+      "path": "packages/photo-editing/src/editor/use-browser-photo-flag-keys.test.tsx",
+      "sha256": "94c8f5e8b6a029f407abe3f9fc80f19500c3568727752e843973a22a10f5ed99",
+      "origin": "niho-photo#47 のため新規作成。選別のキーの test（合成のキーイベントだけを使用）。"
+    },
+    {
+      "path": "packages/photo-editing/src/editor/use-browser-photo-flag-keys.ts",
+      "sha256": "3cede2671fa01d817ba5ee9837bca3300cf458734d995ff65639a161c85e6ca1",
+      "origin": "niho-photo#47 のため新規作成。選別のキー（P / X / U）を聞く hook。外部コードを含まない。"
+    },
+    {
+      "path": "packages/photo-editing/src/use-photo-library-flags.test.tsx",
+      "sha256": "b68a8ea07603bbef6e8263c818145ba87fbda3e9196e60649ca3e06b1dc6b8ae",
+      "origin": "niho-photo#47 のため新規作成。選別のフラグの hook の test（偽の写真の出どころだけを使用）。\n変更理由: PR #98を#91マージ後の最新mainへ積み直し、選別保存中の二重操作ガードを保持。"
+    },
+    {
+      "path": "packages/photo-editing/src/use-photo-library-flags.ts",
+      "sha256": "0edb7825942ad71034bbe317cb0adc90d26e07a6519ec5d34300049ed621715c",
+      "origin": "niho-photo#47 のため新規作成。選別のフラグの付け外しの hook（読み込んだ一覧への楽観更新と失敗時の巻き戻し）。外部コードを含まない。\n変更理由: PR #98を#91マージ後の最新mainへ積み直し、選別保存中の二重操作ガードを保持。"
+    },
+    {
+      "path": "packages/photo-editing/src/develop-engine/develop-engine-errors.ts",
+      "sha256": "d295a43bee0cc04fac318d659610bb0b5ab3c6b4984ed71f27227336435f214f",
+      "origin": "Issue #68の公開仕様 docs/local-adjustments.md だけから新規作成した、段2のwasmの失敗と面の失敗（maskSurfaceMissing・Invalid・Mismatch）の型と読み方。外部画像・非公開コード・個体metadataを含まない。"
+    },
+    {
+      "path": "packages/photo-editing/src/develop-engine/develop-mask-surfaces.ts",
+      "sha256": "059cec7a9f5e3b838ed47944104763facac97e71d9e9972cdbe76e598737fe2b",
+      "origin": "Issue #68の公開仕様 docs/local-adjustments.md だけから新規作成した、描く前に要る面をwasmへ1回だけ渡す係（PNGの記憶・上限で手放す・読めない面の型付きの失敗）。外部画像・非公開コード・個体metadataを含まない。"
+    },
+    {
+      "path": "packages/photo-editing/src/develop-engine/develop-mask-surfaces.test.ts",
+      "sha256": "8f2e28fee35b1ad3f9e5e6b1a02fe6d65b4efefcc851460689ef7e2a5d328978",
+      "origin": "Issue #68のため新規作成した、面を渡す係（要る面・1回だけ・上限・読めない面・開き直し）のNode回帰。外部画像・非公開コード・個体metadataを含まない。"
+    },
+    {
+      "path": "packages/photo-editing/src/develop-engine/develop-engine-client-surfaces.test.ts",
+      "sha256": "489bda5505a4ec707367f8f07ca11a106cd11904298c4f9244550fe1c36894d8",
+      "origin": "Issue #68のため新規作成した、engineの面の受け渡し（描く前の同期・追い越し・開き直し・上限・重ね表示・書き出し・面の作成）の回帰。外部画像・非公開コード・個体metadataを含まない。"
+    },
+    {
+      "path": "packages/photo-editing/src/develop-engine/develop-engine-worker-core-surfaces.test.ts",
+      "sha256": "272963beb82a05447f88319703a270d416c2181c9c63b84b77758056811aae75",
+      "origin": "Issue #68のため新規作成した、Workerの面の受け渡し（能力・渡す/手放す・見本・面の作成・一時的なDeveloperの書き出し）の回帰。外部画像・非公開コード・個体metadataを含まない。"
+    },
+    {
+      "path": "packages/photo-editing/src/photo-editing-mask-brush.ts",
+      "sha256": "7f0a1798c89f9161a25f50d71745c514c034df186fe730bc08d20d3e5d7cdf00",
+      "origin": "Issue #68の公開仕様 docs/local-adjustments.md だけから新規作成した、ブラシの塗りの純粋な計算（面の大きさ・出力から面の画素への dab・滑らかな縁・流量の重ね・消しゴム・間隔）。外部画像・非公開コード・個体metadataを含まない。\n変更理由: PR #99を#91マージ後のmainへ積み直し、遠近補正後のブラシ半径を局所ヤコビアンで写す。"
+    },
+    {
+      "path": "packages/photo-editing/src/photo-editing-mask-brush.test.ts",
+      "sha256": "a6b7fa1d1355a2f689b7d9edab12058421a1a1df3ef7a02350f4d4c8d3ba8b60",
+      "origin": "Issue #68のため新規作成した、ブラシの塗りの計算（幾何への追従・縁・流量・消しゴム・間隔・面の外・決定性）の回帰。外部画像・非公開コード・個体metadataを含まない。\n変更理由: PR #99を#91マージ後のmainへ積み直し、遠近補正後のブラシ半径を局所ヤコビアンで写す。"
+    },
+    {
+      "path": "packages/photo-editing/src/photo-editing-mask-surface-png.ts",
+      "sha256": "94133edd4d450666f0738453351857d135ad5509e6eedff834c36e2c59f6d096",
+      "origin": "Issue #68の公開仕様 docs/local-adjustments.md だけから新規作成した、8bitグレーの面のPNGを値に戻す読み手（IDATの伸長と行のフィルタ）。外部画像・非公開コード・個体metadataを含まない。\n変更理由: 面PNG読込で8MiB上限と寸法一致のstreaming展開を適用し過大展開を拒否"
+    },
+    {
+      "path": "packages/photo-editing/src/photo-editing-mask-surface-png.test.ts",
+      "sha256": "bfaecc4ef714772605d8aa67456dcca70c3f0039aa1ddec303b119304a3c5a45",
+      "origin": "Issue #68のため新規作成した、面のPNGの読み手を合成のPNG（行のフィルタ5種・分割したIDAT・壊れたPNG）で確かめる回帰。外部画像・非公開コード・個体metadataを含まない。\n変更理由: 面PNGの8MiB超入力と宣言寸法を超える展開を拒否する回帰検証を追加"
+    },
+    {
+      "path": "packages/photo-editing/src/browser-photo-export-render-masks.test.ts",
+      "sha256": "c304419641e7d5723aa2ce1e234e56c6e23b6bb9ac923a2c123f8b6aa0144c7a",
+      "origin": "Issue #68のため新規作成した、書き出しの面の読み口と面を読めない理由の回帰。外部画像・非公開コード・個体metadataを含まない。"
+    },
+    {
+      "path": "packages/photo-editing/src/editor/use-browser-photo-mask-brush.ts",
+      "sha256": "3939c959e298b75eb645ccd7df031310c3ce76216d73d4747e92f0faec461197",
+      "origin": "Issue #68の公開仕様 docs/local-adjustments.md だけから新規作成した、ブラシのマスクを塗る状態（面の読み込み・ストロークの確定の列・捨てる条件・全体を塗る/消す）のReactフック。外部画像・非公開コード・個体metadataを含まない。\n変更理由: PR #99を#91マージ後のmainへ積み直し、遠近補正後のブラシ半径を局所ヤコビアンで写す。"
+    },
+    {
+      "path": "packages/photo-editing/src/editor/use-browser-photo-mask-brush.test.tsx",
+      "sha256": "32ea8289689e5e65d7e2f5a40f66debbf8c19e5f71ee4ed3847c44ac36d23227",
+      "origin": "Issue #68のため新規作成した、ブラシの状態（出す条件・追加・1ストローク1単位・保存中の次・捨てる・取り消し・読めない面・E）のjsdom回帰。外部画像・非公開コード・個体metadataを含まない。"
+    },
+    {
+      "path": "packages/photo-editing/src/editor/photo-editing-mask-brush-overlay.tsx",
+      "sha256": "a911d1adcece502b2cc3c5e51eadbc58e40c074581b82cb8308048de006a1e0f",
+      "origin": "Issue #68の公開仕様 docs/local-adjustments.md だけから新規作成した、写真の上のブラシの面（ポインタのストローク・dabの間隔・赤い面の見た目・筆の輪・キー）のReact部品。外部画像・非公開コード・個体metadataを含まない。\n変更理由: 部分補正（マスク）#68: 反転したブラシのマスクの dab の赤の足し引きを逆にする（Codex 指摘）。\n変更理由: PR #99を#91マージ後のmainへ積み直し、遠近補正後のブラシ半径を局所ヤコビアンで写す。"
+    },
+    {
+      "path": "packages/photo-editing/src/editor/photo-editing-mask-brush-overlay.test.tsx",
+      "sha256": "588fe6f2ed1b738ea1d5008d6f0e67bc4f1cb531fad29ba872f2202f543c97e2",
+      "origin": "Issue #68のため新規作成した、写真の上のブラシの面（ストローク・止める・⌥・[ ]・塗れない間）のjsdom回帰。外部画像・非公開コード・個体metadataを含まない。\n変更理由: 部分補正（マスク）#68: 反転したブラシのマスクの dab の赤の足し引きを逆にする（Codex 指摘）。"
+    },
+    {
+      "path": "packages/photo-editing/src/editor/photo-editing-mask-brush-tools.tsx",
+      "sha256": "13b637c876070e331d157cc71999fc9de587ba15707527f25bf89eda921a488d",
+      "origin": "Issue #68の公開仕様 docs/local-adjustments.md だけから新規作成した、右パネルのブラシの道具（描く/消しゴム・大きさ・ぼかし・流量・全体を塗る/消す）のReact部品。外部画像・非公開コード・個体metadataを含まない。"
+    },
+    {
+      "path": "packages/photo-editing/src/editor/photo-editing-mask-tools-brush.test.tsx",
+      "sha256": "bcd9f908f4bcd4a00d2ab8e9ee3bdd106019556ea32981d7267cf3c2ef23cce8",
+      "origin": "Issue #68のため新規作成した、右パネルのブラシ・被写体と空の行・面を読めない理由のjsdom回帰。外部画像・非公開コード・個体metadataを含まない。"
+    },
+    {
+      "path": "packages/photo-editing/src/editor/browser-photo-mask-surface-render.ts",
+      "sha256": "79129a910d0f2b6e689655449413e021b3fba539a13c0980c0b26e82fc3057bf",
+      "origin": "Issue #68の公開仕様 docs/local-adjustments.md だけから新規作成した、面を読めない写真を開いた直後に読めないマスクを当てずに描く補助。外部画像・非公開コード・個体metadataを含まない。"
+    },
+    {
+      "path": "packages/photo-editing/src/editor/browser-photo-mask-surface-render.test.ts",
+      "sha256": "366427fba4761b880dc9b43dbe2ca23ccc9be4c66b7cf45e41bfd76deb4845b6",
+      "origin": "Issue #68のため新規作成した、読めないマスクを当てずに描く補助の回帰。外部画像・非公開コード・個体metadataを含まない。"
+    },
+    {
+      "path": "packages/photo-editing/src/editor/use-photo-editing-target-box.ts",
+      "sha256": "ede74fd47cb9ffd97089b5ce47411851729b844cb19c5d7d7a9a6c8a87b376f8",
+      "origin": "Issue #67のマスクの操作から切り出した、写真のcanvasの重ねる位置と大きさを測るReactフック（Issue #68のブラシの面も使う）。外部画像・非公開コード・個体metadataを含まない。"
+    },
+    {
+      "path": "apps/camera/src/local-library/local-photo-library-mask-surfaces.test.ts",
+      "sha256": "17cf06298463620f47accdaa44f826e9ddee31bbc9cdd959e4a9f80f5f6fe35f",
+      "origin": "Issue #68のため新規作成した、この Mac の PhotoLibrary のマスクの面（photoIdへの結び・開き直し・無い面・能力）の回帰。外部画像・非公開コード・個体metadataを含まない。"
     }
   ],
   "excludedSources": [

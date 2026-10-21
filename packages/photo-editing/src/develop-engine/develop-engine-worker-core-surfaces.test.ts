@@ -1,0 +1,219 @@
+import { describe, expect, it, vi } from "vitest";
+
+import { DEVELOP_ENGINE_CRATE_VERSION, DEVELOP_ENGINE_VERSION, developEngineManifestPath } from "./develop-engine-manifest";
+import {
+  createDevelopEngineWorkerHandler,
+  type DevelopEngineWorkerDeps,
+  type DevelopEngineWorkerResponse,
+} from "./develop-engine-worker-core";
+
+/**
+ * Worker の中の面の受け渡し（M4 #68）: 能力の `surfaces`（口が揃わない glue は面の種類を外す）、開いている写真へ渡す・手放す、見本の
+ * session にもそろえる、面の PNG と id を作る、書き出しに添えた面は一時的な Developer で描く（JPEG / PNG は一発の書き出しと同じ作業
+ * サイズ、作業コピーは描く前に渡す）。
+ */
+
+const MANIFEST_URL = `https://photo.example.test${developEngineManifestPath()}`;
+const MANIFEST = {
+  engine: DEVELOP_ENGINE_VERSION,
+  version: DEVELOP_ENGINE_CRATE_VERSION,
+  files: {
+    [`niho_develop_wasm_bg-${DEVELOP_ENGINE_CRATE_VERSION}.wasm`]: { sha256: "c1", bytes: 1 },
+    [`niho_develop_wasm-${DEVELOP_ENGINE_CRATE_VERSION}.js`]: { sha256: "08", bytes: 1 },
+    [`niho_develop_wasm-${DEVELOP_ENGINE_CRATE_VERSION}.d.ts`]: { sha256: "88", bytes: 1 },
+  },
+};
+const ID = "a".repeat(64);
+const CAPABILITIES = { masks: { kinds: ["linear", "radial", "brush", "subject", "sky"], max: 8, maskPlane: true, surfaces: true } };
+
+type Posted = { message: DevelopEngineWorkerResponse; transfer: Transferable[] | undefined };
+
+function surfaceGlue(options: { capabilities?: unknown; developerSurfaces?: boolean; encode?: boolean } = {}) {
+  const developers: FakeDeveloper[] = [];
+  const thumbnails: FakeDeveloper[] = [];
+  class FakeDeveloper {
+    readonly width = 4;
+    readonly height = 2;
+    readonly input: Uint8Array;
+    readonly workingMaxDimension: number;
+    readonly surfaces = new Map<string, number[]>();
+    readonly renders: string[] = [];
+    readonly free = vi.fn();
+    constructor(input: Uint8Array, workingMaxDimension: number) {
+      this.input = input;
+      this.workingMaxDimension = workingMaxDimension;
+      developers.push(this);
+    }
+    static openWorkingCopy(this: typeof FakeDeveloper, png: Uint8Array) {
+      return new this(png, 2560);
+    }
+    render(settingsJson: string) {
+      this.renders.push(settingsJson);
+      return { width: 1, height: 1, rgba: new Uint8ClampedArray([this.surfaces.size, 0, 0, 255]) };
+    }
+    thumbnail(maxDimension: number) {
+      const session = new (this.constructor as typeof FakeDeveloper)(new Uint8Array(0), maxDimension);
+      thumbnails.push(session);
+      return session;
+    }
+    maskPlane() {
+      return { width: 1, height: 1, data: new Uint8Array([255]) };
+    }
+  }
+  class SurfaceDeveloper extends FakeDeveloper {
+    setMaskSurface(id: string, png: Uint8Array) {
+      if (png.length === 0) throw new Error(`maskSurfaceInvalid: surface ${id}: empty`);
+      this.surfaces.set(id, [...png]);
+    }
+    dropMaskSurface(id: string) {
+      return this.surfaces.delete(id);
+    }
+    exportJpeg(settingsJson: string, maxDimension: number, quality: number) {
+      this.renders.push(settingsJson);
+      return new Uint8Array([0xff, 0xd8, this.surfaces.size, maxDimension & 0xff, quality]);
+    }
+  }
+  const capabilities = options.capabilities ?? CAPABILITIES;
+  const module = {
+    default: vi.fn(async () => ({})),
+    version: () => "0.19.0+test",
+    render: vi.fn(),
+    exportJpeg: vi.fn(() => new Uint8Array([0xff, 0xd8, 0])),
+    convertEditSettings: vi.fn(),
+    Developer: options.developerSurfaces === false ? FakeDeveloper : SurfaceDeveloper,
+    capabilities: () => JSON.stringify(capabilities),
+    imageSize: vi.fn(() => ({ width: 3000, height: 2000 })),
+    rasterDecodeSize: vi.fn((_settingsJson: string, _width: number, _height: number, maxDimension: number) => maxDimension * 2),
+    geometryOutputSize: vi.fn(() => ({ width: 1, height: 1 })),
+    beforeSettings: vi.fn(() => "{}"),
+    ...(options.encode === false
+      ? {}
+      : {
+          encodeMaskSurface: vi.fn((width: number, height: number, data: Uint8Array) => new Uint8Array([0x89, width, height, ...data])),
+          maskSurfaceId: vi.fn(() => ID),
+        }),
+  };
+  return { module, developers, thumbnails };
+}
+
+function setup(module: unknown, encodeJpeg?: DevelopEngineWorkerDeps["encodeJpeg"]) {
+  const posted: Posted[] = [];
+  const deps: DevelopEngineWorkerDeps = {
+    fetch: vi.fn(async () => new Response(JSON.stringify(MANIFEST), { status: 200 })),
+    importModule: vi.fn(async () => module),
+    post: (message, transfer) => posted.push({ message, transfer }),
+    encodeJpeg,
+  };
+  return { handler: createDevelopEngineWorkerHandler(deps), posted };
+}
+
+describe("Worker の面の受け渡し", () => {
+  it("口が揃っていれば masks.surfaces を付ける。揃わない glue は面の種類を描けない扱いにする", async () => {
+    const ready = setup(surfaceGlue().module);
+    await ready.handler({ type: "init", id: 1, manifestUrl: MANIFEST_URL });
+    expect(ready.posted[0]?.message).toMatchObject({ masks: { ...CAPABILITIES.masks } });
+
+    for (const options of [{ developerSurfaces: false }, { encode: false }, { capabilities: { masks: { ...CAPABILITIES.masks, surfaces: false } } }]) {
+      const partial = setup(surfaceGlue(options).module);
+      await partial.handler({ type: "init", id: 1, manifestUrl: MANIFEST_URL });
+      const masks = (partial.posted[0]?.message as { masks?: Record<string, unknown> }).masks;
+      expect(masks).toEqual({ kinds: ["linear", "radial"], max: 8, maskPlane: true });
+    }
+  });
+
+  it("開いている写真へ面を渡し・手放す。写真なし・形の違う面は error。写真を開き直すと面は無い", async () => {
+    const glue = surfaceGlue();
+    const { handler, posted } = setup(glue.module);
+    await handler({ type: "init", id: 1, manifestUrl: MANIFEST_URL });
+    await handler({ type: "setMaskSurface", id: 2, surfaceId: ID, png: new Uint8Array([1, 2]).buffer });
+    expect(posted.at(-1)?.message).toEqual({ type: "error", id: 2, message: "no photo is open" });
+    await handler({ type: "open", id: 3, bytes: new ArrayBuffer(4), workingMaxDimension: 2560 });
+    await handler({ type: "setMaskSurface", id: 4, surfaceId: ID, png: new Uint8Array([1, 2]).buffer });
+    expect(posted.at(-1)?.message).toEqual({ type: "maskSurfaceSet", id: 4 });
+    expect(glue.developers[0]!.surfaces.get(ID)).toEqual([1, 2]);
+    await handler({ type: "setMaskSurface", id: 5, surfaceId: "b".repeat(64), png: new ArrayBuffer(0) });
+    expect(posted.at(-1)?.message).toMatchObject({ type: "error", id: 5, message: expect.stringMatching(/^maskSurfaceInvalid/) });
+    await handler({ type: "dropMaskSurface", id: 6, surfaceId: ID });
+    expect(posted.at(-1)?.message).toEqual({ type: "maskSurfaceDropped", id: 6, dropped: true });
+    await handler({ type: "dropMaskSurface", id: 7, surfaceId: ID });
+    expect(posted.at(-1)?.message).toEqual({ type: "maskSurfaceDropped", id: 7, dropped: false });
+  });
+
+  it("見本の session は面を持たずに始まるので、開いている写真に渡した面をそろえてから描く（手放した面は見本からも手放す）", async () => {
+    const glue = surfaceGlue();
+    const { handler, posted } = setup(glue.module);
+    await handler({ type: "init", id: 1, manifestUrl: MANIFEST_URL });
+    await handler({ type: "open", id: 2, bytes: new ArrayBuffer(4), workingMaxDimension: 2560 });
+    // 見本の口は `ready` の presetThumbnails（Developer.prototype.thumbnail）
+    await handler({ type: "setMaskSurface", id: 3, surfaceId: ID, png: new Uint8Array([5]).buffer });
+    await handler({ type: "renderPresetThumbnail", id: 4, settingsJson: "{}", maxDimension: 64 });
+    expect(posted.at(-1)?.message).toMatchObject({ type: "frame", id: 4 });
+    expect(glue.thumbnails[0]!.surfaces.get(ID)).toEqual([5]);
+    await handler({ type: "dropMaskSurface", id: 5, surfaceId: ID });
+    expect(glue.thumbnails[0]!.surfaces.has(ID)).toBe(false);
+  });
+
+  it("面の値を 8bit グレーの PNG と id にする（PNG は transfer）", async () => {
+    const glue = surfaceGlue();
+    const { handler, posted } = setup(glue.module);
+    await handler({ type: "init", id: 1, manifestUrl: MANIFEST_URL });
+    await handler({ type: "encodeMaskSurface", id: 2, width: 2, height: 1, data: new Uint8Array([0, 255]).buffer });
+    const last = posted.at(-1)!;
+    expect(last.message).toMatchObject({ type: "maskSurfaceEncoded", id: 2, surfaceId: ID });
+    const png = (last.message as { png: ArrayBuffer }).png;
+    expect([...new Uint8Array(png)]).toEqual([0x89, 2, 1, 0, 255]);
+    expect(last.transfer).toEqual([png]);
+    expect(glue.module.encodeMaskSurface).toHaveBeenCalledWith(2, 1, new Uint8Array([0, 255]));
+  });
+
+  it("書き出しに面が添えてあれば、一発の書き出しと同じ作業サイズの一時的な Developer に渡して描く（持っている写真は変えない）", async () => {
+    const glue = surfaceGlue();
+    const { handler, posted } = setup(glue.module);
+    await handler({ type: "init", id: 1, manifestUrl: MANIFEST_URL });
+    await handler({ type: "open", id: 2, bytes: new ArrayBuffer(4), workingMaxDimension: 2560 });
+    const opened = glue.developers[0]!;
+    await handler({
+      type: "exportJpeg",
+      id: 3,
+      bytes: new Uint8Array([1, 2, 3]).buffer,
+      settingsJson: '{"v":5}',
+      maxDimension: 1000,
+      quality: 90,
+      surfaces: [{ id: ID, png: new Uint8Array([7]).buffer }],
+    });
+    const temporary = glue.developers[1]!;
+    expect(temporary.workingMaxDimension).toBe(2000);
+    expect(glue.module.rasterDecodeSize).toHaveBeenCalledWith('{"v":5}', 3000, 2000, 1000, 4096);
+    expect(temporary.surfaces.get(ID)).toEqual([7]);
+    expect(temporary.free).toHaveBeenCalledOnce();
+    expect(posted.at(-1)?.message).toMatchObject({ type: "jpeg", id: 3 });
+    expect([...new Uint8Array((posted.at(-1)!.message as { bytes: ArrayBuffer }).bytes)]).toEqual([0xff, 0xd8, 1, 1000 & 0xff, 90]);
+    expect(glue.module.exportJpeg).not.toHaveBeenCalled();
+    expect(opened.surfaces.size).toBe(0);
+
+    // 面の無い書き出しは今までどおり一発の書き出し
+    await handler({ type: "exportJpeg", id: 4, bytes: new ArrayBuffer(3), settingsJson: "{}", maxDimension: 1000, quality: 90 });
+    expect(glue.module.exportJpeg).toHaveBeenCalledOnce();
+  });
+
+  it("作業コピーの書き出しは、開いた作業コピーに面を渡してから描く", async () => {
+    const glue = surfaceGlue();
+    const encodeJpeg = vi.fn(async () => new Uint8Array([0xff, 0xd8]).buffer);
+    const { handler, posted } = setup(glue.module, encodeJpeg);
+    await handler({ type: "init", id: 1, manifestUrl: MANIFEST_URL });
+    await handler({
+      type: "exportWorkingCopyJpeg",
+      id: 2,
+      png: new ArrayBuffer(4),
+      metaJson: "{}",
+      settingsJson: '{"v":5}',
+      maxDimension: 1000,
+      quality: 90,
+      surfaces: [{ id: ID, png: new Uint8Array([9]).buffer }],
+    });
+    const working = glue.developers[0]!;
+    expect(working.surfaces.get(ID)).toEqual([9]);
+    expect(working.renders).toEqual(['{"v":5}']);
+    expect(posted.at(-1)?.message).toMatchObject({ type: "jpeg", id: 2 });
+  });
+});

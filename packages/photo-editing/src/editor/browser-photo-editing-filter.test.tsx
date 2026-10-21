@@ -22,7 +22,7 @@ let root: Root;
 let changes: Partial<BrowserCloudListFilter>[];
 let clears: number;
 
-function Harness(props: { initial: BrowserCloudListFilter }) {
+function Harness(props: { initial: BrowserCloudListFilter; flags?: boolean }) {
   const [filter, setFilter] = useState(props.initial);
   return (
     <div>
@@ -30,6 +30,7 @@ function Harness(props: { initial: BrowserCloudListFilter }) {
       <BrowserPhotoListFilterControl
         filter={filter}
         count={countBrowserCloudListFilter(filter)}
+        flags={props.flags}
         onChange={(patch) => {
           changes.push(patch);
           setFilter((current) => ({ ...current, ...patch }));
@@ -43,9 +44,9 @@ function Harness(props: { initial: BrowserCloudListFilter }) {
   );
 }
 
-async function render(initial: BrowserCloudListFilter = BROWSER_CLOUD_NO_LIST_FILTER) {
+async function render(initial: BrowserCloudListFilter = BROWSER_CLOUD_NO_LIST_FILTER, flags?: boolean) {
   await act(async () => {
-    root.render(<Harness initial={initial} />);
+    root.render(<Harness initial={initial} flags={flags} />);
   });
 }
 
@@ -257,5 +258,56 @@ describe("一覧の絞り込み（F5b #17125）", () => {
     });
     expect(panel()).toBeNull();
     expect(trigger().getAttribute("aria-expanded")).toBe("false");
+  });
+});
+
+describe("選別の絞り込み（niho-photo#47）", () => {
+  it("選別を持たない写真の出どころでは群を出さない", async () => {
+    await render();
+    await click(trigger());
+    expect(radios("選別")).toEqual([]);
+    expect(panel()?.textContent).not.toContain("採用だけ");
+  });
+
+  it("「採用だけ」「却下を隠す」は互いに排他で、種類・補正と一緒に掛かる。数に入り、「解除」で外れる", async () => {
+    await render(BROWSER_CLOUD_NO_LIST_FILTER, true);
+    await click(trigger());
+    expect(states("選別")).toEqual([
+      ["すべて", "true"],
+      ["採用だけ", "false"],
+      ["却下を隠す", "false"],
+    ]);
+
+    await click(radio("選別", "採用だけ"));
+    expect(changes).toEqual([{ flag: "pick" }]);
+    expect(trigger().textContent).toBe("1");
+    await click(radio("選別", "却下を隠す"));
+    expect(changes.at(-1)).toEqual({ flag: "notRejected" });
+    expect(states("選別")).toEqual([
+      ["すべて", "false"],
+      ["採用だけ", "false"],
+      ["却下を隠す", "true"],
+    ]);
+    await click(radio("種類", "RAW"));
+    expect(trigger().textContent).toBe("2");
+
+    await click(clearButton());
+    expect(clears).toBe(1);
+    expect(trigger().textContent).toBe("");
+    expect(states("選別")[0]).toEqual(["すべて", "true"]);
+  });
+
+  it("「すべて」に戻すと絞らない（null）。←→ でも選び直す", async () => {
+    await render({ ...BROWSER_CLOUD_NO_LIST_FILTER, flag: "pick" }, true);
+    expect(trigger().textContent).toBe("1");
+    await click(trigger());
+    // 開いたら最初に選んでいる選択肢（種類の「すべて」）へフォーカスする（今までどおり）
+    expect(document.activeElement).toBe(radio("種類", "すべて"));
+    expect(radio("選別", "採用だけ").getAttribute("aria-checked")).toBe("true");
+    await press(radio("選別", "採用だけ"), "ArrowRight");
+    expect(changes.at(-1)).toEqual({ flag: "notRejected" });
+    await click(radio("選別", "すべて"));
+    expect(changes.at(-1)).toEqual({ flag: null });
+    expect(trigger().textContent).toBe("");
   });
 });

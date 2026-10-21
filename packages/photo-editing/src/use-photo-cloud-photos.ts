@@ -10,6 +10,7 @@ import { photoEditingQueryKeys } from "./photo-editing-query-keys";
 import type {
   PhotoLibrary,
   PhotoLibraryCounts,
+  PhotoLibraryFlagFilter,
   PhotoLibraryItem,
   PhotoLibraryKindFilter,
   PhotoLibraryPhoto,
@@ -163,12 +164,14 @@ export function usePhotoCloudPhotos(options: {
   kind?: PhotoCloudListKind;
   /** 補正済み（true）/ 未補正（false）で絞る（省くと絞らない。NIHO Desktop の面は省く。移行元設計） */
   edited?: boolean;
+  /** 選別で絞る（採用だけ / 却下を隠す。省くと絞らない。`capabilities.flags` の写真の出どころだけ。niho-photo#47） */
+  flag?: PhotoLibraryFlagFilter;
   /** この Mac のフォルダ（`PhotoLibrary.folders` のある写真の出どころだけ。そのフォルダとその下の写真。NIHO camera C3 移行元設計） */
   folderId?: string;
   /** この Mac の「選んだ写真」。`folderId` と同時には渡さない。 */
   localSource?: "selected";
 }): PhotoCloudPhotos {
-  const { spotId, enabled, sort, hasOriginal, favorite, albumId, kind, edited, folderId, localSource } = options;
+  const { spotId, enabled, sort, hasOriginal, favorite, albumId, kind, edited, flag, folderId, localSource } = options;
   const library = usePhotoLibrary();
   const host = usePhotoEditingHost();
   const queryClient = useQueryClient();
@@ -179,6 +182,7 @@ export function usePhotoCloudPhotos(options: {
     albumId: albumId ?? null,
     kind: kind ?? null,
     edited: edited ?? null,
+    flag: flag ?? null,
     folderId: folderId ?? null,
     localSource: localSource ?? null,
   });
@@ -195,6 +199,7 @@ export function usePhotoCloudPhotos(options: {
         ...(albumId === undefined ? {} : { albumId }),
         ...(kind === undefined ? {} : { kind }),
         ...(edited === undefined ? {} : { edited }),
+        ...(flag === undefined ? {} : { flag }),
         ...(folderId === undefined ? {} : { folderId }),
         ...(localSource === undefined ? {} : { localSource }),
       });

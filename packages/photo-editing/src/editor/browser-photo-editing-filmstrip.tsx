@@ -5,6 +5,7 @@ import { cn } from "niho-ui/cn";
 
 import { BROWSER_PHOTO_EDITING_FILMSTRIP_LABEL } from "../photo-editing-copy";
 
+import { BROWSER_PHOTO_FLAG_LABELS, BrowserPhotoFlagMark } from "./browser-photo-editing-flags";
 import type { BrowserPhotoEditingGridItem } from "./browser-photo-editing-grid";
 import { PhotoEditingTileImage } from "./photo-editing-grid";
 
@@ -39,6 +40,7 @@ function revealTile(strip: HTMLElement, tile: HTMLElement) {
  * - 開いている写真の升は accent-ink の輪。開いている写真が替わったら、その升を帯の中で見える位置まで送る（動きを減らす設定では
  *   滑らかにしない）。帯の中で操作していたら、フォーカスもその升へ移す
  * - 追加している途中の写真は薄くして押せない
+ * - 選別の印（採用 / 却下。niho-photo#47）は升の右下に一覧と同じ形で出し、却下した写真の画は薄くする（押せる）
  * - Tab で止まるのは開いている写真の升だけ。升の上の ← → は `onArrowKey`（画面の ← → と同じ移り方で前後の写真を開く）
  */
 export function BrowserPhotoEditingFilmstrip(props: {
@@ -85,7 +87,8 @@ export function BrowserPhotoEditingFilmstrip(props: {
               <button
                 ref={active ? activeTileRef : undefined}
                 type="button"
-                aria-label={item.fileName}
+                // 選別の印は読み上げ名に添える（升の名前は写真名。niho-photo#47）
+                aria-label={item.flag ? `${item.fileName}（${BROWSER_PHOTO_FLAG_LABELS[item.flag]}）` : item.fileName}
                 aria-current={active ? "true" : undefined}
                 title={item.fileName}
                 disabled={adding}
@@ -111,21 +114,25 @@ export function BrowserPhotoEditingFilmstrip(props: {
                       : "opacity-[0.82] hover:opacity-100",
                 )}
               >
-                {thumbnail.url ? (
-                  <PhotoEditingTileImage
-                    key={thumbnail.url}
-                    url={thumbnail.url}
-                    geometry={item.geometry ?? null}
-                    cellAspect={FILMSTRIP_TILE_ASPECT}
-                  />
-                ) : thumbnail.failed ? (
-                  <span
-                    aria-hidden
-                    className="flex h-full w-full items-center justify-center text-base font-bold text-niho-text-muted"
-                  >
-                    {Array.from(item.fileName)[0] ?? ""}
-                  </span>
-                ) : null}
+                {/* 却下した写真は画だけ薄くする（開いている升の輪は落とさない。niho-photo#47） */}
+                <span className={cn("block h-full w-full", item.flag === "reject" && "opacity-40")}>
+                  {thumbnail.url ? (
+                    <PhotoEditingTileImage
+                      key={thumbnail.url}
+                      url={thumbnail.url}
+                      geometry={item.geometry ?? null}
+                      cellAspect={FILMSTRIP_TILE_ASPECT}
+                    />
+                  ) : thumbnail.failed ? (
+                    <span
+                      aria-hidden
+                      className="flex h-full w-full items-center justify-center text-base font-bold text-niho-text-muted"
+                    >
+                      {Array.from(item.fileName)[0] ?? ""}
+                    </span>
+                  ) : null}
+                </span>
+                {item.flag ? <BrowserPhotoFlagMark flag={item.flag} small className="bottom-1 right-1" /> : null}
               </button>
             </li>
           );
