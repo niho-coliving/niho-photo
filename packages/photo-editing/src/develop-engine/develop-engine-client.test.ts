@@ -651,6 +651,43 @@ describe("createDevelopEngine", () => {
     expect(await engine.supportsGeometry()).toBe(true);
   });
 
+  it("ready に upright: true が付いた wasm だけ Upright（niho-photo#46 後半）を推定し、結果の JSON を読む", async () => {
+    const { worker, engine } = await readyEngine({ geometry: true, features: { perspective: true, upright: true } });
+    expect(await engine.supportsUpright()).toBe(true);
+    const settings = { v: 1, engine: "niho-11", geometry: { rotate: 90 } };
+    const estimated = engine.estimateUpright(settings, 3);
+    const request = worker.lastRequest("estimateUpright");
+    expect(request).toEqual({ type: "estimateUpright", id: request.id, settingsJson: JSON.stringify(settings), mode: 3 });
+    const perspective = { vertical: -31.5, horizontal: 0, rotate: 1.25, aspect: 0, scale: 100, x: 0, y: 0 };
+    worker.respond({
+      type: "upright",
+      id: request.id,
+      resultJson: JSON.stringify({ perspective, mode: 3, confidence: 0.9, lines: { vertical: 12, horizontal: 4 } }),
+    });
+    await expect(estimated).resolves.toEqual({
+      perspective,
+      mode: 3,
+      confidence: 0.9,
+      lines: { vertical: 12, horizontal: 4 },
+      reason: null,
+    });
+
+    // 読めない結果・error は reject
+    const broken = engine.estimateUpright(settings, 1);
+    worker.respond({ type: "upright", id: worker.lastRequest("estimateUpright").id, resultJson: '{"mode":9}' });
+    await expect(broken).rejects.toThrow("develop engine returned an invalid upright estimate");
+    const failed = engine.estimateUpright(settings, 1);
+    worker.respond({ type: "error", id: worker.lastRequest("estimateUpright").id, message: "no photo is open" });
+    await expect(failed).rejects.toThrow("no photo is open");
+  });
+
+  it("upright の無い ready（古い wasm）では Upright を出さず、要求も送らない", async () => {
+    const { worker, engine } = await readyEngine({ geometry: true, features: { perspective: true } });
+    expect(await engine.supportsUpright()).toBe(false);
+    await expect(engine.estimateUpright({}, 1)).rejects.toThrow("develop engine cannot estimate upright");
+    expect(worker.requests("estimateUpright")).toEqual([]);
+  });
+
   it("sampleColor は設定・描画長辺・正規化座標を worker に渡す", async () => {
     const { worker, engine } = await readyEngine({ features: { colorPoints: true } });
     const sampled = engine.sampleColor({ v: 4, colorPoints: [] }, { maxDimension: 1280, x: 0.2, y: 0.8 });

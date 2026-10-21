@@ -33,6 +33,9 @@ import { parseDevelopEngineManifest } from "./develop-engine-manifest";
  *   `detail: true` を付ける
  * - 遠近（`v: 7` の `geometry.perspective`。niho-photo#46）も同じく、`validateSettings` が小さな `v: 7` の設定を通すときだけ `ready` に
  *   `perspective: true` を付ける（幾何の口が無い wasm には付けない）
+ * - Upright（niho-photo#46 後半）: `estimateUpright` は開いている写真の `Developer.estimateUpright(settingsJson, mode)` の結果の JSON を
+ *   そのまま返す（描画と同じ列で順に処理する単発の問い合わせ。`sampleColor` と同じ）。`Developer` に口があり遠近も描けるとき
+ *   だけ `ready` に `upright: true` を付け、無い glue・写真を開いていなければ error
  * - プリセットの適用量・書き出し・見本（F2a 移行元設計 の口。crate 0.5.0 から）: `applyPreset`（開いている写真の撮影時の白
  *   `asShotWhite()` を渡す）・`settingsToXmp`・`renderPresetThumbnail`（開いている写真の `thumbnail(256)` の別の session を初回に
  *   作って持ち、丁寧に〔final〕描く。親のengine/CNR設定が変わったら手放し、次回に現在の解析から作り直す。写真を手放すと一緒に手放す）。口が glue にあれば `ready` に `presetAmount` /
@@ -56,6 +59,8 @@ export type DevelopEngineWorkerRequest =
   | { type: "render"; id: number; settingsJson: string; maxDimension: number; interactive: boolean }
   | { type: "sampleColor"; id: number; settingsJson: string; maxDimension: number; x: number; y: number }
   | { type: "maskPlane"; id: number; settingsJson: string; maskId: string; maxDimension: number }
+/** Upright の推定（`mode`: 1 自動・2 水平・3 垂直・4 フル） */
+  | { type: "estimateUpright"; id: number; settingsJson: string; mode: number }
   | {
       type: "exportJpeg";
       id: number;
@@ -129,6 +134,8 @@ export type DevelopEngineWorkerFeatures = {
   detail?: true;
   /** wasm が遠近のある設定（`v: 7`。niho-photo#46）を読める。 */
   perspective?: true;
+  /** `Developer.estimateUpright`（Upright。niho-photo#46 後半）があり、遠近も描ける */
+  upright?: true;
   /** `applyPreset`（プリセットの適用量。F2a 移行元設計） */
   presetAmount?: true;
   /** `settingsToXmp`（今の補正をプリセットに書き出す） */
@@ -176,6 +183,8 @@ export type DevelopEngineWorkerResponse =
   | { type: "sampledColor"; id: number; lightness: number; chroma: number; hue: number }
   /** `maskPlane` の面（`width·height` byte。行優先・`invert` 込み） */
   | { type: "maskPlane"; id: number; width: number; height: number; data: ArrayBuffer }
+/** `estimateUpright` の結果（JSON のまま） */
+  | { type: "upright"; id: number; resultJson: string }
   | { type: "error"; id: number; message: string };
 
 export type DevelopEngineWorkerDeps = {
@@ -214,6 +223,8 @@ type DevelopDeveloper = {
   autoSettings?: (settingsJson: string) => unknown;
   /** 1 枚のマスクの面 `{ width, height, data }`（M2 の glue から。無い glue もある） */
   maskPlane?: (settingsJson: string, maskId: string, maxDimension: number) => unknown;
+  /** Upright: 今の設定の枠で推定した遠近の JSON（crate 0.23.0 から。無い glue もある） */
+  estimateUpright?: (settingsJson: string, mode: number) => unknown;
 };
 
 /** 見本用の session の長辺（見本 1 枚は、これを行の大きさに縮めて描く）。 */
@@ -263,6 +274,8 @@ type DevelopGlue = {
   capabilities: (() => unknown) | null;
   /** `Developer.prototype.maskPlane` がある */
   maskPlane: boolean;
+  /** `Developer.prototype.estimateUpright` がある（無い glue では Upright のボタンを出さない） */
+  upright: boolean;
 };
 
 /** 幾何（切り抜き・回転。F3 移行元設計）の口。 */
@@ -323,6 +336,9 @@ function readGlue(module: unknown): DevelopGlue | null {
   // 部分補正の口（無い glue でも、マスクの無い写真は描ける）
   const capabilities = module.capabilities;
   const maskPlane: unknown = isRecord(developerPrototype) ? Reflect.get(developerPrototype, "maskPlane") : undefined;
+const estimateUpright: unknown = isRecord(developerPrototype)
+    ? Reflect.get(developerPrototype, "estimateUpright")
+    : undefined;
   const geometry: DevelopGeometryGlue | null =
     typeof imageSize === "function" &&
     typeof rasterDecodeSize === "function" &&
@@ -357,6 +373,7 @@ function readGlue(module: unknown): DevelopGlue | null {
     colorSampling: typeof sampleColor === "function",
     capabilities: typeof capabilities === "function" ? (capabilities as () => unknown) : null,
     maskPlane: typeof maskPlane === "function",
+    upright: typeof estimateUpright === "function",
   };
 }
 
@@ -602,6 +619,7 @@ export function createDevelopEngineWorkerHandler(
   // 起こした wasm が描ける部分補正（起こしたときに `capabilities()` を 1 回だけ読む。描けなければ null）
   let masks: DevelopMaskCapabilities | null = null;
   let perspective = false;
+  let upright = false;
   let wasmMemory: () => ArrayBufferLike | null = () => null;
   let diagnostics = false;
   let unavailableReason: string | null = null;
@@ -724,6 +742,7 @@ export function createDevelopEngineWorkerHandler(
       ...(detail ? { detail: true as const } : {}),
       ...(masks ? { masks: { ...masks, kinds: [...masks.kinds] } } : {}),
       ...(perspective ? { perspective: true as const } : {}),
+      ...(upright ? { upright: true as const } : {}),
     });
   };
 
@@ -762,6 +781,7 @@ export function createDevelopEngineWorkerHandler(
       detail = acceptsDetailSettings(loaded.validateSettings);
       masks = readMaskCapabilities(loaded);
       perspective = loaded.geometry !== null && acceptsPerspectiveSettings(loaded.validateSettings);
+      upright = perspective && loaded.upright;
       postReady(id);
     } catch (error) {
       unavailableReason = errorMessage(error);
@@ -884,6 +904,18 @@ export function createDevelopEngineWorkerHandler(
           const plane = readMaskPlane(opened.maskPlane(message.settingsJson, message.maskId, message.maxDimension));
           const data = transferableBuffer(plane.data, wasmMemory());
           deps.post({ type: "maskPlane", id, width: plane.width, height: plane.height, data }, [data]);
+          return;
+        }
+        case "estimateUpright": {
+          requireGlue();
+          const opened = developer;
+          if (!opened) throw new Error("no photo is open");
+          if (!upright || typeof opened.estimateUpright !== "function") {
+            throw new Error("develop engine cannot estimate upright");
+          }
+          const resultJson = opened.estimateUpright(message.settingsJson, message.mode);
+          if (typeof resultJson !== "string") throw new Error("develop engine returned no upright estimate");
+          deps.post({ type: "upright", id, resultJson });
           return;
         }
         case "exportJpeg": {

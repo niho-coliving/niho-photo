@@ -23,6 +23,7 @@ import {
   type DevelopDetailNoise,
 } from "./develop-detail-preview";
 import { readDevelopSettings, type DevelopSettings } from "./develop-settings";
+import { readDevelopUprightEstimate, type DevelopUprightEstimate, type DevelopUprightMode } from "./develop-upright";
 
 export type { DevelopMaskCapabilities } from "./develop-engine-worker-core";
 
@@ -75,6 +76,8 @@ export {
  *   枚数・面の口。口の無い古い wasm は null）。`maskPlane` は 1 枚のマスクの面（重ね表示）で、Worker へ出すのは同時に 1 つまで、
  *   出している間に来た要求は「次の 1 つ」として持ち（さらに新しい要求が来たら古い「次」は null）、描画の枠は使わない（描画を
  *   取り消さない・追い越さない）。写真を開き直す・閉じると、出している面の結果は捨て、「次」は null で終える
+* - Upright（`estimateUpright`。開いている写真の `Developer.estimateUpright`、niho-photo#46 後半）は、口が wasm にあり遠近も描けるとき
+ *   （`supportsUpright()`）だけ使える。`sampleColor` と同じく捨てずに順に処理し、描画の枠には入らない
  */
 
 /** `applyPreset` の撮影時の白の出どころ（省くと開いている写真）。 */
@@ -234,6 +237,17 @@ export type DevelopEngine = {
    */
   supportsPerspective: () => Promise<boolean>;
   /**
+   * 持っている写真の Upright: 今の設定 `settings` の枠（90° 回転・反転。角度補正は差し引く）で、写真の直線から遠近の 回転・垂直方向・
+   * 水平方向 を推定する（`mode`: 1 自動・2 水平・3 垂直・4 フル）。線が見つからなければ恒等で `reason` 付き。捨てずに順に処理し、
+   * 描画の枠は使わない。wasm に無い・写真を開いていない・結果を読めなければ reject
+   */
+  estimateUpright: (settings: object, mode: DevelopUprightMode) => Promise<DevelopUprightEstimate>;
+  /**
+   * `estimateUpright` を使える wasm か（開いた写真の `Developer` に口があり、遠近〔v 7〕も描ける。crate 0.23.0 から。初回に wasm を
+   * 起こす。使えなければ false。throw しない）
+   */
+  supportsUpright: () => Promise<boolean>;
+  /**
    * JPEG / PNG の寸法（EXIF の向きを反映。ヘッダーだけ読む）。bytes は Worker へコピーで渡す（呼び出し側の ArrayBuffer はそのまま
    * 使える。`open` / `exportJpeg` は手放す）。wasm に無ければ reject
    */
@@ -303,6 +317,7 @@ type Pending = {
     | "settingsToXmp"
     | "autoSettings"
     | "sampleColor"
+    | "estimateUpright"
     | "warmAutoSettings"
     | "imageSize"
     | "rasterDecodeSize"
@@ -455,6 +470,8 @@ export function createDevelopEngine(options: CreateDevelopEngineOptions = {}): D
   };
   const finalSettingsJson = (settings: object): string => JSON.stringify(withoutInertDetail(settings as Record<string, unknown>));
   let perspectiveSupported = false;
+  // Upright の口が wasm の `Developer` にあり、遠近も描ける（`ready` の応答で分かる）
+  let uprightSupported = false;
   // プリセットの適用量・書き出し・見本の口が wasm にある（`ready` の応答で分かる）
   let presetAmountSupported = false;
   let settingsToXmpSupported = false;
@@ -617,6 +634,7 @@ export function createDevelopEngine(options: CreateDevelopEngineOptions = {}): D
         colorPointsSupported = response.colorPoints === true;
         detailSupported = response.detail === true;
         perspectiveSupported = response.perspective === true;
+        uprightSupported = response.upright === true;
         presetAmountSupported = response.presetAmount === true;
         settingsToXmpSupported = response.settingsToXmp === true;
         presetThumbnailsSupported = response.presetThumbnails === true;
@@ -803,6 +821,24 @@ export function createDevelopEngine(options: CreateDevelopEngineOptions = {}): D
 
     async supportsPerspective() {
       return (await ready()) && perspectiveSupported;
+    },
+
+    async supportsUpright() {
+      return (await ready()) && uprightSupported;
+    },
+
+    async estimateUpright(settings, mode) {
+      // 口の無い wasm には送らない
+      if (status === "ready" && !terminateWhenIdle && !uprightSupported) {
+        throw new DevelopEngineError("develop engine cannot estimate upright");
+      }
+      const response = await request("estimateUpright", (id) => ({
+        message: { type: "estimateUpright", id, settingsJson: JSON.stringify(settings), mode },
+      }));
+      if (response.type !== "upright") throw new DevelopEngineError("develop engine returned no upright estimate");
+      const estimate = readDevelopUprightEstimate(response.resultJson);
+      if (!estimate) throw new DevelopEngineError("develop engine returned an invalid upright estimate");
+      return estimate;
     },
 
     async sampleColor(settings, options) {

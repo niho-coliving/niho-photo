@@ -51,6 +51,7 @@ pub mod resize;
 pub mod settings;
 pub mod spatial;
 pub mod tone_ops;
+pub mod upright;
 pub mod wb_table;
 pub mod xmp;
 

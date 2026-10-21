@@ -166,13 +166,14 @@
         "path": "packages/photo-editing/src/browser-photo-export-render.test.ts",
         "sha256": "37f9b00d27256499f945ff515f75837c197b608a7c0c2de01be7d8bcbe96241c"
       },
-      "outputSha256": "07473c786104d38d1a6c021d967c7f41ae602bb2d8829fce12cbbea9bc9bb93a",
+      "outputSha256": "d275e8cddf3972fb42afe3ee846e57e31b6b1b4f5f0d8e43cc0227725e1447b9",
       "modifications": [
         "Issue #30 Oklch色ミキサーとengine 10/11対応を反映",
         "Issue 13 provisional export and rebind regression",
         "Issue #32 engineのsupportsDetailをmockに足す",
         "Issue #32 detail v6 を、先行する masks v5 と #72 の histogram/Jキー契約に同期する。",
-        "PR #88 main rebase and perspective integration with develop engine 0.22.0"
+        "PR #88 main rebase and perspective integration with develop engine 0.22.0",
+        "Upright自動推定を作者更新後の遠近crate v0.23.0へ統合"
       ]
     },
     {
@@ -272,7 +273,7 @@
         "path": "packages/photo-editing/src/develop-engine/develop-engine-client.test.ts",
         "sha256": "ab57eb9cc53aee5fc1ca937830d4eb7c979bf9da92b32c220bdeab772e8db065"
       },
-      "outputSha256": "b16ccf132154d8b56599053abbc52cbabd9b7065bc58190db974e97dabb1aa40",
+      "outputSha256": "fb0a2dc1282e7ffd4ef664ca7f238d94a35c73d723fd234a110f62c6b6d3d127",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
@@ -283,7 +284,8 @@
         "Issue #32 detail uses v6 because Issue #31 masks already owns v5; synchronize the Rust and TypeScript contract, probe, tests, and documentation.",
         "Issue #32 detail v6 を、先行する masks v5 と #72 の histogram/Jキー契約に同期する。",
         "部分補正（マスク）#67: supportsMasks と maskPlane（最新の 1 つにまとめる・描画の枠を使わない・開き直しで捨てる）を検証する",
-        "PR #88 main rebase and perspective integration with develop engine 0.22.0"
+        "PR #88 main rebase and perspective integration with develop engine 0.22.0",
+        "Upright自動推定を作者更新後の遠近crate v0.23.0へ統合"
       ]
     },
     {
@@ -294,7 +296,7 @@
         "path": "packages/photo-editing/src/develop-engine/develop-engine-client.ts",
         "sha256": "d734116dcc1e882d2e3debedb7d79fb892915571f6b59965886464cc933c022f"
       },
-      "outputSha256": "735c959abf4fa34062688f6167b20f53af4809f5271ff039b420072f089bf0fa",
+      "outputSha256": "9c8e0a18c885e958603e7e55519e103c329e0dfd5e23f59b96354102d8d85717",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
@@ -305,7 +307,8 @@
         "Issue #32 detail uses v6 because Issue #31 masks already owns v5; synchronize the Rust and TypeScript contract, probe, tests, and documentation.",
         "Issue #32 detail v6 を、先行する masks v5 と #72 の histogram/Jキー契約に同期する。",
         "部分補正（マスク）#67: wasm の capabilities() の masks を supportsMasks で公開し、1 枚のマスクの面を同時に 1 つまでの maskPlane で取りに行く",
-        "PR #88 main rebase and perspective integration with develop engine 0.22.0"
+        "PR #88 main rebase and perspective integration with develop engine 0.22.0",
+        "Upright自動推定を作者更新後の遠近crate v0.23.0へ統合"
       ]
     },
     {
@@ -316,7 +319,7 @@
         "path": "packages/photo-editing/src/develop-engine/develop-engine-manifest.ts",
         "sha256": "5df5cda8a061155a614d1e60a1c263e0764c83978708cfcc16959905387d5e4f"
       },
-      "outputSha256": "fca3c84b975c6d7b66be47b3dcf5c1d8f9566a8b81f9b64f9fd3d4f3fb005444",
+      "outputSha256": "c0efaab8941e80152163627ba8ff97ab3b415868572cf01877f3178100988251",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
@@ -333,7 +336,8 @@
         "PR #74: #80 統合後に float-cube の変更を重ね、最終ハッシュを反映。",
         "PR #90: rasterの相対WBをniho-13へ移し、新規編集の既定とsettings/UI契約を同期。",
         "Bump crate version for mask surface WASM",
-        "PR #88 main rebase and perspective integration with develop engine 0.22.0"
+        "PR #88 main rebase and perspective integration with develop engine 0.22.0",
+        "Upright自動推定を作者更新後の遠近crate v0.23.0へ統合"
       ]
     },
     {
@@ -360,7 +364,7 @@
         "path": "packages/photo-editing/src/develop-engine/develop-engine-worker-core.test.ts",
         "sha256": "eb20b196dd11f240e0944d79d51244a1951536f264a1aa7c1fcb06180f86d26b"
       },
-      "outputSha256": "5281916b7122e2c4d8e0b0dd52d7957001189a02dfcd3342e29a6c7d50124cac",
+      "outputSha256": "2643282be0e82f487b43b37c8e1fcdaf688976dbadee103a604b9bc79b1801f1",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
@@ -369,7 +373,8 @@
         "Issue #32 detail uses v6 because Issue #31 masks already owns v5; synchronize the Rust and TypeScript contract, probe, tests, and documentation.",
         "Issue #32 detail v6 を、先行する masks v5 と #72 の histogram/Jキー契約に同期する。",
         "部分補正（マスク）#67: capabilities() の読み方（古い glue・壊れた応答）と maskPlane の応答・transfer・順序を検証する",
-        "PR #88 main rebase and perspective integration with develop engine 0.22.0"
+        "PR #88 main rebase and perspective integration with develop engine 0.22.0",
+        "Upright自動推定を作者更新後の遠近crate v0.23.0へ統合"
       ]
     },
     {
@@ -380,7 +385,7 @@
         "path": "packages/photo-editing/src/develop-engine/develop-engine-worker-core.ts",
         "sha256": "460e15bb7865292233cc8baf9864ede3d31d47158aff084415364fa1495cb776"
       },
-      "outputSha256": "bfdf9ba80e05da21a55389ed0235ab357afdcaa7fb3ecf5b821afe08d50b9520",
+      "outputSha256": "6c1b2fb47f93a20d0a47a831536e1980e73d9350ea688315cece3cbff970e91f",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
@@ -389,7 +394,8 @@
         "Issue #32 detail uses v6 because Issue #31 masks already owns v5; synchronize the Rust and TypeScript contract, probe, tests, and documentation.",
         "Issue #32 detail v6 を、先行する masks v5 と #72 の histogram/Jキー契約に同期する。",
         "部分補正（マスク）#67: 起こしたときに capabilities() を 1 回読んで ready に masks を付け、maskPlane の要求を通常の列で処理する",
-        "PR #88 main rebase and perspective integration with develop engine 0.22.0"
+        "PR #88 main rebase and perspective integration with develop engine 0.22.0",
+        "Upright自動推定を作者更新後の遠近crate v0.23.0へ統合"
       ]
     },
     {
@@ -1191,7 +1197,7 @@
         "path": "packages/photo-editing/src/editor/browser-photo-editing-workbench.tsx",
         "sha256": "f655136ae0c985d793822ca8bef1668dba26ffd4bb8f13d2ba3d6c2ccb13ceb6"
       },
-      "outputSha256": "ebf6e57ea93f0ef2178d1adc8620ceeafe158296f2f7beeee612609832599dfc",
+      "outputSha256": "8ff60ca5f45ea713a61a9c6291585cc2f9a05662685914484504debee35eff53",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
@@ -1250,7 +1256,8 @@
         "原寸native書き出しの輝度互換性ガードと色相ホイール操作を修正。",
         "PR #80 のカラーグレーディングを最新HSL UIと統合。",
         "PR #82: #74 squash merge後に版機能の変更をmainへ積み直し、最終ハッシュを反映。",
-        "PR #88 main rebase and perspective integration with develop engine 0.22.0"
+        "PR #88 main rebase and perspective integration with develop engine 0.22.0",
+        "Upright自動推定を作者更新後の遠近crate v0.23.0へ統合"
       ]
     },
     {
@@ -1425,12 +1432,13 @@
         "path": "packages/photo-editing/src/editor/photo-editing-crop-tools.tsx",
         "sha256": "7a261c902f9b1e7b98d171a7744ca4c9fb44c5df64dc6e2ef78d8b0833f72f22"
       },
-      "outputSha256": "c890c7c08229ec5f6759bb3b93d28a958f46400d3aeae6a29d5d82519abda549",
+      "outputSha256": "a44bbdbd6a066c0f26cbdb804c406c8acaeee178a7f0f2a5ec7ec039b822ef9b",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
         "PR #61 の切り抜きUI・完了/取消操作と回帰検証を公開repoで実装。",
-        "PR #88 main rebase and perspective integration with develop engine 0.22.0"
+        "PR #88 main rebase and perspective integration with develop engine 0.22.0",
+        "Upright自動推定を作者更新後の遠近crate v0.23.0へ統合"
       ]
     },
     {
@@ -1704,14 +1712,15 @@
         "path": "packages/photo-editing/src/editor/use-browser-photo-crop.ts",
         "sha256": "42a650250b0a21968956fb2f055e87c59b6706e3730c2ef037c5775241e0a7df"
       },
-      "outputSha256": "3a9d0c3b1b951e34362f91900f6259cd9fde83a982ee89984e1490558192da59",
+      "outputSha256": "4aa43c6ff728f5c0b185fd2ef60f34cb034ce5112594d4c382687af396989876",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
         "PR #61 の切り抜きUI・完了/取消操作と回帰検証を公開repoで実装。",
         "部分補正（マスク）#67: 切り抜きの座標の基準を読む readCropSource をマスクの座標の基準にも使えるよう公開する",
         "部分補正（マスク）#69: 作業画像の大きさの読み方をプリセットのマスクの配置でも使えるよう公開する",
-        "PR #88 main rebase and perspective integration with develop engine 0.22.0"
+        "PR #88 main rebase and perspective integration with develop engine 0.22.0",
+        "Upright自動推定を作者更新後の遠近crate v0.23.0へ統合"
       ]
     },
     {
@@ -2270,7 +2279,7 @@
         "path": "packages/photo-editing/src/photo-editing-copy.ts",
         "sha256": "1208d4124dca26c951d73f6f84c560879e69beddfb9a16426e1a9dcc9fd30c27"
       },
-      "outputSha256": "16eb8d679d3716332d77f107717965cda86e474c8c255ed079e6a7b701dcd9b6",
+      "outputSha256": "801c52568639a96e112370195bf1ea978295331a82807ae90260b76d3c91db6c",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
@@ -2306,7 +2315,8 @@
         "原寸native書き出しの輝度互換性ガードと色相ホイール操作を修正。",
         "PR #80 のカラーグレーディングを最新HSL UIと統合。",
         "PR #82: #74 squash merge後に版機能の変更をmainへ積み直し、最終ハッシュを反映。",
-        "PR #88 main rebase and perspective integration with develop engine 0.22.0"
+        "PR #88 main rebase and perspective integration with develop engine 0.22.0",
+        "Upright自動推定を作者更新後の遠近crate v0.23.0へ統合"
       ]
     },
     {
@@ -4850,7 +4860,7 @@
         "path": "packages/develop-engine/Cargo.lock",
         "sha256": "e7caae6825c3c4c50d7d593c35d7163de7d311357b81558d1ad1a009cbfafadc"
       },
-      "outputSha256": "725a3ad4251874c5bf44a916f3a81aa18b7d813ca4820072717b36c57f3823a1",
+      "outputSha256": "f483c8c54fc77b93db9a2844e3762d9acda1642b5bf72fd72fcf4af7cd7cef9a",
       "modifications": [
         "新しい色相保持エンジンと新旧バイナリの能力境界・数値回帰を整合。",
         "現像workspaceだけを0.17.0へ更新し外部依存の固定版を維持。",
@@ -4865,7 +4875,8 @@
         "部分補正（マスク）#68: niho-develop の直接依存に png・sha2 を足す（crate は増えない）",
         "PR #90: niho-13のWB先行適用とdetail連携cacheを#84後のmainへ統合。",
         "Bump crate version for mask surface WASM",
-        "PR #88 main rebase and perspective integration with develop engine 0.22.0"
+        "PR #88 main rebase and perspective integration with develop engine 0.22.0",
+        "Upright自動推定を作者更新後の遠近crate v0.23.0へ統合"
       ]
     },
     {
@@ -4876,7 +4887,7 @@
         "path": "packages/develop-engine/Cargo.toml",
         "sha256": "274ef616c08b9ade52276b660ea12ce836bc08f97e67dedcf163f76114dd4ab0"
       },
-      "outputSha256": "aafdd9dc6099c79da2292b12792681d6dea5151476fd586dd5c5b05b3929613f",
+      "outputSha256": "7f0987ee126a31ca6b9a6ad554e7b9d4093cd94461064343a0df1402f6770461",
       "modifications": [
         "新しい色相保持エンジンと新旧バイナリの能力境界・数値回帰を整合。",
         "Issue #30 Oklch色ミキサーとengine 10/11対応を反映",
@@ -4889,7 +4900,8 @@
         "Issue #29: niho-12公開物のためworkspace版を0.19.0へ更新",
         "PR #90: niho-13のWB先行適用とdetail連携cacheを#84後のmainへ統合。",
         "Bump crate version for mask surface WASM",
-        "PR #88 main rebase and perspective integration with develop engine 0.22.0"
+        "PR #88 main rebase and perspective integration with develop engine 0.22.0",
+        "Upright自動推定を作者更新後の遠近crate v0.23.0へ統合"
       ]
     },
     {
@@ -5675,7 +5687,7 @@
         "path": "packages/develop-engine/crates/niho-develop-wasm/src/lib.rs",
         "sha256": "bb2c416ce23b4e3ca3208f32736f22254ed82276b24fd7f49f1a022e4eb85fbd"
       },
-      "outputSha256": "a555766e778ed10748ab5f2528ef3b4c2cadb7f1fea3fdddc0a2554fe7f01e8e",
+      "outputSha256": "eed22749e8e3df981a263120f1f91fd1f10573cf81738efcd7ea78ee11c771f1",
       "modifications": [
         "Issue #30 Oklch色ミキサーとengine 10/11対応を反映",
         "部分補正（マスク）#65: validateSettingsのマスク読み取り回帰テストを追加",
@@ -5685,7 +5697,8 @@
         "PR #76 detailとPR #81 maskを統合し、公開出力ハッシュを更新。",
         "部分補正（マスク）#68: Developer の面の口・exportJpeg/exportPng・capabilities の面の種類を足す",
         "部分補正（マスク）#69: presetSettings / applyPreset の結果の masks（見えている枠の座標）を説明に足す",
-        "PR #88 adds perspective settings v7; WASM unknown-version guard advances to v8"
+        "PR #88 adds perspective settings v7; WASM unknown-version guard advances to v8",
+        "Upright自動推定を作者更新後の遠近crate v0.23.0へ統合"
       ]
     },
     {
@@ -6142,7 +6155,7 @@
         "path": "packages/develop-engine/crates/niho-develop/src/lib.rs",
         "sha256": "1591d49effaa779c8e23ad6877508ccf336565eec8336d5b4e6faa3b5d3846b0"
       },
-      "outputSha256": "e666c65489e8787b62690b7a74109a298bffce946ab9b858d73485c0f2adbc83",
+      "outputSha256": "bc5b615d582e409f9be01c509738929ecd16bfcca7bda1a0f45aa07b109fc55f",
       "modifications": [
         "公開Issue #26/#27/#29: 旧版を保つfloat cube候補、研究用WB/H-Sプローブ、合成検証と計測契約を追加。",
         "Issue #28の色相安定engine追加と互換回帰を反映。",
@@ -6169,7 +6182,8 @@
         "部分補正（マスク）#68: Session に面の置き場と書き出しを足し、面の失敗の code を足す",
         "PR #90: niho-13のWB先行適用とdetail連携cacheを#84後のmainへ統合。",
         "PR #90: NIHO6 master keyをmask layer判定と共有し、source/analysis WBを揃える。",
-        "PR #88 main rebase and perspective integration with develop engine 0.22.0"
+        "PR #88 main rebase and perspective integration with develop engine 0.22.0",
+        "Upright自動推定を作者更新後の遠近crate v0.23.0へ統合"
       ]
     },
     {
@@ -9840,8 +9854,8 @@
     },
     {
       "path": "packages/photo-editing/src/editor/use-browser-photo-crop.test.tsx",
-      "sha256": "f6d7f5ca89a4e03e272a6a09fc3d922ee5d0d965fb319e5deee2e564d986caa2",
-      "origin": "公開repoで新規作成（#52）。所有する実画像・外部fixtureを使わず、切り抜き完了・取消の状態遷移を合成データで検証。\n変更理由: PR #88 main rebase and perspective integration with develop engine 0.22.0"
+      "sha256": "716340b7e61aeab4f6a3aafe7bff54889afc541d923ae75296e27cf69d4d31eb",
+      "origin": "公開repoで新規作成（#52）。所有する実画像・外部fixtureを使わず、切り抜き完了・取消の状態遷移を合成データで検証。\n変更理由: PR #88 main rebase and perspective integration with develop engine 0.22.0\n変更理由: Upright自動推定を作者更新後の遠近crate v0.23.0へ統合"
     },
     {
       "path": "packages/photo-editing/src/editor/photo-editing-presets-panel.test.tsx",
@@ -9955,8 +9969,8 @@
     },
     {
       "path": "scripts/ci/scopes.test.mjs",
-      "sha256": "80b71c821fa06c0876ed4960fd96c21bdc2cd38817a309b42fef864e83103b6d",
-      "origin": "Issue #2の公開成果物・SBOM・固定SHA取り込み契約のため独立作成。公開仕様と既存公開CIから生成器・schema・guard・検証・責務境界を定義し、外部コード・秘密・実ユーザーデータを含まない。\n変更理由: Issue #2の公開検証成果物・SBOM・固定SHA取り込み契約と秘密を持たないCI検査を追加。\n変更理由: Issue #2の実装検証で成果物名・輸送receipt・build設定を強化。\n変更理由: Issue #32 detail v6 を、先行する masks v5 と #72 の histogram/Jキー契約に同期する。\n変更理由: PR #81 のマスク描画を最新mainの変更と統合。\n変更理由: PR #76 detailとPR #81 maskを統合し、公開出力ハッシュを更新。\n変更理由: PR #88 main rebase and perspective integration with develop engine 0.22.0"
+      "sha256": "3559e1b4a92f39227250875f3b1604492331b4ed7b27793dca384f42f08c5512",
+      "origin": "Issue #2の公開成果物・SBOM・固定SHA取り込み契約のため独立作成。公開仕様と既存公開CIから生成器・schema・guard・検証・責務境界を定義し、外部コード・秘密・実ユーザーデータを含まない。\n変更理由: Issue #2の公開検証成果物・SBOM・固定SHA取り込み契約と秘密を持たないCI検査を追加。\n変更理由: Issue #2の実装検証で成果物名・輸送receipt・build設定を強化。\n変更理由: Issue #32 detail v6 を、先行する masks v5 と #72 の histogram/Jキー契約に同期する。\n変更理由: PR #81 のマスク描画を最新mainの変更と統合。\n変更理由: PR #76 detailとPR #81 maskを統合し、公開出力ハッシュを更新。\n変更理由: PR #88 main rebase and perspective integration with develop engine 0.22.0\n変更理由: Upright自動推定を作者更新後の遠近crate v0.23.0へ統合"
     },
     {
       "path": "scripts/ci/workflow-lib.mjs",
@@ -10530,8 +10544,8 @@
     },
     {
       "path": "packages/develop-engine/crates/niho-develop/tests/niho13.rs",
-      "sha256": "d37274f1c675231ca0a9ad00db7daf289ad55a5cb53ccd65322f0f1bc3891ba2",
-      "origin": "公開Issue #27 のため公開済み数式・既存primitiveから独立実装したengine・合成テスト・計測コード・日本語手順。非公開の写真・参照画素・パス・履歴・第三者ソースを含まない。\n変更理由: Bump crate version for mask surface WASM\n変更理由: PR #88 main rebase and perspective integration with develop engine 0.22.0"
+      "sha256": "5d8b4b78384ab8be22fc9916e14ce969a21ad316804ea79b6a7d86b48e6bd197",
+      "origin": "公開Issue #27 のため公開済み数式・既存primitiveから独立実装したengine・合成テスト・計測コード・日本語手順。非公開の写真・参照画素・パス・履歴・第三者ソースを含まない。\n変更理由: Bump crate version for mask surface WASM\n変更理由: PR #88 main rebase and perspective integration with develop engine 0.22.0\n変更理由: Uprightを含むcrate v0.23.0への版上げを検査する期待値に更新"
     },
     {
       "path": "packages/develop-engine/fixtures/color/review-2026-10-21/round27-analysis-before-wb.json",
@@ -10695,13 +10709,43 @@
     },
     {
       "path": "packages/photo-editing/src/editor/photo-editing-geometry-section.tsx",
-      "sha256": "28ad2751d63e98a706beb25202ba18361cd2369cb33595db77ff3c6158973148",
-      "origin": "niho-photo#46 のため新規作成。切り抜きの道具の「ジオメトリ」の節（遠近の 7 本のスライダー・余白を埋めるのスイッチ・初期化）の部品。"
+      "sha256": "017f295a568da7907143b8c0110d19e0f42022e4018a6d81c8bbdbfbd6294a78",
+      "origin": "niho-photo#46 のため新規作成。切り抜きの道具の「ジオメトリ」の節（遠近の 7 本のスライダー・余白を埋めるのスイッチ・初期化）の部品。\n変更理由: Upright自動推定を作者更新後の遠近crate v0.23.0へ統合"
     },
     {
       "path": "packages/photo-editing/src/editor/photo-editing-geometry-section.test.tsx",
-      "sha256": "8963c5ee7428ffa1340955f884a0268eb00a007f5db3032d51b8b5e0ebea366b",
-      "origin": "niho-photo#46 のため新規作成。ジオメトリの節の開閉・スライダーの drag と commit・既定値への戻し・余白を埋める・初期化・表示の丸めの test。合成の値だけを使用。"
+      "sha256": "b0cc56562f1a3c0577f7ed77737fce953272aa27d96eeb57762ae4e5ec54bd91",
+      "origin": "niho-photo#46 のため新規作成。ジオメトリの節の開閉・スライダーの drag と commit・既定値への戻し・余白を埋める・初期化・表示の丸めの test。合成の値だけを使用。\n変更理由: Upright自動推定を作者更新後の遠近crate v0.23.0へ統合"
+    },
+    {
+      "path": "docs/geometry-perspective.md",
+      "sha256": "be6def6631b46c0c4883deb45ec9049cdd8d92c0e4b99ac3954b4ea6add060bd",
+      "origin": "niho-photo#46 の公開仕様だけから新規作成したジオメトリ（遠近の手動補正）の文書。保存形 v7、NIHO の近似モデルの式と定数、描画・余白を埋める・XMP・画面の契約。Lightroom の実測による校正は未実施と明記。非公開形式や私有データを含まない。\n変更理由: niho-photo#46 後半の Upright（推定の手順・公開面・画面・制限）を追記した。\n変更理由: Upright自動推定機能を現行main統合後のcrate v0.23.0へ追加\n変更理由: Upright後半のエンジン版を前半v0.22に続くv0.23と明記\n変更理由: Upright自動推定を作者更新後の遠近crate v0.23.0へ統合"
+    },
+    {
+      "path": "packages/develop-engine/crates/niho-develop/src/upright.rs",
+      "sha256": "73fb95ac1efb35ddba7a366bf097bfb1684224feb59a9b168199749292668541",
+      "origin": "niho-photo#46 後半のため新規作成。写真の直線（自前の LSD 風の線分検出）から Upright（水平・垂直・フル・自動）の遠近の回転・垂直・水平を Tukey の反復重み付き Levenberg–Marquardt で推定し、線が足りなければ補正しない処理と、その単体 test。Lightroom の数値表や外部ライブラリを使わず、合成の値だけで検証。\n変更理由: Upright自動推定機能を現行main統合後のcrate v0.23.0へ追加\n変更理由: Upright自動推定を作者更新後の遠近crate v0.23.0へ統合"
+    },
+    {
+      "path": "packages/develop-engine/crates/niho-develop/tests/upright.rs",
+      "sha256": "3db88ff5e2b8c1bf06cbd8d3349268aa17d0a6c52b506ce29a5bbfbf3d46f412",
+      "origin": "niho-photo#46 後半のため新規作成。既知の射影を当てた合成の建物風画像と線の無い合成画像で、各モードの推定誤差・自動の選び方・誤補正しないこと・補正後に描いた線の傾き・決定論・native と wasm の一致を確かめる test。実写真・実 RAW を使わない。\n変更理由: Upright自動推定機能を現行main統合後のcrate v0.23.0へ追加\n変更理由: Upright自動推定を作者更新後の遠近crate v0.23.0へ統合"
+    },
+    {
+      "path": "packages/photo-editing/src/develop-engine/develop-upright.ts",
+      "sha256": "28db06a37ff06556177f605b31bbd24e04dc9cc68ee488c107c5eea302d1ee83",
+      "origin": "niho-photo#46 後半のため新規作成。crate の estimateUpright の結果の読み方と、Upright の結果を幾何（遠近・upright・余白を埋める）に当てる・切る純粋な関数。\n変更理由: Upright自動推定機能を現行main統合後のcrate v0.23.0へ追加\n変更理由: Upright自動推定を作者更新後の遠近crate v0.23.0へ統合"
+    },
+    {
+      "path": "packages/photo-editing/src/develop-engine/develop-upright.test.ts",
+      "sha256": "f4e2adde53be9fd7aef64630df55b6512eee290fcb2451d9bca9cd74b27a04e9",
+      "origin": "niho-photo#46 後半のため新規作成。Upright の結果の読み取り・幾何への当て方と切り方・押しているボタン・推定した枠の比較の test。合成の値だけを使用。\n変更理由: Upright自動推定機能を現行main統合後のcrate v0.23.0へ追加\n変更理由: Upright自動推定を作者更新後の遠近crate v0.23.0へ統合"
+    },
+    {
+      "path": "packages/photo-editing/src/editor/photo-editing-upright-buttons.tsx",
+      "sha256": "53321aa3c4a7c3933d4a5ba435dfe0d45b27021da483d6d2bee01863e8d3be02",
+      "origin": "niho-photo#46 後半のため新規作成。切り抜きの道具の「ジオメトリ」の節の先頭の Upright（自動 / 水平 / 垂直 / フル）のボタンと知らせの部品。\n変更理由: Upright自動推定機能を現行main統合後のcrate v0.23.0へ追加\n変更理由: Upright自動推定を作者更新後の遠近crate v0.23.0へ統合"
     }
   ],
   "excludedSources": [

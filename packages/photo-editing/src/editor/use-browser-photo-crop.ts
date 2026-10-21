@@ -11,6 +11,14 @@ import {
   type DevelopSize,
 } from "../develop-engine/develop-geometry";
 import { sameDevelopSettings, type DevelopSettings } from "../develop-engine/develop-settings";
+import {
+  applyDevelopUpright,
+  clearDevelopUpright,
+  developGeometryUpright,
+  isDevelopUprightFound,
+  sameDevelopUprightFrame,
+  type DevelopUprightMode,
+} from "../develop-engine/develop-upright";
 import type { PhotoEditingSettings } from "../photo-editing-types";
 import {
   PHOTO_EDITING_CROP_EXPORT_DECODE_CAP,
@@ -22,6 +30,7 @@ import {
 
 import type { DevelopSession } from "./browser-photo-editing-model";
 import type { PhotoEditingSettingsUpdate, PhotoEditingSliderPhase } from "./photo-editing-adjustment-controls";
+import type { PhotoEditingUprightControl, PhotoEditingUprightStatus } from "./photo-editing-upright-buttons";
 
 /** 切り抜きの道具を開いている写真の、座標の基準と書き出しの入力の大きさ。 */
 type CropSource = {
@@ -70,6 +79,10 @@ export async function readCropSource(
  * - ジオメトリの節（遠近のスライダー・「余白を埋める」。niho-photo#46）も幾何の一部として同じ作法: スライダーは補正のスライダーと同じく
  *   動かしている間は手元で描き直し（`changeGeometry` の `drag`）、離したら 1 単位で確定する。［キャンセル］で入ったときの遠近に戻る。
  *   遠近を描ける wasm（`supportsPerspective`）のときだけ節を出す（`perspective`）
+ * - 節の先頭の Upright（自動 / 水平 / 垂直 / フル。niho-photo#46 後半）は Upright を推定できる wasm（`supportsUpright`）のときだけ出す
+ *   （`upright`）。押すと開いている写真で推定し（その間は 4 つとも押せない）、見つかれば遠近・`upright`・「余白を埋める」を 1 回の
+ *   確定（取り消しの 1 単位）で書く。見つからなければ書かずに 1 行で知らせる。押しているボタンをもう一度押すと Upright を切る
+ *   （遠近を恒等に戻す 1 単位）。推定の間に切り抜きを出た・写真が替わった・90° 回転・反転・角度を変えたら、結果は捨てる
  * - 「補正」に戻るとき（と、切り抜きの間に写真を離れるとき）は、切り抜きに合わせて wasm の作業サイズを確かめ直す
  *   （`ensureDevelopWorkingSize`）。終わるまで `settling`（面はその間描かず、終わってから切り抜いた画を丁寧に描く）
  * - 編集内容がまるごと入れ替わった（別の写真・別の端末の補正の読み直し）・写真を離れた（一覧へ戻った）・出す条件を満たさなく
@@ -103,6 +116,16 @@ export function useBrowserPhotoCrop(params: {
   const [supported, setSupported] = useState<boolean | null>(null);
   /** wasm が遠近（v 7）を描けるか（確かめるまで null） */
   const [perspectiveSupported, setPerspectiveSupported] = useState<boolean | null>(null);
+  /** wasm が Upright を推定できるか（確かめるまで null） */
+  const [uprightSupported, setUprightSupported] = useState<boolean | null>(null);
+  /** Upright を推定している間 */
+  const [uprightBusy, setUprightBusy] = useState(false);
+  /** Upright の結果の知らせ（見つからなかった・失敗した・当てた） */
+  const [uprightStatus, setUprightStatus] = useState<PhotoEditingUprightStatus | null>(null);
+  /** Upright の推定の世代（切り抜きを出た・次を押したら、古い結果を捨てる） */
+  const uprightRunRef = useRef(0);
+  /** 推定している間（同じ描画の中で二度押されても 1 回だけ推定する） */
+  const uprightBusyRef = useRef(false);
   /** 切り抜きの道具を開いている写真と、その座標の基準（開いていなければ null） */
   const [cropSource, setCropSource] = useState<CropSource | null>(null);
   const cropSourceRef = useRef<CropSource | null>(null);
@@ -156,6 +179,30 @@ export function useBrowserPhotoCrop(params: {
       cancelled = true;
     };
   }, [available, engineRef, mountedRef, perspectiveSupported]);
+  useEffect(() => {
+    if (!available || perspectiveSupported !== true || uprightSupported !== null) return;
+    const engine = engineRef.current;
+    if (!engine) return;
+    let cancelled = false;
+    // 確かめられない engine（口の無い差し替え）は、使えない扱い（編集は止めない）
+    void Promise.resolve()
+      .then(() => engine.supportsUpright())
+      .then(
+        (value) => {
+          if (!cancelled && mountedRef.current) setUprightSupported(value === true);
+        },
+        () => {
+          if (!cancelled && mountedRef.current) setUprightSupported(false);
+        },
+      );
+    return () => {
+      cancelled = true;
+    };
+  }, [available, engineRef, mountedRef, perspectiveSupported, uprightSupported]);
+  // 見つからなかった・失敗したの知らせは、次に編集内容が変わるまで
+  useEffect(() => {
+    setUprightStatus((status) => (status?.kind === "applied" ? status : null));
+  }, [settingsKey]);
   const active = available && cropSource !== null && cropSource.key === photoKey;
   const latestRef = useRef({ available, active, photoKey });
   latestRef.current = { available, active, photoKey };
@@ -207,6 +254,11 @@ export function useBrowserPhotoCrop(params: {
     replaceCropSource(null);
     setLiveAngle(null);
     setExportLongEdge(null);
+    // 推定中の Upright の結果は捨てる
+    uprightRunRef.current += 1;
+    uprightBusyRef.current = false;
+    setUprightBusy(false);
+    setUprightStatus(null);
     if (!wasOpen) {
       setSettling(false);
       return;
@@ -260,6 +312,56 @@ export function useBrowserPhotoCrop(params: {
   };
 
   /**
+   * Upright のボタン（`mode`: 1 自動・2 水平・3 垂直・4 フル）。押しているボタンなら Upright を切る。ほかは開いている写真で推定し、
+   * 見つかれば遠近・`upright`・「余白を埋める」を 1 回の確定で書く（見つからなければ書かずに知らせる）。
+   */
+  const runUpright = (mode: DevelopUprightMode) => {
+    const { active: open, photoKey: key } = latestRef.current;
+    const engine = engineRef.current;
+    if (!open || uprightBusyRef.current || !engine) return;
+    const settings = settingsRef.current;
+    const requested = readDevelopGeometry(settings);
+    setUprightStatus(null);
+    if (developGeometryUpright(requested) === mode) {
+      changeGeometry(clearDevelopUpright, "commit");
+      return;
+    }
+    const run = ++uprightRunRef.current;
+    uprightBusyRef.current = true;
+    setUprightBusy(true);
+    const isCurrent = () =>
+      mountedRef.current &&
+      run === uprightRunRef.current &&
+      latestRef.current.active &&
+      latestRef.current.photoKey === key;
+    const finish = () => {
+      uprightBusyRef.current = false;
+      setUprightBusy(false);
+    };
+    void Promise.resolve()
+      .then(() => engine.estimateUpright(settings, mode))
+      .then(
+        (estimate) => {
+          if (!isCurrent()) return;
+          finish();
+          if (!isDevelopUprightFound(estimate)) {
+            setUprightStatus({ kind: "notFound" });
+            return;
+          }
+          // 推定の間に回した・反転した・角度を変えた枠には当てない
+          if (!sameDevelopUprightFrame(requested, readDevelopGeometry(settingsRef.current))) return;
+          changeGeometry((current) => applyDevelopUpright(current, estimate, mode), "commit");
+          setUprightStatus({ kind: "applied", mode });
+        },
+        () => {
+          if (!isCurrent()) return;
+          finish();
+          setUprightStatus({ kind: "failed" });
+        },
+      );
+  };
+
+  /**
    * ［キャンセル］・Esc: 入ったときの幾何に戻し（今と違えば取り消しの 1 単位。↶ でキャンセルの前に戻せる）、「補正」に戻る。
    * ［完了］・Enter・ほかの道具へ移るのは {@link leave}（幾何は押すたびに確定済みなので、そのまま残す）。
    */
@@ -301,6 +403,18 @@ export function useBrowserPhotoCrop(params: {
   }, [engineRef, exportInput, mountedRef, settingsKey, settingsRef]);
 
   const geometry = useMemo(() => readDevelopGeometry(settings), [settings]);
+  const perspective = active && perspectiveSupported === true;
+  const pressedUpright = developGeometryUpright(geometry);
+  const upright: PhotoEditingUprightControl | null =
+    perspective && uprightSupported === true
+      ? {
+          pressed: pressedUpright,
+          busy: uprightBusy,
+          // 当てた知らせは、そのボタンを押している間だけ
+          status: uprightStatus?.kind === "applied" && uprightStatus.mode !== pressedUpright ? null : uprightStatus,
+          run: runUpright,
+        }
+      : null;
 
   return {
     /** 「補正 / 切り抜き」の切り替えを出す */
@@ -312,7 +426,9 @@ export function useBrowserPhotoCrop(params: {
     /** 確定している幾何 */
     geometry,
     /** ジオメトリの節（遠近）を出す（切り抜きの道具を開いていて、wasm が遠近を描ける） */
-    perspective: active && perspectiveSupported === true,
+    perspective,
+    /** 節の先頭の Upright のボタン（wasm が Upright を推定できるときだけ。ほかは null） */
+    upright,
     /** 座標の基準（切り抜きの道具を開いている間だけ） */
     source: active && cropSource ? cropSource.source : null,
     liveAngle: active ? liveAngle : null,

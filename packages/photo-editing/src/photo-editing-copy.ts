@@ -697,6 +697,27 @@ export const PHOTO_EDITING_GEOMETRY_LABELS = {
 } as const;
 export const PHOTO_EDITING_GEOMETRY_CONSTRAIN_LABEL = "余白を埋める";
 export const PHOTO_EDITING_GEOMETRY_CONSTRAIN_HINT = "補正で空いた余白が写らないよう、切り抜きを写真の中に収めます。";
+/**
+ * 「ジオメトリ」の節の先頭の Upright（niho-photo#46 後半。Lightroom の 自動 / 水平 / 垂直 / フル）。ボタンの読み上げ名は「名前（何を
+ * 直すか）」、マウスの説明は「何を直すか」。キーは `geometry.upright` の値（1 自動 / 2 水平 / 3 垂直 / 4 フル）。
+ */
+export const PHOTO_EDITING_UPRIGHT_TITLE = "Upright";
+export const PHOTO_EDITING_UPRIGHT_BUTTONS = [
+  { mode: 1, label: "自動", description: "傾きと遠近を自動で補正" },
+  { mode: 2, label: "水平", description: "傾きだけを水平に補正" },
+  { mode: 3, label: "垂直", description: "傾きと縦の遠近を補正" },
+  { mode: 4, label: "フル", description: "傾きと縦横の遠近をすべて補正" },
+] as const;
+/** 線が見つからず補正しなかったとき（節の中の控えめな 1 行）。 */
+export const PHOTO_EDITING_UPRIGHT_NOT_FOUND_TEXT = "傾きを検出できませんでした";
+/** 推定そのものが失敗したとき。 */
+export const PHOTO_EDITING_UPRIGHT_FAILED_TEXT = "自動で補正できませんでした。もう一度お試しください。";
+
+/** Upright を当てた後の読み上げ（画面には出さない）。 */
+export function photoEditingUprightAppliedText(mode: number): string {
+  const button = PHOTO_EDITING_UPRIGHT_BUTTONS.find((candidate) => candidate.mode === mode);
+  return button ? `Upright の「${button.label}」で補正しました` : "";
+}
 
 /** 写真の上の切り抜きの枠と、そのつまみ（角 4・辺 4。枠がまっすぐ立って見える向きで）の読み上げ名。 */
 export const PHOTO_EDITING_CROP_FRAME_LABEL = "切り抜きの枠";

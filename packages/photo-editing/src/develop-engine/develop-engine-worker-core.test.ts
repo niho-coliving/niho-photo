@@ -1039,6 +1039,74 @@ describe("createDevelopEngineWorkerHandler", () => {
     expect(glue.developers[1]?.renders).toEqual([{ settingsJson: "{}", maxDimension: 1280, interactive: false }]);
   });
 
+  it("Upright の口（niho-photo#46 後半）が Developer にあり遠近も描ければ ready に upright: true を付け、結果の JSON をそのまま返す", async () => {
+    const glue = fakeGlue();
+    const Base = glue.module.Developer;
+    const calls: { settingsJson: string; mode: number }[] = [];
+    let result: unknown = '{"perspective":{"vertical":-30},"mode":3,"confidence":0.8,"lines":{"vertical":9,"horizontal":2}}';
+    class UprightDeveloper extends Base {
+      estimateUpright(settingsJson: string, mode: number) {
+        calls.push({ settingsJson, mode });
+        return result;
+      }
+    }
+    const geometryGlue = {
+      imageSize: () => ({ width: 6000, height: 4000 }),
+      rasterDecodeSize: () => 1280,
+      geometryOutputSize: () => ({ width: 1280, height: 853 }),
+      beforeSettings: (settingsJson: string) => settingsJson,
+      validateSettings: () => "[]",
+    };
+    const { handler, posted } = setup({ module: { ...glue.module, ...geometryGlue, Developer: UprightDeveloper } });
+    await handler({ type: "init", id: 1, manifestUrl: MANIFEST_URL });
+    // 写真を開いていなければ error
+    await handler({ type: "estimateUpright", id: 2, settingsJson: "{}", mode: 1 });
+    await handler({ type: "open", id: 3, bytes: new ArrayBuffer(4), workingMaxDimension: 1280 });
+    await handler({ type: "estimateUpright", id: 4, settingsJson: '{"v":1}', mode: 3 });
+    // 口が文字列以外を返したら error（次の要求は処理する）
+    result = 1;
+    await handler({ type: "estimateUpright", id: 5, settingsJson: "{}", mode: 4 });
+    await handler({ type: "render", id: 6, settingsJson: "{}", maxDimension: 1280, interactive: false });
+
+    expect(posted[0]?.message).toMatchObject({ type: "ready", perspective: true, upright: true });
+    expect(posted[1]?.message).toMatchObject({ type: "error", id: 2, message: "no photo is open" });
+    expect(posted[3]?.message).toEqual({
+      type: "upright",
+      id: 4,
+      resultJson: '{"perspective":{"vertical":-30},"mode":3,"confidence":0.8,"lines":{"vertical":9,"horizontal":2}}',
+    });
+    expect(posted.slice(4).map((entry) => [entry.message.type, entry.message.id])).toEqual([
+      ["error", 5],
+      ["frame", 6],
+    ]);
+    expect(calls).toEqual([
+      { settingsJson: '{"v":1}', mode: 3 },
+      { settingsJson: "{}", mode: 4 },
+    ]);
+  });
+
+  it("Upright の口があっても遠近（v: 7）を描けない wasm・口の無い glue には upright を付けず、要求は error", async () => {
+    const glue = fakeGlue();
+    class UprightDeveloper extends glue.module.Developer {
+      estimateUpright() {
+        return "{}";
+      }
+    }
+    // 遠近を描けない（幾何の口が無い）
+    const old = setup({ module: { ...glue.module, Developer: UprightDeveloper } });
+    await old.handler({ type: "init", id: 1, manifestUrl: MANIFEST_URL });
+    await old.handler({ type: "open", id: 2, bytes: new ArrayBuffer(4), workingMaxDimension: 1280 });
+    await old.handler({ type: "estimateUpright", id: 3, settingsJson: "{}", mode: 1 });
+    expect(old.posted[0]?.message).toEqual({ type: "ready", id: 1, version: "0.2.0+test" });
+    expect(old.posted[2]?.message).toMatchObject({ type: "error", id: 3, message: "develop engine cannot estimate upright" });
+    // 口の無い glue
+    const none = setup();
+    await none.handler({ type: "init", id: 1, manifestUrl: MANIFEST_URL });
+    await none.handler({ type: "open", id: 2, bytes: new ArrayBuffer(4), workingMaxDimension: 1280 });
+    await none.handler({ type: "estimateUpright", id: 3, settingsJson: "{}", mode: 1 });
+    expect(none.posted[2]?.message).toMatchObject({ type: "error", id: 3, message: "develop engine cannot estimate upright" });
+  });
+
   it("「自動」の口の無い glue では ready に付けず（ほかは使える）、autoSettings の要求は error", async () => {
     const { handler, posted } = setup();
     await handler({ type: "init", id: 1, manifestUrl: MANIFEST_URL });

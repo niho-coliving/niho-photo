@@ -15,6 +15,7 @@ import {
   type DevelopSize,
 } from "../develop-engine/develop-geometry";
 import { neutralDevelopSettings, type DevelopSettings } from "../develop-engine/develop-settings";
+import type { DevelopUprightEstimate, DevelopUprightMode } from "../develop-engine/develop-upright";
 
 import type { DevelopSession } from "./browser-photo-editing-model";
 import { useBrowserPhotoCrop, type BrowserPhotoCrop } from "./use-browser-photo-crop";
@@ -37,9 +38,15 @@ let settingsRef: MutableRefObject<DevelopSettings>;
 let commits: DevelopSettings[];
 let ensureDevelopWorkingSize: ReturnType<typeof vi.fn<(settings: DevelopSettings) => Promise<boolean>>>;
 
+/** Upright（niho-photo#46 後半）を推定できる wasm か、と推定の中身（テストごとに差し替える）。 */
+let uprightSupported = true;
+let estimateUpright: ReturnType<typeof vi.fn<DevelopEngine["estimateUpright"]>>;
+
 const engine = {
   supportsGeometry: async () => true,
   supportsPerspective: async () => true,
+  supportsUpright: async () => uprightSupported,
+  estimateUpright: (settings: object, mode: DevelopUprightMode) => estimateUpright(settings, mode),
   imageSize: async () => SOURCE,
   geometryOutputSize: async () => null,
 } as unknown as DevelopEngine;
@@ -125,6 +132,10 @@ beforeEach(() => {
   root = createRoot(container);
   commits = [];
   ensureDevelopWorkingSize = vi.fn(async () => true);
+  uprightSupported = true;
+  estimateUpright = vi.fn<DevelopEngine["estimateUpright"]>(async () => {
+    throw new Error("estimateUpright is not set");
+  });
 });
 
 afterEach(async () => {
@@ -259,5 +270,151 @@ describe("ジオメトリの節（遠近。niho-photo#46）", () => {
     await run(() => crop.changeGeometry(vertical(-35), "commit"));
     expect(commits).toEqual([]);
     expect(Object.hasOwn(settingsRef.current, "geometry")).toBe(false);
+  });
+});
+
+describe("Upright（niho-photo#46 後半）", () => {
+  const PERSPECTIVE = { vertical: -31.5, horizontal: 0, rotate: 1.2, aspect: 0, scale: 100, x: 0, y: 0 };
+  const FOUND: DevelopUprightEstimate = {
+    perspective: PERSPECTIVE,
+    mode: 3,
+    confidence: 0.9,
+    lines: { vertical: 14, horizontal: 3 },
+    reason: null,
+  };
+  const NOT_FOUND: DevelopUprightEstimate = {
+    perspective: { vertical: 0, horizontal: 0, rotate: 0, aspect: 0, scale: 100, x: 0, y: 0 },
+    mode: 1,
+    confidence: 0,
+    lines: { vertical: 0, horizontal: 0 },
+    reason: "noLines",
+  };
+
+  /** 推定を待たせる（`resolve` / `reject` で返す）。 */
+  function deferEstimate() {
+    let resolve!: (estimate: DevelopUprightEstimate) => void;
+    let reject!: (error: unknown) => void;
+    estimateUpright.mockImplementation(
+      () =>
+        new Promise<DevelopUprightEstimate>((onResolve, onReject) => {
+          resolve = onResolve;
+          reject = onReject;
+        }),
+    );
+    return {
+      resolve: (estimate: DevelopUprightEstimate) => act(async () => resolve(estimate)),
+      reject: (error: unknown) => act(async () => reject(error)),
+    };
+  }
+
+  const tilted: DevelopGeometry = {
+    rotate: 0,
+    flipH: false,
+    flipV: false,
+    angle: 1.5,
+    crop: { left: 0.1, top: 0, right: 0.9, bottom: 1 },
+    perspective: { vertical: 0, horizontal: 0, rotate: 0, aspect: 20, scale: 110, x: 0, y: 0 },
+  };
+
+  it("Upright を推定できる wasm で切り抜きを開いている間だけボタンを出す", async () => {
+    await render();
+    expect(crop.upright).toBeNull();
+    await enter();
+    expect(crop.upright).toMatchObject({ pressed: 0, busy: false, status: null });
+    await run(() => crop.leave());
+    expect(crop.upright).toBeNull();
+  });
+
+  it("推定できない wasm（古い公開物）ではボタンを出さない", async () => {
+    uprightSupported = false;
+    await render();
+    await enter();
+    expect(crop.perspective).toBe(true);
+    expect(crop.upright).toBeNull();
+  });
+
+  it("押すと今の設定で推定し（その間は押せない）、遠近・upright・余白を埋めるを 1 回の確定で書く（↶ で 1 回戻る）", async () => {
+    await render(tilted);
+    await enter();
+    const estimate = deferEstimate();
+    await run(() => crop.upright?.run(3));
+    expect(estimateUpright).toHaveBeenCalledWith(settingsRef.current, 3);
+    expect(crop.upright?.busy).toBe(true);
+    // 推定の間にもう一度押しても、もう 1 回は推定しない
+    await run(() => crop.upright?.run(1));
+    expect(estimateUpright).toHaveBeenCalledTimes(1);
+
+    await estimate.resolve(FOUND);
+    expect(crop.upright?.busy).toBe(false);
+    expect(commits).toHaveLength(1);
+    expect(commits[0]?.v).toBe(7);
+    // 縦横比・拡大は既定に戻し、角度・切り抜きは残す
+    expect(currentGeometry()).toEqual(stored({ ...tilted, perspective: PERSPECTIVE, upright: 3, constrain: true }));
+    expect(crop.upright).toMatchObject({ pressed: 3, status: { kind: "applied", mode: 3 } });
+  });
+
+  it("押しているボタンをもう一度押すと切る（遠近を恒等に戻す 1 単位。余白を埋めるは残す）", async () => {
+    await render({ ...tilted, perspective: PERSPECTIVE, upright: 2, constrain: true });
+    await enter();
+    expect(crop.upright?.pressed).toBe(2);
+    await run(() => crop.upright?.run(2));
+    expect(estimateUpright).not.toHaveBeenCalled();
+    expect(commits).toHaveLength(1);
+    const { perspective: _perspective, ...rest } = tilted;
+    expect(currentGeometry()).toEqual(stored({ ...rest, constrain: true }));
+    expect(crop.upright?.pressed).toBe(0);
+  });
+
+  it("線が見つからなければ書かずに知らせ、次に編集内容が変わると知らせを消す", async () => {
+    await render();
+    await enter();
+    estimateUpright.mockResolvedValue(NOT_FOUND);
+    await run(() => crop.upright?.run(1));
+    expect(commits).toEqual([]);
+    expect(Object.hasOwn(settingsRef.current, "geometry")).toBe(false);
+    expect(crop.upright?.status).toEqual({ kind: "notFound" });
+    await run(() => crop.changeGeometry((current) => ({ ...current, constrain: true }), "commit"));
+    expect(crop.upright?.status).toBeNull();
+  });
+
+  it("推定に失敗したら書かずに知らせる", async () => {
+    await render();
+    await enter();
+    const estimate = deferEstimate();
+    await run(() => crop.upright?.run(4));
+    await estimate.reject(new Error("develop engine cannot estimate upright"));
+    expect(commits).toEqual([]);
+    expect(crop.upright).toMatchObject({ busy: false, status: { kind: "failed" } });
+  });
+
+  it("推定の間に切り抜きを出た・90° 回した枠には、遅れて返った結果を当てない", async () => {
+    await render();
+    await enter();
+    let estimate = deferEstimate();
+    await run(() => crop.upright?.run(3));
+    await run(() => crop.leave());
+    await estimate.resolve(FOUND);
+    expect(commits).toEqual([]);
+
+    await enter();
+    estimate = deferEstimate();
+    await run(() => crop.upright?.run(3));
+    const rotated = rotateGeometryClockwise(crop.geometry, SOURCE);
+    await run(() => crop.commit(rotated));
+    await estimate.resolve(FOUND);
+    expect(commits).toHaveLength(1);
+    expect(currentGeometry()).toEqual(stored(rotated));
+    expect(crop.upright?.busy).toBe(false);
+  });
+
+  it("［キャンセル］は Upright も入ったときに戻す", async () => {
+    await render();
+    await enter();
+    estimateUpright.mockResolvedValue(FOUND);
+    await run(() => crop.upright?.run(3));
+    expect(commits).toHaveLength(1);
+    await run(() => crop.cancel());
+    expect(Object.hasOwn(settingsRef.current, "geometry")).toBe(false);
+    expect(settingsRef.current.v).toBe(1);
   });
 });

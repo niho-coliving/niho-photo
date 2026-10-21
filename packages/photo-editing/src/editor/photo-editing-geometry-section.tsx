@@ -54,19 +54,22 @@ export function formatGeometryValue(key: DevelopPerspectiveKey, value: number): 
   return key === "rotate" ? `${text}°` : text;
 }
 
+/** 手で 1 本を動かす（Upright の結果から手動に替わるので、押している Upright のボタンは外す）。 */
 function withField(geometry: DevelopGeometry, key: DevelopPerspectiveKey, value: number): DevelopGeometry {
   const perspective: DevelopPerspective = { ...developGeometryPerspective(geometry), [key]: value };
-  return { ...geometry, perspective };
+  const { upright: _upright, ...rest } = geometry;
+  return { ...rest, perspective };
 }
 
 /**
  * 切り抜きの道具の「ジオメトリ」の節（niho-photo#46。Lightroom の切り抜きパネルの中の変形。既定は閉じる。開閉は端末に覚える）。
  *
  * - 遠近の 7 本のスライダー（垂直方向・水平方向・回転・縦横比・拡大・縮小・X / Y オフセット。範囲・単位は XMP の `Perspective*`
- *   どおり）。ドラッグの間は `drag`、離したら `commit`（取り消しの 1 単位）。ダブルクリックで既定値（拡大・縮小は 100%、ほかは 0）
+ *   どおり）。ドラッグの間は `drag`、離したら `commit`（取り消しの 1 単位）。ダブルクリックで既定値（拡大・縮小は 100%、ほかは 0）。
+ *   手で動かすと Upright のボタンは外れる（`upright` を消す。値は Upright の結果から続けて直せる）
  * - 「余白を埋める」のスイッチ（補正で空いた余白が写らないよう、切り抜きを写真の中に収める）
  * - 見出しの横の「初期化」は遠近と「余白を埋める」と Upright だけを既定に戻す（角度・反転・回転・切り抜きは触らない）
- * - `leading` は節の先頭に差し込む要素（後半で足す Upright の 自動 / 水平 / 垂直 / フル のボタンの置き場）
+ * - `leading` は節の先頭に差し込む要素（Upright の 自動 / 水平 / 垂直 / フル のボタン。niho-photo#46 後半）
  */
 export function PhotoEditingGeometrySection(props: {
   geometry: DevelopGeometry;

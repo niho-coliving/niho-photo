@@ -58,6 +58,7 @@ import { PhotoEditingGeometrySection, type PhotoEditingGeometryChange } from "./
 import { PhotoEditingMenu, type PhotoEditingMenuItem } from "./photo-editing-menu";
 import { PhotoEditingSlider, type PhotoEditingSliderPhase } from "./photo-editing-slider";
 import { PhotoEditingRuler } from "./photo-editing-ruler";
+import { PhotoEditingUprightButtons, type PhotoEditingUprightControl } from "./photo-editing-upright-buttons";
 
 const FOCUS_RING_CLASS_NAME = "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-niho-accent-ink";
 
@@ -67,7 +68,8 @@ const FOCUS_RING_CLASS_NAME = "focus-visible:outline-none focus-visible:ring-2 f
  *
  * - PC（Lightroom の並び。#52）: 縦横比の行（今の比率の名前 ▾ のメニューと、右端に「縦横の入れ替え」）→ 角度補正のスライダー →
  *   「反転と回転」の 4 つの icon（左に 90° 回転・右に 90° 回転・左右の反転・上下の反転）→「ジオメトリ」の節（遠近のスライダーと
- *   「余白を埋める」。niho-photo#46。`onGeometryChange` を渡し、wasm が遠近を描ける〔`perspective`〕ときだけ）→ 書き出しの大きさの
+ *   「余白を埋める」。niho-photo#46。`onGeometryChange` を渡し、wasm が遠近を描ける〔`perspective`〕ときだけ。先頭に Upright の
+ *   4 つのボタン〔`upright` を渡したときだけ〕）→ 書き出しの大きさの
  *   1 行 →［完了］［キャンセル］（`onDone` / `onCancel` を渡したときだけ。Enter / Esc は面のキーで同じものを呼ぶ）
  * - スマホ: 縦横比のチップ・入れ替え・90° 回転・左右の反転・「初期化」の帯と、角度補正の目盛り
  * - 押すたびに新しい幾何を `onCommit` に渡す（取り消しの 1 単位。保存と履歴は呼ぶ側）
@@ -100,6 +102,8 @@ export function PhotoEditingCropTools(props: {
   perspective?: boolean;
   /** PC の「ジオメトリ」の節の変更（`drag` は描き直すだけ、`commit` で取り消しの 1 単位） */
   onGeometryChange?: PhotoEditingGeometryChange;
+  /** PC の「ジオメトリ」の節の先頭の Upright のボタン（wasm が Upright を推定できるときだけ） */
+  upright?: PhotoEditingUprightControl | null;
 }) {
   const { geometry, source, disabled } = props;
   const headingId = useId();
@@ -309,7 +313,12 @@ export function PhotoEditingCropTools(props: {
       </div>
       {props.perspective && props.onGeometryChange ? (
         <div className="mt-3">
-          <PhotoEditingGeometrySection geometry={geometry} disabled={disabled} onChange={props.onGeometryChange} />
+          <PhotoEditingGeometrySection
+            geometry={geometry}
+            disabled={disabled}
+            onChange={props.onGeometryChange}
+            leading={props.upright ? <PhotoEditingUprightButtons control={props.upright} disabled={disabled} /> : undefined}
+          />
         </div>
       ) : null}
       {props.exportLongEdge !== null ? (
