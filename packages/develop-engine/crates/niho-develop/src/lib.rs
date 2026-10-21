@@ -597,20 +597,48 @@ enum RawEngine {
 }
 
 /// The `niho-6` analysis shared by the sessions of one photo: its features
-/// (once per head white balance, `niho-13` balancing the whole photo first)
-/// and the coefficient maps of the last exposure.
+/// (per head white balance, `niho-13` balancing the whole photo first) and
+/// the coefficient maps per white balance and exposure, the
+/// [`NIHO6_KEPT`] most recently used of each. Two, so the photo's own white
+/// balance and exposure survive the preset previews and auto candidates
+/// drawn at theirs (which otherwise make the photo's next released frame
+/// compute its analysis again).
 #[derive(Default)]
 struct Niho6AnalysisCache {
-    features: std::sync::Mutex<Option<Niho6Features>>,
-    at_exposure: std::sync::Mutex<Option<Niho6AtExposure>>,
+    features: std::sync::Mutex<Vec<Niho6Features>>,
+    at_exposure: std::sync::Mutex<Vec<Niho6AtExposure>>,
 }
 
-/// The features of the whole photo under a head white balance (the last
-/// one asked for: one feature set in memory), plus the detail settings that
-/// reduce its noise before the features are measured.
+/// How many feature sets / analyses [`Niho6AnalysisCache`] keeps.
+const NIHO6_KEPT: usize = 2;
+
+/// The value of `key` in `slots` (most recent first), made and kept when
+/// missing; the least recently used is dropped first (one fewer in memory
+/// while making).
+fn most_recent<K: PartialEq + Clone, V: Clone>(
+    slots: &mut Vec<(K, V)>,
+    key: K,
+    make: impl FnOnce() -> V,
+) -> V {
+    if let Some(index) = slots
+        .iter()
+        .position(|(cached_key, _)| cached_key == &key)
+    {
+        let entry = slots.remove(index);
+        let value = entry.1.clone();
+        slots.insert(0, entry);
+        return value;
+    }
+    slots.truncate(NIHO6_KEPT - 1);
+    let value = make();
+    slots.insert(0, (key, value.clone()));
+    value
+}
+
+/// The features of the whole photo keyed by head white balance and detail
+/// settings.
 type Niho6Features = (
-    Option<HeadWhiteBalance>,
-    String,
+    (Option<HeadWhiteBalance>, String),
     Result<Arc<niho6::SourceFeatures>, String>,
 );
 
@@ -624,12 +652,10 @@ struct Niho6Gains {
     gains: Arc<niho6::ResponseGains>,
 }
 
-/// The analysis made under a head white balance at an exposure (its `f64`
-/// bits) and its result.
+/// The analysis made under a head white balance and detail amount at an
+/// exposure (its `f64` bits) and its result.
 type Niho6AtExposure = (
-    Option<HeadWhiteBalance>,
-    String,
-    u64,
+    (Option<HeadWhiteBalance>, String, u64),
     Result<Arc<niho6::Analysis>, String>,
 );
 
@@ -1038,8 +1064,9 @@ impl Session {
     }
 
     /// The `niho-6` analysis of the whole photo balanced by `white` and
-    /// reduced by the active detail settings (shared: features once per white
-    /// balance and detail amount, networks again only when exposure changes).
+    /// reduced by the active detail settings. The shared LRU keeps two feature
+    /// sets keyed by white balance and detail amounts, and two analyses keyed
+    /// by those values plus exposure.
     fn niho6_analysis(
         &self,
         white: Option<HeadWhiteBalance>,
@@ -1056,18 +1083,12 @@ impl Session {
             },
         );
         let features = {
-            let mut slot = self
+            let mut slots = self
                 .niho6_analysis
                 .features
                 .lock()
                 .unwrap_or_else(std::sync::PoisonError::into_inner);
-            if slot
-                .as_ref()
-                .is_none_or(|(cached_white, cached_detail, _)| {
-                    *cached_white != white || cached_detail != &detail_key
-                })
-            {
-                *slot = None;
+            most_recent(&mut slots, (white, detail_key.clone()), || {
                 let whole = self.niho6_source.as_ref();
                 let balanced = match white {
                     None => None,
@@ -1114,40 +1135,27 @@ impl Session {
                     .expect("validated NIHO 6 session detail input"),
                 });
                 let image = prepared.as_ref().unwrap_or(source);
-                let made = niho6::source_features(image, whole.space())
+                niho6::source_features(image, whole.space())
                     .map(Arc::new)
-                    .map_err(|error| error.to_string());
-                *slot = Some((white, detail_key.clone(), made));
-            }
-            slot.as_ref()
-                .expect("NIHO 6 features")
-                .2
-                .clone()
-                .map_err(Error::Niho6Prepare)?
-        };
-        let mut cached = self
+                    .map_err(|error| error.to_string())
+            })
+        }
+        .map_err(Error::Niho6Prepare)?;
+        let mut slots = self
             .niho6_analysis
             .at_exposure
             .lock()
             .unwrap_or_else(std::sync::PoisonError::into_inner);
-        let exposure_key = exposure_ev.to_bits();
-        if cached
-            .as_ref()
-            .is_none_or(|(cached_white, cached_detail, key, _)| {
-                *cached_white != white || cached_detail != &detail_key || *key != exposure_key
-            })
-        {
-            let made = niho6::analysis_at(&features, exposure_ev)
-                .map(Arc::new)
-                .map_err(|error| error.to_string());
-            *cached = Some((white, detail_key, exposure_key, made));
-        }
-        cached
-            .as_ref()
-            .expect("NIHO 6 analysis")
-            .3
-            .clone()
-            .map_err(Error::Niho6Prepare)
+        most_recent(
+            &mut slots,
+            (white, detail_key, exposure_ev.to_bits()),
+            || {
+                niho6::analysis_at(&features, exposure_ev)
+                    .map(Arc::new)
+                    .map_err(|error| error.to_string())
+            },
+        )
+        .map_err(Error::Niho6Prepare)
     }
 
     /// The NIHO 3 analysis this session holds, for a session made from it.
@@ -2209,6 +2217,48 @@ mod tests {
         dragged.vibrance = 10.0;
         session.render(&dragged, 600, Quality::Interactive).unwrap();
         assert_eq!(exposure_of(&session), Some(0.0));
+    }
+
+    #[test]
+    fn niho6_keeps_the_photos_analysis_through_previews_at_other_white_balances() {
+        let (w, h) = (240usize, 160usize);
+        let rgba: Vec<u8> = (0..w * h)
+            .flat_map(|i| {
+                let v = ((i % w) * 255 / w) as u8 / 2 + ((i / w) % 37) as u8;
+                [v, v / 2 + 40, 255 - v, 255]
+            })
+            .collect();
+        let png = encode::encode_png(&rgba, w, h).unwrap();
+        let mut session = Session::open_raster(&png, 0, Filter::Lanczos3).unwrap();
+        let settings = parse_settings(r#"{"v":2,"engine":"niho-6"}"#).unwrap();
+        let warm = Some(HeadWhiteBalance {
+            temperature: 30.0,
+            tint: 0.0,
+        });
+        let photo = session.niho6_analysis(warm, 0.2, &settings).unwrap();
+        // A preset preview (no white balance) and an auto candidate at another
+        // exposure use the shared cache in between.
+        let preview = session.niho6_analysis(None, 0.2, &settings).unwrap();
+        assert!(!Arc::ptr_eq(&photo, &preview));
+        assert!(Arc::ptr_eq(
+            &session.niho6_analysis(warm, 0.2, &settings).unwrap(),
+            &photo
+        ));
+        let candidate = session.niho6_analysis(warm, 0.5, &settings).unwrap();
+        assert!(Arc::ptr_eq(
+            &session.niho6_analysis(warm, 0.2, &settings).unwrap(),
+            &photo
+        ));
+        // The least recently used goes first: the preview's analysis (then
+        // the candidate's) was made again.
+        assert!(!Arc::ptr_eq(
+            &session.niho6_analysis(None, 0.2, &settings).unwrap(),
+            &preview
+        ));
+        assert!(!Arc::ptr_eq(
+            &session.niho6_analysis(warm, 0.5, &settings).unwrap(),
+            &candidate
+        ));
     }
 
     #[test]

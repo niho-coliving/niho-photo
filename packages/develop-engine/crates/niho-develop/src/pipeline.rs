@@ -400,6 +400,13 @@ pub struct SettingsCubes {
     pub color: Option<Arc<Cube>>,
     /// Drag frames: the per-pixel tail ([`DragTail`]).
     pub drag: Option<Arc<DragTail>>,
+    /// The cubes of the last released (Final) frame, kept through the drag
+    /// frames after it (whose cubes are of the drag grid): releasing a drag
+    /// that left the cubes' settings as they were (the white balance of
+    /// `niho-13`, H/S, Texture, Clarity, ...) takes them back instead of
+    /// baking the Final grid again. The same keys, so the same entries.
+    released: Option<Arc<SettingsCubes>>,
+    quality: Quality,
 }
 
 fn post_key(s: &DevelopSettings, exposure_non_raw_ev: f64, dimension: usize) -> String {
@@ -510,12 +517,17 @@ pub fn settings_cubes(
     } else {
         String::new()
     };
+    // This frame's cache and the released frame's cubes it keeps.
+    let caches = [cache, cache.and_then(|c| c.released.as_deref())];
+    let kept = |pick: &dyn Fn(&SettingsCubes) -> Option<Arc<Cube>>| {
+        caches.iter().flatten().find_map(|c| pick(c))
+    };
     let acr3 = if ak.is_empty() {
         None
     } else {
-        match cache {
-            Some(c) if c.acr3_key == ak && c.acr3.is_some() => c.acr3.clone(),
-            _ => Some(Arc::new(bake_float_look_cube(&s.look, dimension))),
+        match kept(&|c| (c.acr3_key == ak).then(|| c.acr3.clone()).flatten()) {
+            Some(cube) => Some(cube),
+            None => Some(Arc::new(bake_float_look_cube(&s.look, dimension))),
         }
     };
     let want_post =
@@ -535,8 +547,8 @@ pub fn settings_cubes(
     {
         None
     } else {
-        match cache {
-            Some(c) if c.post_key == pk && c.post.is_some() => c.post.clone(),
+        match kept(&|c| (c.post_key == pk).then(|| c.post.clone()).flatten()) {
+            Some(cube) => Some(cube),
             // A drag frame can keep a matching final cube without
             // baking one; releasing H/S or WB then reuses it.
             _ if !bake => None,
@@ -595,8 +607,12 @@ pub fn settings_cubes(
                 ))) {
         None
     } else {
-        match cache {
-            Some(c) if c.color_cube_key == cube_ck && c.color.is_some() => c.color.clone(),
+        match kept(&|c| {
+            (c.color_cube_key == cube_ck)
+                .then(|| c.color.clone())
+                .flatten()
+        }) {
+            Some(cube) => Some(cube),
             _ if !bake => None,
             _ => Some(Arc::new(if formula_settings.has_active_color_points() {
                 bake_pre_color_cube_for(formula_settings, dimension, raw)
@@ -614,6 +630,19 @@ pub fn settings_cubes(
         color_cube_key: cube_ck,
         color,
         drag: cache.and_then(|c| c.drag.clone()),
+        // A released frame is itself the set to keep; a drag frame keeps the
+        // last released set (the frame before it, or the one that one kept).
+        released: match (quality, cache) {
+            (Quality::Final, _) => None,
+            (Quality::Interactive, Some(c)) if c.quality == Quality::Final => {
+                Some(Arc::new(SettingsCubes {
+                    released: None,
+                    ..c.clone()
+                }))
+            }
+            (Quality::Interactive, c) => c.and_then(|c| c.released.clone()),
+        },
+        quality,
     }
 }
 
@@ -3614,5 +3643,54 @@ mod local_pass_tests {
         // same adaptive parameters.
         assert!(computes(&mut cache, "36/0", Quality::Final));
         assert!(!computes(&mut cache, "36/0", Quality::Final));
+    }
+}
+
+#[cfg(test)]
+mod released_cube_tests {
+    use super::*;
+
+    #[test]
+    fn a_release_after_drag_frames_takes_back_the_released_cubes() {
+        let mut s = DevelopSettings::neutral();
+        s.engine = crate::settings::ENGINE_NIHO_13.into();
+        s.look = crate::look::LOOK_NIHO_STANDARD_1.into();
+        s.contrast = 20.0;
+        s.vibrance = 15.0;
+        let released = settings_cubes(&s, 0.3, Quality::Final, None, true, None, false);
+        let post = released.post.clone().expect("cube P");
+        let color = released.color.clone().expect("cube Q");
+        // Drag frames of a slider outside the cubes (the drag grid's keys).
+        let mut cache = released;
+        for _ in 0..3 {
+            cache = settings_cubes(
+                &s,
+                0.3,
+                Quality::Interactive,
+                Some(&cache),
+                false,
+                None,
+                false,
+            );
+            assert!(cache.post.is_none());
+        }
+        let again = settings_cubes(&s, 0.3, Quality::Final, Some(&cache), true, None, false);
+        assert!(Arc::ptr_eq(again.post.as_ref().unwrap(), &post));
+        assert!(Arc::ptr_eq(again.color.as_ref().unwrap(), &color));
+        // A drag that changed cube P bakes it again on release; cube Q stays.
+        s.contrast = 25.0;
+        let dragged = settings_cubes(
+            &s,
+            0.3,
+            Quality::Interactive,
+            Some(&again),
+            false,
+            None,
+            false,
+        );
+        let changed = settings_cubes(&s, 0.3, Quality::Final, Some(&dragged), true, None, false);
+        assert!(!Arc::ptr_eq(changed.post.as_ref().unwrap(), &post));
+        assert!(Arc::ptr_eq(changed.color.as_ref().unwrap(), &color));
+        assert!(changed.released.is_none());
     }
 }

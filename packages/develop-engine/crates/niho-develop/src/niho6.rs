@@ -326,16 +326,22 @@ pub(crate) fn resize_plane_bilinear(
     let mut output = vec![0.0; out_width * out_height];
     let scale_x = in_width as f64 / out_width as f64;
     let scale_y = in_height as f64 / out_height as f64;
+    // The column positions are the same on every row (computed once, the
+    // same values).
+    let columns: Vec<(usize, usize, f32)> = (0..out_width)
+        .map(|x| {
+            let sx = ((x as f64 + 0.5) * scale_x - 0.5).clamp(0.0, (in_width - 1) as f64);
+            let x0 = libm::floor(sx) as usize;
+            let x1 = (x0 + 1).min(in_width - 1);
+            (x0, x1, (sx - x0 as f64) as f32)
+        })
+        .collect();
     for y in 0..out_height {
         let sy = ((y as f64 + 0.5) * scale_y - 0.5).clamp(0.0, (in_height - 1) as f64);
         let y0 = libm::floor(sy) as usize;
         let y1 = (y0 + 1).min(in_height - 1);
         let ty = (sy - y0 as f64) as f32;
-        for x in 0..out_width {
-            let sx = ((x as f64 + 0.5) * scale_x - 0.5).clamp(0.0, (in_width - 1) as f64);
-            let x0 = libm::floor(sx) as usize;
-            let x1 = (x0 + 1).min(in_width - 1);
-            let tx = (sx - x0 as f64) as f32;
+        for (x, &(x0, x1, tx)) in columns.iter().enumerate() {
             let top = source[y0 * in_width + x0]
                 + tx * (source[y0 * in_width + x1] - source[y0 * in_width + x0]);
             let bottom = source[y1 * in_width + x0]
