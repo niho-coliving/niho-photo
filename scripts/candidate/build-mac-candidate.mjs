@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import { spawnSync } from "node:child_process";
-import { lstatSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, symlinkSync, writeFileSync, cpSync } from "node:fs";
+import { lstatSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync, cpSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -21,6 +21,7 @@ import {
   sha256,
   sourceOwnership,
   stageCandidateNotices,
+  stagePreparedNodeDependencies,
   verifyBuiltApp,
   verifyCandidateDirectory,
   verifySdkDirectory,
@@ -76,6 +77,7 @@ function sourceSnapshot(workspace) {
   function visit(directory, prefix = "") {
     for (const entry of readdirSync(directory, { withFileTypes: true })) {
       const relative = prefix ? `${prefix}/${entry.name}` : entry.name;
+      if (relative.split("/").includes("node_modules")) continue;
       if (BUILD_OUTPUTS.some((allowed) => relative === allowed || relative.startsWith(`${allowed}/`))) continue;
       const full = path.join(directory, entry.name);
       const stat = lstatSync(full);
@@ -144,8 +146,6 @@ export function buildCandidate(values) {
   assertOwnershipMatches(ownership, sdk.manifest.sourceOwnership);
   const publicFirebaseKey = readPublicConfig(path.resolve(values["--public-firebase-config"]));
   const nodeModules = path.resolve(values["--node-modules"]);
-  const nodeModulesStat = lstatSync(nodeModules, { throwIfNoEntry: false });
-  if (!nodeModulesStat?.isDirectory() || nodeModulesStat.isSymbolicLink()) throw new CandidateError("prepared node_modulesは通常directoryが必要です");
   const output = path.resolve(values["--output"]);
   if (lstatSync(output, { throwIfNoEntry: false })) throw new CandidateError("candidate outputは新規directoryが必要です");
   const scratch = mkdtempSync(path.join(tmpdir(), "niho-photo-candidate-"));
@@ -153,9 +153,8 @@ export function buildCandidate(values) {
     const workspace = path.join(scratch, "workspace");
     materializeGitTree(repoRoot, source.commit, workspace);
     const sourceBefore = sourceSnapshot(workspace);
-    // Dependency installation is deliberately outside this helper. CI prepares this exact
-    // directory before version overlay; the symlink is build-only and cannot enter the app.
-    symlinkSync(nodeModules, path.join(workspace, "node_modules"), "dir");
+    // Installはoverlay前にCIが済ませ、rootとworkspace固有の依存を同じlayoutへstageする。
+    stagePreparedNodeDependencies({ nodeModules, workspace });
     stageRuntime({ sdkDirectory, sdkManifest: sdk.manifest, workspace, scratch });
     const overlays = applyVersionOverlay(workspace, values["--version"]);
     assertExpectedWorkspaceChanges(sourceBefore, sourceSnapshot(workspace));

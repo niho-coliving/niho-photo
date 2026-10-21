@@ -19,6 +19,7 @@ import {
   resolveCleanSource,
   sha256,
   stageCandidateNotices,
+  stagePreparedNodeDependencies,
   validateTarEntries,
   verifyAppNoticeResources,
   verifyCandidateDirectory,
@@ -388,4 +389,32 @@ test("published SDK preparerは7-file directoryとGitHub releaseの8 assetsを�
   assert.doesNotThrow(() => preparePublishedSdkProof({ "--sdk-directory": sdkDirectory, "--sdk-receipt": receiptFile, "--release-json": releaseFile, "--tag-sha": candidate.manifest.sdk.source.commit, "--expected-version": candidate.manifest.sdk.version, "--expected-manifest-sha256": candidate.manifest.sdk.manifestSha256, "--output": output, "--github-output": githubOutput }));
   assert.deepEqual(JSON.parse(readFileSync(path.join(output, "photo-sdk-release.json"))).assets.map(({ name }) => name).sort(), assets.map(({ name }) => name).sort());
   assert.match(readFileSync(githubOutput, "utf8"), /sdk-manifest-sha256=/u);
+});
+
+
+test("prepared npm依存はnested workspaceと相対linkをbuild workspace内に再現する", () => {
+  const prepared = temp("photo-prepared-deps-");
+  const workspace = temp("photo-staged-deps-");
+  const rootManifest = JSON.stringify({ workspaces: ["apps/camera", "packages/editor"] });
+  for (const target of [prepared, workspace]) {
+    put(target, "package.json", rootManifest);
+    put(target, "package-lock.json", "same lock\n");
+    put(target, "apps/camera/package.json", JSON.stringify({ type: "module", name: "camera" }));
+    put(target, "packages/editor/package.json", JSON.stringify({ type: "module", name: "editor", exports: "./index.js" }));
+  }
+  put(prepared, "packages/editor/index.js", 'export default "original-source-must-not-load";\n');
+  put(workspace, "packages/editor/index.js", 'export default "build-source";\n');
+  mkdirSync(path.join(prepared, "node_modules"));
+  symlinkSync("../packages/editor", path.join(prepared, "node_modules/editor"), "dir");
+  put(prepared, "apps/camera/node_modules/camera-only/package.json", JSON.stringify({ type: "module", exports: "./index.js" }));
+  put(prepared, "apps/camera/node_modules/camera-only/index.js", 'export default "nested-dependency";\n');
+  assert.deepEqual(stagePreparedNodeDependencies({ nodeModules: path.join(prepared, "node_modules"), workspace }), ["node_modules", "apps/camera/node_modules"]);
+  put(workspace, "apps/camera/probe.mjs", 'import nested from "camera-only"; import editor from "editor"; console.log(nested + ":" + editor);\n');
+  const result = execFileSync(process.execPath, [path.join(workspace, "apps/camera/probe.mjs")], { encoding: "utf8", cwd: "/" });
+  assert.equal(result.trim(), "nested-dependency:build-source");
+  assert.throws(() => stagePreparedNodeDependencies({ nodeModules: path.join(prepared, "node_modules"), workspace }), /新規path/u);
+  const mismatched = temp("photo-mismatched-deps-");
+  put(mismatched, "package.json", rootManifest);
+  put(mismatched, "package-lock.json", "different lock\n");
+  assert.throws(() => stagePreparedNodeDependencies({ nodeModules: path.join(prepared, "node_modules"), workspace: mismatched }), /manifest\/lock/u);
 });

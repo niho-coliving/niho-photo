@@ -90,6 +90,37 @@ function git(repoRoot, args, options = {}) {
   return run("git", ["-C", repoRoot, ...args], options);
 }
 
+export function stagePreparedNodeDependencies({ nodeModules, workspace }) {
+  ordinaryDirectory(nodeModules, "prepared node_modules");
+  if (path.basename(nodeModules) !== "node_modules") throw new CandidateError("prepared依存のrootが不正です");
+  const prepared = path.dirname(nodeModules);
+  for (const name of ["package.json", "package-lock.json"]) {
+    const source = path.join(prepared, name), target = path.join(workspace, name);
+    ordinaryFile(source, `prepared ${name}`);
+    if (!readFileSync(source).equals(readFileSync(target))) throw new CandidateError("prepared依存のroot manifest/lockがapp sourceと一致しません");
+  }
+  const manifest = JSON.parse(readFileSync(path.join(workspace, "package.json"), "utf8"));
+  if (!Array.isArray(manifest.workspaces) || manifest.workspaces.some((name) => typeof name !== "string" || !/^(?:[A-Za-z0-9_-]+\/)*[A-Za-z0-9_-]+$/u.test(name))) throw new CandidateError("prepared依存のworkspace集合が不正です");
+  const paths = ["node_modules"];
+  for (const name of manifest.workspaces) {
+    const source = path.join(prepared, name, "package.json");
+    ordinaryFile(source, "prepared workspace manifest");
+    if (!readFileSync(source).equals(readFileSync(path.join(workspace, name, "package.json")))) throw new CandidateError("prepared workspace依存がapp sourceと一致しません");
+    const relative = `${name}/node_modules`;
+    if (lstatSync(path.join(prepared, relative), { throwIfNoEntry: false })) {
+      ordinaryDirectory(path.join(prepared, relative), "prepared workspace node_modules");
+      paths.push(relative);
+    }
+  }
+  for (const relative of paths) {
+    const target = path.join(workspace, relative);
+    if (lstatSync(target, { throwIfNoEntry: false })) throw new CandidateError("build依存の配置先は新規pathが必要です");
+    // npm workspace/.binの相対symlinkは同じlayoutのbuild workspace内へ向ける。
+    cpSync(path.join(prepared, relative), target, { recursive: true, dereference: false, verbatimSymlinks: true, errorOnExist: true, force: false });
+  }
+  return paths;
+}
+
 export function resolveCleanSource(repoRoot, sourceRef) {
   ordinaryDirectory(repoRoot, "repository");
   assertFullSha(sourceRef, "app source");

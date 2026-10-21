@@ -14,7 +14,7 @@
 - release version、公開Firebase build config JSON、run ID、attempt。config JSONは
   `NIHO_PHOTO_PUBLIC_FIREBASE_WEB_API_KEY` だけを持ち、未設定や形式不正なら公式candidateを作りません。
   値はmanifestやログへ書かずSHA-256だけを記録します。
-- overlay前にCIが用意したroot `node_modules` directory。helper自身は `npm install` やdownloadをしません。
+- overlay前にCIが用意したroot `node_modules` directory。その親にあるroot/workspace manifestとroot lockがapp sourceに一致することを検査し、workspace固有のnested `node_modules`も一時buildへcopyします。npm workspace/.binの相対linkを保ち、build先のsourceへ解決します。helper自身は `npm install` やdownloadをしません。
 
 ```sh
 npm run candidate:build -- \
