@@ -33,7 +33,7 @@ export function BrowserPhotoEditingToolRail(props: { items: ReadonlyArray<Browse
   return (
     <nav
       aria-label={PHOTO_EDITING_TOOL_RAIL_LABEL}
-      className="hidden min-h-0 flex-col items-center gap-1 border-l border-niho-border bg-[var(--photo-editing-surface,white)] py-2 lg:flex"
+      className="hidden min-h-0 flex-col items-center gap-1 border-l border-niho-border bg-[var(--photo-editing-surface,white)] py-2 lg:row-span-2 lg:flex"
     >
       {props.items.map((item) => {
         const Icon = item.icon;

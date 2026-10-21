@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useId, useRef, useState, type PointerEvent, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { ChevronDown, LayoutGrid, MoreHorizontal } from "lucide-react";
 
@@ -323,6 +324,11 @@ export function PhotoEditingPresetsPanel(props: {
   variant?: "section" | "panel" | "row";
   /** `row` の今のプリセット名・一覧のボタンを押した（プリセットの面を開く） */
   onOpenPanel?: () => void;
+  /**
+   * `panel` の右上の「⋯」を描く場所（右パネルの見出し行。niho-photo#49）。渡すと一覧の上に「⋯」だけの行を作らず、見出し行に
+   * 並べる（⋯ を 2 段に重ねない）。省く・まだ null のときは一覧の上の行に描く
+   */
+  actionsSlot?: HTMLElement | null;
 }) {
   const variant = props.variant ?? "section";
   const headingId = useId();
@@ -806,12 +812,18 @@ export function PhotoEditingPresetsPanel(props: {
     return (
       <div role="group" aria-labelledby={headingId} className="pt-1">
         {variant === "panel" ? (
-          // 見出しは右パネルの見出しが兼ねる（読み上げの名前だけ残す）。右上の「⋯」は上の行に右寄せで残す
+          // 見出しは右パネルの見出しが兼ねる（読み上げの名前だけ残す）。右上の「⋯」は見出し行（`actionsSlot`）へ、無ければ上の行に右寄せ
           <>
             <h4 id={headingId} className="sr-only">
               {PHOTO_EDITING_PRESETS_TITLE}
             </h4>
-            {browserActions ? <div className="flex min-h-11 items-center gap-1">{browserActions}</div> : null}
+            {browserActions ? (
+              props.actionsSlot ? (
+                createPortal(browserActions, props.actionsSlot)
+              ) : (
+                <div className="flex min-h-11 items-center gap-1">{browserActions}</div>
+              )
+            ) : null}
           </>
         ) : (
           <div className="flex min-h-11 items-center gap-1">

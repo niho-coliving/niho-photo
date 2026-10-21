@@ -50,6 +50,7 @@ describe("BrowserPhotoEditingFooter keyboard order", () => {
 
   it("keeps the narrow-screen visual order aligned with DOM and focus order", () => {
     const status = container.querySelector<HTMLElement>("footer > div.flex.min-w-0.flex-1");
+    const footer = container.querySelector<HTMLElement>("footer");
     const viewGroup = container.querySelector<HTMLElement>('[role="group"][aria-label="表示"]');
     const viewSwitches = Array.from(viewGroup?.querySelectorAll("button") ?? []);
     const undoButton = status?.querySelector("button") ?? null;
@@ -58,6 +59,8 @@ describe("BrowserPhotoEditingFooter keyboard order", () => {
 
     expect(status?.className).toContain("max-[479px]:w-full");
     expect(status?.className).not.toContain("order-first");
+    expect(footer?.className).toContain("lg:max-xl:flex-wrap");
+    expect(footer?.className).toContain("lg:max-xl:gap-y-1");
     if (!lastViewSwitch || !undoButton || !exportButton) {
       throw new Error("表示切替・元に戻す・書き出すのボタンが見つかりません");
     }
