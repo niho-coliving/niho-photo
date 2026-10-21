@@ -115,11 +115,11 @@ fn render_raster(bytes: &[u8], settings: &DevelopSettings, quality: Quality) -> 
     session.render(settings, 0, quality).unwrap().rgba
 }
 
-fn linear_ramp() -> LinearImage {
-    let mut data = Vec::with_capacity(1024 * 64 * 3);
+fn linear_ramp(width: usize) -> LinearImage {
+    let mut data = Vec::with_capacity(width * 64 * 3);
     for row in 0..64 {
-        for x in 0..1024 {
-            let t = x as f64 / 1023.0;
+        for x in 0..width {
+            let t = x as f64 / (width - 1) as f64;
             let rgb = if row < 32 {
                 [0.035 + 0.35 * t, 0.08 + 0.62 * t, 0.16 + 0.75 * t]
             } else {
@@ -132,7 +132,7 @@ fn linear_ramp() -> LinearImage {
         }
     }
     LinearImage {
-        width: 1024,
+        width,
         height: 64,
         data,
     }
@@ -157,30 +157,45 @@ fn render_ramp(
 }
 
 /// Adjacent-pixel output steps along one ramp row: `>= 2` code values
-/// (banding), equal neighbors, and the largest step, per RGB channel.
-fn adjacent(rgba: &[u8], row: usize) -> Value {
-    let row = &rgba[row * 1024 * 4..(row + 1) * 1024 * 4];
+/// (banding), where they are (`x` of the left pixel), equal neighbors, and
+/// the largest step, per RGB channel.
+fn adjacent(rgba: &[u8], row: usize, width: usize) -> Value {
+    let row = &rgba[row * width * 4..(row + 1) * width * 4];
     let mut ge2 = [0usize; 3];
+    let mut positions = Vec::new();
     let mut equal = [0usize; 3];
     let mut max = [0u8; 3];
-    for pair in row.chunks_exact(4).collect::<Vec<_>>().windows(2) {
+    for (x, pair) in row
+        .chunks_exact(4)
+        .collect::<Vec<_>>()
+        .windows(2)
+        .enumerate()
+    {
+        let mut step = false;
         for channel in 0..3 {
             let d = pair[0][channel].abs_diff(pair[1][channel]);
             ge2[channel] += usize::from(d >= 2);
+            step |= d >= 2;
             equal[channel] += usize::from(d == 0);
             max[channel] = max[channel].max(d);
+        }
+        if step {
+            positions.push(x);
         }
     }
     json!({
         "adjacentGe2": ge2,
         "adjacentGe2Total": ge2.iter().sum::<usize>(),
+        "adjacentGe2At": positions,
         "adjacentEqual": equal,
         "maxAdjacent": max
     })
 }
 
-fn ge2_total(rgba: &[u8], row: usize) -> usize {
-    adjacent(rgba, row)["adjacentGe2Total"].as_u64().unwrap() as usize
+fn ge2_total(rgba: &[u8], row: usize, width: usize) -> usize {
+    adjacent(rgba, row, width)["adjacentGe2Total"]
+        .as_u64()
+        .unwrap() as usize
 }
 
 fn main() {
@@ -225,7 +240,10 @@ fn main() {
         fixtures.push(json!({"fixture": name, "cases": rows}));
     }
 
-    let ramp = linear_ramp();
+    let ramp = linear_ramp(1024);
+    // The same interpolation at 4x the steps: a step that is still >= 2
+    // there is not explained by the slope of the tone response alone.
+    let fine_ramp = linear_ramp(4096);
     let variants: Vec<(&str, DevelopSettings)> = vec![
         ("moderate", moderate()),
         ("preset-bluesky2", preset("niho-bluesky2")),
@@ -238,6 +256,10 @@ fn main() {
         "rasterNiho10Interactive": 0, "rasterNiho12Interactive": 0,
         "legacyRawNiho2Final": 0, "legacyRawNiho12Final": 0,
         "legacyRawNiho2Interactive": 0, "legacyRawNiho12Interactive": 0
+    });
+    let mut fine_totals = json!({
+        "rasterNiho10Final": 0, "rasterNiho12Final": 0,
+        "legacyRawNiho2Final": 0, "legacyRawNiho12Final": 0
     });
     let mut timings = Vec::new();
     for (variant, settings) in &variants {
@@ -264,15 +286,20 @@ fn main() {
                     format!("{prefix}{engine}{quality}")
                 };
                 for (quality, frame) in [("Final", &final_frame), ("Interactive", &interactive)] {
-                    let total = ge2_total(frame, 0) + ge2_total(frame, 32);
+                    let total = ge2_total(frame, 0, 1024) + ge2_total(frame, 32, 1024);
                     let k = key(quality);
                     totals[&k] = (totals[&k].as_u64().unwrap() + total as u64).into();
                 }
+                let (fine, _) = render_ramp(&fine_ramp, &s, Quality::Final, raw);
+                let fine_total = ge2_total(&fine, 0, 4096) + ge2_total(&fine, 32, 4096);
+                let k = key("Final");
+                fine_totals[&k] = (fine_totals[&k].as_u64().unwrap() + fine_total as u64).into();
                 rows[engine] = json!({
-                    "skyFinal": adjacent(&final_frame, 0),
-                    "skinFinal": adjacent(&final_frame, 32),
-                    "skyInteractive": adjacent(&interactive, 0),
-                    "skinInteractive": adjacent(&interactive, 32)
+                    "skyFinal": adjacent(&final_frame, 0, 1024),
+                    "skinFinal": adjacent(&final_frame, 32, 1024),
+                    "skyInteractive": adjacent(&interactive, 0, 1024),
+                    "skinInteractive": adjacent(&interactive, 32, 1024),
+                    "final4096AdjacentGe2Total": fine_total
                 });
                 if *variant == "moderate" {
                     timings.push(json!({
@@ -322,6 +349,7 @@ fn main() {
             "rows": {"sky": 0, "skin": 32},
             "input": "1024 distinct linear f32 steps per 2-color interpolation; no input 8-bit quantization",
             "adjacentGe2Totals": totals,
+            "adjacentGe2Totals4096Final": fine_totals,
             "variants": ramps
         },
         "timingsMs": {
