@@ -243,12 +243,16 @@ describe("PhotoEditingColorGrading", () => {
     expect(thumb().getAttribute("aria-valuetext")).toBe("色相 356°、彩度 0");
   });
 
-  it("色相環のダブルクリックで彩度 0（色相は残す）。スライダーのダブルクリックは既定値（ブレンドは 100）", async () => {
+  it("つまみのダブルクリックだけで彩度 0（色相は残す）。スライダーのダブルクリックは既定値（ブレンドは 100）", async () => {
     await render({
       initial: { ...neutralDevelopSettings(null), colorGrading: { shadow: { hue: 210, saturation: 40 }, blending: 30 } },
     });
     await act(async () => {
       wheel().dispatchEvent(new MouseEvent("dblclick", { bubbles: true }));
+    });
+    expect(changes).toHaveLength(0);
+    await act(async () => {
+      thumb().dispatchEvent(new MouseEvent("dblclick", { bubbles: true }));
     });
     expect(changes.at(-1)).toEqual({
       phase: "commit",
@@ -259,6 +263,19 @@ describe("PhotoEditingColorGrading", () => {
     });
     expect(changes.at(-1)?.settings.colorGrading).toEqual({ shadow: { hue: 210, saturation: 0, luminance: 0 }, blending: 100 });
     expect(slider("ブレンド").value).toBe("100");
+  });
+
+  it("環のつまみ以外をダブルクリックしても、先行した位置変更以外の commit を足さない", async () => {
+    await render({ initial: { ...neutralDevelopSettings(null), colorGrading: { shadow: { hue: 210, saturation: 40 } } } });
+    placeWheel();
+    await pointer("pointerdown", wheel(), 180, 100);
+    await pointer("pointerup", wheel(), 180, 100);
+    const changesAfterClick = changes.length;
+    await act(async () => {
+      wheel().dispatchEvent(new MouseEvent("dblclick", { bubbles: true }));
+    });
+    expect(changes).toHaveLength(changesAfterClick);
+    expect(changes.at(-1)?.settings.colorGrading).toEqual({ shadow: { hue: 0, saturation: 80, luminance: 0 } });
   });
 
   it("輝度のスライダーで中間調の輝度を書く（エンジン 0.19.0 から描く）", async () => {

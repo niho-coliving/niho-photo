@@ -14,6 +14,7 @@ import { createEditHistory, pushEditHistory, undoEditHistory } from "./photo-edi
 import {
   PHOTO_EDITING_COLOR_GRADING_ZONES,
   hasPhotoEditingColorGradingEdits,
+  hasPhotoEditingColorGradingNativeExportUnsupportedLuminance,
   hasPhotoEditingColorGradingZoneEdits,
   photoEditingColorGradingHueColor,
   photoEditingColorGradingHueRgb,
@@ -93,6 +94,21 @@ describe("readPhotoEditingColorGrading", () => {
     ]);
     expect(hasPhotoEditingColorGradingEdits(base({ colorGrading: { blending: 40 } }))).toBe(true);
     expect(hasPhotoEditingColorGradingEdits(base({ colorGrading: { balance: 10 } }))).toBe(true);
+  });
+});
+
+describe("原寸の native 書き出しとの互換性", () => {
+  it("中間調・全体の輝度が動いているときだけ非対応とする", () => {
+    expect(hasPhotoEditingColorGradingNativeExportUnsupportedLuminance(base())).toBe(false);
+    expect(
+      hasPhotoEditingColorGradingNativeExportUnsupportedLuminance(base({ colorGrading: { shadow: { luminance: 25 } } })),
+    ).toBe(false);
+    expect(
+      hasPhotoEditingColorGradingNativeExportUnsupportedLuminance(base({ colorGrading: { midtone: { luminance: -1 } } })),
+    ).toBe(true);
+    expect(
+      hasPhotoEditingColorGradingNativeExportUnsupportedLuminance(base({ colorGrading: { global: { luminance: 1 } } })),
+    ).toBe(true);
   });
 });
 

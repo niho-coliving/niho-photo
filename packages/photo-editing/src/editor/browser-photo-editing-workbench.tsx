@@ -33,6 +33,7 @@ import {
   type BrowserPhotoBatchExportTarget,
 } from "../browser-photo-batch-export";
 import { hasDevelopGeometry, isNeutralDevelopColors, type DevelopSettings } from "../develop-engine/develop-settings";
+import { hasPhotoEditingColorGradingNativeExportUnsupportedLuminance } from "../photo-editing-color-grading";
 import { isDevelopWorkTarget } from "../develop-engine/develop-work-target";
 import {
   isWorkPending,
@@ -1336,6 +1337,11 @@ export function BrowserPhotoEditingWorkbench(props: {
     delete withoutFullSize.exportFullSize;
     return withoutFullSize;
   })();
+  const selectedExportSettings =
+    selectedItem && viewMode === "loupe" && opened?.key === selectedItem.key
+      ? open.settingsRef.current
+      : selectedItem?.photo.developSettings ?? {};
+  const nativeFullSizeUnsupported = hasPhotoEditingColorGradingNativeExportUnsupportedLuminance(selectedExportSettings);
   const exportChoices = selectedItem
     ? resolveBrowserPhotoExportChoices({
         photo: selectedItem.photo,
@@ -1346,6 +1352,7 @@ export function BrowserPhotoEditingWorkbench(props: {
         engineUsable: !develop.developUnavailable,
         // 原寸（K2-3a 移行元設計）は、原寸の書き出しに対応した NIHO Desktop の口があるときだけ（PC のシートに出す）
         desktopFullSize: capabilities.nativeExport || capabilities.nativeExportUpdateRequired,
+        nativeFullSizeUnsupported,
         // HEIC / HEIF・TIFF の原寸は、描ける口（NIHO camera）だけ
         desktopFullSizeRaster: capabilities.nativeExportRaster === true,
         // 背景除去（C4 移行元設計）: PNG を足し、原寸は camera の口があるときだけ

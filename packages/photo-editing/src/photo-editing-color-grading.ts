@@ -128,6 +128,12 @@ export function hasPhotoEditingColorGradingEdits(settings: PhotoEditingSettings)
   );
 }
 
+/** Current native renderer predates midtone/global luminance grading; those settings cannot be exported at full size yet. */
+export function hasPhotoEditingColorGradingNativeExportUnsupportedLuminance(settings: PhotoEditingSettings): boolean {
+  const values = readPhotoEditingColorGrading(settings);
+  return values.midtone.luminance !== 0 || values.global.luminance !== 0;
+}
+
 function without(settings: PhotoEditingSettings, key: string): PhotoEditingSettings {
   const next = { ...settings };
   delete next[key];

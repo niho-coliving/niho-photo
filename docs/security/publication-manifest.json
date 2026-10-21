@@ -205,14 +205,15 @@
         "path": "packages/photo-editing/src/browser-photo-export.test.ts",
         "sha256": "60c3cd32192302e933a8941375069b4a4625309e054716b8417fbe6752cf87b5"
       },
-      "outputSha256": "c7b58918b2db9c182655d03bb5aaf6ba364e7a8d9d36d3068185ddbc668d2c94",
+      "outputSha256": "12e854f88dd547461d3dae96b8551e5ee9d3b4b8987348570754168ec4d8dd11",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
         "Issue #28で既知になったengine番号を未知版fixtureから除外。",
         "新しい色相保持エンジンと新旧バイナリの能力境界・数値回帰を整合。",
         "PR #62 で追加したniho-10対応に合わせ未知の将来engineを使う回帰検証へ更新",
-        "PR #62 のniho-10対応に合わせ未知の将来engineで回帰検証"
+        "PR #62 のniho-10対応に合わせ未知の将来engineで回帰検証",
+        "原寸native書き出しの輝度互換性ガードと色相ホイール操作を修正。"
       ]
     },
     {
@@ -223,10 +224,11 @@
         "path": "packages/photo-editing/src/browser-photo-export.ts",
         "sha256": "866f98dfe091c3ac0eec072666e6be07b7df11c85687a22b5c11ebb4941bf4d5"
       },
-      "outputSha256": "cdeb622c4dfc3da2e6eb5b25c1500c8c99fd3381fed6002c49ac2544aec49407",
+      "outputSha256": "84a4b79f68ffd8caaa0a5093d780ce49e1cd9b82587eaea75355c54a058afa09",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
-        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。"
+        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
+        "原寸native書き出しの輝度互換性ガードと色相ホイール操作を修正。"
       ]
     },
     {
@@ -1060,7 +1062,7 @@
         "path": "packages/photo-editing/src/editor/browser-photo-editing-workbench.tsx",
         "sha256": "f655136ae0c985d793822ca8bef1668dba26ffd4bb8f13d2ba3d6c2ccb13ceb6"
       },
-      "outputSha256": "56940d89333792605951e369288ee62b343b10909d4637b83b9775dda051bdb8",
+      "outputSha256": "875c3acd9b9752f33fd709c93a755b689dd30c8ba03d2cfe307f3cf6559d42cc",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
@@ -1099,7 +1101,8 @@
         "niho-photo#43 の右端の帯の下端に「情報」を置き、右パネルを情報の面にする。",
         "niho-photo#37 PC の wasm の写真で、ライトの群の下に「カーブ」の節を置く。",
         "niho-photo#38 PC のカラーの群の下にカラーミキサーの節、スマホの層にカラーミキサーの道具を置く。Oklch の文言をポイントカラーへ改名。",
-        "niho-photo#39 カラーミキサーの節の後ろにカラーグレーディングの節と、スマホの道具を渡した。"
+        "niho-photo#39 カラーミキサーの節の後ろにカラーグレーディングの節と、スマホの道具を渡した。",
+        "原寸native書き出しの輝度互換性ガードと色相ホイール操作を修正。"
       ]
     },
     {
@@ -1664,14 +1667,15 @@
         "path": "packages/photo-editing/src/editor/use-browser-photo-export-delete.ts",
         "sha256": "c1c209ddbe8cc049adb5c06c323c0f96e316cb28a8302293ca0f531f88d00592"
       },
-      "outputSha256": "519d47c3ca67e82ddf69b33c42793faa43f6cdc83c5a58c9696d6b1b249a54fb",
+      "outputSha256": "c9e7cfe8a5110a6c7b433044abcacb0a803c82d4304f871c120c809fdf40efc1",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
         "Issue #13の段階表示、provisional draft、canonical handoffと書き出し境界を実装。",
         "Issue 13 progressive RAW open implementation",
         "Issue 13 canonical export waiting status",
-        "未完了プリセットを編集ロック前に確定して補正と重複書き出しを保護する"
+        "未完了プリセットを編集ロック前に確定して補正と重複書き出しを保護する",
+        "原寸native書き出しの輝度互換性ガードと色相ホイール操作を修正。"
       ]
     },
     {
@@ -2077,7 +2081,7 @@
         "path": "packages/photo-editing/src/photo-editing-copy.ts",
         "sha256": "1208d4124dca26c951d73f6f84c560879e69beddfb9a16426e1a9dcc9fd30c27"
       },
-      "outputSha256": "6fa88973d2e57b2d001349307d2c0c4f70ca3d21dbd691e63655ce2fe8e3c37f",
+      "outputSha256": "5f01930eeffa3b0b30fd28e001964a20ae864fe0f816aa1f40b2f6bf6640379c",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
@@ -2092,7 +2096,8 @@
         "niho-photo#43 の右パネルの「情報」の文言（道具の名前・群の見出し・行のラベル）を追加。",
         "niho-photo#37 「カーブ」の節・グラフ・点の読み上げの文言を追加。",
         "niho-photo#38 カラーミキサー（HSL）の文言を追加し、Oklch の補正と Lightroom の PointColors の名前を「ポイントカラー」に改める。",
-        "niho-photo#39 カラーグレーディングの文言を足し、使えない項目からカラーグレーディングの輝度を外した。"
+        "niho-photo#39 カラーグレーディングの文言を足し、使えない項目からカラーグレーディングの輝度を外した。",
+        "原寸native書き出しの輝度互換性ガードと色相ホイール操作を修正。"
       ]
     },
     {
@@ -9446,8 +9451,8 @@
     },
     {
       "path": "packages/photo-editing/src/editor/use-browser-photo-export-delete.test.tsx",
-      "sha256": "ff003afd2eb27c8aaa3c0455755289ad2681b2feb983e0848a7e2416ffffbc78",
-      "origin": "Issue #13のため独立作成。actual export hookと公開fixtureだけで、補正書き出しのcanonical待機とRAW original copyの非待機を検証。外部画像・非公開コード・個体metadataを含まない。\n変更理由: 書出しhost境界のmockを実際の保存関数型に限定。\n変更理由: プリセット確定待機と重複書き出しおよびRAW原本非待機を実経路で検証する"
+      "sha256": "430e7c42bc3dfee5758db33a7462cf0f46f5018190f86c07004e4215c893500e",
+      "origin": "Issue #13のため独立作成。actual export hookと公開fixtureだけで、補正書き出しのcanonical待機とRAW original copyの非待機を検証。外部画像・非公開コード・個体metadataを含まない。\n変更理由: 書出しhost境界のmockを実際の保存関数型に限定。\n変更理由: プリセット確定待機と重複書き出しおよびRAW原本非待機を実経路で検証する\n変更理由: 原寸native書き出しの輝度互換性ガードと色相ホイール操作を修正。\n変更理由: 原寸native書き出しの輝度互換性ガードと色相ホイール操作を修正。"
     },
     {
       "path": "packages/photo-editing/src/editor/use-browser-photo-progressive-open.test.tsx",
@@ -9631,18 +9636,18 @@
     },
     {
       "path": "packages/photo-editing/src/photo-editing-color-grading.ts",
-      "sha256": "eb972420815b11f6558bbe1f598202621c30332adb80304527a0e00f5db4b77a",
-      "origin": "niho-photo#39 のため新規作成。developSettings.colorGrading（4 ゾーン × 色相・彩度・輝度とブレンド・バランス）の読み書きの純関数と、crate の grade_direction・PROPHOTO_TO_SRGB から移植した色相環の色。外部コード・実データを含まない。"
+      "sha256": "b38df31a176064637f100d8c0767a270e6ef528ef2cd4624e9e67cc01187b617",
+      "origin": "niho-photo#39 のため新規作成。developSettings.colorGrading（4 ゾーン × 色相・彩度・輝度とブレンド・バランス）の読み書きの純関数と、crate の grade_direction・PROPHOTO_TO_SRGB から移植した色相環の色。外部コード・実データを含まない。\n変更理由: 原寸native書き出しの輝度互換性ガードと色相ホイール操作を修正。"
     },
     {
       "path": "packages/photo-editing/src/photo-editing-color-grading.test.ts",
-      "sha256": "f9f6b1e53822315b507331e3cb5dd26608c819cd61d0b5c6467fc6a716098bd3",
-      "origin": "niho-photo#39 のため新規作成。カラーグレーディングの読み書き・既定のときのキーの削除・色相環の色と、補正のコピー・貼り付け・取り消しの履歴・プリセットの既定の群に colorGrading が入ることの test。合成の値だけを使用。"
+      "sha256": "47b8065ed050389b929e93cdcbadd34c6bf4f619a3602a823362ff80d358d3ef",
+      "origin": "niho-photo#39 のため新規作成。カラーグレーディングの読み書き・既定のときのキーの削除・色相環の色と、補正のコピー・貼り付け・取り消しの履歴・プリセットの既定の群に colorGrading が入ることの test。合成の値だけを使用。\n変更理由: 原寸native書き出しの輝度互換性ガードと色相ホイール操作を修正。"
     },
     {
       "path": "packages/photo-editing/src/editor/photo-editing-color-wheel.tsx",
-      "sha256": "e4bd24d129e57126335513c3beeeefef26a8cc21160617638c2af01a1c8e9c05",
-      "origin": "niho-photo#39 のため新規作成。ドラッグとキーで色相と彩度を動かすカラーグレーディングの色相環の部品。外部コード・実データを含まない。"
+      "sha256": "bbbcef9169676e07d021b61747a7c6ad23befe294b34f6270698b969705cfdd9",
+      "origin": "niho-photo#39 のため新規作成。ドラッグとキーで色相と彩度を動かすカラーグレーディングの色相環の部品。外部コード・実データを含まない。\n変更理由: 原寸native書き出しの輝度互換性ガードと色相ホイール操作を修正。\n変更理由: 原寸native書き出しの輝度互換性ガードと色相ホイール操作を修正。"
     },
     {
       "path": "packages/photo-editing/src/editor/photo-editing-color-grading.tsx",
@@ -9651,8 +9656,8 @@
     },
     {
       "path": "packages/photo-editing/src/editor/photo-editing-color-grading.test.tsx",
-      "sha256": "b91a427065317b2909733217d5c553a471f04603db121e40c9838a1295710d64",
-      "origin": "niho-photo#39 のため新規作成。帯の 4 択・色相環のドラッグ / キー / ダブルクリック・スライダー・初期化・節の開閉と、カラーの下の並び（カラーミキサー → カラーグレーディング → ポイントカラー）の test。合成の値だけを使用。"
+      "sha256": "c23af6c9428803f273f7c0b7563b03aa0b155d5b18e809e6e393f3414db37b2a",
+      "origin": "niho-photo#39 のため新規作成。帯の 4 択・色相環のドラッグ / キー / ダブルクリック・スライダー・初期化・節の開閉と、カラーの下の並び（カラーミキサー → カラーグレーディング → ポイントカラー）の test。合成の値だけを使用。\n変更理由: 原寸native書き出しの輝度互換性ガードと色相ホイール操作を修正。"
     },
     {
       "path": "packages/photo-editing/src/editor/browser-photo-editing-mobile-editor-color-grading.test.tsx",

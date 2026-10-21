@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useId, useRef, type KeyboardEvent, type PointerEvent } from "react";
+import { useEffect, useId, useRef, type KeyboardEvent, type MouseEvent as ReactMouseEvent, type PointerEvent } from "react";
 import { cn } from "niho-ui/cn";
 
 import {
@@ -142,8 +142,9 @@ export function PhotoEditingColorWheel(props: {
     if (drag.changed) onChange(drag.last, "commit");
   };
 
-  const onDoubleClick = () => {
-    if (disabled || saturation === 0) return;
+  const onDoubleClick = (event: ReactMouseEvent<HTMLDivElement>) => {
+    const thumb = thumbRef.current;
+    if (disabled || saturation === 0 || !thumb || !(event.target instanceof Node) || !thumb.contains(event.target)) return;
     onChange({ hue, saturation: 0 }, "commit");
   };
 
