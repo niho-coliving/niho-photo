@@ -6213,7 +6213,7 @@
         "path": "packages/develop-engine/crates/niho-develop/src/pipeline.rs",
         "sha256": "d982d76cf1b5d34526f700e5edfcef00ae8647d22b845c0f7234ed340ba9d641"
       },
-      "outputSha256": "8737e1777948a45cdd306781cc9834364d08eeb0daa882a3e66ea5e5b4fbdb8f",
+      "outputSha256": "3b1b4c4611c86a7f5f4e40966ab1c00e80a9bbe44925a33615ec6d728a9ffb85",
       "modifications": [
         "公開Issue #26/#27/#29: 旧版を保つfloat cube候補、研究用WB/H-Sプローブ、合成検証と計測契約を追加。",
         "Issue #28の色相安定engine追加と互換回帰を反映。",
@@ -6239,7 +6239,8 @@
         "PR #80 のカラーグレーディングを最新HSL UIと統合。",
         "Issue #29: niho-12のfloat cubeと旧RAW数式・JPEG増分WB判定を共通化し、RAW色取得を描画と同じ数式にする",
         "PR #74: #80 統合後に float-cube の変更を重ね、最終ハッシュを反映。",
-        "PR #90: niho-13のWB先行適用とdetail連携cacheを#84後のmainへ統合。"
+        "PR #90: niho-13のWB先行適用とdetail連携cacheを#84後のmainへ統合。",
+        "PR #90: local passのcache regression fixtureにsource key引数を追加し、#74の契約へ接続。"
       ]
     },
     {

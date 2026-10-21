@@ -3615,6 +3615,7 @@ mod local_pass_tests {
         let mut computed = false;
         local_pass(
             cache,
+            None,
             "input".into(),
             source_key.into(),
             quality,
