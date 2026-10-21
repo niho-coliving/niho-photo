@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 
 import { act } from "react";
+import { createPortal } from "react-dom";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -211,6 +212,35 @@ describe("プリセットの面", () => {
     expect(container.querySelector('input[type="range"]')).toBeNull();
     // ↶ ↷ は見出し行に残す
     expect(container.querySelector('button[aria-label="取り消す"]')).not.toBeNull();
+  });
+
+  it("見出し行の ⋯ はプリセットのメニューだけ（補正のメニューの ⋯ と 2 つ並べない。niho-photo#49）", async () => {
+    const clipboard = { canCopy: true, canPaste: true, onCopy: vi.fn(), onPaste: vi.fn() };
+    // 一覧の部品は、受け口（actionsSlot）があれば ⋯ をそこへ描く
+    const presetsWithMenu: NonNullable<AdjustmentsProps["presets"]> = (view) => (
+      <div data-testid="presets" data-variant={view.variant}>
+        {view.actionsSlot
+          ? createPortal(
+              <button type="button" aria-label="プリセットの操作" aria-haspopup="menu">
+                ⋯
+              </button>,
+              view.actionsSlot,
+            )
+          : null}
+      </div>
+    );
+    const menus = () =>
+      Array.from(aside().querySelectorAll('button[aria-haspopup="menu"]')).map((button) => button.getAttribute("aria-label"));
+    const headerRow = () => aside().querySelector("h2")?.parentElement ?? null;
+
+    await render({ panel: "presets", presets: presetsWithMenu, clipboard });
+    expect(menus()).toEqual(["プリセットの操作"]);
+    expect(headerRow()?.querySelector('button[aria-label="プリセットの操作"]')).not.toBeNull();
+    expect(presets()?.querySelector('button[aria-label="プリセットの操作"]')).toBeNull();
+
+    // 補正の面の見出し行は補正のメニュー（コピー / 貼り付け）のまま
+    await render({ panel: "adjust", presets: presetsWithMenu, clipboard });
+    expect(menus()).toEqual(["補正のメニュー"]);
   });
 
   it("プリセットの部品が無い写真は、プリセットの面を選んでいても補正の面", async () => {
