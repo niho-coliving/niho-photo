@@ -10003,8 +10003,8 @@
     },
     {
       "path": "packages/develop-engine/tools/calibrate/fit_analytic_hs.py",
-      "sha256": "41b01c071bb0e1e726b32eda5a4952b2b464e91590637728337e5665cb0e7615",
-      "origin": "公開Issue #26 のため独立実装した開発教師上の校正・撮影日fold交差検証・gate計測・一度だけの独立評価の手順。入力は利用者指定のrepository外、非公開の写真・パス・scene名・参照画素をsourceへ含めず匿名集計だけを公開する。sealed・independentのcohortを拒否する。\n変更理由: #26 独立評価(holdout)で欠けた部分集合・設定を許し、必須の書き出しの欠落を開始前に止める\n変更理由: holdoutを凍結tool・両実行物・subset gate・入力指紋でfail-closedにする\n変更理由: #26 案C の写真ごとの目標・ridge（内側の撮影日CV）・end-to-end の微調整・交差検証・gate・採否規則を追加\n変更理由: #26 案C の preset 文脈の診断（単独操作の目標を preset に当てた誤差と、写真ごとの preset の上限）を追加\n変更理由: #26 案C′（preset の文脈を含む写真ごとの目標・強い ridge 正則化）を交差検証の前に固定して追加\n変更理由: PR #95: preset-oracle の再利用キャッシュを計画・教師・実行物・設定のfingerprintへ結び付ける。\n変更理由: #26 publish-c は全sceneのキャッシュと診断要約のfingerprint一致を確認してから公開する"
+      "sha256": "443f78aa5249cc3e7747a2fe25dc6102f62732b7e7441461b631b7b4f19f2a4e",
+      "origin": "公開Issue #26 のため独立実装した開発教師上の校正・撮影日fold交差検証・gate計測・一度だけの独立評価の手順。入力は利用者指定のrepository外、非公開の写真・パス・scene名・参照画素をsourceへ含めず匿名集計だけを公開する。sealed・independentのcohortを拒否する。\n変更理由: #26 独立評価(holdout)で欠けた部分集合・設定を許し、必須の書き出しの欠落を開始前に止める\n変更理由: holdoutを凍結tool・両実行物・subset gate・入力指紋でfail-closedにする\n変更理由: #26 案C の写真ごとの目標・ridge（内側の撮影日CV）・end-to-end の微調整・交差検証・gate・採否規則を追加\n変更理由: #26 案C の preset 文脈の診断（単独操作の目標を preset に当てた誤差と、写真ごとの preset の上限）を追加\n変更理由: #26 案C′（preset の文脈を含む写真ごとの目標・強い ridge 正則化）を交差検証の前に固定して追加\n変更理由: PR #95: preset-oracle の再利用キャッシュを計画・教師・実行物・設定のfingerprintへ結び付ける。\n変更理由: #26 publish-c は全sceneのキャッシュと診断要約のfingerprint一致を確認してから公開する\n変更理由: #26 案C/C′の写真別目標cacheを計画・参照入力・実行物・設定へ結び付ける"
     },
     {
       "path": "packages/develop-engine/tools/calibrate/fit_linear_wb_3x3.py",
@@ -10033,8 +10033,8 @@
     },
     {
       "path": "packages/develop-engine/tools/calibrate/tests/test_fit_analytic_hs.py",
-      "sha256": "8f38d9b36ef7595c6f6d7876aeccb3e80fdabe8e5954201fdf55773494de8e66",
-      "origin": "公開Issue #26 のため独立作成したunittest。合成データとtemporary directoryだけを使い、実写真・第三者資産を含まない。\n変更理由: #26 部分集合の欠けたgate表と判定を合成データで検査する\n変更理由: holdoutの凍結照合・場面数・部分集合判定・cache invalidationを合成fixtureで検査する\n変更理由: #26 案C の ridge・モデル候補・niho-6 CV 表・採否規則を合成データで検査する\n変更理由: #26 案C′ の λ の範囲と目標の切り替えを検査する"
+      "sha256": "0a7dc6ee3a7f9c9c9e4733f7415cf670792805100e020cbcb4604b73045a4973",
+      "origin": "公開Issue #26 のため独立作成したunittest。合成データとtemporary directoryだけを使い、実写真・第三者資産を含まない。\n変更理由: #26 部分集合の欠けたgate表と判定を合成データで検査する\n変更理由: holdoutの凍結照合・場面数・部分集合判定・cache invalidationを合成fixtureで検査する\n変更理由: #26 案C の ridge・モデル候補・niho-6 CV 表・採否規則を合成データで検査する\n変更理由: #26 案C′ の λ の範囲と目標の切り替えを検査する\n変更理由: 案C/C′の写真別目標cacheを計画・写真入力・参照目標変更時に無効化する回帰を検査"
     },
     {
       "path": "packages/develop-engine/tools/color-review-build-diff.py",

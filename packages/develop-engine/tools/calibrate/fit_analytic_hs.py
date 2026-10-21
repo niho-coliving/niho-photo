@@ -154,6 +154,127 @@ def preset_oracle_fingerprint(plan_path: Path, targets_path: Path, config_path: 
     return fingerprint.hexdigest()
 
 
+def target_cache_fingerprint(variant: str, plan_path: Path, config_path: Path, calibrate: Path,
+                             fev: int, input_targets: Path | None = None) -> str:
+    """Bind per-photo target caches to their plan, inputs, fit options and source targets."""
+    fingerprint = hashlib.sha256()
+    fingerprint.update(b"photo-target-cache/v1\0")
+    fingerprint.update(variant.encode("ascii"))
+    fingerprint.update(b"\0")
+    fingerprint.update(baseline_fingerprint(plan_path, config_path, calibrate).encode("ascii"))
+    fingerprint.update(b"\0")
+    fingerprint.update(str(fev).encode("ascii"))
+    fingerprint.update(b"\0")
+    fingerprint.update(json.dumps({
+        "priorWeight": C_PRIOR_WEIGHT,
+        "priorReference": C_PRIOR_REFERENCE.tolist(),
+        "priorScale": C_PRIOR_SCALE.tolist(),
+        "step": C_TARGET_STEP.tolist(),
+        "ranges": C_RANGES.tolist(),
+        "contextTargetFev": CP_TARGET_FEV,
+    }, sort_keys=True).encode("utf-8"))
+    fingerprint.update(b"\0")
+    if input_targets is not None:
+        fingerprint.update(digest(input_targets).encode("ascii"))
+    fingerprint.update(b"\0")
+    fingerprint.update(digest(Path(__file__).resolve()).encode("ascii"))
+    return fingerprint.hexdigest()
+
+
+def read_target_cache(path: Path, variant: str, plan_path: Path, config_path: Path, calibrate: Path,
+                      expected_fev: int | None = None, input_targets: Path | None = None) -> dict | None:
+    """Return only a cache that still matches this trial's inputs and source code."""
+    try:
+        cache = json.loads(path.read_text())
+        if not isinstance(cache, dict):
+            return None
+        fev = cache.get("fev")
+        rows = cache.get("rows")
+        if (cache.get("variant") != variant or type(fev) is not int or fev <= 0
+                or (expected_fev is not None and fev != expected_fev) or not isinstance(rows, dict)):
+            return None
+        expected = target_cache_fingerprint(variant, plan_path, config_path, calibrate, fev, input_targets)
+        return rows if cache.get("fingerprint") == expected else None
+    except (OSError, TypeError, ValueError, json.JSONDecodeError):
+        return None
+
+
+def write_target_cache(path: Path, variant: str, fingerprint: str, fev: int, rows: dict) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temporary = path.with_suffix(".tmp")
+    temporary.write_text(json.dumps({"variant": variant, "fingerprint": fingerprint, "fev": fev, "rows": rows}))
+    temporary.replace(path)
+
+
+def candidate_targets(variant: str, plan_path: Path, config_path: Path, calibrate: Path, work: Path) -> tuple[Path, dict]:
+    target_path = work / "runs" / VARIANTS_C[variant]["targets"]
+    input_targets = work / "runs" / VARIANTS_C["C"]["targets"] if variant == "CP" else None
+    rows = read_target_cache(target_path, variant, plan_path, config_path, calibrate, input_targets=input_targets)
+    expected_scenes = {str(j) for j in range(len(json.loads(plan_path.read_text())["scenes"]))}
+    if rows is None or set(rows) != expected_scenes:
+        command = "targets --context" if variant == "CP" else "targets"
+        raise SystemExit(f"candidate {variant} targets are stale or incomplete; rerun `{command}`")
+    return target_path, rows
+
+
+def cv_fold_fingerprint(variant: str, plan_path: Path, config_path: Path, calibrate: Path,
+                        target_path: Path, folds: str, fold: int, tune_fev: int) -> str:
+    """Bind each C/C′ fold fit to the exact trial inputs and optimizer settings."""
+    fingerprint = hashlib.sha256()
+    fingerprint.update(b"candidate-cv-fold/v1\0")
+    fingerprint.update(baseline_fingerprint(plan_path, config_path, calibrate).encode("ascii"))
+    fingerprint.update(b"\0")
+    fingerprint.update(digest(target_path).encode("ascii"))
+    fingerprint.update(b"\0")
+    fingerprint.update(json.dumps({"variant": variant, "folds": folds, "fold": fold,
+                                   "tuneFev": tune_fev}, sort_keys=True).encode("utf-8"))
+    fingerprint.update(b"\0")
+    fingerprint.update(digest(Path(__file__).resolve()).encode("ascii"))
+    return fingerprint.hexdigest()
+
+
+def read_cv_fold_cache(path: Path, fingerprint: str) -> dict | None:
+    metadata_path = path.with_suffix(".cache.json")
+    try:
+        metadata = json.loads(metadata_path.read_text())
+        fitted = json.loads(path.read_text())
+        return fitted if isinstance(metadata, dict) and metadata.get("fingerprint") == fingerprint \
+            and isinstance(fitted, dict) else None
+    except (OSError, TypeError, ValueError, json.JSONDecodeError):
+        return None
+
+
+def write_cv_fold_cache(path: Path, fingerprint: str) -> None:
+    metadata_path = path.with_suffix(".cache.json")
+    temporary = metadata_path.with_suffix(".tmp")
+    temporary.write_text(json.dumps({"fingerprint": fingerprint}) + "\n")
+    temporary.replace(metadata_path)
+
+
+def gate_cache_fingerprint(family: str, folds: str, plan_path: Path, config_path: Path,
+                           calibrate: Path, probe: Path, colorcheck: Path,
+                           manifests: list[Path]) -> str:
+    """Bind rendered gate rows to the exact teacher inputs, tools and coefficients."""
+    fingerprint = hashlib.sha256()
+    fingerprint.update(b"candidate-gate/v1\0")
+    fingerprint.update(baseline_fingerprint(plan_path, config_path, calibrate).encode("ascii"))
+    fingerprint.update(b"\0")
+    fingerprint.update(json.dumps({"family": family, "folds": folds}, sort_keys=True).encode("utf-8"))
+    fingerprint.update(b"\0")
+    for path in (probe, *sorted(manifests)):
+        fingerprint.update(path.name.encode("utf-8"))
+        fingerprint.update(b"\0")
+        fingerprint.update(digest(path).encode("ascii"))
+        fingerprint.update(b"\0")
+    for source in sorted(colorcheck.rglob("*.py")):
+        fingerprint.update(source.relative_to(colorcheck).as_posix().encode("utf-8"))
+        fingerprint.update(b"\0")
+        fingerprint.update(digest(source).encode("ascii"))
+        fingerprint.update(b"\0")
+    fingerprint.update(digest(Path(__file__).resolve()).encode("ascii"))
+    return fingerprint.hexdigest()
+
+
 def binaries(repo: Path) -> dict[str, Path]:
     root = repo / "packages/develop-engine/target/release"
     return {
@@ -660,16 +781,17 @@ def photo_targets(args) -> None:
     plan_path = args.work / "plan.json"
     plan_doc = json.loads(plan_path.read_text())
     calibrate = binaries(args.repo)["calibrate"]
-    server = Server(calibrate, args.work / "server-config.json")
+    config_path = args.work / "server-config.json"
+    server = Server(calibrate, config_path)
     base_rows = surrogate_baseline(
-        server, args.work, plan_doc, plan_path, args.work / "server-config.json", calibrate)
+        server, args.work, plan_doc, plan_path, config_path, calibrate)
     if args.context:
-        context_targets(server, plan_doc, base_rows, args.work)
+        context_targets(server, plan_doc, base_rows, args.work, plan_path, config_path, calibrate)
         server.close()
         return
     path = args.work / "runs" / "photo-targets.json"
-    path.parent.mkdir(parents=True, exist_ok=True)
-    done = json.loads(path.read_text()) if path.exists() else {}
+    fingerprint = target_cache_fingerprint("C", plan_path, config_path, calibrate, args.fev)
+    done = read_target_cache(path, "C", plan_path, config_path, calibrate, args.fev) or {}
     for j in range(len(plan_doc["scenes"])):
         if str(j) in done:
             continue
@@ -691,15 +813,21 @@ def photo_targets(args) -> None:
             for i, row in zip(items, server.eval(constant_candidate(theta), items)):
                 rows[str(i)] = row.tolist()
         done[str(j)] = {"theta": theta.tolist(), "rows": rows}
-        path.write_text(json.dumps(done))
+        write_target_cache(path, "C", fingerprint, args.fev, done)
         print(f"targets {j + 1}/{len(plan_doc['scenes'])}", flush=True)
     server.close()
 
 
-def context_targets(server: Server, plan_doc: dict, base_rows: np.ndarray, work: Path) -> None:
-    single = json.loads((work / "runs" / VARIANTS_C["C"]["targets"]).read_text())
+def context_targets(server: Server, plan_doc: dict, base_rows: np.ndarray, work: Path,
+                    plan_path: Path, config_path: Path, calibrate: Path) -> None:
+    single_path = work / "runs" / VARIANTS_C["C"]["targets"]
+    single = read_target_cache(single_path, "C", plan_path, config_path, calibrate)
+    expected_scenes = {str(j) for j in range(len(plan_doc["scenes"]))}
+    if single is None or set(single) != expected_scenes:
+        raise SystemExit("candidate C targets are stale or incomplete; rerun `targets` before `targets --context`")
     path = work / "runs" / VARIANTS_C["CP"]["targets"]
-    done = json.loads(path.read_text()) if path.exists() else {}
+    fingerprint = target_cache_fingerprint("CP", plan_path, config_path, calibrate, CP_TARGET_FEV, single_path)
+    done = read_target_cache(path, "CP", plan_path, config_path, calibrate, CP_TARGET_FEV, single_path) or {}
     for j in range(len(plan_doc["scenes"])):
         if str(j) in done:
             continue
@@ -716,7 +844,7 @@ def context_targets(server: Server, plan_doc: dict, base_rows: np.ndarray, work:
         rows = server.eval(constant_candidate(best), items)
         done[str(j)] = {"theta": best.tolist(), "loss": value,
                         "rows": {str(i): row.tolist() for i, row in zip(items, rows)}}
-        path.write_text(json.dumps(done))
+        write_target_cache(path, "CP", fingerprint, CP_TARGET_FEV, done)
         print(f"context targets {j + 1}/{len(plan_doc['scenes'])}", flush=True)
 
 
@@ -846,9 +974,11 @@ def model_candidate(model: dict, tune: np.ndarray | None = None) -> dict:
 
 
 def fit_c(server: Server, plan_doc: dict, scene_ids: set[int], base_rows: np.ndarray, work: Path,
-          fev: int, log, variant: str = "C") -> dict:
+          calibrate: Path, fev: int, log, variant: str = "C") -> dict:
     config = VARIANTS_C[variant]
-    targets_doc = json.loads((work / "runs" / config["targets"]).read_text())
+    plan_path = work / "plan.json"
+    config_path = work / "server-config.json"
+    _, targets_doc = candidate_targets(variant, plan_path, config_path, calibrate, work)
     features_all = np.array([s["photoFeatures"] for s in server.description["scenes"]])
     ids = sorted(scene_ids)
     model = fit_ridge(features_all[ids], np.array([targets_doc[str(j)]["theta"] for j in ids]),
@@ -881,21 +1011,25 @@ def cv_c(args) -> None:
     key = fold_key(args.folds)
     out_dir = args.work / "runs" / f"{VARIANTS_C[args.variant]['cv']}-{args.folds}"
     out_dir.mkdir(parents=True, exist_ok=True)
+    target_path, _ = candidate_targets(args.variant, plan_path, args.work / "server-config.json", calibrate, args.work)
     rows_oof = {name: np.full((len(plan_doc["items"]), 4), np.nan) for name in ("C0", "C")}
     for k in sorted({s[key] for s in plan_doc["scenes"]}):
         held = {i for i, s in enumerate(plan_doc["scenes"]) if s[key] == k}
         train = set(range(len(plan_doc["scenes"]))) - held
         path = out_dir / f"fold{k}.json"
-        if path.exists():
-            fitted = json.loads(path.read_text())
-        else:
+        fingerprint = cv_fold_fingerprint(args.variant, plan_path, args.work / "server-config.json", calibrate,
+                                          target_path, args.folds, k, args.tune_fev)
+        fitted = read_cv_fold_cache(path, fingerprint)
+        if fitted is None:
             started = time.monotonic()
             print(f"fold {k}: train {len(train)} held {len(held)}", flush=True)
-            fitted = fit_c(server, plan_doc, train, base_rows, args.work, args.tune_fev,
+            fitted = fit_c(server, plan_doc, train, base_rows, args.work, calibrate, args.tune_fev,
                            lambda msg: print(msg, flush=True), args.variant)
             fitted["seconds"] = time.monotonic() - started
             fitted["heldScenes"] = sorted(held)
+            fitted["tuneFev"] = args.tune_fev
             path.write_text(json.dumps(fitted, indent=1))
+            write_cv_fold_cache(path, fingerprint)
         held_items = [i for i, it in enumerate(plan_doc["items"]) if it["scene"] in held]
         for name in ("C0", "C"):
             rows_oof[name][held_items] = server.eval(fitted[name], held_items)
@@ -916,7 +1050,7 @@ def fit_all_c(args) -> None:
     out_dir = args.work / "runs" / VARIANTS_C[args.variant]["all"]
     out_dir.mkdir(parents=True, exist_ok=True)
     started = time.monotonic()
-    fitted = fit_c(server, plan_doc, set(range(len(plan_doc["scenes"]))), base_rows, args.work, args.tune_fev,
+    fitted = fit_c(server, plan_doc, set(range(len(plan_doc["scenes"]))), base_rows, args.work, calibrate, args.tune_fev,
                    lambda msg: print(msg, flush=True), args.variant)
     fitted["seconds"] = time.monotonic() - started
     rows = {name: server.eval(fitted[name], list(range(len(plan_doc["items"])))).tolist() for name in ("C0", "C")}
@@ -978,16 +1112,43 @@ def adoption(tables: dict, niho6: dict) -> dict:
 
 def publish_c(args) -> None:
     config = VARIANTS_C[args.family]
-    plan_doc = json.loads((args.work / "plan.json").read_text())
+    plan_path = args.work / "plan.json"
+    config_path = args.work / "server-config.json"
+    plan_doc = json.loads(plan_path.read_text())
     out = args.work / "gate" / args.family
-    rows = json.loads((out / "rows-private.json").read_text())
+    rows_path = out / "rows-private.json"
+    rows = json.loads(rows_path.read_text())
     meta = json.loads((out / "gate-meta.json").read_text())
+    if meta.get("family") != args.family:
+        raise SystemExit("gate results belong to another candidate; rerun gate")
+    bins = binaries(args.repo)
+    candidate_targets(args.family, plan_path, config_path, bins["calibrate"], args.work)
+    fold_key_name = fold_key(meta["folds"])
+    fold_ids = sorted({scene[fold_key_name] for scene in plan_doc["scenes"]})
+    manifest_paths = [out / f"fold{k}.manifest.json" for k in fold_ids] + [out / "all.manifest.json"]
+    expected_gate = gate_cache_fingerprint(
+        args.family, meta["folds"], plan_path, config_path, bins["calibrate"], bins["probe"],
+        args.repo / "packages/develop-engine/tools/colorcheck", manifest_paths)
+    if meta.get("cacheFingerprint") != expected_gate or meta.get("rowsSha256") != digest(rows_path):
+        raise SystemExit("gate results are stale; rerun gate before publish-c")
+    expected_rows = {(i, "neutral") if item["variant"] == "neutral" else (i, kind)
+                     for i, item in enumerate(plan_doc["items"])
+                     for kind in (("neutral",) if item["variant"] == "neutral" else ("oof", "insample"))}
+    actual_rows = {(row.get("item"), row.get("kind")) for row in rows if isinstance(row, dict)}
+    if len(rows) != len(expected_rows) or actual_rows != expected_rows:
+        raise SystemExit("gate results are incomplete; rerun gate before publish-c")
     tables = gate_tables(plan_doc, rows)
     cv_dir = args.work / "runs" / f"{config['cv']}-{meta['folds']}"
     key = fold_key(meta["folds"])
     fold_info = []
     for k in sorted({s[key] for s in plan_doc["scenes"]}):
-        fitted = json.loads((cv_dir / f"fold{k}.json").read_text())
+        fit_path = cv_dir / f"fold{k}.json"
+        fitted = json.loads(fit_path.read_text())
+        fingerprint = cv_fold_fingerprint(
+            args.family, plan_path, config_path, bins["calibrate"],
+            args.work / "runs" / config["targets"], meta["folds"], k, fitted.get("tuneFev", -1))
+        if read_cv_fold_cache(fit_path, fingerprint) is None:
+            raise SystemExit(f"candidate {args.family} fold {k} is stale; rerun cv-c before publish-c")
         held = [s for s in plan_doc["scenes"] if s[key] == k]
         fold_info.append({"fold": k, "heldScenes": len(held),
                           "heldSubsets": {x: sum(s["subset"] == x for s in held) for x in SUBSETS},
@@ -1108,13 +1269,30 @@ def gate(args) -> None:
     bins = binaries(args.repo)
     key = fold_key(args.folds)
     model_family = args.family in VARIANTS_C
+    plan_path = args.work / "plan.json"
+    config_path = args.work / "server-config.json"
+    target_path = None
+    if model_family:
+        target_path, _ = candidate_targets(args.family, plan_path, config_path, bins["calibrate"], args.work)
     cv_dir = args.work / "runs" / (f"{VARIANTS_C[args.family]['cv']}-{args.folds}" if model_family
                                    else f"cv-{args.folds}")
     out = args.work / "gate" / args.family
     out.mkdir(parents=True, exist_ok=True)
     manifests = {}
     for k in sorted({s[key] for s in plan_doc["scenes"]}):
-        fitted = json.loads((cv_dir / f"fold{k}.json").read_text())
+        fit_path = cv_dir / f"fold{k}.json"
+        if model_family:
+            cached = json.loads(fit_path.read_text())
+            tune_fev = cached.get("tuneFev") if isinstance(cached, dict) else None
+            if type(tune_fev) is not int:
+                raise SystemExit(f"candidate {args.family} fold {k} has no valid tuning record; rerun cv-c")
+            fingerprint = cv_fold_fingerprint(args.family, plan_path, config_path, bins["calibrate"],
+                                              target_path, args.folds, k, tune_fev)
+            fitted = read_cv_fold_cache(fit_path, fingerprint)
+            if fitted is None:
+                raise SystemExit(f"candidate {args.family} fold {k} is stale; rerun cv-c before gate")
+        else:
+            fitted = json.loads(fit_path.read_text())
         manifests[k] = out / f"fold{k}.manifest.json"
         freeze(bins, fitted["C" if model_family else args.family], manifests[k])
     all_fit = json.loads((args.work / "runs" / (VARIANTS_C[args.family]["all"] if model_family else "all")
@@ -1122,6 +1300,10 @@ def gate(args) -> None:
     manifests["all"] = out / "all.manifest.json"
     freeze(bins, all_fit["C" if model_family else args.family], manifests["all"])
     colorcheck = str(args.repo / "packages/develop-engine/tools/colorcheck")
+    manifests_for_fingerprint = [Path(manifests[k]) for k in sorted(manifests, key=str)]
+    cache_fingerprint = gate_cache_fingerprint(
+        args.family, args.folds, plan_path, config_path, bins["calibrate"], bins["probe"],
+        Path(colorcheck), manifests_for_fingerprint)
     jobs = []
     for i, it in enumerate(plan_doc["items"]):
         scene = plan_doc["scenes"][it["scene"]]
@@ -1136,10 +1318,19 @@ def gate(args) -> None:
         jobs.append(common | {"dir": str(out / "renders" / f"{i}-insample"), "manifest": str(manifests["all"]),
                               "fold": "all", "measureA": False, "kind": "insample"})
     rows_path = out / "rows-private.json"
+    fingerprint_path = out / "rows-private.fingerprint"
     done = {}
-    if rows_path.exists():
-        for row in json.loads(rows_path.read_text()):
-            done[(row["item"], row["kind"])] = row
+    if rows_path.exists() and fingerprint_path.exists() and fingerprint_path.read_text().strip() == cache_fingerprint:
+        try:
+            for row in json.loads(rows_path.read_text()):
+                done[(row["item"], row["kind"])] = row
+        except (KeyError, TypeError, ValueError, json.JSONDecodeError):
+            done = {}
+    else:
+        rows_path.unlink(missing_ok=True)
+    temporary_fingerprint = fingerprint_path.with_suffix(".tmp")
+    temporary_fingerprint.write_text(cache_fingerprint + "\n")
+    temporary_fingerprint.replace(fingerprint_path)
     pending = [j for j in jobs if (j["item"], j["kind"]) not in done]
     started = time.monotonic()
     with concurrent.futures.ProcessPoolExecutor(max_workers=args.threads) as pool:
@@ -1147,13 +1338,18 @@ def gate(args) -> None:
             row["kind"] = job["kind"]
             done[(job["item"], job["kind"])] = row
             if n % 25 == 0 or n == len(pending):
-                rows_path.write_text(json.dumps(list(done.values())))
+                temporary_rows = rows_path.with_suffix(".tmp")
+                temporary_rows.write_text(json.dumps(list(done.values())))
+                temporary_rows.replace(rows_path)
                 print(f"{n}/{len(pending)} {time.monotonic() - started:.0f}s", flush=True)
-    rows_path.write_text(json.dumps(list(done.values())))
+    temporary_rows = rows_path.with_suffix(".tmp")
+    temporary_rows.write_text(json.dumps(list(done.values())))
+    temporary_rows.replace(rows_path)
     meta = {"family": args.family, "folds": args.folds,
             "manifests": {str(k): {"sha256": digest(p), "coefficientsSha256": json.loads(p.read_text())["coefficientsSha256"]}
                           for k, p in manifests.items()},
             "probeSha256": digest(bins["probe"]), "calibrateSha256": digest(bins["calibrate"]),
+            "cacheFingerprint": cache_fingerprint, "rowsSha256": digest(rows_path),
             "seconds": time.monotonic() - started}
     (out / "gate-meta.json").write_text(json.dumps(meta, indent=1))
 
