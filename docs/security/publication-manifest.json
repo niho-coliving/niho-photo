@@ -6163,7 +6163,8 @@
         "新しい色相保持エンジンと新旧バイナリの能力境界・数値回帰を整合。",
         "Issue #30 Oklch色ミキサーとengine 10/11対応を反映",
         "部分補正（マスク）#65: XMP書き出しでmasksをnotWrittenに報告する",
-        "Issue #32 XMP書き出しにsharpening群と輝度NR・detailのカラーNRを追加"
+        "Issue #32 XMP書き出しにsharpening群と輝度NR・detailのカラーNRを追加",
+        "cap inherited legacy color reduction when writing XMP"
       ]
     },
     {
@@ -6700,7 +6701,8 @@
       },
       "outputSha256": "ed8beb33fdf73d50fd11850f3da66d1c5f95cf3157ceafa71a8f24760c597f10",
       "modifications": [
-        "Issue #32 sharpening群とdetailのNR書き出し・往復を検証する"
+        "Issue #32 sharpening群とdetailのNR書き出し・往復を検証する",
+        "cover the capped inherited legacy XMP value"
       ]
     },
     {
