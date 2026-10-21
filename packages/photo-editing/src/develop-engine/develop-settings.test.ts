@@ -25,7 +25,10 @@ import {
   readDevelopDetail,
   readDevelopSettings,
   resetDevelopSettingsColors,
+  sameDevelopSettings,
   signedWorkingCopyState,
+  presetDevelopSettings,
+  autoDevelopSettings,
   type DevelopSettings,
 } from "./develop-settings";
 
@@ -308,7 +311,7 @@ describe("developSettingsOnWorkingCopy（#16944）", () => {
 });
 
 describe("isEditableDevelopSettings", () => {
-  it("まだ無いか、v1〜v7 で既知の数式なら直せる（未知の版・必要版より低い値は直さない）", () => {
+  it("まだ無いか、v1〜v8 で既知の数式なら直せる（未知の版・必要版より低い値は直さない）", () => {
     expect(isEditableDevelopSettings(null)).toBe(true);
     expect(isEditableDevelopSettings(undefined)).toBe(true);
     expect(isEditableDevelopSettings({ v: 1, engine: "niho-1" })).toBe(true);
@@ -324,7 +327,8 @@ describe("isEditableDevelopSettings", () => {
     expect(isEditableDevelopSettings({ v: 5, engine: "niho-1" })).toBe(true);
     expect(isEditableDevelopSettings({ v: 6, engine: "niho-1" })).toBe(true);
     expect(isEditableDevelopSettings({ v: 7, engine: "niho-1" })).toBe(true);
-    expect(isEditableDevelopSettings({ v: 8, engine: "niho-1" })).toBe(false);
+    expect(isEditableDevelopSettings({ v: 8, engine: "niho-1" })).toBe(true);
+    expect(isEditableDevelopSettings({ v: 9, engine: "niho-1" })).toBe(false);
     expect(isEditableDevelopSettings({ v: 1, engine: "niho-1", geometry: CROP })).toBe(false);
     expect(isEditableDevelopSettings("niho-1")).toBe(false);
   });
@@ -378,7 +382,7 @@ describe("isEditableDevelopSettings", () => {
     expect(isEditableDevelopSettings({ v: 1, engine: "niho-1", look: 1 })).toBe(false);
   });
 
-  it("readDevelopSettings は v1〜v7 の形だけを読み、必要な版より低い値は拒む", () => {
+  it("readDevelopSettings は v1〜v8 の形だけを読み、必要な版より低い値は拒む", () => {
     expect(readDevelopSettings({ v: 1, engine: "niho-1", exposure: 1 })).toEqual({ v: 1, engine: "niho-1", exposure: 1 });
     expect(readDevelopSettings({ v: 2, engine: "niho-1", geometry: CROP })).toEqual({ v: 2, engine: "niho-1", geometry: CROP });
     expect(readDevelopSettings({ v: 3, engine: "niho-1", grayscale: true })).toEqual({ v: 3, engine: "niho-1", grayscale: true });
@@ -390,7 +394,8 @@ describe("isEditableDevelopSettings", () => {
       engine: "niho-1",
       geometry: { perspective: { vertical: -10 } },
     });
-    expect(readDevelopSettings({ v: 8, engine: "niho-1" })).toBeNull();
+    expect(readDevelopSettings({ v: 8, engine: "niho-1" })).toEqual({ v: 8, engine: "niho-1" });
+    expect(readDevelopSettings({ v: 9, engine: "niho-1" })).toBeNull();
     expect(readDevelopSettings({ v: 6, engine: "niho-1", geometry: { perspective: { vertical: -10 } } })).toBeNull();
     expect(readDevelopSettings({ v: 1 })).toBeNull();
     expect(readDevelopSettings(null)).toBeNull();
@@ -729,13 +734,14 @@ describe("developSettingsToEditSettings（crate の to_edit_settings_value と�
     });
   });
 
-  it("変換できなかった値（legacySettings）・知らない版・幾何（切り抜きを落として写さない）は戻せない（null）", () => {
+  it("変換できなかった値（legacySettings）・未知の版・幾何（切り抜きを落として写さない）は戻せない（null）", () => {
     expect(developSettingsToEditSettings({ ...neutralDevelopSettings(), legacySettings: { exposure: 9 } })).toBeNull();
     expect(
       developSettingsToEditSettings({ ...neutralDevelopSettings("raw-1"), legacySettings: { profile: "adobe" } }),
     ).toBeNull();
     expect(developSettingsToEditSettings({ v: 7, engine: "niho-1" })).toEqual({ whiteBalance: { mode: "asShot" } });
-    expect(developSettingsToEditSettings({ v: 8, engine: "niho-1" })).toBeNull();
+    expect(developSettingsToEditSettings({ v: 8, engine: "niho-1" })).toEqual({ whiteBalance: { mode: "asShot" } });
+    expect(developSettingsToEditSettings({ v: 9, engine: "niho-1" })).toBeNull();
     expect(developSettingsToEditSettings({ ...neutralDevelopSettings(), v: 2, geometry: CROP })).toBeNull();
     expect(developSettingsToEditSettings({ v: 2, engine: "niho-1" })).toEqual({ whiteBalance: { mode: "asShot" } });
     expect(developSettingsToEditSettings(null)).toBeNull();
@@ -836,5 +842,80 @@ describe("補正のコピーと貼り付け（F5a-2 #17140）", () => {
       engine: "niho-2",
       base: "raw-apple.d8.p1.e1.cal-none",
     });
+  });
+});
+
+describe("修復の印（heal。niho-photo#44）", () => {
+  const HEAL = [{ id: "m1", mode: "remove", radius: 0.02, feather: 0.5, points: [[0.2, 0.3], [0.4, 0.35]] }];
+  const healed: DevelopSettings = { v: 8, engine: "niho-10", look: "niho-standard-1", base: null, exposure: 0.4, heal: HEAL };
+
+  it("印があれば形の版は 8（遠近・色ポイントより上）、空・無いなら印のない版", () => {
+    expect(developSettingsVersion({ heal: HEAL })).toBe(8);
+    expect(developSettingsVersion({ heal: HEAL, geometry: { perspective: { vertical: -10 } } })).toBe(8);
+    expect(developSettingsVersion({ heal: [], geometry: { perspective: { vertical: -10 } } })).toBe(7);
+    expect(developSettingsVersion({ heal: [] })).toBe(1);
+  });
+
+  it("v8 を読み・直せる。印が壊れている・印があって v が 8 未満なら読まない・直さない", () => {
+    expect(readDevelopSettings(healed)).toEqual(healed);
+    expect(isEditableDevelopSettings(healed)).toBe(true);
+    expect(readDevelopSettings({ ...healed, heal: undefined })).not.toBeNull();
+    expect(readDevelopSettings({ ...healed, v: 7 })).toBeNull();
+    expect(isEditableDevelopSettings({ ...healed, v: 7 })).toBe(false);
+    const broken = { ...healed, heal: [{ ...HEAL[0], radius: 0.9 }] };
+    expect(readDevelopSettings(broken)).toBeNull();
+    expect(isEditableDevelopSettings(broken)).toBe(false);
+    expect(readDevelopSettings({ ...healed, v: 9 })).toBeNull();
+  });
+
+  it("補正のコピーは印を運ばず、貼り付け先の印を保つ（写真の中の傷の位置は写真ごと）", () => {
+    const copied = copyDevelopSettings(healed);
+    expect(copied).not.toHaveProperty("heal");
+    expect(copied.exposure).toBe(0.4);
+    const target: DevelopSettings = { v: 1, engine: "niho-10", look: "niho-standard-1", base: null };
+    const pasted = pasteDevelopSettings(target, copied);
+    expect(pasted).not.toHaveProperty("heal");
+    expect(pasted.v).toBe(1);
+    const otherMarks = [{ ...HEAL[0], id: "x", points: [[0.9, 0.9]] }];
+    const onto = pasteDevelopSettings({ ...target, v: 8, heal: otherMarks }, { ...copied, heal: HEAL });
+    expect(onto.heal).toBe(otherMarks);
+    expect(onto.v).toBe(8);
+  });
+
+  it("プリセット・自動は印を運ばず、当てる前の写真の印を保つ", () => {
+    const presetResult: DevelopSettings = { v: 1, engine: "niho-10", look: "niho-standard-1", base: null, contrast: 30 };
+    const applied = presetDevelopSettings(healed, presetResult);
+    expect(applied.heal).toBe(HEAL);
+    expect(applied.v).toBe(8);
+    expect(applied.contrast).toBe(30);
+    const plain: DevelopSettings = { v: 1, engine: "niho-10", look: "niho-standard-1", base: null };
+    expect(presetDevelopSettings(plain, { ...presetResult, v: 8, heal: HEAL })).not.toHaveProperty("heal");
+    const auto = autoDevelopSettings(healed, { ...healed, exposure: 0.9, heal: undefined });
+    expect(auto.heal).toBe(HEAL);
+    expect(auto.v).toBe(8);
+  });
+
+  it("「初期化」は色だけを戻し、印（と幾何）は保つ。印は色の補正に数えないが、印のある写真は neutral でない", () => {
+    const reset = resetDevelopSettingsColors({ ...healed, geometry: CROP }, null);
+    expect(reset.heal).toBe(HEAL);
+    expect(reset.geometry).toBe(CROP);
+    expect(reset.exposure).toBe(0);
+    expect(reset.v).toBe(8);
+    expect(resetDevelopSettingsColors({ ...healed, exposure: 0 }, null).heal).toBe(HEAL);
+    expect(isNeutralDevelopColors({ ...healed, exposure: 0 })).toBe(true);
+    expect(isNeutralDevelopSettings({ ...healed, exposure: 0 })).toBe(false);
+    expect(isNeutralDevelopSettings({ ...healed, exposure: 0, v: 1, heal: [] })).toBe(true);
+  });
+
+  it("旧エンジン（Photo Bench）の形へは戻さない（印を落とすと消したものが戻る）", () => {
+    expect(developSettingsToEditSettings({ ...healed, exposure: 0 })).toBeNull();
+    expect(developSettingsToEditSettings({ ...healed, v: 1, heal: [] })).not.toBeNull();
+  });
+
+  it("同じかの比較は印のキーの順を問わず、点が違えば違う", () => {
+    const reordered = { ...healed, heal: [{ points: HEAL[0]!.points, feather: 0.5, radius: 0.02, mode: "remove", id: "m1" }] };
+    expect(sameDevelopSettings(healed, reordered)).toBe(true);
+    const moved = { ...healed, heal: [{ ...HEAL[0], points: [[0.2, 0.3]] }] };
+    expect(sameDevelopSettings(healed, moved)).toBe(false);
   });
 });

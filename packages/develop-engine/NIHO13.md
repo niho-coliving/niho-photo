@@ -163,11 +163,11 @@ p99 の悪化は端の飽和色（純青・純緑付近）に集まる。悪化�
 
 ## 既定と互換
 
-- crate: `ENGINE_VERSION` は `niho-13`（reader capability）、workspace は 0.22.0。`DevelopSettings::neutral()` / `new_edit()` は互換の既定（`niho-1`）のまま。
+- crate: `ENGINE_VERSION` は `niho-13`（reader capability）、workspace は 0.24.0。`DevelopSettings::neutral()` / `new_edit()` は互換の既定（`niho-1`）のまま。
 - 画面（`packages/photo-editing` の `develop-settings.ts`）: `DEVELOP_SETTINGS_ENGINE` は `niho-13`、保存済みの `niho-12` は `NIHO12_DEVELOP_SETTINGS_ENGINE`。直接描く JPEG / PNG、`raster.*`、unsigned の `raw-apple.*` の未保存の写真は `niho-13` で開く。作業コピーの無い RAW と版の分からない作業コピーは `niho-2`、signed RAW の既定（`niho-3` / `niho-11`）は変えない。
 - 保存済みの `niho-2` / `niho-6` / `niho-10` / `niho-12` は、開く・プリセット・初期化・貼り付けで `niho-13` に変えない（Rust の XMP 経路も同じ）。既定の切替前に作った未保存 draft（`niho-2` / `niho-6` / `niho-10` / `niho-12`）はその数式のまま戻す。
 - NIHO Desktop の原寸書き出しで未編集の写真には、従来どおり `niho-2` の neutral を渡す（neutral は相対 WB が 0 なので raster は同じ画）。
-- 画面の wasm は `/develop-engine/niho-13/manifest-0.22.0.json` を読む。`niho-13` の補正を描く非公開側（ワーカー・Web の配備）は、この版の固定 SHA を取り込んでから画面を配る（#2）。
+- 画面の wasm は `/develop-engine/niho-13/manifest-0.24.0.json` を読む。`niho-13` の補正を描く非公開側（ワーカー・Web の配備）は、この版の固定 SHA を取り込んでから画面を配る（#2）。
 
 ## 再現手順
 

@@ -21,6 +21,7 @@ pub mod fastmath;
 pub mod frame;
 pub mod geometry;
 pub mod head_wb;
+pub mod heal;
 pub mod icc_lut;
 mod jpeg_wb;
 pub mod local_mask;
@@ -260,7 +261,7 @@ pub fn render(
     settings_json: &str,
     options: &RenderOptions,
 ) -> Result<Rendered, Error> {
-    let settings = parse_settings(settings_json)?;
+    let mut settings = parse_settings(settings_json)?;
     if matches!(
         settings.engine.as_str(),
         settings::ENGINE_NIHO_4
@@ -273,8 +274,19 @@ pub fn render(
             settings.engine
         )));
     }
+    // Heal marks: the decoded original is healed in place (as a Session
+    // heals its source; no second copy), except for a `niho-6` response,
+    // whose Session heals its prepared master.
+    let heal_decoded = !settings.heal.is_empty()
+        && !(niho6::uses_raster_formula(&settings) && niho6::uses_response(&settings));
+    let heal = if heal_decoded {
+        std::mem::take(&mut settings.heal)
+    } else {
+        Vec::new()
+    };
     if rendered_geometry(&settings).is_none() {
-        let raster = decode::decode_raster(input, options.max_dimension, options.filter)?;
+        let mut raster = decode::decode_raster(input, options.max_dimension, options.filter)?;
+        heal::heal_in_place(&heal, &mut raster.image);
         // Local masks render in layers (`Session::render`); their `R0` is
         // this path's frame (an unmasked one-shot render).
         if settings.has_active_masks()
@@ -297,7 +309,8 @@ pub fn render(
         options.max_dimension,
         options.decode_cap,
     )?;
-    let raster = decode::decode_raster(input, long_edge, options.filter)?;
+    let mut raster = decode::decode_raster(input, long_edge, options.filter)?;
+    heal::heal_in_place(&heal, &mut raster.image);
     Session::new(SessionSource::Raster(raster), options.filter).render(
         &settings,
         options.max_dimension,
@@ -740,6 +753,22 @@ fn source_at_size_key<'a>(
     }
 }
 
+/// The source a Session's frames read: the healed copy when the settings
+/// have heal marks ([`Session::ensure_heal`]), else the prepared master or
+/// the source.
+fn frame_source<'a>(
+    healed: &'a Option<heal::Healed>,
+    niho3: &'a Option<PreparedNiho3>,
+    source: &'a SessionSource,
+    use_niho3: bool,
+) -> &'a SessionSource {
+    match (healed, use_niho3) {
+        (Some(healed), _) => &healed.source,
+        (None, true) => &niho3.as_ref().expect("prepared niho3").source,
+        (None, false) => source,
+    }
+}
+
 /// A decoded photo kept for repeated renders (slider drags): decode once,
 /// keep the per-size reductions (or, with a geometry, the working image of
 /// the window), the adaptive statistics, the cubes of the previous frame
@@ -824,6 +853,11 @@ pub struct Session {
     local_shared: Option<pipeline::LocalPass>,
     /// The response gains of the last `niho-6` master ([`Niho6Gains`]).
     niho6_gains: Option<Niho6Gains>,
+    /// The active source healed by the settings' marks ([`heal`]): the
+    /// frames read it instead (`None` without marks).
+    healed: Option<heal::Healed>,
+    /// The marks' plans, shared with the sessions made from this one.
+    heal_plans: Arc<heal::PlanCache>,
 }
 
 impl Session {
@@ -879,6 +913,8 @@ impl Session {
             niho3: None,
             parked_niho3: None,
             niho3_seed: None,
+            healed: None,
+            heal_plans: Arc::default(),
         }
     }
 
@@ -984,8 +1020,9 @@ impl Session {
         isolated.niho3_seed = self.niho3_analysis();
         isolated.share_balanced_source(self);
         isolated.share_niho6_analysis(self);
+        isolated.heal_plans = Arc::clone(&self.heal_plans);
         // The picker reads the global settings: the color points it targets
-        // are global (local masks do not move them).
+        // are global (local masks do not move them). Heal marks remain active.
         let global = local_render::without_masks(settings);
         isolated.sample_color_isolated(&global, max_dimension, x, y)
     }
@@ -1022,18 +1059,10 @@ impl Session {
             .map(|prepared| &prepared.settings)
             .unwrap_or(settings);
         let (source, output) = if let Some(framed) = self.framed.as_ref() {
-            let active = if use_niho3 {
-                &self.niho3.as_ref().expect("prepared niho3").source
-            } else {
-                self.source.as_ref()
-            };
+            let active = frame_source(&self.healed, &self.niho3, &self.source, use_niho3);
             (framed.image.as_ref().unwrap_or(active), framed.plan.output)
         } else {
-            let active = if use_niho3 {
-                &self.niho3.as_ref().expect("prepared niho3").source
-            } else {
-                self.source.as_ref()
-            };
+            let active = frame_source(&self.healed, &self.niho3, &self.source, use_niho3);
             let source = source_at_size_key(
                 size_key.expect("unframed size key"),
                 active,
@@ -1173,6 +1202,7 @@ impl Session {
         // Masks keep their place on the photo, not on the reduction.
         thumbnail.working_size = self.working_size;
         thumbnail.share_niho6_analysis(self);
+        thumbnail.heal_plans = Arc::clone(&self.heal_plans);
         thumbnail
     }
 
@@ -1361,11 +1391,7 @@ impl Session {
     }
 
     fn active_source(&self, niho3: bool) -> &SessionSource {
-        if niho3 {
-            &self.niho3.as_ref().expect("prepared niho3").source
-        } else {
-            self.source.as_ref()
-        }
+        frame_source(&self.healed, &self.niho3, &self.source, niho3)
     }
 
     fn niho3_mode(&self, settings: &DevelopSettings) -> Result<Option<RawEngine>, Error> {
@@ -1883,6 +1909,7 @@ impl Session {
         if !use_niho3 {
             self.release_master();
         }
+        self.ensure_heal(settings, use_niho3)?;
         let render_settings = if use_niho3 {
             self.niho3
                 .as_ref()
@@ -1898,11 +1925,7 @@ impl Session {
         }
         self.framed = None;
         let key = self.at_size(max_dimension, use_niho3);
-        let active_source = if use_niho3 {
-            &self.niho3.as_ref().expect("prepared niho3").source
-        } else {
-            self.source.as_ref()
-        };
+        let active_source = frame_source(&self.healed, &self.niho3, &self.source, use_niho3);
         let source = source_at_size_key(key, active_source, self.sized.as_ref());
         let mut rendered = match source {
             SessionSource::Raster(raster) => {
@@ -1998,11 +2021,7 @@ impl Session {
             });
         }
         let framed = self.framed.as_ref().expect("framed");
-        let active_source = if use_niho3 {
-            &self.niho3.as_ref().expect("prepared niho3").source
-        } else {
-            self.source.as_ref()
-        };
+        let active_source = frame_source(&self.healed, &self.niho3, &self.source, use_niho3);
         let framing = pipeline::Framing {
             stats_source: active_source.image(),
             long_edge: framed.plan.scale_long_edge,
@@ -2084,11 +2103,16 @@ impl Session {
         if !issues.is_empty() {
             return Err(Error::InvalidSettings(issues));
         }
-        if settings.masks.is_empty() {
+        if settings.masks.is_empty() && settings.heal.is_empty() {
             return self.auto_outcome_global(settings);
         }
-        let mut outcome = self.auto_outcome_global(&local_render::without_masks(settings))?;
+        // Auto measures the global image without local masks or heal marks,
+        // then returns both photo-specific edits unchanged.
+        let mut global = local_render::without_masks(settings);
+        global.heal.clear();
+        let mut outcome = self.auto_outcome_global(&global)?;
         outcome.settings.masks = settings.masks.clone();
+        outcome.settings.heal = settings.heal.clone();
         Ok(outcome)
     }
 

@@ -24,6 +24,9 @@
 //! none and fail on an active surface mask with `maskSurfaceMissing`).
 //! `developer.estimateUpright(settingsJson,
 //! mode)` estimates Upright (the perspective that stands its lines upright).
+//! Heal marks (`developSettings.heal`, v 8) render through `render` and
+//! `developer.render` like any other setting; the Developer keeps their plans
+//! across frames.
 //! Everything runs single threaded (no SharedArrayBuffer, spec "段 2").
 
 use js_sys::{Object, Reflect, Uint8ClampedArray};
@@ -351,7 +354,7 @@ mod tests {
     }
 
     /// `validateSettings` reads `masks` like the crate does (v 5 and later,
-    /// strict keys; v 6 is detail, v 7 is perspective, and v 8 is unknown).
+    /// strict keys; v 6 is detail, v 7 is perspective, v 8 is heal, and v 9 is unknown).
     #[test]
     fn validate_settings_accepts_and_rejects_masks() {
         let mask = r#"{"id":"m1","kind":"linear","zero":{"x":0.5,"y":0.2},"full":{"x":0.5,"y":0.5},"adjust":{"exposure":-0.7}}"#;
@@ -364,8 +367,9 @@ mod tests {
         assert!(issues(5, mask).is_empty());
         assert!(issues(6, mask).is_empty());
         assert!(issues(7, mask).is_empty());
+        assert!(issues(8, mask).is_empty());
         assert_eq!(issues(4, mask)[0]["code"], "versionTooLow");
-        assert_eq!(issues(8, mask)[0]["code"], "unsupportedVersion");
+        assert_eq!(issues(9, mask)[0]["code"], "unsupportedVersion");
         let unknown = mask.replace(r#""adjust""#, r#""opacity":1,"adjust""#);
         assert_eq!(issues(5, &unknown)[0]["code"], "unknownMaskKey");
     }

@@ -33,6 +33,8 @@ import { parseDevelopEngineManifest } from "./develop-engine-manifest";
  *   `detail: true` を付ける
  * - 遠近（`v: 7` の `geometry.perspective`。niho-photo#46）も同じく、`validateSettings` が小さな `v: 7` の設定を通すときだけ `ready` に
  *   `perspective: true` を付ける（幾何の口が無い wasm には付けない）
+ * - 修復（`v: 8` の `heal`。niho-photo#44）も同じく、`validateSettings` が小さな `v: 8` の設定を通すときだけ `ready` に `heal: true` を
+ *   付ける（`heal` を知らない wasm が印を黙って落として描かないよう、版の比較でなく実際の設定で確かめる）
  * - Upright（niho-photo#46 後半）: `estimateUpright` は開いている写真の `Developer.estimateUpright(settingsJson, mode)` の結果の JSON を
  *   そのまま返す（描画と同じ列で順に処理する単発の問い合わせ。`sampleColor` と同じ）。`Developer` に口があり遠近も描けるとき
  *   だけ `ready` に `upright: true` を付け、無い glue・写真を開いていなければ error
@@ -136,6 +138,8 @@ export type DevelopEngineWorkerFeatures = {
   perspective?: true;
   /** `Developer.estimateUpright`（Upright。niho-photo#46 後半）があり、遠近も描ける */
   upright?: true;
+  /** wasm が修復の印のある設定（`v: 8` の `heal`。niho-photo#44）を読める。 */
+  heal?: true;
   /** `applyPreset`（プリセットの適用量。F2a 移行元設計） */
   presetAmount?: true;
   /** `settingsToXmp`（今の補正をプリセットに書き出す） */
@@ -486,6 +490,25 @@ function acceptsPerspectiveSettings(validateSettings: DevelopGlue["validateSetti
   }
 }
 
+/** 修復の印が 1 つある小さな設定（crate の `HEAL_SETTINGS_VERSION` = 8）。 */
+const HEAL_PROBE_SETTINGS_JSON = JSON.stringify({
+  v: 8,
+  engine: "niho-10",
+  look: "niho-standard-1",
+  base: null,
+  heal: [{ id: "probe", mode: "remove", radius: 0.02, feather: 0.5, points: [[0.5, 0.5]] }],
+});
+
+function acceptsHealSettings(validateSettings: DevelopGlue["validateSettings"]): boolean {
+  if (!validateSettings) return false;
+  try {
+    const issues: unknown = JSON.parse(String(validateSettings(HEAL_PROBE_SETTINGS_JSON)));
+    return Array.isArray(issues) && issues.length === 0;
+  } catch {
+    return false;
+  }
+}
+
 /** glue にある口（`ready` に付ける）。 */
 function glueFeatures(glue: DevelopGlue): DevelopEngineWorkerFeatures {
   return {
@@ -620,6 +643,7 @@ export function createDevelopEngineWorkerHandler(
   let masks: DevelopMaskCapabilities | null = null;
   let perspective = false;
   let upright = false;
+  let heal = false;
   let wasmMemory: () => ArrayBufferLike | null = () => null;
   let diagnostics = false;
   let unavailableReason: string | null = null;
@@ -743,6 +767,7 @@ export function createDevelopEngineWorkerHandler(
       ...(masks ? { masks: { ...masks, kinds: [...masks.kinds] } } : {}),
       ...(perspective ? { perspective: true as const } : {}),
       ...(upright ? { upright: true as const } : {}),
+      ...(heal ? { heal: true as const } : {}),
     });
   };
 
@@ -782,6 +807,7 @@ export function createDevelopEngineWorkerHandler(
       masks = readMaskCapabilities(loaded);
       perspective = loaded.geometry !== null && acceptsPerspectiveSettings(loaded.validateSettings);
       upright = perspective && loaded.upright;
+      heal = acceptsHealSettings(loaded.validateSettings);
       postReady(id);
     } catch (error) {
       unavailableReason = errorMessage(error);

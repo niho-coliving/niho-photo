@@ -651,6 +651,35 @@ describe("createDevelopEngine", () => {
     expect(await engine.supportsGeometry()).toBe(true);
   });
 
+  it("ready に heal: true が付いた wasm だけ修復の印（v8。niho-photo#44）を描けると答える", async () => {
+    const worker = new FakeWorker();
+    const engine = createDevelopEngine({ createWorker: () => worker as unknown as Worker, manifestUrl: MANIFEST_URL });
+    const supported = engine.supportsHeal();
+    worker.respond({
+      type: "ready",
+      id: worker.lastRequest("init").id,
+      version: "niho-develop 0.22.0 (engine niho-11)",
+      geometry: true,
+      perspective: true,
+      heal: true,
+    });
+
+    expect(await supported).toBe(true);
+    expect(await engine.supportsHeal()).toBe(true);
+
+    engine.dispose();
+    expect(await engine.supportsHeal()).toBe(false);
+  });
+
+  it("heal の無い ready（v8 を読めない wasm）では修復を描けないと答える", async () => {
+    const worker = new FakeWorker();
+    const engine = createDevelopEngine({ createWorker: () => worker as unknown as Worker, manifestUrl: MANIFEST_URL });
+    const supported = engine.supportsHeal();
+    worker.respond({ type: "ready", id: worker.lastRequest("init").id, version: "niho-develop 0.21.0 (engine niho-11)", geometry: true, perspective: true });
+    expect(await supported).toBe(false);
+    expect(await engine.supportsPerspective()).toBe(true);
+  });
+
   it("ready に upright: true が付いた wasm だけ Upright（niho-photo#46 後半）を推定し、結果の JSON を読む", async () => {
     const { worker, engine } = await readyEngine({ geometry: true, features: { perspective: true, upright: true } });
     expect(await engine.supportsUpright()).toBe(true);

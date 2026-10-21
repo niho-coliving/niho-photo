@@ -78,6 +78,8 @@ export {
  *   取り消さない・追い越さない）。写真を開き直す・閉じると、出している面の結果は捨て、「次」は null で終える
 * - Upright（`estimateUpright`。開いている写真の `Developer.estimateUpright`、niho-photo#46 後半）は、口が wasm にあり遠近も描けるとき
  *   （`supportsUpright()`）だけ使える。`sampleColor` と同じく捨てずに順に処理し、描画の枠には入らない
+ * - 修復の印（`heal`。niho-photo#44）は描画の設定の一部（口は増やさない）。印を描ける wasm か（`supportsHeal()`）は起こした wasm に
+ *   小さな `v: 8` の設定を確かめさせて分かる
  */
 
 /** `applyPreset` の撮影時の白の出どころ（省くと開いている写真）。 */
@@ -247,6 +249,12 @@ export type DevelopEngine = {
    * 起こす。使えなければ false。throw しない）
    */
   supportsUpright: () => Promise<boolean>;
+  /**
+   * 修復の印（`developSettings` v8 の `heal`。niho-photo#44）を読んで描ける wasm か（Worker が起こした wasm が `validateSettings` で
+   * 小さな `v: 8` の設定を通すとき。crate 0.24.0 から。初回に wasm を起こす。使えなければ false。throw しない）。false の wasm は印の
+   * ある設定を描かない（`unsupportedVersion`）ので、画面は修復の道具を出さない
+   */
+  supportsHeal: () => Promise<boolean>;
   /**
    * JPEG / PNG の寸法（EXIF の向きを反映。ヘッダーだけ読む）。bytes は Worker へコピーで渡す（呼び出し側の ArrayBuffer はそのまま
    * 使える。`open` / `exportJpeg` は手放す）。wasm に無ければ reject
@@ -472,6 +480,8 @@ export function createDevelopEngine(options: CreateDevelopEngineOptions = {}): D
   let perspectiveSupported = false;
   // Upright の口が wasm の `Developer` にあり、遠近も描ける（`ready` の応答で分かる）
   let uprightSupported = false;
+  // 修復の印（v8）を描ける wasm（`ready` の応答で分かる）
+  let healSupported = false;
   // プリセットの適用量・書き出し・見本の口が wasm にある（`ready` の応答で分かる）
   let presetAmountSupported = false;
   let settingsToXmpSupported = false;
@@ -635,6 +645,7 @@ export function createDevelopEngine(options: CreateDevelopEngineOptions = {}): D
         detailSupported = response.detail === true;
         perspectiveSupported = response.perspective === true;
         uprightSupported = response.upright === true;
+        healSupported = response.heal === true;
         presetAmountSupported = response.presetAmount === true;
         settingsToXmpSupported = response.settingsToXmp === true;
         presetThumbnailsSupported = response.presetThumbnails === true;
@@ -825,6 +836,10 @@ export function createDevelopEngine(options: CreateDevelopEngineOptions = {}): D
 
     async supportsUpright() {
       return (await ready()) && uprightSupported;
+    },
+
+    async supportsHeal() {
+      return (await ready()) && healSupported;
     },
 
     async estimateUpright(settings, mode) {

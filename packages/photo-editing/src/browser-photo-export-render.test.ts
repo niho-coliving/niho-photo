@@ -83,6 +83,8 @@ function fakeEngine(options: { source?: { width: number; height: number }; frame
     supportsPerspective: vi.fn(async () => true),
     // Upright（niho-photo#46 後半。この export test では使わない）
     supportsUpright: vi.fn(async () => false),
+    // 修復（niho-photo#44。印は描画の設定の一部）
+    supportsHeal: vi.fn(async () => true),
     estimateUpright: vi.fn(async () => {
       throw new Error("not used by exports");
     }),
