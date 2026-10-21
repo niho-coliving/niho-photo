@@ -638,6 +638,8 @@ def gate_tables(plan_doc: dict, rows: list[dict]) -> dict:
                 "p99Max": round(float(p99.max()), 4), "p99Over8": int((p99 > 8).sum())}
 
     def paired(idx, which):
+        if not idx:
+            return None
         a = [pick(i, "A") for i in idx]
         b = [pick(i, which) for i in idx]
         dm = np.array([y["mean"] - x["mean"] for x, y in zip(a, b)])
@@ -783,8 +785,15 @@ def holdout(args) -> None:
         raise SystemExit("candidate manifest differs from the freeze record")
     cohort = args.cohort.resolve()
     meta = json.loads((cohort / "manifest.json").read_text())
+    required = ("neutral",) + PRESETS
+    missing = [f"{scene['scene']}__{v}" for scene in meta["scenes"] for v in required
+               if not (cohort / "lr-export" / f"{scene['scene']}__{v}.jpg").exists()
+               or not (cohort / "inputs" / f"{scene['scene']}__neutral.jpg").exists()]
+    if missing:
+        raise SystemExit(f"{len(missing)} required inputs / exports are missing (neutral and the 3 presets)")
     settings_dir = args.work / "holdout-settings"
     subprocess.run([str(binaries(args.repo)["calibrate"]), "settings", str(settings_dir)], check=True)
+    args.work.mkdir(parents=True, exist_ok=True)
     marker.write_text(json.dumps({"startedAt": time.strftime("%Y-%m-%dT%H:%M:%S%z"),
                                   "freezeSha256": digest(args.freeze)}))
     scenes, skipped = [], 0
@@ -810,12 +819,14 @@ def holdout(args) -> None:
             job["manifest"] = str(manifest)
         jobs.append(job)
     with concurrent.futures.ProcessPoolExecutor(max_workers=args.threads) as pool:
-        rows = list(pool.map(gate_job, jobs))
-    for row, it in zip(rows, items):
-        row["kind"] = "neutral" if it["variant"] == "neutral" else "oof"
-        if row["kind"] == "oof":
-            rows_insample = dict(row, kind="insample")
-            rows.append(rows_insample)
+        measured = list(pool.map(gate_job, jobs))
+    rows = []
+    for row, it in zip(measured, items):
+        if it["variant"] == "neutral":
+            rows.append(dict(row, kind="neutral"))
+        else:
+            # One frozen candidate: the held-out and "in-sample" columns are the same rows.
+            rows.extend([dict(row, kind="oof"), dict(row, kind="insample")])
     (out / "rows-private.json").write_text(json.dumps(rows))
     tables = gate_tables({"scenes": scenes, "items": items}, rows)
     result = {"kind": "independent-holdout", "issue": 26, "freezeSha256": digest(args.freeze),

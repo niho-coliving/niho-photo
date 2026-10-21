@@ -9397,13 +9397,13 @@
     },
     {
       "path": "packages/develop-engine/tools/calibrate/fit_analytic_hs.py",
-      "sha256": "f0e53d4fca94e9559e6d667de385d7d75c747490d9e844748c5afaca621c1572",
-      "origin": "公開Issue #26 のため独立実装した開発教師上の校正・撮影日fold交差検証・gate計測・一度だけの独立評価の手順。入力は利用者指定のrepository外、非公開の写真・パス・scene名・参照画素をsourceへ含めず匿名集計だけを公開する。sealed・independentのcohortを拒否する。"
+      "sha256": "23d59650f146da7dffb71d6eba8a3594e1ba24d2b81ca934903a0f12a833c2c6",
+      "origin": "公開Issue #26 のため独立実装した開発教師上の校正・撮影日fold交差検証・gate計測・一度だけの独立評価の手順。入力は利用者指定のrepository外、非公開の写真・パス・scene名・参照画素をsourceへ含めず匿名集計だけを公開する。sealed・independentのcohortを拒否する。\n変更理由: #26 独立評価(holdout)で欠けた部分集合・設定を許し、必須の書き出しの欠落を開始前に止める"
     },
     {
       "path": "packages/develop-engine/tools/calibrate/tests/test_fit_analytic_hs.py",
-      "sha256": "6da825f3d918a08ba11b309c9d3cf035e9c292483e019594d9878c2a6be5a036",
-      "origin": "公開Issue #26 のため独立作成したunittest。合成データとtemporary directoryだけを使い、実写真・第三者資産を含まない。"
+      "sha256": "9a4a4dfd56ee69c154e33af09b8be7eded52c5470315fc8deb0c3eaec10f1e56",
+      "origin": "公開Issue #26 のため独立作成したunittest。合成データとtemporary directoryだけを使い、実写真・第三者資産を含まない。\n変更理由: #26 部分集合の欠けたgate表と判定を合成データで検査する"
     }
   ],
   "excludedSources": [

@@ -87,6 +87,31 @@ class ModelTests(unittest.TestCase):
         self.assertEqual(F.select_family(plan, {"B1": b1, "B2": b2_worse_daylight})["family"], "B1")
         self.assertEqual(F.select_family(plan, {"B1": b1, "B2": b1.copy()})["family"], "B1")
 
+    def test_gate_tables_allow_missing_subsets_and_variants(self):
+        scenes = [{"subset": "dark"}, {"subset": "brightIphone"}]
+        variants = ("neutral",) + F.PRESETS
+        items = [{"scene": j, "variant": v} for j in range(2) for v in variants]
+        rows = []
+        for i, it in enumerate(items):
+            metric = {"mean": 1.0 + i, "p99": 5.0 + i, "max": 9.0}
+            if it["variant"] == "neutral":
+                rows.append({"item": i, "kind": "neutral", "A": metric})
+            else:
+                better = {"mean": 0.5 + i, "p99": 4.0 + i, "max": 9.0}
+                rows.append({"item": i, "kind": "oof", "A": metric, "B": better})
+                rows.append({"item": i, "kind": "insample", "A": metric, "B": better})
+        tables = F.gate_tables({"scenes": scenes, "items": items}, rows)
+        self.assertIsNone(tables["daylight"]["presetsTotal"]["niho10"])
+        self.assertIsNone(tables["daylight"]["presetsTotal"]["pairedOutOfFold"])
+        self.assertIsNone(tables["all"]["h100"]["candidateOutOfFold"])
+        total = tables["all"]["presetsTotal"]
+        self.assertEqual(total["candidateOutOfFold"]["n"], 6)
+        self.assertEqual(total["pairedOutOfFold"]["meanWorse"], 0)
+        verdict = F.gate_verdict(tables["all"], "candidateOutOfFold")
+        # Neutral items 0 and 4 have means 1 and 5: the neutral gate fails.
+        self.assertFalse(verdict["neutralMean<=2"])
+        self.assertFalse(verdict["presetP99<=8 (every scene)"])
+
 
 if __name__ == "__main__":
     unittest.main()
