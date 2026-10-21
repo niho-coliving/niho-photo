@@ -1,10 +1,16 @@
 //! Research-only A/B renderer for analytic image-adaptive H/S candidate B.
 //!
 //! Usage:
-//! `analytic_hs_probe <input.jpg> <settings.json> <output-dir> [frozen-residual.json]`
+//! `analytic_hs_probe <input.jpg> <settings.json> <output-dir> [frozen-candidate.json]`
+//!
+//! The optional manifest is a frozen `niho.analytic-hs-candidate.v1`
+//! (formula + residual) or the older residual-only
+//! `niho.analytic-hs-residual.v1`. Without it the uncalibrated formula runs
+//! with a zero residual. A is the settings' raster engine (`niho-6` /
+//! `niho-8` / `niho-10`, else `niho-6`).
 
 use niho_develop::research::analytic_hs::{
-    gate_contract_json, render_pair, residual_from_manifest, ResidualModel,
+    candidate_from_manifest, gate_contract_json, render_pair, Candidate,
 };
 use niho_develop::{encode, parse_settings, Filter, Quality, RenderOptions};
 use serde_json::json;
@@ -16,7 +22,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let input_path = PathBuf::from(args.next().ok_or("input path")?);
     let settings_path = PathBuf::from(args.next().ok_or("settings JSON path")?);
     let output_dir = PathBuf::from(args.next().ok_or("output directory")?);
-    let residual_path = args.next().map(PathBuf::from);
+    let manifest_path = args.next().map(PathBuf::from);
     if args.next().is_some() {
         return Err("too many arguments".into());
     }
@@ -24,13 +30,17 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let input = std::fs::read(&input_path)?;
     let settings_bytes = std::fs::read(&settings_path)?;
     let settings = parse_settings(std::str::from_utf8(&settings_bytes)?)?;
-    let (residual, residual_sha256, frozen) = match residual_path {
+    let (candidate, coefficients_sha256, manifest_sha256) = match manifest_path {
         Some(path) => {
             let bytes = std::fs::read(path)?;
-            let (model, digest) = residual_from_manifest(&bytes).map_err(std::io::Error::other)?;
-            (model, Some(digest), true)
+            let (model, digest) = candidate_from_manifest(&bytes).map_err(std::io::Error::other)?;
+            (
+                model,
+                Some(digest),
+                Some(niho_camera_profile::dcp::sha256_hex(&bytes)),
+            )
         }
-        None => (ResidualModel::default(), None, false),
+        None => (Candidate::default(), None, None),
     };
     let options = RenderOptions {
         max_dimension: 2048,
@@ -39,7 +49,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         ..Default::default()
     };
     let started = Instant::now();
-    let (baseline, candidate, summary) = render_pair(&input, &settings, &options, residual)?;
+    let (baseline, candidate, summary) = render_pair(&input, &settings, &options, &candidate)?;
     let elapsed_ms = started.elapsed().as_secs_f64() * 1000.0;
 
     std::fs::create_dir_all(&output_dir)?;
@@ -47,7 +57,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .map_err(std::io::Error::other)?;
     let candidate_bytes = encode::encode_png(&candidate.rgba, candidate.width, candidate.height)
         .map_err(std::io::Error::other)?;
-    std::fs::write(output_dir.join("candidate-a-niho6.png"), &baseline_bytes)?;
+    std::fs::write(output_dir.join("candidate-a-baseline.png"), &baseline_bytes)?;
     std::fs::write(
         output_dir.join("candidate-b-analytic-hs.png"),
         &candidate_bytes,
@@ -57,15 +67,17 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         "schema": "niho.analytic-hs-probe.v1",
         "status": "research-only-not-production",
         "candidateFrozen": false,
-        "residualFrozen": frozen,
-        "freezeReason": "Freeze the exact source commit and executable hash before any independent evaluation",
+        "coefficientsFrozen": coefficients_sha256.is_some(),
+        "freezeReason": "Freeze the exact source commit, executable hash, coefficients and evaluation manifest before any independent evaluation",
         "executableSha256": digest(&std::fs::read(std::env::current_exe()?)?),
-        "residualCoefficientsSha256": residual_sha256,
+        "coefficientsSha256": coefficients_sha256,
+        "candidateManifestSha256": manifest_sha256,
+        "baselineEngine": niho_develop::research::analytic_hs::baseline_settings(&settings).engine,
         "inputSha256": digest(&input),
         "settingsSha256": digest(&settings_bytes),
         "outputs": {
             "candidateA": {
-                "file": "candidate-a-niho6.png",
+                "file": "candidate-a-baseline.png",
                 "sha256": digest(&baseline_bytes)
             },
             "candidateB": {

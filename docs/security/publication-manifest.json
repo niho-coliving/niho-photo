@@ -7957,9 +7957,10 @@
         "path": "packages/develop-engine/tools/calibrate/README.md",
         "sha256": "92af841741870dad70c2ea5426e93edd6ba043b4236d06ccbb586ba245fe64c8"
       },
-      "outputSha256": "3ec8a86131d4fb1d8b7d14abbcb82cb966f0aef8cd3f9cd29df21651ca644482",
+      "outputSha256": "65aaa9603ce04c79e88345b0bf201c28812ed339b3f94067070297e456e93404",
       "modifications": [
-        "公開ソースに固定しないAdobe Colorプロファイル識別子の指定方法を追記。"
+        "公開ソースに固定しないAdobe Colorプロファイル識別子の指定方法を追記。",
+        "PR #84: #74 squash後のmainへ解析候補を再統合し、公開ハッシュを更新。"
       ]
     },
     {
@@ -9638,13 +9639,13 @@
     },
     {
       "path": "packages/develop-engine/RESEARCH26-27.md",
-      "sha256": "0eaf15ac385b234c3ea8035dc9bd37ed18a38baad75c3bbdcb54fb495e7e8459",
-      "origin": "公開Issue #26/#27/#29 のため公開済み数式・既存primitiveから独立実装した研究用コード・合成テスト・日本語手順。非公開の写真・参照画素・パス・履歴・第三者ソースを含まない。\n変更理由: 暗所A/Bで現行niho-6を基準とし、H/S以外の色・黒レベル等を同じ数式で比較する。\n変更理由: 実測に基づくWB節点別fit、旧版を維持する候補のnative/wasm固定hashと再現可能な性能計測を整備。\n変更理由: 非公開出力をrepository外へ限定しsealed独立評価を拒否する、匿名集計の再現手順を追加。\n変更理由: Studio実測の段差・WB gate未達・wasm初期解析と継続編集の性能をsource SHA付きで記録。\n変更理由: 57場面のfloat対比較と6場面の原理式Bのgate未達を、匿名数値・残作業として記録。\n変更理由: 教師上の次候補fitとownerの撮影作業を区別し、独立評価前の未達判定であることを明確化。"
+      "sha256": "8bdc5033f1a998907a8f329e33c9d30fa26b21092d8e883c0c94cce5118ce5ac",
+      "origin": "公開Issue #26/#27/#29 のため公開済み数式・既存primitiveから独立実装した研究用コード・合成テスト・日本語手順。非公開の写真・参照画素・パス・履歴・第三者ソースを含まない。\n変更理由: 暗所A/Bで現行niho-6を基準とし、H/S以外の色・黒レベル等を同じ数式で比較する。\n変更理由: 実測に基づくWB節点別fit、旧版を維持する候補のnative/wasm固定hashと再現可能な性能計測を整備。\n変更理由: 非公開出力をrepository外へ限定しsealed独立評価を拒否する、匿名集計の再現手順を追加。\n変更理由: Studio実測の段差・WB gate未達・wasm初期解析と継続編集の性能をsource SHA付きで記録。\n変更理由: 57場面のfloat対比較と6場面の原理式Bのgate未達を、匿名数値・残作業として記録。\n変更理由: 教師上の次候補fitとownerの撮影作業を区別し、独立評価前の未達判定であることを明確化。\n変更理由: PR #84: #74 squash後のmainへ解析候補を再統合し、公開ハッシュを更新。"
     },
     {
       "path": "packages/develop-engine/crates/niho-develop/examples/analytic_hs_probe.rs",
-      "sha256": "7a81a2cabd84d445acb30922b0f5d831072afb1d25e20a6f5475061670823aa1",
-      "origin": "公開Issue #26/#27/#29 のため公開済み数式・既存primitiveから独立実装した研究用コード・合成テスト・日本語手順。非公開の写真・参照画素・パス・履歴・第三者ソースを含まない。\n変更理由: 暗所A/Bで現行niho-6を基準とし、H/S以外の色・黒レベル等を同じ数式で比較する。"
+      "sha256": "c6ea425c372baf30b3eb3a5a54dfac0f336523a447c847fe63bdbcf6728d94c3",
+      "origin": "公開Issue #26/#27/#29 のため公開済み数式・既存primitiveから独立実装した研究用コード・合成テスト・日本語手順。非公開の写真・参照画素・パス・履歴・第三者ソースを含まない。\n変更理由: 暗所A/Bで現行niho-6を基準とし、H/S以外の色・黒レベル等を同じ数式で比較する。\n変更理由: PR #84: #74 squash後のmainへ解析候補を再統合し、公開ハッシュを更新。"
     },
     {
       "path": "packages/develop-engine/crates/niho-develop/examples/linear_jpeg_wb_fit.rs",
@@ -9658,8 +9659,8 @@
     },
     {
       "path": "packages/develop-engine/crates/niho-develop/src/research/analytic_hs.rs",
-      "sha256": "821b18e256f14d28045785d2040d693ea6b91b22352cd7bc5fbb62526bac3149",
-      "origin": "公開Issue #26/#27/#29 のため公開済み数式・既存primitiveから独立実装した研究用コード・合成テスト・日本語手順。非公開の写真・参照画素・パス・履歴・第三者ソースを含まない。\n変更理由: 有界EV適用後の浮動小数点overflowも非有限出力として拒否。\n変更理由: 暗所A/Bで現行niho-6を基準とし、H/S以外の色・黒レベル等を同じ数式で比較する。"
+      "sha256": "560da95b9dd4e28e08906e8c272617f4a917cd05a1a71f7998c97a380cc9777c",
+      "origin": "公開Issue #26/#27/#29 のため公開済み数式・既存primitiveから独立実装した研究用コード・合成テスト・日本語手順。非公開の写真・参照画素・パス・履歴・第三者ソースを含まない。\n変更理由: 有界EV適用後の浮動小数点overflowも非有限出力として拒否。\n変更理由: 暗所A/Bで現行niho-6を基準とし、H/S以外の色・黒レベル等を同じ数式で比較する。\n変更理由: PR #84: #74 squash後のmainへ解析候補を再統合し、公開ハッシュを更新。"
     },
     {
       "path": "packages/develop-engine/crates/niho-develop/src/research/linear_jpeg_wb.rs",
@@ -10305,6 +10306,36 @@
       "path": "packages/develop-engine/NIHO12.md",
       "sha256": "588e23c2caec98a20d9307fbf435885cecf8d9ee3b8f02495b53d64025c0c93d",
       "origin": "公開Issue #29 のため公開済み数式・既存primitiveから独立実装したengine・合成テスト・計測コード・日本語手順。非公開の写真・参照画素・パス・履歴・第三者ソースを含まない。"
+    },
+    {
+      "path": "packages/develop-engine/crates/niho-develop/examples/analytic_hs_calibrate.rs",
+      "sha256": "3ba6e1d0aa03753eefbb655f7b7f3e25d534fbdfdef48bd8453d71651168fcac",
+      "origin": "公開Issue #26 のため独立実装した研究用の校正評価器。既存crateのprimitiveだけを使い、入力・参照は実行時に利用者が指定する。非公開の写真・参照画素・パス・scene名を含まない。\n変更理由: #26 案C の写真特徴を読み込み、写真ごとのモデルの候補を代理評価する"
+    },
+    {
+      "path": "packages/develop-engine/tools/calibrate/fit_analytic_hs.py",
+      "sha256": "8ea1bf63c881b7390b247f4973237998cca2c8aacd7e766e6b18840edccc7465",
+      "origin": "公開Issue #26 のため独立実装した開発教師上の校正・撮影日fold交差検証・gate計測・一度だけの独立評価の手順。入力は利用者指定のrepository外、非公開の写真・パス・scene名・参照画素をsourceへ含めず匿名集計だけを公開する。sealed・independentのcohortを拒否する。\n変更理由: #26 独立評価(holdout)で欠けた部分集合・設定を許し、必須の書き出しの欠落を開始前に止める\n変更理由: holdoutを凍結tool・両実行物・subset gate・入力指紋でfail-closedにする\n変更理由: #26 案C の写真ごとの目標・ridge（内側の撮影日CV）・end-to-end の微調整・交差検証・gate・採否規則を追加"
+    },
+    {
+      "path": "packages/develop-engine/tools/calibrate/tests/test_fit_analytic_hs.py",
+      "sha256": "b80fe6623d3b6c406acc33d57a1a683617e502b074a193a1d28e963a6080f51a",
+      "origin": "公開Issue #26 のため独立作成したunittest。合成データとtemporary directoryだけを使い、実写真・第三者資産を含まない。\n変更理由: #26 部分集合の欠けたgate表と判定を合成データで検査する\n変更理由: holdoutの凍結照合・場面数・部分集合判定・cache invalidationを合成fixtureで検査する\n変更理由: #26 案C の ridge・モデル候補・niho-6 CV 表・採否規則を合成データで検査する"
+    },
+    {
+      "path": "packages/develop-engine/fixtures/color/review-2026-10-21/analytic-hs-teachers-B1.json",
+      "sha256": "22f6c2824db3d0fd34cb1281b2db0864493da729547af26421fc641289287adc",
+      "origin": "owner所有の既存非公開教師（57場面）をStudioで比較した匿名集計のみ。撮影日foldの交差検証・全件fit・gate計測の数値、係数、source commit・実行ファイルhash・測定手順・cohort件数を記録し、写真・scene名・私有path・参照画素・個別結果は公開しない。独立評価画像の参照は0枚。"
+    },
+    {
+      "path": "packages/develop-engine/fixtures/color/review-2026-10-21/analytic-hs-candidate.json",
+      "sha256": "2d96fcb98076ad2c0a9d40083316de49ba017f1c74cdd01c73f0911c13bb78aa",
+      "origin": "公開Issue #26 の候補Bの凍結係数（niho.analytic-hs-candidate.v1、10係数とcanonical SHA-256）。非公開教師の匿名の当てはめ結果で、写真・参照画素・scene名を含まない。"
+    },
+    {
+      "path": "packages/develop-engine/fixtures/color/review-2026-10-21/analytic-hs-freeze.json",
+      "sha256": "b60c13c1e5c123bb0c372a08c7ceaef9be15c1eb61e996eb8d167db23cf47972",
+      "origin": "公開Issue #26 の独立評価前のfreeze record。source commit・実行ファイルSHA-256・係数manifestと集計のhash・評価manifest（撮影条件・設定・gate・一度きりの規則）だけを記録し、写真・私有path・scene名を含まない。独立評価は未実施。\n変更理由: 凍結tool hashとcalibrator/probe確認、subset最低数の契約を記録する"
     }
   ],
   "excludedSources": [

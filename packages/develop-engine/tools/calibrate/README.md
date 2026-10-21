@@ -227,3 +227,11 @@ RAW の白（色温度・色かぶり）を、段 2 で Apple の RAW 現像と�
 
 - `make_lr_p3_jpeg.py`: 教師（`--set teachers`）と封印する独立評価（`--set independent`）の Lightroom 入力を作る（設定を埋め込んだ JPEG。`--check` で書き出しを確かめる）。手順は runbook §5「issue18397」。
 - `fit_niho6_response.py`: `dataset`（crate の `examples/niho6_features.rs` の特徴と Lightroom の書き出し）→ `fit`（`--folds dates` で撮影日ごとの検証）→ `export`（`crates/niho-develop/niho6/response-jpeg.json` と、`niho6_response.rs` に写す SHA-256）。式と凍結・独立評価の手順は `../../NIHO6.md`。
+
+## 案 B の原理式（JPEG / PNG のハイライト・シャドウ、#26。`fit_analytic_hs.py`）
+
+- 式と凍結・独立評価の手順は `../../RESEARCH26-27.md`。crate は凍結 manifest（`niho.analytic-hs-candidate.v1`）を読むだけで、当てはめはこの script が crate の外で行う。
+- 開発教師（非公開の作業ディレクトリの `data/teachers`・`data/teachers2`）だけを読む。sealed の manifest、`independent` に解決されるディレクトリ、repository 内の作業ディレクトリは拒否する。
+- 流れ: `plan`（metadata だけで部分集合・撮影日 fold を決める）→ `oracle`（写真ごとの定数。診断と各 fold の開始点）→ `cv --folds dates`（fold ごとに学習側の写真だけで当てはめ、fold 外を評価。B1 と B2 の選択も fold 外の誤差で決める）→ `fit`（全教師）→ `gate --family B1|B2`（2048px 描画・colorcheck 1500px・blur 2・平坦画素）→ `publish`（匿名集計）。凍結後の独立評価は `holdout` を 1 回だけ。
+- 評価器は `examples/analytic_hs_calibrate.rs`（`cargo +1.98.1 build --release --locked -p niho-develop --example analytic_hs_calibrate --example analytic_hs_probe`）。
+- テスト: `python3 -m unittest discover -s tests -t . -p "test_fit_analytic_hs.py"`（作業ディレクトリ・cohort の拒否、部分集合、目的関数、B1/B2 の選択）。
