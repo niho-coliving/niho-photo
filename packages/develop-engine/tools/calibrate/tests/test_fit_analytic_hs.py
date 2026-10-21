@@ -260,6 +260,10 @@ class CandidateCTests(unittest.TestCase):
         z = F.z_of(features, model["mean"], model["scale"])
         prediction = model["bias"][0] + z @ model["weights"][0]
         self.assertLess(float(np.abs(prediction - targets[:, 0]).mean()), 0.1)
+        strong = F.fit_ridge(features, targets, dates, F.CP_LAMBDAS)
+        self.assertTrue(all(lam in F.CP_LAMBDAS for lam in strong["lambdas"]))
+        self.assertEqual(set(F.VARIANTS_C), {"C", "CP"})
+        self.assertNotEqual(F.VARIANTS_C["C"]["targets"], F.VARIANTS_C["CP"]["targets"])
         far = F.z_of(np.full((1, F.C_FEATURES), 1e9), model["mean"], model["scale"])
         self.assertTrue(np.all(np.abs(far) <= F.C_Z_CLIP))
 
