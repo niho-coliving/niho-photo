@@ -156,6 +156,22 @@ export type PhotoLibrary = {
     jpegs: PhotoLibraryEditedPreviewJpegs,
     options: { signal: AbortSignal },
   ): Promise<PhotoLibraryEditedPreviewAttached>;
+  /**
+   * 写真の補正の版（`capabilities.versions`。右パネルの「版」。niho-photo#42。Lightroom の「バージョン」）。名前を付けて残した補正と、
+   * 版を切り替える前に残した自動の版。写真の行（{@link PhotoLibraryPhoto}）には載せず、版の面を開いたときだけ読む。版の無い写真は
+   * 空の配列と `revision` 0。無い・置き終えていない写真は投げる（`errors.isNotFound`）
+   */
+  developVersions?(photoId: string, options?: PhotoLibraryRequestOptions): Promise<PhotoLibraryDevelopVersions>;
+  /**
+   * 版の配列をまるごと保存する（作る・名前を変える・消す・切り替える前の自動の版）。`expectedRevision`（読んだ・前に保存したときの
+   * `revision`）と今の `revision` が違えば保存せず `stale`（今の配列と `revision`）。版は `developSettings` に入れず、写真の補正
+   * （{@link PhotoLibrary.saveDevelopSettings}）とは別の置き場・別の `revision` で持つ。ほかの失敗は投げる
+   */
+  saveDevelopVersions?(
+    photoId: string,
+    versions: readonly PhotoLibraryDevelopVersion[],
+    options: { expectedRevision: number },
+  ): Promise<PhotoLibraryDevelopVersionsSaveResult>;
 
   // ---- 書き出す
   /** 「オリジナル」の書き出し（オリジナルのバイト列と元の名前）。補正を当てた JPEG は編集面が段 2 の wasm で描く */
@@ -272,6 +288,11 @@ export type PhotoLibraryCapabilities = {
    * 行のファイルの項目だけを出す）
    */
   info?: boolean;
+  /**
+   * 補正の版を残せる（{@link PhotoLibrary.developVersions}・{@link PhotoLibrary.saveDevelopVersions}。niho-photo#42）。省略 = 残せない
+   * （右端の帯に「版」を出さない）
+   */
+  versions?: boolean;
 };
 
 /** 受入まで拠点を絞る機能（F9 ）。 */
@@ -604,6 +625,28 @@ export type PhotoLibraryWorkingCopyRetry =
 
 /** 補正の保存の結果（`stale` は別の端末が先に保存していた。今の写真で開き直す）。 */
 export type PhotoLibrarySaveResult = { kind: "saved"; photo: PhotoLibraryPhoto } | { kind: "stale"; photo: PhotoLibraryPhoto };
+
+/** 版の種類（`named` は名前を付けて残した版、`auto` は版を切り替える前の補正を残した自動の版）。 */
+export type PhotoLibraryDevelopVersionKind = "named" | "auto";
+
+/** 補正の版 1 つ（niho-photo#42）。 */
+export type PhotoLibraryDevelopVersion = {
+  /** 写真の中で重ならない不透明な ID（英数字・`-`・`_`。64 文字まで） */
+  id: string;
+  /** 名前（前後の空白を除いた 1〜40 文字） */
+  name: string;
+  /** 作った日時（ISO 8601） */
+  createdAt: string;
+  kind: PhotoLibraryDevelopVersionKind;
+  /** 版の補正（作ったときの写真の `developSettings` のまま。当てるときは今の土台に載せる） */
+  developSettings: DevelopSettings;
+};
+
+/** 写真の版の配列（作った順。古いものが先）と、保存の番号 `revision`（保存のたびに 1 増える。版の無い写真は 0）。 */
+export type PhotoLibraryDevelopVersions = { versions: PhotoLibraryDevelopVersion[]; revision: number };
+
+/** 版の保存の結果（`stale` は別の操作が先に保存していた。今の配列と `revision`）。 */
+export type PhotoLibraryDevelopVersionsSaveResult = ({ kind: "saved" } | { kind: "stale" }) & PhotoLibraryDevelopVersions;
 
 export type PhotoLibraryEditedPreviewJpeg = { blob: Blob; width: number; height: number };
 

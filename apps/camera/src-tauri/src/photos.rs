@@ -8,6 +8,9 @@
 //! - 部分補正のマスク（ブラシ・被写体・空）の面は `~/Library/Application Support/life.niho.camera/mask-surfaces/<写真の SHA-256>/
 //!   <面の SHA-256>.png`（crate の `MaskSurfaceStore`。写真 1 枚あたり 64 面まで、上限では保存した補正が参照しない面のうち
 //!   最後に使ったのが古いものから空ける。補正と同じく古さ・写真の数では消さない）。コマンドは `mask_surfaces.rs`。
+//! - 補正の版（niho-photo#42。名前を付けて残した補正と自動の版）は同じフォルダの `<SHA-256>.versions.json`（crate の
+//!   `saved_versions.rs`。補正の記録とは別のファイル・別の `revision`）。`camera_photo_versions` で読み、`camera_photo_save_versions`
+//!   で配列をまるごと書く。
 //! - 現像（`develop.rs`）はここを `DevelopPhotos` として読む（原寸の書き出しは描かれるマスクの面をここから読む）。Photo Bench は
 //!   持たない（ラスタの作業コピーは `apple-raw-linear raster`）。
 
@@ -22,8 +25,8 @@ use niho_desktop_photo::mask_surfaces::{
   mask_surface_ids, MaskSurfaceError, MaskSurfaceInfo, MaskSurfaceLimits, MaskSurfaceStore, MASK_SURFACES_DIR_NAME,
 };
 use niho_desktop_photo::saved_settings::{
-  content_digest, epoch_ms, ContentDigest, RecordSource, SaveRevision, SavedRecord, SavedSettingsStore, StoreLimits,
-  MAX_SAVED_SETTINGS_BYTES,
+  content_digest, epoch_ms, is_valid_develop_versions, ContentDigest, RecordSource, SaveRevision, SavedRecord,
+  SavedSettingsStore, StoreLimits, MAX_SAVED_SETTINGS_BYTES,
 };
 use serde::Deserialize;
 use serde_json::{json, Value};
@@ -47,6 +50,7 @@ const MASK_SURFACE_MISSING_MESSAGE: &str = "マスクの面が見つかりませ
 const MASK_SURFACE_QUOTA_MESSAGE: &str =
   "この写真にはこれ以上マスクを保存できません。使わないマスクを消してからもう一度お試しください。";
 const MASK_SURFACE_SAVE_FAILED_MESSAGE: &str = "マスクを保存できませんでした。";
+const VERSIONS_SAVE_FAILED_MESSAGE: &str = "版を保存できませんでした。";
 
 /// 補正の置き場の上限: 消さない（古さ・件数で消すと利用者の補正が無くなる）。途中で落ちた一時ファイルの掃除は 1 日ごと。
 pub fn edits_limits() -> StoreLimits {
@@ -269,6 +273,47 @@ impl CameraPhotos {
       Err(_) => Err(CameraError::new(code::INTERNAL, SAVE_FAILED_MESSAGE)),
     }
   }
+
+  /// 開いた写真の補正の版の配列と保存の番号（`{ versions, revision }`。niho-photo#42）。版のファイルが無い・読めない写真は
+  /// `{ versions: [], revision: 0 }`
+  /// （版の無い今までの写真と同じ）。開いていない写真は `notFound`（画面は開き直す）。
+  pub fn versions(&self, photo_id: &str) -> Result<Value, CameraError> {
+    let photo = self
+      .get(photo_id)
+      .ok_or_else(|| CameraError::from(PageError::new(code::NOT_FOUND, LISTED_PHOTO_NOT_FOUND_MESSAGE)))?;
+    let saved = self
+      .edits
+      .as_ref()
+      .and_then(|store| store.load_versions(&photo.digest.key));
+    Ok(match saved {
+      Some(saved) => json!({ "versions": saved.versions, "revision": saved.revision }),
+      None => json!({ "versions": [], "revision": 0 }),
+    })
+  }
+
+  /// 補正の版の配列をまるごと保存する（{@link SavedSettingsStore::save_versions}）。新しい `revision` を返す。画面が知っている番号と違えば
+  /// `revisionConflict`。鍵は開いたときの中身の SHA-256（補正と同じ）。
+  pub fn save_versions(
+    &self,
+    photo_id: &str,
+    versions: &Value,
+    expected_revision: u64,
+    now: SystemTime,
+  ) -> Result<u64, CameraError> {
+    let photo = self
+      .get(photo_id)
+      .ok_or_else(|| CameraError::from(PageError::new(code::NOT_FOUND, LISTED_PHOTO_NOT_FOUND_MESSAGE)))?;
+    let store = self
+      .edits
+      .as_ref()
+      .ok_or_else(|| CameraError::new(code::INTERNAL, VERSIONS_SAVE_FAILED_MESSAGE))?;
+    match store.save_versions(&photo.digest.key, versions, expected_revision, now) {
+      Ok(SaveRevision::Saved { revision, .. }) => Ok(revision),
+      Ok(SaveRevision::Conflict { current }) => Err(CameraError::revision_conflict(current)),
+      Err(err) if err.kind() == std::io::ErrorKind::InvalidInput => Err(invalid_request()),
+      Err(_) => Err(CameraError::new(code::INTERNAL, VERSIONS_SAVE_FAILED_MESSAGE)),
+    }
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -470,6 +515,31 @@ pub struct SaveSettingsRequest {
   pub expected_revision: u64,
 }
 
+/// `camera_photo_versions` の引数。
+#[derive(Debug, Clone, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct VersionsRequest {
+  pub photo_id: String,
+}
+
+/// `camera_photo_save_versions` の引数。`versions` は版の配列まるごと、`expectedRevision` は画面が知っている保存の番号（版のファイルが
+/// 無ければ 0）。
+#[derive(Debug, Clone, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct SaveVersionsRequest {
+  pub photo_id: String,
+  pub versions: Value,
+  pub expected_revision: u64,
+}
+
+pub fn validate_save_versions_request(request: &SaveVersionsRequest) -> Result<(), CameraError> {
+  check_photo_id(&request.photo_id)?;
+  if !is_valid_develop_versions(&request.versions) {
+    return Err(invalid_request());
+  }
+  Ok(())
+}
+
 pub fn validate_open_request(request: &OpenRequest) -> Result<(), CameraError> {
   if request.entry_ids.is_empty() || request.entry_ids.len() > MAX_PHOTOS_PER_OPEN {
     return Err(invalid_request());
@@ -603,6 +673,33 @@ pub async fn camera_photo_save_settings(app: tauri::AppHandle, request: Option<V
     let revision = photos.save(
       &request.photo_id,
       &request.develop_settings,
+      request.expected_revision,
+      SystemTime::now(),
+    )?;
+    Ok(json!({ "revision": revision }))
+  })
+  .await
+}
+
+/// 開いた写真の補正の版（`{ versions, revision }`。右パネルの「版」。niho-photo#42）。
+#[tauri::command]
+pub async fn camera_photo_versions(app: tauri::AppHandle, request: Option<Value>) -> Result<Value, CameraError> {
+  let request: VersionsRequest = parse_request(request)?;
+  check_photo_id(&request.photo_id)?;
+  let photos = photos(&app)?;
+  run_blocking(move || photos.versions(&request.photo_id)).await
+}
+
+/// 補正の版の配列をまるごと保存する（`{ revision }`）。画面が知っている番号と違えば `revisionConflict`（`currentRevision` に今の番号）。
+#[tauri::command]
+pub async fn camera_photo_save_versions(app: tauri::AppHandle, request: Option<Value>) -> Result<Value, CameraError> {
+  let request: SaveVersionsRequest = parse_request(request)?;
+  validate_save_versions_request(&request)?;
+  let photos = photos(&app)?;
+  run_blocking(move || {
+    let revision = photos.save_versions(
+      &request.photo_id,
+      &request.versions,
       request.expected_revision,
       SystemTime::now(),
     )?;

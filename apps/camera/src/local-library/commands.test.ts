@@ -29,6 +29,37 @@ describe("createCameraCommands", () => {
     await expect(failing.commands.photoInfo("photo-1")).rejects.toMatchObject({ code: "notFound" });
   });
 
+  it("reads and replaces an open photo's develop versions with their own revision (niho-photo#42)", async () => {
+    const versions = [
+      {
+        id: "v1",
+        name: "明るめ",
+        createdAt: "2026-10-21T01:32:00.000Z",
+        kind: "named" as const,
+        developSettings: { v: 1 as const, engine: "niho-10", exposure: 0.8 },
+      },
+    ];
+    const { calls, commands } = recording(({ command }) =>
+      command === "camera_photo_versions" ? { versions, revision: 3 } : { revision: 4 },
+    );
+    await expect(commands.photoVersions("photo-1")).resolves.toEqual({ versions, revision: 3 });
+    await expect(commands.savePhotoVersions("photo-1", versions, 3)).resolves.toBe(4);
+    expect(calls).toEqual([
+      { command: "camera_photo_versions", args: { request: { photoId: "photo-1" } } },
+      {
+        command: "camera_photo_save_versions",
+        args: { request: { photoId: "photo-1", versions, expectedRevision: 3 } },
+      },
+    ]);
+    const conflict = recording(() => ({
+      reject: { code: "revisionConflict", message: "別の操作で補正が変わりました。", currentRevision: 5 },
+    }));
+    await expect(conflict.commands.savePhotoVersions("photo-1", [], 3)).rejects.toMatchObject({
+      code: "revisionConflict",
+      currentRevision: 5,
+    });
+  });
+
   it("wraps arguments in `request` with camelCase names and unwraps the answers", async () => {
     const folder = { folderId: "folder-1", name: "DCIM", children: [], photos: [], truncated: false };
     const { calls, commands } = recording(({ command }) => {

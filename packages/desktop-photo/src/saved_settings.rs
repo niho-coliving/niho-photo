@@ -13,9 +13,12 @@
 //!   画面が知っている版と違えば書かずに競合を返す。写真の大きさと更新時刻（`sizeBytes`・`modifiedAtMs`）も残し、一覧で
 //!   写真を開かずに「補正済み」を見分けられるようにする。どれも足しただけの項目で、NIHO Desktop の {@link SavedSettingsStore::save}
 //!   と {@link SavedSettingsStore::load} はそのまま読み書きできる（`revision` の無い記録は版 0）。
+//! - 補正の版（niho-photo#42）は同じフォルダの別のファイル `<キー>.versions.json`（`saved_versions.rs`）。記録と一緒に消す
+//!   （{@link SavedSettingsStore::forget}・掃除は同じキーの記録と版を 1 件として数える）。
 
 use serde_json::{json, Value};
 use sha2::{Digest, Sha256};
+use std::collections::BTreeMap;
 use std::fs;
 use std::io::{self, Read, Write};
 use std::path::{Path, PathBuf};
@@ -242,14 +245,18 @@ impl SavedSettingsStore {
     })
   }
 
-  /// 保存を消す（無ければ何もしない）。
+  /// 保存を消す（無ければ何もしない）。補正の版（`<キー>.versions.json`）も一緒に消す（版だけを残さない）。
   pub fn forget(&self, key: &str) -> io::Result<()> {
     let path = self.record_path(key)?;
+    let versions = self.dir.join(format!("{key}{}", versions::VERSIONS_FILE_SUFFIX));
     let _guard = self.lock();
-    match fs::remove_file(path) {
-      Err(err) if err.kind() != io::ErrorKind::NotFound => Err(err),
-      _ => Ok(()),
+    for path in [path, versions] {
+      match fs::remove_file(path) {
+        Err(err) if err.kind() != io::ErrorKind::NotFound => return Err(err),
+        _ => {}
+      }
     }
+    Ok(())
   }
 
   /// 古いもの・多すぎる分を消し、消した件数を返す（アプリでは `save` の中から掃除する）。
@@ -259,46 +266,69 @@ impl SavedSettingsStore {
     self.sweep_locked(now)
   }
 
+  /// 掃除の本体。同じキーの記録（`<キー>.json`）と版（`<キー>.versions.json`）は 1 件として、新しい方の更新日時で古さ・件数を
+  /// 数え、消すときは一緒に消す（版だけを残さない）。途中で落ちた一時ファイル（`.json.tmp`・`.versions.json.tmp`）は 1 時間で消す。
+  /// 消した件数はファイルの数。
   fn sweep_locked(&self, now: SystemTime) -> usize {
     let Ok(entries) = fs::read_dir(&self.dir) else { return 0 };
     let age_of = |modified: SystemTime| now.duration_since(modified).unwrap_or(Duration::ZERO);
     let mut removed = 0;
-    let mut kept: Vec<(SystemTime, PathBuf)> = Vec::new();
+    // キー → （記録と版の新しい方の更新日時、ファイル）
+    let mut stored: BTreeMap<String, (SystemTime, Vec<PathBuf>)> = BTreeMap::new();
     for entry in entries.flatten() {
       let name = entry.file_name();
       let Some(name) = name.to_str() else { continue };
-      let is_record = name.strip_suffix(".json").is_some_and(is_content_key);
-      let is_temp = name.strip_suffix(".json.tmp").is_some_and(is_content_key);
-      if !is_record && !is_temp {
+      let Some((key, temp)) = stored_file_key(name) else {
         continue;
-      }
+      };
       let Ok(metadata) = entry.metadata() else { continue };
       if !metadata.is_file() {
         continue;
       }
       let modified = metadata.modified().unwrap_or(UNIX_EPOCH);
-      let limit = if is_temp { ORPHAN_TEMP_AGE } else { self.limits.max_age };
-      if age_of(modified) > limit {
-        if fs::remove_file(entry.path()).is_ok() {
+      if temp {
+        if age_of(modified) > ORPHAN_TEMP_AGE && fs::remove_file(entry.path()).is_ok() {
           removed += 1;
         }
         continue;
       }
-      if is_record {
-        kept.push((modified, entry.path()));
+      let slot = stored.entry(key.to_string()).or_insert((UNIX_EPOCH, Vec::new()));
+      slot.0 = slot.0.max(modified);
+      slot.1.push(entry.path());
+    }
+    let mut kept: Vec<(SystemTime, Vec<PathBuf>)> = Vec::new();
+    for (modified, paths) in stored.into_values() {
+      if age_of(modified) > self.limits.max_age {
+        removed += remove_files(paths);
+      } else {
+        kept.push((modified, paths));
       }
     }
     if kept.len() > self.limits.max_entries {
-      // 新しい順に並べ、上限を超えた古い分を消す
+      // 新しい順に並べ（同じ日時はキーの順）、上限を超えた古い分を消す
       kept.sort_by(|a, b| b.0.cmp(&a.0).then_with(|| a.1.cmp(&b.1)));
-      for (_, path) in kept.split_off(self.limits.max_entries) {
-        if fs::remove_file(path).is_ok() {
-          removed += 1;
-        }
+      for (_, paths) in kept.split_off(self.limits.max_entries) {
+        removed += remove_files(paths);
       }
     }
     removed
   }
+}
+
+/// 掃除が扱うファイルのキーと、一時ファイルか（記録 `<キー>.json`・版 `<キー>.versions.json` とそれぞれの `.tmp`）。ほかは None
+/// （触れない）。
+fn stored_file_key(name: &str) -> Option<(&str, bool)> {
+  let (stem, temp) = match name.strip_suffix(".tmp") {
+    Some(stem) => (stem, true),
+    None => (name, false),
+  };
+  versions::versions_file_key(stem)
+    .or_else(|| stem.strip_suffix(".json").filter(|key| is_content_key(key)))
+    .map(|key| (key, temp))
+}
+
+fn remove_files(paths: Vec<PathBuf>) -> usize {
+  paths.into_iter().filter(|path| fs::remove_file(path).is_ok()).count()
 }
 
 /// 写真の中身。`key` は SHA-256（16 進の小文字 64 文字。編集内容の保存のキーで、クラウドの写真置き場の
@@ -406,6 +436,13 @@ fn write_private_file(path: &Path, contents: &[u8]) -> io::Result<()> {
   file.flush()?;
   set_mode(path, 0o600)
 }
+
+#[path = "saved_versions.rs"]
+mod versions;
+pub use versions::{
+  is_valid_develop_versions, SavedVersions, MAX_AUTO_VERSIONS, MAX_NAMED_VERSIONS, MAX_SAVED_VERSIONS_BYTES,
+  MAX_VERSION_NAME_CHARS,
+};
 
 #[cfg(test)]
 #[path = "saved_settings_tests.rs"]

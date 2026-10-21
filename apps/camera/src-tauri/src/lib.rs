@@ -113,6 +113,8 @@ pub fn run() {
       mask_surfaces::camera_mask_surface_save,
       mask_surfaces::camera_mask_surface_load,
       mask_surfaces::camera_mask_surface_exists,
+      photos::camera_photo_versions,
+      photos::camera_photo_save_versions,
       develop::camera_develop_status,
       develop::camera_develop_source,
       develop::camera_develop_source_bytes,
