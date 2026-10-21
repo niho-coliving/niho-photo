@@ -38,14 +38,23 @@
 //!   slider (Final) renders only that layer when the other layers' Final
 //!   frames are still those settings'. A Final render invalidates all
 //!   Interactive frames because it can refresh the frozen `niho-6` analysis
-//!   used by drag renders. A plane is kept per layer while the mask's shape,
-//!   the geometry and the size stay.
+//!   used by drag renders. A plane is kept per layer while the mask's shape
+//!   (a surface mask's: its surface's id, which names the surface's bytes,
+//!   and size), the geometry and the size stay; dropping a surface drops the
+//!   planes made from it.
+//!
+//! `brush` / `subject` / `sky` masks sample the Session's surface of their
+//! `surface.id` ([`Session::set_mask_surface`]): a frame with an active one
+//! whose surface is not set is [`Error::MaskSurfaceMissing`], of another
+//! size than `surface.width` / `surface.height` [`Error::MaskSurfaceMismatch`],
+//! before anything is drawn.
 //!
 //! The layers of masks that are gone or no longer active are dropped at the
 //! next frame; a frame without an active mask drops them all.
 
 use crate::local_mask::{LocalMask, MaskShape};
 use crate::local_render::{self, PlaneError, SourceMap};
+use crate::mask_surface::MaskSurface;
 use crate::pipeline::{self, Rendered};
 use crate::settings::DevelopSettings;
 use crate::spatial::{self, Quality};
@@ -68,6 +77,19 @@ impl MaskLayers {
         self.base.interactive = None;
         for layer in &mut self.layers {
             layer.frames.interactive = None;
+        }
+    }
+
+    /// Drops the planes made from the surface `id`.
+    pub(crate) fn forget_surface(&mut self, id: &str) {
+        for layer in &mut self.layers {
+            if layer
+                .plane
+                .as_ref()
+                .is_some_and(|plane| plane.surface.as_deref() == Some(id))
+            {
+                layer.plane = None;
+            }
         }
     }
 }
@@ -106,6 +128,8 @@ fn frame_key(settings: &DevelopSettings, max_dimension: usize, quality: Quality)
 /// One mask's plane.
 struct Plane {
     key: String,
+    /// The surface it was sampled from (a surface mask's).
+    surface: Option<String>,
     weights: Vec<u32>,
     /// Whether any weight is not 0 (an all-zero plane draws nothing).
     any: bool,
@@ -150,6 +174,17 @@ impl LayerCaches {
 fn plane_error(e: PlaneError) -> Error {
     match e {
         PlaneError::SurfaceMissing(id) => Error::MaskSurfaceMissing(id),
+        PlaneError::SurfaceMismatch {
+            mask,
+            surface,
+            expected,
+            actual,
+        } => Error::MaskSurfaceMismatch {
+            mask,
+            surface,
+            expected,
+            actual,
+        },
     }
 }
 
@@ -161,15 +196,29 @@ fn invalid_crop() -> Error {
     )])
 }
 
-/// The first active mask of a kind whose surface this build does not hold.
-fn missing_surface(settings: &DevelopSettings) -> Option<&LocalMask> {
-    settings
-        .masks
-        .iter()
-        .find(|m| m.is_active() && matches!(m.shape, MaskShape::Surface(_)))
-}
-
 impl Session {
+    /// The surface a mask samples (`None` for linear and radial masks):
+    /// the one set under its `surface.id`, of its `surface` size.
+    fn surface_of(&self, mask: &LocalMask) -> Result<Option<Arc<MaskSurface>>, Error> {
+        let MaskShape::Surface(reference) = &mask.shape else {
+            return Ok(None);
+        };
+        let surface = self
+            .mask_surfaces
+            .get(&reference.id)
+            .ok_or_else(|| Error::MaskSurfaceMissing(mask.id.clone()))?;
+        let actual = (surface.width(), surface.height());
+        if actual != (reference.width, reference.height) {
+            return Err(Error::MaskSurfaceMismatch {
+                mask: mask.id.clone(),
+                surface: reference.id.clone(),
+                expected: (reference.width, reference.height),
+                actual,
+            });
+        }
+        Ok(Some(Arc::clone(surface)))
+    }
+
     /// The output-to-working-image map of `settings`' geometry.
     fn mask_map(&self, settings: &DevelopSettings) -> Result<SourceMap, Error> {
         let (w, h) = self.working_size;
@@ -180,8 +229,10 @@ impl Session {
     /// `invert` applied, whether or not it is enabled) at the size a render
     /// of `settings` at `max_dimension` has, from the same map and plane as
     /// the render. For the editor's overlay; the Session's frame state is
-    /// not touched. A `brush` / `subject` / `sky` mask is
-    /// [`Error::MaskSurfaceMissing`] (no surface store before M4).
+    /// not touched. A `brush` / `subject` / `sky` mask samples its surface
+    /// ([`Session::set_mask_surface`]; without it
+    /// [`Error::MaskSurfaceMissing`], of another size
+    /// [`Error::MaskSurfaceMismatch`]).
     pub fn mask_plane(
         &self,
         settings: &DevelopSettings,
@@ -202,7 +253,9 @@ impl Session {
         let (w, h) = frame::output_size(rendered_geometry(settings), sw, sh, capped)
             .map_err(|e| Error::InvalidSettings(vec![e]))?;
         let map = self.mask_map(settings)?;
-        let weights = local_render::mask_weights(mask, &map, w, h).map_err(plane_error)?;
+        let surface = self.surface_of(mask)?;
+        let weights = local_render::mask_weights(mask, &map, w, h, surface.as_deref())
+            .map_err(plane_error)?;
         Ok((
             w,
             h,
@@ -220,8 +273,10 @@ impl Session {
         max_dimension: usize,
         quality: Quality,
     ) -> Result<Rendered, Error> {
-        if let Some(mask) = missing_surface(settings) {
-            return Err(Error::MaskSurfaceMissing(mask.id.clone()));
+        // Every active surface mask needs its surface, before anything is
+        // drawn.
+        for mask in settings.masks.iter().filter(|m| m.is_active()) {
+            self.surface_of(mask)?;
         }
         let max_dimension = self.capped_dimension(max_dimension);
         let mut layers = self.masks.take().unwrap_or_default();
@@ -296,11 +351,17 @@ impl Session {
             );
             if layer.plane.as_ref().is_none_or(|p| p.key != plane_key) {
                 layer.plane = None;
+                let surface = self.surface_of(mask)?;
                 let weights =
-                    local_render::mask_weights(mask, &map, width, height).map_err(plane_error)?;
+                    local_render::mask_weights(mask, &map, width, height, surface.as_deref())
+                        .map_err(plane_error)?;
                 let any = weights.iter().any(|w| *w != 0);
                 layer.plane = Some(Plane {
                     key: plane_key,
+                    surface: match &mask.shape {
+                        MaskShape::Surface(reference) => Some(reference.id.clone()),
+                        _ => None,
+                    },
                     weights,
                     any,
                 });
@@ -685,6 +746,48 @@ mod tests {
         one.masks.clear();
         session.render(&one, 64, q).unwrap();
         assert!(session.masks.is_none());
+    }
+
+    #[test]
+    fn a_surface_s_plane_is_kept_while_it_is_set_and_dropped_with_it() {
+        let png = photo(60, 40);
+        let data: Vec<u8> = (0..20 * 10).map(|i| (i % 20 * 12) as u8).collect();
+        let surface = crate::mask_surface::MaskSurface::new(20, 10, data).unwrap();
+        let bytes = crate::mask_surface::encode_surface_png(&surface).unwrap();
+        let id = crate::mask_surface::surface_id(&bytes);
+        let s = settings(json!({ "masks": [{
+            "id": "paint", "kind": "brush",
+            "surface": {"id": id, "width": 20, "height": 10},
+            "adjust": {"exposure": -0.5}
+        }] }));
+        let mut session = Session::open_raster(&png, 0, Filter::Lanczos3).unwrap();
+        session.set_mask_surface(&id, &bytes).unwrap();
+        let first = session.render(&s, 32, Quality::Interactive).unwrap();
+        let plane = |s: &Session| {
+            layer(s, "paint")
+                .plane
+                .as_ref()
+                .map(|p| (p.surface.clone(), p.weights.as_ptr() as usize))
+        };
+        let kept = plane(&session).expect("plane");
+        assert_eq!(kept.0.as_deref(), Some(id.as_str()));
+        // Another frame of the same shape keeps the plane.
+        let mut moved = s.clone();
+        moved.masks[0].adjust.exposure = -0.6;
+        session.render(&moved, 32, Quality::Interactive).unwrap();
+        assert_eq!(plane(&session), Some(kept));
+        // Dropping the surface drops the plane made from it.
+        session.drop_mask_surface(&id);
+        assert_eq!(plane(&session), None);
+        assert!(matches!(
+            session.render(&s, 32, Quality::Interactive),
+            Err(Error::MaskSurfaceMissing(m)) if m == "paint"
+        ));
+        session.set_mask_surface(&id, &bytes).unwrap();
+        assert_eq!(
+            session.render(&s, 32, Quality::Interactive).unwrap().rgba,
+            first.rgba
+        );
     }
 
     #[test]

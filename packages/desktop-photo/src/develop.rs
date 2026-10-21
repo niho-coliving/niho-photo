@@ -34,6 +34,7 @@ use crate::capabilities::{validate_photo_static, CapabilityStage};
 use crate::common::{code, is_executable_file, lock, random_hex, scrub_paths, LogFn, PageError};
 use crate::image_info::{read_raster_info, RasterInfo};
 use crate::library::photo_kind;
+use crate::mask_surfaces::{mask_surface_id, mask_surface_ids};
 use crate::saved_settings::{
   content_digest, ensure_private_dir, is_content_key, set_mode, write_private_file_atomically, ContentDigest,
 };
@@ -83,8 +84,9 @@ const SIGNED_MIN_TOOL_VERSION: &str = "0.5.0";
 const SIGNED_MIN_RENDER_VERSION: &str = "0.11.0";
 const NIHO7_MIN_RENDER_VERSION: &str = "0.16.0";
 const NIHO11_MIN_RENDER_VERSION: &str = "0.18.0";
-/// 部分補正（`developSettings.masks`。線形・円形。docs/local-adjustments.md）を描ける niho-develop-render の最小の版。
-/// これより古い sidecar へは `masks` のある設定を渡さない（`v: 5` を読めないか、マスクを描かない）。
+/// 部分補正（`developSettings.masks`。線形・円形と、面〔`--mask-surface`〕を読むブラシ・被写体・空。docs/local-adjustments.md）を
+/// 描ける niho-develop-render の最小の版。これより古い sidecar へは `masks` のある設定を渡さない（`v: 5` を読めないか、マスクを
+/// 描かない）。0.19.0 は線形・円形（#66）と面の口（#68）を同じ版で出す（どちらも公開前）ので、版の境は 1 つ。
 pub const MASKS_MIN_RENDER_VERSION: &str = "0.19.0";
 pub(crate) const SIGNED_REGISTRY_SNAPSHOT: &[u8] = include_bytes!("../calibration/apple-signed-registry.json");
 
@@ -182,6 +184,9 @@ pub mod develop_code {
   pub const NOT_APPLICABLE: &str = "notApplicable";
   /// 保存した RAW の土台を同じ recipe / 校正で復元できない。別の校正で同じ base を名乗らせない。
   pub const RESTORATION_UNAVAILABLE: &str = "restorationUnavailable";
+  /// 補正の描かれるマスク（ブラシ・被写体・空）の面が、この Mac の面の置き場（{@link DevelopPhotos::mask_surface}）に無い・
+  /// 読めない（エンジンの `maskSurfaceMissing` と同じ語）。書き出しの前に断る
+  pub const MASK_SURFACE_MISSING: &str = "maskSurfaceMissing";
 }
 
 pub const UNAVAILABLE_MESSAGE: &str = "この NIHO Desktop では現像を使えません。NIHO Desktop を入れ直してください。";
@@ -205,6 +210,8 @@ const NOT_APPLICABLE_MESSAGE: &str = "この写真の作業コピーはクラウ
 pub const INVALID_BASE_VERSION_MESSAGE: &str = "作業コピーの版が変わりました。もう一度お試しください。";
 const RESTORATION_UNAVAILABLE_MESSAGE: &str =
   "保存した補正の土台を復元できません。NIHO Desktop を更新してもう一度お試しください。";
+pub const MASK_SURFACE_MISSING_MESSAGE: &str =
+  "部分補正のマスク（ブラシなど）の面がこの Mac に見つからないため、書き出せません。マスクを描き直してください。";
 const INTERNAL_MESSAGE: &str = "現像で予期しないエラーが起きました。";
 
 // ---------------------------------------------------------------------------
@@ -1886,6 +1893,13 @@ pub trait DevelopPhotos {
   fn open_photo(&self, photo_id: &str) -> Option<OpenPhoto>;
   /// この Mac に保存済みの補正があるか（signed の新規生成を決める）。写真・保存先の状態が分からないときも true。
   fn has_saved_settings(&self, photo_id: &str) -> bool;
+  /// 部分補正のマスク（ブラシ・被写体・空）の面の PNG（docs/local-adjustments.md「面の受け渡し」。`surface_id` は 16 進の
+  /// 小文字 64 文字）。この Mac に無い・読めない・中身の SHA-256 が `surface_id` でないときは None。原寸の書き出しが、描かれる
+  /// マスクの面をここから読んで `niho-develop-render --mask-surface` へ渡す（無ければ書き出す前に
+  /// {@link develop_code::MASK_SURFACE_MISSING}）。既定は面の置き場を持たないアプリ（いつも None）。
+  fn mask_surface(&self, _photo_id: &str, _surface_id: &str) -> Option<Vec<u8>> {
+    None
+  }
 }
 
 /// 新規 producer と保存済み・編集中の recipe 復元を分けるため、画面が知っている状態を source bridge に添える。
@@ -1915,6 +1929,10 @@ impl<T: DevelopPhotos + ?Sized> DevelopPhotos for Arc<T> {
 
   fn has_saved_settings(&self, photo_id: &str) -> bool {
     (**self).has_saved_settings(photo_id)
+  }
+
+  fn mask_surface(&self, photo_id: &str, surface_id: &str) -> Option<Vec<u8>> {
+    (**self).mask_surface(photo_id, surface_id)
   }
 }
 
@@ -3710,6 +3728,23 @@ impl PhotoDevelop {
     let photo = photos.open_photo(photo_id).ok_or_else(not_open)?;
     validate_develop_input(&photo.path, CapabilityStage::FullRender)?;
     let input = self.export_input_of(&sidecars, &photo)?;
+    // 描かれる面のマスク（ブラシ・被写体・空）の面を、作業コピーを作る前にこの Mac の置き場から読む（無ければ断る。sidecar は面の
+    // 無い有効なマスクを描かずに失敗する）。描かれないマスクの面は渡さない
+    let mut surfaces = Vec::new();
+    for surface_id in mask_surface_ids(develop_settings, true) {
+      let bytes = is_content_key(&surface_id)
+        .then(|| photos.mask_surface(photo_id, &surface_id))
+        .flatten()
+        .filter(|bytes| mask_surface_id(bytes) == surface_id)
+        .ok_or_else(|| {
+          DevelopError::new(
+            develop_code::MASK_SURFACE_MISSING,
+            MASK_SURFACE_MISSING_MESSAGE,
+            format!("mask surface {surface_id} is not on this Mac"),
+          )
+        })?;
+      surfaces.push((surface_id, bytes));
+    }
     let folder = destination
       .parent()
       .filter(|folder| !folder.as_os_str().is_empty())
@@ -3731,6 +3766,15 @@ impl PhotoDevelop {
       OsStr::new("--max-dimension"),
       OsStr::new("0"),
     ]);
+    // 面はこの仕事の一時フォルダへ写して渡す（置き場のパスを sidecar へ渡さない。仕事が終われば一時フォルダごと消える）
+    for (surface_id, bytes) in &surfaces {
+      let path = work.path.join(format!("surface-{surface_id}.png"));
+      write_private_file_atomically(&path, bytes).map_err(|err| internal(format!("mask surface: {}", err.kind())))?;
+      let mut argument = OsString::from(format!("{surface_id}="));
+      argument.push(path.as_os_str());
+      develop_args.extend([OsString::from("--mask-surface"), argument]);
+    }
+    drop(surfaces);
     let mut full_size: Option<MadeWorkingCopy> = None;
     match input {
       ExportInput::Raw => {

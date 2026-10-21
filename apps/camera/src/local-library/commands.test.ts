@@ -260,6 +260,36 @@ describe("createCameraCommands", () => {
     ]);
   });
 
+  it("saves mask surfaces as raw IPC bytes with the photo id and reads them back as bytes", async () => {
+    const id = "a".repeat(64);
+    const png = new Uint8Array([0x89, 0x50, 0x4e, 0x47]);
+    const { calls, commands } = recording(({ command }) => {
+      switch (command) {
+        case "camera_mask_surface_save":
+          return { id, width: 4, height: 3 };
+        case "camera_mask_surface_load":
+          return png.buffer;
+        case "camera_mask_surface_exists":
+          return { missing: ["b".repeat(64)] };
+        default:
+          return {};
+      }
+    });
+    await expect(commands.saveMaskSurface("photo-1", png)).resolves.toEqual({ id, width: 4, height: 3 });
+    await expect(commands.loadMaskSurface("photo-1", id)).resolves.toEqual(png);
+    await expect(commands.missingMaskSurfaces("photo-1", [id, "b".repeat(64)])).resolves.toEqual(["b".repeat(64)]);
+    expect(calls).toEqual([
+      { command: "camera_mask_surface_save", args: png, options: { headers: { "x-niho-photo-id": "photo-1" } } },
+      { command: "camera_mask_surface_load", args: { request: { photoId: "photo-1", surfaceId: id } } },
+      {
+        command: "camera_mask_surface_exists",
+        args: { request: { photoId: "photo-1", surfaceIds: [id, "b".repeat(64)] } },
+      },
+    ]);
+    const refused = recording(() => ({ reject: { code: "maskSurfaceQuota", message: "上限です。" } }));
+    await expect(refused.commands.saveMaskSurface("photo-1", png)).rejects.toMatchObject({ code: "maskSurfaceQuota" });
+  });
+
   it("reports a closed save dialog as cancelled and a refusal as CameraCommandError", async () => {
     const cancelled = recording(() => ({ result: "cancelled" }));
     await expect(cancelled.commands.saveFile(new Uint8Array([1]), "a.xmp")).resolves.toBe("cancelled");

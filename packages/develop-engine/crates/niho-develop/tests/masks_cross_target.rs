@@ -4,8 +4,12 @@
 //! This test runs on both targets and pins the RGBA hashes of a synthetic
 //! photo with a linear and a radial mask under a turned, straightened crop,
 //! as a released frame (the one-shot render) and a drag frame (a Session),
-//! and of the overlay plane.
+//! and of the overlay plane. A second test does the same for a brush mask
+//! whose surface (a synthetic 8-bit gray PNG made here) a Session holds
+//! (`docs/local-adjustments.md` "面の受け渡し", M4 #68): the PNG's bytes and
+//! id, the released and drag frames, the exported PNG and the plane.
 
+use niho_develop::mask_surface::{self, MaskSurface};
 use niho_develop::{encode, parse_settings, render, Filter, Quality, RenderOptions, Session};
 
 fn photo() -> Vec<u8> {
@@ -78,5 +82,69 @@ fn native_and_wasm_render_the_same_masked_bytes() {
             12_440_713_395_875_544_195,
             2_411_968_078_102_423_582
         ]
+    );
+}
+
+/// A soft painted stroke with a hard spot (every value 0..=255 appears).
+fn surface_png() -> Vec<u8> {
+    let (w, h) = (73u32, 41u32);
+    let data = (0..h)
+        .flat_map(|y| (0..w).map(move |x| (x, y)))
+        .map(|(x, y)| {
+            let stroke = (x as i32 * 3 - y as i32 * 5 - 40).unsigned_abs() as f64;
+            let soft = (255.0 - stroke * 6.0).clamp(0.0, 255.0) as u8;
+            let spot = (x as i32 - 55).pow(2) + (y as i32 - 12).pow(2) < 40;
+            if spot {
+                255
+            } else {
+                soft
+            }
+        })
+        .collect();
+    mask_surface::encode_surface_png(&MaskSurface::new(w, h, data).unwrap()).unwrap()
+}
+
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
+fn native_and_wasm_render_the_same_surfaced_bytes() {
+    let input = photo();
+    let png = surface_png();
+    let id = mask_surface::surface_id(&png);
+    let text = format!(
+        r#"{{"v":5,"engine":"niho-10","look":"niho-standard-1","base":null,"shadows":25,
+"geometry":{{"rotate":270,"angle":-2.5,"crop":{{"left":0.04,"top":0.06,"right":0.95,"bottom":0.9}}}},
+"masks":[
+ {{"id":"sky","kind":"linear","zero":{{"x":0.5,"y":0.45}},"full":{{"x":0.52,"y":0.1}},"adjust":{{"exposure":-0.6}}}},
+ {{"id":"paint","kind":"brush","surface":{{"id":"{id}","width":73,"height":41}},"adjust":{{"exposure":0.8,"saturation":-35,"clarity":20}}}}
+]}}"#
+    );
+    let settings = parse_settings(&text).unwrap();
+    let mut session = Session::open_raster(&input, 0, Filter::Lanczos3).unwrap();
+    session.set_mask_surface(&id, &png).unwrap();
+    let released = session.render(&settings, 0, Quality::Final).unwrap();
+    let exported = session.export_png(&settings, 0).unwrap();
+    let drag = session.render(&settings, 96, Quality::Interactive).unwrap();
+    let (w, h, plane) = session.mask_plane(&settings, "paint", 96).unwrap();
+    assert_eq!((drag.width, drag.height), (w, h));
+    assert!(plane.contains(&0) && plane.contains(&255));
+    assert_eq!(
+        [
+            fnv1a64(&png),
+            fnv1a64(&released.rgba),
+            fnv1a64(&exported),
+            fnv1a64(&drag.rgba),
+            fnv1a64(&plane)
+        ],
+        [
+            9_734_754_401_130_926_224,
+            17_735_939_846_036_810_453,
+            6_524_484_371_947_961_774,
+            13_475_127_805_575_395_793,
+            3_389_071_474_784_361_943
+        ]
+    );
+    assert_eq!(
+        id,
+        "57ba7449db4404f2fc716326fa11de7196f123d6559f2a3d0f42ee6f26f6965a"
     );
 }

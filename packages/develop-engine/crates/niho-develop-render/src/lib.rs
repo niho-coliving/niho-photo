@@ -15,6 +15,10 @@
 //!   `raster_decode_size(settings, width, height, max_dimension, 0)` (large
 //!   enough for the crop to reach `max_dimension`, no cap) and rendered at
 //!   `max_dimension`: the one-shot `render` with `decode_cap` 0.
+//! - `--mask-surface <id>=<png>` (repeatable, at most 8): the surfaces of
+//!   `brush` / `subject` / `sky` masks, set into the Session with
+//!   `Session::set_mask_surface` before the render (the wasm's
+//!   `Developer.setMaskSurface`; `docs/local-adjustments.md` "面の受け渡し").
 //!
 //! The output is an 8-bit sRGB PNG without an ICC profile (untagged = sRGB).
 //! The JPEG is written by `apple-raw-linear encode-jpeg`, which carries the
@@ -48,11 +52,13 @@ pub enum ErrorCode {
     UnsupportedSettings,
     /// `developSettings` unreadable, of the wrong types or out of range.
     InvalidSettings,
-    /// An input file (settings, working copy, meta, original) is missing.
+    /// An input file (settings, working copy, meta, original, mask
+    /// surface) is missing.
     InputNotFound,
     /// An input file exists but cannot be read.
     ReadFailed,
-    /// The working copy / original is not a decodable JPEG / PNG.
+    /// The working copy / original is not a decodable JPEG / PNG, or a mask
+    /// surface is not the PNG its id names (`maskSurfaceInvalid`).
     DecodeFailed,
     /// The original's ICC profile cannot be converted.
     UnsupportedProfile,
@@ -140,11 +146,18 @@ impl From<niho_develop::Error> for CliError {
         match e {
             niho_develop::Error::Decode(d) => d.into(),
             niho_develop::Error::Encode(m) => Self::new(ErrorCode::EncodeFailed, m),
-            // A `brush` / `subject` / `sky` mask: this build has no surface
-            // store (M4, #68), so it cannot draw these settings.
+            // An active `brush` / `subject` / `sky` mask whose surface was
+            // not given (`--mask-surface`): these settings cannot be drawn
+            // as they are (as M2, which had no surfaces at all).
             e @ niho_develop::Error::MaskSurfaceMissing(_) => {
                 Self::new(ErrorCode::UnsupportedSettings, e.to_string())
             }
+            // A `--mask-surface` file that is not the surface its id names.
+            e @ niho_develop::Error::MaskSurfaceInvalid { .. } => {
+                Self::new(ErrorCode::DecodeFailed, e.to_string())
+            }
+            // `maskSurfaceMismatch` (the settings' `surface` size is not the
+            // surface's) and the rest.
             other => Self::new(ErrorCode::InvalidSettings, other.to_string()),
         }
     }
@@ -172,7 +185,13 @@ pub struct RenderArgs {
     pub source: Source,
     /// Long-edge cap of the output (0 = the source's size).
     pub max_dimension: usize,
+    /// `--mask-surface <id>=<png>`: the surfaces of `brush` / `subject` /
+    /// `sky` masks (id, file), in the order given, ids distinct.
+    pub mask_surfaces: Vec<(String, PathBuf)>,
 }
+
+/// At most this many `--mask-surface` (the settings' masks).
+pub const MAX_MASK_SURFACE_ARGS: usize = niho_develop::settings::MAX_LOCAL_MASKS;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Command {
@@ -198,6 +217,7 @@ USAGE
       (--working-copy <working.png> --meta <meta.json> [--base-version <v>]
        | --raster <original.jpg|png>)
       [--max-dimension <0|px>]          (default 0 = the source's size)
+      [--mask-surface <sha256>=<surface.png>]...   (at most 8)
   niho-develop-render version
 
 The output PNG has no ICC profile (sRGB) and is written through a temporary
@@ -212,6 +232,14 @@ rendered even when the settings' base differs.
 Settings with a geometry (v 2) render the turned, straightened and cropped
 frame; --max-dimension caps its long edge (never enlarged), and an original
 is decoded large enough for the crop.
+
+--mask-surface gives the surface of brush / subject / sky masks (v 5): the
+file is the 8-bit grayscale PNG (at most 8 MiB, 1..4096 px per side) whose
+sha256 is <sha256> (64 lowercase hex digits). A file that is not that PNG
+is decode_failed (maskSurfaceInvalid); an active surface mask whose surface
+is not given is unsupported_settings (maskSurfaceMissing); a surface of
+another size than the mask's \"surface\" is invalid_settings
+(maskSurfaceMismatch).
 
 Exit codes: 0 ok, 1 invalid_arguments, 2 unsupported_settings,
 3 invalid_settings, 4 input_not_found / read_failed,
@@ -235,7 +263,7 @@ pub fn parse(args: &[String]) -> Result<Command, CliError> {
     }
 }
 
-const RENDER_OPTIONS: [&str; 7] = [
+const RENDER_OPTIONS: [&str; 8] = [
     "--settings",
     "--out",
     "--working-copy",
@@ -243,7 +271,31 @@ const RENDER_OPTIONS: [&str; 7] = [
     "--base-version",
     "--raster",
     "--max-dimension",
+    "--mask-surface",
 ];
+
+/// Options that may be given more than once.
+const REPEATED_OPTIONS: [&str; 1] = ["--mask-surface"];
+
+/// `<id>=<path>` of `--mask-surface`.
+fn parse_mask_surface(value: &str) -> Result<(String, PathBuf), CliError> {
+    let (id, path) = value.split_once('=').ok_or_else(|| {
+        CliError::arguments(format!(
+            "--mask-surface must be <sha256>=<surface.png> (got '{value}')"
+        ))
+    })?;
+    if !niho_develop::mask_surface::is_surface_id(id) {
+        return Err(CliError::arguments(
+            "--mask-surface needs the surface's sha256 (64 lowercase hex digits) before '='",
+        ));
+    }
+    if path.is_empty() {
+        return Err(CliError::arguments(format!(
+            "--mask-surface {id}= needs a file"
+        )));
+    }
+    Ok((id.to_string(), path.into()))
+}
 
 fn parse_render(args: &[String]) -> Result<Command, CliError> {
     let mut values: Vec<(&'static str, String)> = Vec::new();
@@ -280,12 +332,27 @@ fn parse_render(args: &[String]) -> Result<Command, CliError> {
                 "{option} needs a non-empty value"
             )));
         }
-        if values.iter().any(|(o, _)| *o == option) {
+        if !REPEATED_OPTIONS.contains(&option) && values.iter().any(|(o, _)| *o == option) {
             return Err(CliError::arguments(format!(
                 "{option} was given more than once"
             )));
         }
         values.push((option, value));
+    }
+    let mut mask_surfaces: Vec<(String, PathBuf)> = Vec::new();
+    for (_, value) in values.iter().filter(|(o, _)| *o == "--mask-surface") {
+        let (id, path) = parse_mask_surface(value)?;
+        if mask_surfaces.iter().any(|(given, _)| *given == id) {
+            return Err(CliError::arguments(format!(
+                "--mask-surface {id} was given more than once"
+            )));
+        }
+        mask_surfaces.push((id, path));
+    }
+    if mask_surfaces.len() > MAX_MASK_SURFACE_ARGS {
+        return Err(CliError::arguments(format!(
+            "at most {MAX_MASK_SURFACE_ARGS} --mask-surface"
+        )));
     }
     let take = |name: &str| {
         values
@@ -340,6 +407,7 @@ fn parse_render(args: &[String]) -> Result<Command, CliError> {
         out: out.into(),
         source,
         max_dimension,
+        mask_surfaces,
     }))
 }
 
@@ -414,6 +482,29 @@ fn read_bytes(path: &Path, what: &str) -> Result<Vec<u8>, CliError> {
     })
 }
 
+/// A mask surface file: at most [`niho_develop::mask_surface::MAX_SURFACE_PNG_BYTES`]
+/// + 1 bytes are read (a larger one is refused by `set_mask_surface`).
+fn read_mask_surface(path: &Path) -> Result<Vec<u8>, CliError> {
+    use std::io::Read;
+    let failed = |e: std::io::Error| {
+        let code = if e.kind() == std::io::ErrorKind::NotFound {
+            ErrorCode::InputNotFound
+        } else {
+            ErrorCode::ReadFailed
+        };
+        CliError::new(
+            code,
+            format!("cannot read the mask surface {}: {e}", path.display()),
+        )
+    };
+    let file = File::open(path).map_err(failed)?;
+    let mut bytes = Vec::new();
+    file.take(niho_develop::mask_surface::MAX_SURFACE_PNG_BYTES as u64 + 1)
+        .read_to_end(&mut bytes)
+        .map_err(failed)?;
+    Ok(bytes)
+}
+
 fn read_text(path: &Path, what: &str) -> Result<String, CliError> {
     let bytes = read_bytes(path, what)?;
     String::from_utf8(bytes).map_err(|_| {
@@ -440,6 +531,7 @@ fn check_out(args: &RenderArgs) -> Result<(), CliError> {
         Source::WorkingCopy { png, meta, .. } => inputs.extend([png, meta]),
         Source::Raster { path } => inputs.push(path),
     }
+    inputs.extend(args.mask_surfaces.iter().map(|(_, path)| path));
     for input in inputs {
         if fs::canonicalize(input).ok().as_deref() == Some(out.as_path()) {
             return Err(CliError::arguments(format!(
@@ -552,6 +644,12 @@ pub fn render(args: &RenderArgs) -> Result<Value, CliError> {
     let settings_text = read_text(&args.settings, "settings")?;
     let settings = load_settings(&settings_text)?;
     check_out(args)?;
+    // The surface files before the (larger) source.
+    let surfaces = args
+        .mask_surfaces
+        .iter()
+        .map(|(id, path)| Ok((id, read_mask_surface(path)?)))
+        .collect::<Result<Vec<_>, CliError>>()?;
 
     let (mut session, source_kind, source_base, render_max) = match &args.source {
         Source::WorkingCopy {
@@ -597,6 +695,10 @@ pub fn render(args: &RenderArgs) -> Result<Value, CliError> {
             }
         }
     };
+    for (id, bytes) in &surfaces {
+        session.set_mask_surface(id, bytes)?;
+    }
+    drop(surfaces);
     let opened = started.elapsed();
 
     let frame = session.render(&settings, render_max, Quality::Final)?;

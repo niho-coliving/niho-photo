@@ -10,8 +10,8 @@ commands.allow = ["camera_library_add_folder", "camera_library_add_photos", "cam
 
 [[permission]]
 identifier = "allow-camera-photos"
-description = "Allows the bundled NIHO photo UI to open listed photos (reading their content SHA-256), close them, read an open photo's metadata for the info panel (camera, lens, exposure, capture date, dimensions and GPS position read with ImageIO; nothing is cached or written), and save each photo's develop settings on this Mac with a revision check (Application Support/life.niho.camera/edits/<SHA-256>.json). Originals are never modified."
-commands.allow = ["camera_photo_open", "camera_photo_close", "camera_photo_info", "camera_photo_save_settings"]
+description = "Allows the bundled NIHO photo UI to open listed photos (reading their content SHA-256), close them, read an open photo's metadata for the info panel (camera, lens, exposure, capture date, dimensions and GPS position read with ImageIO; nothing is cached or written), save each photo's develop settings on this Mac with a revision check (Application Support/life.niho.camera/edits/<SHA-256>.json), and save, read back and look up the immutable mask surfaces of an open photo's brush / subject / sky masks (8-bit grayscale PNGs of at most 8 MiB sent as raw bytes, named by their SHA-256, at most 64 per photo; Application Support/life.niho.camera/mask-surfaces/<photo SHA-256>/<surface SHA-256>.png). No path is accepted or returned. Originals are never modified."
+commands.allow = ["camera_photo_open", "camera_photo_close", "camera_photo_info", "camera_photo_save_settings", "camera_mask_surface_save", "camera_mask_surface_load", "camera_mask_surface_exists"]
 
 [[permission]]
 identifier = "allow-camera-develop"

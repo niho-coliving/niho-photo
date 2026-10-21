@@ -10,6 +10,12 @@ use serde_json::Value;
 pub mod camera_code {
   /// 補正の保存で、画面が知っている版と今の版が違う（`currentRevision` に今の版）
   pub const REVISION_CONFLICT: &str = "revisionConflict";
+  /// 部分補正のマスクの面の保存: 8bit グレーの PNG（8 MiB 以下・1〜4096 画素）でない（エンジンの語と同じ）
+  pub const MASK_SURFACE_INVALID: &str = "maskSurfaceInvalid";
+  /// 部分補正のマスクの面の読み出し: その写真の面がこの Mac に無い・壊れている（エンジンの語と同じ）
+  pub const MASK_SURFACE_MISSING: &str = "maskSurfaceMissing";
+  /// 部分補正のマスクの面の保存: その写真の面の数が上限で、空けられる面が無い
+  pub const MASK_SURFACE_QUOTA: &str = "maskSurfaceQuota";
 }
 
 pub const INVALID_REQUEST_MESSAGE: &str = "操作を受け付けられませんでした。NIHO photo を開き直してください。";

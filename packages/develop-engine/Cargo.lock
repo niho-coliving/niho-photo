@@ -956,8 +956,10 @@ dependencies = [
  "moxcms",
  "niho-camera-color",
  "niho-camera-profile",
+ "png",
  "quick-xml",
  "serde_json",
+ "sha2",
  "wasm-bindgen-test",
 ]
 
