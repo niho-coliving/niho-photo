@@ -793,8 +793,10 @@
         "path": "packages/photo-editing/src/editor/browser-photo-editing-footer.test.tsx",
         "sha256": "a33628b1d33fd18b2ea082a0640a652b8ec54054e3077ca6256664c6194cd398"
       },
-      "outputSha256": "a33628b1d33fd18b2ea082a0640a652b8ec54054e3077ca6256664c6194cd398",
-      "modifications": []
+      "outputSha256": "86de1d5d430c03b1609b14d8fb9ae7ab858cf49353e0e5e1219ef875d35949df",
+      "modifications": [
+        "中幅画面のフッター折返しクラスを検証する。"
+      ]
     },
     {
       "path": "packages/photo-editing/src/editor/browser-photo-editing-footer.tsx",
@@ -804,13 +806,14 @@
         "path": "packages/photo-editing/src/editor/browser-photo-editing-footer.tsx",
         "sha256": "448c53cf1da0a5f3b41e1d507d2ac5d618a39c0b300571ad95a670bdba86bca0"
       },
-      "outputSha256": "d6b86ee7de6cc1bab538c273737d27e6561d8d58a2bf5f6c1eac2c9c317a71b3",
+      "outputSha256": "578eacceff6cd26cf5e4e87becae4174bf22c27f16942a0d00aa44ad01687ccb",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
         "信頼済みhost接続時だけ共有操作を表示する任意のボタンを追加。",
         "個人クラウドの明示binding、保存先切替、単一写真コピーと公開境界を追加。",
-        "Issue #49の統合確認: 置く列をclassNameで受け取る（PCの幅は中央の列の下だけ）。"
+        "Issue #49の統合確認: 置く列をclassNameで受け取る（PCの幅は中央の列の下だけ）。",
+        "1024〜1279px幅で操作ボタンが重ならないよう折り返す。"
       ]
     },
     {
@@ -1029,7 +1032,7 @@
         "path": "packages/photo-editing/src/editor/browser-photo-editing-workbench-folders.test.tsx",
         "sha256": "2466702c26e46adadb579736eb8edef22cc420e4b0189283fd7d4b762a62869e"
       },
-      "outputSha256": "194d81456de3b684989050c406775bb585e8a67f1a351fefb21d20aa9412e159",
+      "outputSha256": "3540735d2da28bdcfc266fada37501c6c54bfe446844092941fb13245e49e1ef",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
@@ -1043,7 +1046,8 @@
         "公開repoでの機能変更（#54）: 1 枚の面の下にフィルムストリップを置き、切り抜き・背景除去の間は ← → で写真を替えないようにした。",
         "PR #59 の main 競合解消と切替拒否時のフォーカス復元",
         "PR #59 のフィルムストリップと共有UIの統合",
-        "Issue #49の統合確認: 下段の列と左右のパネルの2段の合成テストを追加。"
+        "Issue #49の統合確認: 下段の列と左右のパネルの2段の合成テストを追加。",
+        "左右パネル表示時のフッターと自動高レイアウトを検証する。"
       ]
     },
     {
@@ -1054,7 +1058,7 @@
         "path": "packages/photo-editing/src/editor/browser-photo-editing-workbench.tsx",
         "sha256": "f655136ae0c985d793822ca8bef1668dba26ffd4bb8f13d2ba3d6c2ccb13ceb6"
       },
-      "outputSha256": "6a2211dcdba45db744fd8f46b5955b9e3547ecda33bd0d7a43f75dde1814bad0",
+      "outputSha256": "d688b00dea5f85d805782c71832f9c7237c919acde5547a9549d46af1cafecfc",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
@@ -1088,7 +1092,8 @@
         "最新mainのUI・共有機能と段階RAW openを統合し、既存の境界と補正保持を両立する。",
         "右パネルの補正・プリセット面の切替と段階RAW openを統合し、暫定中の見本生成停止を保つ。",
         "Integrate filmstrip with progressive RAW open",
-        "Issue #49の統合確認: 下段を中央の列の下だけに置き、プリセットの⋯の受け口を渡す。"
+        "Issue #49の統合確認: 下段を中央の列の下だけに置き、プリセットの⋯の受け口を渡す。",
+        "可変高のフッター行と中幅画面の折返しに対応する。"
       ]
     },
     {

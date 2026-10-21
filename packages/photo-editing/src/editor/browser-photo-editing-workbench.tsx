@@ -1778,7 +1778,7 @@ export function BrowserPhotoEditingWorkbench(props: {
       )}
       <div
         className={cn(
-          "grid grid-cols-1 grid-rows-[minmax(0,1fr)_auto] lg:grid-rows-[minmax(0,1fr)_3.5rem]",
+          "grid grid-cols-1 grid-rows-[minmax(0,1fr)_auto]",
           // web の写真編集タブは画面の高さから引いた固定の高さ。NIHO photo（fill）は親の flex に合わせて窓の底まで
           props.appearance === "fill" ? "min-h-0 flex-1" : "min-h-[520px] lg:h-[calc(100dvh-12rem)] lg:min-h-[620px]",
           // 右パネルがあるときは、その右に道具の帯（niho-photo#51）。PC の幅では左の木・右パネル・道具の帯が 2 段（面と下段）を

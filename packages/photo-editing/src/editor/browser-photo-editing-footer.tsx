@@ -205,7 +205,7 @@ export function BrowserPhotoEditingFooter(props: {
 }) {
   const setCompareOriginal = props.onCompareOriginalChange;
   return (
-    <footer className={cn("col-span-full flex min-h-14 items-center gap-2 border-t border-niho-border px-2 max-[479px]:flex-wrap lg:px-3", props.className)}>
+    <footer className={cn("col-span-full flex min-h-14 items-center gap-2 border-t border-niho-border px-2 max-[479px]:flex-wrap lg:px-3 lg:max-xl:flex-wrap lg:max-xl:gap-y-1 lg:max-xl:py-1", props.className)}>
       <div role="group" aria-label="表示" className="flex shrink-0 items-center gap-0.5">
         <button
           type="button"

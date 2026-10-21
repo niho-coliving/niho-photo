@@ -701,6 +701,10 @@ describe("NIHO photo の窓いっぱいの見た目（appearance・treeHidden・
     expect(footer()?.className).toContain("col-span-full");
     expect(footer()?.className).toContain("lg:col-span-1");
     expect(footer()?.className).toContain("lg:col-start-2");
+    expect(footer()?.className).toContain("lg:max-xl:flex-wrap");
+    expect(container.querySelector('section[aria-label="ブラウザ写真編集"] .grid')?.className).toContain(
+      "grid-rows-[minmax(0,1fr)_auto]",
+    );
     expect(tree().className).toContain("lg:row-span-2");
 
     await remount(fake.library, { appearance: "fill", treeHidden: true });
