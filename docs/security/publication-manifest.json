@@ -9227,8 +9227,8 @@
     },
     {
       "path": "packages/develop-engine/crates/niho-develop/examples/analytic_hs_probe.rs",
-      "sha256": "7a81a2cabd84d445acb30922b0f5d831072afb1d25e20a6f5475061670823aa1",
-      "origin": "公開Issue #26/#27/#29 のため公開済み数式・既存primitiveから独立実装した研究用コード・合成テスト・日本語手順。非公開の写真・参照画素・パス・履歴・第三者ソースを含まない。\n変更理由: 暗所A/Bで現行niho-6を基準とし、H/S以外の色・黒レベル等を同じ数式で比較する。"
+      "sha256": "c6ea425c372baf30b3eb3a5a54dfac0f336523a447c847fe63bdbcf6728d94c3",
+      "origin": "公開Issue #26/#27/#29 のため公開済み数式・既存primitiveから独立実装した研究用コード・合成テスト・日本語手順。非公開の写真・参照画素・パス・履歴・第三者ソースを含まない。\n変更理由: 暗所A/Bで現行niho-6を基準とし、H/S以外の色・黒レベル等を同じ数式で比較する。\n変更理由: #26 凍結した候補manifest（係数・SHA-256）を読み、A=設定のraster engineで描く"
     },
     {
       "path": "packages/develop-engine/crates/niho-develop/examples/linear_jpeg_wb_fit.rs",
@@ -9242,8 +9242,8 @@
     },
     {
       "path": "packages/develop-engine/crates/niho-develop/src/research/analytic_hs.rs",
-      "sha256": "821b18e256f14d28045785d2040d693ea6b91b22352cd7bc5fbb62526bac3149",
-      "origin": "公開Issue #26/#27/#29 のため公開済み数式・既存primitiveから独立実装した研究用コード・合成テスト・日本語手順。非公開の写真・参照画素・パス・履歴・第三者ソースを含まない。\n変更理由: 有界EV適用後の浮動小数点overflowも非有限出力として拒否。\n変更理由: 暗所A/Bで現行niho-6を基準とし、H/S以外の色・黒レベル等を同じ数式で比較する。"
+      "sha256": "d081403e3863b3f650258b4063749f8e63a2513e8a05b48773de0c323bf84e6d",
+      "origin": "公開Issue #26/#27/#29 のため公開済み数式・既存primitiveから独立実装した研究用コード・合成テスト・日本語手順。非公開の写真・参照画素・パス・履歴・第三者ソースを含まない。\n変更理由: 有界EV適用後の浮動小数点overflowも非有限出力として拒否。\n変更理由: 暗所A/Bで現行niho-6を基準とし、H/S以外の色・黒レベル等を同じ数式で比較する。\n変更理由: #26 候補Bの振幅/shiftを平均log輝度・p90の直線＋色差指数＋有界残差の凍結manifestにし、niho-10のH/Sと対で描く"
     },
     {
       "path": "packages/develop-engine/crates/niho-develop/src/research/linear_jpeg_wb.rs",
@@ -9389,6 +9389,21 @@
       "path": "packages/photo-editing/src/editor/use-browser-photo-progressive-open.test.tsx",
       "sha256": "f798412e58850f658bbb38743f7724bb9c165090fc270878c4d978af78a8e9ae",
       "origin": "Issue #13のため独立作成。actual React hooksと合成library/engine/frameだけで、provisional編集、canonical handoff、history、retry、abort、旧frame遮断を検証。外部画像・非公開コード・個体metadataを含まない。\n変更理由: 公開signed RAW契約に合う合成metadataで実hookの正規切替を検証。\n変更理由: preview取得失敗でも正規入力の実hookで補正を続けられる回帰を追加。\n変更理由: fallback後の補正を実際にflushし通常保存のbaseと値まで検証。\n変更理由: preset適用・量drag・量commitを未解決のままhandoffに重ねるfailure injectionを追加。\n変更理由: 非同期プリセットfixtureにも実契約のversionとengineを含め型検査する\n変更理由: 同一内容draftの再表示から正規base確定後の既存saverまで実hookで回帰検証する\n変更理由: draft復元テストでも一覧復帰の成功値を明示確認しact補助のvoid型契約に合わせる\n変更理由: Expect current niho-11 default in handoff tests"
+    },
+    {
+      "path": "packages/develop-engine/crates/niho-develop/examples/analytic_hs_calibrate.rs",
+      "sha256": "e7e1f153c84cef985337c76b433e061e3eb9a9cb2f7814e6758acadf736c5de2",
+      "origin": "公開Issue #26 のため独立実装した研究用の校正評価器。既存crateのprimitiveだけを使い、入力・参照は実行時に利用者が指定する。非公開の写真・参照画素・パス・scene名を含まない。"
+    },
+    {
+      "path": "packages/develop-engine/tools/calibrate/fit_analytic_hs.py",
+      "sha256": "f0e53d4fca94e9559e6d667de385d7d75c747490d9e844748c5afaca621c1572",
+      "origin": "公開Issue #26 のため独立実装した開発教師上の校正・撮影日fold交差検証・gate計測・一度だけの独立評価の手順。入力は利用者指定のrepository外、非公開の写真・パス・scene名・参照画素をsourceへ含めず匿名集計だけを公開する。sealed・independentのcohortを拒否する。"
+    },
+    {
+      "path": "packages/develop-engine/tools/calibrate/tests/test_fit_analytic_hs.py",
+      "sha256": "6da825f3d918a08ba11b309c9d3cf035e9c292483e019594d9878c2a6be5a036",
+      "origin": "公開Issue #26 のため独立作成したunittest。合成データとtemporary directoryだけを使い、実写真・第三者資産を含まない。"
     }
   ],
   "excludedSources": [
