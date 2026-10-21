@@ -471,6 +471,20 @@ export const PHOTO_EDITING_PRESET_UNSUPPORTED_LABELS = {
   pointColors: "Lightroom のポイントカラー",
   transform: "変形",
   profile: "プロファイル",
+  // 部分補正（Lightroom のマスク。docs/local-adjustments.md「Lightroom の XMP の読み」）
+  maskBrush: "ブラシのマスク",
+  maskAi: "AI のマスク（被写体や空など）",
+  maskRange: "範囲マスク",
+  maskRadialShape: "一部の円形グラデーション（回転など）",
+  maskCombined: "重ねたマスク",
+  maskOpacity: "マスクの不透明度",
+  maskLimit: "9 枚目からのマスク",
+  maskColor: "マスクの色相とカラー",
+  maskDetail: "マスクのシャープとノイズ軽減",
+  maskLegacy: "マスクの旧式の補正",
+  maskWhiteBalance: "マスクの色温度と色かぶり",
+  maskLegacyList: "旧形式のマスク",
+  maskUnreadable: "読めないマスク",
 } as const;
 /** ブラウザ版の右パネルの一番上の道具の切り替え（補正 / 切り抜き。NIHO Photo 段 1 F3b 移行元設計）。 */
 export const PHOTO_EDITING_TOOL_GROUP_LABEL = "編集の道具";

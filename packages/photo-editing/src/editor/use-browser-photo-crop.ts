@@ -32,9 +32,10 @@ type CropSource = {
 
 /**
  * 開いている写真の、切り抜きの座標の基準にする大きさを読む。オリジナルは wasm の `imageSize`（読んだ寸法は session に覚え、作業
- * サイズを合わせるときに読み直さない）、作業コピーは開いたときの大きさ。読めなければ null。
+ * サイズを合わせるときに読み直さない）、作業コピーは開いたときの大きさ。読めなければ null。プリセットのマスクを作業画像の座標へ
+ * 写すとき（`useBrowserPhotoPresets` の `readSourceSize`）も同じ大きさを使う。
  */
-async function readCropSource(
+export async function readCropSource(
   engine: Pick<DevelopEngine, "imageSize">,
   session: Pick<DevelopSession, "input" | "working" | "workSize">,
 ): Promise<Omit<CropSource, "key"> | null> {

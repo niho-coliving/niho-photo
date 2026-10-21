@@ -1,3 +1,4 @@
+import { parseDevelopMasks, type DevelopMask } from "./develop-masks";
 import { readDevelopSettings, type DevelopSettings } from "./develop-settings";
 
 /**
@@ -59,11 +60,20 @@ export type DevelopPresetResult = {
   settings: DevelopSettings;
   converted: boolean;
   /**
-   * 段 2 が再現しない XMP の項目（レンズ補正・色収差・知らない項目など）。シャープ・ノイズ軽減は crate 0.19.0（Issue #32）から
+   * 段 2 が再現しない XMP の項目（レンズ補正・色収差・知らない項目・ブラシや AI のマスクなど）。シャープ・ノイズ軽減は crate 0.19.0（Issue #32）から
    * 近い式で描く（crate の `approximate`）ので、読めない値か既定でない細かな項目のときだけ入る
    */
   unsupported: string[];
+  /**
+   * プリセットの部分補正（Lightroom の線形・円形のマスク。crate の `PresetResult::masks`）。座標は**当てる写真の見えている枠**
+   * （切り抜き・回転・反転・角度補正の後の出力）の上で、`settings.masks`（当てる前の写真のまま）には入っていない。写真に置くときは
+   * `presetDevelopSettings` が写真の幾何と作業画像の大きさで作業画像の座標へ写す。無い（0 枚）ときはキーが無い。
+   */
+  masks?: DevelopMask[];
 };
+
+/** 結果のマスクが読めなかったときに `unsupported` に足す項目（画面は「読めないマスク」と知らせる）。 */
+export const UNREADABLE_PRESET_MASKS_ITEM = "MaskGroupBasedCorrections";
 
 export const BROKEN_CONVERSION: DevelopEditSettingsConversion = { ok: false, settings: null, issues: [] };
 
@@ -97,17 +107,32 @@ function readStringList(value: unknown): string[] {
   return Array.isArray(value) ? value.filter((item): item is string => typeof item === "string") : [];
 }
 
-/** プリセットを当てた結果の JSON を読む（`applyPreset` の結果も同じ形）。`settings` が v1 の形でなければ null。 */
+/**
+ * プリセットを当てた結果の JSON を読む（`applyPreset` の結果も同じ形）。`settings` が v1 の形でなければ null。`masks` は M1 の
+ * 読み方（`parseDevelopMasks`。結果の `settings` のホワイトバランスの方式で）で厳密に読み、1 枚でも読めなければプリセットのマスクを
+ * すべて使わず、`unsupported` に {@link UNREADABLE_PRESET_MASKS_ITEM} を足す（黙って落とさない）。
+ */
 export function readPresetResult(resultJson: string): DevelopPresetResult | null {
   const record = parseRecord(resultJson);
   const settings = record ? readDevelopSettings(record.settings) : null;
   if (!record || !settings) return null;
-  return {
+  const result: DevelopPresetResult = {
     name: typeof record.name === "string" ? record.name : "",
     settings,
     converted: record.converted === true,
     unsupported: readStringList(record.unsupported),
   };
+  if (record.masks === undefined) return result;
+  const whiteBalance = settings.whiteBalance;
+  const whiteBalanceMode =
+    typeof whiteBalance === "object" && whiteBalance !== null ? (whiteBalance as Record<string, unknown>).mode : undefined;
+  const masks = parseDevelopMasks(record.masks, { whiteBalanceMode });
+  if (masks === null) {
+    if (!result.unsupported.includes(UNREADABLE_PRESET_MASKS_ITEM)) result.unsupported.push(UNREADABLE_PRESET_MASKS_ITEM);
+  } else if (masks.length > 0) {
+    result.masks = masks;
+  }
+  return result;
 }
 
 /** 同梱のプリセットの一覧の JSON を読む（`id` と `xmp` の無いものは落とす。名前が無ければ `id`）。一覧でなければ null。 */

@@ -20,9 +20,15 @@
 //!   scale) and stops at the preset's (no extrapolation).
 //! - `look`, `base` and unknown keys stay the photo's. `engine` also stays,
 //!   except a non-zero incremental-WB preset promotes it to `niho-2`.
+//! - The preset's own masks ([`PresetResult::masks`], Lightroom's local
+//!   corrections) scale their `adjust` deltas by the amount, stopped at the
+//!   `adjust` ranges: 0% carries no mask, 100% the preset's, 150% half as
+//!   much again. Their shapes do not move. The photo's `masks` in `settings`
+//!   stay the photo's at every amount.
 
 use super::{preset_settings, EffectField, PresetResult, XmpError, EFFECT_KEYS, SCALAR_KEYS};
 use crate::decode::LightroomWhite;
+use crate::local_mask::{LocalAdjust, LocalMask};
 use crate::settings::{
     ColorGradeBand, ColorPoint, CurveChannel, CurvePoint, DevelopSettings, HslAdjustment,
     HslAdjustments, HslBand, OklchDelta, OklchRange, OklchTarget, ToneCurve, WhiteBalance,
@@ -53,10 +59,64 @@ pub fn apply_preset(
     result.amount = Some(amount);
     if amount == 0.0 {
         result.settings = base.clone();
+        result.masks.clear();
     } else if amount != 1.0 {
         result.settings = blend(base, &result.settings, amount, as_shot);
+        result.masks = scale_masks(&result.masks, amount);
+    }
+    // The blend can land on an absolute white, which takes no relative local
+    // white balance (`localWhiteBalance`): those deltas go.
+    if result.settings.white_balance.mode == WhiteBalanceMode::Absolute {
+        for mask in &mut result.masks {
+            mask.adjust.relative_temperature = 0.0;
+            mask.adjust.relative_tint = 0.0;
+        }
     }
     Ok(result)
+}
+
+/// The preset's masks at `t`: every `adjust` delta times `t`, stopped at its
+/// range (the shapes, switches and ids stay).
+fn scale_masks(masks: &[LocalMask], t: f64) -> Vec<LocalMask> {
+    masks
+        .iter()
+        .map(|mask| LocalMask {
+            adjust: scale_adjust(&mask.adjust, t),
+            ..mask.clone()
+        })
+        .collect()
+}
+
+fn scale_adjust(adjust: &LocalAdjust, t: f64) -> LocalAdjust {
+    let pm = (-100.0, 100.0);
+    let scale = |v: f64, (lo, hi): (f64, f64)| (v * t).clamp(lo, hi);
+    let mut hsl = HslAdjustments::default();
+    for (band, a) in adjust.hsl.entries() {
+        hsl.set(
+            *band,
+            HslAdjustment {
+                hue: scale(a.hue, pm),
+                saturation: scale(a.saturation, pm),
+                luminance: scale(a.luminance, pm),
+            },
+        );
+    }
+    LocalAdjust {
+        exposure: scale(adjust.exposure, (-5.0, 5.0)),
+        contrast: scale(adjust.contrast, pm),
+        highlights: scale(adjust.highlights, pm),
+        shadows: scale(adjust.shadows, pm),
+        whites: scale(adjust.whites, pm),
+        blacks: scale(adjust.blacks, pm),
+        texture: scale(adjust.texture, pm),
+        clarity: scale(adjust.clarity, pm),
+        dehaze: scale(adjust.dehaze, pm),
+        vibrance: scale(adjust.vibrance, pm),
+        saturation: scale(adjust.saturation, pm),
+        relative_temperature: scale(adjust.relative_temperature, pm),
+        relative_tint: scale(adjust.relative_tint, pm),
+        hsl,
+    }
 }
 
 /// `b` -> `f` at `t` (exactly `b` at 0 or when equal, exactly `f` at 1).

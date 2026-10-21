@@ -3,6 +3,8 @@
 import { useCallback, useEffect, useRef, useState, type MutableRefObject } from "react";
 
 import type { DevelopEngine, DevelopPresetResult } from "../develop-engine/develop-engine-client";
+import type { DevelopSize } from "../develop-engine/develop-geometry";
+import type { PresetMasksPlacement } from "../develop-engine/develop-preset-masks";
 import {
   developSettingsKey,
   presetDevelopSettings,
@@ -71,6 +73,8 @@ type PresetPreview = {
  *   （`previewSettings`・`previewInteractive` で速い描き方。札は出さない）、離したら確定する（取り消しの 1 単位。覚えている結果と
  *   適用量を入れ替え、選ばれた表示は続く）。0% は当てる直前の補正と同じ絵のまま選ばれた表示で、そこで「なし」を押すと覚えている
  *   プリセットを外すだけ（補正は変わらない）
+ * - プリセットが部分補正（Lightroom のマスク）を持つときは、開いている写真の作業画像の大きさ（`readSourceSize`）を読み、写真の
+ *   幾何で作業画像の座標へ写して写真のマスクと置き換える（`presetDevelopSettings`）。大きさを読めなければマスクは当てる前のまま
  */
 export function useBrowserPhotoPresets(params: {
   mountedRef: MutableRefObject<boolean>;
@@ -90,6 +94,11 @@ export function useBrowserPhotoPresets(params: {
   compareOriginal: boolean;
   /** 編集内容がまるごと入れ替わった・写真を離れたときに呼ばれる係を入れる先（`useBrowserPhotoEditSettings` が呼ぶ） */
   editResetHandlerRef: MutableRefObject<(() => void) | null>;
+  /**
+   * 開いている写真の作業画像（向き反映済み・幾何の前）の大きさ。マスクを持つプリセットを当てるときだけ読む（無い・読めなければ
+   * プリセットのマスクを置かない）
+   */
+  readSourceSize?: () => Promise<DevelopSize | null>;
 }) {
   const {
     mountedRef,
@@ -150,6 +159,20 @@ export function useBrowserPhotoPresets(params: {
   const previewAllowed = canApply && !dragging && !amountActive && !compareOriginal && applyingPresetKey === null;
   const latestRef = useRef({ photoKey, canApply, previewAllowed, commitEdit });
   latestRef.current = { photoKey, canApply, previewAllowed, commitEdit };
+  const readSourceSizeRef = useRef(params.readSourceSize);
+  readSourceSizeRef.current = params.readSourceSize;
+
+  /** プリセットのマスクを写真に置くのに要るもの（マスクの無いプリセットは undefined。大きさを読めなければ置かない）。 */
+  const masksPlacement = async (result: DevelopPresetResult): Promise<PresetMasksPlacement | undefined> => {
+    if (!result.masks || result.masks.length === 0) return undefined;
+    let source: DevelopSize | null = null;
+    try {
+      source = (await readSourceSizeRef.current?.()) ?? null;
+    } catch {
+      source = null;
+    }
+    return { masks: result.masks, source };
+  };
 
   /** 今の編集内容が、覚えているプリセットの結果と同じなら返す（選ばれている）。 */
   const currentSelection = (): RememberedPreset | null => {
@@ -196,8 +219,10 @@ export function useBrowserPhotoPresets(params: {
     const base = selection ? selection.base : current;
     const sequence = ++previewSequenceRef.current;
     let result: DevelopPresetResult | null;
+    let placement: PresetMasksPlacement | undefined;
     try {
       result = await resolvePreset(preset, base);
+      placement = await masksPlacement(result);
     } catch {
       result = null;
     }
@@ -211,7 +236,7 @@ export function useBrowserPhotoPresets(params: {
     ) {
       return;
     }
-    const next = result?.converted ? presetDevelopSettings(base, result.settings) : null;
+    const next = result?.converted ? presetDevelopSettings(base, result.settings, placement) : null;
     if (!next || sameDevelopSettings(next, current)) {
       setPreview(null);
       return;
@@ -367,13 +392,14 @@ export function useBrowserPhotoPresets(params: {
     const invalidText = photoEditingPresetInvalidText();
     try {
       const result = await resolvePreset(preset, base);
+      const placement = await masksPlacement(result);
       if (!isCurrent()) return;
       // 当てた結果に段 2 で扱えない項目がある（変換できない）ときは当てない（黙って落とさない）
       if (!result.converted) {
         setApplyError(invalidText);
         return;
       }
-      const next = presetDevelopSettings(base, result.settings);
+      const next = presetDevelopSettings(base, result.settings, placement);
       if (!latestRef.current.commitEdit(next)) return;
       const entry: RememberedPreset = {
         photoKey: key,
@@ -417,7 +443,8 @@ export function useBrowserPhotoPresets(params: {
       const result = await engine.applyPreset(selection.xmp, selection.base, amount / 100);
       if (!result.converted) return null;
       // 0% は Rust 側でも base と同じだが、画面の枠の補完でも byte を変えない。
-      return amount === 0 ? selection.base : presetDevelopSettings(selection.base, result.settings);
+      if (amount === 0) return selection.base;
+      return presetDevelopSettings(selection.base, result.settings, await masksPlacement(result));
     } catch {
       return null;
     }
