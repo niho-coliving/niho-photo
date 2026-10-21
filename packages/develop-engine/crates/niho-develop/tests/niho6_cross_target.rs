@@ -87,3 +87,76 @@ fn native_and_wasm_render_the_same_niho_8_bytes() {
         final_frame.rgba
     );
 }
+
+/// A legacy (unsigned) RAW working copy of the same synthetic photo.
+fn legacy_raw_working_copy() -> Vec<u8> {
+    let (w, h) = (96usize, 72usize);
+    let image = niho_develop::LinearImage {
+        width: w,
+        height: h,
+        data: (0..w * h)
+            .flat_map(|i| {
+                let (x, y) = (
+                    (i % w) as f32 / (w - 1) as f32,
+                    (i / w) as f32 / (h - 1) as f32,
+                );
+                [
+                    0.01 + 0.8 * x * x,
+                    0.02 + 0.5 * x * (1.0 - 0.4 * y),
+                    0.03 + 0.35 * y + 0.2 * x,
+                ]
+            })
+            .collect(),
+    };
+    niho_develop::decode::encode_working_copy(&image)
+}
+
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
+fn native_and_wasm_render_the_same_niho_12_bytes() {
+    // niho-12 is the new-edit default (#29): its raster Final / Interactive
+    // and legacy RAW Final / Interactive bytes are frozen on both targets.
+    let input = photo();
+    let settings = niho_develop::parse_settings(r#"{"v":1,"engine":"niho-12","look":"niho-standard-1","exposure":0.2,"contrast":18,"highlights":-75,"shadows":55,"blacks":40,"vibrance":10,"saturation":-25,"hsl":{"orange":{"hue":0,"saturation":-10,"luminance":20}}}"#).unwrap();
+    let final_frame = render(
+        &input,
+        &settings.to_json(),
+        &RenderOptions {
+            max_dimension: 0,
+            ..Default::default()
+        },
+    )
+    .unwrap();
+    let mut session =
+        niho_develop::Session::open_raster(&input, 0, niho_develop::Filter::Lanczos3).unwrap();
+    let drag = session
+        .render(&settings, 0, niho_develop::Quality::Interactive)
+        .unwrap();
+    assert_eq!((final_frame.width, final_frame.height), (160, 120));
+    assert_eq!(fnv1a64(&final_frame.rgba), 16_491_360_035_185_789_091);
+    assert_eq!(fnv1a64(&drag.rgba), 5_693_656_230_593_535_726);
+    assert_eq!(
+        session
+            .render(&settings, 0, niho_develop::Quality::Final)
+            .unwrap()
+            .rgba,
+        final_frame.rgba
+    );
+
+    let meta = r#"{"kind":"raw","baselineEV":0.3,"asShotWhite":{"x":0.3457,"y":0.3585},"dcpSha256":"fixture","lookTableIncluded":true}"#;
+    let mut raw = niho_develop::Session::open_working_copy(
+        &legacy_raw_working_copy(),
+        meta,
+        niho_develop::Filter::Lanczos3,
+    )
+    .unwrap();
+    let raw_drag = raw
+        .render(&settings, 0, niho_develop::Quality::Interactive)
+        .unwrap();
+    let raw_final = raw
+        .render(&settings, 0, niho_develop::Quality::Final)
+        .unwrap();
+    assert_eq!((raw_final.width, raw_final.height), (96, 72));
+    assert_eq!(fnv1a64(&raw_final.rgba), 7_566_227_202_881_651_497);
+    assert_eq!(fnv1a64(&raw_drag.rgba), 14_103_212_438_157_733_202);
+}

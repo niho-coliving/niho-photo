@@ -62,7 +62,7 @@ use std::{fmt, sync::Arc};
 
 /// Latest formula version this bundle can render. Settings constructors keep
 /// their own compatibility defaults; this advertises reader capability.
-pub const ENGINE_VERSION: &str = settings::ENGINE_NIHO_11;
+pub const ENGINE_VERSION: &str = settings::ENGINE_NIHO_12;
 /// Crate version (build artifacts are published per version).
 pub const CRATE_VERSION: &str = env!("CARGO_PKG_VERSION");
 
@@ -291,11 +291,11 @@ pub fn render_camera_linear(
             settings.engine
         )));
     }
-    if settings.engine == settings::ENGINE_NIHO_8 {
-        return Err(Error::IncompatibleWorkingCopy(
-            "niho-8 camera-linear input is unsupported; use a raster or legacy unsigned RAW working copy"
-                .into(),
-        ));
+    if settings::uses_float_cubes(&settings.engine) {
+        return Err(Error::IncompatibleWorkingCopy(format!(
+            "{} camera-linear input is unsupported; use a raster or legacy unsigned RAW working copy",
+            settings.engine
+        )));
     }
     camera_linear::validate_work_meta(meta)?;
     match settings.base.as_deref() {
@@ -1012,7 +1012,7 @@ impl Session {
             }
             return Ok(niho6::uses_response(settings).then_some(RawEngine::Niho6));
         }
-        if settings.engine == settings::ENGINE_NIHO_8 && !raw {
+        if settings::uses_float_cubes(&settings.engine) && !raw {
             return Ok(niho6::uses_response(settings).then_some(RawEngine::Niho6));
         }
         let engine = match settings.engine.as_str() {
@@ -1023,10 +1023,11 @@ impl Session {
             settings::ENGINE_NIHO_11 => Some(RawEngine::Niho4),
             _ => None,
         };
-        if signed && settings.engine == settings::ENGINE_NIHO_8 {
-            return Err(Error::IncompatibleWorkingCopy(
-                "niho-8 does not define signed-gamma18-v1 semantics; use niho-3/4/5/7".into(),
-            ));
+        if signed && settings::uses_float_cubes(&settings.engine) {
+            return Err(Error::IncompatibleWorkingCopy(format!(
+                "{} does not define signed-gamma18-v1 semantics; use niho-3/4/5/7/11",
+                settings.engine
+            )));
         }
         if signed && engine.is_none() {
             return Err(Error::IncompatibleWorkingCopy(

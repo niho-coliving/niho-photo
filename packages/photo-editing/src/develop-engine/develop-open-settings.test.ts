@@ -116,6 +116,35 @@ describe("resolveDevelopOpenSettings", () => {
     });
   });
 
+  it("未保存の raster・unsigned RAW の作業コピーは niho-12 で開き、保存済みの niho-2 / niho-10 は昇格させない（#29）", () => {
+    const legacyRaw = "raw-apple.d8.p1.e1.cal-none";
+    const raster = "raster.ci2.p2.e2.icc-srgb";
+    for (const [baseVersion, workMeta] of [
+      [legacyRaw, { kind: "raw" }],
+      [raster, { kind: "raster", encoding: "jpeg8" }],
+    ] as const) {
+      expect(resolveDevelopOpenSettings({ cloudPhoto: cloudPhoto(), baseVersion, workMeta })).toMatchObject({
+        kind: "settings",
+        baseSettings: { engine: "niho-12", look: "niho-standard-1", base: baseVersion },
+        settingsSource: "none",
+      });
+    }
+    const saved = (engine: string, base: string) => ({
+      ...SAVED_DEVELOP,
+      developSettings: { v: 1, engine, look: "niho-standard-1", base } as DevelopSettings,
+    });
+    expect(
+      resolveDevelopOpenSettings({ cloudPhoto: cloudPhoto(saved("niho-2", legacyRaw)), baseVersion: legacyRaw, workMeta: { kind: "raw" } }),
+    ).toMatchObject({ kind: "settings", baseSettings: { engine: "niho-2", base: legacyRaw } });
+    expect(resolveDevelopOpenSettings({ cloudPhoto: cloudPhoto(saved("niho-10", raster)), baseVersion: raster })).toMatchObject({
+      kind: "settings",
+      baseSettings: { engine: "niho-10", base: raster },
+    });
+    expect(
+      resolveDevelopOpenSettings({ cloudPhoto: cloudPhoto(saved("niho-12", legacyRaw)), baseVersion: legacyRaw, workMeta: { kind: "raw" } }),
+    ).toMatchObject({ kind: "settings", baseSettings: { engine: "niho-12", base: legacyRaw }, settingsSource: "develop" });
+  });
+
   it("古い API が返す旧エンジンの settings の項目（新しい日時）が行にあっても見ない（developSettings だけで決める）", () => {
     const legacyFields = { hasSettings: true, settingsUpdatedAt: "2026-09-29T00:00:00.000Z" } as Partial<PhotoLibraryPhoto>;
     expect(
