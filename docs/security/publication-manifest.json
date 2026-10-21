@@ -9585,13 +9585,13 @@
     },
     {
       "path": "packages/photo-editing/src/editor/photo-editing-hsl-mixer.tsx",
-      "sha256": "3bd2a0dd946c6d0faf53a3a8eb6f1b716c2c1ed5d39c6d8243b454cd5717cb43",
-      "origin": "niho-photo#38 のため新規作成。右パネルのカラーの群の下の「カラーミキサー」の節と、PC・スマホ共通の「調整」の切り替えと 8 色のスライダーの部品。外部コード・実データを含まない。"
+      "sha256": "1beacebdcdf8ff6c3f556b1e1fa092b8f1f8bacf04d95e0458891b8ba8e6016d",
+      "origin": "niho-photo#38 のため新規作成。右パネルのカラーの群の下の「カラーミキサー」の節と、PC・スマホ共通の「調整」の切り替えと 8 色のスライダーの部品。外部コード・実データを含まない。\n変更理由: disable HSL controls during monochrome mode"
     },
     {
       "path": "packages/photo-editing/src/editor/photo-editing-hsl-mixer.test.tsx",
-      "sha256": "3cc0861c944eef4b226e97a7bd0dc783c0aa9b828f38e60f462d1612603f0ed6",
-      "origin": "niho-photo#38 のため新規作成。カラーミキサーの切り替え・スライダーの drag / commit / リセット・初期化・節の開閉と、カラーの群の下の並び（カラーミキサー → ポイントカラー）の test。合成の値だけを使用。"
+      "sha256": "b558ce78c2ff2a3a7fc4c2dc7a4f1d8f7f486a0b4bc1880c2ff4f3e0cf187ffc",
+      "origin": "niho-photo#38 のため新規作成。カラーミキサーの切り替え・スライダーの drag / commit / リセット・初期化・節の開閉と、カラーの群の下の並び（カラーミキサー → ポイントカラー）の test。合成の値だけを使用。\n変更理由: cover inactive HSL controls in monochrome mode"
     },
     {
       "path": "packages/photo-editing/src/editor/browser-photo-editing-mobile-editor-hsl.test.tsx",
