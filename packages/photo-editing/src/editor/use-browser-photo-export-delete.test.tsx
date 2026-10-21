@@ -5,7 +5,7 @@ import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { DevelopEngine } from "../develop-engine/develop-engine-client";
-import { neutralDevelopSettings, type DevelopSettings } from "../develop-engine/develop-settings";
+import { developSettingsVersion, neutralDevelopSettings, type DevelopSettings } from "../develop-engine/develop-settings";
 import type { PhotoLibrary, PhotoLibraryCapabilities, PhotoLibraryPhoto } from "../library/photo-library";
 import {
   PhotoLibraryProvider,
@@ -120,6 +120,7 @@ let operationRefForTest: { current: "export" | "delete" | "bulk" | null };
 let pendingEdits: { hasPending: () => boolean; waitForPending: ReturnType<typeof vi.fn<() => Promise<void>>> };
 let engine: DevelopEngine;
 let downloadOriginal: ReturnType<typeof vi.fn>;
+let openOriginal: ReturnType<typeof vi.fn<PhotoLibrary["openOriginal"]>>;
 let saveFile = vi.fn<PhotoEditingHost["saveFile"]>();
 let capabilitiesForTest: PhotoLibraryCapabilities;
 let settingsRefForTest: { current: DevelopSettings };
@@ -197,8 +198,13 @@ beforeEach(async () => {
     withCaptureExif: vi.fn(async (bytes: Uint8Array<ArrayBuffer>) => bytes),
   } as unknown as DevelopEngine;
   downloadOriginal = vi.fn(async () => ({ blob: new Blob([new Uint8Array([7])]), fileName: "raw.rw2" }));
+  openOriginal = vi.fn(async (photoId: string) => ({
+    source: { ref: "original", expiresAt: null },
+    photo: { ...photo(), id: photoId },
+  }));
   const library = {
     downloadOriginal,
+    openOriginal,
     exportNative: nativeExport,
     errors: {
       describe: (_error: unknown, fallback: string) => fallback,
@@ -249,6 +255,56 @@ describe("useBrowserPhotoExportAndDelete canonical guard integration", () => {
       kind: "error",
       text: "中間調・全体の輝度を使っている写真は、原寸で書き出せません。",
     });
+  });
+
+  it.each([
+    ["遠近", { geometry: { perspective: { vertical: -20 } } }, "遠近を使っている写真は、原寸で書き出せません。"],
+    [
+      "修復",
+      { heal: [{ id: "a", mode: "remove", radius: 0.02, feather: 0.5, points: [[0.5, 0.5]] }] },
+      "修復を使っている写真は、原寸で書き出せません。",
+    ],
+    ["レンズ補正", { lens: { distortion: 10 } }, "レンズ補正を使っている写真は、原寸で書き出せません。"],
+  ])("%s を原寸 native renderer に渡さない", async (_name, extra, text) => {
+    capabilitiesForTest = { ...CAPABILITIES, nativeExport: true };
+    settingsRefForTest.current = { ...neutralDevelopSettings("raw-apple.d1.p1.e1"), ...extra };
+    let result: BrowserPhotoExportResult | undefined;
+    await act(async () => {
+      result = await runExport("jpeg", { size: "full", jpegRoute: "native" });
+    });
+    expect(result).toBe("failed");
+    expect(nativeExport).not.toHaveBeenCalled();
+    expect(statusForTest).toHaveBeenCalledWith({ kind: "error", text });
+  });
+
+  it("原寸native exportは一覧の古い補正ではなくopenOriginalの最新補正を判定する", async () => {
+    Object.assign(capabilitiesForTest, { nativeExport: true });
+    openedRefForTest.current = null;
+    settingsRefForTest.current = neutralDevelopSettings("raw-apple.d1.p1.e1");
+    openOriginal.mockResolvedValue({
+      source: { ref: "original", expiresAt: null },
+      photo: {
+        ...photo(),
+        hasDevelopSettings: true,
+        developSettings: {
+          ...neutralDevelopSettings("raw-apple.d1.p1.e1"),
+          geometry: { perspective: { vertical: -20 } },
+          v: developSettingsVersion({ geometry: { perspective: { vertical: -20 } } }),
+        },
+        developSettingsUpdatedAt: "2026-10-21T00:00:00.000Z",
+        developRevision: 1,
+      },
+    });
+
+    let result: BrowserPhotoExportResult | undefined;
+    await act(async () => {
+      result = await runExport("jpeg", { size: "full", jpegRoute: "native" });
+    });
+
+    expect(result).toBe("failed");
+    expect(openOriginal).toHaveBeenCalledTimes(1);
+    expect(nativeExport).not.toHaveBeenCalled();
+    expect(statusForTest).toHaveBeenCalledWith({ kind: "error", text: "遠近を使っている写真は、原寸で書き出せません。" });
   });
 
   it("受け付けたプリセットを確定してから編集をロックし、同時の重複exportを抑える", async () => {
