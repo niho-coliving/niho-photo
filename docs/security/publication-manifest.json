@@ -9317,8 +9317,8 @@
     },
     {
       "path": "packages/develop-engine/RESEARCH26-27.md",
-      "sha256": "415274c8d816ba6dca253fc2245ab69bfbe292aadac58a00c7ceb789c50427da",
-      "origin": "公開Issue #26/#27/#29 のため公開済み数式・既存primitiveから独立実装した研究用コード・合成テスト・日本語手順。非公開の写真・参照画素・パス・履歴・第三者ソースを含まない。\n変更理由: 暗所A/Bで現行niho-6を基準とし、H/S以外の色・黒レベル等を同じ数式で比較する。\n変更理由: 実測に基づくWB節点別fit、旧版を維持する候補のnative/wasm固定hashと再現可能な性能計測を整備。\n変更理由: 非公開出力をrepository外へ限定しsealed独立評価を拒否する、匿名集計の再現手順を追加。\n変更理由: Studio実測の段差・WB gate未達・wasm初期解析と継続編集の性能をsource SHA付きで記録。\n変更理由: 57場面のfloat対比較と6場面の原理式Bのgate未達を、匿名数値・残作業として記録。\n変更理由: 教師上の次候補fitとownerの撮影作業を区別し、独立評価前の未達判定であることを明確化。\n変更理由: #26 開発教師での案Bの校正・撮影日fold交差検証・gate未達の匿名数値・原因の切り分け・凍結と一度きりの独立評価の手順を記録\n変更理由: #26 開発教師での案Bの校正・撮影日fold交差検証・gate未達の匿名数値・原因の切り分け・凍結と一度きりの独立評価の手順を記録"
+      "sha256": "8bdc5033f1a998907a8f329e33c9d30fa26b21092d8e883c0c94cce5118ce5ac",
+      "origin": "公開Issue #26/#27/#29 のため公開済み数式・既存primitiveから独立実装した研究用コード・合成テスト・日本語手順。非公開の写真・参照画素・パス・履歴・第三者ソースを含まない。\n変更理由: 暗所A/Bで現行niho-6を基準とし、H/S以外の色・黒レベル等を同じ数式で比較する。\n変更理由: 実測に基づくWB節点別fit、旧版を維持する候補のnative/wasm固定hashと再現可能な性能計測を整備。\n変更理由: 非公開出力をrepository外へ限定しsealed独立評価を拒否する、匿名集計の再現手順を追加。\n変更理由: Studio実測の段差・WB gate未達・wasm初期解析と継続編集の性能をsource SHA付きで記録。\n変更理由: 57場面のfloat対比較と6場面の原理式Bのgate未達を、匿名数値・残作業として記録。\n変更理由: 教師上の次候補fitとownerの撮影作業を区別し、独立評価前の未達判定であることを明確化。\n変更理由: #26 開発教師での案Bの校正・撮影日fold交差検証・gate未達の匿名数値・原因の切り分け・凍結と一度きりの独立評価の手順を記録\n変更理由: #26 開発教師での案Bの校正・撮影日fold交差検証・gate未達の匿名数値・原因の切り分け・凍結と一度きりの独立評価の手順を記録\n変更理由: holdoutの凍結照合と事前subset検査、部分集合別合否を手順に追記する"
     },
     {
       "path": "packages/develop-engine/crates/niho-develop/examples/analytic_hs_probe.rs",
@@ -9697,13 +9697,13 @@
     },
     {
       "path": "packages/develop-engine/tools/calibrate/fit_analytic_hs.py",
-      "sha256": "23d59650f146da7dffb71d6eba8a3594e1ba24d2b81ca934903a0f12a833c2c6",
-      "origin": "公開Issue #26 のため独立実装した開発教師上の校正・撮影日fold交差検証・gate計測・一度だけの独立評価の手順。入力は利用者指定のrepository外、非公開の写真・パス・scene名・参照画素をsourceへ含めず匿名集計だけを公開する。sealed・independentのcohortを拒否する。\n変更理由: #26 独立評価(holdout)で欠けた部分集合・設定を許し、必須の書き出しの欠落を開始前に止める"
+      "sha256": "416daf67844460cd6ad8bd64547e801d60424e8eb7179dec3b8d0f68cd93bd74",
+      "origin": "公開Issue #26 のため独立実装した開発教師上の校正・撮影日fold交差検証・gate計測・一度だけの独立評価の手順。入力は利用者指定のrepository外、非公開の写真・パス・scene名・参照画素をsourceへ含めず匿名集計だけを公開する。sealed・independentのcohortを拒否する。\n変更理由: #26 独立評価(holdout)で欠けた部分集合・設定を許し、必須の書き出しの欠落を開始前に止める\n変更理由: holdoutを凍結tool・両実行物・subset gate・入力指紋でfail-closedにする"
     },
     {
       "path": "packages/develop-engine/tools/calibrate/tests/test_fit_analytic_hs.py",
-      "sha256": "9a4a4dfd56ee69c154e33af09b8be7eded52c5470315fc8deb0c3eaec10f1e56",
-      "origin": "公開Issue #26 のため独立作成したunittest。合成データとtemporary directoryだけを使い、実写真・第三者資産を含まない。\n変更理由: #26 部分集合の欠けたgate表と判定を合成データで検査する"
+      "sha256": "c84c423829ab6d99835cac7d0dcbc6dbb4b1c10830cadf4104f828b13a73e209",
+      "origin": "公開Issue #26 のため独立作成したunittest。合成データとtemporary directoryだけを使い、実写真・第三者資産を含まない。\n変更理由: #26 部分集合の欠けたgate表と判定を合成データで検査する\n変更理由: holdoutの凍結照合・場面数・部分集合判定・cache invalidationを合成fixtureで検査する"
     },
     {
       "path": "packages/develop-engine/fixtures/color/review-2026-10-21/analytic-hs-teachers-B1.json",
@@ -9717,8 +9717,8 @@
     },
     {
       "path": "packages/develop-engine/fixtures/color/review-2026-10-21/analytic-hs-freeze.json",
-      "sha256": "f5b809baeb3ff1ca0a35ce3eb33da7df276441ac6c51295ffb7f113e5ff938b2",
-      "origin": "公開Issue #26 の独立評価前のfreeze record。source commit・実行ファイルSHA-256・係数manifestと集計のhash・評価manifest（撮影条件・設定・gate・一度きりの規則）だけを記録し、写真・私有path・scene名を含まない。独立評価は未実施。"
+      "sha256": "b60c13c1e5c123bb0c372a08c7ceaef9be15c1eb61e996eb8d167db23cf47972",
+      "origin": "公開Issue #26 の独立評価前のfreeze record。source commit・実行ファイルSHA-256・係数manifestと集計のhash・評価manifest（撮影条件・設定・gate・一度きりの規則）だけを記録し、写真・私有path・scene名を含まない。独立評価は未実施。\n変更理由: 凍結tool hashとcalibrator/probe確認、subset最低数の契約を記録する"
     }
   ],
   "excludedSources": [

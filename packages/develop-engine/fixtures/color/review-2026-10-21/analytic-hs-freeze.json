@@ -6,7 +6,7 @@
   "sourceCommit": "74bf5a6197c6cd86d2dc3844bc2f9c479788a9bd",
   "executableBuildCommit": "04dc331f10c553772c6db68e4779dc1433735fa1",
   "developmentRunCommit": "04dc331f10c553772c6db68e4779dc1433735fa1",
-  "sourceNote": "packages/develop-engine/crates and Cargo.lock are identical between executableBuildCommit and sourceCommit; sourceCommit adds only the holdout handling of missing subsets (tools/calibrate). holdout checks git diff against sourceCommit.",
+  "sourceNote": "packages/develop-engine/crates and Cargo.lock are identical between executableBuildCommit and sourceCommit; colorcheck matches sourceCommit. holdout verifies the evaluator script SHA-256 and both frozen executable hashes.",
   "toolchain": "rustc 1.98.1 (cargo +1.98.1)",
   "build": "cargo +1.98.1 build --release --locked --manifest-path packages/develop-engine/Cargo.toml -p niho-develop --example analytic_hs_calibrate --example analytic_hs_probe",
   "executables": {
@@ -77,11 +77,12 @@
       "jpegGateP99Over8ShareMax": 0.15,
       "reported": "both the every-scene p99 <= 8 rule and the JPEG 15% rule, per subset, and paired regressions against niho-10"
     },
-    "once": "fit_analytic_hs.py holdout writes holdout-started.json before reading any reference and refuses a second run; coefficients, formula and thresholds are never changed after seeing the result"
+    "once": "The evaluator script and both executables must match the freeze; holdout validates all three non-blank subset minimums before writing holdout-started.json, then reads references once and refuses a second run. Coefficients, formula and thresholds are never changed after seeing the result."
   },
   "independentEvaluation": {
     "status": "not-run",
     "imagesRead": 0,
     "dryRun": "the holdout command was exercised once on one development teacher image in a throwaway work directory (not an independent evaluation)"
-  }
+  },
+  "evaluationToolSha256": "416daf67844460cd6ad8bd64547e801d60424e8eb7179dec3b8d0f68cd93bd74"
 }

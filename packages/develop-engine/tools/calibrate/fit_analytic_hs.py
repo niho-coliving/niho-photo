@@ -25,6 +25,7 @@ colorcheck at 1500px, blur 2, flat pixels.
   fit_analytic_hs.py --repo <checkout> --work <private> gate --family B1|B2 [--folds dates]
   fit_analytic_hs.py --repo <checkout> --work <private> publish --family B1 --out <summary.json>
   fit_analytic_hs.py --repo <checkout> --work <private> holdout --cohort <new-photos> --freeze <freeze.json>
+      [--calibrate <frozen analytic_hs_calibrate>] [--probe <frozen analytic_hs_probe>]
       (once, only after the freeze; see RESEARCH26-27.md)
 
 Needs numpy, scipy, Pillow, opencv-python-headless (colorcheck's) and release
@@ -91,6 +92,37 @@ RESIDUAL_BOUND = 8.0
 def digest(path: Path) -> str:
     with open(path, "rb") as f:
         return hashlib.file_digest(f, "sha256").hexdigest()
+
+
+def validate_frozen_executables(record: dict, probe: Path, calibrate: Path) -> None:
+    executables = record.get("executables", {})
+    if not probe.is_file() or digest(probe) != executables.get("analyticHsProbeSha256"):
+        raise SystemExit("analytic_hs_probe differs from the frozen executable")
+    if not calibrate.is_file() or digest(calibrate) != executables.get("analyticHsCalibrateSha256"):
+        raise SystemExit("analytic_hs_calibrate differs from the frozen executable")
+
+
+def validate_frozen_tool(record: dict, tool: Path) -> None:
+    if not tool.is_file() or digest(tool) != record.get("evaluationToolSha256"):
+        raise SystemExit("fit_analytic_hs.py differs from the frozen evaluation tool")
+
+
+def baseline_fingerprint(plan_path: Path, config_path: Path, calibrate: Path) -> str:
+    """Bind cached baseline rows to the exact plan, renderer inputs, settings and executable."""
+    config = json.loads(config_path.read_text())
+    paths = {plan_path, config_path, calibrate}
+    for scene in config["scenes"]:
+        paths.add(Path(scene["input"]))
+    for item in config["items"]:
+        paths.update(Path(item[key]) for key in ("settings", "reference") if item.get(key))
+
+    fingerprint = hashlib.sha256()
+    for path in sorted((p.resolve() for p in paths), key=str):
+        fingerprint.update(str(path).encode("utf-8"))
+        fingerprint.update(b"\0")
+        fingerprint.update(digest(path).encode("ascii"))
+        fingerprint.update(b"\0")
+    return fingerprint.hexdigest()
 
 
 def binaries(repo: Path) -> dict[str, Path]:
@@ -343,14 +375,23 @@ def fit_family(server: Server, plan_doc: dict, scene_ids: set[int], base_rows: n
             "trainLoss": {"B1": value, "B2": value_r}, "start": start_candidate}
 
 
-def surrogate_baseline(server: Server, work: Path, count: int) -> np.ndarray:
+def surrogate_baseline(server: Server, work: Path, plan_doc: dict, plan_path: Path,
+                       config_path: Path, calibrate: Path) -> np.ndarray:
     path = work / "surrogate-baseline.json"
+    count = len(plan_doc["items"])
+    fingerprint = baseline_fingerprint(plan_path, config_path, calibrate)
     if path.exists():
-        rows = np.asarray(json.loads(path.read_text())["rows"])
-        if len(rows) == count:
-            return rows
+        try:
+            cached = json.loads(path.read_text())
+            rows = np.asarray(cached["rows"])
+            if cached.get("fingerprint") == fingerprint and rows.shape == (count, 4) and np.isfinite(rows).all():
+                return rows
+        except (KeyError, TypeError, ValueError, json.JSONDecodeError):
+            pass
     rows = server.baseline(list(range(count)))
-    path.write_text(json.dumps({"rows": rows.tolist()}))
+    temporary = path.with_suffix(".tmp")
+    temporary.write_text(json.dumps({"fingerprint": fingerprint, "rows": rows.tolist()}))
+    temporary.replace(path)
     return rows
 
 
@@ -364,10 +405,12 @@ def budget_of(args) -> dict:
 
 
 def cv(args) -> None:
-    plan_doc = json.loads((args.work / "plan.json").read_text())
+    plan_path = args.work / "plan.json"
+    plan_doc = json.loads(plan_path.read_text())
     bins = binaries(args.repo)
     server = Server(bins["calibrate"], args.work / "server-config.json")
-    base_rows = surrogate_baseline(server, args.work, len(plan_doc["items"]))
+    base_rows = surrogate_baseline(
+        server, args.work, plan_doc, plan_path, args.work / "server-config.json", bins["calibrate"])
     key = fold_key(args.folds)
     folds = sorted({s[key] for s in plan_doc["scenes"]})
     out_dir = args.work / "runs" / f"cv-{args.folds}"
@@ -436,10 +479,12 @@ def surrogate_summary(plan_doc: dict, rows: np.ndarray, base: np.ndarray) -> dic
 
 
 def fit_all(args) -> None:
-    plan_doc = json.loads((args.work / "plan.json").read_text())
+    plan_path = args.work / "plan.json"
+    plan_doc = json.loads(plan_path.read_text())
     bins = binaries(args.repo)
     server = Server(bins["calibrate"], args.work / "server-config.json")
-    base_rows = surrogate_baseline(server, args.work, len(plan_doc["items"]))
+    base_rows = surrogate_baseline(
+        server, args.work, plan_doc, plan_path, args.work / "server-config.json", bins["calibrate"])
     out_dir = args.work / "runs" / "all"
     out_dir.mkdir(parents=True, exist_ok=True)
     started = time.monotonic()
@@ -460,10 +505,12 @@ def oracle(args) -> None:
     shift and chroma alpha fitted on that photo's own single H (or S) items.
     In-sample by construction; it separates "the formula cannot express the
     scene statistics' effect" from "this operator cannot reach Lightroom"."""
-    plan_doc = json.loads((args.work / "plan.json").read_text())
+    plan_path = args.work / "plan.json"
+    plan_doc = json.loads(plan_path.read_text())
     bins = binaries(args.repo)
     server = Server(bins["calibrate"], args.work / "server-config.json")
-    base_rows = surrogate_baseline(server, args.work, len(plan_doc["items"]))
+    base_rows = surrogate_baseline(
+        server, args.work, plan_doc, plan_path, args.work / "server-config.json", bins["calibrate"])
     out_path = args.work / "runs" / "oracle.json"
     out_path.parent.mkdir(parents=True, exist_ok=True)
     done = json.loads(out_path.read_text()) if out_path.exists() else {}
@@ -690,6 +737,22 @@ def gate_verdict(table: dict, which: str) -> dict:
     }
 
 
+def require_holdout_subset_counts(scenes: list[dict], minimum: int) -> dict[str, int]:
+    if not isinstance(minimum, int) or isinstance(minimum, bool) or minimum < 1:
+        raise SystemExit("the frozen holdout minimum per subset is invalid")
+    counts = {subset: sum(scene["subset"] == subset for scene in scenes) for subset in SUBSETS}
+    if any(count < minimum for count in counts.values()):
+        raise SystemExit(f"independent holdout requires at least {minimum} non-blank scenes in every subset")
+    return counts
+
+
+def holdout_verdicts(tables: dict) -> dict:
+    return {
+        "all": gate_verdict(tables["all"], "candidateOutOfFold"),
+        "bySubset": {subset: gate_verdict(tables[subset], "candidateOutOfFold") for subset in SUBSETS},
+    }
+
+
 def publish(args) -> None:
     plan_doc = json.loads((args.work / "plan.json").read_text())
     out = args.work / "gate" / args.family
@@ -761,7 +824,7 @@ def publish(args) -> None:
 def holdout(args) -> None:
     """The one independent evaluation of a frozen candidate (owner's new
     night / dark-interior / bright-iPhone photos). Refuses to run twice, or
-    when the source, executable or coefficients differ from the freeze."""
+    when the source, tool, executables or coefficients differ from the freeze."""
     sys.path.insert(0, str(args.repo / "packages/develop-engine/tools/calibrate"))
     from fit_niho6_response import blank_input
 
@@ -770,15 +833,18 @@ def holdout(args) -> None:
     if marker.exists():
         raise SystemExit("the independent evaluation already ran; a new candidate needs a new holdout")
     source = record["sourceCommit"]
-    changed = subprocess.run(["git", "-C", str(args.repo), "diff", "--quiet", source, "--",
-                              "packages/develop-engine/crates", "packages/develop-engine/Cargo.lock",
-                              "packages/develop-engine/tools/calibrate/fit_analytic_hs.py",
-                              "packages/develop-engine/tools/colorcheck/colorcheck"])
-    if changed.returncode:
-        raise SystemExit("renderer or evaluation sources differ from the frozen source commit")
-    probe = args.probe or binaries(args.repo)["probe"]
-    if digest(probe) != record["executables"]["analyticHsProbeSha256"]:
-        raise SystemExit("analytic_hs_probe differs from the frozen executable")
+    executable_build = record["executableBuildCommit"]
+    source_changed = subprocess.run(["git", "-C", str(args.repo), "diff", "--quiet", source, "--",
+                                     "packages/develop-engine/tools/colorcheck/colorcheck"])
+    build_changed = subprocess.run(["git", "-C", str(args.repo), "diff", "--quiet", executable_build, source, "--",
+                                    "packages/develop-engine/crates", "packages/develop-engine/Cargo.lock"])
+    if source_changed.returncode or build_changed.returncode:
+        raise SystemExit("frozen renderer, colorcheck or build sources differ")
+    bins = binaries(args.repo)
+    probe = args.probe or bins["probe"]
+    calibrate = args.calibrate or bins["calibrate"]
+    validate_frozen_executables(record, probe, calibrate)
+    validate_frozen_tool(record, args.repo / "packages/develop-engine/tools/calibrate/fit_analytic_hs.py")
     manifest = args.freeze.parent / record["candidateManifest"]["path"]
     if digest(manifest) != record["candidateManifest"]["sha256"] or \
             json.loads(manifest.read_text())["coefficientsSha256"] != record["candidateManifest"]["coefficientsSha256"]:
@@ -791,11 +857,6 @@ def holdout(args) -> None:
                or not (cohort / "inputs" / f"{scene['scene']}__neutral.jpg").exists()]
     if missing:
         raise SystemExit(f"{len(missing)} required inputs / exports are missing (neutral and the 3 presets)")
-    settings_dir = args.work / "holdout-settings"
-    subprocess.run([str(binaries(args.repo)["calibrate"]), "settings", str(settings_dir)], check=True)
-    args.work.mkdir(parents=True, exist_ok=True)
-    marker.write_text(json.dumps({"startedAt": time.strftime("%Y-%m-%dT%H:%M:%S%z"),
-                                  "freezeSha256": digest(args.freeze)}))
     scenes, skipped = [], 0
     for scene in meta["scenes"]:
         source_path = cohort / "inputs" / f"{scene['scene']}__neutral.jpg"
@@ -804,6 +865,13 @@ def holdout(args) -> None:
             continue
         scenes.append({"scene": scene["scene"], "subset": subset_of(scene), "input": str(source_path),
                        "lrExport": str(cohort / "lr-export")})
+    minimum = record["evaluationManifest"]["selection"]["minimumScenesPerSubset"]
+    subset_counts = require_holdout_subset_counts(scenes, minimum)
+    settings_dir = args.work / "holdout-settings"
+    subprocess.run([str(calibrate), "settings", str(settings_dir)], check=True)
+    args.work.mkdir(parents=True, exist_ok=True)
+    marker.write_text(json.dumps({"startedAt": time.strftime("%Y-%m-%dT%H:%M:%S%z"),
+                                  "freezeSha256": digest(args.freeze)}))
     items = [{"scene": i, "variant": v} for i, s in enumerate(scenes) for v in VARIANTS
              if (Path(s["lrExport"]) / f"{s['scene']}__{v}.jpg").exists()]
     colorcheck = str(args.repo / "packages/develop-engine/tools/colorcheck")
@@ -832,8 +900,7 @@ def holdout(args) -> None:
     result = {"kind": "independent-holdout", "issue": 26, "freezeSha256": digest(args.freeze),
               "sourceCommit": source, "coefficientsSha256": record["candidateManifest"]["coefficientsSha256"],
               "scenes": len(scenes), "blankExcluded": skipped,
-              "subsetCounts": {x: sum(s["subset"] == x for s in scenes) for x in SUBSETS},
-              "tables": tables, "verdict": gate_verdict(tables["all"], "candidateOutOfFold")}
+              "subsetCounts": subset_counts, "tables": tables, "verdict": holdout_verdicts(tables)}
     (out / "holdout-summary-sanitized.json").write_text(json.dumps(result, indent=2) + "\n")
     print(json.dumps(result["verdict"], indent=1))
 
@@ -859,6 +926,7 @@ def main() -> int:
     p = sub.add_parser("holdout")
     p.add_argument("--cohort", required=True, type=Path)
     p.add_argument("--freeze", required=True, type=Path)
+    p.add_argument("--calibrate", type=Path)
     p.add_argument("--probe", type=Path)
     p = sub.add_parser("publish")
     p.add_argument("--family", choices=("B1", "B2"), required=True)

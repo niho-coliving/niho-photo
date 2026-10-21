@@ -4,7 +4,9 @@ import json
 import sys
 import tempfile
 import unittest
+from types import ModuleType, SimpleNamespace
 from pathlib import Path
+from unittest.mock import patch
 
 import numpy as np
 
@@ -111,6 +113,136 @@ class ModelTests(unittest.TestCase):
         # Neutral items 0 and 4 have means 1 and 5: the neutral gate fails.
         self.assertFalse(verdict["neutralMean<=2"])
         self.assertFalse(verdict["presetP99<=8 (every scene)"])
+
+    def test_holdout_verdict_includes_each_subset_even_when_aggregate_passes(self):
+        scenes = [{"subset": subset} for subset in F.SUBSETS]
+        variants = ("neutral",) + F.PRESETS
+        items = [{"scene": scene_index, "variant": variant}
+                 for scene_index in range(len(scenes)) for variant in variants]
+        rows = []
+        for index, item in enumerate(items):
+            baseline = {"mean": 1.0, "p99": 7.0, "max": 9.0}
+            if item["variant"] == "neutral":
+                rows.append({"item": index, "kind": "neutral", "A": baseline})
+                continue
+            candidate = {"mean": 4.0 if item["scene"] == 0 else 1.0, "p99": 7.0, "max": 9.0}
+            rows.extend([{"item": index, "kind": "oof", "A": baseline, "B": candidate},
+                         {"item": index, "kind": "insample", "A": baseline, "B": candidate}])
+
+        tables = F.gate_tables({"scenes": scenes, "items": items}, rows)
+        verdicts = F.holdout_verdicts(tables)
+        self.assertTrue(verdicts["all"]["presetMean<=3"])
+        self.assertFalse(verdicts["bySubset"]["dark"]["presetMean<=3"])
+        self.assertTrue(verdicts["bySubset"]["brightIphone"]["presetMean<=3"])
+        self.assertTrue(verdicts["bySubset"]["daylight"]["presetMean<=3"])
+
+    def test_holdout_requires_frozen_nonblank_minimum_in_every_subset(self):
+        scenes = [{"subset": subset} for subset in F.SUBSETS for _ in range(2)]
+        counts = F.require_holdout_subset_counts(scenes, 2)
+        self.assertEqual(counts, {subset: 2 for subset in F.SUBSETS})
+        with self.assertRaisesRegex(SystemExit, "every subset"):
+            F.require_holdout_subset_counts(scenes[:-1], 2)
+
+    def test_holdout_frozen_executable_guard_checks_calibrator_and_probe(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            probe = Path(tmp) / "analytic_hs_probe"
+            calibrate = Path(tmp) / "analytic_hs_calibrate"
+            probe.write_bytes(b"frozen probe")
+            calibrate.write_bytes(b"frozen calibrator")
+            record = {"executables": {"analyticHsProbeSha256": F.digest(probe),
+                                      "analyticHsCalibrateSha256": F.digest(calibrate)}}
+            F.validate_frozen_executables(record, probe, calibrate)
+            calibrate.write_bytes(b"rebuilt calibrator")
+            with self.assertRaisesRegex(SystemExit, "analytic_hs_calibrate"):
+                F.validate_frozen_executables(record, probe, calibrate)
+
+    def test_holdout_underpowered_cohort_does_not_consume_one_time_marker(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            work = root / "private-work"
+            cohort = root / "cohort"
+            (cohort / "inputs").mkdir(parents=True)
+            (cohort / "lr-export").mkdir()
+            scenes = [
+                {"scene": "dark", "date": "2026-10-01", "model": "Camera", "band": "dark"},
+                {"scene": "iphone", "date": "2026-10-02", "model": "iPhone 13 Pro", "band": "bright"},
+                {"scene": "day", "date": "2026-10-03", "model": "Camera", "band": "mid"},
+            ]
+            (cohort / "manifest.json").write_text(json.dumps({"scenes": scenes}))
+            for scene in scenes:
+                (cohort / "inputs" / f"{scene['scene']}__neutral.jpg").write_bytes(b"input")
+                for variant in ("neutral",) + F.PRESETS:
+                    (cohort / "lr-export" / f"{scene['scene']}__{variant}.jpg").write_bytes(b"reference")
+            probe, calibrate = root / "probe", root / "calibrate"
+            probe.write_bytes(b"probe")
+            calibrate.write_bytes(b"calibrator")
+            candidate = root / "candidate.json"
+            candidate.write_text(json.dumps({"coefficientsSha256": "coefficients"}))
+            freeze = root / "freeze.json"
+            repo = Path(__file__).resolve().parents[5]
+            tool = repo / "packages/develop-engine/tools/calibrate/fit_analytic_hs.py"
+            record = {
+                "sourceCommit": "a" * 40,
+                "executableBuildCommit": "b" * 40,
+                "executables": {"analyticHsProbeSha256": F.digest(probe),
+                                "analyticHsCalibrateSha256": F.digest(calibrate)},
+                "evaluationToolSha256": F.digest(tool),
+                "candidateManifest": {"path": candidate.name, "sha256": F.digest(candidate),
+                                      "coefficientsSha256": "coefficients"},
+                "evaluationManifest": {"selection": {"minimumScenesPerSubset": 2}},
+            }
+            freeze.write_text(json.dumps(record))
+            calibrate_module = ModuleType("fit_niho6_response")
+            calibrate_module.blank_input = lambda _path: False
+            args = SimpleNamespace(repo=repo, work=work, cohort=cohort, freeze=freeze,
+                                   probe=None, calibrate=None, threads=1)
+            with patch.dict(sys.modules, {"fit_niho6_response": calibrate_module}), \
+                    patch.object(F, "binaries", return_value={"probe": probe, "calibrate": calibrate}), \
+                    patch.object(F.subprocess, "run", return_value=SimpleNamespace(returncode=0)) as run:
+                with self.assertRaisesRegex(SystemExit, "at least 2 non-blank scenes"):
+                    F.holdout(args)
+            self.assertFalse((work / "holdout-started.json").exists())
+            self.assertEqual(run.call_count, 2)
+
+    def test_surrogate_baseline_cache_is_bound_to_plan_and_input_contents(self):
+        class FakeServer:
+            def __init__(self):
+                self.calls = 0
+
+            def baseline(self, items):
+                self.calls += 1
+                return np.full((len(items), 4), float(self.calls))
+
+        with tempfile.TemporaryDirectory() as tmp:
+            work = Path(tmp)
+            plan_path, config_path = work / "plan.json", work / "server-config.json"
+            calibrate, source, settings, reference = (work / name for name in
+                                                       ("calibrate", "input.jpg", "settings.json", "reference.jpg"))
+            for path in (calibrate, source, settings, reference):
+                path.write_bytes(b"initial")
+            plan_doc = {"items": [{"scene": 0}, {"scene": 1}]}
+            plan_path.write_text(json.dumps(plan_doc))
+            config = {"scenes": [{"input": str(source)} for _ in plan_doc["items"]],
+                      "items": [{"settings": str(settings), "reference": str(reference)}
+                                for _ in plan_doc["items"]]}
+            config_path.write_text(json.dumps(config))
+            server = FakeServer()
+
+            first = F.surrogate_baseline(server, work, plan_doc, plan_path, config_path, calibrate)
+            cached = F.surrogate_baseline(server, work, plan_doc, plan_path, config_path, calibrate)
+            self.assertTrue(np.array_equal(first, cached))
+            self.assertEqual(server.calls, 1)
+
+            plan_doc = {"items": [{"scene": 1}, {"scene": 0}]}
+            plan_path.write_text(json.dumps(plan_doc))
+            reordered = F.surrogate_baseline(server, work, plan_doc, plan_path, config_path, calibrate)
+            self.assertEqual(server.calls, 2)
+            self.assertFalse(np.array_equal(first, reordered))
+
+            source.write_bytes(b"changed teacher photo at same path")
+            changed_input = F.surrogate_baseline(server, work, plan_doc, plan_path, config_path, calibrate)
+            self.assertEqual(server.calls, 3)
+            self.assertFalse(np.array_equal(reordered, changed_input))
 
 
 if __name__ == "__main__":
