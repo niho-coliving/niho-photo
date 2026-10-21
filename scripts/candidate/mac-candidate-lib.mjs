@@ -260,13 +260,13 @@ export function officialBuildEnvironment(input, { workspace, isolatedRoot, publi
   const inherited = Object.fromEntries(["PATH", "LANG", "DEVELOPER_DIR", "SDKROOT"].filter((key) => input[key]).map((key) => [key, input[key]]));
   const rustupHome = input.RUSTUP_HOME || (input.HOME ? path.join(input.HOME, ".rustup") : undefined);
   if (!path.isAbsolute(rustupHome ?? "")) throw new CandidateError("Rust toolchainの保存先は絶対pathが必要です");
+  const home = path.join(isolatedRoot, "home"), cargoHome = path.join(isolatedRoot, "cargo-home"), temporary = path.join(isolatedRoot, "tmp");
+  for (const directory of [home, cargoHome, temporary]) mkdirSync(directory, { recursive: true, mode: 0o700 });
   const remap = [[workspace, "app-source"], [isolatedRoot, "build-temp"], [rustupHome, "rust-toolchain"], [input.HOME, "build-user"]]
     .filter(([from]) => from)
     .flatMap(([from, to]) => [...new Set([from, ...(existsSync(from) ? [realpathSync(from)] : [])])].map((prefix) => [prefix, to]))
     .sort(([left], [right]) => right.length - left.length)
     .map(([from, to]) => `--remap-path-prefix=${from}=${to}`);
-  const home = path.join(isolatedRoot, "home"), cargoHome = path.join(isolatedRoot, "cargo-home"), temporary = path.join(isolatedRoot, "tmp");
-  for (const directory of [home, cargoHome, temporary]) mkdirSync(directory, { recursive: true, mode: 0o700 });
   const npmUser = path.join(isolatedRoot, "npm-user.npmrc"), npmGlobal = path.join(isolatedRoot, "npm-global.npmrc");
   writeFileSync(npmUser, "", { mode: 0o600 });
   writeFileSync(npmGlobal, "", { mode: 0o600 });

@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { execFileSync } from "node:child_process";
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, statSync, symlinkSync, truncateSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, statSync, symlinkSync, truncateSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { after, test } from "node:test";
@@ -434,4 +434,14 @@ test("Tauriのgen/schemasは生成物とし、それ以外のsource追加・変�
 test("公開byte検査の診断は対象fileと種別だけを表示し検出値を出さない", () => {
   const privateValue = ["", "private", "test-build-root", "src.rs"].join("/");
   assert.throws(() => assertCandidatePublicBytes(Buffer.from(`\0${privateValue}`), undefined, "Contents/MacOS/tool"), (error) => error.message.includes("Contents/MacOS/tool") && error.message.includes("absolute-path") && !error.message.includes(privateValue));
+});
+
+test("official buildは新規の隔離directoryを作ってから別名pathと実pathをremapする", () => {
+  const actual = temp("candidate-isolated-real-");
+  const alias = path.join(temp("candidate-isolated-alias-"), "root");
+  symlinkSync(actual, alias, "dir");
+  const isolatedRoot = path.join(alias, "new-isolated");
+  const env = officialBuildEnvironment({ HOME: actual, PATH: "/usr/bin" }, { workspace: actual, isolatedRoot, publicFirebaseKey: `AIza${"A".repeat(35)}` });
+  assert.ok(env.CARGO_ENCODED_RUSTFLAGS.includes(`${isolatedRoot}=build-temp`));
+  assert.ok(env.CARGO_ENCODED_RUSTFLAGS.includes(`${realpathSync(isolatedRoot)}=build-temp`));
 });
