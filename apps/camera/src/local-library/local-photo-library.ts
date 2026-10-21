@@ -12,6 +12,8 @@
  *   作業コピーで直す JPEG は、native の sidecar が作る作業コピー（`ensureWorkingCopy` → `loadWorkingCopy`）
  * - 「オリジナル」の書き出しは native がファイルを写す（バイト列を画面へ運ばない。{@link takeNativeSaveResult}）
  * - 写真の情報（`info`。右パネルの「情報」）は、native が開いた写真のファイルの EXIF などを ImageIO で都度読む（覚えない）
+ * - 補正の版（`developVersions`・`saveDevelopVersions`。右パネルの「版」）は、native が補正と同じフォルダの別のファイル
+ *   （`<SHA-256>.versions.json`）に配列まるごと読み書きする。鍵は開いたときの中身の SHA-256 で、写真が置き換わっていたら読み書きしない
  * - 消さない（`delete` は何もしない。編集面は置き場が local のとき消す道具を出さない）
  */
 import { BrowserPhotoSourceError } from "niho-photo-editing/browser-photo-source";
@@ -22,6 +24,7 @@ import {
   readDevelopSettings,
   type DevelopSettings,
 } from "niho-photo-editing/develop-engine/develop-settings";
+import { readPhotoLibraryDevelopVersions } from "niho-photo-editing/editor/browser-photo-editing-versions-model";
 import { readJpegPixelSize, readPngPixelSize } from "niho-photo-editing/image-bytes-metadata";
 import type {
   PhotoLibrary,
@@ -102,6 +105,7 @@ export const LOCAL_CLOSED_CAPABILITIES: PhotoLibraryCapabilities = Object.freeze
   addFromDevice: false,
   addFromDeviceFolder: false,
   info: false,
+  versions: false,
 });
 
 /** 現像（同梱の sidecar）が使えるかでの、この Mac のできること。 */
@@ -122,6 +126,8 @@ export function localCapabilities(
     multiSelect: true,
     // 写真の情報は native が ImageIO で読む（同梱の sidecar に依らない）
     info: true,
+    // 補正の版は native が補正の隣のファイルに残す（同梱の sidecar に依らない）
+    versions: true,
   };
 }
 
@@ -944,6 +950,27 @@ export function createLocalPhotoLibrary(commands: CameraCommands, options: Local
         updatedAtMs: now().getTime(),
       };
       return { kind: "saved", photo: openedRow(photoId, saved.handle) };
+    },
+
+    async developVersions(photoId, requestOptions) {
+      // 開いたときの中身の版を読む（native が写真を手放していたら、同じ中身のときだけ開き直す）
+      const loaded = await withStableHandle(photoId, (handle) => commands.photoVersions(handle.nativeId));
+      throwIfAborted(requestOptions?.signal);
+      return readPhotoLibraryDevelopVersions(loaded);
+    },
+
+    async saveDevelopVersions(photoId, versions, saveOptions) {
+      try {
+        const revision = await withStableHandle(photoId, (handle) =>
+          commands.savePhotoVersions(handle.nativeId, versions, saveOptions.expectedRevision),
+        );
+        return { kind: "saved", versions: [...versions], revision };
+      } catch (error) {
+        if (!isCode(error, "revisionConflict")) throw error;
+        // 別の操作が先に保存していた。今の版の配列を読み直して返す
+        const current = await withStableHandle(photoId, (handle) => commands.photoVersions(handle.nativeId));
+        return { kind: "stale", ...readPhotoLibraryDevelopVersions(current) };
+      }
     },
 
     async downloadOriginal(photo) {

@@ -13,7 +13,11 @@ import type {
   CutoutRecipe,
   CutoutSubject,
 } from "niho-photo-editing/photo-cutout";
-import type { PhotoLibraryDevelopSourceContext, PhotoLibraryPhotoInfo } from "niho-photo-editing/library/photo-library";
+import type {
+  PhotoLibraryDevelopSourceContext,
+  PhotoLibraryDevelopVersion,
+  PhotoLibraryPhotoInfo,
+} from "niho-photo-editing/library/photo-library";
 
 /** Tauri の `invoke`（`args` は JSON の引数か raw IPC のバイト列。`options.headers` は raw IPC の添え書き）。 */
 export type Invoke = <T>(
@@ -191,6 +195,21 @@ export function createCameraCommands(invoke: Invoke = tauriInvoke) {
         await call<{ revision: number }>("camera_photo_save_settings", {
           photoId,
           developSettings,
+          expectedRevision,
+        })
+      ).revision,
+    /**
+     * 開いた写真の補正の版（`{ versions, revision }`。niho-photo#42。版の無い写真は空の配列と 0）。中身は native が確かめた形だが、
+     * 接続口の形にするのは LocalPhotoLibrary（`readPhotoLibraryDevelopVersions`）。
+     */
+    photoVersions: (photoId: string) =>
+      call<{ versions: unknown; revision: unknown }>("camera_photo_versions", { photoId }),
+    /** 補正の版の配列をまるごと保存する（新しい `revision`）。画面が知っている番号と違えば `revisionConflict`。 */
+    savePhotoVersions: async (photoId: string, versions: readonly PhotoLibraryDevelopVersion[], expectedRevision: number) =>
+      (
+        await call<{ revision: number }>("camera_photo_save_versions", {
+          photoId,
+          versions,
           expectedRevision,
         })
       ).revision,
