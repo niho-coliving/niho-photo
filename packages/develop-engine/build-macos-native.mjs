@@ -4,10 +4,12 @@ import { spawnSync } from "node:child_process";
 import {
   chmodSync,
   copyFileSync,
+  existsSync,
   lstatSync,
   mkdirSync,
   mkdtempSync,
   readFileSync,
+  realpathSync,
   rmSync,
   writeFileSync,
 } from "node:fs";
@@ -295,7 +297,7 @@ function options(argv) {
   return result;
 }
 
-if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+if (process.argv[1] && existsSync(process.argv[1]) && realpathSync(process.argv[1]) === fileURLToPath(import.meta.url)) {
   try {
     const values = options(process.argv.slice(2));
     buildMacosNative({ engineRoot: path.resolve(values["--engine"]), lockPath: path.resolve(values["--lock"]), outputDirectory: path.resolve(values["--output"]) });

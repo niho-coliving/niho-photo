@@ -3,7 +3,7 @@ import { createHash } from "node:crypto";
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
-import { execFileSync } from "node:child_process";
+import { execFileSync, spawnSync } from "node:child_process";
 import { after, test } from "node:test";
 import { fileURLToPath } from "node:url";
 
@@ -169,6 +169,15 @@ test("macOS native source closure は固定Rust・隔離環境・legacy calibrat
   assert.equal(env.RUSTFLAGS, undefined);
   assert.equal(env.TAURI_SIGNING_PRIVATE_KEY, undefined);
   assert.match(env.CARGO_ENCODED_RUSTFLAGS, /engine-source/);
+});
+
+test("展開先のdirectoryがsymlinkでもnative CLIを実行する", () => {
+  const alias = path.join(temp("niho-photo-native-cli-alias-"), "engine");
+  symlinkSync(path.join(realRoot, "packages/develop-engine"), alias, "dir");
+  // 必須引数を省略するため、Swift/Rust buildには進まない。
+  const result = spawnSync(process.execPath, [path.join(alias, "build-macos-native.mjs")], { encoding: "utf8" });
+  assert.equal(result.status, 1);
+  assert.match(result.stderr, /--engine --lock --output/u);
 });
 
 test("release-set 定義は package/path/version の改変を拒否する", () => {
