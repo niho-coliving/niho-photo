@@ -68,5 +68,23 @@ class TeacherRenderCacheTests(unittest.TestCase):
             self.assertNotEqual(first["candidateSha256"], second["candidateSha256"])
 
 
+class TeacherComparisonTests(unittest.TestCase):
+    def test_matched_pairs_count_noise_half_jnd_and_new_p99_over_8(self):
+        def row(scene, mean, p99):
+            return {"cohort": "teachers", "scene": scene, "variant": "neutral", "mean": mean, "p99": p99}
+
+        baseline = {("teachers", s, "neutral"): row(s, 1.0, p) for s, p in (("a", 7.9), ("b", 9.0), ("c", 2.0))}
+        candidate = [row("a", 1.01, 8.1), row("b", 1.6, 8.9), row("c", 0.7, 2.03)]
+        result = teacher_review.compare_pairs(candidate, baseline)
+        self.assertEqual(result["pairs"], 3)
+        self.assertEqual(result["meanRegressions"], 2)
+        self.assertEqual(result["meanRegressionsOverNoise"], 1)
+        self.assertEqual(result["p99RegressionsOverNoise"], 2)
+        self.assertEqual(result["meanIncreaseAtLeastHalfJnd"], 1)
+        self.assertAlmostEqual(result["maxMeanIncrease"], 0.6)
+        self.assertAlmostEqual(result["maxMeanDecrease"], 0.3)
+        self.assertEqual((result["baselineP99Over8"], result["p99Over8"], result["newP99Over8"]), (1, 2, 1))
+
+
 if __name__ == "__main__":
     unittest.main()

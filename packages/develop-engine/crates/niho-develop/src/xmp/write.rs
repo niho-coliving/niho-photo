@@ -13,8 +13,8 @@ use super::{hsl_key, EffectField, EffectGroup, CURVE_MAP, EFFECT_KEYS, HSL_PREFI
 use crate::effects::GRAIN_DEFAULT_SEED;
 use crate::settings::{
     CurveChannel, DevelopSettings, HslBand, SettingsError, ToneCurve, WhiteBalanceMode,
-    ENGINE_NIHO_10, ENGINE_NIHO_11, ENGINE_NIHO_2, ENGINE_NIHO_3, ENGINE_NIHO_4, ENGINE_NIHO_5,
-    ENGINE_NIHO_6, ENGINE_NIHO_7, ENGINE_NIHO_8,
+    ENGINE_NIHO_10, ENGINE_NIHO_11, ENGINE_NIHO_12, ENGINE_NIHO_2, ENGINE_NIHO_3, ENGINE_NIHO_4,
+    ENGINE_NIHO_5, ENGINE_NIHO_6, ENGINE_NIHO_7, ENGINE_NIHO_8,
 };
 use crate::tone_ops::normalized_points;
 use serde_json::{Map, Value};
@@ -353,6 +353,7 @@ pub fn settings_to_xmp(settings: &DevelopSettings, options: &XmpWriteOptions) ->
                         | ENGINE_NIHO_10
                         | ENGINE_NIHO_11
                         | ENGINE_NIHO_8
+                        | ENGINE_NIHO_12
                 ) {
                     if settings.relative_temperature == 0.0 && settings.relative_tint == 0.0 {
                         // Lightroom interprets Custom with both increments at
