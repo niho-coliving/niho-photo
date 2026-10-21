@@ -6354,7 +6354,7 @@
         "path": "packages/develop-engine/crates/niho-develop/src/xmp.rs",
         "sha256": "be5ddce69eceafb334c173ee92af3614c044039b103903ad1dfef24758f1ec45"
       },
-      "outputSha256": "ba3176b02cd1c4ea05e5a0896e4b9b3266d5cf3501d1f59393951ec75123506c",
+      "outputSha256": "627ffd580fbd5b8720e76c51c7700d63a07afb9fc42c38119d095db9d32bf19c",
       "modifications": [
         "公開Issue #26/#27/#29: 旧版を保つfloat cube候補、研究用WB/H-Sプローブ、合成検証と計測契約を追加。",
         "Issue #28の色相安定engine追加と互換回帰を反映。",
@@ -6365,7 +6365,8 @@
         "Issue #32 detail uses v6 because Issue #31 masks already owns v5; synchronize the Rust and TypeScript contract, probe, tests, and documentation.",
         "Issue #32 detail v6 を、先行する masks v5 と #72 の histogram/Jキー契約に同期する。",
         "niho-photo#39 ColorGradeMidtoneLum / GlobalLum を unsupported から外し、0 は exact・それ以外は approximate と報告する。",
-        "PR #80 のカラーグレーディングを最新HSL UIと統合。"
+        "PR #80 のカラーグレーディングを最新HSL UIと統合。",
+        "PR #80: Color Grading XMP を解析するため、既存の未対応XMPテストの期待値を更新。"
       ]
     },
     {

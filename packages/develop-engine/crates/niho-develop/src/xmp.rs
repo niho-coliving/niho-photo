@@ -2141,8 +2141,10 @@ mod tests {
 </rdf:RDF></x:xmpmeta>"#;
         let result = preset_settings(xmp, None).unwrap();
         assert!(!result.converted);
-        let legacy = result.settings.legacy_settings.unwrap();
+        let legacy = result.settings.legacy_settings.as_ref().unwrap();
         assert!(legacy.contains_key("curveRefineSaturation"));
-        assert!(legacy.contains_key("colorGrading"));
+        assert!(!legacy.contains_key("colorGrading"));
+        assert_eq!(result.settings.color_grading.midtone.luminance, 20.0);
+        assert_eq!(result.settings.color_grading.global.luminance, -10.0);
     }
 }
