@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState, type MutableRefObject, type ReactElement, type ReactNode } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { CircleDashed, Contrast, Crop, FolderOpen, Info, Laptop, Plus, Scissors, SlidersHorizontal, Trash2 } from "lucide-react";
+import { CircleDashed, Contrast, Crop, FolderOpen, History, Info, Laptop, Plus, Scissors, SlidersHorizontal, Trash2 } from "lucide-react";
 
 import { formatPhotoCloudUsage } from "../photo-library-usage";
 import { inertAttribute } from "niho-ui/inert-attribute";
@@ -62,6 +62,7 @@ import {
   PHOTO_EDITING_TOOL_CUTOUT_LABEL,
   PHOTO_EDITING_TOOL_INFO_LABEL,
   PHOTO_EDITING_TOOL_MASK_LABEL,
+  PHOTO_EDITING_TOOL_VERSIONS_LABEL,
 } from "../photo-editing-copy";
 import { movePhotoEditingPhotoId } from "../photo-editing-selection";
 import { photoEditingTileGeometry } from "../photo-editing-tile-geometry";
@@ -143,6 +144,12 @@ import {
 } from "./browser-photo-editing-selection-bar";
 import { BrowserPhotoEditingPresets } from "./browser-photo-editing-presets";
 import { BrowserPhotoEditingToolRail, type BrowserPhotoEditingToolRailItem } from "./browser-photo-editing-tool-rail";
+import { BrowserPhotoEditingVersions } from "./browser-photo-editing-versions";
+import {
+  BROWSER_VERSION_THUMBNAIL_MAX_DIMENSION,
+  developVersionThumbnailFoundation,
+  developVersionThumbnailSettings,
+} from "./browser-photo-editing-versions-model";
 import {
   BrowserPhotoEditingPlaceTabs,
   BrowserPhotoEditingTree,
@@ -193,6 +200,7 @@ import { useBrowserPhotoLeaveGuards } from "./use-browser-photo-leave-guards";
 import { useBrowserPhotoOpen } from "./use-browser-photo-open";
 import { useBrowserPhotoSelection } from "./use-browser-photo-selection";
 import { useBrowserPhotoPresetSupport } from "./use-browser-photo-preset-support";
+import { useBrowserPhotoVersions } from "./use-browser-photo-versions";
 import { useBrowserPresetThumbnails } from "./use-browser-preset-thumbnails";
 
 export type BrowserPhotoPrepareForInsertResult =
@@ -1027,9 +1035,40 @@ export function BrowserPhotoEditingWorkbench(props: {
   // 右パネルのプリセット（帯の「プリセット」と補正の面のプリセットの行）を出せる写真。S1 の canvas（段 2 を使えない）には出さない。
   // 狭い幅は右パネルを見せない（wasm も起こさない）ので、プリセットも読まない
   const presetsAvailable = !canvasOnly && wide;
-  // プリセットを出せない写真は補正の面（選んだ面は覚えたままにし、出せる写真に戻ったらその面に戻す）。情報の面はどの写真でも出せる
+  // 版（niho-photo#42）: プリセットと同じく PC の右パネルで段 2 の wasm を使える写真を 1 枚で見ている間だけ、置き場が版を残せる
+  // （`capabilities.versions`）ときだけ出す
+  const versionsAvailable =
+    presetsAvailable &&
+    loupeItem !== null &&
+    capabilities.versions === true &&
+    library.developVersions !== undefined &&
+    library.saveDevelopVersions !== undefined;
+  // プリセット・版を出せない写真は補正の面（選んだ面は覚えたままにし、出せる写真に戻ったらその面に戻す）。情報の面はどの写真でも出せる
   const shownAdjustPanel: BrowserPhotoAdjustPanel =
-    adjustPanel === "info" || presetsAvailable ? adjustPanel : "adjust";
+    adjustPanel === "info" || (adjustPanel === "versions" ? versionsAvailable : presetsAvailable) ? adjustPanel : "adjust";
+  // 版の面を開いている間だけ版を読み、見えている版の小さな見た目を描く（版の補正を今の土台に載せた絵。写真と補正の JSON で覚える）
+  const versionsShown = toolValue === "adjust" && shownAdjustPanel === "versions";
+  const versions = useBrowserPhotoVersions({
+    photo:
+      versionsShown && loupeItem
+        ? { id: loupeItem.photo.id, contentSha256: loupeOpened?.photo?.contentSha256 ?? loupeItem.photo.contentSha256 }
+        : null,
+    settings,
+    settingsRef: open.settingsRef,
+    commitEdit: open.commitEdit,
+    disabled: controlsDisabled,
+  });
+  const versionThumbnailBase = useMemo(() => developVersionThumbnailFoundation(settings), [settings]);
+  const versionThumbnails = useBrowserPresetThumbnails({
+    mountedRef,
+    engineRef: develop.engineRef,
+    supported: presetSupport.thumbnails && versionsShown,
+    photoKey: wasmPhotoKey,
+    base: versionThumbnailBase,
+    paused: opened?.input?.kind === "provisional" || open.dragging,
+    maxDimension: BROWSER_VERSION_THUMBNAIL_MAX_DIMENSION,
+    settingsOf: developVersionThumbnailSettings,
+  });
   /** 道具が「補正」の間の面を選ぶ（ほかの道具の間は、補正の道具に戻してから） */
   const chooseAdjustPanel = (next: BrowserPhotoAdjustPanel) => {
     if (toolValue !== "adjust") chooseTool("adjust");
@@ -1085,6 +1124,19 @@ export function BrowserPhotoEditingWorkbench(props: {
       pressed: toolValue === "cutout",
       disabled: toolSwitchDisabled,
       onSelect: () => chooseTool("cutout"),
+    });
+  }
+  // 版（niho-photo#42）。上の道具の末尾に置き、押すと右パネルを版の面にし（切り抜き・背景除去の間は補正の道具に戻してから）、
+  // もう一度押すと補正の面へ戻る
+  if (versionsAvailable) {
+    toolRailItems.push({
+      key: "versions",
+      label: PHOTO_EDITING_TOOL_VERSIONS_LABEL,
+      icon: History,
+      pressed: versionsShown,
+      disabled: toolValue !== "adjust" && toolSwitchDisabled,
+      onSelect: () => chooseAdjustPanel("versions"),
+      onDeselect: () => chooseAdjustPanel("adjust"),
     });
   }
   // 情報（niho-photo#43）。1 枚で見ている写真があるときだけ、帯の下端に置く。押すと右パネルを情報の面にし（切り抜き・背景除去の
@@ -2411,6 +2463,29 @@ export function BrowserPhotoEditingWorkbench(props: {
             info={
               loupeItem ? (
                 <BrowserPhotoEditingInfo photo={loupeItem.photo} infoAvailable={capabilities.info === true} />
+              ) : undefined
+            }
+            versions={
+              versionsShown && loupeItem ? (
+                // 写真を替えたら、開いていた入力・確かめのダイアログを閉じる（ほかの写真の版に当てない）
+                <BrowserPhotoEditingVersions
+                  key={loupeItem.photo.id}
+                  status={versions.status}
+                  versions={versions.versions}
+                  selectedId={versions.selectedId}
+                  defaultName={versions.defaultName}
+                  full={versions.full}
+                  disabled={controlsDisabled}
+                  manageDisabled={!props.canEdit}
+                  saveFailed={versions.saveFailed}
+                  thumbnails={versionThumbnails}
+                  onCreate={versions.create}
+                  onRename={versions.rename}
+                  onDelete={versions.remove}
+                  onSwitch={versions.switchTo}
+                  onRetrySave={versions.retrySave}
+                  onReload={versions.reload}
+                />
               ) : undefined
             }
             onOpenPresets={() => setAdjustPanel("presets")}
