@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { execFileSync } from "node:child_process";
-import { chmodSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, statSync, symlinkSync, truncateSync, writeFileSync } from "node:fs";
+import { cpSync, chmodSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, statSync, symlinkSync, truncateSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { after, test } from "node:test";
@@ -10,6 +10,7 @@ import { fileURLToPath } from "node:url";
 import { validateNativeLock, validateNativeSourceClosure } from "../../packages/develop-engine/build-macos-native.mjs";
 import {
   applyVersionOverlay,
+  assertDmgRoot,
   assertCandidatePublicBytes,
   assertOwnershipMatches,
   assertSdkSelection,
@@ -557,6 +558,13 @@ test("実DMGをreadonlyで開き、梱包時の改変・追加・実行属性の
   }
   put(stage, "NIHO photo.app/Contents/MacOS/niho-camera", "changed after verifyBuiltApp\n");
   assert.throws(() => packDmg(app, path.join(stage, "changed.dmg"), expected), /DMG.*inventory/u);
+  const hidden = temp("niho-photo-hidden-dmg-");
+  cpSync(app, path.join(hidden, "NIHO photo.app"), { recursive: true });
+  symlinkSync("/Applications", path.join(hidden, "Applications"));
+  put(hidden, ".Trashes/payload.txt", "synthetic hidden content\n");
+  const hiddenImage = path.join(stage, "hidden.dmg");
+  execFileSync("/usr/bin/hdiutil", ["create", "-volname", "NIHO photo", "-srcfolder", hidden, "-format", "UDZO", hiddenImage], { stdio: "pipe", timeout: 120_000 });
+  assert.throws(() => verifyDmgInventory(hiddenImage, inventoryTree(app)), /DMG root.*metadata payload/u);
 });
 
 test("app inventoryは実行bitが同じでもSUID/SGID/stickyを拒否する", () => {
@@ -568,5 +576,17 @@ test("app inventoryは実行bitが同じでもSUID/SGID/stickyを拒否する", 
   for (const mode of [0o4755, 0o2755, 0o1755]) {
     chmodSync(binary, mode);
     assert.throws(() => inventoryTree(app), /SUID\/SGID\/sticky/u);
+  }
+});
+
+test("DMG rootはappと固定Applications linkだけを許可し、隠しmetadataのpayloadも拒否する", () => {
+  const root = temp("niho-photo-dmg-root-");
+  mkdirSync(path.join(root, "NIHO photo.app"));
+  symlinkSync("/Applications", path.join(root, "Applications"));
+  assert.doesNotThrow(() => assertDmgRoot(root));
+  for (const name of [".DS_Store", ".Trashes", ".fseventsd", ".Spotlight-V100", ".HFS+ Private Directory Data\r"]) {
+    put(root, name === ".DS_Store" ? name : `${name}/payload`, "synthetic hidden payload\n");
+    assert.throws(() => assertDmgRoot(root), /metadata payload/u);
+    rmSync(path.join(root, name), { recursive: true, force: true });
   }
 });

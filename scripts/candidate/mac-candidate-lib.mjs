@@ -492,6 +492,14 @@ export function packAppTar(appPath, output) {
   return { sha256: sha256(readFileSync(output)), bytes: statSync(output).size };
 }
 
+export function assertDmgRoot(mount) {
+  const expected = ["Applications", `${PRODUCT}.app`].sort();
+  if (JSON.stringify(readdirSync(mount).sort()) !== JSON.stringify(expected)) throw new CandidateError("DMG rootに想定外の配布物・metadata payloadがあります");
+  ordinaryDirectory(path.join(mount, `${PRODUCT}.app`), "DMG app");
+  const applications = path.join(mount, "Applications");
+  if (!lstatSync(applications).isSymbolicLink() || readlinkSync(applications) !== "/Applications") throw new CandidateError("DMG Applications linkが不正です");
+}
+
 export function verifyDmgInventory(dmgPath, expectedFiles, { allowedPublicFirebaseKey } = {}) {
   if (process.platform !== "darwin") throw new CandidateError("DMG実inventory検証はmacOS専用です");
   if (!Array.isArray(expectedFiles) || !expectedFiles.length) throw new CandidateError("DMGには検証済みapp inventoryが必要です");
@@ -506,16 +514,7 @@ export function verifyDmgInventory(dmgPath, expectedFiles, { allowedPublicFireba
     run("/usr/bin/hdiutil", ["verify", dmgPath], { env, timeout: 120_000 });
     run("/usr/bin/hdiutil", ["attach", "-readonly", "-nobrowse", "-noautoopen", "-mountpoint", mount, "-plist", dmgPath], { env, timeout: 120_000 });
     attached = true;
-    const allowed = new Set([`${PRODUCT}.app`, "Applications", ".DS_Store", ".Trashes", ".fseventsd", ".Spotlight-V100", ".HFS+ Private Directory Data\r"]);
-    const entries = readdirSync(mount);
-    if (!entries.includes(`${PRODUCT}.app`) || entries.some((name) => !allowed.has(name))) throw new CandidateError("DMG rootに想定外の配布物があります");
-    for (const name of entries) {
-      if (name === `${PRODUCT}.app`) continue;
-      const item = path.join(mount, name), stat = lstatSync(item);
-      if (name === "Applications") {
-        if (!stat.isSymbolicLink() || readlinkSync(item) !== "/Applications") throw new CandidateError("DMG Applications linkが不正です");
-      } else if (stat.isSymbolicLink() || (!stat.isFile() && !stat.isDirectory())) throw new CandidateError("DMG root metadataのlink・special fileは禁止です");
-    }
+    assertDmgRoot(mount);
     // 実際に配布するreadonly imageを読む。候補のprogram/scriptは実行しない。
     const actual = inventoryTree(path.join(mount, `${PRODUCT}.app`), { allowedPublicFirebaseKey });
     const normalize = (records) => records.map(({ path: name, sha256: hash, bytes, executable }) => ({ path: name, sha256: hash, bytes, executable })).sort((a, b) => a.path.localeCompare(b.path, "en"));

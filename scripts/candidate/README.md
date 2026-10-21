@@ -66,7 +66,8 @@ SHA-256/sizeを記録します。公開Firebaseのraw値、signing key、credent
 
 完成tarはPython標準ライブラリで展開・実行せず、全file hash/size/実行属性を検証済みapp inventoryへ照合します。
 builderは完成DMGもreadonly/no-auto-openでmountし、同じinventoryへ照合してからdetachします。画像の検証前後で
-外側hashも固定し、梱包後の差し替えや改変を拒否します。候補のprogram/scriptは起動しません。
+外側hashも固定し、梱包後の差し替えや改変を拒否します。DMG直下はappと固定Applications linkの2件だけを許可し、
+隠しmetadataを含む追加payloadも拒否します。候補のprogram/scriptは起動しません。
 
 ## private signerへのdata-only handoff
 
