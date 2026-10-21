@@ -493,3 +493,48 @@ fn heic_is_not_exported_at_full_size_by_desktop_or_an_old_apple_raw_linear() {
   assert_eq!(err.code, develop_code::UNSUPPORTED_SOURCE);
   assert!(!destination.exists());
 }
+
+#[test]
+fn local_masks_are_exported_only_by_a_render_sidecar_that_draws_them() {
+  let masked = json!({
+    "v": 5, "engine": "niho-10", "look": "niho-standard-1", "base": null,
+    "masks": [{
+      "id": "m1", "kind": "linear", "zero": { "x": 0.5, "y": 0.2 }, "full": { "x": 0.5, "y": 0.5 },
+      "adjust": { "exposure": -0.7 }
+    }]
+  });
+  for (version, draws) in [("0.18.0", false), (MASKS_MIN_RENDER_VERSION, true), ("0.19.1", true)] {
+    let harness = SidecarHarness::new(&format!("export-masks-{version}"));
+    harness.mark("render-version", version);
+    let develop = camera_develop(&harness);
+    let jpeg = photo_file(&harness, "IMG_0002.jpg", b"jpeg bytes");
+    let photos = FakePhotos::new(&[("p1", &jpeg)]);
+    let destination = harness.dir.join("out").join("IMG_0002.jpg");
+    fs::create_dir_all(destination.parent().unwrap()).unwrap();
+    let result = develop.export(&photos, "p1", &masked, &destination, Overwrite::Never);
+    let rendered = harness
+      .work_calls()
+      .iter()
+      .any(|call| call.starts_with("niho-develop-render render "));
+    assert_eq!(develop.is_masks_export_available_cached(), draws, "{version}");
+    if draws {
+      result.unwrap();
+      assert!(rendered, "{version}");
+      let sent: Value =
+        serde_json::from_slice(&fs::read(harness.sidecars.join("last-settings.json")).unwrap()).unwrap();
+      assert_eq!(sent["masks"], masked["masks"], "the masks reach the sidecar as saved");
+    } else {
+      let error = result.unwrap_err();
+      assert_eq!(error.code, develop_code::UNSUPPORTED_SETTINGS);
+      assert!(error.detail.contains(MASKS_MIN_RENDER_VERSION), "{}", error.detail);
+      assert!(!rendered, "an old sidecar never gets the masks");
+      assert!(!destination.exists());
+      // Without masks (or with an empty list) the same sidecar still exports.
+      for settings in [json!({ "exposure": 0.5 }), json!({ "v": 5, "masks": [] })] {
+        develop
+          .export(&photos, "p1", &settings, &destination, Overwrite::Allowed)
+          .unwrap();
+      }
+    }
+  }
+}

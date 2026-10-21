@@ -32,8 +32,8 @@ use crate::convert::{
 use crate::settings::{
     num, CalibrationSettings, ColorGradingSettings, CurveChannel, CurvePoint, DevelopSettings,
     HslAdjustment, HslBand, ToneCurve, VignetteStyle, ENGINE_NIHO_10, ENGINE_NIHO_11,
-    ENGINE_NIHO_2, ENGINE_NIHO_3, ENGINE_NIHO_4, ENGINE_NIHO_5, ENGINE_NIHO_6, ENGINE_NIHO_7,
-    ENGINE_NIHO_8, GRAIN_SEED_MAX,
+    ENGINE_NIHO_12, ENGINE_NIHO_2, ENGINE_NIHO_3, ENGINE_NIHO_4, ENGINE_NIHO_5, ENGINE_NIHO_6,
+    ENGINE_NIHO_7, ENGINE_NIHO_8, GRAIN_SEED_MAX,
 };
 use quick_xml::events::Event;
 use quick_xml::Reader;
@@ -42,9 +42,11 @@ use std::collections::BTreeMap;
 use std::fmt;
 
 mod amount;
+mod detail;
 mod write;
 
 pub use amount::{apply_preset, PRESET_AMOUNT_MAX};
+pub use detail::DETAIL_KEYS;
 pub use write::{
     settings_to_xmp, XmpGroup, XmpWriteOptions, XmpWriteResult, XMP_CAMERA_RAW_VERSION,
     XMP_PROCESS_VERSION,
@@ -1416,16 +1418,7 @@ const SUPPORTED_COLOR_SCALARS: [&str; 25] = [
     "SplitToningBalance",
     "ShadowTint",
 ];
-const UNSUPPORTED_KNOWN: [&str; 8] = [
-    "Sharpness",
-    "SharpenRadius",
-    "SharpenDetail",
-    "SharpenEdgeMasking",
-    "LuminanceSmoothing",
-    "AutoLateralCA",
-    "LensProfileEnable",
-    "LensProfileSetup",
-];
+const UNSUPPORTED_KNOWN: [&str; 3] = ["AutoLateralCA", "LensProfileEnable", "LensProfileSetup"];
 const METADATA_KEYS: [&str; 25] = [
     "AutoGrayscaleMix",
     "Version",
@@ -1477,6 +1470,8 @@ fn is_numeric_crs_property(key: &str) -> bool {
                 | "SharpenDetail"
                 | "SharpenEdgeMasking"
                 | "LuminanceSmoothing"
+                | "LuminanceNoiseReductionDetail"
+                | "LuminanceNoiseReductionContrast"
                 | "ColorNoiseReduction"
                 | "ColorNoiseReductionDetail"
                 | "ColorNoiseReductionSmoothness"
@@ -1491,6 +1486,12 @@ fn is_numeric_crs_property(key: &str) -> bool {
 fn clamp_range(key: &str) -> Option<(f64, f64)> {
     if let Some(field) = effect_field(key) {
         return field.range();
+    }
+    match key {
+        "Sharpness" => return Some(detail::SHARPNESS_RANGE),
+        "SharpenRadius" => return Some(detail::SHARPEN_RADIUS_RANGE),
+        _ if detail::DETAIL_KEYS.contains(&key) => return Some(detail::PERCENT_RANGE),
+        _ => {}
     }
     if key == "Exposure2012" {
         return Some((-5.0, 5.0));
@@ -1547,6 +1548,7 @@ impl XmpDocument {
     pub fn compatibility(&self) -> Vec<CompatibilityItem> {
         let mut settings = DevelopSettings::neutral();
         self.apply_effects(&mut settings);
+        self.apply_detail(&mut settings);
         self.compatibility_for(&settings)
     }
 
@@ -1580,172 +1582,149 @@ impl XmpDocument {
                     .optional_number(k)
                     .is_some_and(|number| number.is_finite());
             let effect = effect_field(k);
-            let (mut pb, mut level, mut note): (Level, Level, String) = if k == "ToneCurveName2012"
-                && self.sequences.is_empty()
-            {
-                (
-                    Level::Metadata,
-                    Level::Metadata,
-                    "名称のみ保持（曲線点なし）".into(),
-                )
-            } else if k == "CameraProfile" {
-                match value.as_str() {
-                    "Adobe Standard" => (
-                        Level::Exact,
-                        Level::Exact,
-                        "段 1 の Adobe Standard（DCP）で描く".into(),
-                    ),
-                    "Adobe Color" => (
-                        Level::Exact,
-                        Level::Approximate,
-                        "Adobe Color のルックは NIHO 標準ルックで置き換える".into(),
-                    ),
-                    _ => (
-                        Level::Unsupported,
-                        Level::Unsupported,
-                        "Adobe Standard / Adobe Color 以外のカメラプロファイルは未対応".into(),
-                    ),
-                }
-            } else if k == "CurveRefineSaturation" {
-                if swift_double(value).is_some_and(|v| v == 100.0) {
-                    (Level::Exact, Level::Exact, "既定値 100 に対応".into())
-                } else {
+            let graded_luminance_model =
+                matches!(k, "ColorGradeMidtoneLum" | "ColorGradeGlobalLum");
+            let (mut pb, mut level, mut note): (Level, Level, String) =
+                if k == "ToneCurveName2012" && self.sequences.is_empty() {
                     (
-                        Level::Unsupported,
-                        Level::Unsupported,
-                        "100 以外は値を保持するのみ（100 として描画）".into(),
+                        Level::Metadata,
+                        Level::Metadata,
+                        "名称のみ保持（曲線点なし）".into(),
                     )
-                }
-            } else if matches!(k, "WhiteBalance" | "Temperature" | "Tint") {
-                if incremental_relative && incremental_valid {
+                } else if k == "CameraProfile" {
+                    match value.as_str() {
+                        "Adobe Standard" => (
+                            Level::Exact,
+                            Level::Exact,
+                            "段 1 の Adobe Standard（DCP）で描く".into(),
+                        ),
+                        "Adobe Color" => (
+                            Level::Exact,
+                            Level::Approximate,
+                            "Adobe Color のルックは NIHO 標準ルックで置き換える".into(),
+                        ),
+                        _ => (
+                            Level::Unsupported,
+                            Level::Unsupported,
+                            "Adobe Standard / Adobe Color 以外のカメラプロファイルは未対応".into(),
+                        ),
+                    }
+                } else if k == "CurveRefineSaturation" {
+                    if swift_double(value).is_some_and(|v| v == 100.0) {
+                        (Level::Exact, Level::Exact, "既定値 100 に対応".into())
+                    } else {
+                        (
+                            Level::Unsupported,
+                            Level::Unsupported,
+                            "100 以外は値を保持するのみ（100 として描画）".into(),
+                        )
+                    }
+                } else if matches!(k, "WhiteBalance" | "Temperature" | "Tint") {
+                    if incremental_relative && incremental_valid {
+                        (
+                            Level::Exact,
+                            Level::Exact,
+                            "非 RAW の増分ホワイトバランス（niho-2 の較正 LUT）".into(),
+                        )
+                    } else if incremental_relative {
+                        (
+                            Level::Unsupported,
+                            Level::Unsupported,
+                            "増分ホワイトバランスは -100..100 の範囲だけ対応".into(),
+                        )
+                    } else if custom_fixed {
+                        let note = LIGHTROOM_CUSTOM_WHITE_NOTE.into();
+                        (Level::Exact, Level::Approximate, note)
+                    } else if custom_absolute {
+                        (
+                            Level::Exact,
+                            Level::Approximate,
+                            CUSTOM_ABSOLUTE_WHITE_NOTE.into(),
+                        )
+                    } else {
+                        (Level::Exact, Level::Exact, "撮影時の白のまま".into())
+                    }
+                } else if k == "ShadowTint" {
                     (
                         Level::Exact,
                         Level::Exact,
-                        "非 RAW の増分ホワイトバランス（niho-2 の較正 LUT）".into(),
+                        "実測で効果ゼロ（何もしない演算として対応）".into(),
                     )
-                } else if incremental_relative {
+                } else if matches!(k, "IncrementalTemperature" | "IncrementalTint")
+                    && incremental_relative
+                    && incremental_valid
+                {
+                    (
+                        Level::Exact,
+                        Level::Exact,
+                        "合成 sRGB 色見本から較正した出力 RGB 差分 LUT（niho-2）".into(),
+                    )
+                } else if matches!(k, "IncrementalTemperature" | "IncrementalTint")
+                    && incremental_relative
+                {
                     (
                         Level::Unsupported,
                         Level::Unsupported,
-                        "増分ホワイトバランスは -100..100 の範囲だけ対応".into(),
+                        "-100..100 の範囲外なので適用しない".into(),
                     )
-                } else if custom_fixed {
-                    let note = LIGHTROOM_CUSTOM_WHITE_NOTE.into();
-                    (Level::Exact, Level::Approximate, note)
-                } else if custom_absolute {
-                    (
-                        Level::Exact,
-                        Level::Approximate,
-                        CUSTOM_ABSOLUTE_WHITE_NOTE.into(),
-                    )
-                } else {
-                    (Level::Exact, Level::Exact, "撮影時の白のまま".into())
-                }
-            } else if k == "ShadowTint" {
-                (
-                    Level::Exact,
-                    Level::Exact,
-                    "実測で効果ゼロ（何もしない演算として対応）".into(),
-                )
-            } else if matches!(k, "IncrementalTemperature" | "IncrementalTint")
-                && incremental_relative
-                && incremental_valid
-            {
-                (
-                    Level::Exact,
-                    Level::Exact,
-                    "合成 sRGB 色見本から較正した出力 RGB 差分 LUT（niho-2）".into(),
-                )
-            } else if matches!(k, "IncrementalTemperature" | "IncrementalTint")
-                && incremental_relative
-            {
-                (
-                    Level::Unsupported,
-                    Level::Unsupported,
-                    "-100..100 の範囲外なので適用しない".into(),
-                )
-            } else if matches!(k, "ColorGradeMidtoneLum" | "ColorGradeGlobalLum") {
-                (
-                    Level::Unsupported,
-                    Level::Unsupported,
-                    "測定式が無いため値を保持するのみ".into(),
-                )
-            } else if matches!(k, "Highlights2012" | "Shadows2012") {
-                (
-                    Level::Exact,
-                    Level::Exact,
-                    "局所ラプラシアン（linear ProPhoto）".into(),
-                )
-            } else if matches!(k, "Texture" | "Clarity2012") {
-                (
-                    Level::Exact,
-                    Level::Exact,
-                    "段別ゲイン（linear ProPhoto）".into(),
-                )
-            } else if k == "ColorNoiseReduction" {
-                if effective_settings.engine == ENGINE_NIHO_3 {
-                    (
+                } else if graded_luminance_model {
+                    // Photo Bench keeps the value only; NIHO renders it with an
+                    // approximation not calibrated against Lightroom yet
+                    // (niho-photo#39, `color_ops::LUM_MIDTONE` / `LUM_GLOBAL`).
+                    if swift_double(value) == Some(0.0) {
+                        (Level::Unsupported, Level::Exact, NOTE_EFFECT_NONE.into())
+                    } else {
+                        (
                             Level::Unsupported,
                             Level::Approximate,
-                            "niho-3 signed RAW でのみ適用する Lightroom 近似の signed-RGB guided CNR（R209 frozen。raster では保持のみ）".into(),
+                            "NIHO の近似式（Lightroom の実測による校正は未実施）".into(),
                         )
-                } else if matches!(
-                    effective_settings.engine.as_str(),
-                    ENGINE_NIHO_4 | ENGINE_NIHO_5 | ENGINE_NIHO_7 | ENGINE_NIHO_11
-                ) {
+                    }
+                } else if matches!(k, "Highlights2012" | "Shadows2012") {
+                    (
+                        Level::Exact,
+                        Level::Exact,
+                        "局所ラプラシアン（linear ProPhoto）".into(),
+                    )
+                } else if matches!(k, "Texture" | "Clarity2012") {
+                    (
+                        Level::Exact,
+                        Level::Exact,
+                        "段別ゲイン（linear ProPhoto）".into(),
+                    )
+                } else if let Some(found) = self.detail_level(k, value, effective_settings) {
+                    found
+                } else if k == "Dehaze" {
+                    (Level::Exact, Level::Exact, "トーンカーブ＋彩度倍率".into())
+                } else if SUPPORTED_SCALARS.contains(&k) {
+                    (Level::Exact, Level::Exact, "実測フィット式".into())
+                } else if SUPPORTED_COLOR_SCALARS.contains(&k) || is_hsl {
+                    (
+                        Level::Exact,
+                        Level::Exact,
+                        "実測フィット式（linear ProPhoto）".into(),
+                    )
+                } else if k == "ToneCurveName2012" {
+                    (
+                        Level::Approximate,
+                        Level::Approximate,
+                        "曲線点で描く（名称は保持のみ）".into(),
+                    )
+                } else if UNSUPPORTED_KNOWN.contains(&k) {
                     (
                         Level::Unsupported,
-                        Level::Approximate,
-                        "niho-4/5/7 signed RAW でのみ適用する Lightroom 近似の signed-RGB guided CNR（R209 frozen）".into(),
+                        Level::Unsupported,
+                        "値を保持するのみ（未実装）".into(),
                     )
+                } else if METADATA_KEYS.contains(&k) {
+                    (Level::Metadata, Level::Metadata, "値を保持".into())
                 } else {
                     (
-                            Level::Unsupported,
-                            Level::Unsupported,
-                            "この数式の版では描画に未適用。niho-3 signed RAW は Lightroom 近似の CNR に対応".into(),
-                        )
-                }
-            } else if matches!(
-                k,
-                "ColorNoiseReductionDetail" | "ColorNoiseReductionSmoothness"
-            ) {
-                (
-                    Level::Unsupported,
-                    Level::Unsupported,
-                    "値を保持するのみ（描画には未適用。frozen CNR は Detail/Smoothness 50 の特性）"
-                        .into(),
-                )
-            } else if k == "Dehaze" {
-                (Level::Exact, Level::Exact, "トーンカーブ＋彩度倍率".into())
-            } else if SUPPORTED_SCALARS.contains(&k) {
-                (Level::Exact, Level::Exact, "実測フィット式".into())
-            } else if SUPPORTED_COLOR_SCALARS.contains(&k) || is_hsl {
-                (
-                    Level::Exact,
-                    Level::Exact,
-                    "実測フィット式（linear ProPhoto）".into(),
-                )
-            } else if k == "ToneCurveName2012" {
-                (
-                    Level::Approximate,
-                    Level::Approximate,
-                    "曲線点で描く（名称は保持のみ）".into(),
-                )
-            } else if UNSUPPORTED_KNOWN.contains(&k) {
-                (
-                    Level::Unsupported,
-                    Level::Unsupported,
-                    "値を保持するのみ（未実装）".into(),
-                )
-            } else if METADATA_KEYS.contains(&k) {
-                (Level::Metadata, Level::Metadata, "値を保持".into())
-            } else {
-                (
-                    Level::Unsupported,
-                    Level::Unsupported,
-                    "未認識の Camera Raw 設定（適用しない）".into(),
-                )
-            };
+                        Level::Unsupported,
+                        Level::Unsupported,
+                        "未認識の Camera Raw 設定（適用しない）".into(),
+                    )
+                };
             // NIHO effects (Photo Bench: unrecognized, so unsupported).
             if let Some(field) = effect {
                 (level, note) = self.effect_level(k, field, value, effective_settings);
@@ -1755,10 +1734,13 @@ impl XmpDocument {
                 level = Level::Unsupported;
                 note = "有限数として読めないため適用しない".into();
             }
-            // An effect in use is approximate already; its note still says
-            // the value was clamped.
+            // Effects, Detail values and graded luminance in use can already
+            // be approximate; their notes still say the value was clamped.
             let clampable = match effect {
                 Some(_) => matches!(level, Level::Exact | Level::Approximate),
+                None if graded_luminance_model || detail::DETAIL_KEYS.contains(&k) => {
+                    matches!(level, Level::Exact | Level::Approximate)
+                }
                 None => matches!(level, Level::Exact),
             };
             if let (Some(range), Some(v)) = (clamp_range(k), swift_double(value)) {
@@ -1868,11 +1850,15 @@ pub fn preset_settings(
                     | ENGINE_NIHO_10
                     | ENGINE_NIHO_11
                     | ENGINE_NIHO_8
+                    | ENGINE_NIHO_12
             )
         {
             settings.engine = b.engine.clone();
         }
         copy_effects(b, &mut settings);
+        // Detail is not in Photo Bench's EditSettings either: start from the
+        // photo's, then let this XMP's Detail-panel keys replace it below.
+        settings.detail = b.detail;
         // Adobe XMP has no public representation for NIHO's independently
         // authored OKLCH points. Applying a preset must never erase them.
         settings.color_points = b.color_points.clone();
@@ -1905,6 +1891,10 @@ pub fn preset_settings(
             .map(|v| v.clamp(0.0, 100.0))
             .unwrap_or(inherited.color_noise_reduction_smoothness);
     }
+    // Sharpening and noise reduction (v6 detail) after the engine and the
+    // legacy signed-RAW color NR are final (detail.rs decides whether the
+    // legacy field can carry the value).
+    doc.apply_detail(&mut settings);
     // The preset may turn on an effect after the geometry/base shape was
     // restored, so derive the version only after all effect patches land.
     settings.v = settings.required_version();
@@ -2075,7 +2065,12 @@ mod tests {
         assert_eq!(r.settings.exposure, 5.0);
         assert_eq!(r.settings.contrast, -20.0);
         assert!(r.approximate.contains(&"Exposure2012".to_string()));
-        assert!(r.unsupported.contains(&"Sharpness".to_string()));
+        // Sharpness 0 renders no sharpening, exactly like Lightroom at 0
+        // (Issue #32), and creates no v6 detail.
+        let sharpness = r.items.iter().find(|i| i.property == "Sharpness").unwrap();
+        assert_eq!(sharpness.level, Level::Exact);
+        assert_eq!(sharpness.photo_bench_level, Level::Unsupported);
+        assert_eq!(r.settings.detail, None);
         assert!(r.unsupported.contains(&"FutureThing".to_string()));
     }
 
@@ -2147,8 +2142,10 @@ mod tests {
 </rdf:RDF></x:xmpmeta>"#;
         let result = preset_settings(xmp, None).unwrap();
         assert!(!result.converted);
-        let legacy = result.settings.legacy_settings.unwrap();
+        let legacy = result.settings.legacy_settings.as_ref().unwrap();
         assert!(legacy.contains_key("curveRefineSaturation"));
-        assert!(legacy.contains_key("colorGrading"));
+        assert!(!legacy.contains_key("colorGrading"));
+        assert_eq!(result.settings.color_grading.midtone.luminance, 20.0);
+        assert_eq!(result.settings.color_grading.global.luminance, -10.0);
     }
 }

@@ -21,6 +21,7 @@ import {
   PHOTO_EDITING_BASE_CONTROL_KEYS,
   type PhotoEditingControlKey,
 } from "../photo-editing-adjustments";
+import { PHOTO_EDITING_DETAIL_KEYS } from "../photo-editing-detail";
 import { PHOTO_EDITING_EFFECT_KEYS } from "../photo-editing-effects";
 import { PHOTO_EDITING_EXPORT_PNG_FAILED_TEXT } from "../photo-editing-copy";
 import type {
@@ -201,10 +202,10 @@ export type BrowserPhotoTool = "adjust" | "crop" | "cutout";
 
 /**
  * 道具が「補正」の間に右パネルに出す面（niho-photo#51）。`adjust` は自動 / 白黒・プリセットの行・補正の群、`presets` はプリセットの
- * 一覧だけ、`info` は写真の情報（撮影条件・カメラ・レンズ・ファイル。niho-photo#43）。右端の道具の帯の「プリセット」「補正」
- * 「情報」で切り替え、写真を替えても保つ（Lightroom と同じ）。
+ * 一覧だけ、`info` は写真の情報（撮影条件・カメラ・レンズ・ファイル。niho-photo#43）、`versions` は補正の版（niho-photo#42）。
+ * 右端の道具の帯の「プリセット」「補正」「版」「情報」で切り替え、写真を替えても保つ（Lightroom と同じ）。
  */
-export type BrowserPhotoAdjustPanel = "adjust" | "presets" | "info";
+export type BrowserPhotoAdjustPanel = "adjust" | "presets" | "info" | "versions";
 
 /** 補正の面に置くプリセットの部品の形（`row` は補正の群の上の 1 行、`panel` はプリセットの面いっぱいの一覧）。 */
 export type BrowserPhotoPresetsVariant = "row" | "panel";
@@ -269,6 +270,36 @@ export const BROWSER_EFFECTS_ADJUSTMENT_KEYS: ReadonlyArray<PhotoEditingControlK
   ...PHOTO_EDITING_BASE_CONTROL_KEYS,
   ...PHOTO_EDITING_EFFECT_KEYS,
 ];
+const BROWSER_EFFECTS_DETAIL_ADJUSTMENT_KEYS: ReadonlyArray<PhotoEditingControlKey> = [
+  ...BROWSER_EFFECTS_ADJUSTMENT_KEYS,
+  ...PHOTO_EDITING_DETAIL_KEYS,
+];
+const BROWSER_BASE_DETAIL_ADJUSTMENT_KEYS: ReadonlyArray<PhotoEditingControlKey> = [
+  ...PHOTO_EDITING_BASE_CONTROL_KEYS,
+  ...PHOTO_EDITING_DETAIL_KEYS,
+];
+
+/**
+ * ディテール（シャープ・ノイズ軽減。Issue #32）の群を出す入力か。wasm で開いた写真はどれも出す（owner 判断 2026-10-21: RAW でも
+ * 出す）。JPEG / PNG は drag 中も NR を描き、16bit PNG の作業コピー（RAW・HEIC / TIFF など）は drag 中は NR も計算し直さず、指を
+ * 離した後の確定描画で当てる（engine client の `develop-detail-preview.ts`）。ディテールを 0 以外にしない写真の描画は変わらない。
+ */
+export function detailControlsAvailable(input: DevelopSourceInput | null | undefined): boolean {
+  return input !== null && input !== undefined;
+}
+
+/**
+ * wasm で開いた PC の右パネルに出す項目（`visibleKeys`。省くと基本の 13 項目）。効果（v: 3）・ディテール（シャープ・ノイズ軽減。
+ * v: 6。Issue #32）は、それぞれ読めると確かめた wasm の写真にだけ足す。並びは群の定義のまま（ディテールは効果の後ろ）。スマホの面は
+ * 道具の帯が 7 つで幅いっぱい（375px で実測）なので、効果と同じくまだ足さない。
+ */
+export function browserAdjustmentKeys(options: {
+  effects: boolean;
+  detail: boolean;
+}): ReadonlyArray<PhotoEditingControlKey> | undefined {
+  if (options.detail) return options.effects ? BROWSER_EFFECTS_DETAIL_ADJUSTMENT_KEYS : BROWSER_BASE_DETAIL_ADJUSTMENT_KEYS;
+  return options.effects ? BROWSER_EFFECTS_ADJUSTMENT_KEYS : undefined;
+}
 /** ブラウザは RAW も相対で直すので、絶対の白は使わない（撮影時の白を渡さない。RAW の K 表示は S11 の後の別の slice）。 */
 export const BROWSER_WHITE_BALANCE_SOURCE: Pick<PhotoEditingPhoto, "asShotWhiteBalance"> = { asShotWhiteBalance: null };
 

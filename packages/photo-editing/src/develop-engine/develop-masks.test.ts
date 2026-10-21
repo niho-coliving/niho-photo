@@ -398,7 +398,7 @@ describe("developSettings への取り込み（部分補正は写真自身の編
     expect(isEditableDevelopSettings(withMasks())).toBe(true);
     expect(isEditableDevelopSettings(withMasks({ v: 4 }))).toBe(false);
     expect(isEditableDevelopSettings(withMasks({}, [{ id: "broken" }]))).toBe(false);
-    expect(isEditableDevelopSettings(withMasks({ v: 6 }))).toBe(false);
+    expect(isEditableDevelopSettings(withMasks({ v: 7 }))).toBe(false);
     expect(
       isEditableDevelopSettings(withMasks({ whiteBalance: { mode: "absolute", temperature: 5500, tint: 0 } }, [linear({ adjust: { relativeTint: 3 } })])),
     ).toBe(false);
@@ -479,6 +479,6 @@ describe("developSettings への取り込み（部分補正は写真自身の編
 
   it("プリセットに保存できない項目の表示に「部分補正（マスク）」がある", () => {
     expect(photoEditingPresetNotWrittenError(["masks"])).toContain("部分補正（マスク）");
-    expect(photoEditingPresetNotWrittenError(["masks", "colorPoints"])).toContain("部分補正（マスク）・色ミキサー");
+    expect(photoEditingPresetNotWrittenError(["masks", "colorPoints"])).toContain("部分補正（マスク）・ポイントカラー");
   });
 });

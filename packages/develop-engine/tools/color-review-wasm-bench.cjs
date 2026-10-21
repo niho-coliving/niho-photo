@@ -1,11 +1,15 @@
 // Synthetic, reproducible Node/wasm timing probe. No private photos or npm dependencies.
-// Usage: node color-review-wasm-bench.cjs /path/to/nodejs/niho_develop_wasm.js
+// Usage: node color-review-wasm-bench.cjs /path/to/nodejs/niho_develop_wasm.js [raster-engines] [legacy-raw-engines]
+//   raster-engines: comma-separated, default "niho-6,niho-8" (the 2026-10-20 run)
+//   legacy-raw-engines: comma-separated engines for a legacy unsigned RAW working copy, default none
 // Node on Studio is a reference environment, not a browser/device performance claim.
 const zlib = require('node:zlib');
 const crypto = require('node:crypto');
 const { performance } = require('node:perf_hooks');
 const path = require('node:path');
 const wasm = require(path.resolve(process.argv[2]));
+const rasterEngines = (process.argv[3] ?? 'niho-6,niho-8').split(',').filter(Boolean);
+const rawEngines = (process.argv[4] ?? '').split(',').filter(Boolean);
 
 function crc32(bytes) {
   let crc = 0xffffffff;
@@ -21,6 +25,11 @@ function chunk(type, data) {
   const crc = Buffer.alloc(4); crc.writeUInt32BE(crc32(Buffer.concat([tag, data])));
   return Buffer.concat([header, tag, data, crc]);
 }
+function png(width, height, bitDepth, raw) {
+  const ihdr = Buffer.alloc(13);
+  ihdr.writeUInt32BE(width); ihdr.writeUInt32BE(height, 4); ihdr[8] = bitDepth; ihdr[9] = 2;
+  return Buffer.concat([Buffer.from([137,80,78,71,13,10,26,10]),chunk('IHDR',ihdr),chunk('IDAT',zlib.deflateSync(raw)),chunk('IEND',Buffer.alloc(0))]);
+}
 function photo() {
   const width = 1024, height = 768;
   const raw = Buffer.alloc(height * (1 + width * 3));
@@ -33,14 +42,28 @@ function photo() {
       raw[offset + 2] = window ? 250 : 16;
     }
   }
-  const ihdr = Buffer.alloc(13);
-  ihdr.writeUInt32BE(width); ihdr.writeUInt32BE(height, 4); ihdr[8] = 8; ihdr[9] = 2;
-  return Buffer.concat([Buffer.from([137,80,78,71,13,10,26,10]),chunk('IHDR',ihdr),chunk('IDAT',zlib.deflateSync(raw)),chunk('IEND',Buffer.alloc(0))]);
+  return png(width, height, 8, raw);
 }
-const input = photo();
-const rows = [];
-for (const engine of ['niho-6','niho-8']) {
-  const developer = new wasm.Developer(input, 0);
+// The same kind of scene as a legacy unsigned RAW working copy: 16-bit linear
+// ProPhoto encoded with gamma 1.8 over [0, 2] (`decode::encode_working_copy`).
+function legacyRawWorkingCopy() {
+  const width = 1024, height = 768;
+  const raw = Buffer.alloc(height * (1 + width * 6));
+  const encode = (linear) => Math.round(Math.pow(Math.min(Math.max(linear / 2, 0), 1), 1 / 1.8) * 65535);
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      const offset = y * (width * 6 + 1) + 1 + x * 6;
+      const window = x > 640 && y < 320;
+      const rgb = window ? [0.85, 0.9, 0.95] : [0.01 + x / 1024 * 0.08, 0.012 + y / 768 * 0.06, 0.008];
+      rgb.forEach((value, channel) => raw.writeUInt16BE(encode(value), offset + channel * 2));
+    }
+  }
+  return png(width, height, 16, raw);
+}
+const LEGACY_RAW_META = JSON.stringify({kind:'raw',baselineEV:0,asShotWhite:{x:0.3457,y:0.3585},dcpSha256:'synthetic',lookTableIncluded:true});
+
+function bench(open, engine, source) {
+  const developer = open();
   const settings = {v:1, engine, look:'niho-standard-1', exposure:0.2, highlights:-75, shadows:55, blacks:40, vibrance:10, hsl:{orange:{hue:0,saturation:-10,luminance:20}}};
   const timings = {};
   for (const [name, interactive] of [['coldInteractive',true],['coldFinal',false],['cachedInteractive',true],['cachedFinal',false]]) {
@@ -59,7 +82,18 @@ for (const engine of ['niho-6','niho-8']) {
   warm.sort((a,b)=>a-b);
   timings.editedInteractiveMedian = warm[2];
   timings.editedInteractiveMax = warm[4];
-  rows.push({engine,timingsMs:timings,interactive100ms:timings.editedInteractiveMax<=100,final1000ms:timings.coldFinal<=1000});
+  // The release after the drag: one Final with the last edited settings.
+  const start = performance.now();
+  developer.render(JSON.stringify(settings),0,false);
+  timings.releasedFinal = performance.now() - start;
   developer.free();
+  return {source,engine,timingsMs:timings,interactive100ms:timings.editedInteractiveMax<=100,final1000ms:timings.coldFinal<=1000&&timings.releasedFinal<=1000};
 }
-console.log(JSON.stringify({schema:'niho.color-review-wasm-timing.v1',environment:'Node wasm SIMD on Studio; browser/device performance remains separate',node:process.version,engineBundle:wasm.version(),dimensions:[1024,768],inputSha256:crypto.createHash('sha256').update(input).digest('hex'),rows},null,2));
+
+const input = photo();
+const workingCopy = legacyRawWorkingCopy();
+const rows = [];
+for (const engine of rasterEngines) rows.push(bench(() => new wasm.Developer(input, 0), engine, 'raster'));
+for (const engine of rawEngines) rows.push(bench(() => wasm.Developer.openWorkingCopy(workingCopy, LEGACY_RAW_META), engine, 'legacyRaw'));
+const sha256 = (bytes) => crypto.createHash('sha256').update(bytes).digest('hex');
+console.log(JSON.stringify({schema:'niho.color-review-wasm-timing.v2',environment:'Node wasm SIMD on Studio; browser/device performance remains separate',node:process.version,engineBundle:wasm.version(),dimensions:[1024,768],inputSha256:sha256(input),legacyRawWorkingCopySha256:rawEngines.length?sha256(workingCopy):null,order:'engines run in the listed order within one process; cold values include process-wide caches of earlier rows',rows},null,2));

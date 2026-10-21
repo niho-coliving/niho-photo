@@ -8,7 +8,7 @@ import {
   workWaitText,
   type WorkWait,
 } from "../develop-engine/develop-work-wait";
-import type { PhotoEditingControlKey } from "../photo-editing-adjustments";
+import type { PhotoEditingAdjustmentGroupId, PhotoEditingControlKey } from "../photo-editing-adjustments";
 import {
   BROWSER_PHOTO_EDITING_READ_ONLY_TEXT,
   PHOTO_EDITING_AUTO_LABEL,
@@ -31,6 +31,7 @@ import {
   PHOTO_EDITING_TOOL_CROP_LABEL,
   PHOTO_EDITING_TOOL_CUTOUT_LABEL,
   PHOTO_EDITING_TOOL_INFO_LABEL,
+  PHOTO_EDITING_TOOL_VERSIONS_LABEL,
   PHOTO_EDITING_UNDO_LABEL,
   PHOTO_EDITING_UNDO_TITLE,
 } from "../photo-editing-copy";
@@ -82,6 +83,9 @@ const TOOL_LABELS: Readonly<Record<BrowserPhotoTool, string>> = {
  * 「情報」の面（niho-photo#43。`panel` が `info` で `info` を渡したとき）は 見出し行（名前だけ）→ 情報の群。写真を直す面ではないので、
  * ↶ ↷ ⋯・「初期化」・作業コピーの状態・閲覧のみの 1 行は出さない（キーの取り消し・やり直しは今までどおり効く）。ヒストグラムは
  * ほかの面と同じく一番上に残す（撮影条件と分布を一緒に見る。白飛び・黒つぶれの印の切り替えも消さない）。
+ *
+ * 「版」の面（niho-photo#42。`panel` が `versions` で `versions` を渡したとき）も情報の面と同じ形（見出し行は名前だけ → 版の一覧）。
+ * 版の切り替えは取り消し・やり直しの 1 単位なので、↶ ↷ は補正の面とキーで効く。
  */
 
 /**
@@ -117,8 +121,17 @@ export function BrowserPhotoEditingAdjustments(props: {
   settings: PhotoEditingSettings;
   /** 見せる項目（省略時は基本の 13 項目。S1 の canvas は 5 項目、効果を描ける wasm の写真は効果の項目も入れて渡す） */
   visibleKeys?: ReadonlyArray<PhotoEditingControlKey>;
-  /** Oklch の独立した色ミキサー（対応する wasm の写真だけ）。 */
+  /**
+   * Oklch の独立した色ミキサー（画面の名前は「ポイントカラー」。対応する wasm の写真だけ）。カラーの群の直後（`afterGroup.color` の
+   * 「カラーミキサー」の節の下。niho-photo#38）に、開いたまま置く
+   */
   colorMixer?: ReactNode;
+  /**
+   * 補正の面で、群の直後に差し込む節（群の id ごと。`PhotoEditingAdjustmentGroups` の `afterGroup`）。ライトの群の下の「カーブ」
+   * （niho-photo#37）・カラーの群の下の「カラーミキサー」（niho-photo#38。どちらも PC で wasm が描いている写真だけ渡す）など、既定で
+   * 閉じた節を置く
+   */
+  afterGroup?: Partial<Record<PhotoEditingAdjustmentGroupId, ReactNode>>;
   /**
    * 一番上のヒストグラム（niho-photo#36。画を描ける wasm の写真だけ渡す）。道具・面〔補正 / プリセット / 切り抜き / 背景除去〕に
    * 依らず見出し行の上に出し、パネルを送っても上端に残す
@@ -140,6 +153,8 @@ export function BrowserPhotoEditingAdjustments(props: {
   panel?: BrowserPhotoAdjustPanel;
   /** 「情報」の面の中身（niho-photo#43。`panel` が `info` の間だけ描く。渡さなければ情報の面は出さない） */
   info?: ReactNode;
+  /** 「版」の面の中身（niho-photo#42。`panel` が `versions` の間だけ描く。渡さなければ版の面は出さない） */
+  versions?: ReactNode;
   /** プリセットの行から、プリセットの面を開く */
   onOpenPresets?: () => void;
   /** 切り抜きの道具（「切り抜き」の間、プリセットの節と群の代わりに出す） */
@@ -166,20 +181,23 @@ export function BrowserPhotoEditingAdjustments(props: {
   const presets = props.presets;
   // プリセットの部品が無い写真（S1 の canvas）は、補正の面だけ
   const showPresetsPanel = !cropping && !cutting && presets !== undefined && props.panel === "presets";
-  if (!cropping && !cutting && props.info !== undefined && props.panel === "info") {
-    // 情報の面: 見出し行は名前だけ（ヒストグラムの置き方は下の補正の面と同じ）
+  // 情報・版の面（写真を直すスライダーの無い面）: 見出し行は名前だけ（ヒストグラムの置き方は下の補正の面と同じ）
+  const sideFace =
+    props.panel === "info"
+      ? { label: PHOTO_EDITING_TOOL_INFO_LABEL, content: props.info }
+      : props.panel === "versions"
+        ? { label: PHOTO_EDITING_TOOL_VERSIONS_LABEL, content: props.versions }
+        : null;
+  if (!cropping && !cutting && sideFace !== null && sideFace.content !== undefined) {
     return (
-      <aside
-        aria-label={PHOTO_EDITING_TOOL_INFO_LABEL}
-        className={props.histogram ? ASIDE_WITH_HISTOGRAM_CLASS_NAME : ASIDE_CLASS_NAME}
-      >
+      <aside aria-label={sideFace.label} className={props.histogram ? ASIDE_WITH_HISTOGRAM_CLASS_NAME : ASIDE_CLASS_NAME}>
         {props.histogram ? (
           <div className="sticky top-0 z-10 -mx-3 bg-[var(--photo-editing-surface,white)] px-3 pb-1 pt-2">{props.histogram}</div>
         ) : null}
         <div className="flex min-h-11 items-center gap-1">
-          <h2 className="min-w-0 flex-1 truncate text-sm font-bold text-niho-text">{PHOTO_EDITING_TOOL_INFO_LABEL}</h2>
+          <h2 className="min-w-0 flex-1 truncate text-sm font-bold text-niho-text">{sideFace.label}</h2>
         </div>
-        {props.info}
+        {sideFace.content}
       </aside>
     );
   }
@@ -191,6 +209,18 @@ export function BrowserPhotoEditingAdjustments(props: {
         ? PHOTO_EDITING_PRESETS_TITLE
         : TOOL_LABELS.adjust;
   const auto = props.auto;
+  // ポイントカラー（Oklch）はカラーの群の下、カラーミキサーの節の後ろ（Lightroom と同じくカラーの下に並べる。niho-photo#38）
+  const afterGroup = props.colorMixer
+    ? {
+        ...props.afterGroup,
+        color: (
+          <>
+            {props.afterGroup?.color}
+            {props.colorMixer}
+          </>
+        ),
+      }
+    : props.afterGroup;
   // 白黒のチップは、効果を描ける wasm の写真（`visibleKeys` に白黒が入っている）だけ
   const grayscaleChip = props.visibleKeys?.includes("grayscale") === true;
   const grayscalePressed = readGrayscale(props.settings);
@@ -351,9 +381,9 @@ export function BrowserPhotoEditingAdjustments(props: {
             visibleKeys={props.visibleKeys}
             // 白黒は一番上のチップで切り替える（群の中には描かない。白黒の間に彩度を押せなくするのは群のまま）
             grayscaleToggle="hidden"
+            afterGroup={afterGroup}
             onSettingsChange={props.onSettingsChange}
           />
-          {props.colorMixer}
         </>
       )}
       {!props.canEdit ? <p className="mt-3 text-xs text-niho-text-muted">{BROWSER_PHOTO_EDITING_READ_ONLY_TEXT}</p> : null}

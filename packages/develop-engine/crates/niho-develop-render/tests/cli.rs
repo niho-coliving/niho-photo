@@ -410,6 +410,100 @@ fn a_geometry_is_rendered_cropped() {
     }
 }
 
+/// `settings` with a linear and a radial local mask (`v: 5`) and `geometry`.
+fn with_masks(settings: &DevelopSettings, geometry: Option<&str>) -> DevelopSettings {
+    let mut v = settings.to_value();
+    v["v"] = 5.into();
+    if let Some(geometry) = geometry {
+        v["geometry"] = serde_json::from_str(geometry).unwrap();
+    }
+    v["masks"] = serde_json::json!([
+        {
+            "id": "sky", "kind": "linear",
+            "zero": {"x": 0.5, "y": 0.6}, "full": {"x": 0.5, "y": 0.1},
+            "adjust": {"exposure": -0.8, "highlights": -30}
+        },
+        {
+            "id": "face", "kind": "radial", "invert": true,
+            "center": {"x": 0.45, "y": 0.55}, "radius": {"x": 0.3, "y": 0.25},
+            "angle": 20, "feather": 60,
+            "adjust": {"saturation": -40, "clarity": 25}
+        }
+    ]);
+    DevelopSettings::from_json(&v.to_string()).unwrap()
+}
+
+#[test]
+fn local_masks_match_the_crates_render() {
+    let dir = TempDir::new("masks");
+    // An original, turned and cropped: the crate's one-shot render.
+    let raster_settings = with_masks(
+        &settings(None),
+        Some(r#"{"rotate":90,"crop":{"left":0.1,"top":0.2,"right":0.9,"bottom":0.7}}"#),
+    );
+    let settings_path = dir.write("settings.json", raster_settings.to_json());
+    let out = dir.path("raster.png");
+    let result = run(&[
+        "render",
+        "--settings",
+        s(&settings_path),
+        "--raster",
+        s(&golden_jpeg()),
+        "--max-dimension",
+        "320",
+        "--out",
+        s(&out),
+    ]);
+    assert_eq!(result.code, 0, "{}", result.stdout);
+    let input = fs::read(golden_jpeg()).unwrap();
+    let options = RenderOptions {
+        max_dimension: 320,
+        quality: Quality::Final,
+        filter: Filter::Lanczos3,
+        decode_cap: 0,
+    };
+    let expected = niho_develop::render(&input, &raster_settings.to_json(), &options).unwrap();
+    let (w, h, rgb) = read_png(&out);
+    assert_eq!((w, h), (expected.width, expected.height));
+    assert_eq!(rgb, rgb_of(&expected.rgba), "same pixels as the crate");
+    let mut unmasked = raster_settings.clone();
+    unmasked.masks.clear();
+    let plain = niho_develop::render(&input, &unmasked.to_json(), &options).unwrap();
+    assert_ne!(plain.rgba, expected.rgba, "the masks change the frame");
+
+    // A working copy: the session's frame at its size and reduced.
+    let png = working_copy();
+    let wc_settings = with_masks(&settings(Some(WC_BASE)), None);
+    let settings_path = dir.write("settings-wc.json", wc_settings.to_json());
+    let wc_path = dir.write("working.png", &png);
+    let meta_path = dir.write("working.json", META);
+    for max_dimension in [0usize, 48] {
+        let out = dir.path(&format!("wc-{max_dimension}.png"));
+        let result = run(&[
+            "render",
+            "--settings",
+            s(&settings_path),
+            "--working-copy",
+            s(&wc_path),
+            "--meta",
+            s(&meta_path),
+            "--base-version",
+            WC_BASE,
+            &format!("--max-dimension={max_dimension}"),
+            "--out",
+            s(&out),
+        ]);
+        assert_eq!(result.code, 0, "{}", result.stdout);
+        let expected = Session::open_working_copy(&png, META, Filter::Lanczos3)
+            .unwrap()
+            .render(&wc_settings, max_dimension, Quality::Final)
+            .unwrap();
+        let (w, h, rgb) = read_png(&out);
+        assert_eq!((w, h), (expected.width, expected.height));
+        assert_eq!(rgb, rgb_of(&expected.rgba), "max {max_dimension}");
+    }
+}
+
 #[test]
 fn a_different_base_is_rendered_and_reported() {
     let dir = TempDir::new("base-mismatch");
@@ -484,10 +578,19 @@ fn failures_are_one_json_line_with_a_fixed_exit_code() {
     let no_v = with("no-v.json", r#"{"engine":"niho-1"}"#);
     let no_engine = with("no-engine.json", r#"{"v":1}"#);
     let v6 = with("v6.json", r#"{"v":6,"engine":"niho-1"}"#);
+    let v6_out = dir.path("v6-out.png");
     let masks = with(
         "masks.json",
-        r#"{"v":5,"engine":"niho-1","masks":[{"id":"m1","kind":"linear","zero":{"x":0.5,"y":0.2},"full":{"x":0.5,"y":0.5},"adjust":{"exposure":-0.7}}]}"#,
+        &format!(
+            r#"{{"v":5,"engine":"niho-1","masks":[{{"id":"b1","kind":"brush","surface":{{"id":"{}","width":8,"height":4}},"adjust":{{"exposure":-0.7}}}}]}}"#,
+            "0".repeat(64)
+        ),
     );
+    let future_settings = format!(
+        r#"{{"v":{},"engine":"niho-1"}}"#,
+        niho_develop::settings::MAX_SETTINGS_VERSION + 1
+    );
+    let future_version = with("future-version.json", &future_settings);
     // A turned crop whose corners do not make a rectangle on this photo.
     let crop = with(
         "crop.json",
@@ -627,12 +730,17 @@ fn failures_are_one_json_line_with_a_fixed_exit_code() {
             "unsupported_settings",
             2,
         ),
-        ("v 6", raster(&v6, &jpeg, &out), "unsupported_settings", 2),
-        // Saved and valid (v 5), but not drawn until M2 (#66): never a frame
-        // without the mask.
+        // Saved and valid (v 5), but not drawn until M4 (#68): never a frame
+        // without the brush surface.
         (
-            "active local masks",
+            "a brush mask without its surface",
             raster(&masks, &jpeg, &out),
+            "unsupported_settings",
+            2,
+        ),
+        (
+            "future version",
+            raster(&future_version, &jpeg, &out),
             "unsupported_settings",
             2,
         ),
@@ -742,6 +850,9 @@ fn failures_are_one_json_line_with_a_fixed_exit_code() {
         );
         assert_eq!(result.code, exit, "{name}");
     }
+    let v6_result = raster(&v6, &jpeg, &v6_out);
+    assert_eq!(v6_result.code, 0, "v 6 is supported: {}", v6_result.stdout);
+    assert!(v6_out.is_file());
     let mut kept = vec![
         good.as_path(),
         wc_path.as_path(),
@@ -753,7 +864,9 @@ fn failures_are_one_json_line_with_a_fixed_exit_code() {
         no_v.as_path(),
         no_engine.as_path(),
         v6.as_path(),
+        v6_out.as_path(),
         masks.as_path(),
+        future_version.as_path(),
         crop.as_path(),
         crop_v1.as_path(),
         look.as_path(),
@@ -774,7 +887,7 @@ fn version_and_help() {
         "niho-develop-render {}",
         niho_develop::CRATE_VERSION
     )));
-    assert!(version.stdout.contains("engine niho-11"));
+    assert!(version.stdout.contains("engine niho-12"));
     let help = run(&["--help"]);
     assert_eq!(help.code, 0);
     assert!(help.stdout.contains("Exit codes"));
@@ -793,6 +906,7 @@ fn settings_loader_accepts_all_formula_versions_and_rejects_unknown() {
         ("niho-8", "niho-standard-1"),
         ("niho-10", "niho-standard-1"),
         ("niho-11", "niho-standard-5"),
+        ("niho-12", "niho-standard-1"),
     ] {
         let settings = niho_develop_render::load_settings(&format!(
             r#"{{"v":1,"engine":"{engine}","look":"{look}"}}"#
@@ -805,6 +919,11 @@ fn settings_loader_accepts_all_formula_versions_and_rejects_unknown() {
     )
     .unwrap_err();
     assert_eq!(error.code, niho_develop_render::ErrorCode::InvalidSettings);
+    let error = niho_develop_render::load_settings(
+        r#"{"v":1,"engine":"niho-12","look":"niho-standard-5"}"#,
+    )
+    .unwrap_err();
+    assert_eq!(error.code, niho_develop_render::ErrorCode::InvalidSettings);
     let unsupported_engine =
         niho_develop_render::load_settings(r#"{"v":1,"engine":"niho-9","look":"niho-standard-5"}"#)
             .unwrap_err();
@@ -814,9 +933,9 @@ fn settings_loader_accepts_all_formula_versions_and_rejects_unknown() {
     );
     assert!(unsupported_engine
         .message
-        .contains("niho-1 through niho-8, niho-10, and niho-11"));
+        .contains("niho-1 through niho-8, niho-10, niho-11, and niho-12"));
     let missing_engine = niho_develop_render::load_settings(r#"{"v":1}"#).unwrap_err();
     assert!(missing_engine
         .message
-        .contains("niho-1 through niho-8, niho-10, and niho-11"));
+        .contains("niho-1 through niho-8, niho-10, niho-11, and niho-12"));
 }

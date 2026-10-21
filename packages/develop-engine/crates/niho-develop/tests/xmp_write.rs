@@ -5,8 +5,8 @@
 
 use niho_develop::effects::GRAIN_DEFAULT_SEED;
 use niho_develop::settings::{
-    ColorGradeBand, CurveChannel, CurvePoint, HslAdjustment, HslBand, ToneCurve, VignetteStyle,
-    WhiteBalance, WhiteBalanceMode,
+    ColorGradeBand, CurveChannel, CurvePoint, DetailSettings, HslAdjustment, HslBand,
+    SharpeningSettings, ToneCurve, VignetteStyle, WhiteBalance, WhiteBalanceMode,
 };
 use niho_develop::tone_ops::curves_are_identity;
 use niho_develop::xmp::{
@@ -53,10 +53,6 @@ fn everything() -> DevelopSettings {
         let (lo, hi) = key.range;
         if key.xmp == "Exposure2012" || key.xmp == "CurveRefineSaturation" {
             continue; // 1.37 above; 100 is the only rendered refinement
-        }
-        // Midtone / global luminance are retained but not rendered.
-        if matches!(key.xmp, "ColorGradeMidtoneLum" | "ColorGradeGlobalLum") {
-            continue;
         }
         let v = lo + (hi - lo) * ((i * 37 % 89) as f64 + 5.0) / 100.0;
         *key.field.value_mut(&mut s) = if key.field.is_integer_slider() || key.range.1 == 359.0 {
@@ -106,6 +102,18 @@ fn everything() -> DevelopSettings {
     s.grain.size = 35.0;
     s.grain.roughness = 55.0;
     s.grain.seed = Some(20_260_930.0);
+    // v6 detail (Issue #32): Camera Raw stores these as integers except the
+    // radius, which has one decimal.
+    s.detail = Some(DetailSettings {
+        sharpening: SharpeningSettings {
+            amount: 65.0,
+            radius: 1.3,
+            detail: 40.0,
+            masking: 20.0,
+        },
+        luminance_noise_reduction: 30.0,
+        color_noise_reduction: Some(45.0),
+    });
     s.v = s.required_version();
     assert!(s.validate().is_empty(), "{:?}", s.validate());
     s
@@ -260,9 +268,42 @@ fn groups_decide_what_is_written() {
     for group in XmpGroup::ALL {
         let keys = written_keys(&s, &[group]);
         if group == XmpGroup::NoiseReduction {
-            assert!(keys.is_empty(), "legacy engine must not export CNR");
-            assert_eq!(XmpGroup::parse(group.as_str()), Some(group));
-            continue;
+            // A raster engine renders NR only through v6 detail.
+            assert_eq!(
+                keys,
+                BTreeSet::from(
+                    [
+                        "LuminanceSmoothing",
+                        "ColorNoiseReduction",
+                        "ColorNoiseReductionDetail",
+                        "ColorNoiseReductionSmoothness",
+                    ]
+                    .map(String::from)
+                )
+            );
+            let mut without_detail = s.clone();
+            without_detail.detail = None;
+            assert!(
+                written_keys(&without_detail, &[group]).is_empty(),
+                "legacy engine without detail must not export CNR"
+            );
+        }
+        if group == XmpGroup::Sharpening {
+            assert_eq!(
+                keys,
+                BTreeSet::from(
+                    [
+                        "Sharpness",
+                        "SharpenRadius",
+                        "SharpenDetail",
+                        "SharpenEdgeMasking"
+                    ]
+                    .map(String::from)
+                )
+            );
+            let mut without_detail = s.clone();
+            without_detail.detail = None;
+            assert!(written_keys(&without_detail, &[group]).is_empty());
         }
         assert!(!keys.is_empty(), "{group:?}");
         assert!(union.is_disjoint(&keys), "{group:?} overlaps");
@@ -536,7 +577,8 @@ fn options_are_read_from_json() {
             "blackAndWhite",
             "vignette",
             "grain",
-            "noiseReduction"
+            "noiseReduction",
+            "sharpening"
         ]
     );
 }
@@ -558,6 +600,42 @@ fn color_grading_wheels_use_lightrooms_split_toning_keys() {
     assert_eq!(doc.properties["SplitToningShadowSaturation"], "12");
     assert_eq!(doc.properties["ColorGradeShadowLum"], "-5");
     assert!(!doc.properties.contains_key("ColorGradeShadowHue"));
+}
+
+/// niho-photo#39: the midtone / global luminance render, so a preset writes
+/// them like every other key of its group (0 included, the way Lightroom
+/// saves a preset) and they read back without an "unsupported" report.
+#[test]
+fn midtone_and_global_luminance_are_written_and_read_back() {
+    let options = XmpWriteOptions {
+        groups: vec![XmpGroup::ColorGrading],
+        ..all_groups()
+    };
+    let mut s = DevelopSettings::neutral();
+    s.color_grading.midtone = ColorGradeBand {
+        hue: 40.0,
+        saturation: 20.0,
+        luminance: 35.0,
+    };
+    s.color_grading.global.luminance = -12.0;
+    let out = xmp::settings_to_xmp(&s, &options);
+    let doc = xmp::parse(&out.xmp).unwrap();
+    assert_eq!(doc.properties["ColorGradeMidtoneLum"], "+35");
+    assert_eq!(doc.properties["ColorGradeGlobalLum"], "-12");
+    let back = read(&out.xmp);
+    assert!(back.converted, "{:?}", back.convert_issues);
+    assert!(back.unsupported.is_empty(), "{:?}", back.unsupported);
+    assert_eq!(back.settings.color_grading, s.color_grading);
+    // 0 is written too: applying the preset resets a photo's luminance.
+    let zero = xmp::settings_to_xmp(&DevelopSettings::neutral(), &options);
+    let zero_doc = xmp::parse(&zero.xmp).unwrap();
+    assert_eq!(zero_doc.properties["ColorGradeMidtoneLum"], "0");
+    assert_eq!(zero_doc.properties["ColorGradeGlobalLum"], "0");
+    let reset = xmp::preset_settings(&zero.xmp, Some(&s)).unwrap();
+    assert!(reset.converted, "{:?}", reset.convert_issues);
+    assert_eq!(reset.settings.color_grading.midtone.luminance, 0.0);
+    assert_eq!(reset.settings.color_grading.global.luminance, 0.0);
+    assert!(reset.unsupported.is_empty(), "{:?}", reset.unsupported);
 }
 
 #[test]
@@ -617,6 +695,18 @@ fn niho3_noise_reduction_group_round_trips_without_changing_legacy_presets() {
         xmp::settings_to_xmp(&legacy, &options).xmp,
         xmp::settings_to_xmp(&legacy, &without_noise).xmp
     );
+}
+
+#[test]
+fn legacy_raw_color_noise_reduction_is_capped_at_the_r209_limit_in_xmp() {
+    let mut settings = DevelopSettings::neutral();
+    settings.engine = niho_develop::settings::ENGINE_NIHO_3.into();
+    settings.color_noise_reduction = 75.0;
+    assert!(settings.detail.is_none());
+
+    let written = xmp::settings_to_xmp(&settings, &all_groups());
+    let document = xmp::parse(&written.xmp).unwrap();
+    assert_eq!(document.properties["ColorNoiseReduction"], "50");
 }
 
 #[test]

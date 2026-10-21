@@ -109,6 +109,8 @@ pub fn run() {
       photos::camera_photo_close,
       photos::camera_photo_info,
       photos::camera_photo_save_settings,
+      photos::camera_photo_versions,
+      photos::camera_photo_save_versions,
       develop::camera_develop_status,
       develop::camera_develop_source,
       develop::camera_develop_source_bytes,
