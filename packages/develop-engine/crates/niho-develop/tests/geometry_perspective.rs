@@ -261,7 +261,7 @@ fn large_reductions_and_tiny_angles_keep_the_window_on_the_output() {
 #[cfg_attr(not(target_arch = "wasm32"), test)]
 fn an_older_reader_refuses_a_perspective() {
     // v 7 is required; a v 2 geometry with a perspective is too low and
-    // v 9 is unknown.
+    // v 10 is unknown.
     let low = DevelopSettings::from_json(r#"{"v":2,"geometry":{"perspective":{"vertical":-10}}}"#)
         .unwrap();
     assert!(low
@@ -269,7 +269,7 @@ fn an_older_reader_refuses_a_perspective() {
         .iter()
         .any(|issue| issue.code == "versionTooLow"));
     assert_eq!(
-        DevelopSettings::from_json(r#"{"v":9}"#).unwrap_err().code,
+        DevelopSettings::from_json(r#"{"v":10}"#).unwrap_err().code,
         "unsupportedVersion"
     );
     let input = grid_png(64, 48);

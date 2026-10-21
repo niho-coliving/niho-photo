@@ -124,6 +124,7 @@ function createEngine(options: { heal: boolean }) {
     supportsColorPoints: vi.fn(async () => false),
     supportsDetail: vi.fn(async () => false),
     supportsHeal: vi.fn(async () => options.heal),
+    supportsLens: vi.fn(async () => true),
     imageSize: vi.fn(async () => ({ width: 1200, height: 800 })),
     rasterDecodeSize: vi.fn(async () => 1280),
     geometryOutputSize: vi.fn(async () => ({ width: 1200, height: 800 })),

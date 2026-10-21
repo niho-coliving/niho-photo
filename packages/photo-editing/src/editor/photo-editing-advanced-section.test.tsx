@@ -78,7 +78,8 @@ describe("保存値の読み書き", () => {
     expect([...parseStoredOpenAdvancedSections(null)]).toEqual([]);
     expect([...parseStoredOpenAdvancedSections("{")]).toEqual([]);
     expect([...parseStoredOpenAdvancedSections('{"curve":true}')]).toEqual([]);
-    expect([...parseStoredOpenAdvancedSections('["lens", 3, "curve"]')]).toEqual(["curve"]);
+    expect([...parseStoredOpenAdvancedSections('["future", 3, "curve"]')]).toEqual(["curve"]);
+    expect([...parseStoredOpenAdvancedSections('["lens", "curve"]')]).toEqual(["lens", "curve"]);
   });
 
   it("1 つの節だけを書き換え、ほかの id（知らないものも）は残す", () => {

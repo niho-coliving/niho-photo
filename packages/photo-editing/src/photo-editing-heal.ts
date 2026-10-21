@@ -16,6 +16,7 @@ import {
   type DevelopHealMarkView,
 } from "./develop-engine/develop-heal-editing";
 import { resetDevelopSettingsColors, type DevelopSettings } from "./develop-engine/develop-settings";
+import { withoutPhotoEditingLensWarp } from "./photo-editing-lens";
 
 /**
  * 修復の道具の画面（niho-photo#44 後半）の計算（React に依存しない純粋な関数。写真の上のブラシ・右パネル・面の描画が使う）。印の形と
@@ -50,17 +51,19 @@ function clamp(value: number, min: number, max: number): number {
 }
 
 /**
- * 修復の道具の間に描く設定: 幾何（90° 回転・反転・遠近・角度・切り抜き・縦横比・Upright の記録）を全部外す。色・効果・修復の印は
- * そのまま（ポインタの位置 = 印の座標にする）。
+ * 修復の道具の間に描く設定: 幾何（90° 回転・反転・遠近・角度・切り抜き・縦横比・Upright の記録）と、画素を動かすレンズ補正（歪み・
+ * 色収差の除去。niho-photo#45）を全部外す。色・効果・周辺光量・フリンジ・修復の印はそのまま（ポインタの位置 = 印の座標にする）。
  */
 export function healFrameDevelopSettings(settings: DevelopSettings): DevelopSettings {
-  return writeDevelopGeometry(settings, {
-    rotate: 0,
-    flipH: false,
-    flipV: false,
-    angle: 0,
-    crop: { left: 0, top: 0, right: 1, bottom: 1 },
-  });
+  return withoutPhotoEditingLensWarp(
+    writeDevelopGeometry(settings, {
+      rotate: 0,
+      flipH: false,
+      flipV: false,
+      angle: 0,
+      crop: { left: 0, top: 0, right: 1, bottom: 1 },
+    }),
+  );
 }
 
 /**
