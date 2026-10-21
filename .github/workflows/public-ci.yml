@@ -25,7 +25,8 @@
         "has-native": "${{ steps.scope.outputs.has-native }}",
         "has-swift": "${{ steps.scope.outputs.has-swift }}",
         "photo-editing": "${{ steps.scope.outputs.photo-editing }}",
-        "photo-sdk": "${{ steps.scope.outputs.photo-sdk }}"
+        "photo-sdk": "${{ steps.scope.outputs.photo-sdk }}",
+        "photo-candidate": "${{ steps.scope.outputs.photo-candidate }}"
       },
       "steps": [
         {
@@ -214,6 +215,59 @@
         }
       ]
     },
+    "photo-candidate": {
+      "name": "Photo Mac candidate proof",
+      "needs": [
+        "plan",
+        "publication"
+      ],
+      "if": "needs.plan.outputs.photo-candidate == 'true'",
+      "runs-on": "macos-26",
+      "timeout-minutes": 90,
+      "env": {
+        "CI": "true"
+      },
+      "steps": [
+        {
+          "uses": "actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683",
+          "with": {
+            "persist-credentials": false,
+            "fetch-depth": 0
+          }
+        },
+        {
+          "uses": "actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020",
+          "with": {
+            "node-version": "24.15.0"
+          }
+        },
+        {
+          "name": "lock済みNode依存をoverlay前に準備",
+          "run": "npm ci --ignore-scripts --no-audit --no-fund"
+        },
+        {
+          "name": "candidate data fixtureを検証",
+          "run": "node --test scripts/candidate/*.test.mjs"
+        },
+        {
+          "name": "固定Rust/WASM toolchainを準備",
+          "run": "rustup toolchain install 1.98.1 --profile minimal --target wasm32-unknown-unknown\ncargo +1.98.1 install wasm-bindgen-cli --version 0.2.129 --locked"
+        },
+        {
+          "name": "current SHAから完全Mac candidateを実build",
+          "env": {
+            "CANDIDATE_OUTPUT": "${{ runner.temp }}/photo-candidate",
+            "CANDIDATE_RUN_ATTEMPT": "${{ github.run_attempt }}",
+            "CANDIDATE_RUN_ID": "${{ github.run_id }}",
+            "CANDIDATE_SOURCE_SHA": "${{ github.sha }}",
+            "FIREBASE_CONFIG": "${{ runner.temp }}/photo-candidate-public-config.json",
+            "SDK_RELEASE_DIR": "${{ runner.temp }}/photo-candidate-sdk",
+            "SDK_RUNTIME_DIR": "${{ runner.temp }}/photo-candidate-runtime"
+          },
+          "run": "set -euo pipefail\nnpm run sdk:build-engine-runtime -- --output \"$SDK_RUNTIME_DIR\"\nnpm run sdk:pack -- --output \"$SDK_RELEASE_DIR\" --source \"$CANDIDATE_SOURCE_SHA\" --engine-assets \"$SDK_RUNTIME_DIR\"\nsdk_version=$(node -p 'require(\"./sdk/release-set.json\").version')\ncandidate_version=\"0.0.0\"\nsdk_manifest=\"$SDK_RELEASE_DIR/niho-photo-sdk-$sdk_version-$CANDIDATE_SOURCE_SHA.json\"\nsdk_manifest_sha=$(shasum -a 256 \"$sdk_manifest\" | cut -d ' ' -f 1)\nnode -e 'require(\"node:fs\").writeFileSync(process.argv[1], JSON.stringify({NIHO_PHOTO_PUBLIC_FIREBASE_WEB_API_KEY: \"AIza\" + \"0\".repeat(35)}) + \"\\n\")' \"$FIREBASE_CONFIG\"\nnpm run candidate:build -- --sdk-directory \"$SDK_RELEASE_DIR\" --sdk-mode local-validation --sdk-manifest-sha256 \"$sdk_manifest_sha\" --app-source \"$CANDIDATE_SOURCE_SHA\" --version \"$candidate_version\" --public-firebase-config \"$FIREBASE_CONFIG\" --node-modules \"$GITHUB_WORKSPACE/node_modules\" --output \"$CANDIDATE_OUTPUT\" --run-id \"$CANDIDATE_RUN_ID\" --run-attempt \"$CANDIDATE_RUN_ATTEMPT\"\ncandidate_manifest=$(find \"$CANDIDATE_OUTPUT\" -maxdepth 1 -type f -name '*.candidate.json')\nif [[ -z \"$candidate_manifest\" || \"$(find \"$CANDIDATE_OUTPUT\" -maxdepth 1 -type f -name '*.candidate.json' | wc -l | tr -d ' ')\" != \"1\" ]]; then exit 1; fi\ncandidate_manifest_sha=$(shasum -a 256 \"$candidate_manifest\" | cut -d ' ' -f 1)\nnpm run candidate:verify -- --directory \"$CANDIDATE_OUTPUT\" --expected-manifest-sha256 \"$candidate_manifest_sha\" --expected-source \"$CANDIDATE_SOURCE_SHA\" --expected-version \"$candidate_version\" --expected-sdk-mode local-validation --expected-sdk-version \"$sdk_version\" --expected-sdk-manifest-sha256 \"$sdk_manifest_sha\" --run-id \"$CANDIDATE_RUN_ID\" --run-attempt \"$CANDIDATE_RUN_ATTEMPT\""
+        }
+      ]
+    },
     "native": {
       "name": "Client / ${{ matrix.scope }}",
       "needs": [
@@ -323,6 +377,7 @@
         "dependencies",
         "photo-editing",
         "photo-sdk",
+        "photo-candidate",
         "native",
         "swift"
       ],

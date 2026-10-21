@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "version": "0.1.0",
+  "version": "0.1.1",
   "repository": "niho-coliving/niho-photo",
   "packages": [
     {
@@ -71,9 +71,10 @@
         "Cargo.toml",
         "LICENSES.md",
         "README.md",
+        "build-macos-native.mjs",
         "licenses/**",
         "rust-toolchain.toml",
-        "calibration/jpeg-incremental-wb-v1.bin",
+        "calibration/**",
         "crates/*/Cargo.toml",
         "crates/*/src/**",
         "crates/niho-base-raw/profiles/**",
@@ -81,7 +82,13 @@
         "crates/niho-develop/niho3/**",
         "crates/niho-develop/niho4/**",
         "crates/niho-develop/niho6/**",
-        "crates/niho-develop/presets/**"
+        "crates/niho-develop/presets/**",
+        "tools/apple-raw-linear/Package.swift",
+        "tools/apple-raw-linear/Sources/**",
+        "tools/apple-raw-linear/Tests/**",
+        "tools/niho-camera-cutout/Package.swift",
+        "tools/niho-camera-cutout/Sources/**",
+        "tools/niho-camera-cutout/Tests/**"
       ],
       "exclude": []
     }
@@ -96,6 +103,7 @@
     "scripts/sdk",
     "scripts/ci/cloud-contract-sync.mjs",
     "scripts/ci/image-metadata.mjs",
+    "scripts/ci/photo-candidate-workflow-lib.mjs",
     "scripts/ci/photo-sdk-workflow-lib.mjs",
     "scripts/ci/publication-lib.mjs",
     "scripts/ci/release-evidence-lib.mjs",

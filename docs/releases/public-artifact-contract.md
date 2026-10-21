@@ -2,6 +2,10 @@
 
 Issue #2。公開リポジトリ `niho-coliving/niho-photo` の完全なcommit SHAを、検証用Mac app、SBOM、lockfile、toolchain、認証・共有contractへ結び付ける。公開mergeによって本番への署名・公証・配布・更新公開は始まらない。非公開側の取り込み実装は別の作業とする。
 
+この文書のmain push artifactはvalidation-onlyの旧経路である。Issue #113の手動Mac candidate prereleaseは、公開済みSDKの
+manifest/receipt/release metadata、完全native closure、candidate manifest、Actions artifact receipt/provenanceを追加で固定する
+別経路であり、この3-file artifactを公式candidateへ昇格・流用しない。どちらもprivate `camera-v` releaseやupdater feedを変更しない。
+
 ## 成果物と識別子
 
 `Public CI` のmain pushは、文書だけの変更でもcameraを検証する。cameraの既存native検証後に、GitHub-hosted `macos-14` runnerでrelease modeのad-hoc署名 `.app` を作る。PRやfork側のmain pushでは成果物を生成・uploadしない。公開CIの権限は `contents: read` だけで、Apple署名、updater署名、認証、配備のsecretやOIDCを要求しない。ビルド環境は必要な公開値だけをallowlistし、Rustは1.98.1、Nodeは24.15.0、npm/Tauriはlockfileと記録された実行版へ結び付ける。Xcodeの実行版も記録する。

@@ -9,6 +9,10 @@ const workflow = JSON.parse(await readFile(new URL("../../.github/workflows/phot
 test("SDK release workflowはmain dispatchのbuild/publishだけを許可する", () => assert.deepEqual(photoSdkWorkflowFailures(workflow), []));
 
 for (const [name, mutate] of [
+  ["builder OIDC permission", (value) => { value.jobs.build.permissions = { "id-token": "write" }; }],
+  ["attestation omitted", (value) => { value.jobs.publish.steps = value.jobs.publish.steps.filter((step) => step.id !== "attest"); }],
+  ["attestation subject changed", (value) => { value.jobs.publish.steps.find((step) => step.id === "attest").with["subject-path"] = "unverified.json"; }],
+  ["attestation OIDC permission omitted", (value) => { delete value.jobs.publish.permissions["id-token"]; }],
   ["build write permission", (value) => { value.jobs.build.permissions = { contents: "write" }; }],
   ["unfixed action", (value) => { value.jobs.build.steps[0].uses = "actions/checkout@v4"; }],
   ["non-main dispatch", (value) => { value.jobs.build.steps.find((step) => step.id === "source").run = "git checkout HEAD"; }],

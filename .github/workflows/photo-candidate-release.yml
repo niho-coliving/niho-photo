@@ -1,0 +1,224 @@
+{
+  "name": "Photo Mac candidate release",
+  "on": {
+    "workflow_dispatch": {
+      "inputs": {
+        "app_source_sha": {
+          "description": "origin/mainに含まれるapp sourceのfull commit SHA",
+          "required": true,
+          "type": "string"
+        },
+        "sdk_version": {
+          "description": "公開済みphoto-sdk-v tagのstrict semver",
+          "required": true,
+          "type": "string"
+        },
+        "app_version": {
+          "description": "candidate用の通常x.y.z app version",
+          "required": true,
+          "type": "string"
+        },
+        "sdk_manifest_sha256": {
+          "description": "公開済みSDK manifest bytesのSHA-256",
+          "required": true,
+          "type": "string"
+        }
+      }
+    }
+  },
+  "permissions": {
+    "contents": "read"
+  },
+  "concurrency": {
+    "group": "photo-candidate-${{ github.workflow }}-${{ github.run_id }}",
+    "cancel-in-progress": false
+  },
+  "jobs": {
+    "build": {
+      "name": "Build and verify Mac candidate",
+      "runs-on": "macos-26",
+      "timeout-minutes": 90,
+      "outputs": {
+        "app-source-sha": "${{ steps.source.outputs.app-source-sha }}",
+        "app-version": "${{ steps.source.outputs.app-version }}",
+        "sdk-version": "${{ steps.sdk.outputs.sdk-version }}",
+        "sdk-manifest-sha256": "${{ steps.sdk.outputs.sdk-manifest-sha256 }}",
+        "candidate-manifest-sha256": "${{ steps.candidate.outputs.candidate-manifest-sha256 }}",
+        "candidate-manifest-file": "${{ steps.candidate.outputs.candidate-manifest-file }}",
+        "artifact-id": "${{ steps.upload.outputs.artifact-id }}",
+        "artifact-digest": "${{ steps.upload.outputs.artifact-digest }}",
+        "artifact-name": "${{ steps.names.outputs.artifact-name }}"
+      },
+      "steps": [
+        {
+          "uses": "actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683",
+          "with": {
+            "persist-credentials": false,
+            "fetch-depth": 0
+          }
+        },
+        {
+          "id": "source",
+          "name": "dispatchとapp sourceをmainへ固定",
+          "env": {
+            "APP_SOURCE_SHA": "${{ inputs.app_source_sha }}",
+            "APP_VERSION": "${{ inputs.app_version }}",
+            "CANDIDATE_REPOSITORY": "${{ github.repository }}",
+            "CANDIDATE_WORKFLOW_REF": "${{ github.ref }}",
+            "CANDIDATE_WORKFLOW_SHA": "${{ github.sha }}",
+            "SDK_MANIFEST_SHA256": "${{ inputs.sdk_manifest_sha256 }}",
+            "SDK_VERSION": "${{ inputs.sdk_version }}"
+          },
+          "run": "set -euo pipefail\nif [[ \"$CANDIDATE_WORKFLOW_REF\" != \"refs/heads/main\" || \"$CANDIDATE_REPOSITORY\" != \"niho-coliving/niho-photo\" || \"$(git rev-parse HEAD)\" != \"$CANDIDATE_WORKFLOW_SHA\" ]]; then exit 1; fi\nnode -e 'const [appSource, sdkVersion, appVersion, manifestHash] = process.argv.slice(1); const semver = /^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)(?:-([0-9A-Za-z-]+(?:\\.[0-9A-Za-z-]+)*))?(?:\\+([0-9A-Za-z-]+(?:\\.[0-9A-Za-z-]+)*))?$/; const match = semver.exec(sdkVersion); if (!/^[a-f0-9]{40}$/.test(appSource) || !match || (match[4]?.split(\".\") ?? []).some((part) => /^\\d+$/.test(part) && part.length > 1 && part.startsWith(\"0\")) || !/^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)$/.test(appVersion) || !/^[a-f0-9]{64}$/.test(manifestHash)) process.exit(1)' \"$APP_SOURCE_SHA\" \"$SDK_VERSION\" \"$APP_VERSION\" \"$SDK_MANIFEST_SHA256\"\ngit fetch --no-tags origin main:refs/remotes/origin/main \"$APP_SOURCE_SHA\"\ngit merge-base --is-ancestor \"$APP_SOURCE_SHA\" refs/remotes/origin/main\ngit checkout --detach \"$APP_SOURCE_SHA\"\nprintf 'app-source-sha=%s\\napp-version=%s\\n' \"$APP_SOURCE_SHA\" \"$APP_VERSION\" >> \"$GITHUB_OUTPUT\""
+        },
+        {
+          "uses": "actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020",
+          "with": {
+            "node-version": "24.15.0"
+          }
+        },
+        {
+          "name": "Node依存をversion overlay前に準備",
+          "run": "npm ci --ignore-scripts --no-audit --no-fund"
+        },
+        {
+          "name": "固定Rust/WASM toolchainを準備",
+          "run": "rustup toolchain install 1.98.1 --profile minimal --target wasm32-unknown-unknown\ncargo +1.98.1 install wasm-bindgen-cli --version 0.2.129 --locked"
+        },
+        {
+          "id": "sdk",
+          "name": "公開済みSDK releaseを取得してproofを固定",
+          "env": {
+            "GH_TOKEN": "${{ github.token }}",
+            "SDK_ARTIFACT_ROOT": "${{ runner.temp }}/photo-candidate-artifact",
+            "SDK_MANIFEST_SHA256": "${{ inputs.sdk_manifest_sha256 }}",
+            "SDK_RELEASE_DIR": "${{ runner.temp }}/photo-sdk-release",
+            "SDK_VERSION": "${{ inputs.sdk_version }}"
+          },
+          "run": "set -euo pipefail\ntag=\"photo-sdk-v$SDK_VERSION\"\nmkdir -p \"$SDK_RELEASE_DIR\" \"$RUNNER_TEMP/photo-sdk-proof-input\" \"$SDK_ARTIFACT_ROOT\"\ngh api \"repos/niho-coliving/niho-photo/releases/tags/$tag\" > \"$RUNNER_TEMP/photo-sdk-proof-input/release.json\"\ngh release download \"$tag\" --repo niho-coliving/niho-photo --dir \"$SDK_RELEASE_DIR\" --pattern '*.tgz' --pattern \"niho-photo-sdk-$SDK_VERSION-*.json\"\ngh release download \"$tag\" --repo niho-coliving/niho-photo --dir \"$RUNNER_TEMP/photo-sdk-proof-input\" --pattern photo-sdk-artifact-receipt.json\ngit fetch --no-tags origin \"refs/tags/$tag:refs/tags/$tag\"\ntag_sha=$(git rev-parse \"$tag^{commit}\")\nnode scripts/candidate/prepare-published-sdk.mjs --sdk-directory \"$SDK_RELEASE_DIR\" --sdk-receipt \"$RUNNER_TEMP/photo-sdk-proof-input/photo-sdk-artifact-receipt.json\" --release-json \"$RUNNER_TEMP/photo-sdk-proof-input/release.json\" --tag-sha \"$tag_sha\" --expected-version \"$SDK_VERSION\" --expected-manifest-sha256 \"$SDK_MANIFEST_SHA256\" --output \"$SDK_ARTIFACT_ROOT/sdk-proof\" --github-output \"$GITHUB_OUTPUT\""
+        },
+        {
+          "name": "公開Firebase Web configだけをbuild fileへ書く",
+          "env": {
+            "NIHO_PHOTO_PUBLIC_FIREBASE_WEB_API_KEY": "${{ vars.NIHO_PHOTO_PUBLIC_FIREBASE_WEB_API_KEY }}"
+          },
+          "run": "node -e 'const value = process.env.NIHO_PHOTO_PUBLIC_FIREBASE_WEB_API_KEY; if (!/^AIza[A-Za-z0-9_-]{30,}$/.test(value ?? \"\")) process.exit(1); require(\"node:fs\").writeFileSync(process.argv[1], JSON.stringify({NIHO_PHOTO_PUBLIC_FIREBASE_WEB_API_KEY: value}) + \"\\n\", {mode: 0o600})' \"$RUNNER_TEMP/photo-candidate-public-config.json\""
+        },
+        {
+          "id": "candidate",
+          "name": "published SDKからMac candidateをbuildしてdata検証",
+          "env": {
+            "APP_SOURCE_SHA": "${{ steps.source.outputs.app-source-sha }}",
+            "APP_VERSION": "${{ steps.source.outputs.app-version }}",
+            "CANDIDATE_ARTIFACT_ROOT": "${{ runner.temp }}/photo-candidate-artifact",
+            "CANDIDATE_RUN_ATTEMPT": "${{ github.run_attempt }}",
+            "CANDIDATE_RUN_ID": "${{ github.run_id }}",
+            "FIREBASE_CONFIG": "${{ runner.temp }}/photo-candidate-public-config.json",
+            "SDK_MANIFEST_SHA256": "${{ steps.sdk.outputs.sdk-manifest-sha256 }}",
+            "SDK_RELEASE_DIR": "${{ runner.temp }}/photo-sdk-release",
+            "SDK_VERSION": "${{ steps.sdk.outputs.sdk-version }}"
+          },
+          "run": "set -euo pipefail\ncandidate_dir=\"$CANDIDATE_ARTIFACT_ROOT/candidate\"\nnpm run candidate:build -- --sdk-directory \"$SDK_RELEASE_DIR\" --sdk-mode published --sdk-manifest-sha256 \"$SDK_MANIFEST_SHA256\" --app-source \"$APP_SOURCE_SHA\" --version \"$APP_VERSION\" --public-firebase-config \"$FIREBASE_CONFIG\" --node-modules \"$GITHUB_WORKSPACE/node_modules\" --output \"$candidate_dir\" --run-id \"$CANDIDATE_RUN_ID\" --run-attempt \"$CANDIDATE_RUN_ATTEMPT\"\ncandidate_manifest=$(find \"$candidate_dir\" -maxdepth 1 -type f -name '*.candidate.json')\nif [[ -z \"$candidate_manifest\" || \"$(find \"$candidate_dir\" -maxdepth 1 -type f -name '*.candidate.json' | wc -l | tr -d ' ')\" != \"1\" ]]; then exit 1; fi\ncandidate_manifest_sha=$(shasum -a 256 \"$candidate_manifest\" | cut -d ' ' -f 1)\nnpm run candidate:verify -- --directory \"$candidate_dir\" --sdk-proof-directory \"$CANDIDATE_ARTIFACT_ROOT/sdk-proof\" --expected-manifest-sha256 \"$candidate_manifest_sha\" --expected-source \"$APP_SOURCE_SHA\" --expected-version \"$APP_VERSION\" --expected-sdk-mode published --expected-sdk-version \"$SDK_VERSION\" --expected-sdk-manifest-sha256 \"$SDK_MANIFEST_SHA256\" --run-id \"$CANDIDATE_RUN_ID\" --run-attempt \"$CANDIDATE_RUN_ATTEMPT\"\nprintf 'candidate-manifest-file=%s\\ncandidate-manifest-sha256=%s\\n' \"$(basename \"$candidate_manifest\")\" \"$candidate_manifest_sha\" >> \"$GITHUB_OUTPUT\""
+        },
+        {
+          "id": "names",
+          "name": "artifact identityを固定",
+          "env": {
+            "APP_SOURCE_SHA": "${{ steps.source.outputs.app-source-sha }}",
+            "CANDIDATE_RUN_ATTEMPT": "${{ github.run_attempt }}",
+            "CANDIDATE_RUN_ID": "${{ github.run_id }}"
+          },
+          "run": "set -euo pipefail\nif ! [[ \"$APP_SOURCE_SHA\" =~ ^[a-f0-9]{40}$ && \"$CANDIDATE_RUN_ID\" =~ ^[1-9][0-9]*$ && \"$CANDIDATE_RUN_ATTEMPT\" =~ ^[1-9][0-9]*$ ]]; then exit 1; fi\nprintf 'artifact-name=niho-photo-candidate-%s-run-%s-attempt-%s\\n' \"$APP_SOURCE_SHA\" \"$CANDIDATE_RUN_ID\" \"$CANDIDATE_RUN_ATTEMPT\" >> \"$GITHUB_OUTPUT\""
+        },
+        {
+          "id": "upload",
+          "name": "candidateとSDK proofを専用artifactへ保存",
+          "uses": "actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9",
+          "with": {
+            "name": "${{ steps.names.outputs.artifact-name }}",
+            "path": "${{ runner.temp }}/photo-candidate-artifact/",
+            "if-no-files-found": "error",
+            "retention-days": 30,
+            "compression-level": 0,
+            "include-hidden-files": false
+          }
+        }
+      ]
+    },
+    "publish": {
+      "name": "Publish data-only Mac candidate prerelease",
+      "needs": [
+        "build"
+      ],
+      "if": "github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && github.repository == 'niho-coliving/niho-photo'",
+      "runs-on": "ubuntu-24.04",
+      "timeout-minutes": 10,
+      "permissions": {
+        "actions": "read",
+        "contents": "write",
+        "id-token": "write",
+        "attestations": "write"
+      },
+      "steps": [
+        {
+          "uses": "actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683",
+          "with": {
+            "persist-credentials": false,
+            "fetch-depth": 1,
+            "ref": "${{ github.sha }}"
+          }
+        },
+        {
+          "uses": "actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020",
+          "with": {
+            "node-version": "24.15.0"
+          }
+        },
+        {
+          "name": "builder artifactをID指定でdata取得",
+          "uses": "actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093",
+          "with": {
+            "artifact-ids": "${{ needs.build.outputs.artifact-id }}",
+            "path": "${{ runner.temp }}/photo-candidate-download",
+            "merge-multiple": true
+          }
+        },
+        {
+          "name": "dispatch mainのverifierで全bytesを再照合",
+          "env": {
+            "APP_SOURCE_SHA": "${{ needs.build.outputs.app-source-sha }}",
+            "APP_VERSION": "${{ needs.build.outputs.app-version }}",
+            "CANDIDATE_ARTIFACT_DIGEST": "${{ needs.build.outputs.artifact-digest }}",
+            "CANDIDATE_ARTIFACT_ID": "${{ needs.build.outputs.artifact-id }}",
+            "CANDIDATE_ARTIFACT_NAME": "${{ needs.build.outputs.artifact-name }}",
+            "CANDIDATE_MANIFEST_SHA256": "${{ needs.build.outputs.candidate-manifest-sha256 }}",
+            "CANDIDATE_RUN_ATTEMPT": "${{ github.run_attempt }}",
+            "CANDIDATE_RUN_ID": "${{ github.run_id }}",
+            "CANDIDATE_TOOLING_SHA": "${{ github.sha }}",
+            "SDK_MANIFEST_SHA256": "${{ needs.build.outputs.sdk-manifest-sha256 }}",
+            "SDK_VERSION": "${{ needs.build.outputs.sdk-version }}"
+          },
+          "run": "node scripts/candidate/verify-mac-candidate.mjs --directory \"$RUNNER_TEMP/photo-candidate-download/candidate\" --sdk-proof-directory \"$RUNNER_TEMP/photo-candidate-download/sdk-proof\" --expected-manifest-sha256 \"$CANDIDATE_MANIFEST_SHA256\" --expected-source \"$APP_SOURCE_SHA\" --expected-version \"$APP_VERSION\" --expected-sdk-mode published --expected-sdk-version \"$SDK_VERSION\" --expected-sdk-manifest-sha256 \"$SDK_MANIFEST_SHA256\" --run-id \"$CANDIDATE_RUN_ID\" --run-attempt \"$CANDIDATE_RUN_ATTEMPT\" --artifact-id \"$CANDIDATE_ARTIFACT_ID\" --artifact-digest \"$CANDIDATE_ARTIFACT_DIGEST\" --artifact-name \"$CANDIDATE_ARTIFACT_NAME\" --tooling-source \"$CANDIDATE_TOOLING_SHA\" --receipt \"$RUNNER_TEMP/photo-candidate-artifact-receipt.json\" --provenance \"$RUNNER_TEMP/photo-candidate-provenance.json\""
+        },
+        {
+          "name": "candidate manifestを公式workflow identityへ署名する",
+          "id": "attest",
+          "uses": "actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6",
+          "with": {
+            "subject-path": "${{ runner.temp }}/photo-candidate-download/candidate/${{ needs.build.outputs.candidate-manifest-file }}",
+            "create-storage-record": false
+          }
+        },
+        {
+          "name": "新規CAS tagとcandidate prereleaseを作成",
+          "env": {
+            "APP_SOURCE_SHA": "${{ needs.build.outputs.app-source-sha }}",
+            "APP_VERSION": "${{ needs.build.outputs.app-version }}",
+            "GH_TOKEN": "${{ github.token }}"
+          },
+          "run": "set -euo pipefail\nif ! [[ \"$APP_SOURCE_SHA\" =~ ^[a-f0-9]{40}$ && \"$APP_VERSION\" =~ ^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)$ ]]; then exit 1; fi\ntag=\"photo-candidate-v$APP_VERSION-${APP_SOURCE_SHA:0:12}\"\ngh api --method POST repos/niho-coliving/niho-photo/git/refs -f ref=\"refs/tags/$tag\" -f sha=\"$APP_SOURCE_SHA\" >/dev/null\ngh release create \"$tag\" --verify-tag --target \"$APP_SOURCE_SHA\" --prerelease --latest=false --title \"NIHO photo Mac candidate v$APP_VERSION\" --notes \"source $APP_SOURCE_SHA から作成した更新用署名前のMac候補です。正式配布は既存の署名・配布workflowから行います。tag確保後に失敗した版は再利用せず、より高いapp versionで再実行してください。\" \"$RUNNER_TEMP/photo-candidate-download/candidate\"/*.dmg \"$RUNNER_TEMP/photo-candidate-download/candidate\"/*.app.tar.gz \"$RUNNER_TEMP/photo-candidate-download/candidate\"/*.cdx.json \"$RUNNER_TEMP/photo-candidate-download/candidate\"/*.candidate.json \"$RUNNER_TEMP/photo-candidate-download/sdk-proof\"/niho-photo-sdk-*.json \"$RUNNER_TEMP/photo-candidate-artifact-receipt.json\" \"$RUNNER_TEMP/photo-candidate-provenance.json\""
+        }
+      ]
+    }
+  }
+}

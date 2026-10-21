@@ -46,7 +46,9 @@ export function createArtifactReceipt({ artifactId, artifactDigest, artifactName
 export function assertPublicBytes(bytes, forbiddenRoots = []) {
   const text = bytes.toString("utf8");
   const normalized = text.replace(/\\+/g, "/");
-  if (containsPrivateReference(text) || forbiddenRoots.filter(Boolean).some((root) => text.includes(root)) || /(?:^|[\s\x00\x22\x27\x60(=])\/(?:Users|Volumes|home|private|root)\//i.test(normalized) || /(?:^|[\s\x00\x22\x27\x60(=])file:\/\/\/(?:Users|Volumes|home|private|root)\//i.test(normalized) || /(?:^|[\s\x00\x22\x27\x60(=])[a-z]:\/Users\//i.test(normalized)) throw new Error("成果物に非公開参照があります（値は非表示）");
+  if (containsPrivateReference(text)) throw new Error("成果物に非公開参照があります [private-reference]（値は非表示）");
+  if (forbiddenRoots.filter(Boolean).some((root) => text.includes(root))) throw new Error("成果物に非公開参照があります [build-root]（値は非表示）");
+  if (/(?:^|[\s\x00\x22\x27\x60(=])\/(?:Users|Volumes|home|private|root)\//i.test(normalized) || /(?:^|[\s\x00\x22\x27\x60(=])file:\/\/\/(?:Users|Volumes|home|private|root)\//i.test(normalized) || /(?:^|[\s\x00\x22\x27\x60(=])[a-z]:\/Users\//i.test(normalized)) throw new Error("成果物に非公開参照があります [absolute-path]（値は非表示）");
   if (/sourceMappingURL\s*=|-----BEGIN (?:[A-Z]+ )?PRIVATE KEY-----|\b(?:gh[pousr]_[A-Za-z0-9]{20,}|github_pat_[A-Za-z0-9_]{20,}|AKIA[A-Z0-9]{16}|AIza[A-Za-z0-9_-]{30,}|eyJ[A-Za-z0-9_-]+\.eyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+)\b/.test(text) || /["']?(?:access_token|refresh_token|id_token|client_secret|password)["']?\s*[:=]\s*["'][^"']{8,}["']/i.test(text)) throw new Error("成果物に秘密またはsource mapがあります（値は非表示）");
 }
 
