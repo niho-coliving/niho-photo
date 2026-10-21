@@ -5385,10 +5385,11 @@
         "path": "packages/develop-engine/crates/niho-develop-wasm/src/lib.rs",
         "sha256": "bb2c416ce23b4e3ca3208f32736f22254ed82276b24fd7f49f1a022e4eb85fbd"
       },
-      "outputSha256": "85159b68dfbefe8bf8b57d9f628d9e90dcae7895b76824e14aea82b84c45e74c",
+      "outputSha256": "68336c556281065b86b1de056f1359ff8530a11c777c9c902bd0d09ce8324955",
       "modifications": [
         "Issue #30 Oklch色ミキサーとengine 10/11対応を反映",
-        "部分補正（マスク）#65: validateSettingsのマスク読み取り回帰テストを追加"
+        "部分補正（マスク）#65: validateSettingsのマスク読み取り回帰テストを追加",
+        "detail を v6 にした rebase に合わせ、validateSettings の test を v6 は有効・v7 を未来版に直す"
       ]
     },
     {
