@@ -53,9 +53,9 @@ use crate::output::{output_transform, output_transform_clip};
 use crate::relative_wb::relative_matrix;
 use crate::resize::{bilinear_downscale, bilinear_downscale_with, Filter};
 use crate::settings::{
-    DevelopSettings, VignetteStyle, WhiteBalanceMode, ENGINE_NIHO_10, ENGINE_NIHO_11,
-    ENGINE_NIHO_2, ENGINE_NIHO_3, ENGINE_NIHO_4, ENGINE_NIHO_5, ENGINE_NIHO_6, ENGINE_NIHO_7,
-    ENGINE_NIHO_8,
+    uses_float_cubes, DevelopSettings, VignetteStyle, WhiteBalanceMode, ENGINE_NIHO_10,
+    ENGINE_NIHO_11, ENGINE_NIHO_12, ENGINE_NIHO_2, ENGINE_NIHO_3, ENGINE_NIHO_4, ENGINE_NIHO_5,
+    ENGINE_NIHO_6, ENGINE_NIHO_7, ENGINE_NIHO_8,
 };
 use crate::spatial::{
     self, adaptive_parameters, AdaptivePath, AdaptiveStats, Plane, Quality, SpatialParams,
@@ -196,7 +196,7 @@ pub fn bake_post_ops_cube_with_look(
 ) -> Cube {
     let prepared = PreparedPostOps::with_exposure(s, exposure_non_raw_ev).with_look(look);
     let transform = move |v| prepared.apply(v);
-    if s.engine == ENGINE_NIHO_8 {
+    if uses_float_cubes(&s.engine) {
         Cube::bake_float_with_dimension(dimension, &transform)
     } else {
         Cube::bake_with_dimension(dimension, &transform)
@@ -210,6 +210,31 @@ fn bake_raw_post_ops_cube_niho3(
 ) -> Cube {
     let prepared = PreparedPostOps::with_exposure(s, exposure_non_raw_ev).with_look(look);
     Cube::bake_float(&move |v| prepared.apply(v))
+}
+
+/// The settings whose formulas render a legacy unsigned RAW working copy for
+/// a float-cube engine: `niho-8` and `niho-12` keep the `niho-2` RAW formula
+/// and change only cube precision (`None` for every other engine).
+fn legacy_raw_formula(s: &DevelopSettings) -> Option<DevelopSettings> {
+    uses_float_cubes(&s.engine).then(|| {
+        let mut legacy = s.clone();
+        legacy.engine = ENGINE_NIHO_2.to_string();
+        legacy
+    })
+}
+
+/// Raster engines whose relative white balance is the calibrated
+/// incremental-WB delta LUT on the encoded output (not the linear matrix).
+fn uses_jpeg_white_balance(engine: &str) -> bool {
+    matches!(
+        engine,
+        ENGINE_NIHO_2
+            | ENGINE_NIHO_3
+            | ENGINE_NIHO_6
+            | ENGINE_NIHO_8
+            | ENGINE_NIHO_10
+            | ENGINE_NIHO_12
+    )
 }
 
 /// The look whose tone goes into cube P on the RAW path (`None` when the
@@ -237,7 +262,7 @@ pub fn bake_color_cube_for(s: &DevelopSettings, dimension: usize, raw: bool) -> 
             prepared.apply(v)
         }
     };
-    if s.engine == ENGINE_NIHO_8
+    if uses_float_cubes(&s.engine)
         || s.has_active_color_points()
         || (!raw && s.engine == ENGINE_NIHO_10)
     {
@@ -448,15 +473,13 @@ pub fn settings_cubes(
         legacy.engine = ENGINE_NIHO_2.to_string();
         legacy.look = crate::look::LOOK_NIHO_INTERIM_1.to_string();
         Some(legacy)
-    } else if raw && s.engine == ENGINE_NIHO_8 {
-        let mut legacy = s.clone();
-        legacy.engine = ENGINE_NIHO_2.to_string();
-        Some(legacy)
+    } else if raw {
+        legacy_raw_formula(s)
     } else {
         None
     };
     let formula_settings = formula_override.as_ref().unwrap_or(s);
-    let float_candidate = s.engine == ENGINE_NIHO_8;
+    let float_candidate = uses_float_cubes(&s.engine);
     let dimension = if raw
         && matches!(
             s.engine.as_str(),
@@ -1863,19 +1886,15 @@ fn render_linear(
         None => px,
     };
     let mut stats = stats_cache;
-    let jpeg_white_balance = if matches!(
-        s.engine.as_str(),
-        ENGINE_NIHO_2 | ENGINE_NIHO_3 | ENGINE_NIHO_6 | ENGINE_NIHO_8 | ENGINE_NIHO_10
-    ) && s.white_balance.mode == WhiteBalanceMode::Relative
+    let jpeg_white_balance = if uses_jpeg_white_balance(&s.engine)
+        && s.white_balance.mode == WhiteBalanceMode::Relative
     {
         PreparedJpegWhiteBalance::new(s.relative_temperature, s.relative_tint)
     } else {
         None
     };
-    let relative = if !matches!(
-        s.engine.as_str(),
-        ENGINE_NIHO_2 | ENGINE_NIHO_3 | ENGINE_NIHO_6 | ENGINE_NIHO_8 | ENGINE_NIHO_10
-    ) && s.white_balance.mode == WhiteBalanceMode::Relative
+    let relative = if !uses_jpeg_white_balance(&s.engine)
+        && s.white_balance.mode == WhiteBalanceMode::Relative
     {
         relative_matrix(s.relative_temperature, s.relative_tint)
     } else {
@@ -2781,14 +2800,10 @@ fn render_raw(
         own: local_cache,
         shared: shared_local,
     } = local_caches;
-    // The opt-in candidate deliberately keeps the legacy unsigned-RAW
-    // formula. Only its three cubes change precision; signed RAW never
-    // reaches this path with niho-8.
-    let legacy_formula = (s.engine == ENGINE_NIHO_8).then(|| {
-        let mut legacy = s.clone();
-        legacy.engine = ENGINE_NIHO_2.to_string();
-        legacy
-    });
+    // `niho-8` / `niho-12` deliberately keep the legacy unsigned-RAW formula.
+    // Only their three cubes change precision; signed RAW never reaches this
+    // path with them.
+    let legacy_formula = legacy_raw_formula(s);
     let formula = legacy_formula.as_ref().unwrap_or(s);
     let mut approximations = vec!["dcpLookTableNotApplied"];
     if white_balance.is_some_and(|wb| wb.approximate) {
@@ -3210,10 +3225,8 @@ pub(crate) fn sample_raster_before_color_points(
     } else {
         None
     };
-    let relative = if !matches!(
-        s.engine.as_str(),
-        ENGINE_NIHO_2 | ENGINE_NIHO_3 | ENGINE_NIHO_6 | ENGINE_NIHO_10
-    ) && s.white_balance.mode == WhiteBalanceMode::Relative
+    let relative = if !uses_jpeg_white_balance(&s.engine)
+        && s.white_balance.mode == WhiteBalanceMode::Relative
     {
         relative_matrix(s.relative_temperature, s.relative_tint)
     } else {
@@ -3276,6 +3289,10 @@ pub(crate) fn sample_raw_before_color_points(
     if let Some(sample) = color_points.and_then(|plane| plane.sample(output_index)) {
         return sample;
     }
+    // Sample the formula `render_raw` draws (`niho-2` for the float-cube
+    // engines' legacy RAW path).
+    let legacy_formula = legacy_raw_formula(s);
+    let s = legacy_formula.as_ref().unwrap_or(s);
     let WorkingCopyMeta::Raw {
         baseline_ev,
         as_shot_white,

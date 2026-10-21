@@ -1,0 +1,167 @@
+{
+  "schema": "niho.color-review-wasm-timing.v2-aggregate",
+  "environment": "Node wasm SIMD on Mac Studio (M1 Max); browser/device performance remains separate",
+  "node": "v24.18.0",
+  "engineBundle": "niho-develop 0.19.0 (engine niho-12)",
+  "sourceCommit": "69502dc9a09d03743bc4553a72962a6cca4e81f7",
+  "dimensions": [
+    1024,
+    768
+  ],
+  "inputSha256": "95c149d7585cb77d833e21943d494e6bfbd3c5501b1a66123cc6269c125a9e5a",
+  "legacyRawWorkingCopySha256": "751df8b1eb89482438b6ed97e11607e151a95b42960f9705b80f3f9881da397c",
+  "tool": "packages/develop-engine/tools/color-review-wasm-bench.cjs <glue.js> <raster engines> <legacy RAW engines>",
+  "protocol": "6 processes; odd runs list the baseline engine first, even runs niho-12 first; min and median per metric",
+  "targets": {
+    "editedInteractiveMaxMs": 100,
+    "finalMs": 1000
+  },
+  "rows": [
+    {
+      "source": "raster",
+      "engine": "niho-10",
+      "runs": 6,
+      "minMs": {
+        "coldInteractive": 960.6,
+        "coldFinal": 690.1,
+        "cachedInteractive": 28.7,
+        "cachedFinal": 584.1,
+        "editedInteractiveMedian": 102.1,
+        "editedInteractiveMax": 103.4,
+        "releasedFinal": 616.2
+      },
+      "medianMs": {
+        "coldInteractive": 1106.4,
+        "coldFinal": 733.4,
+        "cachedInteractive": 29.8,
+        "cachedFinal": 602.2,
+        "editedInteractiveMedian": 103.2,
+        "editedInteractiveMax": 104.9,
+        "releasedFinal": 621.6
+      },
+      "interactive100msByMedian": false,
+      "final1000msByMedian": true
+    },
+    {
+      "source": "raster",
+      "engine": "niho-12",
+      "runs": 6,
+      "minMs": {
+        "coldInteractive": 973.7,
+        "coldFinal": 702.1,
+        "cachedInteractive": 28.4,
+        "cachedFinal": 590.3,
+        "editedInteractiveMedian": 100.6,
+        "editedInteractiveMax": 101.2,
+        "releasedFinal": 589.5
+      },
+      "medianMs": {
+        "coldInteractive": 1102.3,
+        "coldFinal": 725.8,
+        "cachedInteractive": 30.0,
+        "cachedFinal": 591.8,
+        "editedInteractiveMedian": 103.5,
+        "editedInteractiveMax": 104.9,
+        "releasedFinal": 609.0
+      },
+      "interactive100msByMedian": false,
+      "final1000msByMedian": true
+    },
+    {
+      "source": "legacyRaw",
+      "engine": "niho-2",
+      "runs": 6,
+      "minMs": {
+        "coldInteractive": 163.6,
+        "coldFinal": 724.8,
+        "cachedInteractive": 26.5,
+        "cachedFinal": 657.5,
+        "editedInteractiveMedian": 66.5,
+        "editedInteractiveMax": 67.7,
+        "releasedFinal": 755.8
+      },
+      "medianMs": {
+        "coldInteractive": 201.6,
+        "coldFinal": 748.4,
+        "cachedInteractive": 27.5,
+        "cachedFinal": 675.1,
+        "editedInteractiveMedian": 67.2,
+        "editedInteractiveMax": 68.5,
+        "releasedFinal": 764.7
+      },
+      "interactive100msByMedian": true,
+      "final1000msByMedian": true
+    },
+    {
+      "source": "legacyRaw",
+      "engine": "niho-12",
+      "runs": 6,
+      "minMs": {
+        "coldInteractive": 170.4,
+        "coldFinal": 770.9,
+        "cachedInteractive": 34.6,
+        "cachedFinal": 696.7,
+        "editedInteractiveMedian": 64.4,
+        "editedInteractiveMax": 73.4,
+        "releasedFinal": 783.9
+      },
+      "medianMs": {
+        "coldInteractive": 211.9,
+        "coldFinal": 797.3,
+        "cachedInteractive": 37.1,
+        "cachedFinal": 727.2,
+        "editedInteractiveMedian": 67.5,
+        "editedInteractiveMax": 76.3,
+        "releasedFinal": 808.8
+      },
+      "interactive100msByMedian": true,
+      "final1000msByMedian": true
+    }
+  ],
+  "context": {
+    "protocol": "2 processes with raster engines niho-6,niho-10,niho-12 in that order; median per metric",
+    "rows": [
+      {
+        "engine": "niho-6",
+        "medianMs": {
+          "coldInteractive": 1194.9,
+          "coldFinal": 547.7,
+          "cachedInteractive": 30.6,
+          "cachedFinal": 387.1,
+          "editedInteractiveMedian": 72.6,
+          "editedInteractiveMax": 75.2,
+          "releasedFinal": 397.8
+        }
+      },
+      {
+        "engine": "niho-10",
+        "medianMs": {
+          "coldInteractive": 1010.5,
+          "coldFinal": 718.3,
+          "cachedInteractive": 31.5,
+          "cachedFinal": 604.3,
+          "editedInteractiveMedian": 102.7,
+          "editedInteractiveMax": 104.3,
+          "releasedFinal": 626.5
+        }
+      },
+      {
+        "engine": "niho-12",
+        "medianMs": {
+          "coldInteractive": 995.6,
+          "coldFinal": 707.7,
+          "cachedInteractive": 31.4,
+          "cachedFinal": 597.8,
+          "editedInteractiveMedian": 105.1,
+          "editedInteractiveMax": 106.1,
+          "releasedFinal": 616.4
+        }
+      }
+    ]
+  },
+  "notes": [
+    "Other processes loaded the host during the runs (load average 7-17 on 10 cores); single-threaded wasm timings carry that noise",
+    "Interactive drag frames evaluate cube P / Q as functions at the 33^3 drag-tail nodes, so niho-12 and niho-10 share the drag cost",
+    "The raster drag cost above 100 ms is the niho-10 hue-stable saturation stage (niho-6 runs the same frames in about 72-74 ms); niho-12 does not add to it"
+  ]
+}

@@ -80,6 +80,15 @@ pub const ENGINE_NIHO_8: &str = "niho-8";
 pub const ENGINE_NIHO_10: &str = "niho-10";
 /// `niho-7` signed-RAW renderer with hue-stable global / HSL saturation.
 pub const ENGINE_NIHO_11: &str = "niho-11";
+/// #29 float-cube renderer for new raster and legacy (unsigned) RAW edits.
+/// Raster sources use the `niho-10` formulas and legacy unsigned RAW working
+/// copies the `niho-2` formulas (the `niho-8` RAW path); every color cube
+/// (RAW look + ACR3, P, Q) keeps unquantized f32 entries on the same grid
+/// (Interactive 33³ / Final 64³, gamma 1.8, input clamp, trilinear). Signed
+/// RAW and camera-linear input are refused. The pixels of saved `niho-12`
+/// settings are frozen from here on: a later formula or precision change is a
+/// new engine, never a change of `niho-12`.
+pub const ENGINE_NIHO_12: &str = "niho-12";
 
 pub fn is_known_engine(engine: &str) -> bool {
     matches!(
@@ -94,7 +103,15 @@ pub fn is_known_engine(engine: &str) -> bool {
             | ENGINE_NIHO_10
             | ENGINE_NIHO_11
             | ENGINE_NIHO_8
+            | ENGINE_NIHO_12
     )
+}
+
+/// Engines whose raster / legacy-RAW cubes keep unquantized f32 entries
+/// (the `niho-8` candidate and `niho-12`). Older engines keep their original
+/// cube precision so their saved pixels never change.
+pub fn uses_float_cubes(engine: &str) -> bool {
+    matches!(engine, ENGINE_NIHO_8 | ENGINE_NIHO_12)
 }
 /// Look versions (`look`): `niho-interim-1` is the identity and the default
 /// of settings that do not name one (S5 photos and converted Photo Bench
@@ -2119,11 +2136,19 @@ mod tests {
             ENGINE_NIHO_8
         );
         assert_eq!(
-            DevelopSettings::from_json(r#"{"engine":"niho-9"}"#)
-                .unwrap_err()
-                .code,
-            "unsupportedEngine"
+            DevelopSettings::from_json(r#"{"engine":"niho-12"}"#)
+                .unwrap()
+                .engine,
+            ENGINE_NIHO_12
         );
+        for unknown in ["niho-9", "niho-13"] {
+            assert_eq!(
+                DevelopSettings::from_json(&format!(r#"{{"engine":"{unknown}"}}"#))
+                    .unwrap_err()
+                    .code,
+                "unsupportedEngine"
+            );
+        }
         assert_eq!(
             DevelopSettings::from_json(r#"{"exposure":"1"}"#)
                 .unwrap_err()

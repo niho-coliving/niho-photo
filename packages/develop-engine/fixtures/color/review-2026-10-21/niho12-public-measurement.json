@@ -1,0 +1,2024 @@
+{
+  "cubeContract": {
+    "entries": "f32-unquantized (RAW look+ACR3, P, Q)",
+    "finalDimension": 64,
+    "gamma": 1.8,
+    "inputClamp": "unchanged",
+    "interactiveDimension": 33,
+    "interpolation": "trilinear"
+  },
+  "engine": "niho-12",
+  "formulas": {
+    "cameraLinear": "refused",
+    "legacyRaw": "niho-2",
+    "raster": "niho-10 (niho-6 response + hue-stable saturation)",
+    "signedRaw": "refused"
+  },
+  "publicFixtures": {
+    "cases": [
+      "neutral",
+      "preset-bluesky2",
+      "preset-pastel",
+      "preset-colorful",
+      "basic",
+      "tone-pointwise",
+      "spatial-hs",
+      "spatial-texture-clarity",
+      "color",
+      "relative-wb"
+    ],
+    "inputs": [
+      {
+        "cases": [
+          {
+            "case": "neutral",
+            "niho12MinusNiho10Final": {
+              "changedPixels": 0,
+              "maxAbsoluteCodeDelta": 0,
+              "meanAbsoluteCodeDelta": 0.0,
+              "pixels": 960000,
+              "pixelsByMaxDelta": {
+                "1": 0,
+                "2": 0,
+                "atLeast3": 0
+              }
+            }
+          },
+          {
+            "case": "preset-bluesky2",
+            "niho12MinusNiho10Final": {
+              "changedPixels": 456642,
+              "maxAbsoluteCodeDelta": 6,
+              "meanAbsoluteCodeDelta": 0.20087881944444444,
+              "pixels": 960000,
+              "pixelsByMaxDelta": {
+                "1": 448413,
+                "2": 7676,
+                "atLeast3": 553
+              }
+            }
+          },
+          {
+            "case": "preset-pastel",
+            "niho12MinusNiho10Final": {
+              "changedPixels": 481277,
+              "maxAbsoluteCodeDelta": 4,
+              "meanAbsoluteCodeDelta": 0.20765347222222222,
+              "pixels": 960000,
+              "pixelsByMaxDelta": {
+                "1": 472881,
+                "2": 8309,
+                "atLeast3": 87
+              }
+            }
+          },
+          {
+            "case": "preset-colorful",
+            "niho12MinusNiho10Final": {
+              "changedPixels": 505058,
+              "maxAbsoluteCodeDelta": 5,
+              "meanAbsoluteCodeDelta": 0.21905451388888889,
+              "pixels": 960000,
+              "pixelsByMaxDelta": {
+                "1": 498381,
+                "2": 6195,
+                "atLeast3": 482
+              }
+            }
+          },
+          {
+            "case": "basic",
+            "niho12MinusNiho10Final": {
+              "changedPixels": 415402,
+              "maxAbsoluteCodeDelta": 4,
+              "meanAbsoluteCodeDelta": 0.18226770833333333,
+              "pixels": 960000,
+              "pixelsByMaxDelta": {
+                "1": 413557,
+                "2": 1789,
+                "atLeast3": 56
+              }
+            }
+          },
+          {
+            "case": "tone-pointwise",
+            "niho12MinusNiho10Final": {
+              "changedPixels": 428507,
+              "maxAbsoluteCodeDelta": 4,
+              "meanAbsoluteCodeDelta": 0.19293298611111112,
+              "pixels": 960000,
+              "pixelsByMaxDelta": {
+                "1": 427507,
+                "2": 998,
+                "atLeast3": 2
+              }
+            }
+          },
+          {
+            "case": "spatial-hs",
+            "niho12MinusNiho10Final": {
+              "changedPixels": 0,
+              "maxAbsoluteCodeDelta": 0,
+              "meanAbsoluteCodeDelta": 0.0,
+              "pixels": 960000,
+              "pixelsByMaxDelta": {
+                "1": 0,
+                "2": 0,
+                "atLeast3": 0
+              }
+            }
+          },
+          {
+            "case": "spatial-texture-clarity",
+            "niho12MinusNiho10Final": {
+              "changedPixels": 0,
+              "maxAbsoluteCodeDelta": 0,
+              "meanAbsoluteCodeDelta": 0.0,
+              "pixels": 960000,
+              "pixelsByMaxDelta": {
+                "1": 0,
+                "2": 0,
+                "atLeast3": 0
+              }
+            }
+          },
+          {
+            "case": "color",
+            "niho12MinusNiho10Final": {
+              "changedPixels": 0,
+              "maxAbsoluteCodeDelta": 0,
+              "meanAbsoluteCodeDelta": 0.0,
+              "pixels": 960000,
+              "pixelsByMaxDelta": {
+                "1": 0,
+                "2": 0,
+                "atLeast3": 0
+              }
+            }
+          },
+          {
+            "case": "relative-wb",
+            "niho12MinusNiho10Final": {
+              "changedPixels": 0,
+              "maxAbsoluteCodeDelta": 0,
+              "meanAbsoluteCodeDelta": 0.0,
+              "pixels": 960000,
+              "pixelsByMaxDelta": {
+                "1": 0,
+                "2": 0,
+                "atLeast3": 0
+              }
+            }
+          }
+        ],
+        "fixture": "dsc02072.jpg"
+      },
+      {
+        "cases": [
+          {
+            "case": "neutral",
+            "niho12MinusNiho10Final": {
+              "changedPixels": 0,
+              "maxAbsoluteCodeDelta": 0,
+              "meanAbsoluteCodeDelta": 0.0,
+              "pixels": 960000,
+              "pixelsByMaxDelta": {
+                "1": 0,
+                "2": 0,
+                "atLeast3": 0
+              }
+            }
+          },
+          {
+            "case": "preset-bluesky2",
+            "niho12MinusNiho10Final": {
+              "changedPixels": 520055,
+              "maxAbsoluteCodeDelta": 6,
+              "meanAbsoluteCodeDelta": 0.23615868055555556,
+              "pixels": 960000,
+              "pixelsByMaxDelta": {
+                "1": 508790,
+                "2": 10114,
+                "atLeast3": 1151
+              }
+            }
+          },
+          {
+            "case": "preset-pastel",
+            "niho12MinusNiho10Final": {
+              "changedPixels": 472091,
+              "maxAbsoluteCodeDelta": 4,
+              "meanAbsoluteCodeDelta": 0.20666284722222222,
+              "pixels": 960000,
+              "pixelsByMaxDelta": {
+                "1": 464674,
+                "2": 7277,
+                "atLeast3": 140
+              }
+            }
+          },
+          {
+            "case": "preset-colorful",
+            "niho12MinusNiho10Final": {
+              "changedPixels": 512031,
+              "maxAbsoluteCodeDelta": 5,
+              "meanAbsoluteCodeDelta": 0.21743194444444444,
+              "pixels": 960000,
+              "pixelsByMaxDelta": {
+                "1": 506010,
+                "2": 5193,
+                "atLeast3": 828
+              }
+            }
+          },
+          {
+            "case": "basic",
+            "niho12MinusNiho10Final": {
+              "changedPixels": 433121,
+              "maxAbsoluteCodeDelta": 3,
+              "meanAbsoluteCodeDelta": 0.19141493055555556,
+              "pixels": 960000,
+              "pixelsByMaxDelta": {
+                "1": 431739,
+                "2": 1363,
+                "atLeast3": 19
+              }
+            }
+          },
+          {
+            "case": "tone-pointwise",
+            "niho12MinusNiho10Final": {
+              "changedPixels": 406978,
+              "maxAbsoluteCodeDelta": 4,
+              "meanAbsoluteCodeDelta": 0.18199652777777778,
+              "pixels": 960000,
+              "pixelsByMaxDelta": {
+                "1": 406079,
+                "2": 898,
+                "atLeast3": 1
+              }
+            }
+          },
+          {
+            "case": "spatial-hs",
+            "niho12MinusNiho10Final": {
+              "changedPixels": 0,
+              "maxAbsoluteCodeDelta": 0,
+              "meanAbsoluteCodeDelta": 0.0,
+              "pixels": 960000,
+              "pixelsByMaxDelta": {
+                "1": 0,
+                "2": 0,
+                "atLeast3": 0
+              }
+            }
+          },
+          {
+            "case": "spatial-texture-clarity",
+            "niho12MinusNiho10Final": {
+              "changedPixels": 0,
+              "maxAbsoluteCodeDelta": 0,
+              "meanAbsoluteCodeDelta": 0.0,
+              "pixels": 960000,
+              "pixelsByMaxDelta": {
+                "1": 0,
+                "2": 0,
+                "atLeast3": 0
+              }
+            }
+          },
+          {
+            "case": "color",
+            "niho12MinusNiho10Final": {
+              "changedPixels": 0,
+              "maxAbsoluteCodeDelta": 0,
+              "meanAbsoluteCodeDelta": 0.0,
+              "pixels": 960000,
+              "pixelsByMaxDelta": {
+                "1": 0,
+                "2": 0,
+                "atLeast3": 0
+              }
+            }
+          },
+          {
+            "case": "relative-wb",
+            "niho12MinusNiho10Final": {
+              "changedPixels": 0,
+              "maxAbsoluteCodeDelta": 0,
+              "meanAbsoluteCodeDelta": 0.0,
+              "pixels": 960000,
+              "pixelsByMaxDelta": {
+                "1": 0,
+                "2": 0,
+                "atLeast3": 0
+              }
+            }
+          }
+        ],
+        "fixture": "dsc02078.jpg"
+      },
+      {
+        "cases": [
+          {
+            "case": "neutral",
+            "niho12MinusNiho10Final": {
+              "changedPixels": 0,
+              "maxAbsoluteCodeDelta": 0,
+              "meanAbsoluteCodeDelta": 0.0,
+              "pixels": 960000,
+              "pixelsByMaxDelta": {
+                "1": 0,
+                "2": 0,
+                "atLeast3": 0
+              }
+            }
+          },
+          {
+            "case": "preset-bluesky2",
+            "niho12MinusNiho10Final": {
+              "changedPixels": 480057,
+              "maxAbsoluteCodeDelta": 6,
+              "meanAbsoluteCodeDelta": 0.21923333333333334,
+              "pixels": 960000,
+              "pixelsByMaxDelta": {
+                "1": 460534,
+                "2": 15849,
+                "atLeast3": 3674
+              }
+            }
+          },
+          {
+            "case": "preset-pastel",
+            "niho12MinusNiho10Final": {
+              "changedPixels": 528207,
+              "maxAbsoluteCodeDelta": 12,
+              "meanAbsoluteCodeDelta": 0.23333680555555555,
+              "pixels": 960000,
+              "pixelsByMaxDelta": {
+                "1": 516742,
+                "2": 11023,
+                "atLeast3": 442
+              }
+            }
+          },
+          {
+            "case": "preset-colorful",
+            "niho12MinusNiho10Final": {
+              "changedPixels": 467092,
+              "maxAbsoluteCodeDelta": 5,
+              "meanAbsoluteCodeDelta": 0.19871979166666667,
+              "pixels": 960000,
+              "pixelsByMaxDelta": {
+                "1": 456939,
+                "2": 8873,
+                "atLeast3": 1280
+              }
+            }
+          },
+          {
+            "case": "basic",
+            "niho12MinusNiho10Final": {
+              "changedPixels": 481095,
+              "maxAbsoluteCodeDelta": 5,
+              "meanAbsoluteCodeDelta": 0.20713194444444444,
+              "pixels": 960000,
+              "pixelsByMaxDelta": {
+                "1": 476240,
+                "2": 4741,
+                "atLeast3": 114
+              }
+            }
+          },
+          {
+            "case": "tone-pointwise",
+            "niho12MinusNiho10Final": {
+              "changedPixels": 476151,
+              "maxAbsoluteCodeDelta": 3,
+              "meanAbsoluteCodeDelta": 0.21717534722222223,
+              "pixels": 960000,
+              "pixelsByMaxDelta": {
+                "1": 474004,
+                "2": 2146,
+                "atLeast3": 1
+              }
+            }
+          },
+          {
+            "case": "spatial-hs",
+            "niho12MinusNiho10Final": {
+              "changedPixels": 0,
+              "maxAbsoluteCodeDelta": 0,
+              "meanAbsoluteCodeDelta": 0.0,
+              "pixels": 960000,
+              "pixelsByMaxDelta": {
+                "1": 0,
+                "2": 0,
+                "atLeast3": 0
+              }
+            }
+          },
+          {
+            "case": "spatial-texture-clarity",
+            "niho12MinusNiho10Final": {
+              "changedPixels": 0,
+              "maxAbsoluteCodeDelta": 0,
+              "meanAbsoluteCodeDelta": 0.0,
+              "pixels": 960000,
+              "pixelsByMaxDelta": {
+                "1": 0,
+                "2": 0,
+                "atLeast3": 0
+              }
+            }
+          },
+          {
+            "case": "color",
+            "niho12MinusNiho10Final": {
+              "changedPixels": 0,
+              "maxAbsoluteCodeDelta": 0,
+              "meanAbsoluteCodeDelta": 0.0,
+              "pixels": 960000,
+              "pixelsByMaxDelta": {
+                "1": 0,
+                "2": 0,
+                "atLeast3": 0
+              }
+            }
+          },
+          {
+            "case": "relative-wb",
+            "niho12MinusNiho10Final": {
+              "changedPixels": 0,
+              "maxAbsoluteCodeDelta": 0,
+              "meanAbsoluteCodeDelta": 0.0,
+              "pixels": 960000,
+              "pixelsByMaxDelta": {
+                "1": 0,
+                "2": 0,
+                "atLeast3": 0
+              }
+            }
+          }
+        ],
+        "fixture": "dsc02150.jpg"
+      },
+      {
+        "cases": [
+          {
+            "case": "neutral",
+            "niho12MinusNiho10Final": {
+              "changedPixels": 0,
+              "maxAbsoluteCodeDelta": 0,
+              "meanAbsoluteCodeDelta": 0.0,
+              "pixels": 73728,
+              "pixelsByMaxDelta": {
+                "1": 0,
+                "2": 0,
+                "atLeast3": 0
+              }
+            }
+          },
+          {
+            "case": "preset-bluesky2",
+            "niho12MinusNiho10Final": {
+              "changedPixels": 47984,
+              "maxAbsoluteCodeDelta": 29,
+              "meanAbsoluteCodeDelta": 0.42787452980324076,
+              "pixels": 73728,
+              "pixelsByMaxDelta": {
+                "1": 38837,
+                "2": 4487,
+                "atLeast3": 4660
+              }
+            }
+          },
+          {
+            "case": "preset-pastel",
+            "niho12MinusNiho10Final": {
+              "changedPixels": 47731,
+              "maxAbsoluteCodeDelta": 25,
+              "meanAbsoluteCodeDelta": 0.3518111617476852,
+              "pixels": 73728,
+              "pixelsByMaxDelta": {
+                "1": 39835,
+                "2": 5844,
+                "atLeast3": 2052
+              }
+            }
+          },
+          {
+            "case": "preset-colorful",
+            "niho12MinusNiho10Final": {
+              "changedPixels": 40687,
+              "maxAbsoluteCodeDelta": 5,
+              "meanAbsoluteCodeDelta": 0.24876121238425927,
+              "pixels": 73728,
+              "pixelsByMaxDelta": {
+                "1": 38810,
+                "2": 1270,
+                "atLeast3": 607
+              }
+            }
+          },
+          {
+            "case": "basic",
+            "niho12MinusNiho10Final": {
+              "changedPixels": 47151,
+              "maxAbsoluteCodeDelta": 3,
+              "meanAbsoluteCodeDelta": 0.31211118344907407,
+              "pixels": 73728,
+              "pixelsByMaxDelta": {
+                "1": 42142,
+                "2": 3089,
+                "atLeast3": 1920
+              }
+            }
+          },
+          {
+            "case": "tone-pointwise",
+            "niho12MinusNiho10Final": {
+              "changedPixels": 48128,
+              "maxAbsoluteCodeDelta": 2,
+              "meanAbsoluteCodeDelta": 0.3148148148148148,
+              "pixels": 73728,
+              "pixelsByMaxDelta": {
+                "1": 47104,
+                "2": 1024,
+                "atLeast3": 0
+              }
+            }
+          },
+          {
+            "case": "spatial-hs",
+            "niho12MinusNiho10Final": {
+              "changedPixels": 0,
+              "maxAbsoluteCodeDelta": 0,
+              "meanAbsoluteCodeDelta": 0.0,
+              "pixels": 73728,
+              "pixelsByMaxDelta": {
+                "1": 0,
+                "2": 0,
+                "atLeast3": 0
+              }
+            }
+          },
+          {
+            "case": "spatial-texture-clarity",
+            "niho12MinusNiho10Final": {
+              "changedPixels": 0,
+              "maxAbsoluteCodeDelta": 0,
+              "meanAbsoluteCodeDelta": 0.0,
+              "pixels": 73728,
+              "pixelsByMaxDelta": {
+                "1": 0,
+                "2": 0,
+                "atLeast3": 0
+              }
+            }
+          },
+          {
+            "case": "color",
+            "niho12MinusNiho10Final": {
+              "changedPixels": 0,
+              "maxAbsoluteCodeDelta": 0,
+              "meanAbsoluteCodeDelta": 0.0,
+              "pixels": 73728,
+              "pixelsByMaxDelta": {
+                "1": 0,
+                "2": 0,
+                "atLeast3": 0
+              }
+            }
+          },
+          {
+            "case": "relative-wb",
+            "niho12MinusNiho10Final": {
+              "changedPixels": 0,
+              "maxAbsoluteCodeDelta": 0,
+              "meanAbsoluteCodeDelta": 0.0,
+              "pixels": 73728,
+              "pixelsByMaxDelta": {
+                "1": 0,
+                "2": 0,
+                "atLeast3": 0
+              }
+            }
+          }
+        ],
+        "fixture": "saturated-blue.png"
+      }
+    ],
+    "reference": "niho-10 raster formula on the same public input and settings (not Photo Bench / Lightroom)",
+    "summary": {
+      "maxAbsoluteCodeDelta": 29,
+      "maxMeanAbsoluteCodeDelta": 0.42787452980324076,
+      "pairs": 40,
+      "pairsWithChangedPixels": 20,
+      "photoPixelsCompared": 28800000,
+      "photoPixelsWithDeltaAtLeast3": 8830
+    }
+  },
+  "schema": "niho.niho12-public-measurement.v1",
+  "status": "new-edit default for raster and legacy unsigned RAW working copies",
+  "syntheticRamps": {
+    "adjacentGe2Totals": {
+      "legacyRawNiho12Final": 5,
+      "legacyRawNiho12Interactive": 5,
+      "legacyRawNiho2Final": 12,
+      "legacyRawNiho2Interactive": 7,
+      "rasterNiho10Final": 2,
+      "rasterNiho10Interactive": 0,
+      "rasterNiho12Final": 0,
+      "rasterNiho12Interactive": 0
+    },
+    "adjacentGe2Totals4096Final": {
+      "legacyRawNiho12Final": 0,
+      "legacyRawNiho2Final": 0,
+      "rasterNiho10Final": 0,
+      "rasterNiho12Final": 0
+    },
+    "input": "1024 distinct linear f32 steps per 2-color interpolation; no input 8-bit quantization",
+    "rows": {
+      "skin": 32,
+      "sky": 0
+    },
+    "variants": [
+      {
+        "legacyRaw": {
+          "niho-12": {
+            "final4096AdjacentGe2Total": 0,
+            "skinFinal": {
+              "adjacentEqual": [
+                914,
+                866,
+                847
+              ],
+              "adjacentGe2": [
+                0,
+                0,
+                0
+              ],
+              "adjacentGe2At": [],
+              "adjacentGe2Total": 0,
+              "maxAdjacent": [
+                1,
+                1,
+                1
+              ]
+            },
+            "skinInteractive": {
+              "adjacentEqual": [
+                915,
+                866,
+                847
+              ],
+              "adjacentGe2": [
+                0,
+                0,
+                0
+              ],
+              "adjacentGe2At": [],
+              "adjacentGe2Total": 0,
+              "maxAdjacent": [
+                1,
+                1,
+                1
+              ]
+            },
+            "skyFinal": {
+              "adjacentEqual": [
+                863,
+                918,
+                979
+              ],
+              "adjacentGe2": [
+                0,
+                0,
+                0
+              ],
+              "adjacentGe2At": [],
+              "adjacentGe2Total": 0,
+              "maxAdjacent": [
+                1,
+                1,
+                1
+              ]
+            },
+            "skyInteractive": {
+              "adjacentEqual": [
+                862,
+                919,
+                979
+              ],
+              "adjacentGe2": [
+                0,
+                0,
+                0
+              ],
+              "adjacentGe2At": [],
+              "adjacentGe2Total": 0,
+              "maxAdjacent": [
+                1,
+                1,
+                1
+              ]
+            }
+          },
+          "niho-2": {
+            "final4096AdjacentGe2Total": 0,
+            "skinFinal": {
+              "adjacentEqual": [
+                913,
+                864,
+                847
+              ],
+              "adjacentGe2": [
+                0,
+                0,
+                0
+              ],
+              "adjacentGe2At": [],
+              "adjacentGe2Total": 0,
+              "maxAdjacent": [
+                1,
+                1,
+                1
+              ]
+            },
+            "skinInteractive": {
+              "adjacentEqual": [
+                915,
+                865,
+                847
+              ],
+              "adjacentGe2": [
+                0,
+                0,
+                0
+              ],
+              "adjacentGe2At": [],
+              "adjacentGe2Total": 0,
+              "maxAdjacent": [
+                1,
+                1,
+                1
+              ]
+            },
+            "skyFinal": {
+              "adjacentEqual": [
+                863,
+                919,
+                976
+              ],
+              "adjacentGe2": [
+                1,
+                0,
+                0
+              ],
+              "adjacentGe2At": [
+                5
+              ],
+              "adjacentGe2Total": 1,
+              "maxAdjacent": [
+                2,
+                1,
+                1
+              ]
+            },
+            "skyInteractive": {
+              "adjacentEqual": [
+                863,
+                918,
+                979
+              ],
+              "adjacentGe2": [
+                0,
+                0,
+                0
+              ],
+              "adjacentGe2At": [],
+              "adjacentGe2Total": 0,
+              "maxAdjacent": [
+                1,
+                1,
+                1
+              ]
+            }
+          }
+        },
+        "raster": {
+          "niho-10": {
+            "final4096AdjacentGe2Total": 0,
+            "skinFinal": {
+              "adjacentEqual": [
+                879,
+                883,
+                893
+              ],
+              "adjacentGe2": [
+                0,
+                0,
+                0
+              ],
+              "adjacentGe2At": [],
+              "adjacentGe2Total": 0,
+              "maxAdjacent": [
+                1,
+                1,
+                1
+              ]
+            },
+            "skinInteractive": {
+              "adjacentEqual": [
+                880,
+                882,
+                892
+              ],
+              "adjacentGe2": [
+                0,
+                0,
+                0
+              ],
+              "adjacentGe2At": [],
+              "adjacentGe2Total": 0,
+              "maxAdjacent": [
+                1,
+                1,
+                1
+              ]
+            },
+            "skyFinal": {
+              "adjacentEqual": [
+                893,
+                897,
+                920
+              ],
+              "adjacentGe2": [
+                0,
+                0,
+                0
+              ],
+              "adjacentGe2At": [],
+              "adjacentGe2Total": 0,
+              "maxAdjacent": [
+                1,
+                1,
+                1
+              ]
+            },
+            "skyInteractive": {
+              "adjacentEqual": [
+                893,
+                898,
+                920
+              ],
+              "adjacentGe2": [
+                0,
+                0,
+                0
+              ],
+              "adjacentGe2At": [],
+              "adjacentGe2Total": 0,
+              "maxAdjacent": [
+                1,
+                1,
+                1
+              ]
+            }
+          },
+          "niho-12": {
+            "final4096AdjacentGe2Total": 0,
+            "skinFinal": {
+              "adjacentEqual": [
+                880,
+                882,
+                892
+              ],
+              "adjacentGe2": [
+                0,
+                0,
+                0
+              ],
+              "adjacentGe2At": [],
+              "adjacentGe2Total": 0,
+              "maxAdjacent": [
+                1,
+                1,
+                1
+              ]
+            },
+            "skinInteractive": {
+              "adjacentEqual": [
+                880,
+                882,
+                892
+              ],
+              "adjacentGe2": [
+                0,
+                0,
+                0
+              ],
+              "adjacentGe2At": [],
+              "adjacentGe2Total": 0,
+              "maxAdjacent": [
+                1,
+                1,
+                1
+              ]
+            },
+            "skyFinal": {
+              "adjacentEqual": [
+                895,
+                898,
+                920
+              ],
+              "adjacentGe2": [
+                0,
+                0,
+                0
+              ],
+              "adjacentGe2At": [],
+              "adjacentGe2Total": 0,
+              "maxAdjacent": [
+                1,
+                1,
+                1
+              ]
+            },
+            "skyInteractive": {
+              "adjacentEqual": [
+                893,
+                898,
+                920
+              ],
+              "adjacentGe2": [
+                0,
+                0,
+                0
+              ],
+              "adjacentGe2At": [],
+              "adjacentGe2Total": 0,
+              "maxAdjacent": [
+                1,
+                1,
+                1
+              ]
+            }
+          }
+        },
+        "variant": "moderate"
+      },
+      {
+        "legacyRaw": {
+          "niho-12": {
+            "final4096AdjacentGe2Total": 0,
+            "skinFinal": {
+              "adjacentEqual": [
+                966,
+                895,
+                866
+              ],
+              "adjacentGe2": [
+                0,
+                0,
+                1
+              ],
+              "adjacentGe2At": [
+                1
+              ],
+              "adjacentGe2Total": 1,
+              "maxAdjacent": [
+                1,
+                1,
+                2
+              ]
+            },
+            "skinInteractive": {
+              "adjacentEqual": [
+                966,
+                897,
+                869
+              ],
+              "adjacentGe2": [
+                0,
+                0,
+                1
+              ],
+              "adjacentGe2At": [
+                10
+              ],
+              "adjacentGe2Total": 1,
+              "maxAdjacent": [
+                1,
+                1,
+                2
+              ]
+            },
+            "skyFinal": {
+              "adjacentEqual": [
+                886,
+                962,
+                1007
+              ],
+              "adjacentGe2": [
+                0,
+                0,
+                0
+              ],
+              "adjacentGe2At": [],
+              "adjacentGe2Total": 0,
+              "maxAdjacent": [
+                1,
+                1,
+                1
+              ]
+            },
+            "skyInteractive": {
+              "adjacentEqual": [
+                885,
+                963,
+                1006
+              ],
+              "adjacentGe2": [
+                0,
+                0,
+                0
+              ],
+              "adjacentGe2At": [],
+              "adjacentGe2Total": 0,
+              "maxAdjacent": [
+                1,
+                1,
+                1
+              ]
+            }
+          },
+          "niho-2": {
+            "final4096AdjacentGe2Total": 0,
+            "skinFinal": {
+              "adjacentEqual": [
+                957,
+                891,
+                863
+              ],
+              "adjacentGe2": [
+                0,
+                1,
+                2
+              ],
+              "adjacentGe2At": [
+                0,
+                3
+              ],
+              "adjacentGe2Total": 3,
+              "maxAdjacent": [
+                1,
+                2,
+                2
+              ]
+            },
+            "skinInteractive": {
+              "adjacentEqual": [
+                964,
+                896,
+                868
+              ],
+              "adjacentGe2": [
+                0,
+                0,
+                2
+              ],
+              "adjacentGe2At": [
+                0,
+                6
+              ],
+              "adjacentGe2Total": 2,
+              "maxAdjacent": [
+                1,
+                1,
+                2
+              ]
+            },
+            "skyFinal": {
+              "adjacentEqual": [
+                888,
+                964,
+                1003
+              ],
+              "adjacentGe2": [
+                3,
+                0,
+                0
+              ],
+              "adjacentGe2At": [
+                2,
+                3,
+                12
+              ],
+              "adjacentGe2Total": 3,
+              "maxAdjacent": [
+                2,
+                1,
+                1
+              ]
+            },
+            "skyInteractive": {
+              "adjacentEqual": [
+                886,
+                962,
+                1006
+              ],
+              "adjacentGe2": [
+                0,
+                0,
+                0
+              ],
+              "adjacentGe2At": [],
+              "adjacentGe2Total": 0,
+              "maxAdjacent": [
+                1,
+                1,
+                1
+              ]
+            }
+          }
+        },
+        "raster": {
+          "niho-10": {
+            "final4096AdjacentGe2Total": 0,
+            "skinFinal": {
+              "adjacentEqual": [
+                929,
+                896,
+                893
+              ],
+              "adjacentGe2": [
+                0,
+                0,
+                0
+              ],
+              "adjacentGe2At": [],
+              "adjacentGe2Total": 0,
+              "maxAdjacent": [
+                1,
+                1,
+                1
+              ]
+            },
+            "skinInteractive": {
+              "adjacentEqual": [
+                931,
+                898,
+                894
+              ],
+              "adjacentGe2": [
+                0,
+                0,
+                0
+              ],
+              "adjacentGe2At": [],
+              "adjacentGe2Total": 0,
+              "maxAdjacent": [
+                1,
+                1,
+                1
+              ]
+            },
+            "skyFinal": {
+              "adjacentEqual": [
+                907,
+                940,
+                967
+              ],
+              "adjacentGe2": [
+                0,
+                0,
+                0
+              ],
+              "adjacentGe2At": [],
+              "adjacentGe2Total": 0,
+              "maxAdjacent": [
+                1,
+                1,
+                1
+              ]
+            },
+            "skyInteractive": {
+              "adjacentEqual": [
+                906,
+                940,
+                967
+              ],
+              "adjacentGe2": [
+                0,
+                0,
+                0
+              ],
+              "adjacentGe2At": [],
+              "adjacentGe2Total": 0,
+              "maxAdjacent": [
+                1,
+                1,
+                1
+              ]
+            }
+          },
+          "niho-12": {
+            "final4096AdjacentGe2Total": 0,
+            "skinFinal": {
+              "adjacentEqual": [
+                929,
+                896,
+                894
+              ],
+              "adjacentGe2": [
+                0,
+                0,
+                0
+              ],
+              "adjacentGe2At": [],
+              "adjacentGe2Total": 0,
+              "maxAdjacent": [
+                1,
+                1,
+                1
+              ]
+            },
+            "skinInteractive": {
+              "adjacentEqual": [
+                931,
+                898,
+                894
+              ],
+              "adjacentGe2": [
+                0,
+                0,
+                0
+              ],
+              "adjacentGe2At": [],
+              "adjacentGe2Total": 0,
+              "maxAdjacent": [
+                1,
+                1,
+                1
+              ]
+            },
+            "skyFinal": {
+              "adjacentEqual": [
+                907,
+                941,
+                967
+              ],
+              "adjacentGe2": [
+                0,
+                0,
+                0
+              ],
+              "adjacentGe2At": [],
+              "adjacentGe2Total": 0,
+              "maxAdjacent": [
+                1,
+                1,
+                1
+              ]
+            },
+            "skyInteractive": {
+              "adjacentEqual": [
+                906,
+                940,
+                967
+              ],
+              "adjacentGe2": [
+                0,
+                0,
+                0
+              ],
+              "adjacentGe2At": [],
+              "adjacentGe2Total": 0,
+              "maxAdjacent": [
+                1,
+                1,
+                1
+              ]
+            }
+          }
+        },
+        "variant": "preset-bluesky2"
+      },
+      {
+        "legacyRaw": {
+          "niho-12": {
+            "final4096AdjacentGe2Total": 0,
+            "skinFinal": {
+              "adjacentEqual": [
+                962,
+                894,
+                872
+              ],
+              "adjacentGe2": [
+                0,
+                1,
+                2
+              ],
+              "adjacentGe2At": [
+                0,
+                1,
+                9
+              ],
+              "adjacentGe2Total": 3,
+              "maxAdjacent": [
+                1,
+                2,
+                2
+              ]
+            },
+            "skinInteractive": {
+              "adjacentEqual": [
+                963,
+                897,
+                872
+              ],
+              "adjacentGe2": [
+                0,
+                1,
+                2
+              ],
+              "adjacentGe2At": [
+                1,
+                4
+              ],
+              "adjacentGe2Total": 3,
+              "maxAdjacent": [
+                1,
+                2,
+                2
+              ]
+            },
+            "skyFinal": {
+              "adjacentEqual": [
+                910,
+                952,
+                985
+              ],
+              "adjacentGe2": [
+                0,
+                0,
+                0
+              ],
+              "adjacentGe2At": [],
+              "adjacentGe2Total": 0,
+              "maxAdjacent": [
+                1,
+                1,
+                1
+              ]
+            },
+            "skyInteractive": {
+              "adjacentEqual": [
+                909,
+                952,
+                985
+              ],
+              "adjacentGe2": [
+                0,
+                0,
+                0
+              ],
+              "adjacentGe2At": [],
+              "adjacentGe2Total": 0,
+              "maxAdjacent": [
+                1,
+                1,
+                1
+              ]
+            }
+          },
+          "niho-2": {
+            "final4096AdjacentGe2Total": 0,
+            "skinFinal": {
+              "adjacentEqual": [
+                948,
+                895,
+                871
+              ],
+              "adjacentGe2": [
+                0,
+                0,
+                3
+              ],
+              "adjacentGe2At": [
+                0,
+                2,
+                6
+              ],
+              "adjacentGe2Total": 3,
+              "maxAdjacent": [
+                1,
+                1,
+                2
+              ]
+            },
+            "skinInteractive": {
+              "adjacentEqual": [
+                964,
+                896,
+                872
+              ],
+              "adjacentGe2": [
+                0,
+                1,
+                2
+              ],
+              "adjacentGe2At": [
+                0,
+                4
+              ],
+              "adjacentGe2Total": 3,
+              "maxAdjacent": [
+                1,
+                2,
+                2
+              ]
+            },
+            "skyFinal": {
+              "adjacentEqual": [
+                909,
+                952,
+                983
+              ],
+              "adjacentGe2": [
+                0,
+                0,
+                0
+              ],
+              "adjacentGe2At": [],
+              "adjacentGe2Total": 0,
+              "maxAdjacent": [
+                1,
+                1,
+                1
+              ]
+            },
+            "skyInteractive": {
+              "adjacentEqual": [
+                909,
+                952,
+                983
+              ],
+              "adjacentGe2": [
+                0,
+                0,
+                0
+              ],
+              "adjacentGe2At": [],
+              "adjacentGe2Total": 0,
+              "maxAdjacent": [
+                1,
+                1,
+                1
+              ]
+            }
+          }
+        },
+        "raster": {
+          "niho-10": {
+            "final4096AdjacentGe2Total": 0,
+            "skinFinal": {
+              "adjacentEqual": [
+                927,
+                894,
+                885
+              ],
+              "adjacentGe2": [
+                0,
+                0,
+                0
+              ],
+              "adjacentGe2At": [],
+              "adjacentGe2Total": 0,
+              "maxAdjacent": [
+                1,
+                1,
+                1
+              ]
+            },
+            "skinInteractive": {
+              "adjacentEqual": [
+                930,
+                893,
+                885
+              ],
+              "adjacentGe2": [
+                0,
+                0,
+                0
+              ],
+              "adjacentGe2At": [],
+              "adjacentGe2Total": 0,
+              "maxAdjacent": [
+                1,
+                1,
+                1
+              ]
+            },
+            "skyFinal": {
+              "adjacentEqual": [
+                887,
+                931,
+                963
+              ],
+              "adjacentGe2": [
+                2,
+                0,
+                0
+              ],
+              "adjacentGe2At": [
+                27,
+                29
+              ],
+              "adjacentGe2Total": 2,
+              "maxAdjacent": [
+                2,
+                1,
+                1
+              ]
+            },
+            "skyInteractive": {
+              "adjacentEqual": [
+                888,
+                931,
+                963
+              ],
+              "adjacentGe2": [
+                0,
+                0,
+                0
+              ],
+              "adjacentGe2At": [],
+              "adjacentGe2Total": 0,
+              "maxAdjacent": [
+                1,
+                1,
+                1
+              ]
+            }
+          },
+          "niho-12": {
+            "final4096AdjacentGe2Total": 0,
+            "skinFinal": {
+              "adjacentEqual": [
+                930,
+                893,
+                885
+              ],
+              "adjacentGe2": [
+                0,
+                0,
+                0
+              ],
+              "adjacentGe2At": [],
+              "adjacentGe2Total": 0,
+              "maxAdjacent": [
+                1,
+                1,
+                1
+              ]
+            },
+            "skinInteractive": {
+              "adjacentEqual": [
+                930,
+                893,
+                885
+              ],
+              "adjacentGe2": [
+                0,
+                0,
+                0
+              ],
+              "adjacentGe2At": [],
+              "adjacentGe2Total": 0,
+              "maxAdjacent": [
+                1,
+                1,
+                1
+              ]
+            },
+            "skyFinal": {
+              "adjacentEqual": [
+                889,
+                931,
+                963
+              ],
+              "adjacentGe2": [
+                0,
+                0,
+                0
+              ],
+              "adjacentGe2At": [],
+              "adjacentGe2Total": 0,
+              "maxAdjacent": [
+                1,
+                1,
+                1
+              ]
+            },
+            "skyInteractive": {
+              "adjacentEqual": [
+                888,
+                931,
+                963
+              ],
+              "adjacentGe2": [
+                0,
+                0,
+                0
+              ],
+              "adjacentGe2At": [],
+              "adjacentGe2Total": 0,
+              "maxAdjacent": [
+                1,
+                1,
+                1
+              ]
+            }
+          }
+        },
+        "variant": "preset-pastel"
+      },
+      {
+        "legacyRaw": {
+          "niho-12": {
+            "final4096AdjacentGe2Total": 0,
+            "skinFinal": {
+              "adjacentEqual": [
+                966,
+                898,
+                871
+              ],
+              "adjacentGe2": [
+                0,
+                0,
+                0
+              ],
+              "adjacentGe2At": [],
+              "adjacentGe2Total": 0,
+              "maxAdjacent": [
+                1,
+                1,
+                1
+              ]
+            },
+            "skinInteractive": {
+              "adjacentEqual": [
+                966,
+                898,
+                871
+              ],
+              "adjacentGe2": [
+                0,
+                0,
+                0
+              ],
+              "adjacentGe2At": [],
+              "adjacentGe2Total": 0,
+              "maxAdjacent": [
+                1,
+                1,
+                1
+              ]
+            },
+            "skyFinal": {
+              "adjacentEqual": [
+                884,
+                966,
+                1008
+              ],
+              "adjacentGe2": [
+                1,
+                0,
+                0
+              ],
+              "adjacentGe2At": [
+                0
+              ],
+              "adjacentGe2Total": 1,
+              "maxAdjacent": [
+                2,
+                1,
+                1
+              ]
+            },
+            "skyInteractive": {
+              "adjacentEqual": [
+                882,
+                966,
+                1010
+              ],
+              "adjacentGe2": [
+                1,
+                0,
+                0
+              ],
+              "adjacentGe2At": [
+                3
+              ],
+              "adjacentGe2Total": 1,
+              "maxAdjacent": [
+                2,
+                1,
+                1
+              ]
+            }
+          },
+          "niho-2": {
+            "final4096AdjacentGe2Total": 0,
+            "skinFinal": {
+              "adjacentEqual": [
+                957,
+                898,
+                870
+              ],
+              "adjacentGe2": [
+                0,
+                0,
+                0
+              ],
+              "adjacentGe2At": [],
+              "adjacentGe2Total": 0,
+              "maxAdjacent": [
+                1,
+                1,
+                1
+              ]
+            },
+            "skinInteractive": {
+              "adjacentEqual": [
+                968,
+                898,
+                871
+              ],
+              "adjacentGe2": [
+                0,
+                0,
+                0
+              ],
+              "adjacentGe2At": [],
+              "adjacentGe2Total": 0,
+              "maxAdjacent": [
+                1,
+                1,
+                1
+              ]
+            },
+            "skyFinal": {
+              "adjacentEqual": [
+                883,
+                966,
+                1002
+              ],
+              "adjacentGe2": [
+                2,
+                0,
+                0
+              ],
+              "adjacentGe2At": [
+                1,
+                31
+              ],
+              "adjacentGe2Total": 2,
+              "maxAdjacent": [
+                2,
+                1,
+                1
+              ]
+            },
+            "skyInteractive": {
+              "adjacentEqual": [
+                883,
+                966,
+                1008
+              ],
+              "adjacentGe2": [
+                2,
+                0,
+                0
+              ],
+              "adjacentGe2At": [
+                4,
+                8
+              ],
+              "adjacentGe2Total": 2,
+              "maxAdjacent": [
+                2,
+                1,
+                1
+              ]
+            }
+          }
+        },
+        "raster": {
+          "niho-10": {
+            "final4096AdjacentGe2Total": 0,
+            "skinFinal": {
+              "adjacentEqual": [
+                919,
+                895,
+                882
+              ],
+              "adjacentGe2": [
+                0,
+                0,
+                0
+              ],
+              "adjacentGe2At": [],
+              "adjacentGe2Total": 0,
+              "maxAdjacent": [
+                1,
+                1,
+                1
+              ]
+            },
+            "skinInteractive": {
+              "adjacentEqual": [
+                919,
+                895,
+                882
+              ],
+              "adjacentGe2": [
+                0,
+                0,
+                0
+              ],
+              "adjacentGe2At": [],
+              "adjacentGe2Total": 0,
+              "maxAdjacent": [
+                1,
+                1,
+                1
+              ]
+            },
+            "skyFinal": {
+              "adjacentEqual": [
+                860,
+                933,
+                973
+              ],
+              "adjacentGe2": [
+                0,
+                0,
+                0
+              ],
+              "adjacentGe2At": [],
+              "adjacentGe2Total": 0,
+              "maxAdjacent": [
+                1,
+                1,
+                1
+              ]
+            },
+            "skyInteractive": {
+              "adjacentEqual": [
+                862,
+                934,
+                972
+              ],
+              "adjacentGe2": [
+                0,
+                0,
+                0
+              ],
+              "adjacentGe2At": [],
+              "adjacentGe2Total": 0,
+              "maxAdjacent": [
+                1,
+                1,
+                1
+              ]
+            }
+          },
+          "niho-12": {
+            "final4096AdjacentGe2Total": 0,
+            "skinFinal": {
+              "adjacentEqual": [
+                919,
+                894,
+                882
+              ],
+              "adjacentGe2": [
+                0,
+                0,
+                0
+              ],
+              "adjacentGe2At": [],
+              "adjacentGe2Total": 0,
+              "maxAdjacent": [
+                1,
+                1,
+                1
+              ]
+            },
+            "skinInteractive": {
+              "adjacentEqual": [
+                919,
+                895,
+                882
+              ],
+              "adjacentGe2": [
+                0,
+                0,
+                0
+              ],
+              "adjacentGe2At": [],
+              "adjacentGe2Total": 0,
+              "maxAdjacent": [
+                1,
+                1,
+                1
+              ]
+            },
+            "skyFinal": {
+              "adjacentEqual": [
+                859,
+                934,
+                971
+              ],
+              "adjacentGe2": [
+                0,
+                0,
+                0
+              ],
+              "adjacentGe2At": [],
+              "adjacentGe2Total": 0,
+              "maxAdjacent": [
+                1,
+                1,
+                1
+              ]
+            },
+            "skyInteractive": {
+              "adjacentEqual": [
+                862,
+                934,
+                972
+              ],
+              "adjacentGe2": [
+                0,
+                0,
+                0
+              ],
+              "adjacentGe2At": [],
+              "adjacentGe2Total": 0,
+              "maxAdjacent": [
+                1,
+                1,
+                1
+              ]
+            }
+          }
+        },
+        "variant": "preset-colorful"
+      }
+    ],
+    "width": 1024
+  },
+  "timingsMs": {
+    "rows": [
+      {
+        "engine": "niho-10",
+        "finalMs": 303.75595799999996,
+        "interactiveMs": 104.11449999999999,
+        "path": "raster"
+      },
+      {
+        "engine": "niho-12",
+        "finalMs": 299.609083,
+        "interactiveMs": 103.631,
+        "path": "raster"
+      },
+      {
+        "engine": "niho-2",
+        "finalMs": 245.201209,
+        "interactiveMs": 135.42375,
+        "path": "legacyRaw"
+      },
+      {
+        "engine": "niho-12",
+        "finalMs": 281.10787500000004,
+        "interactiveMs": 80.108375,
+        "path": "legacyRaw"
+      }
+    ],
+    "scope": "native cold pipeline render of the 1024x64 ramp (moderate); not a wasm frame gate"
+  },
+  "measurementSourceCommit": "8fb378e2964642636c3d3e3f9bfb8a209ff2c5ac",
+  "measurementHost": "Mac Studio (M1 Max 64GB)",
+  "measurementDate": "2026-10-21",
+  "rustToolchain": "1.98.1",
+  "scopeNotes": [
+    "publicFixtures is a difference against niho-10 on the same public inputs, not a Photo Bench / Lightroom reference",
+    "Ramp steps that remain with niho-12 are all within the first 11 pixels of the dark end (x <= 10 of 1024); at 4096 steps no engine has a step >= 2",
+    "adjacentGe2 counts channels; adjacentGe2At lists the left pixel of each step",
+    "Native timings were taken while other processes loaded the host; they are informational, not a wasm frame gate"
+  ]
+}
