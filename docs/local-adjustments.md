@@ -57,7 +57,7 @@ Epic #31 の契約。線形・円形・ブラシ・被写体・空の「面」�
   - `relativeTemperature` `relativeTint`（−100〜100）
   - `hsl`（全体の `hsl` と同じ形・差分。各値 −100〜100）
 - 各マスク・各入れ子は上のキーだけを持つ厳密な形とし、欠落、未知キー、種類に合わないキー、非有限値、範囲外、重複 id、9 枚以上を Rust と TypeScript の双方で拒む。
-- 正規形（`to_value` / `writeDevelopMasks`）: キー順は上の例の順（`id` `kind` `enabled`（`false` のときだけ）`invert`（`true` のときだけ）、種類のキー、`adjust`）。`adjust` は 0 の項目を書かない。TypeScript は数値を小数 6 桁に丸めて書く。
+- 正規形（`to_value` / `writeDevelopMasks`）: キー順は上の例の順（`id` `kind` `enabled`（`false` のときだけ）`invert`（`true` のときだけ）、種類のキー、`adjust`）。`adjust` は 0 の項目を書かない。`adjust.hsl` は全体の `hsl` と同じ交互配列（帯の順は赤→マゼンタ。0 の帯は書かず、帯の中も 0 でない `hue` `saturation` `luminance` だけ）。TypeScript は数値を小数 6 桁に丸めて書く。Rust の `to_value` は JSON のキーが辞書順になるため、キー順はこの TypeScript の `writeDevelopMasks` が保ち、Rust は値の等価で突き合わせる（`tests/fixtures/masks/settings-cases.json` の `canonical`）。
 - 設定全体の上限（Rust の 64 KiB・下書きの 32 KiB）に面の画素は入れない。ブラシ・被写体・空は `surface` で参照するだけにし、undo の 100 版にも面を載せない。
 
 ## 座標
@@ -105,7 +105,7 @@ Epic #31 の契約。線形・円形・ブラシ・被写体・空の「面」�
 
 ## 版と互換
 
-- `masks` に 1 枚でもあれば `v` を要求する（今の最大は `COLOR_POINTS_SETTINGS_VERSION = 4`。`detail`（#32）と競合したら、先に merge された側が次の番号になる）。古い reader は `v` が未知のため設定を補正なしとして読み替えず、閲覧のみにする。
+- `masks` に 1 枚でもあれば `v = 5`（`MASKS_SETTINGS_VERSION`）を要求する。`detail`（#32）も 5 を使う予定で、先に merge された側が 5、後の側が 6 に振り直す。古い reader は `v` が未知のため設定を補正なしとして読み替えず、閲覧のみにする。
 - 能力の問い合わせ: wasm は `colorPoints` と同じ probe（`acceptsMaskSettings`）で `masks` を出す。Mac の書き出しは sidecar の最小版を超えているときだけ `masks` 付きの設定を渡す。
 - 取り扱い: 「初期化」とプリセット適用前の比較は `masks` を除く。プリセット（XMP）の適用・自動補正・設定のコピーは対象の `masks` を変えない（コピー元の `masks` も持ち出さない）。旧形式への変換 (`developSettingsToEditSettings`) は `masks` が有効なら null。XMP の書き出しは `masks` を書かず `notWritten: ["masks"]` を返す。
 
