@@ -9792,6 +9792,11 @@
       "origin": "2026-10-21のStudio実測。公開golden入力・独立した合成画像から計測し、source commit・実行環境・適用範囲とともに数値だけを記録。実写真・非公開参照画素を含まない。"
     },
     {
+      "path": "packages/develop-engine/fixtures/color/review-2026-10-21/round27-analysis-before-wb.json",
+      "sha256": "c6431b24a89be4425ac6f2649b828f56e28f00962ea18b219d4433389281269a",
+      "origin": "owner所有の既存非公開教師をStudioで比較した匿名集計のみ（niho-13と代案の描画差）。source commit・renderer hash・測定手順・cohort件数・判断の規則を記録し、写真・scene名・私有path・個別結果は公開しない。独立評価画像の参照は0枚。"
+    },
+    {
       "path": "packages/develop-engine/fixtures/color/review-2026-10-21/round27-linear-3x3.json",
       "sha256": "a5423e048c0723310f98b37adbdb6f36752d69256372c9648abdf6ec322832fe",
       "origin": "2026-10-21のStudio実測。公開の増分WB測定（jpeg-incremental-wb-v1.bin）だけから線形3×3を当てはめた誤差の数値。実写真・非公開参照画素を含まない。"
@@ -9805,6 +9810,11 @@
       "path": "packages/develop-engine/fixtures/color/review-2026-10-21/round27-prototype-niho-10.json",
       "sha256": "ea6b5b94a01e82b45873294d75f88ce45c8cf12515cc79dbc095719ec6dd21d1",
       "origin": "2026-10-21のStudio実測。owner判断の根拠となった試作（合成17³色見本、人物写真なし）のLightroom比較の数値だけを記録。書き出し画像・私有パスを含まない。"
+    },
+    {
+      "path": "packages/develop-engine/fixtures/color/review-2026-10-21/round27-release-breakdown.json",
+      "sha256": "90b4a6c94919dad2aa08d680c67f5fc80fd72e700eed0cf6f62a7f8b67958da5",
+      "origin": "2026-10-21のStudio実測。独立した合成画像でwasmの確定描画の段ごとの時間を測った数値だけを、source commit・手順とともに記録。実写真・非公開参照画素を含まない。"
     },
     {
       "path": "packages/develop-engine/fixtures/color/review-2026-10-21/round27-teacher-development.json",
@@ -9940,6 +9950,11 @@
       "path": "packages/develop-engine/tools/calibrate/tests/test_fit_analytic_hs.py",
       "sha256": "b80fe6623d3b6c406acc33d57a1a683617e502b074a193a1d28e963a6080f51a",
       "origin": "公開Issue #26 のため独立作成したunittest。合成データとtemporary directoryだけを使い、実写真・第三者資産を含まない。\n変更理由: #26 部分集合の欠けたgate表と判定を合成データで検査する\n変更理由: holdoutの凍結照合・場面数・部分集合判定・cache invalidationを合成fixtureで検査する\n変更理由: #26 案C の ridge・モデル候補・niho-6 CV 表・採否規則を合成データで検査する"
+    },
+    {
+      "path": "packages/develop-engine/tools/color-review-build-diff.py",
+      "sha256": "d36b0c8f3c54b22d7fb786d25040860dc1d62a3f59776596048e667a0f566fbb",
+      "origin": "公開Issue #27 の計測用に独立実装した、開発用教師で2つのbuildの描画差を比べる道具。教師・私有パスは引数で受け、公開物は匿名の集計だけ。封印済みの独立cohortは読まない。"
     },
     {
       "path": "packages/develop-engine/tools/color-review-teachers.py",

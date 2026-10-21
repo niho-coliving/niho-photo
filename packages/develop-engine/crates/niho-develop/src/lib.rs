@@ -2229,7 +2229,7 @@ mod tests {
             })
             .collect();
         let png = encode::encode_png(&rgba, w, h).unwrap();
-        let mut session = Session::open_raster(&png, 0, Filter::Lanczos3).unwrap();
+        let session = Session::open_raster(&png, 0, Filter::Lanczos3).unwrap();
         let settings = parse_settings(r#"{"v":2,"engine":"niho-6"}"#).unwrap();
         let warm = Some(HeadWhiteBalance {
             temperature: 30.0,

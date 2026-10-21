@@ -3,7 +3,7 @@
   "environment": "Node wasm SIMD on Mac Studio (M1 Max); browser/device performance remains separate",
   "node": "v24.18.0",
   "engineBundle": "niho-develop 0.20.0 (engine niho-13)",
-  "sourceCommit": "7ba870647415de42920216a4c96849ed9056040c",
+  "sourceCommit": "6ac20e682ac0f9da1890c500fb84405db6f8742b",
   "tool": "packages/develop-engine/tools/color-review-wasm-bench.cjs <glue.js> niho-12,niho-13 niho-12,niho-13 <WIDTHxHEIGHT>",
   "protocol": "per size 6 processes; odd runs list niho-12 first, even runs niho-13 first; median and min per metric. whiteBalance*: 5 Interactive ticks of relativeTemperature 6..30 after the contrast drag, then one Final",
   "targets": {
@@ -25,28 +25,28 @@
           "engine": "niho-12",
           "runs": 6,
           "medianMs": {
-            "coldInteractive": 1123.0,
-            "coldFinal": 738.3,
-            "cachedInteractive": 30.2,
-            "cachedFinal": 606.3,
-            "editedInteractiveMedian": 105.2,
-            "editedInteractiveMax": 107.7,
-            "releasedFinal": 620.5,
-            "whiteBalanceInteractiveMedian": 51.1,
-            "whiteBalanceInteractiveMax": 52.8,
-            "whiteBalanceReleasedFinal": 643.9
+            "coldInteractive": 1225.6,
+            "coldFinal": 781.5,
+            "cachedInteractive": 29.7,
+            "cachedFinal": 128.6,
+            "editedInteractiveMedian": 106.1,
+            "editedInteractiveMax": 114.5,
+            "releasedFinal": 235.9,
+            "whiteBalanceInteractiveMedian": 50.7,
+            "whiteBalanceInteractiveMax": 54.8,
+            "whiteBalanceReleasedFinal": 149.1
           },
           "minMs": {
-            "coldInteractive": 1006.5,
-            "coldFinal": 708.7,
-            "cachedInteractive": 28.7,
-            "cachedFinal": 577.8,
-            "editedInteractiveMedian": 99.6,
-            "editedInteractiveMax": 100.7,
-            "releasedFinal": 605.7,
-            "whiteBalanceInteractiveMedian": 48.6,
-            "whiteBalanceInteractiveMax": 49.5,
-            "whiteBalanceReleasedFinal": 619.0
+            "coldInteractive": 1016.1,
+            "coldFinal": 724.0,
+            "cachedInteractive": 29.0,
+            "cachedFinal": 125.4,
+            "editedInteractiveMedian": 103.2,
+            "editedInteractiveMax": 104.0,
+            "releasedFinal": 228.3,
+            "whiteBalanceInteractiveMedian": 49.4,
+            "whiteBalanceInteractiveMax": 49.7,
+            "whiteBalanceReleasedFinal": 145.2
           }
         },
         {
@@ -54,28 +54,28 @@
           "engine": "niho-13",
           "runs": 6,
           "medianMs": {
-            "coldInteractive": 1128.3,
-            "coldFinal": 746.7,
-            "cachedInteractive": 30.2,
-            "cachedFinal": 604.2,
-            "editedInteractiveMedian": 104.3,
-            "editedInteractiveMax": 106.9,
-            "releasedFinal": 625.1,
-            "whiteBalanceInteractiveMedian": 69.3,
-            "whiteBalanceInteractiveMax": 74.1,
-            "whiteBalanceReleasedFinal": 1594.2
+            "coldInteractive": 1138.7,
+            "coldFinal": 762.9,
+            "cachedInteractive": 35.6,
+            "cachedFinal": 134.9,
+            "editedInteractiveMedian": 106.8,
+            "editedInteractiveMax": 108.9,
+            "releasedFinal": 236.5,
+            "whiteBalanceInteractiveMedian": 69.0,
+            "whiteBalanceInteractiveMax": 73.6,
+            "whiteBalanceReleasedFinal": 1129.3
           },
           "minMs": {
-            "coldInteractive": 969.5,
-            "coldFinal": 698.9,
-            "cachedInteractive": 29.1,
-            "cachedFinal": 583.5,
-            "editedInteractiveMedian": 101.5,
-            "editedInteractiveMax": 102.2,
-            "releasedFinal": 607.3,
-            "whiteBalanceInteractiveMedian": 67.8,
-            "whiteBalanceInteractiveMax": 69.2,
-            "whiteBalanceReleasedFinal": 1525.4
+            "coldInteractive": 998.8,
+            "coldFinal": 699.8,
+            "cachedInteractive": 29.4,
+            "cachedFinal": 125.1,
+            "editedInteractiveMedian": 102.9,
+            "editedInteractiveMax": 103.4,
+            "releasedFinal": 228.3,
+            "whiteBalanceInteractiveMedian": 67.6,
+            "whiteBalanceInteractiveMax": 70.8,
+            "whiteBalanceReleasedFinal": 1111.1
           }
         },
         {
@@ -83,28 +83,28 @@
           "engine": "niho-12",
           "runs": 6,
           "medianMs": {
-            "coldInteractive": 210.8,
-            "coldFinal": 808.5,
+            "coldInteractive": 225.5,
+            "coldFinal": 821.3,
             "cachedInteractive": 38.7,
-            "cachedFinal": 734.5,
-            "editedInteractiveMedian": 68.6,
-            "editedInteractiveMax": 77.4,
-            "releasedFinal": 814.9,
-            "whiteBalanceInteractiveMedian": 57.1,
-            "whiteBalanceInteractiveMax": 66.8,
-            "whiteBalanceReleasedFinal": 775.3
+            "cachedFinal": 502.2,
+            "editedInteractiveMedian": 72.2,
+            "editedInteractiveMax": 81.4,
+            "releasedFinal": 695.6,
+            "whiteBalanceInteractiveMedian": 58.6,
+            "whiteBalanceInteractiveMax": 68.6,
+            "whiteBalanceReleasedFinal": 508.1
           },
           "minMs": {
-            "coldInteractive": 172.8,
-            "coldFinal": 791.9,
-            "cachedInteractive": 36.5,
-            "cachedFinal": 700.5,
-            "editedInteractiveMedian": 65.4,
-            "editedInteractiveMax": 74.9,
-            "releasedFinal": 799.8,
-            "whiteBalanceInteractiveMedian": 55.4,
-            "whiteBalanceInteractiveMax": 64.4,
-            "whiteBalanceReleasedFinal": 763.9
+            "coldInteractive": 174.3,
+            "coldFinal": 813.5,
+            "cachedInteractive": 35.8,
+            "cachedFinal": 442.5,
+            "editedInteractiveMedian": 67.9,
+            "editedInteractiveMax": 77.6,
+            "releasedFinal": 616.0,
+            "whiteBalanceInteractiveMedian": 57.3,
+            "whiteBalanceInteractiveMax": 66.8,
+            "whiteBalanceReleasedFinal": 465.6
           }
         },
         {
@@ -112,28 +112,28 @@
           "engine": "niho-13",
           "runs": 6,
           "medianMs": {
-            "coldInteractive": 218.1,
-            "coldFinal": 808.9,
-            "cachedInteractive": 36.9,
-            "cachedFinal": 733.0,
-            "editedInteractiveMedian": 70.4,
-            "editedInteractiveMax": 77.4,
-            "releasedFinal": 821.2,
-            "whiteBalanceInteractiveMedian": 57.8,
-            "whiteBalanceInteractiveMax": 66.2,
-            "whiteBalanceReleasedFinal": 775.2
+            "coldInteractive": 269.7,
+            "coldFinal": 824.7,
+            "cachedInteractive": 39.4,
+            "cachedFinal": 521.8,
+            "editedInteractiveMedian": 70.2,
+            "editedInteractiveMax": 78.8,
+            "releasedFinal": 645.8,
+            "whiteBalanceInteractiveMedian": 59.6,
+            "whiteBalanceInteractiveMax": 67.7,
+            "whiteBalanceReleasedFinal": 479.9
           },
           "minMs": {
-            "coldInteractive": 174.8,
-            "coldFinal": 791.6,
-            "cachedInteractive": 36.4,
-            "cachedFinal": 717.7,
-            "editedInteractiveMedian": 64.3,
-            "editedInteractiveMax": 76.7,
-            "releasedFinal": 788.1,
-            "whiteBalanceInteractiveMedian": 54.4,
-            "whiteBalanceInteractiveMax": 63.2,
-            "whiteBalanceReleasedFinal": 737.7
+            "coldInteractive": 172.4,
+            "coldFinal": 789.4,
+            "cachedInteractive": 35.7,
+            "cachedFinal": 455.2,
+            "editedInteractiveMedian": 67.2,
+            "editedInteractiveMax": 76.1,
+            "releasedFinal": 615.2,
+            "whiteBalanceInteractiveMedian": 55.2,
+            "whiteBalanceInteractiveMax": 66.3,
+            "whiteBalanceReleasedFinal": 468.6
           }
         }
       ]
@@ -151,28 +151,28 @@
           "engine": "niho-12",
           "runs": 6,
           "medianMs": {
-            "coldInteractive": 1107.7,
-            "coldFinal": 849.6,
-            "cachedInteractive": 48.6,
-            "cachedFinal": 673.6,
+            "coldInteractive": 1117.6,
+            "coldFinal": 872.2,
+            "cachedInteractive": 46.5,
+            "cachedFinal": 203.6,
             "editedInteractiveMedian": 122.2,
-            "editedInteractiveMax": 124.6,
-            "releasedFinal": 697.0,
-            "whiteBalanceInteractiveMedian": 79.3,
-            "whiteBalanceInteractiveMax": 82.3,
-            "whiteBalanceReleasedFinal": 728.0
+            "editedInteractiveMax": 124.8,
+            "releasedFinal": 304.6,
+            "whiteBalanceInteractiveMedian": 78.8,
+            "whiteBalanceInteractiveMax": 82.0,
+            "whiteBalanceReleasedFinal": 233.1
           },
           "minMs": {
-            "coldInteractive": 1007.9,
-            "coldFinal": 799.7,
-            "cachedInteractive": 45.7,
-            "cachedFinal": 641.2,
-            "editedInteractiveMedian": 117.6,
-            "editedInteractiveMax": 117.9,
-            "releasedFinal": 664.5,
-            "whiteBalanceInteractiveMedian": 75.6,
-            "whiteBalanceInteractiveMax": 76.0,
-            "whiteBalanceReleasedFinal": 714.0
+            "coldInteractive": 1022.0,
+            "coldFinal": 844.9,
+            "cachedInteractive": 45.1,
+            "cachedFinal": 197.3,
+            "editedInteractiveMedian": 118.8,
+            "editedInteractiveMax": 119.0,
+            "releasedFinal": 298.0,
+            "whiteBalanceInteractiveMedian": 76.8,
+            "whiteBalanceInteractiveMax": 77.3,
+            "whiteBalanceReleasedFinal": 227.0
           }
         },
         {
@@ -180,28 +180,28 @@
           "engine": "niho-13",
           "runs": 6,
           "medianMs": {
-            "coldInteractive": 1123.9,
-            "coldFinal": 886.3,
-            "cachedInteractive": 47.4,
-            "cachedFinal": 672.8,
-            "editedInteractiveMedian": 121.5,
-            "editedInteractiveMax": 124.2,
-            "releasedFinal": 698.2,
-            "whiteBalanceInteractiveMedian": 106.3,
-            "whiteBalanceInteractiveMax": 113.2,
-            "whiteBalanceReleasedFinal": 1754.4
+            "coldInteractive": 1221.5,
+            "coldFinal": 866.4,
+            "cachedInteractive": 45.4,
+            "cachedFinal": 198.8,
+            "editedInteractiveMedian": 120.6,
+            "editedInteractiveMax": 124.0,
+            "releasedFinal": 304.1,
+            "whiteBalanceInteractiveMedian": 106.9,
+            "whiteBalanceInteractiveMax": 112.8,
+            "whiteBalanceReleasedFinal": 1281.5
           },
           "minMs": {
-            "coldInteractive": 1033.4,
-            "coldFinal": 801.8,
-            "cachedInteractive": 42.1,
-            "cachedFinal": 644.0,
-            "editedInteractiveMedian": 115.1,
-            "editedInteractiveMax": 121.3,
-            "releasedFinal": 659.4,
-            "whiteBalanceInteractiveMedian": 101.4,
-            "whiteBalanceInteractiveMax": 106.2,
-            "whiteBalanceReleasedFinal": 1666.3
+            "coldInteractive": 1007.6,
+            "coldFinal": 825.1,
+            "cachedInteractive": 44.0,
+            "cachedFinal": 196.0,
+            "editedInteractiveMedian": 118.5,
+            "editedInteractiveMax": 119.4,
+            "releasedFinal": 298.4,
+            "whiteBalanceInteractiveMedian": 102.5,
+            "whiteBalanceInteractiveMax": 110.5,
+            "whiteBalanceReleasedFinal": 1227.7
           }
         },
         {
@@ -209,28 +209,28 @@
           "engine": "niho-12",
           "runs": 6,
           "medianMs": {
-            "coldInteractive": 211.6,
-            "coldFinal": 1049.0,
-            "cachedInteractive": 53.4,
-            "cachedFinal": 928.7,
-            "editedInteractiveMedian": 84.1,
-            "editedInteractiveMax": 94.8,
-            "releasedFinal": 1078.7,
-            "whiteBalanceInteractiveMedian": 73.3,
-            "whiteBalanceInteractiveMax": 81.1,
-            "whiteBalanceReleasedFinal": 979.2
+            "coldInteractive": 265.7,
+            "coldFinal": 1063.1,
+            "cachedInteractive": 54.4,
+            "cachedFinal": 652.8,
+            "editedInteractiveMedian": 84.5,
+            "editedInteractiveMax": 92.4,
+            "releasedFinal": 901.4,
+            "whiteBalanceInteractiveMedian": 74.6,
+            "whiteBalanceInteractiveMax": 83.2,
+            "whiteBalanceReleasedFinal": 688.8
           },
           "minMs": {
-            "coldInteractive": 170.0,
-            "coldFinal": 1034.0,
-            "cachedInteractive": 50.3,
-            "cachedFinal": 904.4,
-            "editedInteractiveMedian": 80.4,
-            "editedInteractiveMax": 88.4,
-            "releasedFinal": 1024.1,
-            "whiteBalanceInteractiveMedian": 69.1,
-            "whiteBalanceInteractiveMax": 77.4,
-            "whiteBalanceReleasedFinal": 934.4
+            "coldInteractive": 169.9,
+            "coldFinal": 1035.1,
+            "cachedInteractive": 49.4,
+            "cachedFinal": 628.4,
+            "editedInteractiveMedian": 83.1,
+            "editedInteractiveMax": 88.6,
+            "releasedFinal": 858.4,
+            "whiteBalanceInteractiveMedian": 72.1,
+            "whiteBalanceInteractiveMax": 80.3,
+            "whiteBalanceReleasedFinal": 681.0
           }
         },
         {
@@ -238,37 +238,295 @@
           "engine": "niho-13",
           "runs": 6,
           "medianMs": {
-            "coldInteractive": 218.3,
-            "coldFinal": 1052.3,
-            "cachedInteractive": 53.2,
-            "cachedFinal": 928.7,
-            "editedInteractiveMedian": 83.9,
-            "editedInteractiveMax": 94.2,
-            "releasedFinal": 1064.4,
-            "whiteBalanceInteractiveMedian": 73.1,
-            "whiteBalanceInteractiveMax": 82.1,
-            "whiteBalanceReleasedFinal": 981.6
+            "coldInteractive": 217.8,
+            "coldFinal": 1077.5,
+            "cachedInteractive": 53.7,
+            "cachedFinal": 643.7,
+            "editedInteractiveMedian": 83.6,
+            "editedInteractiveMax": 95.7,
+            "releasedFinal": 868.9,
+            "whiteBalanceInteractiveMedian": 73.5,
+            "whiteBalanceInteractiveMax": 81.6,
+            "whiteBalanceReleasedFinal": 678.5
           },
           "minMs": {
-            "coldInteractive": 163.4,
-            "coldFinal": 1009.7,
-            "cachedInteractive": 50.5,
-            "cachedFinal": 907.8,
-            "editedInteractiveMedian": 81.2,
-            "editedInteractiveMax": 89.7,
-            "releasedFinal": 1055.1,
-            "whiteBalanceInteractiveMedian": 72.4,
-            "whiteBalanceInteractiveMax": 79.1,
-            "whiteBalanceReleasedFinal": 964.8
+            "coldInteractive": 169.2,
+            "coldFinal": 1049.9,
+            "cachedInteractive": 50.0,
+            "cachedFinal": 629.8,
+            "editedInteractiveMedian": 81.5,
+            "editedInteractiveMax": 89.6,
+            "releasedFinal": 853.4,
+            "whiteBalanceInteractiveMedian": 70.5,
+            "whiteBalanceInteractiveMax": 78.8,
+            "whiteBalanceReleasedFinal": 668.4
           }
         }
       ]
     }
   ],
+  "before": {
+    "sourceCommit": "7ba870647415de42920216a4c96849ed9056040c",
+    "note": "the same protocol before the released cubes were kept through drag frames (load average 9-28)",
+    "sizes": [
+      {
+        "dimensions": [
+          1024,
+          768
+        ],
+        "inputSha256": "95c149d7585cb77d833e21943d494e6bfbd3c5501b1a66123cc6269c125a9e5a",
+        "legacyRawWorkingCopySha256": "751df8b1eb89482438b6ed97e11607e151a95b42960f9705b80f3f9881da397c",
+        "rows": [
+          {
+            "source": "raster",
+            "engine": "niho-12",
+            "runs": 6,
+            "medianMs": {
+              "coldInteractive": 1123.0,
+              "coldFinal": 738.3,
+              "cachedInteractive": 30.2,
+              "cachedFinal": 606.3,
+              "editedInteractiveMedian": 105.2,
+              "editedInteractiveMax": 107.7,
+              "releasedFinal": 620.5,
+              "whiteBalanceInteractiveMedian": 51.1,
+              "whiteBalanceInteractiveMax": 52.8,
+              "whiteBalanceReleasedFinal": 643.9
+            },
+            "minMs": {
+              "coldInteractive": 1006.5,
+              "coldFinal": 708.7,
+              "cachedInteractive": 28.7,
+              "cachedFinal": 577.8,
+              "editedInteractiveMedian": 99.6,
+              "editedInteractiveMax": 100.7,
+              "releasedFinal": 605.7,
+              "whiteBalanceInteractiveMedian": 48.6,
+              "whiteBalanceInteractiveMax": 49.5,
+              "whiteBalanceReleasedFinal": 619.0
+            }
+          },
+          {
+            "source": "raster",
+            "engine": "niho-13",
+            "runs": 6,
+            "medianMs": {
+              "coldInteractive": 1128.3,
+              "coldFinal": 746.7,
+              "cachedInteractive": 30.2,
+              "cachedFinal": 604.2,
+              "editedInteractiveMedian": 104.3,
+              "editedInteractiveMax": 106.9,
+              "releasedFinal": 625.1,
+              "whiteBalanceInteractiveMedian": 69.3,
+              "whiteBalanceInteractiveMax": 74.1,
+              "whiteBalanceReleasedFinal": 1594.2
+            },
+            "minMs": {
+              "coldInteractive": 969.5,
+              "coldFinal": 698.9,
+              "cachedInteractive": 29.1,
+              "cachedFinal": 583.5,
+              "editedInteractiveMedian": 101.5,
+              "editedInteractiveMax": 102.2,
+              "releasedFinal": 607.3,
+              "whiteBalanceInteractiveMedian": 67.8,
+              "whiteBalanceInteractiveMax": 69.2,
+              "whiteBalanceReleasedFinal": 1525.4
+            }
+          },
+          {
+            "source": "legacyRaw",
+            "engine": "niho-12",
+            "runs": 6,
+            "medianMs": {
+              "coldInteractive": 210.8,
+              "coldFinal": 808.5,
+              "cachedInteractive": 38.7,
+              "cachedFinal": 734.5,
+              "editedInteractiveMedian": 68.6,
+              "editedInteractiveMax": 77.4,
+              "releasedFinal": 814.9,
+              "whiteBalanceInteractiveMedian": 57.1,
+              "whiteBalanceInteractiveMax": 66.8,
+              "whiteBalanceReleasedFinal": 775.3
+            },
+            "minMs": {
+              "coldInteractive": 172.8,
+              "coldFinal": 791.9,
+              "cachedInteractive": 36.5,
+              "cachedFinal": 700.5,
+              "editedInteractiveMedian": 65.4,
+              "editedInteractiveMax": 74.9,
+              "releasedFinal": 799.8,
+              "whiteBalanceInteractiveMedian": 55.4,
+              "whiteBalanceInteractiveMax": 64.4,
+              "whiteBalanceReleasedFinal": 763.9
+            }
+          },
+          {
+            "source": "legacyRaw",
+            "engine": "niho-13",
+            "runs": 6,
+            "medianMs": {
+              "coldInteractive": 218.1,
+              "coldFinal": 808.9,
+              "cachedInteractive": 36.9,
+              "cachedFinal": 733.0,
+              "editedInteractiveMedian": 70.4,
+              "editedInteractiveMax": 77.4,
+              "releasedFinal": 821.2,
+              "whiteBalanceInteractiveMedian": 57.8,
+              "whiteBalanceInteractiveMax": 66.2,
+              "whiteBalanceReleasedFinal": 775.2
+            },
+            "minMs": {
+              "coldInteractive": 174.8,
+              "coldFinal": 791.6,
+              "cachedInteractive": 36.4,
+              "cachedFinal": 717.7,
+              "editedInteractiveMedian": 64.3,
+              "editedInteractiveMax": 76.7,
+              "releasedFinal": 788.1,
+              "whiteBalanceInteractiveMedian": 54.4,
+              "whiteBalanceInteractiveMax": 63.2,
+              "whiteBalanceReleasedFinal": 737.7
+            }
+          }
+        ]
+      },
+      {
+        "dimensions": [
+          1280,
+          960
+        ],
+        "inputSha256": "29a4d83584f5c7a3c0be63328aa3a66cce411a6ab3bc81cce356c44ecca858d0",
+        "legacyRawWorkingCopySha256": "14c4ffd2042f786df2f776d5029a4fc837b5658a365fdb9a86f4b03fe25ea5dd",
+        "rows": [
+          {
+            "source": "raster",
+            "engine": "niho-12",
+            "runs": 6,
+            "medianMs": {
+              "coldInteractive": 1107.7,
+              "coldFinal": 849.6,
+              "cachedInteractive": 48.6,
+              "cachedFinal": 673.6,
+              "editedInteractiveMedian": 122.2,
+              "editedInteractiveMax": 124.6,
+              "releasedFinal": 697.0,
+              "whiteBalanceInteractiveMedian": 79.3,
+              "whiteBalanceInteractiveMax": 82.3,
+              "whiteBalanceReleasedFinal": 728.0
+            },
+            "minMs": {
+              "coldInteractive": 1007.9,
+              "coldFinal": 799.7,
+              "cachedInteractive": 45.7,
+              "cachedFinal": 641.2,
+              "editedInteractiveMedian": 117.6,
+              "editedInteractiveMax": 117.9,
+              "releasedFinal": 664.5,
+              "whiteBalanceInteractiveMedian": 75.6,
+              "whiteBalanceInteractiveMax": 76.0,
+              "whiteBalanceReleasedFinal": 714.0
+            }
+          },
+          {
+            "source": "raster",
+            "engine": "niho-13",
+            "runs": 6,
+            "medianMs": {
+              "coldInteractive": 1123.9,
+              "coldFinal": 886.3,
+              "cachedInteractive": 47.4,
+              "cachedFinal": 672.8,
+              "editedInteractiveMedian": 121.5,
+              "editedInteractiveMax": 124.2,
+              "releasedFinal": 698.2,
+              "whiteBalanceInteractiveMedian": 106.3,
+              "whiteBalanceInteractiveMax": 113.2,
+              "whiteBalanceReleasedFinal": 1754.4
+            },
+            "minMs": {
+              "coldInteractive": 1033.4,
+              "coldFinal": 801.8,
+              "cachedInteractive": 42.1,
+              "cachedFinal": 644.0,
+              "editedInteractiveMedian": 115.1,
+              "editedInteractiveMax": 121.3,
+              "releasedFinal": 659.4,
+              "whiteBalanceInteractiveMedian": 101.4,
+              "whiteBalanceInteractiveMax": 106.2,
+              "whiteBalanceReleasedFinal": 1666.3
+            }
+          },
+          {
+            "source": "legacyRaw",
+            "engine": "niho-12",
+            "runs": 6,
+            "medianMs": {
+              "coldInteractive": 211.6,
+              "coldFinal": 1049.0,
+              "cachedInteractive": 53.4,
+              "cachedFinal": 928.7,
+              "editedInteractiveMedian": 84.1,
+              "editedInteractiveMax": 94.8,
+              "releasedFinal": 1078.7,
+              "whiteBalanceInteractiveMedian": 73.3,
+              "whiteBalanceInteractiveMax": 81.1,
+              "whiteBalanceReleasedFinal": 979.2
+            },
+            "minMs": {
+              "coldInteractive": 170.0,
+              "coldFinal": 1034.0,
+              "cachedInteractive": 50.3,
+              "cachedFinal": 904.4,
+              "editedInteractiveMedian": 80.4,
+              "editedInteractiveMax": 88.4,
+              "releasedFinal": 1024.1,
+              "whiteBalanceInteractiveMedian": 69.1,
+              "whiteBalanceInteractiveMax": 77.4,
+              "whiteBalanceReleasedFinal": 934.4
+            }
+          },
+          {
+            "source": "legacyRaw",
+            "engine": "niho-13",
+            "runs": 6,
+            "medianMs": {
+              "coldInteractive": 218.3,
+              "coldFinal": 1052.3,
+              "cachedInteractive": 53.2,
+              "cachedFinal": 928.7,
+              "editedInteractiveMedian": 83.9,
+              "editedInteractiveMax": 94.2,
+              "releasedFinal": 1064.4,
+              "whiteBalanceInteractiveMedian": 73.1,
+              "whiteBalanceInteractiveMax": 82.1,
+              "whiteBalanceReleasedFinal": 981.6
+            },
+            "minMs": {
+              "coldInteractive": 163.4,
+              "coldFinal": 1009.7,
+              "cachedInteractive": 50.5,
+              "cachedFinal": 907.8,
+              "editedInteractiveMedian": 81.2,
+              "editedInteractiveMax": 89.7,
+              "releasedFinal": 1055.1,
+              "whiteBalanceInteractiveMedian": 72.4,
+              "whiteBalanceInteractiveMax": 79.1,
+              "whiteBalanceReleasedFinal": 964.8
+            }
+          }
+        ]
+      }
+    ]
+  },
   "notes": [
-    "Load average on the host during the runs: 9-28 (other processes; single-threaded wasm timings carry that noise)",
+    "Load average on the host during the runs: 12-43 (other processes; single-threaded wasm timings carry that noise)",
     "niho-13 white-balance drag ticks rebuild the balanced source and the niho-6 master from the kept response gains; they reuse the last frame's niho-6 analysis and local pass (drag frames only)",
-    "The released white-balance Final re-analyses the balanced photo for the niho-6 H/S response (features and networks), which these settings use (highlights -75, shadows 55); settings without the response release like niho-12",
-    "Legacy unsigned RAW working copies render niho-12 pixels with niho-13; their timings are the same"
+    "The released white-balance Final analyses the balanced photo again for the niho-6 H/S response (features and networks, about 0.83 s at 1280x960: round27-release-breakdown.json); these settings use the response (highlights -75, shadows 55)",
+    "Every release keeps the released cubes whose settings the drag left as they were (cachedFinal, releasedFinal and whiteBalanceReleasedFinal of niho-12 drop with it); the pixels are the same"
   ]
 }

@@ -25,7 +25,8 @@ raster（JPEG / PNG 原本と raster 作業コピー）の相対 WB は、`niho-
 WB を変えると元画像が変わるので、Session（native・wasm 共通）は次のように持つ。
 
 - 元画像: デコードしたままの原本と、`niho-13` の WB 済みの元画像を別に持つ。WB 済みの元画像は相対 WB（温度・tint）を key にし、WB が変わると作り直す。そのとき、元画像から作った縮小・切り抜きの窓・統計・色ポイントの plane・`niho-6` の master を捨てる（cube と効果の plane は元画像によらないので残す）。
-- `niho-6` の解析: 写真全体の特徴量と exposure ごとの係数を、相対 WB を key に持つ（WB 済みの写真全体から作る。プリセットの見本・自動の候補とも共有）。master の key には元画像の WB と解析の WB の両方を入れ、drag 中の解析で作った master を確定描画に使わない。
+- `niho-6` の解析: 写真全体の特徴量と exposure ごとの係数を、相対 WB を key に持つ（WB 済みの写真全体から作る。プリセットの見本・自動の候補とも共有し、最近使った 2 つまで持つので、写真の WB・exposure の解析が見本・候補に追い出されない）。master の key には元画像の WB と解析の WB の両方を入れ、drag 中の解析で作った master を確定描画に使わない。
+- cube: drag のフレームの間も直前の確定フレームの cube（Final の 64³）を持ち、drag が cube の設定（露光量・トーン・色）を変えていなければ、確定でそのまま使う（同じ key の同じ cube。全 engine 共通で、`niho-12` の確定も速くなる）。
 - 局所階調の pass: 読んだ元画像の WB を `source_key` に持ち、確定描画（Final）は同じ WB の pass しか使わない。
 - 色ポイントの plane: key に設定の JSON（WB を含む）が入る。
 - 色取得・自動・プリセットの見本: 色取得と自動は親の WB 済みの元画像を共有した別の Session で描き、見本は原本の縮小を自分のプリセットの WB で作り直す。親の次のフレームは変えない。
@@ -102,18 +103,63 @@ p99 の悪化は端の飽和色（純青・純緑付近）に集まる。悪化�
 
 ## wasm 性能
 
-[Studio/Node/wasm SIMD 計測](fixtures/color/review-2026-10-21/round27-wasm-performance.json)。合成の写真（1024×768 と、画面のプレビューの長辺の 1280×960）、Highlights −75・Shadows +55 などの同じ設定で、コントラストの drag の後に相対の色温度を 5 コマ drag して確定する。`niho-12` と `niho-13` の順を入れ替えた 6 process の中央値（測定中の host の load average は 9〜28）。
+[Studio/Node/wasm SIMD 計測](fixtures/color/review-2026-10-21/round27-wasm-performance.json)。合成の写真（1024×768 と、画面のプレビューの長辺の 1280×960）、Highlights −75・Shadows +55 などの同じ設定で、コントラストの drag の後に相対の色温度を 5 コマ drag して確定する。`niho-12` と `niho-13` の順を入れ替えた 6 process の中央値（測定中の host の load average は 12〜43）。
 
-| 大きさ | engine | コントラストの drag 最大 | WB の drag 1 コマ（中央値 / 最大） | WB の確定 Final |
+| 大きさ | engine | コントラストの drag 最大 / 確定 | WB の drag 1 コマ（中央値 / 最大） | WB の確定 Final |
 | --- | --- | ---: | ---: | ---: |
-| 1024×768 | niho-12 | 107.7ms | 51.1 / 52.8ms | 643.9ms |
-| 1024×768 | niho-13 | 106.9ms | 69.3 / 74.1ms | 1594.2ms |
-| 1280×960 | niho-12 | 124.6ms | 79.3 / 82.3ms | 728.0ms |
-| 1280×960 | niho-13 | 124.2ms | 106.3 / 113.2ms | 1754.4ms |
+| 1024×768 | niho-12 | 114.5 / 235.9ms | 50.7 / 54.8ms | 149.1ms |
+| 1024×768 | niho-13 | 108.9 / 236.5ms | 69.0 / 73.6ms | 1129.3ms |
+| 1280×960 | niho-12 | 124.8 / 304.6ms | 78.8 / 82.0ms | 233.1ms |
+| 1280×960 | niho-13 | 124.0 / 304.1ms | 106.9 / 112.8ms | 1281.5ms |
 
-- WB の drag の 1 コマは、WB 済みの元画像と `niho-6` の master を作り直す分だけ `niho-12`（出力側の LUT）より遅い。1280×960 で目安の 100ms をわずかに超えるが、同じ写真のコントラストの drag（124ms）より速い。局所階調の pass と応答の gain を drag 中に使い回す前・差分の参照を cube の lerp にする前は、1280×960 で 150ms 前後（負荷の高い時間帯の計測）だった。
-- WB の確定は、WB 済みの写真全体から `niho-6` の H/S 応答を解析し直す（特徴量と network）ので 1.6〜1.8 秒かかり、目安の 1 秒を超える。この設定は H/S 応答を使う（Highlights < 0 / Shadows > 0）。H/S 応答を使わない設定には解析が無く、確定は `niho-12` と同じ程度。露光量の drag の確定も同じ network を回し直す（特徴量は回さない）ので、WB の確定はそれより特徴量の分だけ長い。確定の画素を変えずに短くするには解析そのものの高速化が要り、この Issue の範囲外とする。
+- WB の drag の 1 コマは、WB 済みの元画像（1280×960 で約 55ms）と `niho-6` の master を作り直す分だけ `niho-12`（出力側の LUT）より遅い。1280×960 で目安の 100ms をわずかに超えるが、同じ写真のコントラストの drag（124ms）より速い。
+- WB の確定は 1.1〜1.3 秒で、目安の 1 秒を超える（下の内訳。H/S 応答を使う設定のとき。使わない設定には解析が無く、確定は `niho-12` と同じ程度）。
+- 確定 cube の持ち越しの前（`6a73289`）は、WB の確定が 1594 / 1754ms、コントラストの確定が 625 / 698ms だった。
 - 旧 RAW の作業コピーは `niho-12` と同じ画素で、時間も同じ（[計測](fixtures/color/review-2026-10-21/round27-wasm-performance.json)の `legacyRaw`）。
+
+### WB の確定の内訳
+
+1280×960 の WB の drag の 1 コマと確定を、Session の各段に `performance.now()` の区間を入れた計測用の build（区間を測るだけで画素は同じ。commit しない）で測った（[内訳](fixtures/color/review-2026-10-21/round27-release-breakdown.json)、3 process の中央値、load average 12〜14）。
+
+| 段 | 確定（`6a73289`） | 確定（今） | drag の 1 コマ（今） |
+| --- | ---: | ---: | ---: |
+| WB 済みの元画像 | — | — | 55.4ms |
+| `niho-6` の特徴量（WB 済みの写真全体） | 369.4ms | 360.6ms | — |
+| `niho-6` の network | 478.6ms | 472.1ms | — |
+| 応答の gain | 28.0ms | 18.3ms | — |
+| master | 4.0ms | 4.1ms | 4.1ms |
+| cube（Final 64³ の焼き直し） | 494.0ms | 0 | — |
+| 局所階調の統計・ln0・pass | 164.6ms | 161.7ms | — |
+| フレームの描画（その他） | 215.6ms | 231.0ms | 45.5ms |
+| 合計 | 1754.2ms | 1247.8ms | 105.0ms |
+
+確定の画素を変えずに削れたのは cube の焼き直しと gain の一部だった。残る 1 秒超えの大半は、WB 済みの写真から `niho-6` の H/S 応答を解析し直す特徴量と network（合わせて 0.83 秒）で、WB が変われば確定ごとに必要になる（同じ WB へ戻ったときは、持っている 2 つの解析を使う）。
+
+### 代案「解析は WB 前の元画像」を採らなかった理由
+
+`niho-6` の解析だけを WB 前の元画像から作れば（画素の WB は先頭のまま）、WB の確定で特徴量と network が要らなくなる（cube の持ち越しを含めて 0.4 秒前後の見込み）。判断の規則は測定の前に決めた: 代案と今の定義の差が mean ≤ 0.3 かつ p99 ≤ 1.5 なら代案を採る。組ごとに当てる（全組がこの範囲に入れば採る）。
+
+開発用教師 57 場面 × プリセット 3 本 × WB 5 通り（温度 ±30、tint ±20、温度 +30 + tint +20）の 855 組を、両方の定義で 2048px に描き、教師の比較と同じ手順（長辺 1500・blur 2・平坦画素・位置合わせ）の CIEDE2000 で比べた（[匿名集計](fixtures/color/review-2026-10-21/round27-analysis-before-wb.json)、`tools/color-review-build-diff.py`。sealed の独立 cohort は開いていない）。
+
+| WB | プリセット | mean（平均 / 最大） | p99（平均 / 最大） | 最大 |
+| --- | --- | ---: | ---: | ---: |
+| 温度 +30 | bluesky2 | 0.266 / 0.774 | 0.778 / 2.172 | 4.19 |
+| 温度 +30 | pastel | 0.290 / 0.962 | 0.824 / 2.046 | 3.90 |
+| 温度 +30 | colorful | 0.460 / 1.505 | 1.384 / 4.342 | 7.88 |
+| 温度 −30 | bluesky2 | 0.112 / 0.317 | 0.333 / 0.822 | 2.68 |
+| 温度 −30 | pastel | 0.126 / 0.331 | 0.386 / 0.803 | 5.63 |
+| 温度 −30 | colorful | 0.195 / 0.461 | 0.556 / 1.684 | 4.11 |
+| tint +20 | bluesky2 | 0.033 / 0.146 | 0.153 / 0.793 | 0.83 |
+| tint +20 | pastel | 0.030 / 0.098 | 0.140 / 0.789 | 0.85 |
+| tint +20 | colorful | 0.048 / 0.144 | 0.187 / 0.556 | 1.04 |
+| tint −20 | bluesky2 | 0.073 / 0.293 | 0.263 / 0.793 | 1.05 |
+| tint −20 | pastel | 0.071 / 0.202 | 0.258 / 0.803 | 0.92 |
+| tint −20 | colorful | 0.117 / 0.284 | 0.394 / 0.930 | 1.51 |
+| 温度 +30 + tint +20 | bluesky2 | 0.244 / 0.728 | 0.725 / 2.232 | 4.02 |
+| 温度 +30 + tint +20 | pastel | 0.263 / 0.824 | 0.757 / 2.096 | 3.37 |
+| 温度 +30 + tint +20 | colorful | 0.419 / 1.361 | 1.268 / 4.327 | 7.74 |
+
+855 組全体では mean の平均 0.183・p99 の平均 0.560 だが、mean > 0.3 が 171 組、p99 > 1.5 が 40 組（どちらかを超えるのは 182 組、57 場面のうち 47 場面）あり、最大は mean 1.50・p99 4.34。組の平均でも温度 +30（と温度 +30 + tint +20）の colorful は mean 0.46 / 0.42 で規則を超える。差は温度を上げる WB で大きい（WB 済みの写真と WB 前の写真で、H/S 応答の解析が見る輝度と特徴が変わる）。規則を満たさないので代案は採らず、`niho-13` の解析は WB 済みの写真から作る定義のままとした。
 
 ## 既定と互換
 
@@ -140,6 +186,10 @@ python3 packages/develop-engine/tools/calibrate/round27_measure.py --round <roun
 
 # 開発用教師（<work>/data/teachers と teachers2）
 python3 packages/develop-engine/tools/color-review-teachers.py --repo . --work <work> --engines niho-12,niho-13 --workers 6
+
+# 代案との画素差（両方の build の niho-develop-render を渡す）
+python3 packages/develop-engine/tools/color-review-build-diff.py --repo . --work <work> \
+  --baseline-bin <niho-13 の niho-develop-render> --candidate-bin <代案の niho-develop-render> --workers 6
 
 cargo +1.98.1 build --release --locked --target wasm32-unknown-unknown \
   --config packages/develop-engine/.cargo/config.toml \
