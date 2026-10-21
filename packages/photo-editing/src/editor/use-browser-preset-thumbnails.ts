@@ -53,6 +53,8 @@ function byDocumentOrder(a: Element, b: Element): number {
  *   （編集の描画を待たせない）。スライダー・適用量を動かしている間（`paused`）は新しい見本を出さない
  * - 土台の key が変わったら 400ms 待ってから見えている行を作り直し、その間は前の見本を出したまま。写真が変わったら見本を捨てる
  * - 使えない wasm（`supported` が false）では undefined（パネルは見本の無い行のまま）
+ * - 版の見本（niho-photo#42）も同じ仕組みで描く: 行の `xmp` に版の補正の JSON を渡し、`settingsOf` でそれを土台（今の補正の
+ *   数式・ルック・作業コピーの版だけ）に載せた補正にする。見本は行ごとに (土台の key, 行の値) で覚え、写真が変わったら捨てる
  */
 export function useBrowserPresetThumbnails(params: {
   mountedRef: MutableRefObject<boolean>;
@@ -67,7 +69,10 @@ export function useBrowserPresetThumbnails(params: {
   paused: boolean;
   /** 見本 1 枚の長辺（省くと {@link BROWSER_PRESET_THUMBNAIL_MAX_DIMENSION}） */
   maxDimension?: number;
-  resolvePreset: (preset: PhotoEditingPresetTarget, base: DevelopSettings) => Promise<DevelopPresetResult>;
+  /** プリセットを土台に当てる（`settingsOf` を渡したときは使わない） */
+  resolvePreset?: (preset: PhotoEditingPresetTarget, base: DevelopSettings) => Promise<DevelopPresetResult>;
+  /** 行の値（`xmp`）から描く補正を決める（版の見本。null は描けない）。省くとプリセット（`xmp` を土台に当てる） */
+  settingsOf?: (row: { key: string; xmp: string | null }, base: DevelopSettings) => DevelopSettings | null;
 }): PhotoEditingPresetThumbnails | undefined {
   const { mountedRef, engineRef, supported, photoKey, base, paused } = params;
   const maxDimension = params.maxDimension ?? BROWSER_PRESET_THUMBNAIL_MAX_DIMENSION;
@@ -80,8 +85,18 @@ export function useBrowserPresetThumbnails(params: {
   const retriesRef = useRef(0);
   const retryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [version, setVersion] = useState(0);
-  const latestRef = useRef({ supported, photoKey, paused, base, baseKey, maxDimension, resolvePreset: params.resolvePreset });
-  latestRef.current = { supported, photoKey, paused, base, baseKey, maxDimension, resolvePreset: params.resolvePreset };
+  const latest = {
+    supported,
+    photoKey,
+    paused,
+    base,
+    baseKey,
+    maxDimension,
+    resolvePreset: params.resolvePreset,
+    settingsOf: params.settingsOf,
+  };
+  const latestRef = useRef(latest);
+  latestRef.current = latest;
 
   /** 描き直す見本のうち、見えている一番上の行（無ければ null）。 */
   const nextRow = (target: Target): { key: string; xmp: string | null } | null => {
@@ -104,8 +119,14 @@ export function useBrowserPresetThumbnails(params: {
   ): Promise<DevelopFrame | "failed" | "retry"> => {
     try {
       let settings = target.base;
-      if (row.xmp !== null) {
-        const result = await latestRef.current.resolvePreset({ key: row.key, name: "", xmp: row.xmp }, target.base);
+      const { settingsOf, resolvePreset } = latestRef.current;
+      if (settingsOf) {
+        const resolved = settingsOf(row, target.base);
+        if (!resolved) return "failed";
+        settings = resolved;
+      } else if (row.xmp !== null) {
+        if (!resolvePreset) return "failed";
+        const result = await resolvePreset({ key: row.key, name: "", xmp: row.xmp }, target.base);
         if (!result.converted) return "failed";
         settings = presetDevelopSettings(target.base, result.settings);
       }
