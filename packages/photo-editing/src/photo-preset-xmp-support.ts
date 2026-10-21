@@ -9,7 +9,7 @@ import {
  * Lightroom のプリセット（XMP）のうち、NIHO の現像エンジンが使えないものの見分け（NIHO Photo 段 1 F2b 移行元設計）。
  *
  * - {@link summarizeUnsupportedPresetItems}: エンジンの `presetSettings` が返す `unsupported`（XMP の項目名。crate の
- *   `xmp.rs` の `UNSUPPORTED_KNOWN`・知らない項目・まだ描けない効果・埋め込みの Look の `Look.<項目>`・読めなかったマスクの
+ *   プロファイル補正の項目・知らない項目・まだ描けない効果・埋め込みの Look の `Look.<項目>`・読めなかったマスクの
  *   `MaskGroupBasedCorrections.<n>.<理由>`）を、Lightroom の日本語の名前にまとめる。表に無い項目は数だけ数える。シャープ・ノイズ軽減・
  *   カラーノイズの軽減は crate 0.19.0（Issue #32）から近い式で描く（`approximate`）ので、ここに来るのは読めない値と、既定でない
  *   ノイズ軽減の細かな項目（ディテール・コントラスト・滑らかさ）だけ
@@ -105,21 +105,16 @@ const UNSUPPORTED_GROUPS: readonly UnsupportedGroup[] = [
     prefixes: ["ColorNoiseReduction"],
     masters: ["ColorNoiseReduction"],
   },
-  { label: LABELS.chromaticAberration, keys: ["AutoLateralCA"] },
-  { label: LABELS.defringe, prefixes: ["Defringe"], masters: ["DefringePurpleAmount", "DefringeGreenAmount"] },
-  {
-    label: LABELS.lensCorrection,
-    prefixes: ["LensProfile", "LensManual"],
-    masters: ["LensProfileEnable", "LensManualDistortionAmount"],
-  },
+  // レンズ補正の手動の値・色収差の除去（`AutoLateralCA`）・フリンジ軽減（`Defringe*`）は、エンジン 0.23.0 から描く（niho-photo#45。
+  // crate は `unsupported` に入れない）。残るのは旧方式（PV2010）の `Defringe` と、プロファイル補正の量（100 以外）
+  { label: LABELS.defringe, keys: ["Defringe"] },
+  // プロファイル補正は RAW の作業コピーが撮影データで適用済み。オン（1）はそのまま、オフ（0）は Lightroom の既定と同じ値なので
+  // 知らせない（主の項目が 0。crate は作業コピーの補正を切れないので `unsupported` に入れる）
+  { label: LABELS.lensCorrection, prefixes: ["LensProfile"], masters: ["LensProfileEnable"] },
   { label: LABELS.incrementalWhiteBalance, keys: ["IncrementalTemperature", "IncrementalTint"] },
   { label: LABELS.blackAndWhite, keys: ["ConvertToGrayscale"], prefixes: ["GrayMixer"], masters: ["ConvertToGrayscale"] },
-  {
-    label: LABELS.vignette,
-    keys: ["VignetteAmount", "VignetteMidpoint"],
-    prefixes: ["PostCropVignette"],
-    masters: ["PostCropVignetteAmount", "VignetteAmount"],
-  },
+  // レンズの手動の周辺光量（`VignetteAmount` / `VignetteMidpoint`）はエンジン 0.23.0 から描く（niho-photo#45）
+  { label: LABELS.vignette, prefixes: ["PostCropVignette"], masters: ["PostCropVignetteAmount"] },
   { label: LABELS.grain, prefixes: ["Grain"], masters: ["GrainAmount"] },
   // カラーグレーディングの中間調・全体の輝度（`ColorGradeMidtoneLum` / `ColorGradeGlobalLum`）は、エンジン 0.19.0 から描く
   // （niho-photo#39。crate は `unsupported` に入れない）ので、ここには置かない

@@ -75,6 +75,10 @@ type FakeOptions = {
   info?: Record<string, unknown>;
   /** 中身の SHA-256 → native が返す補正の版（`camera_photo_versions`。無ければ版の無い写真） */
   versions?: Record<string, { versions: unknown; revision: number }>;
+  /** entryId → native が覚えている選別のフラグ（一覧の写真に `flag` を添える。niho-photo#47） */
+  flags?: Record<string, "pick" | "reject">;
+  /** `camera_library_set_flags` の失敗 */
+  setFlagsError?: CameraCommandError;
 };
 
 function sha(entryId: string): string {
@@ -95,6 +99,17 @@ function fakeNative(options: FakeOptions = {}) {
   const versions = new Map(Object.entries(options.versions ?? {}));
   const hashes = new Map(Object.entries(options.hashes ?? {}).map(([key, values]) => [key, [...values]]));
   const statuses = [...(options.status ?? [{ available: true, raster: true, fullSizeRaster: true }])];
+  const flags = new Map(Object.entries(options.flags ?? {}));
+  /** native と同じく、フラグの付いた写真にだけ `flag` を添える */
+  const flagged = (photo: LibraryEntry): LibraryEntry => {
+    const flag = flags.get(photo.entryId);
+    return flag ? { ...photo, flag } : photo;
+  };
+  const flaggedFolder = (folder: LibraryFolder): LibraryFolder => ({
+    ...folder,
+    photos: folder.photos.map(flagged),
+    children: folder.children.map(flaggedFolder),
+  });
   let next = 0;
   const fail = (code: string, message: string, currentRevision?: number) => {
     throw { code, message, ...(currentRevision === undefined ? {} : { currentRevision }) };
@@ -115,21 +130,36 @@ function fakeNative(options: FakeOptions = {}) {
         case "camera_develop_status":
           return statuses.length > 1 ? statuses.shift() : statuses[0];
         case "camera_library_remembered":
-          return { folders: [ROOT], photos: options.rememberedPhotos ?? [] };
+          return { folders: [flaggedFolder(ROOT)], photos: (options.rememberedPhotos ?? []).map(flagged) };
         case "camera_library_selected_photos":
-          return { photos: options.rememberedPhotos ?? [] };
+          return { photos: (options.rememberedPhotos ?? []).map(flagged) };
         case "camera_library_add_folder":
-          return { folder: ROOT.children[0] };
+          return { folder: flaggedFolder(ROOT.children[0]) };
         case "camera_library_add_photos":
-          return { photos: options.addedPhotos ?? [] };
+          return { photos: (options.addedPhotos ?? []).map(flagged) };
+        case "camera_library_set_flags": {
+          if (options.setFlagsError) return fail(options.setFlagsError.code, options.setFlagsError.message);
+          const updated: string[] = [];
+          const notFound: string[] = [];
+          for (const entryId of request?.entryIds as string[]) {
+            if (!entries.has(entryId)) {
+              notFound.push(entryId);
+              continue;
+            }
+            updated.push(entryId);
+            if (request?.flag === "pick" || request?.flag === "reject") flags.set(entryId, request.flag);
+            else flags.delete(entryId);
+          }
+          return { updated, notFound };
+        }
         case "camera_library_forget_folder":
           return {};
         case "camera_library_forget_photos":
           if (options.forgetPhotosError) return fail(options.forgetPhotosError.code, options.forgetPhotosError.message);
           return {};
         case "camera_library_list_folder":
-          if (request?.folderId === "f-root") return { folder: ROOT };
-          if (request?.folderId === "f-sub") return { folder: ROOT.children[0] };
+          if (request?.folderId === "f-root") return { folder: flaggedFolder(ROOT) };
+          if (request?.folderId === "f-sub") return { folder: flaggedFolder(ROOT.children[0]) };
           return fail("notFound", "フォルダが見つかりません。");
         case "camera_photo_open": {
           const photos = [];
@@ -237,7 +267,7 @@ function fakeNative(options: FakeOptions = {}) {
   };
   const commands = createCameraCommands(invoke);
   const library = createLocalPhotoLibrary(commands, { now: () => new Date("2026-10-15T00:00:00.000Z"), sleep: async () => undefined });
-  return { calls, commands, library, saved, open, tokens, versions };
+  return { calls, commands, library, saved, open, tokens, versions, flags };
 }
 
 const commandsOf = (calls: Call[]) => calls.map(([command]) => command);
@@ -254,11 +284,15 @@ describe("capabilities", () => {
       nativeExport: true,
       nativeExportRaster: true,
       exportFolder: true,
+      // マスクの面（ブラシ）の置き場はアプリのコマンド（M4 #68）
+      maskSurfaces: true,
       cutout: true,
       multiSelect: true,
       info: true,
       versions: true,
+      flags: true,
     });
+    expect(LOCAL_CLOSED_CAPABILITIES.flags).toBe(false);
     await expect(library.rollout()).resolves.toEqual({ crop: true, mobileEditing: false });
   });
 
@@ -343,6 +377,7 @@ describe("folders and list", () => {
       developRevision: 0,
       webRenderedRevision: null,
       favorite: false,
+      flag: null,
       previewUrl: "niho-thumb://localhost/e-jpg?size=256",
     });
   });
@@ -1016,5 +1051,92 @@ describe("export, presets and errors", () => {
     expect(library.errors.readDevelopRevisionStale(new CameraCommandError("revisionConflict", "x"))).toBeNull();
     expect(library.errors.readQuotaExceeded(notFound)).toBeNull();
     expect(library.errors.describeStorageError(new Error("x"), "fallback")).toBeNull();
+  });
+});
+
+describe("pick / reject flags (niho-photo#47)", () => {
+  it("shows the native flags on listed rows and filters picks only or hides rejects, with counts that match each page", async () => {
+    const { library } = fakeNative({ flags: { "e-raw": "pick", "e-heic": "reject" } });
+    const all = await library.list({ folderId: "f-root" });
+    expect(all.items.map((item) => [item.id, item.flag])).toEqual([
+      ["e-raw", "pick"],
+      ["e-jpg", null],
+      ["e-heic", "reject"],
+      ["e-png", null],
+    ]);
+    const picks = await library.list({ folderId: "f-root", flag: "pick" });
+    expect(picks.items.map((item) => item.id)).toEqual(["e-raw"]);
+    expect(picks.counts).toEqual({ photos: 4, articleImages: 0, favorites: 0, matching: 1 });
+    const kept = await library.list({ folderId: "f-root", flag: "notRejected", limit: 2 });
+    expect(kept.items.map((item) => item.id)).toEqual(["e-raw", "e-jpg"]);
+    expect(kept.counts).toEqual({ photos: 4, articleImages: 0, favorites: 0, matching: 3 });
+    const rest = await library.list({ folderId: "f-root", flag: "notRejected", limit: 2, cursor: kept.next });
+    expect(rest.items.map((item) => item.id)).toEqual(["e-png"]);
+    // 種類・補正済みと一緒に掛かる
+    await expect(library.list({ folderId: "f-root", flag: "notRejected", kind: "heic" })).resolves.toMatchObject({
+      items: [],
+      counts: { matching: 0 },
+    });
+    await expect(library.list({ folderId: "f-root", flag: "pick", edited: false })).resolves.toMatchObject({
+      items: [{ id: "e-raw" }],
+    });
+  });
+
+  it("filters the selected photos the same way", async () => {
+    const first = entry("picked-first", "first.jpg", "2026-01-01T00:00:00.000Z");
+    const second = entry("picked-second", "second.jpg", "2026-10-01T00:00:00.000Z");
+    const { library } = fakeNative({ rememberedPhotos: [first, second], flags: { "picked-second": "reject" } });
+    await expect(library.list({ localSource: "selected", flag: "notRejected" })).resolves.toMatchObject({
+      items: [{ id: "picked-first", flag: null }],
+      counts: { photos: 2, matching: 1 },
+    });
+  });
+
+  it("sets and clears flags by entry ID, reports missing photos and adds the flag to opened rows", async () => {
+    const fake = fakeNative({ flags: { "e-jpg": "pick" } });
+    const { library, calls } = fake;
+    // 開く前に一覧を読む（一覧で分かったフラグを開いた行に添える）
+    await library.list({ folderId: "f-root" });
+    await expect(library.get("e-jpg")).resolves.toMatchObject({ id: "e-jpg", flag: "pick" });
+
+    await expect(library.flags?.set(["e-raw", "e-raw", "e-gone"], "reject")).resolves.toEqual({
+      updated: 1,
+      skipped: { notFound: 1, noOriginal: 0 },
+    });
+    expect(calls.at(-1)).toEqual(["camera_library_set_flags", { entryIds: ["e-raw", "e-gone"], flag: "reject" }]);
+    expect(fake.flags.get("e-raw")).toBe("reject");
+    await expect(library.get("e-raw")).resolves.toMatchObject({ flag: "reject" });
+    await expect(library.list({ folderId: "f-root", flag: "notRejected" })).resolves.toMatchObject({
+      items: [{ id: "e-jpg" }, { id: "e-heic" }, { id: "e-png" }],
+    });
+
+    await expect(library.flags?.set(["e-jpg"], null)).resolves.toMatchObject({ updated: 1 });
+    expect(calls.at(-1)).toEqual(["camera_library_set_flags", { entryIds: ["e-jpg"], flag: null }]);
+    await expect(library.get("e-jpg")).resolves.toMatchObject({ flag: null });
+    // 何も送らない
+    const before = calls.length;
+    await expect(library.flags?.set([], "pick")).resolves.toEqual({ updated: 0, skipped: { notFound: 0, noOriginal: 0 } });
+    expect(calls.length).toBe(before);
+  });
+
+  it("leaves the flag out of opened rows it has not listed, and passes native failures through", async () => {
+    const { library } = fakeNative({ setFlagsError: new CameraCommandError("internal", "採用・却下を保存できませんでした。") });
+    const opened = await library.get("e-raw");
+    expect(opened).not.toBeNull();
+    expect(opened && "flag" in opened).toBe(false);
+    await expect(library.flags?.set(["e-raw"], "pick")).rejects.toMatchObject({
+      code: "internal",
+      message: "採用・却下を保存できませんでした。",
+    });
+  });
+
+  it("keeps working for a Mac without any saved flags (older data)", async () => {
+    const { library } = fakeNative();
+    const page = await library.list({ folderId: "f-root" });
+    expect(page.items.every((item) => item.flag === null)).toBe(true);
+    await expect(library.list({ folderId: "f-root", flag: "notRejected" })).resolves.toMatchObject({
+      counts: { matching: 4 },
+    });
+    await expect(library.list({ folderId: "f-root", flag: "pick" })).resolves.toMatchObject({ items: [] });
   });
 });

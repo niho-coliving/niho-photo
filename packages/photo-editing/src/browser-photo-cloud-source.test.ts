@@ -138,6 +138,44 @@ describe("木と印", () => {
     expect(isBrowserCloudPhotoInFilter(cloudPhoto({ fileExtension: "png" }), { kind: "jpeg", edited: null })).toBe(false);
   });
 
+  it("選別（採用だけ / 却下を隠す。niho-photo#47）は種類・補正済みと一緒に掛かり、サーバーへ送る条件と手元の写真を選り分ける条件が同じ", () => {
+    const picks: BrowserCloudListFilter = { kind: null, edited: null, flag: "pick" };
+    const kept: BrowserCloudListFilter = { kind: "raw", edited: null, flag: "notRejected" };
+    expect(browserCloudListParams("folder:folder-1", picks)).toEqual({ folderId: "folder-1", flag: "pick" });
+    expect(browserCloudListParams("selected", kept)).toEqual({ localSource: "selected", kind: "raw", flag: "notRejected" });
+    expect(browserCloudListParams("photos", { ...picks, flag: null })).toEqual({ hasOriginal: true });
+    // 記事の画像では送らない
+    expect(browserCloudListParams("articleImages", picks)).toEqual({ hasOriginal: false });
+    expect(countBrowserCloudListFilter(picks)).toBe(1);
+    expect(countBrowserCloudListFilter(kept)).toBe(2);
+    expect(countBrowserCloudListFilter({ kind: "jpeg", edited: true, flag: "pick" })).toBe(3);
+    expect(BROWSER_CLOUD_NO_LIST_FILTER.flag ?? null).toBeNull();
+
+    const picked = cloudPhoto({ flag: "pick" });
+    const rejected = cloudPhoto({ flag: "reject" });
+    const unflagged = cloudPhoto({ flag: null });
+    // フラグの無い古い行（`flag` を省いた行）はフラグなし
+    const legacy = cloudPhoto();
+    expect([picked, rejected, unflagged, legacy].map((photo) => isBrowserCloudPhotoInFilter(photo, picks))).toEqual([
+      true,
+      false,
+      false,
+      false,
+    ]);
+    const notRejected = { ...picks, flag: "notRejected" as const };
+    expect([picked, rejected, unflagged, legacy].map((photo) => isBrowserCloudPhotoInFilter(photo, notRejected))).toEqual([
+      true,
+      false,
+      true,
+      true,
+    ]);
+    // 絞らなければ却下した写真も出る（却下は消さない）
+    expect(isBrowserCloudPhotoInFilter(rejected, BROWSER_CLOUD_NO_LIST_FILTER)).toBe(true);
+    // 種類と一緒に
+    expect(isBrowserCloudPhotoInFilter(cloudPhoto({ fileExtension: "rw2", flag: "pick" }), kept)).toBe(true);
+    expect(isBrowserCloudPhotoInFilter(cloudPhoto({ fileExtension: "jpg", flag: "pick" }), kept)).toBe(false);
+  });
+
   it("「選んだ写真」は folderId と混ぜず明示的な localSource で読み、一覧内の行だけを絞り込む", () => {
     const filter: BrowserCloudListFilter = { kind: "jpeg", edited: false };
     expect(isBrowserSelectedPhotosPlace("selected")).toBe(true);

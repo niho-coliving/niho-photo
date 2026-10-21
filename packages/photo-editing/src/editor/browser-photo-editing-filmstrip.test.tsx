@@ -95,6 +95,31 @@ afterEach(() => {
 });
 
 describe("BrowserPhotoEditingFilmstrip", () => {
+  it("選別（niho-photo#47）: 升の右下に一覧と同じ採用・却下の印、読み上げ名に添える。却下した写真は画だけ薄くして押せる", async () => {
+    await render({
+      items: [stripItem("a", { flag: "pick" }), stripItem("b", { flag: "reject" }), stripItem("c", { flag: null })],
+      activeKey: "b",
+    });
+    expect(Array.from(container.querySelectorAll("nav li > button")).map((button) => button.getAttribute("aria-label"))).toEqual([
+      "a.JPG（採用）",
+      "b.JPG（却下）",
+      "c.JPG",
+    ]);
+    expect(tile("a.JPG（採用）").title).toBe("a.JPG");
+    expect(tile("a.JPG（採用）").querySelector("span.absolute")?.textContent).toBe("採用");
+    expect(tile("c.JPG").querySelector("span.absolute")).toBeNull();
+    const rejected = tile("b.JPG（却下）");
+    expect(rejected.querySelector("img")?.parentElement?.className).toContain("opacity-40");
+    // 開いている升の輪は薄くしない
+    expect(rejected.className).toContain("ring-niho-accent-ink");
+    expect(rejected.className).not.toContain("opacity-40");
+    expect(rejected.disabled).toBe(false);
+    await act(async () => {
+      tile("a.JPG（採用）").click();
+    });
+    expect(onOpen).toHaveBeenCalledWith("a");
+  });
+
   it("帯は「この一覧の写真」の nav で、升は写真名の button。開いている写真に印、追加中の写真は薄くして押せない", async () => {
     await render({ activeKey: "b" });
     expect(strip()).not.toBeNull();

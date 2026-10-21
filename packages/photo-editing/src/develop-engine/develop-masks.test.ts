@@ -398,7 +398,7 @@ describe("developSettings への取り込み（部分補正は写真自身の編
     expect(isEditableDevelopSettings(withMasks())).toBe(true);
     expect(isEditableDevelopSettings(withMasks({ v: 4 }))).toBe(false);
     expect(isEditableDevelopSettings(withMasks({}, [{ id: "broken" }]))).toBe(false);
-    expect(isEditableDevelopSettings(withMasks({ v: 9 }))).toBe(false);
+    expect(isEditableDevelopSettings(withMasks({ v: 10 }))).toBe(false);
     expect(
       isEditableDevelopSettings(withMasks({ whiteBalance: { mode: "absolute", temperature: 5500, tint: 0 } }, [linear({ adjust: { relativeTint: 3 } })])),
     ).toBe(false);

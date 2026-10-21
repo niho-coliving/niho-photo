@@ -28,6 +28,9 @@
 //! - The Transform sliders (`geometry.perspective`, niho-photo#46) move
 //!   linearly like numbers; the rest of the geometry is the photo's and the
 //!   kept Upright mode the preset's above 0%.
+//! - The lens corrections (`lens`, niho-photo#45): distortion, vignetting,
+//!   its midpoint and the fringe amounts move like numbers; the chromatic
+//!   aberration switch and the fringe hue ranges are the preset's above 0%.
 use super::{preset_settings, EffectField, PresetResult, XmpError, EFFECT_KEYS, SCALAR_KEYS};
 use crate::decode::LightroomWhite;
 use crate::geometry::{Geometry, PerspectiveField};
@@ -216,6 +219,7 @@ fn blend(
     }
     r.tone_curves = mix_curves(&base.tone_curves, &full.tone_curves, t);
     mix_perspective(base, t, &mut r);
+    r.lens = super::lens::blend_lens(&base.lens, &full.lens, t, mix_in);
     mix_white_balance(base, full, t, as_shot, &mut r);
     // The blended result may turn on an effect even when the photo's base
     // used the legacy shape version. Keep the version contract in sync with

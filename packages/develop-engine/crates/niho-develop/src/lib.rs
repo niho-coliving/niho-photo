@@ -24,6 +24,7 @@ pub mod head_wb;
 pub mod heal;
 pub mod icc_lut;
 mod jpeg_wb;
+pub mod lens;
 pub mod local_mask;
 pub mod local_render;
 pub mod look;
@@ -201,9 +202,51 @@ fn geometry_error(e: SettingsError) -> Error {
     Error::InvalidSettings(vec![e])
 }
 
-/// "補正前": the color adjustments (and the local `masks`) back to neutral,
-/// keeping `v`, `engine`, `look`, `base` and `geometry` (the before view is
-/// the same frame, only the colors are the original's). `v` stays the
+/// The chromatic aberration of one photo ([`lens::estimate_chromatic_aberration`]):
+/// found once from the whole photo as opened (before its geometry, white
+/// balance and adjustments) and shared with the sessions made from this
+/// one (preset previews, auto, the picker), whatever their size.
+struct LensCache {
+    source: Arc<SessionSource>,
+    chromatic: std::sync::OnceLock<lens::ChromaticEstimate>,
+    estimates: std::sync::atomic::AtomicUsize,
+}
+
+impl LensCache {
+    fn new(source: Arc<SessionSource>) -> Self {
+        Self {
+            source,
+            chromatic: std::sync::OnceLock::new(),
+            estimates: std::sync::atomic::AtomicUsize::new(0),
+        }
+    }
+
+    fn with_chromatic_estimate(
+        source: Arc<SessionSource>,
+        estimate: lens::ChromaticEstimate,
+    ) -> Self {
+        let chromatic = std::sync::OnceLock::new();
+        let _ = chromatic.set(estimate);
+        Self {
+            source,
+            chromatic,
+            estimates: std::sync::atomic::AtomicUsize::new(1),
+        }
+    }
+
+    fn chromatic(&self) -> lens::ChromaticEstimate {
+        *self.chromatic.get_or_init(|| {
+            self.estimates
+                .fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+            lens::estimate_chromatic_aberration(self.source.image())
+        })
+    }
+}
+
+/// "補正前": the color adjustments (and the local `masks`, the heal marks and
+/// the manual `lens` corrections) back to neutral, keeping `v`, `engine`,
+/// `look`, `base` and `geometry` (the before view is the same frame, only
+/// the colors are the original's). `v` stays the
 /// saved one (at least what the kept parts need), as with color points.
 pub fn before_settings(settings_json: &str) -> Result<String, Error> {
     let s = parse_settings(settings_json)?;
@@ -229,14 +272,24 @@ pub fn raster_decode_size(
     max_dimension: usize,
     cap: usize,
 ) -> Result<usize, Error> {
-    frame::decode_long_edge(
+    let size = frame::decode_long_edge(
         rendered_geometry(settings),
         width,
         height,
         max_dimension,
         cap,
     )
-    .map_err(geometry_error)
+    .map_err(geometry_error)?;
+    // A negative lens distortion magnifies the photo to fill its corners.
+    let zoom = lens::decode_zoom(&settings.lens);
+    if zoom == 1.0 || max_dimension == 0 {
+        return Ok(size);
+    }
+    let mut larger = (libm::ceil(size as f64 * zoom) as usize).min(width.max(height));
+    if cap > 0 {
+        larger = larger.min(cap);
+    }
+    Ok(larger.max(size))
 }
 
 /// The size `settings` render at from a `width x height` source (a
@@ -284,7 +337,7 @@ pub fn render(
     } else {
         Vec::new()
     };
-    if rendered_geometry(&settings).is_none() {
+    if rendered_geometry(&settings).is_none() && !settings.lens.is_active() {
         let mut raster = decode::decode_raster(input, options.max_dimension, options.filter)?;
         heal::heal_in_place(&heal, &mut raster.image);
         // Local masks render in layers (`Session::render`); their `R0` is
@@ -310,12 +363,23 @@ pub fn render(
         options.decode_cap,
     )?;
     let mut raster = decode::decode_raster(input, long_edge, options.filter)?;
+    // A one-shot render heals its decoded raster before opening the Session.
+    // Preserve the original pixels for the photo-wide CA estimate so this
+    // path matches an interactive Session, whose lens cache keeps the source.
+    let chromatic_estimate = if heal_decoded && settings.lens.remove_chromatic_aberration {
+        Some(lens::estimate_chromatic_aberration(&raster.image))
+    } else {
+        None
+    };
     heal::heal_in_place(&heal, &mut raster.image);
-    Session::new(SessionSource::Raster(raster), options.filter).render(
-        &settings,
-        options.max_dimension,
-        options.quality,
-    )
+    let mut session = Session::new(SessionSource::Raster(raster), options.filter);
+    if let Some(estimate) = chromatic_estimate {
+        session.lens = Arc::new(LensCache::with_chromatic_estimate(
+            Arc::clone(&session.source),
+            estimate,
+        ));
+    }
+    session.render(&settings, options.max_dimension, options.quality)
 }
 
 /// One-shot render of a RAW working-copy PNG and its metadata.
@@ -858,6 +922,9 @@ pub struct Session {
     healed: Option<heal::Healed>,
     /// The marks' plans, shared with the sessions made from this one.
     heal_plans: Arc<heal::PlanCache>,
+    /// The photo's chromatic aberration, shared with the sessions made
+    /// from this one.
+    lens: Arc<LensCache>,
 }
 
 impl Session {
@@ -886,6 +953,7 @@ impl Session {
             SessionSource::Raster(raster) => (raster.info.source_width, raster.info.source_height),
             SessionSource::WorkingCopy { image, .. } => (image.width, image.height),
         };
+        let lens = Arc::new(LensCache::new(Arc::clone(&source)));
         Self {
             working_size,
             masks: None,
@@ -915,6 +983,7 @@ impl Session {
             niho3_seed: None,
             healed: None,
             heal_plans: Arc::default(),
+            lens,
         }
     }
 
@@ -1021,6 +1090,7 @@ impl Session {
         isolated.share_balanced_source(self);
         isolated.share_niho6_analysis(self);
         isolated.heal_plans = Arc::clone(&self.heal_plans);
+        isolated.lens = Arc::clone(&self.lens);
         // The picker reads the global settings: the color points it targets
         // are global (local masks do not move them). Heal marks remain active.
         let global = local_render::without_masks(settings);
@@ -1203,6 +1273,7 @@ impl Session {
         thumbnail.working_size = self.working_size;
         thumbnail.share_niho6_analysis(self);
         thumbnail.heal_plans = Arc::clone(&self.heal_plans);
+        thumbnail.lens = Arc::clone(&self.lens);
         thumbnail
     }
 
@@ -1920,8 +1991,19 @@ impl Session {
             settings.clone()
         };
         let settings = &render_settings;
-        if let Some(g) = rendered_geometry(settings) {
-            return self.render_framed(settings, g, max_dimension, quality, use_niho3);
+        // A lens that renders something draws through a frame (the
+        // identity geometry without one).
+        let lens = self.lens_render(settings);
+        let identity = Geometry::default();
+        if let Some(g) = rendered_geometry(settings).or(lens.as_ref().map(|_| &identity)) {
+            return self.render_framed(
+                settings,
+                g,
+                lens.as_ref(),
+                max_dimension,
+                quality,
+                use_niho3,
+            );
         }
         self.framed = None;
         let key = self.at_size(max_dimension, use_niho3);
@@ -1987,24 +2069,56 @@ impl Session {
         Ok(rendered)
     }
 
-    /// A frame with a geometry: the window's working image (kept while the
-    /// geometry and the size stay, in place of the per-size reduction),
-    /// the statistics of the whole source, the output cut from the window.
+    /// What the lens of `settings` renders on this photo (`None`: nothing;
+    /// the chromatic aberration is estimated once per photo when the switch
+    /// is on, [`LensCache`]).
+    fn lens_render(&self, settings: &DevelopSettings) -> Option<lens::LensRender> {
+        let l = &settings.lens;
+        if !l.is_active() {
+            return None;
+        }
+        let chromatic = l.remove_chromatic_aberration.then(|| self.lens.chromatic());
+        let space = match self.source.as_ref() {
+            SessionSource::Raster(_) => lens::LensSpace::LinearSrgb,
+            SessionSource::WorkingCopy { .. } => lens::LensSpace::LinearProPhoto,
+        };
+        lens::LensRender::new(l, chromatic, space)
+    }
+
+    /// The photo's chromatic aberration as estimated so far and how many
+    /// times it was estimated (tests: the estimate is made once per photo,
+    /// not per frame).
+    pub fn lens_stats(&self) -> lens::LensStats {
+        lens::LensStats {
+            chromatic: self.lens.chromatic.get().copied(),
+            chromatic_estimates: self
+                .lens
+                .estimates
+                .load(std::sync::atomic::Ordering::Relaxed),
+        }
+    }
+
+    /// A frame with a geometry (or a lens): the window's working image
+    /// (kept while the geometry, the lens and the size stay, in place of
+    /// the per-size reduction), the statistics of the whole source, the
+    /// output cut from the window.
     fn render_framed(
         &mut self,
         settings: &DevelopSettings,
         g: &Geometry,
+        lens: Option<&lens::LensRender>,
         max_dimension: usize,
         quality: Quality,
         use_niho3: bool,
     ) -> Result<Rendered, Error> {
-        let key = frame::frame_key(g, max_dimension);
+        let key = frame::frame_key_with_lens(g, lens, max_dimension);
         if self.framed.as_ref().is_none_or(|f| f.key != key) {
             // One working image in memory at a time.
             self.framed = None;
             self.sized = None;
             let (w, h) = self.active_source(use_niho3).size();
-            let plan = frame::plan(g, w, h, max_dimension).map_err(geometry_error)?;
+            let plan =
+                frame::plan_with_lens(g, lens, w, h, max_dimension).map_err(geometry_error)?;
             let image = (!plan.window_is_source()).then(|| {
                 let active = self.active_source(use_niho3);
                 let window = frame::working_image(active.image(), &plan, self.filter);
@@ -2137,6 +2251,7 @@ impl Session {
             isolated.niho3_seed = self.niho3_analysis();
             isolated.share_balanced_source(self);
             isolated.share_niho6_analysis(self);
+            isolated.lens = Arc::clone(&self.lens);
             let raw = use_niho3.is_some_and(|engine| engine != RawEngine::Niho6);
             return auto::try_run(settings, raw, |candidate| {
                 isolated.render(candidate, auto::PROXY_LONG_EDGE, auto::PROXY_QUALITY)
@@ -2149,8 +2264,13 @@ impl Session {
         let balanced = self.balanced_source(white);
         let source = balanced.image();
         let (w, h) = (source.width, source.height);
-        let plan = match rendered_geometry(settings) {
-            Some(g) => Some(frame::plan(g, w, h, auto::PROXY_LONG_EDGE).map_err(geometry_error)?),
+        let lens = self.lens_render(settings);
+        let identity = Geometry::default();
+        let plan = match rendered_geometry(settings).or(lens.as_ref().map(|_| &identity)) {
+            Some(g) => Some(
+                frame::plan_with_lens(g, lens.as_ref(), w, h, auto::PROXY_LONG_EDGE)
+                    .map_err(geometry_error)?,
+            ),
             None => None,
         };
         let proxy = match &plan {
