@@ -22,6 +22,7 @@ import {
   SquareSplitHorizontal,
   Sparkles,
   Sun,
+  Triangle,
   Undo2,
   type LucideIcon,
 } from "lucide-react";
@@ -114,6 +115,8 @@ const TOOL_ICONS: Record<MobileToolId, LucideIcon> = {
   light: Sun,
   color: Droplet,
   effects: Aperture,
+  // ディテール（Issue #32。Lightroom のディテールの道具と同じ三角）。帯の幅が足りないので、今のスマホの面には出さない
+  detail: Triangle,
   crop: Crop,
   "color-mixer": Pipette,
 };

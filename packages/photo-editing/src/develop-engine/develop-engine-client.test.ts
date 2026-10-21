@@ -542,6 +542,47 @@ describe("createDevelopEngine", () => {
     expect(await engine.supportsColorPoints()).toBe(false);
   });
 
+  it("ready に detail: true が付いた wasm だけディテールを公開する（Issue #32）", async () => {
+    const { engine } = await readyEngine({ features: { detail: true } });
+    expect(await engine.supportsDetail()).toBe(true);
+    const { engine: older } = await readyEngine({ features: { colorPoints: true } });
+    expect(await older.supportsDetail()).toBe(false);
+  });
+
+  it("16bit PNG の作業コピーを開いている間は、プレビュー（描画・見本・色取得）からディテールを外し、書き出しは外さない（Issue #32）", async () => {
+    const { worker, engine } = await readyEngine({ features: { detail: true, colorPoints: true, presetThumbnails: true } });
+    const detail = { sharpening: { amount: 40, radius: 1, detail: 25, masking: 0 }, luminanceNoiseReduction: 20 };
+    const settings = { v: 5, engine: "niho-11", detail };
+
+    // JPEG / PNG（open）はプレビューにも描く
+    const opened = engine.open(new ArrayBuffer(4), 2560);
+    worker.respond({ type: "opened", id: worker.lastRequest("open").id, width: 4, height: 3 });
+    await opened;
+    void engine.render(settings, { maxDimension: 1280, interactive: false });
+    expect(JSON.parse((worker.lastRequest("render") as { settingsJson: string }).settingsJson)).toEqual(settings);
+    worker.respond(frameResponse(worker.lastRequest("render").id, 1));
+    await flushPromises();
+
+    // 作業コピー（openWorkingCopy）はプレビューから外す
+    const working = engine.openWorkingCopy(new ArrayBuffer(8), '{"kind":"raw"}');
+    worker.respond({ type: "opened", id: worker.lastRequest("openWorkingCopy").id, width: 2560, height: 1707 });
+    await working;
+    void engine.render(settings, { maxDimension: 1280, interactive: false });
+    expect(JSON.parse((worker.lastRequest("render") as { settingsJson: string }).settingsJson)).toEqual({ v: 5, engine: "niho-11" });
+    worker.respond(frameResponse(worker.lastRequest("render").id, 2));
+    await flushPromises();
+    void engine.sampleColor(settings, { maxDimension: 1280, x: 0.5, y: 0.5 });
+    expect(JSON.parse((worker.lastRequest("sampleColor") as { settingsJson: string }).settingsJson)).not.toHaveProperty("detail");
+    void engine.renderPresetThumbnail(settings, 96);
+    await flushPromises();
+    const thumbnail = worker.lastRequest("renderPresetThumbnail") as { settingsJson: string };
+    expect(JSON.parse(thumbnail.settingsJson)).toEqual({ v: 5, engine: "niho-11" });
+
+    // 書き出しはディテールを描く
+    void engine.exportWorkingCopyJpeg(new ArrayBuffer(8), '{"kind":"raw"}', settings, { maxDimension: 2048, quality: 90 });
+    expect(JSON.parse((worker.lastRequest("exportWorkingCopyJpeg") as { settingsJson: string }).settingsJson)).toEqual(settings);
+  });
+
   it("sampleColor は設定・描画長辺・正規化座標を worker に渡す", async () => {
     const { worker, engine } = await readyEngine({ features: { colorPoints: true } });
     const sampled = engine.sampleColor({ v: 4, colorPoints: [] }, { maxDimension: 1280, x: 0.2, y: 0.8 });

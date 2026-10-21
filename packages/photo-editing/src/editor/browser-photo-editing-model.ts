@@ -21,6 +21,7 @@ import {
   PHOTO_EDITING_BASE_CONTROL_KEYS,
   type PhotoEditingControlKey,
 } from "../photo-editing-adjustments";
+import { PHOTO_EDITING_DETAIL_KEYS } from "../photo-editing-detail";
 import { PHOTO_EDITING_EFFECT_KEYS } from "../photo-editing-effects";
 import { PHOTO_EDITING_EXPORT_PNG_FAILED_TEXT } from "../photo-editing-copy";
 import type {
@@ -268,6 +269,37 @@ export const BROWSER_EFFECTS_ADJUSTMENT_KEYS: ReadonlyArray<PhotoEditingControlK
   ...PHOTO_EDITING_BASE_CONTROL_KEYS,
   ...PHOTO_EDITING_EFFECT_KEYS,
 ];
+const BROWSER_EFFECTS_DETAIL_ADJUSTMENT_KEYS: ReadonlyArray<PhotoEditingControlKey> = [
+  ...BROWSER_EFFECTS_ADJUSTMENT_KEYS,
+  ...PHOTO_EDITING_DETAIL_KEYS,
+];
+const BROWSER_BASE_DETAIL_ADJUSTMENT_KEYS: ReadonlyArray<PhotoEditingControlKey> = [
+  ...PHOTO_EDITING_BASE_CONTROL_KEYS,
+  ...PHOTO_EDITING_DETAIL_KEYS,
+];
+
+/**
+ * ディテール（シャープ・ノイズ軽減。Issue #32）をプレビューに描ける入力か。wasm の final（長辺 2048px）が 1 秒に収まると実測した
+ * JPEG / PNG のオリジナルと JPEG の作業コピー（`open` で開く）だけ。16bit PNG の作業コピー（RAW など）・RAW を開いている途中の仮の画は、
+ * プレビューでは描かず書き出しだけが描く（engine の `openWorkingCopy` の後の描画はディテールを外す）ので、補正の面にも出さない。
+ */
+export function detailPreviewable(input: DevelopSourceInput | null | undefined): boolean {
+  if (!input) return false;
+  return input.kind === "original" || (input.kind === "workingCopy" && input.encoding === "jpeg8");
+}
+
+/**
+ * wasm で開いた PC の右パネルに出す項目（`visibleKeys`。省くと基本の 13 項目）。効果（v: 3）・ディテール（シャープ・ノイズ軽減。
+ * v: 5。Issue #32）は、それぞれ読めると確かめた wasm の写真にだけ足す。並びは群の定義のまま（ディテールは効果の後ろ）。スマホの面は
+ * 道具の帯が 7 つで幅いっぱい（375px で実測）なので、効果と同じくまだ足さない。
+ */
+export function browserAdjustmentKeys(options: {
+  effects: boolean;
+  detail: boolean;
+}): ReadonlyArray<PhotoEditingControlKey> | undefined {
+  if (options.detail) return options.effects ? BROWSER_EFFECTS_DETAIL_ADJUSTMENT_KEYS : BROWSER_BASE_DETAIL_ADJUSTMENT_KEYS;
+  return options.effects ? BROWSER_EFFECTS_ADJUSTMENT_KEYS : undefined;
+}
 /** ブラウザは RAW も相対で直すので、絶対の白は使わない（撮影時の白を渡さない。RAW の K 表示は S11 の後の別の slice）。 */
 export const BROWSER_WHITE_BALANCE_SOURCE: Pick<PhotoEditingPhoto, "asShotWhiteBalance"> = { asShotWhiteBalance: null };
 

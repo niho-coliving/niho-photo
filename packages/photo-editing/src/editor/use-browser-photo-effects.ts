@@ -51,6 +51,30 @@ export function useBrowserPhotoColorPointsSupport(params: {
   engineRef: MutableRefObject<DevelopEngine | null>;
   photoKey: string | null;
 }): boolean {
+  return useEngineSupport(params, "colorPoints");
+}
+
+/**
+ * ディテール（シャープ・ノイズ軽減。Issue #32）の項目を出せるか。ディテールのある設定は `v: 5` で保存するので、効果と同じく
+ * 起こした wasm が読めると確かめてから出す（確かめている間・読めない wasm・wasm を使えないときは false）。
+ */
+export function useBrowserPhotoDetailSupport(params: {
+  mountedRef: MutableRefObject<boolean>;
+  engineRef: MutableRefObject<DevelopEngine | null>;
+  photoKey: string | null;
+}): boolean {
+  return useEngineSupport(params, "detail");
+}
+
+/** 写真を 1 枚で見ているときに 1 回だけ wasm の口を確かめ、画面を開いている間覚える。 */
+function useEngineSupport(
+  params: {
+    mountedRef: MutableRefObject<boolean>;
+    engineRef: MutableRefObject<DevelopEngine | null>;
+    photoKey: string | null;
+  },
+  capability: "colorPoints" | "detail",
+): boolean {
   const { mountedRef, engineRef, photoKey } = params;
   const [supported, setSupported] = useState<boolean | null>(null);
   const wanted = photoKey !== null;
@@ -59,7 +83,7 @@ export function useBrowserPhotoColorPointsSupport(params: {
     const engine = engineRef.current;
     if (!engine) return;
     let cancelled = false;
-    engine.supportsColorPoints().then(
+    (capability === "detail" ? engine.supportsDetail() : engine.supportsColorPoints()).then(
       (value) => {
         if (!cancelled && mountedRef.current) setSupported(value === true);
       },
@@ -70,6 +94,6 @@ export function useBrowserPhotoColorPointsSupport(params: {
     return () => {
       cancelled = true;
     };
-  }, [engineRef, mountedRef, photoKey, supported, wanted]);
+  }, [capability, engineRef, mountedRef, photoKey, supported, wanted]);
   return supported === true;
 }

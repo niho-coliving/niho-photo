@@ -310,7 +310,7 @@ describe("createDevelopEngineWorkerHandler", () => {
     expect(autoLog).toHaveBeenCalledWith({ stage: "autoSettings", durationMs: 0, wasmMemoryBytes: 65_536, status: "ok" });
   });
 
-  it("wasm が v: 3 の効果と v: 4 の色ポイントを通せば、それぞれの ready capability を付ける", async () => {
+  it("wasm が v: 3 の効果・v: 4 の色ポイント・v: 5 のディテールを通せば、それぞれの ready capability を付ける", async () => {
     const glue = fakeGlue();
     const validateSettings = vi.fn((_settingsJson: string) => "[]");
     const { handler, posted } = setup({ module: { ...glue.module, validateSettings } });
@@ -319,11 +319,11 @@ describe("createDevelopEngineWorkerHandler", () => {
     await handler({ type: "init", id: 2, manifestUrl: MANIFEST_URL });
 
     expect(posted.map((entry) => entry.message)).toEqual([
-      { type: "ready", id: 1, version: "0.2.0+test", effects: true, colorPoints: true },
-      { type: "ready", id: 2, version: "0.2.0+test", effects: true, colorPoints: true },
+      { type: "ready", id: 1, version: "0.2.0+test", effects: true, colorPoints: true, detail: true },
+      { type: "ready", id: 2, version: "0.2.0+test", effects: true, colorPoints: true, detail: true },
     ]);
     // capability ごとに最小設定を 1 回ずつ確かめ、2 回目の init では繰り返さない。
-    expect(validateSettings).toHaveBeenCalledTimes(2);
+    expect(validateSettings).toHaveBeenCalledTimes(3);
     expect(JSON.parse(validateSettings.mock.calls[0]?.[0] ?? "null")).toEqual({
       v: 3,
       engine: "niho-1",
@@ -338,6 +338,23 @@ describe("createDevelopEngineWorkerHandler", () => {
       base: null,
       colorPoints: [{ id: "probe" }],
     });
+    expect(JSON.parse(validateSettings.mock.calls[2]?.[0] ?? "null")).toEqual({
+      v: 5,
+      engine: "niho-10",
+      look: "niho-standard-1",
+      base: null,
+      detail: { sharpening: { amount: 10, radius: 1, detail: 25, masking: 0 }, luminanceNoiseReduction: 0 },
+    });
+  });
+
+  it("v: 5 のディテールを断る wasm（古い crate）には detail の capability を付けない", async () => {
+    const glue = fakeGlue();
+    const validateSettings = vi.fn((settingsJson: string) =>
+      JSON.parse(settingsJson).v === 5 ? JSON.stringify([{ path: "v", code: "unsupportedVersion" }]) : "[]",
+    );
+    const { handler, posted } = setup({ module: { ...glue.module, validateSettings } });
+    await handler({ type: "init", id: 1, manifestUrl: MANIFEST_URL });
+    expect(posted[0]?.message).toEqual({ type: "ready", id: 1, version: "0.2.0+test", effects: true, colorPoints: true });
   });
 
   it("sampleColor は正規化座標を session に渡し、Stage Q の Oklch だけを返す", async () => {
@@ -377,7 +394,7 @@ describe("createDevelopEngineWorkerHandler", () => {
     }
   });
 
-  it("幾何の口と v3/v4 設定があれば ready に全 capability を付ける", async () => {
+  it("幾何の口と v3/v4/v5 設定があれば ready に全 capability を付ける", async () => {
     const glue = fakeGlue();
     const { handler, posted } = setup({
       module: {
@@ -399,6 +416,7 @@ describe("createDevelopEngineWorkerHandler", () => {
       geometry: true,
       effects: true,
       colorPoints: true,
+      detail: true,
     });
   });
 
