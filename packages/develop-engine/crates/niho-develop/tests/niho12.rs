@@ -73,7 +73,8 @@ fn parses_as_a_reader_capability_without_changing_constructor_defaults() {
             .engine,
         ENGINE_NIHO_12
     );
-    assert_eq!(niho_develop::ENGINE_VERSION, ENGINE_NIHO_12);
+    // Still read after `niho-13` became the latest formula (#27).
+    assert!(niho_develop::settings::is_known_engine(ENGINE_NIHO_12));
     // Crate constructors keep their compatibility default; the product
     // default for new edits is chosen by the clients (`develop-settings.ts`).
     assert_eq!(DevelopSettings::neutral().engine, "niho-1");

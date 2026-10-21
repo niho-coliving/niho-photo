@@ -9,8 +9,9 @@
 //!   `geometryOutputToSource` (`tests/fixtures/masks/geometry-map-cases.json`
 //!   holds its values; both sides check them).
 //! - [`mask_weights`]: the plane `m` of one mask in `f32` with IEEE `+ - * /
-//!   sqrt` only (the radial angle's sine and cosine once per mask, `libm`), so
-//!   native and wasm agree bit for bit, quantised to `w = floor(m * 65536 +
+//!   sqrt` only (the radial angle's sine and cosine once per mask, `libm`;
+//!   a surface's bilinear sample with `floor`, [`crate::mask_surface::Sampler`]),
+//!   so native and wasm agree bit for bit, quantised to `w = floor(m * 65536 +
 //!   0.5)` (`0..=65536`, one `u32` per output pixel).
 //! - [`local_settings`]: the global settings plus a mask's `adjust`, clamped
 //!   to the global ranges.
@@ -20,6 +21,7 @@
 
 use crate::geometry::Geometry;
 use crate::local_mask::{LocalAdjust, LocalMask, MaskShape};
+use crate::mask_surface::{MaskSurface, Sampler};
 use crate::settings::{DevelopSettings, WhiteBalanceMode};
 
 /// The weight of `m = 1`.
@@ -189,14 +191,24 @@ impl SourceMap {
 /// A mask the plane cannot be made for.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum PlaneError {
-    /// A `brush` / `subject` / `sky` mask: its surface is not in this build
-    /// (the surface store is M4, #68). Holds the mask id.
+    /// A `brush` / `subject` / `sky` mask without its surface. Holds the
+    /// mask id.
     SurfaceMissing(String),
+    /// The surface given is not of the size the mask's `surface` says.
+    SurfaceMismatch {
+        mask: String,
+        surface: String,
+        /// The `surface.width` / `surface.height` of the settings.
+        expected: (u32, u32),
+        /// The surface's own size.
+        actual: (u32, u32),
+    },
 }
 
-/// One mask's shape in plane units (`X = u * A`, `Y = v`), `f32`.
+/// One mask's shape: linear and radial in plane units (`X = u * A`,
+/// `Y = v`, `f32`), a surface over the working image (`u`, `v`).
 #[derive(Debug, Clone, Copy)]
-enum Shape {
+enum Shape<'a> {
     Linear {
         zx: f32,
         zy: f32,
@@ -215,10 +227,15 @@ enum Shape {
         /// `max(feather / 100, 0.002)`.
         f: f32,
     },
+    Surface(Sampler<'a>),
 }
 
-impl Shape {
-    fn of(mask: &LocalMask, aspect: f64) -> Result<Self, PlaneError> {
+impl<'a> Shape<'a> {
+    fn of(
+        mask: &LocalMask,
+        aspect: f64,
+        surface: Option<&'a MaskSurface>,
+    ) -> Result<Self, PlaneError> {
         match &mask.shape {
             MaskShape::Linear { zero, full } => {
                 let (zx, zy) = ((zero.x * aspect) as f32, zero.y as f32);
@@ -250,13 +267,27 @@ impl Shape {
                     f: ((feather / 100.0) as f32).max(MIN_RADIAL_FEATHER),
                 })
             }
-            MaskShape::Surface(_) => Err(PlaneError::SurfaceMissing(mask.id.clone())),
+            MaskShape::Surface(reference) => {
+                let surface = surface.ok_or_else(|| PlaneError::SurfaceMissing(mask.id.clone()))?;
+                let actual = (surface.width(), surface.height());
+                if actual != (reference.width, reference.height) {
+                    return Err(PlaneError::SurfaceMismatch {
+                        mask: mask.id.clone(),
+                        surface: reference.id.clone(),
+                        expected: (reference.width, reference.height),
+                        actual,
+                    });
+                }
+                Ok(Shape::Surface(Sampler::new(surface)))
+            }
         }
     }
 
-    /// `m` (`0..1`) at plane point `(x, y)`, before `invert`.
+    /// `m` (`0..1`) at working-image position `(u, v)`, before `invert`.
     #[inline(always)]
-    fn value(&self, x: f32, y: f32) -> f32 {
+    fn value(&self, u: f64, v: f64, aspect: f64) -> f32 {
+        // Linear and radial: the plane point `X = (u * A) as f32`, `Y = v as f32`.
+        let plane = || ((u * aspect) as f32, v as f32);
         match *self {
             Shape::Linear {
                 zx,
@@ -264,7 +295,10 @@ impl Shape {
                 dx,
                 dy,
                 den,
-            } => (((x - zx) * dx + (y - zy) * dy) / den).clamp(0.0, 1.0),
+            } => {
+                let (x, y) = plane();
+                (((x - zx) * dx + (y - zy) * dy) / den).clamp(0.0, 1.0)
+            }
             Shape::Radial {
                 cx,
                 cy,
@@ -274,6 +308,7 @@ impl Shape {
                 b,
                 f,
             } => {
+                let (x, y) = plane();
                 let (ox, oy) = (x - cx, y - cy);
                 let px = ox * cos + oy * sin;
                 let py = -ox * sin + oy * cos;
@@ -282,6 +317,7 @@ impl Shape {
                 let s = ((1.0 - r) / f).clamp(0.0, 1.0);
                 s * s * (3.0 - 2.0 * s)
             }
+            Shape::Surface(sampler) => sampler.value(u, v),
         }
     }
 }
@@ -298,7 +334,9 @@ pub fn weight_to_u8(weight: u32) -> u8 {
     ((weight * 255 + FULL_WEIGHT / 2) >> 16) as u8
 }
 
-/// What a mask's plane depends on besides the map and the output size.
+/// What a mask's plane depends on besides the map and the output size (a
+/// surface mask's: its surface's id, which names the surface's bytes, and
+/// size).
 pub fn shape_key(mask: &LocalMask) -> String {
     format!("{:?}|{}", mask.shape, mask.invert)
 }
@@ -306,14 +344,19 @@ pub fn shape_key(mask: &LocalMask) -> String {
 /// The blend weights of `mask` on a `width x height` output whose pixels
 /// `map` places on the working image ([`weight_of`] per pixel, row-major).
 /// `enabled` and `adjust` are not read (the caller decides what is drawn).
+/// A `brush` / `subject` / `sky` mask samples `surface` (spread over the
+/// whole working image; `None` is [`PlaneError::SurfaceMissing`], another
+/// size than its `surface` [`PlaneError::SurfaceMismatch`]); the other
+/// kinds do not read it.
 pub fn mask_weights(
     mask: &LocalMask,
     map: &SourceMap,
     width: usize,
     height: usize,
+    surface: Option<&MaskSurface>,
 ) -> Result<Vec<u32>, PlaneError> {
     let aspect = map.aspect();
-    let shape = Shape::of(mask, aspect)?;
+    let shape = Shape::of(mask, aspect, surface)?;
     let columns: Vec<f64> = (0..width)
         .map(|i| (i as f64 + 0.5) / width as f64)
         .collect();
@@ -322,7 +365,7 @@ pub fn mask_weights(
         let py = (j as f64 + 0.5) / height as f64;
         for &px in &columns {
             let [u, v] = map.source_of(px, py);
-            let m = shape.value((u * aspect) as f32, v as f32);
+            let m = shape.value(u, v, aspect);
             let m = if mask.invert { 1.0 - m } else { m };
             weights.push(weight_of(m));
         }
@@ -486,7 +529,7 @@ mod tests {
     }
 
     fn plane(mask: &LocalMask, map: &SourceMap, w: usize, h: usize) -> Vec<u32> {
-        mask_weights(mask, map, w, h).unwrap()
+        mask_weights(mask, map, w, h, None).unwrap()
     }
 
     #[test]
@@ -761,17 +804,115 @@ mod tests {
         assert_eq!(blend(&base, &[(&one, &half)])[0], 11);
     }
 
-    #[test]
-    fn a_surface_mask_has_no_plane_without_its_surface() {
-        let m = mask(MaskShape::Surface(MaskSurfaceRef {
+    fn surface_mask(width: u32, height: u32) -> LocalMask {
+        mask(MaskShape::Surface(MaskSurfaceRef {
             id: "0".repeat(64),
-            width: 4,
-            height: 4,
-        }));
+            width,
+            height,
+        }))
+    }
+
+    #[test]
+    fn a_surface_mask_has_no_plane_without_its_surface_of_its_size() {
+        let m = surface_mask(4, 4);
         let map = SourceMap::new(None, 4, 4).unwrap();
         assert_eq!(
-            mask_weights(&m, &map, 4, 4),
+            mask_weights(&m, &map, 4, 4, None),
             Err(PlaneError::SurfaceMissing("m".into()))
         );
+        let other = MaskSurface::new(4, 3, vec![0; 12]).unwrap();
+        assert_eq!(
+            mask_weights(&m, &map, 4, 4, Some(&other)),
+            Err(PlaneError::SurfaceMismatch {
+                mask: "m".into(),
+                surface: "0".repeat(64),
+                expected: (4, 4),
+                actual: (4, 3),
+            })
+        );
+        // Linear and radial masks do not read a surface.
+        let given = MaskSurface::new(1, 1, vec![255]).unwrap();
+        let l = linear((0.5, 0.0), (0.5, 1.0));
+        assert_eq!(
+            mask_weights(&l, &map, 4, 4, Some(&given)).unwrap(),
+            plane(&l, &map, 4, 4)
+        );
+    }
+
+    #[test]
+    fn a_surface_plane_is_its_bilinear_sample_at_each_pixel_centre() {
+        // A 1 x 1 surface is a constant; 255 is a full weight.
+        let map = SourceMap::new(None, 30, 20).unwrap();
+        for (value, weight) in [
+            (0u8, 0u32),
+            (255, FULL_WEIGHT),
+            (51, weight_of(51.0 / 255.0)),
+        ] {
+            let s = MaskSurface::new(1, 1, vec![value]).unwrap();
+            let w = mask_weights(&surface_mask(1, 1), &map, 30, 20, Some(&s)).unwrap();
+            assert!(w.iter().all(|x| *x == weight), "{value}");
+        }
+        // A surface of the output's size lands pixel on pixel (sizes whose
+        // pixel centres are exact in binary).
+        let data: Vec<u8> = (0..8 * 4).map(|i| (i * 8) as u8).collect();
+        let s = MaskSurface::new(8, 4, data.clone()).unwrap();
+        let map = SourceMap::new(None, 800, 400).unwrap();
+        let w = mask_weights(&surface_mask(8, 4), &map, 8, 4, Some(&s)).unwrap();
+        let expected: Vec<u32> = data
+            .iter()
+            .map(|b| weight_of(f32::from(*b) / 255.0))
+            .collect();
+        assert_eq!(w, expected);
+        // Inverted: 1 - m.
+        let mut inverted = surface_mask(8, 4);
+        inverted.invert = true;
+        let w = mask_weights(&inverted, &map, 8, 4, Some(&s)).unwrap();
+        let expected: Vec<u32> = data
+            .iter()
+            .map(|b| weight_of(1.0 - f32::from(*b) / 255.0))
+            .collect();
+        assert_eq!(w, expected);
+        // The surface spans the whole working image whatever its own aspect:
+        // a 2 x 1 surface (left 255, right 0) on a 4 x 8 output is 1 on the
+        // left column, 0 on the right one and half way between.
+        let s = MaskSurface::new(2, 1, vec![255, 0]).unwrap();
+        let map = SourceMap::new(None, 40, 80).unwrap();
+        let w = mask_weights(&surface_mask(2, 1), &map, 4, 8, Some(&s)).unwrap();
+        for row in w.chunks(4) {
+            assert_eq!(row, [FULL_WEIGHT, 49152, 16384, 0]);
+        }
+    }
+
+    #[test]
+    fn a_surface_plane_follows_the_content_through_a_quarter_turn() {
+        // The left half painted, on a square photo.
+        let (w, h) = (16usize, 16usize);
+        let data: Vec<u8> = (0..32 * 32)
+            .map(|i| if i % 32 < 16 { 255 } else { 0 })
+            .collect();
+        let s = MaskSurface::new(32, 32, data).unwrap();
+        let m = surface_mask(32, 32);
+        let none = SourceMap::new(None, w, h).unwrap();
+        let turned = SourceMap::new(Some(&geometry(r#"{"rotate":90}"#)), w, h).unwrap();
+        let a = mask_weights(&m, &none, w, h, Some(&s)).unwrap();
+        let b = mask_weights(&m, &turned, w, h, Some(&s)).unwrap();
+        // Unturned: the left 8 columns are painted.
+        for j in 0..h {
+            for i in 0..w {
+                assert_eq!(
+                    a[j * w + i],
+                    if i < 8 { FULL_WEIGHT } else { 0 },
+                    "({i}, {j})"
+                );
+            }
+        }
+        // Output (i, j) of a clockwise turn shows source (j, h - 1 - i): the
+        // painted left of the photo is the top of the turned frame.
+        for j in 0..h {
+            for i in 0..w {
+                assert_eq!(b[j * w + i], a[(h - 1 - i) * w + j], "({i}, {j})");
+                assert_eq!(b[j * w + i], if j < 8 { FULL_WEIGHT } else { 0 });
+            }
+        }
     }
 }

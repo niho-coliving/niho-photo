@@ -53,9 +53,9 @@ use crate::output::{output_transform, output_transform_clip};
 use crate::relative_wb::relative_matrix;
 use crate::resize::{bilinear_downscale, bilinear_downscale_with, Filter};
 use crate::settings::{
-    uses_float_cubes, DevelopSettings, VignetteStyle, WhiteBalanceMode, ENGINE_NIHO_10,
-    ENGINE_NIHO_11, ENGINE_NIHO_12, ENGINE_NIHO_2, ENGINE_NIHO_3, ENGINE_NIHO_4, ENGINE_NIHO_5,
-    ENGINE_NIHO_6, ENGINE_NIHO_7, ENGINE_NIHO_8,
+    uses_float_cubes, uses_head_white_balance, DevelopSettings, VignetteStyle, WhiteBalanceMode,
+    ENGINE_NIHO_10, ENGINE_NIHO_11, ENGINE_NIHO_12, ENGINE_NIHO_2, ENGINE_NIHO_3, ENGINE_NIHO_4,
+    ENGINE_NIHO_5, ENGINE_NIHO_6, ENGINE_NIHO_7, ENGINE_NIHO_8,
 };
 use crate::spatial::{
     self, adaptive_parameters, AdaptivePath, AdaptiveStats, Plane, Quality, SpatialParams,
@@ -110,7 +110,11 @@ pub struct Rendered {
 /// midtone / global color grading luminance (niho-photo#39).
 pub fn has_active_color_edits(s: &DevelopSettings) -> bool {
     let tol = 1e-9;
-    let relative_active = s.white_balance.mode == WhiteBalanceMode::Relative;
+    // `niho-13` balances the source itself and keeps a bounded source in
+    // [0, 1] (`head_wb.rs`), so its white balance alone needs no output
+    // transform: the balanced bounded source is drawn as a bounded one.
+    let relative_active =
+        s.white_balance.mode == WhiteBalanceMode::Relative && !uses_head_white_balance(&s.engine);
     let scalars = [
         s.exposure,
         s.contrast,
@@ -235,6 +239,14 @@ fn uses_jpeg_white_balance(engine: &str) -> bool {
             | ENGINE_NIHO_10
             | ENGINE_NIHO_12
     )
+}
+
+/// Raster engines whose relative white balance is the linear matrix of
+/// `relative_wb.rs` in the head pixel (`niho-1`): not the output-side LUT,
+/// and not `niho-13`, whose source is balanced before it reaches a frame
+/// (`head_wb.rs`).
+fn uses_relative_matrix_on_raster(engine: &str) -> bool {
+    !uses_jpeg_white_balance(engine) && !uses_head_white_balance(engine)
 }
 
 /// The look whose tone goes into cube P on the RAW path (`None` when the
@@ -388,6 +400,13 @@ pub struct SettingsCubes {
     pub color: Option<Arc<Cube>>,
     /// Drag frames: the per-pixel tail ([`DragTail`]).
     pub drag: Option<Arc<DragTail>>,
+    /// The cubes of the last released (Final) frame, kept through the drag
+    /// frames after it (whose cubes are of the drag grid): releasing a drag
+    /// that left the cubes' settings as they were (the white balance of
+    /// `niho-13`, H/S, Texture, Clarity, ...) takes them back instead of
+    /// baking the Final grid again. The same keys, so the same entries.
+    released: Option<Arc<SettingsCubes>>,
+    quality: Quality,
 }
 
 fn post_key(s: &DevelopSettings, exposure_non_raw_ev: f64, dimension: usize) -> String {
@@ -498,12 +517,17 @@ pub fn settings_cubes(
     } else {
         String::new()
     };
+    // This frame's cache and the released frame's cubes it keeps.
+    let caches = [cache, cache.and_then(|c| c.released.as_deref())];
+    let kept = |pick: &dyn Fn(&SettingsCubes) -> Option<Arc<Cube>>| {
+        caches.iter().flatten().find_map(|c| pick(c))
+    };
     let acr3 = if ak.is_empty() {
         None
     } else {
-        match cache {
-            Some(c) if c.acr3_key == ak && c.acr3.is_some() => c.acr3.clone(),
-            _ => Some(Arc::new(bake_float_look_cube(&s.look, dimension))),
+        match kept(&|c| (c.acr3_key == ak).then(|| c.acr3.clone()).flatten()) {
+            Some(cube) => Some(cube),
+            None => Some(Arc::new(bake_float_look_cube(&s.look, dimension))),
         }
     };
     let want_post =
@@ -523,8 +547,8 @@ pub fn settings_cubes(
     {
         None
     } else {
-        match cache {
-            Some(c) if c.post_key == pk && c.post.is_some() => c.post.clone(),
+        match kept(&|c| (c.post_key == pk).then(|| c.post.clone()).flatten()) {
+            Some(cube) => Some(cube),
             // A drag frame can keep a matching final cube without
             // baking one; releasing H/S or WB then reuses it.
             _ if !bake => None,
@@ -583,8 +607,12 @@ pub fn settings_cubes(
                 ))) {
         None
     } else {
-        match cache {
-            Some(c) if c.color_cube_key == cube_ck && c.color.is_some() => c.color.clone(),
+        match kept(&|c| {
+            (c.color_cube_key == cube_ck)
+                .then(|| c.color.clone())
+                .flatten()
+        }) {
+            Some(cube) => Some(cube),
             _ if !bake => None,
             _ => Some(Arc::new(if formula_settings.has_active_color_points() {
                 bake_pre_color_cube_for(formula_settings, dimension, raw)
@@ -602,6 +630,19 @@ pub fn settings_cubes(
         color_cube_key: cube_ck,
         color,
         drag: cache.and_then(|c| c.drag.clone()),
+        // A released frame is itself the set to keep; a drag frame keeps the
+        // last released set (the frame before it, or the one that one kept).
+        released: match (quality, cache) {
+            (Quality::Final, _) => None,
+            (Quality::Interactive, Some(c)) if c.quality == Quality::Final => {
+                Some(Arc::new(SettingsCubes {
+                    released: None,
+                    ..c.clone()
+                }))
+            }
+            (Quality::Interactive, c) => c.and_then(|c| c.released.clone()),
+        },
+        quality,
     }
 }
 
@@ -1413,9 +1454,13 @@ fn local_luminance(ln0: &Plane, params: &SpatialParams) -> Option<Plane> {
 /// them while dragging, `PreviewDragSession`). Dragging a slider outside
 /// the pass (a color, a curve, cube P on JPEG / PNG) then costs no local
 /// processing at all. A released frame takes it only when it is a released
-/// pass with the same adaptive parameters, i.e. the same pixels.
+/// pass with the same adaptive parameters of the same source, i.e. the same
+/// pixels. `niho-13`'s head white balance is the source's (`source_key`):
+/// a drag of it keeps the pass of the frame before (its ratio of the
+/// previous balance), the released frame computes it again.
 pub struct LocalPass {
     input_key: String,
+    source_key: String,
     params_key: String,
     quality: Quality,
     ratio: Plane,
@@ -1576,6 +1621,7 @@ fn local_pass<'c>(
     cache: &'c mut Option<LocalPass>,
     shared: Option<&'c LocalPass>,
     input_key: String,
+    source_key: String,
     quality: Quality,
     params: impl FnOnce() -> SpatialParams,
     ln0: impl FnOnce() -> Plane,
@@ -1586,9 +1632,9 @@ fn local_pass<'c>(
     }
     let p = params();
     let params_key = format!("{:?}|{:?}|{}", p.gain_scale, p.shift, p.scale_px);
-    let same_pass = cache
-        .as_ref()
-        .is_some_and(|c| c.quality == Quality::Final && c.params_key == params_key);
+    let same_pass = cache.as_ref().is_some_and(|c| {
+        c.quality == Quality::Final && c.params_key == params_key && c.source_key == source_key
+    });
     if same_input && same_pass {
         return cache.as_ref();
     }
@@ -1609,6 +1655,7 @@ fn local_pass<'c>(
     drop(ln0);
     *cache = Some(LocalPass {
         input_key,
+        source_key,
         params_key,
         quality,
         ratio,
@@ -1616,9 +1663,31 @@ fn local_pass<'c>(
     cache.as_ref()
 }
 
-/// Renders a decoded JPEG / PNG original. `niho-6` settings that use its
-/// response are prepared here from this raster (a Session keeps the
-/// analysis instead, [`prepare_niho6`]).
+/// `raster` balanced by the head white balance of `s` (`niho-13`,
+/// `head_wb.rs`; `None` when `s` takes none). A Session keeps the balanced
+/// source instead.
+fn head_balanced_raster(raster: &Raster, s: &DevelopSettings) -> Option<Raster> {
+    crate::head_wb::balanced(&raster.image, crate::niho6::SourceSpace::LinearSrgb, s).map(|image| {
+        Raster {
+            image,
+            info: raster.info.clone(),
+        }
+    })
+}
+
+/// A raster working copy balanced by the head white balance of `s` (`None`
+/// for a RAW working copy or settings that take none).
+fn head_balanced_working_copy(wc: &WorkingCopy<'_>, s: &DevelopSettings) -> Option<LinearImage> {
+    if !matches!(wc.meta, WorkingCopyMeta::Raster { .. }) {
+        return None;
+    }
+    crate::head_wb::balanced(wc.image, crate::niho6::SourceSpace::LinearProPhoto, s)
+}
+
+/// Renders a decoded JPEG / PNG original. `niho-13` balances it first
+/// (`head_wb.rs`); `niho-6` settings that use its response are prepared
+/// here from this (balanced) raster (a Session keeps the analysis instead,
+/// [`prepare_niho6`]).
 pub fn render_raster(
     raster: &Raster,
     s: &DevelopSettings,
@@ -1626,6 +1695,8 @@ pub fn render_raster(
     stats_cache: Option<AdaptiveStats>,
     cubes_cache: Option<&SettingsCubes>,
 ) -> (Rendered, SettingsCubes, Option<AdaptiveStats>) {
+    let balanced = head_balanced_raster(raster, s);
+    let raster = balanced.as_ref().unwrap_or(raster);
     let prepared = niho6_one_shot(raster, s);
     let (raster, failed) = match &prepared {
         Some(Ok(prepared)) => (prepared, false),
@@ -1705,15 +1776,15 @@ fn niho6_one_shot(
 }
 
 /// The `niho-6` image of a Session: `image` (the whole source or its
-/// reduction for a display-size frame) with the response of `analysis`
-/// (made from the whole source).
+/// reduction for a display-size frame) with the response gains of the
+/// analysis of the whole source ([`crate::niho6::response_gains`], which the
+/// Session keeps: the same bytes as [`crate::niho6::apply`]).
 pub(crate) fn prepare_niho6(
     image: &LinearImage,
     space: crate::niho6::SourceSpace,
-    analysis: &crate::niho6::Analysis,
-    settings: &DevelopSettings,
+    gains: &crate::niho6::ResponseGains,
 ) -> Result<LinearImage, crate::niho6::PrepareError> {
-    crate::niho6::apply(image, space, analysis, settings)
+    crate::niho6::apply_gains(image, space, gains)
 }
 
 /// [`render_raster`] with a session's kept local pass ([`LocalPass`]) and
@@ -1760,6 +1831,8 @@ pub(crate) fn render_raster_in_session(
 /// Photo Bench compresses the unclipped color (output.rs). Diagnostics: the
 /// golden test leaves those pixels out of its 99.9th percentile.
 pub fn render_raster_marking_out_of_srgb(raster: &Raster, s: &DevelopSettings) -> Rendered {
+    let balanced = head_balanced_raster(raster, s);
+    let raster = balanced.as_ref().unwrap_or(raster);
     let prepared = niho6_one_shot(raster, s).and_then(Result::ok);
     let raster = prepared.as_ref().unwrap_or(raster);
     let downstream;
@@ -1893,7 +1966,7 @@ fn render_linear(
     } else {
         None
     };
-    let relative = if !uses_jpeg_white_balance(&s.engine)
+    let relative = if uses_relative_matrix_on_raster(&s.engine)
         && s.white_balance.mode == WhiteBalanceMode::Relative
     {
         relative_matrix(s.relative_temperature, s.relative_tint)
@@ -1918,6 +1991,10 @@ fn render_linear(
         "raster|{w}x{h}|{input_matrix:?}|{relative:?}|{stage_p}|{}|{}|{}|{}|{}",
         spatial_highlights, spatial_shadows, s.texture, s.clarity, frame.key
     );
+    // `niho-13`: `img` is the source balanced by its head white balance (the
+    // caller's). A drag of the balance may keep the pass ([`LocalPass`]); a
+    // released frame only takes a pass of the same balance.
+    let source_key = crate::head_wb::HeadWhiteBalance::key(crate::head_wb::HeadWhiteBalance::of(s));
     prepare_local_cache(local_cache, spatial_on, &input_key);
     let calibration =
         needs_calibration(&s.calibration).then(|| to_f32(&calibration_matrix(&s.calibration)));
@@ -2007,6 +2084,7 @@ fn render_linear(
             local_cache,
             shared_local,
             input_key,
+            source_key,
             quality,
             || {
                 // Non-RAW adaptive statistics: the plain input (linear sRGB,
@@ -2359,7 +2437,8 @@ pub struct WorkingCopy<'a> {
     pub meta: &'a WorkingCopyMeta,
 }
 
-/// Renders a RAW (or non-RAW) working copy. `niho-6` settings that use its
+/// Renders a RAW (or non-RAW) working copy. `niho-13` balances a non-RAW
+/// working copy first (`head_wb.rs`). `niho-6` settings that use its
 /// response are prepared here from a non-RAW working copy (linear ProPhoto),
 /// as [`render_raster`] does for rasters (a Session keeps the analysis
 /// instead), so this draws the same image as a Session.
@@ -2369,6 +2448,11 @@ pub fn render_working_copy(
     quality: Quality,
     cubes_cache: Option<&SettingsCubes>,
 ) -> (Rendered, SettingsCubes) {
+    let balanced = head_balanced_working_copy(wc, s);
+    let wc = &WorkingCopy {
+        image: balanced.as_ref().unwrap_or(wc.image),
+        meta: wc.meta,
+    };
     let prepared = niho6_working_copy_one_shot(wc, s);
     let (image, failed) = match &prepared {
         Some(Ok(prepared)) => (prepared, false),
@@ -2469,6 +2553,11 @@ pub fn render_working_copy_marking_out_of_srgb(
     wc: &WorkingCopy<'_>,
     s: &DevelopSettings,
 ) -> Rendered {
+    let balanced = head_balanced_working_copy(wc, s);
+    let wc = &WorkingCopy {
+        image: balanced.as_ref().unwrap_or(wc.image),
+        meta: wc.meta,
+    };
     let prepared = niho6_working_copy_one_shot(wc, s);
     let (image, failed) = match &prepared {
         Some(Ok(prepared)) => (prepared, false),
@@ -2855,6 +2944,7 @@ fn render_raw(
             local_cache,
             shared_local,
             input_key,
+            String::new(),
             quality,
             || {
                 // round2 set A: statistics of the "preHS" rendering (every
@@ -3225,7 +3315,7 @@ pub(crate) fn sample_raster_before_color_points(
     } else {
         None
     };
-    let relative = if !uses_jpeg_white_balance(&s.engine)
+    let relative = if uses_relative_matrix_on_raster(&s.engine)
         && s.white_balance.mode == WhiteBalanceMode::Relative
     {
         relative_matrix(s.relative_temperature, s.relative_tint)
@@ -3498,5 +3588,110 @@ mod color_point_cache_tests {
             color_point_plane_key("raster", &first_image, cropped, Quality::Final, &settings),
             "geometry/dimension"
         );
+    }
+}
+
+#[cfg(test)]
+mod local_pass_tests {
+    use super::*;
+
+    fn params(quality: Quality) -> SpatialParams {
+        let (gain_scale, shift) = adaptive_parameters(None, AdaptivePath::NonRaw);
+        SpatialParams {
+            highlights: -40.0,
+            shadows: 0.0,
+            texture: 0.0,
+            clarity: 20.0,
+            scale_px: spatial::scale_px(32.0),
+            long_edge: 32,
+            gain_scale,
+            shift,
+            quality,
+        }
+    }
+
+    /// Whether `local_pass` computed a new pass (else it reused the kept one).
+    fn computes(cache: &mut Option<LocalPass>, source_key: &str, quality: Quality) -> bool {
+        let mut computed = false;
+        local_pass(
+            cache,
+            None,
+            "input".into(),
+            source_key.into(),
+            quality,
+            || params(quality),
+            || {
+                computed = true;
+                let mut plane = Plane::new(32, 24);
+                for (i, v) in plane.data.iter_mut().enumerate() {
+                    *v = (i % 7) as f32 * 0.1 - 2.0;
+                }
+                plane
+            },
+        )
+        .expect("pass");
+        computed
+    }
+
+    #[test]
+    fn released_frames_take_a_pass_of_the_same_source_only() {
+        let mut cache = None;
+        assert!(computes(&mut cache, "30/0", Quality::Final));
+        assert!(!computes(&mut cache, "30/0", Quality::Final));
+        // A drag of niho-13's white balance keeps the pass of the frame before.
+        assert!(!computes(&mut cache, "36/0", Quality::Interactive));
+        // Its release never takes a pass of another balance, even with the
+        // same adaptive parameters.
+        assert!(computes(&mut cache, "36/0", Quality::Final));
+        assert!(!computes(&mut cache, "36/0", Quality::Final));
+    }
+}
+
+#[cfg(test)]
+mod released_cube_tests {
+    use super::*;
+
+    #[test]
+    fn a_release_after_drag_frames_takes_back_the_released_cubes() {
+        let mut s = DevelopSettings::neutral();
+        s.engine = crate::settings::ENGINE_NIHO_13.into();
+        s.look = crate::look::LOOK_NIHO_STANDARD_1.into();
+        s.contrast = 20.0;
+        s.vibrance = 15.0;
+        let released = settings_cubes(&s, 0.3, Quality::Final, None, true, None, false);
+        let post = released.post.clone().expect("cube P");
+        let color = released.color.clone().expect("cube Q");
+        // Drag frames of a slider outside the cubes (the drag grid's keys).
+        let mut cache = released;
+        for _ in 0..3 {
+            cache = settings_cubes(
+                &s,
+                0.3,
+                Quality::Interactive,
+                Some(&cache),
+                false,
+                None,
+                false,
+            );
+            assert!(cache.post.is_none());
+        }
+        let again = settings_cubes(&s, 0.3, Quality::Final, Some(&cache), true, None, false);
+        assert!(Arc::ptr_eq(again.post.as_ref().unwrap(), &post));
+        assert!(Arc::ptr_eq(again.color.as_ref().unwrap(), &color));
+        // A drag that changed cube P bakes it again on release; cube Q stays.
+        s.contrast = 25.0;
+        let dragged = settings_cubes(
+            &s,
+            0.3,
+            Quality::Interactive,
+            Some(&again),
+            false,
+            None,
+            false,
+        );
+        let changed = settings_cubes(&s, 0.3, Quality::Final, Some(&dragged), true, None, false);
+        assert!(!Arc::ptr_eq(changed.post.as_ref().unwrap(), &post));
+        assert!(Arc::ptr_eq(changed.color.as_ref().unwrap(), &color));
+        assert!(changed.released.is_none());
     }
 }

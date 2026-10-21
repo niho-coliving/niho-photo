@@ -2,8 +2,9 @@
 //! strict validation (Epic #31, M1 = #65). The contract is
 //! `docs/local-adjustments.md`; this module only reads, checks and writes the
 //! settings. The planes and the blend are `local_render.rs` (M2, #66); the
-//! surface file I/O of `brush` / `subject` / `sky` belongs to M4 (#68), so
-//! until then an active mask of those kinds fails to render
+//! surfaces of `brush` / `subject` / `sky` are set into a Session
+//! (`mask_surface.rs`, `Session::set_mask_surface`, M4 #68), and an active
+//! mask of those kinds whose surface is not set fails to render
 //! (`Error::MaskSurfaceMissing`).
 //!
 //! Strictness (Rust and `develop-masks.ts` agree through

@@ -996,4 +996,69 @@ describe("createDevelopEngine", () => {
     engine.dispose();
     expect(worker.terminated).toBe(true);
   });
+
+  describe("部分補正（マスク。M3 #67）", () => {
+    const MASKS = { kinds: ["linear", "radial"], max: 8, maskPlane: true };
+
+    function planeResponse(id: number, value: number): DevelopEngineWorkerResponse {
+      return { type: "maskPlane", id, width: 2, height: 1, data: new Uint8Array([value, 255 - value]).buffer };
+    }
+
+    it("supportsMasks は ready の masks（無い wasm・使えない engine は null。throw しない）", async () => {
+      const { engine } = await readyEngine({ features: { masks: MASKS } });
+      expect(await engine.supportsMasks?.()).toEqual(MASKS);
+      const { engine: old } = await readyEngine();
+      expect(await old.supportsMasks?.()).toBeNull();
+      await expect(old.maskPlane?.({}, "mask-a", { maxDimension: 640 })).rejects.toBeInstanceOf(DevelopEngineError);
+      const unavailable = createDevelopEngine({ createWorker: () => null, manifestUrl: MANIFEST_URL });
+      expect(await unavailable.supportsMasks?.()).toBeNull();
+      engine.dispose();
+      expect(await engine.supportsMasks?.()).toBeNull();
+    });
+
+    it("maskPlane は設定・id・長辺を送り、面を返す。同時に 1 つまでで、出している間の要求は最新の 1 つだけを次に出す", async () => {
+      const { worker, engine } = await readyEngine({ features: { masks: MASKS } });
+      const first = engine.maskPlane!({ v: 5, masks: [] }, "mask-a", { maxDimension: 640 });
+      const second = engine.maskPlane!({ v: 5 }, "mask-a", { maxDimension: 640 });
+      const third = engine.maskPlane!({ v: 5 }, "mask-b", { maxDimension: 1280 });
+      expect(worker.requests("maskPlane")).toHaveLength(1);
+      expect(worker.lastRequest("maskPlane")).toMatchObject({
+        type: "maskPlane",
+        settingsJson: JSON.stringify({ v: 5, masks: [] }),
+        maskId: "mask-a",
+        maxDimension: 640,
+      });
+      // 追い越された「次」は null
+      await expect(second).resolves.toBeNull();
+      worker.respond(planeResponse(worker.lastRequest("maskPlane").id, 10));
+      const plane = await first;
+      expect(plane?.width).toBe(2);
+      expect(Array.from(plane?.data ?? [])).toEqual([10, 245]);
+      await flushPromises();
+      expect(worker.requests("maskPlane")).toHaveLength(2);
+      expect(worker.lastRequest("maskPlane")).toMatchObject({ maskId: "mask-b", maxDimension: 1280 });
+      worker.respond({ type: "error", id: worker.lastRequest("maskPlane").id, message: "maskNotFound" });
+      await expect(third).rejects.toThrow("maskNotFound");
+    });
+
+    it("maskPlane は描画の枠を使わない（描画を取り消さない・待たせない）。写真を開き直すと面の結果は捨てる", async () => {
+      const { worker, engine } = await readyEngine({ features: { masks: MASKS } });
+      const render = engine.render({}, { maxDimension: 1280, interactive: true });
+      const plane = engine.maskPlane!({}, "mask-a", { maxDimension: 640 });
+      expect(worker.requests("render")).toHaveLength(1);
+      expect(worker.requests("maskPlane")).toHaveLength(1);
+      worker.respond(frameResponse(worker.lastRequest("render").id, 3));
+      expect((await render)?.rgba[0]).toBe(3);
+      const opened = engine.open(new ArrayBuffer(4), 1280);
+      await expect(plane).resolves.toBeNull();
+      // 遅れて来た古い面は捨てる（次の要求を止めない）
+      worker.respond(planeResponse(worker.lastRequest("maskPlane").id, 1));
+      worker.respond({ type: "opened", id: worker.lastRequest("open").id, width: 4, height: 2 });
+      await opened;
+      const next = engine.maskPlane!({}, "mask-a", { maxDimension: 640 });
+      expect(worker.requests("maskPlane")).toHaveLength(2);
+      worker.respond(planeResponse(worker.lastRequest("maskPlane").id, 7));
+      expect(Array.from((await next)?.data ?? [])).toEqual([7, 248]);
+    });
+  });
 });

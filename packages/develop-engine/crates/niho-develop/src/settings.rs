@@ -89,6 +89,21 @@ pub const ENGINE_NIHO_11: &str = "niho-11";
 /// settings are frozen from here on: a later formula or precision change is a
 /// new engine, never a change of `niho-12`.
 pub const ENGINE_NIHO_12: &str = "niho-12";
+/// #27 head white-balance renderer for new raster and legacy (unsigned) RAW
+/// edits: `niho-12`, except that on raster sources (JPEG / PNG originals and
+/// raster working copies) the relative white balance is the measured
+/// incremental-WB delta (`calibration/jpeg-incremental-wb-v1.bin`, the
+/// `niho-2` LUT's knots, interpolation and pair residual) added in float to
+/// the encoded sRGB of the source right after its conversion to linear
+/// sRGB, instead of to the 8-bit output. Everything downstream (the `niho-6`
+/// H/S analysis, the local pass and its statistics, Auto, the color picker)
+/// reads that balanced source; there is no output-side LUT. Legacy unsigned
+/// RAW working copies render exactly as `niho-12` (the `niho-2` formula and
+/// its linear relative-WB matrix). Signed RAW and camera-linear input are
+/// refused. With a zero relative white balance it draws `niho-12`'s bytes.
+/// The pixels of saved `niho-13` settings are frozen from here on: a later
+/// formula change is a new engine, never a change of `niho-13`.
+pub const ENGINE_NIHO_13: &str = "niho-13";
 
 pub fn is_known_engine(engine: &str) -> bool {
     matches!(
@@ -104,14 +119,21 @@ pub fn is_known_engine(engine: &str) -> bool {
             | ENGINE_NIHO_11
             | ENGINE_NIHO_8
             | ENGINE_NIHO_12
+            | ENGINE_NIHO_13
     )
 }
 
 /// Engines whose raster / legacy-RAW cubes keep unquantized f32 entries
-/// (the `niho-8` candidate and `niho-12`). Older engines keep their original
-/// cube precision so their saved pixels never change.
+/// (the `niho-8` candidate, `niho-12` and `niho-13`). Older engines keep
+/// their original cube precision so their saved pixels never change.
 pub fn uses_float_cubes(engine: &str) -> bool {
-    matches!(engine, ENGINE_NIHO_8 | ENGINE_NIHO_12)
+    matches!(engine, ENGINE_NIHO_8 | ENGINE_NIHO_12 | ENGINE_NIHO_13)
+}
+
+/// Engines that apply the relative white balance of a raster source to the
+/// source itself (`niho-13`, `head_wb.rs`) rather than to the output.
+pub fn uses_head_white_balance(engine: &str) -> bool {
+    engine == ENGINE_NIHO_13
 }
 /// Look versions (`look`): `niho-interim-1` is the identity and the default
 /// of settings that do not name one (S5 photos and converted Photo Bench
@@ -2141,7 +2163,13 @@ mod tests {
                 .engine,
             ENGINE_NIHO_12
         );
-        for unknown in ["niho-9", "niho-13"] {
+        assert_eq!(
+            DevelopSettings::from_json(r#"{"engine":"niho-13"}"#)
+                .unwrap()
+                .engine,
+            ENGINE_NIHO_13
+        );
+        for unknown in ["niho-9", "niho-14"] {
             assert_eq!(
                 DevelopSettings::from_json(&format!(r#"{{"engine":"{unknown}"}}"#))
                     .unwrap_err()

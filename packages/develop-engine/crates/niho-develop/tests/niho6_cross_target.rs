@@ -160,3 +160,79 @@ fn native_and_wasm_render_the_same_niho_12_bytes() {
     assert_eq!(fnv1a64(&raw_final.rgba), 7_566_227_202_881_651_497);
     assert_eq!(fnv1a64(&raw_drag.rgba), 14_103_212_438_157_733_202);
 }
+
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
+fn native_and_wasm_render_the_same_niho_13_bytes() {
+    // niho-13 is the new-edit default (#27): the relative white balance is
+    // applied to the raster source (`head_wb.rs`). Its raster Final /
+    // Interactive bytes with a white balance are frozen on both targets;
+    // without one they are niho-12's (the hashes above), and its legacy RAW
+    // path is niho-12's with or without one.
+    const EDITS: &str = r#""look":"niho-standard-1","exposure":0.2,"contrast":18,"highlights":-75,"shadows":55,"blacks":40,"vibrance":10,"saturation":-25,"hsl":{"orange":{"hue":0,"saturation":-10,"luminance":20}}"#;
+    let settings = |engine: &str, white: &str| {
+        niho_develop::parse_settings(&format!(r#"{{"v":1,"engine":"{engine}",{EDITS}{white}}}"#))
+            .unwrap()
+    };
+    const WARM: &str =
+        r#","whiteBalance":{"mode":"relative"},"relativeTemperature":30,"relativeTint":20"#;
+    let input = photo();
+    let draw = |settings: &niho_develop::DevelopSettings| {
+        let final_frame = render(
+            &input,
+            &settings.to_json(),
+            &RenderOptions {
+                max_dimension: 0,
+                ..Default::default()
+            },
+        )
+        .unwrap();
+        let mut session =
+            niho_develop::Session::open_raster(&input, 0, niho_develop::Filter::Lanczos3).unwrap();
+        let drag = session
+            .render(settings, 0, niho_develop::Quality::Interactive)
+            .unwrap();
+        let released = session
+            .render(settings, 0, niho_develop::Quality::Final)
+            .unwrap();
+        assert_eq!(released.rgba, final_frame.rgba);
+        assert_eq!((final_frame.width, final_frame.height), (160, 120));
+        (fnv1a64(&final_frame.rgba), fnv1a64(&drag.rgba))
+    };
+    assert_eq!(
+        draw(&settings("niho-13", "")),
+        (16_491_360_035_185_789_091, 5_693_656_230_593_535_726)
+    );
+    let warm = draw(&settings("niho-13", WARM));
+    assert_ne!(warm, draw(&settings("niho-12", WARM)));
+    assert_eq!(
+        warm,
+        (12_987_301_143_173_593_065, 10_702_906_636_120_976_588)
+    );
+
+    let meta = r#"{"kind":"raw","baselineEV":0.3,"asShotWhite":{"x":0.3457,"y":0.3585},"dcpSha256":"fixture","lookTableIncluded":true}"#;
+    for (white, expected) in [
+        ("", (7_566_227_202_881_651_497, 14_103_212_438_157_733_202)),
+        (WARM, (8_651_232_258_884_636_697, 259_039_195_463_019_758)),
+    ] {
+        let mut frames = Vec::new();
+        for engine in ["niho-12", "niho-13"] {
+            let mut raw = niho_develop::Session::open_working_copy(
+                &legacy_raw_working_copy(),
+                meta,
+                niho_develop::Filter::Lanczos3,
+            )
+            .unwrap();
+            let settings = settings(engine, white);
+            let drag = raw
+                .render(&settings, 0, niho_develop::Quality::Interactive)
+                .unwrap();
+            let released = raw
+                .render(&settings, 0, niho_develop::Quality::Final)
+                .unwrap();
+            frames.push((fnv1a64(&released.rgba), fnv1a64(&drag.rgba)));
+        }
+        assert_eq!(frames[0], frames[1]);
+        assert_eq!(frames[1], expected);
+    }
+}

@@ -11,7 +11,7 @@
 //! interaction residual.  The resulting delta cube is prepared once per
 //! frame; applying it allocates nothing per pixel.
 
-const DIMENSION: usize = 17;
+pub(crate) const DIMENSION: usize = 17;
 const NODE_COUNT: usize = DIMENSION * DIMENSION * DIMENSION;
 const CHANNELS: usize = 3;
 const VARIANT_COUNT: usize = 10;
@@ -20,7 +20,7 @@ const LUT_BYTES: usize = VARIANT_COUNT * NODE_COUNT * CHANNELS * 2;
 
 /// Python's `[round(i * 255 / 16) for i in range(17)]`, used by the measured
 /// chart.  The 15/16-byte steps are intentionally not treated as uniform.
-const LEVELS: [u8; DIMENSION] = [
+pub(crate) const LEVELS: [u8; DIMENSION] = [
     0, 16, 32, 48, 64, 80, 96, 112, 128, 143, 159, 175, 191, 207, 223, 239, 255,
 ];
 
@@ -189,7 +189,14 @@ impl PreparedJpegWhiteBalance {
         })
     }
 
-    fn delta(&self, rgb: [u8; 3]) -> [f32; 3] {
+    /// The blended delta of every chart node (bytes), `r`-major then `g`,
+    /// `b` (`niho-13`'s head white balance interpolates it itself,
+    /// `head_wb.rs`).
+    pub(crate) fn node_deltas(&self) -> &[[f32; CHANNELS]] {
+        &self.deltas
+    }
+
+    pub(crate) fn delta(&self, rgb: [u8; 3]) -> [f32; 3] {
         let [r, g, b] = rgb.map(|value| GRID[value as usize]);
         let mut result = [0.0; CHANNELS];
         for dr in 0..=1 {

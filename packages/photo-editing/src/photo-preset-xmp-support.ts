@@ -9,9 +9,10 @@ import {
  * Lightroom のプリセット（XMP）のうち、NIHO の現像エンジンが使えないものの見分け（NIHO Photo 段 1 F2b 移行元設計）。
  *
  * - {@link summarizeUnsupportedPresetItems}: エンジンの `presetSettings` が返す `unsupported`（XMP の項目名。crate の
- *   `xmp.rs` の `UNSUPPORTED_KNOWN`・知らない項目・まだ描けない効果・埋め込みの Look の `Look.<項目>`）を、Lightroom の日本語の
- *   名前にまとめる。表に無い項目は数だけ数える。シャープ・ノイズ軽減・カラーノイズの軽減は crate 0.19.0（Issue #32）から近い式で
- *   描く（`approximate`）ので、ここに来るのは読めない値と、既定でないノイズ軽減の細かな項目（ディテール・コントラスト・滑らかさ）だけ
+ *   `xmp.rs` の `UNSUPPORTED_KNOWN`・知らない項目・まだ描けない効果・埋め込みの Look の `Look.<項目>`・読めなかったマスクの
+ *   `MaskGroupBasedCorrections.<n>.<理由>`）を、Lightroom の日本語の名前にまとめる。表に無い項目は数だけ数える。シャープ・ノイズ軽減・
+ *   カラーノイズの軽減は crate 0.19.0（Issue #32）から近い式で描く（`approximate`）ので、ここに来るのは読めない値と、既定でない
+ *   ノイズ軽減の細かな項目（ディテール・コントラスト・滑らかさ）だけ
  * - {@link presetUsesLightroomColorTable}: Lightroom 専用の色の表（プロファイルの LUT）を使うプリセットか
  */
 
@@ -21,6 +22,8 @@ type UnsupportedGroup = {
   keys?: readonly string[];
   /** この群の項目名（前方一致） */
   prefixes?: readonly string[];
+  /** この群の項目名（正規表現。マスクの `<一覧>.<n>.<理由>`） */
+  pattern?: RegExp;
   /**
    * 群の主の項目。XMP にある主の項目がすべて「効かない値」（0 / False）なら、群ごと知らせない（Lightroom は全項目を書き出すので、
    * 量が 0 のシャープの半径などは、プリセットが持っていても何もしない）。主の項目が XMP に 1 つも無ければ、知らせる
@@ -31,6 +34,57 @@ type UnsupportedGroup = {
   /** 0 / False のほかに「効かない値」とみなす値 */
   noEffect?: (value: string) => boolean;
 };
+
+/** crate がマスクを読む Lightroom の局所補正の一覧（`xmp/masks.rs` の `LOCAL_CORRECTION_LISTS`）。 */
+const CORRECTION_LISTS = [
+  "MaskGroupBasedCorrections",
+  "GradientBasedCorrections",
+  "CircularGradientBasedCorrections",
+  "PaintBasedCorrections",
+] as const;
+
+/** 読めなかったマスクの項目（`<一覧>.<n>.<理由か Local の項目>`）の正規表現。 */
+function maskItems(details: readonly string[]): RegExp {
+  return new RegExp(`^(?:${CORRECTION_LISTS.join("|")})\\.\\d+\\.(?:${details.join("|")})$`, "u");
+}
+
+/**
+ * マスクの群。crate はマスクの理由を、効く（値が既定でない）ときだけ `unsupported` に入れるので、値を見ずに知らせる。結果の
+ * マスクを画面で読めなかったとき（`develop-engine-results.ts` の `UNREADABLE_PRESET_MASKS_ITEM`）も「読めないマスク」。
+ */
+const MASK_GROUPS: readonly UnsupportedGroup[] = [
+  { label: LABELS.maskBrush, pattern: maskItems(["brush"]), always: true },
+  { label: LABELS.maskAi, pattern: maskItems(["aiMask"]), always: true },
+  { label: LABELS.maskRange, pattern: maskItems(["rangeMask"]), always: true },
+  {
+    label: LABELS.maskRadialShape,
+    pattern: maskItems(["rotatedRadial", "radialRoundness", "radialMidpoint", "radialFlipped", "radialVersion"]),
+    always: true,
+  },
+  { label: LABELS.maskCombined, pattern: maskItems(["multipleMasks", "maskBlend"]), always: true },
+  { label: LABELS.maskOpacity, pattern: maskItems(["maskValue"]), always: true },
+  { label: LABELS.maskLimit, pattern: maskItems(["tooMany"]), always: true },
+  { label: LABELS.maskColor, pattern: maskItems(["LocalHue", "LocalToningSaturation"]), always: true },
+  {
+    label: LABELS.maskDetail,
+    pattern: maskItems(["LocalSharpness", "LocalLuminanceNoise", "LocalMoire", "LocalDefringe"]),
+    always: true,
+  },
+  {
+    label: LABELS.maskLegacy,
+    pattern: maskItems(["LocalBrightness", "LocalExposure", "LocalContrast", "LocalClarity"]),
+    always: true,
+  },
+  { label: LABELS.maskWhiteBalance, pattern: maskItems(["LocalTemperature", "LocalTint"]), always: true },
+  // 旧形式の一覧（GradientBasedCorrections など）は、実物の XMP で形を確かめるまで読まない
+  { label: LABELS.maskLegacyList, pattern: maskItems(["legacyList"]), always: true },
+  {
+    label: LABELS.maskUnreadable,
+    keys: ["MaskGroupBasedCorrections"],
+    pattern: maskItems(["outOfRange", "invalid", "unknownMask"]),
+    always: true,
+  },
+];
 
 /** 並びは知らせに出す順。 */
 const UNSUPPORTED_GROUPS: readonly UnsupportedGroup[] = [
@@ -86,6 +140,7 @@ const UNSUPPORTED_GROUPS: readonly UnsupportedGroup[] = [
   },
   // 既定のプロファイル（Default Color など）は写真のルックを変えない
   { label: LABELS.profile, keys: ["CameraProfile"], noEffect: (value) => /^default\b/i.test(value.trim()) },
+  ...MASK_GROUPS,
 ];
 
 /**
@@ -96,16 +151,25 @@ const IGNORED_PREFIXES: readonly string[] = ["Look."];
 const IGNORED_KEYS: ReadonlySet<string> = new Set(["CameraProfileDigest"]);
 
 function matchesGroup(group: UnsupportedGroup, key: string): boolean {
-  return (group.keys?.includes(key) ?? false) || (group.prefixes?.some((prefix) => key.startsWith(prefix)) ?? false);
+  return (
+    (group.keys?.includes(key) ?? false) ||
+    (group.prefixes?.some((prefix) => key.startsWith(prefix)) ?? false) ||
+    (group.pattern?.test(key) ?? false)
+  );
 }
 
 const LOOK_BLOCK_PATTERN = /<crs:Look\b[^>]*?(?:\/>|>[\s\S]*?<\/crs:Look\s*>)/g;
+/** 局所補正の一覧（マスクごとに `crs:Version` などの同じ名前の値を持つので、根の値として読まない）。 */
+const CORRECTION_BLOCK_PATTERN = new RegExp(
+  `<crs:(${CORRECTION_LISTS.join("|")})\\b[^>]*?(?:\\/>|>[\\s\\S]*?<\\/crs:\\1\\s*>)`,
+  "g",
+);
 const CRS_ATTRIBUTE_PATTERN = /\bcrs:([A-Za-z0-9_]+)\s*=\s*(?:"([^"]*)"|'([^']*)')/g;
 const CRS_ELEMENT_PATTERN = /<crs:([A-Za-z0-9_]+)\s*>([^<]*)<\/crs:\1\s*>/g;
 
-/** XMP の根の Camera Raw の値（属性と単純な要素。埋め込みの Look の中は読まない）。 */
+/** XMP の根の Camera Raw の値（属性と単純な要素。埋め込みの Look と局所補正の一覧の中は読まない）。 */
 function readRootCrsValues(xmp: string): Map<string, string> {
-  const root = xmp.replace(LOOK_BLOCK_PATTERN, "");
+  const root = xmp.replace(LOOK_BLOCK_PATTERN, "").replace(CORRECTION_BLOCK_PATTERN, "");
   const values = new Map<string, string>();
   for (const match of root.matchAll(CRS_ATTRIBUTE_PATTERN)) values.set(match[1], match[2] ?? match[3] ?? "");
   for (const match of root.matchAll(CRS_ELEMENT_PATTERN)) {

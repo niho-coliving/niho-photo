@@ -7,10 +7,11 @@ use crate::test_support::develop::*;
 use std::collections::HashMap;
 use std::fs;
 
-/// 開いた写真（`photoId` → ファイル）。
+/// 開いた写真（`photoId` → ファイル）と、面の置き場（面の id → PNG のバイト列）。
 struct FakePhotos {
   photos: HashMap<String, OpenPhoto>,
   has_saved_settings: bool,
+  surfaces: HashMap<String, Vec<u8>>,
 }
 
 impl FakePhotos {
@@ -29,11 +30,17 @@ impl FakePhotos {
     Self {
       photos,
       has_saved_settings: false,
+      surfaces: HashMap::new(),
     }
   }
 
   fn with_saved_settings(mut self) -> Self {
     self.has_saved_settings = true;
+    self
+  }
+
+  fn with_surface(mut self, id: &str, bytes: &[u8]) -> Self {
+    self.surfaces.insert(id.to_string(), bytes.to_vec());
     self
   }
 }
@@ -45,6 +52,10 @@ impl DevelopPhotos for FakePhotos {
 
   fn has_saved_settings(&self, _photo_id: &str) -> bool {
     self.has_saved_settings
+  }
+
+  fn mask_surface(&self, _photo_id: &str, surface_id: &str) -> Option<Vec<u8>> {
+    self.surfaces.get(surface_id).cloned()
   }
 }
 
@@ -537,4 +548,105 @@ fn local_masks_are_exported_only_by_a_render_sidecar_that_draws_them() {
       }
     }
   }
+}
+
+#[test]
+fn surface_masks_hand_only_their_drawn_surfaces_to_the_render_sidecar() {
+  use crate::mask_surfaces::mask_surface_id;
+  let painted = b"\x89PNG painted surface".to_vec();
+  let unused = b"\x89PNG surface of a disabled mask".to_vec();
+  let (a, b) = (mask_surface_id(&painted), mask_surface_id(&unused));
+  let missing = "0".repeat(64);
+  let brush = |id: &str, surface: &str, enabled: bool| {
+    json!({
+      "id": id, "kind": "brush", "enabled": enabled,
+      "surface": { "id": surface, "width": 64, "height": 48 },
+      "adjust": { "exposure": -0.7 }
+    })
+  };
+  let settings =
+    |masks: Value| json!({ "v": 5, "engine": "niho-10", "look": "niho-standard-1", "base": null, "masks": masks });
+  let harness = SidecarHarness::new("export-mask-surfaces");
+  harness.mark("render-version", MASKS_MIN_RENDER_VERSION);
+  let develop = camera_develop(&harness);
+  let jpeg = photo_file(&harness, "IMG_0003.jpg", b"jpeg bytes");
+  let photos = FakePhotos::new(&[("p1", &jpeg)])
+    .with_surface(&a, &painted)
+    .with_surface(&b, &unused);
+  let out = harness.dir.join("out");
+  fs::create_dir_all(&out).unwrap();
+  // Drawn: the brush (twice, one surface) and not the disabled sky (whose
+  // surface would be missing anyway) nor an empty one.
+  let drawn = settings(json!([
+    brush("m1", &a, true),
+    brush("m2", &a, true),
+    brush("m3", &missing, false),
+    { "id": "m4", "kind": "sky", "surface": { "id": missing, "width": 8, "height": 8 }, "adjust": {} }
+  ]));
+  let destination = out.join("drawn.jpg");
+  develop
+    .export(&photos, "p1", &drawn, &destination, Overwrite::Never)
+    .unwrap();
+  let render = harness
+    .work_calls()
+    .into_iter()
+    .find(|call| call.starts_with("niho-develop-render render "))
+    .expect("rendered");
+  assert_eq!(render.matches("--mask-surface").count(), 1, "{render}");
+  assert!(render.contains(&format!("--mask-surface {a}=")), "{render}");
+  assert!(!render.contains(&missing) && !render.contains(&b), "{render}");
+  assert_eq!(
+    fs::read(harness.sidecars.join(format!("last-surface-{a}.png"))).unwrap(),
+    painted
+  );
+  let sent: Value = serde_json::from_slice(&fs::read(harness.sidecars.join("last-settings.json")).unwrap()).unwrap();
+  assert_eq!(sent["masks"], drawn["masks"], "the masks reach the sidecar as saved");
+  assert!(destination.exists());
+  // The surface copies went with the job's folder.
+  let surface_copies = |dir: &Path| -> usize {
+    fn walk(dir: &Path, count: &mut usize) {
+      for entry in fs::read_dir(dir).into_iter().flatten().flatten() {
+        let path = entry.path();
+        if path.is_dir() {
+          walk(&path, count);
+        } else if entry.file_name().to_string_lossy().starts_with("surface-") {
+          *count += 1;
+        }
+      }
+    }
+    let mut count = 0;
+    walk(dir, &mut count);
+    count
+  };
+  assert_eq!(surface_copies(&harness.cache_dir()), 0);
+
+  // A drawn mask whose surface this Mac does not have (or has with other
+  // bytes): refused before any working copy or render.
+  let wrong = FakePhotos::new(&[("p1", &jpeg)]).with_surface(&missing, b"other bytes");
+  for (photos, name) in [(&photos, "missing"), (&wrong, "mismatch")] {
+    let calls = harness.work_calls().len();
+    let destination = out.join(format!("{name}.jpg"));
+    let error = develop
+      .export(
+        photos,
+        "p1",
+        &settings(json!([brush("m1", &missing, true)])),
+        &destination,
+        Overwrite::Never,
+      )
+      .unwrap_err();
+    assert_eq!(error.code, develop_code::MASK_SURFACE_MISSING, "{name}");
+    assert_eq!(error.message, MASK_SURFACE_MISSING_MESSAGE);
+    assert!(error.detail.contains(&missing), "{}", error.detail);
+    assert_eq!(harness.work_calls().len(), calls, "{name}: nothing ran");
+    assert!(!destination.exists());
+  }
+
+  // An old sidecar is refused first, surfaces or not.
+  let old = SidecarHarness::new("export-mask-surfaces-old");
+  old.mark("render-version", "0.18.0");
+  let error = camera_develop(&old)
+    .export(&photos, "p1", &drawn, &out.join("old.jpg"), Overwrite::Never)
+    .unwrap_err();
+  assert_eq!(error.code, develop_code::UNSUPPORTED_SETTINGS);
 }

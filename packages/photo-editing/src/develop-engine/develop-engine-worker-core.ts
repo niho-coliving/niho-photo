@@ -42,6 +42,10 @@ import { parseDevelopEngineManifest } from "./develop-engine-manifest";
  * - 自動（F4a 移行元設計 の口）: `autoSettings` は開いている写真の `Developer.autoSettings(settingsJson)` で、今の設定からライト 6 本と
  *   自然な彩度だけを決めた設定の JSON をそのまま返す（通常要求は順に処理し、先読みは低優先度で遅らせて取り消し・昇格できる）。
  *   `Developer` に口があれば `ready` に `auto: true` を付け、無い glue・写真を開いていなければ error（ほかは使える）
+ * - 部分補正（マスク。`docs/local-adjustments.md`「版と互換」）: 起こしたときに glue の `capabilities()` を 1 回だけ読み、描ける種類が
+ *   あれば `ready` に `masks: { kinds, max, maskPlane }` を付ける（`validateSettings` は M1 の wasm〔読めるが描かない〕でも通るので
+ *   使わない。口の無い古い glue・読めない応答は付けない＝描けない）。`maskPlane` は開いている写真の 1 枚のマスクの面（重ね表示用。
+ *   `{ width, height, data }`、data は transfer）で、通常の要求と同じ列で順に処理する（描画を取り消さない）
  */
 
 export type DevelopEngineWorkerRequest =
@@ -49,6 +53,7 @@ export type DevelopEngineWorkerRequest =
   | { type: "open"; id: number; bytes: ArrayBuffer; workingMaxDimension: number }
   | { type: "render"; id: number; settingsJson: string; maxDimension: number; interactive: boolean }
   | { type: "sampleColor"; id: number; settingsJson: string; maxDimension: number; x: number; y: number }
+  | { type: "maskPlane"; id: number; settingsJson: string; maskId: string; maxDimension: number }
   | {
       type: "exportJpeg";
       id: number;
@@ -130,6 +135,18 @@ export type DevelopEngineWorkerFeatures = {
   auto?: true;
   /** `applyPreset` と `asShotWhiteFromMeta`（開いている写真なしでプリセットを当てる。一覧の一括。F5a-2 移行元設計） */
   presetFromMeta?: true;
+  /** 部分補正（マスク）を描ける種類と枚数（glue の `capabilities()`。無い・描けない glue では付けない） */
+  masks?: DevelopMaskCapabilities;
+};
+
+/** wasm が描ける部分補正（`capabilities().masks`）。 */
+export type DevelopMaskCapabilities = {
+  /** 描ける種類（今の M2 は `linear` `radial`） */
+  kinds: string[];
+  /** 最大の枚数 */
+  max: number;
+  /** `Developer.maskPlane`（重ね表示の面）がある */
+  maskPlane: boolean;
 };
 
 export type DevelopEngineWorkerResponse =
@@ -153,6 +170,8 @@ export type DevelopEngineWorkerResponse =
   /** `autoSettings` の結果（完成した設定の JSON のまま） */
   | { type: "auto"; id: number; settingsJson: string }
   | { type: "sampledColor"; id: number; lightness: number; chroma: number; hue: number }
+  /** `maskPlane` の面（`width·height` byte。行優先・`invert` 込み） */
+  | { type: "maskPlane"; id: number; width: number; height: number; data: ArrayBuffer }
   | { type: "error"; id: number; message: string };
 
 export type DevelopEngineWorkerDeps = {
@@ -189,6 +208,8 @@ type DevelopDeveloper = {
   asShotWhite?: () => unknown;
   /** 「自動」: 今の設定の JSON から、ライト 6 本と自然な彩度だけを変えた設定の JSON（無い glue もある） */
   autoSettings?: (settingsJson: string) => unknown;
+  /** 1 枚のマスクの面 `{ width, height, data }`（M2 の glue から。無い glue もある） */
+  maskPlane?: (settingsJson: string, maskId: string, maxDimension: number) => unknown;
 };
 
 /** 見本用の session の長辺（見本 1 枚は、これを行の大きさに縮めて描く）。 */
@@ -234,6 +255,10 @@ type DevelopGlue = {
   auto: boolean;
   /** `Developer.prototype.sampleColor` がある。 */
   colorSampling: boolean;
+  /** `capabilities()`（描ける部分補正の JSON。無い古い glue はマスクを描けない） */
+  capabilities: (() => unknown) | null;
+  /** `Developer.prototype.maskPlane` がある */
+  maskPlane: boolean;
 };
 
 /** 幾何（切り抜き・回転。F3 移行元設計）の口。 */
@@ -291,6 +316,9 @@ function readGlue(module: unknown): DevelopGlue | null {
   // 「自動」の口（無い glue でも、手で直す分は使う）
   const autoSettings: unknown = isRecord(developerPrototype) ? Reflect.get(developerPrototype, "autoSettings") : undefined;
   const sampleColor: unknown = isRecord(developerPrototype) ? Reflect.get(developerPrototype, "sampleColor") : undefined;
+  // 部分補正の口（無い glue でも、マスクの無い写真は描ける）
+  const capabilities = module.capabilities;
+  const maskPlane: unknown = isRecord(developerPrototype) ? Reflect.get(developerPrototype, "maskPlane") : undefined;
   const geometry: DevelopGeometryGlue | null =
     typeof imageSize === "function" &&
     typeof rasterDecodeSize === "function" &&
@@ -323,6 +351,37 @@ function readGlue(module: unknown): DevelopGlue | null {
     presetThumbnails: typeof thumbnail === "function",
     auto: typeof autoSettings === "function",
     colorSampling: typeof sampleColor === "function",
+    capabilities: typeof capabilities === "function" ? (capabilities as () => unknown) : null,
+    maskPlane: typeof maskPlane === "function",
+  };
+}
+
+/** crate の `MAX_LOCAL_MASKS`（契約の上限。glue がこれより大きい値を返しても上限で止める）。 */
+const MAX_MASKS_CONTRACT = 8;
+
+/**
+ * glue の `capabilities()` から描ける部分補正を読む（1 回だけ。口が無い・throw・JSON でない・種類が無い・形が違うなら null＝描けない）。
+ * 知らない種類は落とし、`max` は 1〜8 の整数だけを受ける。
+ */
+function readMaskCapabilities(glue: DevelopGlue): DevelopMaskCapabilities | null {
+  if (!glue.capabilities) return null;
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(String(glue.capabilities()));
+  } catch {
+    return null;
+  }
+  if (!isRecord(parsed) || !isRecord(parsed.masks)) return null;
+  const { kinds, max, maskPlane } = parsed.masks;
+  if (!Array.isArray(kinds) || !isPositiveInteger(max)) return null;
+  const known = ["linear", "radial", "brush", "subject", "sky"];
+  const readKinds = [...new Set(kinds.filter((kind): kind is string => typeof kind === "string" && known.includes(kind)))];
+  if (readKinds.length === 0) return null;
+  return {
+    kinds: readKinds,
+    max: Math.min(max, MAX_MASKS_CONTRACT),
+    // 面の口は、応答と Developer の両方にあるときだけ
+    maskPlane: maskPlane === true && glue.maskPlane,
   };
 }
 
@@ -439,6 +498,17 @@ function readFrame(value: unknown): RenderedFrame {
   return { width, height, rgba };
 }
 
+/** glue の `maskPlane` が返した `{ width, height, data }`（data は `width·height` byte）を読む。 */
+function readMaskPlane(value: unknown): { width: number; height: number; data: Uint8Array } {
+  if (!isRecord(value)) throw new Error("develop engine returned no mask plane");
+  const { width, height, data } = value;
+  if (!isPositiveInteger(width) || !isPositiveInteger(height) || !(data instanceof Uint8Array)) {
+    throw new Error("develop engine returned an invalid mask plane");
+  }
+  if (data.length !== width * height) throw new Error("develop engine returned a mask plane of the wrong size");
+  return { width, height, data };
+}
+
 /** glue が返した `{ width, height }`（正の整数）を読む。 */
 function readSize(value: unknown): { width: number; height: number } {
   if (!isRecord(value)) throw new Error("develop engine returned no size");
@@ -508,6 +578,8 @@ export function createDevelopEngineWorkerHandler(
   let effects = false;
   let colorPoints = false;
   let detail = false;
+  // 起こした wasm が描ける部分補正（起こしたときに `capabilities()` を 1 回だけ読む。描けなければ null）
+  let masks: DevelopMaskCapabilities | null = null;
   let wasmMemory: () => ArrayBufferLike | null = () => null;
   let diagnostics = false;
   let unavailableReason: string | null = null;
@@ -628,6 +700,7 @@ export function createDevelopEngineWorkerHandler(
       ...(effects ? { effects: true as const } : {}),
       ...(colorPoints ? { colorPoints: true as const } : {}),
       ...(detail ? { detail: true as const } : {}),
+      ...(masks ? { masks: { ...masks, kinds: [...masks.kinds] } } : {}),
     });
   };
 
@@ -664,6 +737,7 @@ export function createDevelopEngineWorkerHandler(
       effects = acceptsEffectSettings(loaded.validateSettings);
       colorPoints = loaded.colorSampling && acceptsColorPointSettings(loaded.validateSettings);
       detail = acceptsDetailSettings(loaded.validateSettings);
+      masks = readMaskCapabilities(loaded);
       postReady(id);
     } catch (error) {
       unavailableReason = errorMessage(error);
@@ -774,6 +848,18 @@ export function createDevelopEngineWorkerHandler(
             chroma: chroma as number,
             hue: hue as number,
           });
+          return;
+        }
+        case "maskPlane": {
+          requireGlue();
+          const opened = developer;
+          if (!opened) throw new Error("no photo is open");
+          if (!masks?.maskPlane || typeof opened.maskPlane !== "function") {
+            throw new Error("develop engine cannot draw mask planes");
+          }
+          const plane = readMaskPlane(opened.maskPlane(message.settingsJson, message.maskId, message.maxDimension));
+          const data = transferableBuffer(plane.data, wasmMemory());
+          deps.post({ type: "maskPlane", id, width: plane.width, height: plane.height, data }, [data]);
           return;
         }
         case "exportJpeg": {

@@ -7,6 +7,7 @@ import {
   type KeyboardEvent,
   type MutableRefObject,
   type PointerEvent,
+  type ReactNode,
 } from "react";
 
 import { Spinner } from "niho-ui/components/spinner";
@@ -126,6 +127,11 @@ export function BrowserPhotoEditingLoupe(props: {
     split: number;
     onSplitChange: (split: number) => void;
   } | null;
+   /**
+   * 写真の上のマスクの操作（部分補正。M3 #67。マスクの道具の間だけ渡す）。canvas は動かさず、その上に重ねる（canvas を測る）。
+   * 仮のプレビューの間・切り抜きの間は出さない
+   */
+  maskOverlay?: ReactNode;
   canvasRef: MutableRefObject<HTMLCanvasElement | null>;
   colorPicker?: {
     active: boolean;
@@ -319,6 +325,7 @@ export function BrowserPhotoEditingLoupe(props: {
           </span>
         </>
       ) : null}
+      {drawn && canvas && !opened?.previewPending && props.maskOverlay ? props.maskOverlay : null}
       {drawn && !opened?.previewPending && props.compareOriginal ? (
         <span aria-hidden data-testid="photo-compare-original-badge" className={LOUPE_BADGE_CLASS_NAME}>
           {PHOTO_EDITING_COMPARE_ORIGINAL_LABEL}

@@ -174,6 +174,69 @@ describe("describeUnsupportedPresetItems", () => {
     expect(describeUnsupportedPresetItems(["Look.Name"])).toBeNull();
     expect(describeUnsupportedPresetItems(["Sharpness"], xmp('crs:Sharpness="0"'))).toBeNull();
   });
+
+  it("読めなかったマスク（crate の `<一覧>.<n>.<理由>`）を種類ごとの名前にする（読んだマスクは知らせない）", () => {
+    const corrections = '<crs:MaskGroupBasedCorrections><rdf:Seq><rdf:li crs:What="Correction"/></rdf:Seq></crs:MaskGroupBasedCorrections>';
+    expect(
+      describeUnsupportedPresetItems(
+        [
+          "MaskGroupBasedCorrections.4.rotatedRadial",
+          "MaskGroupBasedCorrections.4.radialRoundness",
+          "MaskGroupBasedCorrections.2.brush",
+          "PaintBasedCorrections.1.brush",
+          "MaskGroupBasedCorrections.3.aiMask",
+        ],
+        xmp('crs:Exposure2012="+0.1"', corrections),
+      ),
+    ).toBe("ブラシのマスク・AI のマスク（被写体や空など）・一部の円形グラデーション（回転など）は使えないので、それ以外を取り込みました");
+    expect(
+      summarizeUnsupportedPresetItems([
+        "MaskGroupBasedCorrections.1.rangeMask",
+        "MaskGroupBasedCorrections.1.multipleMasks",
+        "MaskGroupBasedCorrections.2.maskBlend",
+        "MaskGroupBasedCorrections.3.maskValue",
+        "MaskGroupBasedCorrections.9.tooMany",
+        "MaskGroupBasedCorrections.1.LocalHue",
+        "MaskGroupBasedCorrections.1.LocalToningSaturation",
+        "MaskGroupBasedCorrections.1.LocalSharpness",
+        "MaskGroupBasedCorrections.1.LocalMoire",
+        "MaskGroupBasedCorrections.1.LocalExposure",
+        "MaskGroupBasedCorrections.1.LocalTemperature",
+        "MaskGroupBasedCorrections.5.outOfRange",
+        "MaskGroupBasedCorrections.6.unknownMask",
+        "MaskGroupBasedCorrections",
+        "MaskGroupBasedCorrections.1.LocalFutureSlider",
+        "MaskGroupBasedCorrections.2.radialFlipped",
+        // 旧形式の一覧は読まず、補正ごとに知らせる
+        "GradientBasedCorrections.1.legacyList",
+        "CircularGradientBasedCorrections.2.legacyList",
+      ]),
+    ).toEqual({
+      labels: [
+        "範囲マスク",
+        "一部の円形グラデーション（回転など）",
+        "重ねたマスク",
+        "マスクの不透明度",
+        "9 枚目からのマスク",
+        "マスクの色相とカラー",
+        "マスクのシャープとノイズ軽減",
+        "マスクの旧式の補正",
+        "マスクの色温度と色かぶり",
+        "旧形式のマスク",
+        "読めないマスク",
+      ],
+      // 名前の無い局所補正は数だけ
+      otherCount: 1,
+    });
+  });
+
+  it("局所補正の一覧の中の値（マスクごとの Version など）は根の値として読まない", () => {
+    const text = xmp(
+      'crs:Sharpness="0" crs:Version="17.0"',
+      '<crs:MaskGroupBasedCorrections><rdf:Seq><rdf:li><rdf:Description crs:What="Correction" crs:Sharpness="25"/></rdf:li></rdf:Seq></crs:MaskGroupBasedCorrections>',
+    );
+    expect(describeUnsupportedPresetItems(["Sharpness"], text)).toBeNull();
+  });
 });
 
 describe("presetUsesLightroomColorTable", () => {

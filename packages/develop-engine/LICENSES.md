@@ -128,7 +128,7 @@ LibRawの行列表、旧DCP8件、旧spec4件、rawtoaces-data、外部ICC、Col
 | once_cell | 1.21.4 | MIT OR Apache-2.0 | MIT | 依存の依存 |
 | once_cell_polyfill | 1.70.2 | MIT OR Apache-2.0 | MIT | niho-base-raw: macOS・Linux では build されない（Windows・Android などの依存） |
 | pin-project-lite | 0.2.17 | Apache-2.0 OR MIT | MIT | 依存の依存 |
-| png | 0.18.1 | MIT OR Apache-2.0 | MIT | PNG（image 経由。niho-base-raw は作業コピーの 16bit PNG に直接使う） |
+| png | 0.18.1 | MIT OR Apache-2.0 | MIT | PNG（image 経由。niho-base-raw は作業コピーの 16bit PNG、niho-develop は部分補正のマスクの面の 8bit グレー PNG に直接使う） |
 | proc-macro-crate | 3.5.0 | MIT OR Apache-2.0 | MIT | niho-base-raw: build 時のみ（proc-macro など） |
 | proc-macro2 | 1.0.107 | MIT OR Apache-2.0 | MIT | 依存の依存 |
 | pxfm | 0.1.30 | BSD-3-Clause OR Apache-2.0 | BSD-3-Clause | moxcms の数学関数 |
@@ -148,7 +148,7 @@ LibRawの行列表、旧DCP8件、旧spec4件、rawtoaces-data、外部ICC、Col
 | serde_derive | 1.0.229 | MIT OR Apache-2.0 | MIT | build 時のみ（proc-macro など） |
 | serde_json | 1.0.151 | MIT OR Apache-2.0 | MIT | developSettings、niho-camera-profile の DCP spec、niho-base-raw のサイドカーの JSON |
 | serde_spanned | 0.6.9 | MIT OR Apache-2.0 | MIT | niho-base-raw: 依存の依存 |
-| sha2 | 0.10.9 | MIT OR Apache-2.0 | MIT | niho-camera-profile: 元の DCP バイト列の SHA-256（baseVersion） |
+| sha2 | 0.10.9 | MIT OR Apache-2.0 | MIT | niho-camera-profile: 元の DCP バイト列の SHA-256（baseVersion）。niho-develop: 部分補正のマスクの面の PNG の SHA-256（面の id） |
 | shlex | 2.0.1 | MIT OR Apache-2.0 | MIT | niho-base-raw: macOS・Linux では build されない（Windows・Android などの依存） |
 | simd-adler32 | 0.3.10 | MIT | MIT | deflate |
 | slab | 0.4.12 | MIT | MIT | 依存の依存 |

@@ -5,18 +5,25 @@
 //!   名前を変えても・別のフォルダへ動かしても、同じ写真なら同じ補正が付いてくる。
 //! - 補正は `~/Library/Application Support/life.niho.camera/edits/<SHA-256>.json`（crate の `SavedSettingsStore`。版
 //!   `revision`・写真の名前・大きさ・更新時刻つき）。NIHO photo では補正が利用者のデータそのものなので、古さ・件数では消さない。
+//! - 部分補正のマスク（ブラシ・被写体・空）の面は `~/Library/Application Support/life.niho.camera/mask-surfaces/<写真の SHA-256>/
+//!   <面の SHA-256>.png`（crate の `MaskSurfaceStore`。写真 1 枚あたり 64 面まで、上限では保存した補正と名前付き・自動版が参照する面を
+//!   残し、参照されない面のうち最後に使ったのが古いものから空ける。補正と同じく古さ・写真の数では消さない）。コマンドは `mask_surfaces.rs`。
 //! - 補正の版（niho-photo#42。名前を付けて残した補正と自動の版）は同じフォルダの `<SHA-256>.versions.json`（crate の
 //!   `saved_versions.rs`。補正の記録とは別のファイル・別の `revision`）。`camera_photo_versions` で読み、`camera_photo_save_versions`
 //!   で配列をまるごと書く。
-//! - 現像（`develop.rs`）はここを `DevelopPhotos` として読む。Photo Bench は持たない（ラスタの作業コピーは `apple-raw-linear raster`）。
+//! - 現像（`develop.rs`）はここを `DevelopPhotos` として読む（原寸の書き出しは描かれるマスクの面をここから読む）。Photo Bench は
+//!   持たない（ラスタの作業コピーは `apple-raw-linear raster`）。
 
-use crate::error::{invalid_request, parse_request, run_blocking, CameraError};
+use crate::error::{camera_code, invalid_request, parse_request, run_blocking, CameraError};
 use crate::library::library;
 use niho_desktop_photo::capabilities::{validate_photo, CapabilityStage};
 use niho_desktop_photo::common::{code, new_opaque_id, PageError};
 use niho_desktop_photo::develop::{DevelopPhotos, OpenPhoto};
 use niho_desktop_photo::image_info::{read_photo_info, PhotoInfo};
 use niho_desktop_photo::library::{is_valid_id, iso8601_utc, photo_kind, LISTED_PHOTO_NOT_FOUND_MESSAGE};
+use niho_desktop_photo::mask_surfaces::{
+  mask_surface_ids, MaskSurfaceError, MaskSurfaceInfo, MaskSurfaceLimits, MaskSurfaceStore, MASK_SURFACES_DIR_NAME,
+};
 use niho_desktop_photo::saved_settings::{
   content_digest, epoch_ms, is_valid_develop_versions, ContentDigest, RecordSource, SaveRevision, SavedRecord,
   SavedSettingsStore, StoreLimits, MAX_SAVED_SETTINGS_BYTES,
@@ -38,6 +45,11 @@ pub const EDITS_DIR_NAME: &str = "edits";
 
 const PHOTO_UNREADABLE_MESSAGE: &str = "写真を読めませんでした。ファイルを確かめてください。";
 const SAVE_FAILED_MESSAGE: &str = "補正を保存できませんでした。";
+pub(crate) const MASK_SURFACE_INVALID_MESSAGE: &str = "マスクを保存できませんでした。もう一度描いてください。";
+const MASK_SURFACE_MISSING_MESSAGE: &str = "マスクの面が見つかりません。マスクを描き直してください。";
+const MASK_SURFACE_QUOTA_MESSAGE: &str =
+  "この写真にはこれ以上マスクを保存できません。使わないマスクや保存版を整理してからもう一度お試しください。";
+const MASK_SURFACE_SAVE_FAILED_MESSAGE: &str = "マスクを保存できませんでした。";
 const VERSIONS_SAVE_FAILED_MESSAGE: &str = "版を保存できませんでした。";
 
 /// 補正の置き場の上限: 消さない（古さ・件数で消すと利用者の補正が無くなる）。途中で落ちた一時ファイルの掃除は 1 日ごと。
@@ -79,10 +91,12 @@ fn edited_key(file_name: &str, size_bytes: u64, modified_at_ms: u64) -> EditedKe
   )
 }
 
-/// 開いた写真と補正の置き場（アプリに 1 つ）。
+/// 開いた写真と補正・マスクの面の置き場（アプリに 1 つ）。
 pub struct CameraPhotos {
   opened: Mutex<Opened>,
   edits: Option<SavedSettingsStore>,
+  /// 部分補正のマスクの面（{@link CameraPhotos::with_mask_surfaces}。無ければ面を保存・読み出しできない）
+  surfaces: Option<MaskSurfaceStore>,
   /// {@link EditedKey} の索引（最初に一覧を出すときに記録から作り、保存のたびに足す）
   edited: Mutex<Option<HashSet<EditedKey>>>,
 }
@@ -92,8 +106,15 @@ impl CameraPhotos {
     Self {
       opened: Mutex::new(Opened::default()),
       edits,
+      surfaces: None,
       edited: Mutex::new(None),
     }
+  }
+
+  /// マスクの面の置き場を持たせる。
+  pub fn with_mask_surfaces(mut self, surfaces: MaskSurfaceStore) -> Self {
+    self.surfaces = Some(surfaces);
+    self
   }
 
   fn edited_lock(&self) -> MutexGuard<'_, Option<HashSet<EditedKey>>> {
@@ -295,6 +316,92 @@ impl CameraPhotos {
   }
 }
 
+// ---------------------------------------------------------------------------
+// マスクの面
+
+fn mask_surface_error(error: MaskSurfaceError) -> CameraError {
+  match error {
+    MaskSurfaceError::InvalidId => invalid_request(),
+    MaskSurfaceError::InvalidPng(_) | MaskSurfaceError::TooLarge => {
+      CameraError::new(camera_code::MASK_SURFACE_INVALID, MASK_SURFACE_INVALID_MESSAGE)
+    }
+    MaskSurfaceError::QuotaExceeded => CameraError::new(camera_code::MASK_SURFACE_QUOTA, MASK_SURFACE_QUOTA_MESSAGE),
+    MaskSurfaceError::NotFound | MaskSurfaceError::Corrupt => {
+      CameraError::new(camera_code::MASK_SURFACE_MISSING, MASK_SURFACE_MISSING_MESSAGE)
+    }
+    MaskSurfaceError::Io(_) => CameraError::new(code::INTERNAL, MASK_SURFACE_SAVE_FAILED_MESSAGE),
+  }
+}
+
+impl CameraPhotos {
+  fn opened_photo(&self, photo_id: &str) -> Result<OpenedPhoto, CameraError> {
+    self
+      .get(photo_id)
+      .ok_or_else(|| CameraError::from(PageError::new(code::NOT_FOUND, LISTED_PHOTO_NOT_FOUND_MESSAGE)))
+  }
+
+  fn surface_store(&self) -> Result<&MaskSurfaceStore, CameraError> {
+    self
+      .surfaces
+      .as_ref()
+      .ok_or_else(|| CameraError::new(code::INTERNAL, MASK_SURFACE_SAVE_FAILED_MESSAGE))
+  }
+
+  /// 開いた写真のマスクの面を保存する（`png` は 8bit グレーの PNG。id は中身の SHA-256）。上限では、現在の保存済み補正と名前付き・
+  /// 自動版が参照する面を残して、最後に使ったのが古い面から空ける。
+  pub fn save_mask_surface(&self, photo_id: &str, png: &[u8], now: SystemTime) -> Result<MaskSurfaceInfo, CameraError> {
+    let photo = self.opened_photo(photo_id)?;
+    let store = self.surface_store()?;
+    let mut keep: std::collections::BTreeSet<String> = self
+      .saved(&photo.digest.key)
+      .map(|record| mask_surface_ids(&record.settings, false))
+      .unwrap_or_default()
+      .into_iter()
+      .collect();
+    if let Some(versions) = self
+      .edits
+      .as_ref()
+      .and_then(|store| store.load_versions(&photo.digest.key))
+    {
+      if let Some(items) = versions.versions.as_array() {
+        for version in items {
+          keep.extend(mask_surface_ids(&version["developSettings"], false));
+        }
+      }
+    }
+    store
+      .save(&photo.digest.key, png, &keep, now)
+      .map_err(mask_surface_error)
+  }
+
+  /// 開いた写真のマスクの面の PNG（中身の SHA-256 を `surface_id` と照らしたもの）。
+  pub fn load_mask_surface(&self, photo_id: &str, surface_id: &str, now: SystemTime) -> Result<Vec<u8>, CameraError> {
+    let photo = self.opened_photo(photo_id)?;
+    self
+      .surface_store()?
+      .load(&photo.digest.key, surface_id, now)
+      .map_err(mask_surface_error)
+  }
+
+  /// `surface_ids` のうち、開いた写真の面の置き場に無いもの（渡した順）。
+  pub fn missing_mask_surfaces(&self, photo_id: &str, surface_ids: &[String]) -> Result<Vec<String>, CameraError> {
+    let photo = self.opened_photo(photo_id)?;
+    let store = self.surface_store()?;
+    Ok(
+      surface_ids
+        .iter()
+        .filter(|id| !store.contains(&photo.digest.key, id))
+        .cloned()
+        .collect(),
+    )
+  }
+}
+
+/// マスクの面の置き場の上限（1 枚あたり 64 面・1 面 8 MiB）。
+pub fn mask_surface_limits() -> MaskSurfaceLimits {
+  MaskSurfaceLimits::default()
+}
+
 impl DevelopPhotos for CameraPhotos {
   fn open_photo(&self, photo_id: &str) -> Option<OpenPhoto> {
     self.get(photo_id).map(|photo| OpenPhoto {
@@ -310,6 +417,10 @@ impl DevelopPhotos for CameraPhotos {
       // 写真・保存先の状態が分からないときは「保存あり」（crate の約束）
       _ => true,
     }
+  }
+
+  fn mask_surface(&self, photo_id: &str, surface_id: &str) -> Option<Vec<u8>> {
+    self.load_mask_surface(photo_id, surface_id, SystemTime::now()).ok()
   }
 }
 
@@ -339,12 +450,18 @@ fn annotate(value: &mut Value, index: &HashSet<EditedKey>) {
 pub struct PhotosState(pub Arc<CameraPhotos>);
 
 pub fn install(app: &tauri::AppHandle) {
-  let edits = app
-    .path()
-    .app_data_dir()
-    .ok()
+  let data = app.path().app_data_dir().ok();
+  let edits = data
+    .as_ref()
     .map(|dir| SavedSettingsStore::new(dir.join(EDITS_DIR_NAME), edits_limits()));
-  app.manage(PhotosState(Arc::new(CameraPhotos::new(edits))));
+  let mut photos = CameraPhotos::new(edits);
+  if let Some(dir) = data {
+    photos = photos.with_mask_surfaces(MaskSurfaceStore::new(
+      dir.join(MASK_SURFACES_DIR_NAME),
+      mask_surface_limits(),
+    ));
+  }
+  app.manage(PhotosState(Arc::new(photos)));
 }
 
 pub fn photos(app: &tauri::AppHandle) -> Result<Arc<CameraPhotos>, CameraError> {

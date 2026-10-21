@@ -147,6 +147,7 @@ case "$cmd" in
         --out) out="$2"; shift 2 ;;
         --settings) settings="$2"; shift 2 ;;
         --working-copy) wc="$2"; shift 2 ;;
+        --mask-surface) ms="$2"; cp "${ms#*=}" "$d/last-surface-${ms%%=*}.png"; shift 2 ;;
         *) shift ;;
       esac
     done
