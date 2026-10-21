@@ -133,6 +133,27 @@ def baseline_fingerprint(plan_path: Path, config_path: Path, calibrate: Path) ->
     return fingerprint.hexdigest()
 
 
+def preset_oracle_fingerprint(plan_path: Path, targets_path: Path, config_path: Path,
+                              calibrate: Path, fev: int) -> str:
+    """Bind per-photo preset diagnostics to the exact inputs, tool and fit options."""
+    fingerprint = hashlib.sha256()
+    fingerprint.update(b"preset-oracle-cache/v1\0")
+    fingerprint.update(baseline_fingerprint(plan_path, config_path, calibrate).encode("ascii"))
+    fingerprint.update(b"\0")
+    fingerprint.update(digest(targets_path).encode("ascii"))
+    fingerprint.update(b"\0")
+    fingerprint.update(str(fev).encode("ascii"))
+    fingerprint.update(b"\0")
+    fingerprint.update(json.dumps({
+        "presets": PRESETS,
+        "step": C_TARGET_STEP.tolist(),
+        "ranges": C_RANGES.tolist(),
+    }, sort_keys=True).encode("utf-8"))
+    fingerprint.update(b"\0")
+    fingerprint.update(digest(Path(__file__).resolve()).encode("ascii"))
+    return fingerprint.hexdigest()
+
+
 def binaries(repo: Path) -> dict[str, Path]:
     root = repo / "packages/develop-engine/target/release"
     return {
@@ -706,12 +727,22 @@ def preset_oracle(args) -> None:
     plan_path = args.work / "plan.json"
     plan_doc = json.loads(plan_path.read_text())
     calibrate = binaries(args.repo)["calibrate"]
-    server = Server(calibrate, args.work / "server-config.json")
+    config_path = args.work / "server-config.json"
+    targets_path = args.work / "runs" / "photo-targets.json"
+    server = Server(calibrate, config_path)
     base_rows = surrogate_baseline(
-        server, args.work, plan_doc, plan_path, args.work / "server-config.json", calibrate)
-    targets = json.loads((args.work / "runs" / "photo-targets.json").read_text())
+        server, args.work, plan_doc, plan_path, config_path, calibrate)
+    targets = json.loads(targets_path.read_text())
     path = args.work / "runs" / "preset-oracle.json"
-    done = json.loads(path.read_text()) if path.exists() else {}
+    fingerprint = preset_oracle_fingerprint(plan_path, targets_path, config_path, calibrate, args.fev)
+    done = {}
+    if path.exists():
+        try:
+            cached = json.loads(path.read_text())
+            if cached.get("fingerprint") == fingerprint and isinstance(cached.get("rows"), dict):
+                done = cached["rows"]
+        except (AttributeError, OSError, TypeError, json.JSONDecodeError):
+            pass
     for j in range(len(plan_doc["scenes"])):
         if str(j) in done:
             continue
@@ -727,7 +758,9 @@ def preset_oracle(args) -> None:
         best, _, _ = minimize(fun, theta, C_TARGET_STEP, C_RANGES[:, 0], C_RANGES[:, 1], args.fev)
         done[str(j)] = {"items": items, "single": single.tolist(),
                         "oracle": server.eval(constant_candidate(best), items).tolist(), "theta": best.tolist()}
-        path.write_text(json.dumps(done))
+        temporary = path.with_suffix(".tmp")
+        temporary.write_text(json.dumps({"fingerprint": fingerprint, "rows": done}))
+        temporary.replace(path)
         print(f"preset-oracle {j + 1}/{len(plan_doc['scenes'])}", flush=True)
     server.close()
     summary = {}
