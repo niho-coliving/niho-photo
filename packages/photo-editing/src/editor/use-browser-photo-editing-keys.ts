@@ -16,10 +16,12 @@ import {
  *   重ならない組み合わせにする。Shift の無い ⌘C / ⌘V はブラウザの
  *   コピー・貼り付けのまま（横取りしない）
  * - `\`（JIS 配列では `¥` で来る）を押している間だけ補正前を見せる。押しっぱなしの繰り返しは無視し、離したら・窓がフォーカスを
- *   失ったら戻す。切り抜きの道具の間（`compareEnabled` が false）は効かない
+ *   失ったら戻す。切り抜きの道具の間・補正前と補正後を並べている間（`compareEnabled` が false。niho-photo#41）は効かない
  * - `R` = 「補正」と「切り抜き」の道具を切り替える（F3b 移行元設計。切り替えを出していない間〔`onToggleTool` が無い〕は扱わない）
  * - `J` = 黒つぶれ・白飛びの印を写真に重ねる / 外す（niho-photo#36。Lightroom と同じ。修飾キー〔⇧ を含む〕つきは扱わない。
  *   ヒストグラムを出していない間・切り抜き / 背景除去の道具の間〔`onToggleClipping` が無い〕は扱わない）
+ * - `Y` = 補正前と補正後を並べる / 戻す、`Shift+Y` = 分割する / 戻す（niho-photo#41。⌘ ⌃ ⌥ つき・押しっぱなしの繰り返しは扱わない。
+ *   比較を使えない間〔`onToggleCompareView` が無い。切り抜き / 背景除去の道具の間〕は扱わない）
  * - 切り抜きの道具の間（`onCropDone` / `onCropCancel` がある間。#52）: Enter =［完了］、Esc =［キャンセル］。ボタンの上の Enter も
  *   ［完了］（自分の Enter を使う部品は `preventDefault` する: 値の直接入力の欄・［キャンセル］）
  *
@@ -32,6 +34,8 @@ export type BrowserPhotoEditingKey =
   | "compare"
   | "tool"
   | "clip"
+  | "compareSide"
+  | "compareSplit"
   | "copy"
   | "paste"
   | "cropDone"
@@ -58,6 +62,7 @@ export function resolveBrowserPhotoEditingKey(
   if (event.key === "Enter") return event.shiftKey ? null : "cropDone";
   if (event.key === "Escape") return "cropCancel";
   if (event.key === "j" || event.key === "J") return event.shiftKey ? null : "clip";
+  if (event.key === "y" || event.key === "Y") return event.shiftKey ? "compareSplit" : "compareSide";
   return event.key === "r" || event.key === "R" ? "tool" : null;
 }
 
@@ -78,12 +83,14 @@ export function useBrowserPhotoEditingKeys(options: {
   onCopy: () => void;
   onPaste: () => void;
   onCompareOriginalChange: (compare: boolean) => void;
-  /** 補正前のキーを扱うか（省くと true。切り抜きの道具の間は false） */
+  /** 補正前のキーを扱うか（省くと true。切り抜きの道具の間・比較の間は false） */
   compareEnabled?: boolean;
   /** `R` で道具を切り替える（切り替えを出していない間は null。省くと扱わない） */
   onToggleTool?: (() => void) | null;
   /** `J` で黒つぶれ・白飛びの印を写真に重ねる / 外す（出していない間は null。省くと扱わない） */
   onToggleClipping?: (() => void) | null;
+  /** `Y` / `Shift+Y` で補正前と補正後を並べる / 分割する / 戻す（niho-photo#41。使えない間は null。省くと扱わない） */
+  onToggleCompareView?: ((key: "side" | "split") => void) | null;
   /** 切り抜きの道具の間の Enter =［完了］・Esc =［キャンセル］（ほかの間は null。省くと扱わない） */
   onCropDone?: (() => void) | null;
   onCropCancel?: (() => void) | null;
@@ -129,6 +136,15 @@ export function useBrowserPhotoEditingKeys(options: {
         if (!toggleTool) return;
         event.preventDefault();
         if (!event.repeat) toggleTool();
+        return;
+      }
+      // J キーは閲覧専用でもヒストグラムの印を使えるよう `enabled` の前で扱う。
+      // 比較の Y / Shift+Y は、編集操作が有効なときだけ扱う。
+      if (key === "compareSide" || key === "compareSplit") {
+        const toggleCompareView = callbacksRef.current.onToggleCompareView;
+        if (!toggleCompareView) return;
+        event.preventDefault();
+        if (!event.repeat) toggleCompareView(key === "compareSplit" ? "split" : "side");
         return;
       }
       if (key === "cropDone" || key === "cropCancel") {

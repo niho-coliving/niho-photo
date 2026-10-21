@@ -301,7 +301,8 @@
         "Issue #28の色相安定engine追加と互換回帰を反映。",
         "新しい色相保持エンジンと新旧バイナリの能力境界・数値回帰を整合。",
         "Issue #30 Oklch色ミキサーとengine 10/11対応を反映",
-        "部分補正（マスク）#66: 画面が読むcrateの版を0.19.0へ上げる"
+        "部分補正（マスク）#66: 画面が読むcrateの版を0.19.0へ上げる",
+        "PR #81 のマスク描画を最新mainの変更と統合。"
       ]
     },
     {
@@ -811,14 +812,16 @@
         "path": "packages/photo-editing/src/editor/browser-photo-editing-footer.tsx",
         "sha256": "448c53cf1da0a5f3b41e1d507d2ac5d618a39c0b300571ad95a670bdba86bca0"
       },
-      "outputSha256": "578eacceff6cd26cf5e4e87becae4174bf22c27f16942a0d00aa44ad01687ccb",
+      "outputSha256": "ede08df70a1a76cc301f714c85dc9f7eabade5f1ecf75d1289af8490ce9284f0",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
         "信頼済みhost接続時だけ共有操作を表示する任意のボタンを追加。",
         "個人クラウドの明示binding、保存先切替、単一写真コピーと公開境界を追加。",
         "Issue #49の統合確認: 置く列をclassNameで受け取る（PCの幅は中央の列の下だけ）。",
-        "1024〜1279px幅で操作ボタンが重ならないよう折り返す。"
+        "1024〜1279px幅で操作ボタンが重ならないよう折り返す。",
+        "niho-photo#41 下段の「補正前」の右に「比較」のメニュー（並べる・分割・比較しない）を追加。",
+        "niho-photo#41 の比較UIを #72 のヒストグラム・Jキー契約と併存するようmainへ積み直した。"
       ]
     },
     {
@@ -855,7 +858,7 @@
         "path": "packages/photo-editing/src/editor/browser-photo-editing-loupe.tsx",
         "sha256": "51859688628c86e65c882ff94a59b6324ecb621ac9f759121c7c3d7ed4ccc35a"
       },
-      "outputSha256": "3fddd0489592d35c6104d813eeb72a658f52b194fc5251eeafc24c7314846527",
+      "outputSha256": "e64ca7850aaf64ab4e89ddb733b34f433d724d0116ae9c567efed93d50f6ca46",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
@@ -867,7 +870,10 @@
         "Issue #13の段階表示、provisional draft、canonical handoffと書き出し境界を実装。",
         "最新mainのUI・共有機能と段階RAW openを統合し、既存の境界と補正保持を両立する。",
         "Issue #49の統合確認: PCの幅で1枚の画のまわりに余白を置く（背景除去の層の中でも効くよう画の側で決める）。",
-        "niho-photo#36 クリップ領域の印を写真に重ねる口を追加。"
+        "niho-photo#36 クリップ領域の印を写真に重ねる口を追加。",
+        "niho-photo#41 補正前と補正後を並べる・分割する表示（補正前の面・分割の重ね・札）を追加。",
+        "niho-photo#41 の比較UIを #72 のヒストグラム・Jキー契約と併存するようmainへ積み直した。",
+        "niho-photo#41 の左右比較で両canvasに同じPC余白とfitを適用する。"
       ]
     },
     {
@@ -878,11 +884,13 @@
         "path": "packages/photo-editing/src/editor/browser-photo-editing-mobile-editor.tsx",
         "sha256": "cf0ebc1e3a23b7a2e8ecea7538cc6f2d9880cbf4e181d79db61f26dc293c3d1a"
       },
-      "outputSha256": "de888b8b67943347c22caaf903df435808e9f55189d463e40617ca4c9564e1d7",
+      "outputSha256": "9b09fafc553f837b8ebf1fb55928dc6164f5ceddc44e399daeb217812e487e96",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
-        "Issue #30 Oklch色ミキサーとengine 10/11対応を反映"
+        "Issue #30 Oklch色ミキサーとengine 10/11対応を反映",
+        "niho-photo#41 スマホの層に補正前と補正後を上下に並べる切り替えを追加。",
+        "niho-photo#41 の比較UIを #72 のヒストグラム・Jキー契約と併存するようmainへ積み直した。"
       ]
     },
     {
@@ -1064,7 +1072,7 @@
         "path": "packages/photo-editing/src/editor/browser-photo-editing-workbench.tsx",
         "sha256": "f655136ae0c985d793822ca8bef1668dba26ffd4bb8f13d2ba3d6c2ccb13ceb6"
       },
-      "outputSha256": "d96dec3449d60107a97d5a3bef6bb7663d5b8003d1eba0cc3094a79472e898c6",
+      "outputSha256": "40154ebf388eec52902826ad75af4eccbff822ce26eba8c44f37d54d8b6bfbb3",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
@@ -1101,7 +1109,9 @@
         "Issue #49の統合確認: 下段を中央の列の下だけに置き、プリセットの⋯の受け口を渡す。",
         "可変高のフッター行と中幅画面の折返しに対応する。",
         "niho-photo#36 ヒストグラムとクリップ表示とJキーを組み込み。",
-        "閲覧専用のヒストグラムで、Jキーを操作ボタンと同じ条件で有効にする。"
+        "閲覧専用のヒストグラムで、Jキーを操作ボタンと同じ条件で有効にする。",
+        "niho-photo#41 比較の状態・Y キー・補正前の描画先を組み込み。",
+        "niho-photo#41 の比較UIを #72 のヒストグラム・Jキー契約と併存するようmainへ積み直した。"
       ]
     },
     {
@@ -1617,10 +1627,12 @@
         "path": "packages/photo-editing/src/editor/use-browser-photo-editing-keys.test.ts",
         "sha256": "9a3c9ab4818e0e9f3bb3c00f9dd720fee808dae707c3bff1e0eaabcf1f2787c1"
       },
-      "outputSha256": "763faba1d68347e64157a3a454fd1cd51d9f2ff16fe9d19bfe56a62338a656e2",
+      "outputSha256": "fb1c70edd87acc6a48a97aaeb795e84dadeffc2ad16061b3677d5d87b84fe103",
       "modifications": [
         "PR #61 の切り抜きUI・完了/取消操作と回帰検証を公開repoで実装。",
-        "niho-photo#36 J キーの読み分けを検証。"
+        "niho-photo#36 J キーの読み分けを検証。",
+        "niho-photo#41 Y / Shift+Y の読み分けを検証。",
+        "niho-photo#41 の比較UIを #72 のヒストグラム・Jキー契約と併存するようmainへ積み直した。"
       ]
     },
     {
@@ -1631,13 +1643,15 @@
         "path": "packages/photo-editing/src/editor/use-browser-photo-editing-keys.ts",
         "sha256": "869fc1769c085f4affe0fb260ad2cc9c0df21bd16c3e893ce65f015da29ce2fa"
       },
-      "outputSha256": "e0163e86442b89070a88672f4fd81e3cd3ce5afff1121e77b67d549e0308143a",
+      "outputSha256": "a8084280b66ab57ca93c7d1dcb94a97df8bab86712a4ac02dc4c7d46176db053",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
         "PR #61 の切り抜きUI・完了/取消操作と回帰検証を公開repoで実装。",
         "niho-photo#36 黒つぶれ白飛び表示の J キーを追加。",
-        "Jキーの有効条件を他の編集ショートカットから独立させる。"
+        "Jキーの有効条件を他の編集ショートカットから独立させる。",
+        "niho-photo#41 Y / Shift+Y で並べる・分割・戻すキーを追加し、比較の間は補正前のキーを止める。",
+        "niho-photo#41 の比較UIを #72 のヒストグラム・Jキー契約と併存するようmainへ積み直した。"
       ]
     },
     {
@@ -1727,7 +1741,7 @@
         "path": "packages/photo-editing/src/editor/use-browser-photo-open.ts",
         "sha256": "2755ea206c0fe9edc8df05ff40d78326310449cb9d509e75a291fdc3822a1d2e"
       },
-      "outputSha256": "89a9310548cd1bc34107360a6ecf3552856171a9557b380c1c8f2df9c508ae2f",
+      "outputSha256": "b15903a2bd38e5b95a5c720647bc809fc7202647d8c049004fb7db28433bee60",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
@@ -1742,7 +1756,9 @@
         "Issue #13の段階RAW open、競合回帰、匿名の区間計測を追加。正規producerの数式と成果物は維持。",
         "暫定入力だけ既存Interactive品質を使い、正規Finalへの切替と実UIの再現計測を追加。",
         "未解決presetを旧engineで確定し最新draftまで保存した後だけcanonicalへ切り替える。",
-        "niho-photo#36 描いた画をヒストグラムへ渡す口を追加。"
+        "niho-photo#36 描いた画をヒストグラムへ渡す口を追加。",
+        "niho-photo#41 比較の間に補正前の画を2枚目のcanvasへ描く口を追加。",
+        "niho-photo#41 の比較UIを #72 のヒストグラム・Jキー契約と併存するようmainへ積み直した。"
       ]
     },
     {
@@ -1854,10 +1870,13 @@
         "path": "packages/photo-editing/src/editor/use-photo-editing-zoom.ts",
         "sha256": "f85914654c70c294a0cd0b550c201fae352721e966d96f71cbdfd6efcdb4d6f4"
       },
-      "outputSha256": "1b4853f726dcd269b6dd5432b11cde59bc92b6910777cbe329a673e105f9866d",
+      "outputSha256": "80dd8d8480cf3e046e1072c70362a59981b1924c8d8df9e26b77aadb8a900d6c",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
-        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。"
+        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
+        "niho-photo#41 上下に並べている間は指の下の半分の面で拡大を測る。",
+        "niho-photo#41 の比較UIを #72 のヒストグラム・Jキー契約と併存するようmainへ積み直した。",
+        "niho-photo#41 の比較pane集合変更時に拡大位置を新しい境界へclampする。"
       ]
     },
     {
@@ -1925,7 +1944,8 @@
         "任意の個別写真ソース契約と選んだ写真のUI、復元、取消、再試行、失敗時参照保持を追加",
         "Issue #13の段階表示、provisional draft、canonical handoffと書き出し境界を実装。",
         "Issue 13 progressive RAW open implementation",
-        "部分補正（マスク）#66: 能力にnativeExportMasksを足す"
+        "部分補正（マスク）#66: 能力にnativeExportMasksを足す",
+        "PR #81 のマスク描画を最新mainの変更と統合。"
       ]
     },
     {
@@ -2074,7 +2094,7 @@
         "path": "packages/photo-editing/src/photo-editing-copy.ts",
         "sha256": "1208d4124dca26c951d73f6f84c560879e69beddfb9a16426e1a9dcc9fd30c27"
       },
-      "outputSha256": "5f81a5f16d4213197b6a015e82c9522206dc4fe92afa3a4e1da155083837939e",
+      "outputSha256": "c22695d1f01f5172c9d9433741ff2060d615ce0590aa225f0ebce1b7849301dd",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
@@ -2085,7 +2105,9 @@
         "Issue #30 Oklch色ミキサーとengine 10/11対応を反映",
         "公開repoでの機能変更（#54）: 1 枚の面の下にフィルムストリップを置き、切り抜き・背景除去の間は ← → で写真を替えないようにした。",
         "部分補正（マスク）#65: XMP未書き込み項目に部分補正の表示名を追加",
-        "niho-photo#36 ヒストグラムと黒つぶれ白飛び表示の文言を追加。"
+        "niho-photo#36 ヒストグラムと黒つぶれ白飛び表示の文言を追加。",
+        "niho-photo#41 比較（並べる・分割・比較しない・補正後・境界）の文言を追加。",
+        "niho-photo#41 の比較UIを #72 のヒストグラム・Jキー契約と併存するようmainへ積み直した。"
       ]
     },
     {
@@ -3547,7 +3569,8 @@
         "書き出しcommand境界の引数設計を明記し、Clippyの引数数lintを局所的に許容する。",
         "全open photoの原本をexport destinationから保護",
         "全書き出し経路が全open photo原本を保護",
-        "部分補正（マスク）#66: 現像の状態に masks（部分補正の原寸書き出しの可否）を足す"
+        "部分補正（マスク）#66: 現像の状態に masks（部分補正の原寸書き出しの可否）を足す",
+        "PR #81 のマスク描画を最新mainの変更と統合。"
       ]
     },
     {
@@ -3897,7 +3920,8 @@
         "個別写真の追加・件数・一覧・参照削除を不透明なentryIdの既存経路へ接続 / 選択写真一覧を専用IPC commandへ分離。",
         "Issue #13の段階表示、provisional draft、canonical handoffと書き出し境界を実装。",
         "Issue 13 progressive RAW open implementation",
-        "部分補正（マスク）#66: DevelopStatus に masks の型を足す"
+        "部分補正（マスク）#66: DevelopStatus に masks の型を足す",
+        "PR #81 のマスク描画を最新mainの変更と統合。"
       ]
     },
     {
@@ -3954,7 +3978,8 @@
         "abort直後の同一写真再選択が新native要求を発行する回帰を追加。",
         "最新mainのUI・共有機能と段階RAW openを統合し、既存の境界と補正保持を両立する。",
         "選択済みhandleの再利用と未open近隣先読みの抑止を回帰検証",
-        "部分補正（マスク）#66: nativeExportMasks の能力の回帰を足す"
+        "部分補正（マスク）#66: nativeExportMasks の能力の回帰を足す",
+        "PR #81 のマスク描画を最新mainの変更と統合。"
       ]
     },
     {
@@ -3976,7 +4001,8 @@
         "最後のconsumer中止時にjobを外し、直後の同じ写真の再選択へcancel済みPromiseを渡さない。",
         "最新mainのUI・共有機能と段階RAW openを統合し、既存の境界と補正保持を両立する。",
         "プレビュー照会で開いた写真のhandleを再利用し不要なRAW再hashを避ける",
-        "部分補正（マスク）#66: sidecar が描けるときだけ nativeExportMasks を開く"
+        "部分補正（マスク）#66: sidecar が描けるときだけ nativeExportMasks を開く",
+        "PR #81 のマスク描画を最新mainの変更と統合。"
       ]
     },
     {
@@ -4136,7 +4162,8 @@
         "最新mainの認証・形式能力・共通UI変更とOklch/ディテールの変更を両立して統合。",
         "Issue #13の段階RAW open、競合回帰、匿名の区間計測を追加。正規producerの数式と成果物は維持。",
         "最新mainのUI・共有機能と段階RAW openを統合し、既存の境界と補正保持を両立する。",
-        "部分補正（マスク）#66: masks のある設定を描ける版の sidecar にだけ渡す（MASKS_MIN_RENDER_VERSION）"
+        "部分補正（マスク）#66: masks のある設定を描ける版の sidecar にだけ渡す（MASKS_MIN_RENDER_VERSION）",
+        "PR #81 のマスク描画を最新mainの変更と統合。"
       ]
     },
     {
@@ -4155,7 +4182,8 @@
         "新しい色相保持エンジンと新旧バイナリの能力境界・数値回帰を整合。",
         "Issue #30 Oklch色ミキサーとengine 10/11対応を反映",
         "最新mainの認証・形式能力・共通UI変更とOklch/ディテールの変更を両立して統合。",
-        "部分補正（マスク）#66: 古い sidecar へ masks を渡さない書き出しの回帰を足す"
+        "部分補正（マスク）#66: 古い sidecar へ masks を渡さない書き出しの回帰を足す",
+        "PR #81 のマスク描画を最新mainの変更と統合。"
       ]
     },
     {
@@ -4552,7 +4580,8 @@
         "新しい色相保持エンジンと新旧バイナリの能力境界・数値回帰を整合。",
         "現像workspaceだけを0.17.0へ更新し外部依存の固定版を維持。",
         "Issue #30 Oklch色ミキサーとengine 10/11対応を反映",
-        "部分補正（マスク）#66: 現像workspaceを0.19.0へ更新し外部依存の固定版を維持"
+        "部分補正（マスク）#66: 現像workspaceを0.19.0へ更新し外部依存の固定版を維持",
+        "PR #81 のマスク描画を最新mainの変更と統合。"
       ]
     },
     {
@@ -4567,7 +4596,8 @@
       "modifications": [
         "新しい色相保持エンジンと新旧バイナリの能力境界・数値回帰を整合。",
         "Issue #30 Oklch色ミキサーとengine 10/11対応を反映",
-        "部分補正（マスク）#66: 現像workspaceの版を0.19.0へ上げる"
+        "部分補正（マスク）#66: 現像workspaceの版を0.19.0へ上げる",
+        "PR #81 のマスク描画を最新mainの変更と統合。"
       ]
     },
     {
@@ -5279,7 +5309,8 @@
         "Issue #30 Oklch色ミキサーとengine 10/11対応を反映",
         "PR #62 の対応engine範囲をエラー文に正確に表示",
         "部分補正（マスク）#65: 未描画のマスク付き設定をunsupported_settingsで拒否する対応",
-        "部分補正（マスク）#66: masksNotRenderedを外しmaskSurfaceMissingをunsupported_settingsへ写す"
+        "部分補正（マスク）#66: masksNotRenderedを外しmaskSurfaceMissingをunsupported_settingsへ写す",
+        "PR #81 のマスク描画を最新mainの変更と統合。"
       ]
     },
     {
@@ -5314,7 +5345,8 @@
         "CLIの未知engine判定を最新契約へ更新",
         "CLI版表示の現行engine番号を正しく検証",
         "部分補正（マスク）#65: v6を未知版とし有効なマスク付き設定の拒否を検証",
-        "部分補正（マスク）#66: マスク付きの描画がcrateと同じ画素になるCLIの回帰を足す"
+        "部分補正（マスク）#66: マスク付きの描画がcrateと同じ画素になるCLIの回帰を足す",
+        "PR #81 のマスク描画を最新mainの変更と統合。"
       ]
     },
     {
@@ -5340,7 +5372,8 @@
       "modifications": [
         "Issue #30 Oklch色ミキサーとengine 10/11対応を反映",
         "部分補正（マスク）#65: validateSettingsのマスク読み取り回帰テストを追加",
-        "部分補正（マスク）#66: capabilitiesとDeveloper.maskPlaneを足す"
+        "部分補正（マスク）#66: capabilitiesとDeveloper.maskPlaneを足す",
+        "PR #81 のマスク描画を最新mainの変更と統合。"
       ]
     },
     {
@@ -5792,7 +5825,8 @@
         "色サンプルの段参照を集約し、キャッシュキーの回帰試験では借用を次描画前に解放する",
         "色点のサンプル座標と回帰試験を整合し、操作中640pxと確定解像度を分ける",
         "部分補正（マスク）#65: 有効なマスクの描画をmasksNotRenderedで拒否しM2まで安全に失敗させる",
-        "部分補正（マスク）#66: Sessionの描画を層の描画に対応させ、自動補正と色の取得はmasksを除いて測る"
+        "部分補正（マスク）#66: Sessionの描画を層の描画に対応させ、自動補正と色の取得はmasksを除いて測る",
+        "PR #81 のマスク描画を最新mainの変更と統合。"
       ]
     },
     {
@@ -5939,7 +5973,8 @@
         "色サンプルの有効点有無で共通のf32選択座標を使い、段の依存参照を構造体で共有する",
         "色点のサンプル座標と回帰試験を整合し、操作中640pxと確定解像度を分ける",
         "niho-8と色ポイントのcube統合を修正",
-        "部分補正（マスク）#66: 同じ画像の層が全体の局所階調のpassを読めるようにする"
+        "部分補正（マスク）#66: 同じ画像の層が全体の局所階調のpassを読めるようにする",
+        "PR #81 のマスク描画を最新mainの変更と統合。"
       ]
     },
     {
@@ -9444,8 +9479,8 @@
     },
     {
       "path": "packages/photo-editing/src/editor/use-browser-photo-progressive-open.test.tsx",
-      "sha256": "fc17d3ee618412d075fe97a523e63d6ed24a2dfb3b492998148c905d40c9ca89",
-      "origin": "Issue #13のため独立作成。actual React hooksと合成library/engine/frameだけで、provisional編集、canonical handoff、history、retry、abort、旧frame遮断を検証。外部画像・非公開コード・個体metadataを含まない。\n変更理由: 公開signed RAW契約に合う合成metadataで実hookの正規切替を検証。\n変更理由: preview取得失敗でも正規入力の実hookで補正を続けられる回帰を追加。\n変更理由: fallback後の補正を実際にflushし通常保存のbaseと値まで検証。\n変更理由: preset適用・量drag・量commitを未解決のままhandoffに重ねるfailure injectionを追加。\n変更理由: 非同期プリセットfixtureにも実契約のversionとengineを含め型検査する\n変更理由: 同一内容draftの再表示から正規base確定後の既存saverまで実hookで回帰検証する\n変更理由: draft復元テストでも一覧復帰の成功値を明示確認しact補助のvoid型契約に合わせる\n変更理由: Expect current niho-11 default in handoff tests\n変更理由: niho-photo#36 描いた画をヒストグラムへ渡すことを検証。"
+      "sha256": "07c263f932645cbdf5841a76416aa3f32351a97534f3c98d969f07b3463922da",
+      "origin": "Issue #13のため独立作成。actual React hooksと合成library/engine/frameだけで、provisional編集、canonical handoff、history、retry、abort、旧frame遮断を検証。外部画像・非公開コード・個体metadataを含まない。\n変更理由: 公開signed RAW契約に合う合成metadataで実hookの正規切替を検証。\n変更理由: preview取得失敗でも正規入力の実hookで補正を続けられる回帰を追加。\n変更理由: fallback後の補正を実際にflushし通常保存のbaseと値まで検証。\n変更理由: preset適用・量drag・量commitを未解決のままhandoffに重ねるfailure injectionを追加。\n変更理由: 非同期プリセットfixtureにも実契約のversionとengineを含め型検査する\n変更理由: 同一内容draftの再表示から正規base確定後の既存saverまで実hookで回帰検証する\n変更理由: draft復元テストでも一覧復帰の成功値を明示確認しact補助のvoid型契約に合わせる\n変更理由: Expect current niho-11 default in handoff tests\n変更理由: niho-photo#36 描いた画をヒストグラムへ渡すことを検証。\n変更理由: niho-photo#41 比較の間の補正前の描画（描き直さない・ヒストグラムへ渡さない・canonical差し替え）を検証。\n変更理由: niho-photo#41 の比較UIを #72 のヒストグラム・Jキー契約と併存するようmainへ積み直した。"
     },
     {
       "path": ".github/workflows/public-ci.yml",
@@ -9470,7 +9505,7 @@
     {
       "path": "scripts/ci/scopes.test.mjs",
       "sha256": "bd49b793b767f12275ed2b515ca9ef92e1fb433173eb766acc09528a7503374d",
-      "origin": "Issue #2の公開成果物・SBOM・固定SHA取り込み契約のため独立作成。公開仕様と既存公開CIから生成器・schema・guard・検証・責務境界を定義し、外部コード・秘密・実ユーザーデータを含まない。\n変更理由: Issue #2の公開検証成果物・SBOM・固定SHA取り込み契約と秘密を持たないCI検査を追加。\n変更理由: Issue #2の実装検証で成果物名・輸送receipt・build設定を強化。"
+      "origin": "Issue #2の公開成果物・SBOM・固定SHA取り込み契約のため独立作成。公開仕様と既存公開CIから生成器・schema・guard・検証・責務境界を定義し、外部コード・秘密・実ユーザーデータを含まない。\n変更理由: Issue #2の公開検証成果物・SBOM・固定SHA取り込み契約と秘密を持たないCI検査を追加。\n変更理由: Issue #2の実装検証で成果物名・輸送receipt・build設定を強化。\n変更理由: PR #81 のマスク描画を最新mainの変更と統合。"
     },
     {
       "path": "scripts/ci/workflow-lib.mjs",
@@ -9530,12 +9565,12 @@
     {
       "path": "packages/develop-engine/crates/niho-develop/src/local_mask.rs",
       "sha256": "b6b7a82bc23edf81a6f60fd5b1eb23ae772f6c08ffabeed860f54210ac26f8e3",
-      "origin": "Issue #65の公開仕様 docs/local-adjustments.md だけから新規作成した部分補正（マスク）の保存形・厳密検証・正規形書き出しのRust実装。実写真・非公開コード・私有参照出力を含まない。\n変更理由: 部分補正（マスク）#66: M2で描画される前提に文書を合わせる"
+      "origin": "Issue #65の公開仕様 docs/local-adjustments.md だけから新規作成した部分補正（マスク）の保存形・厳密検証・正規形書き出しのRust実装。実写真・非公開コード・私有参照出力を含まない。\n変更理由: 部分補正（マスク）#66: M2で描画される前提に文書を合わせる\n変更理由: PR #81 のマスク描画を最新mainの変更と統合。"
     },
     {
       "path": "packages/develop-engine/crates/niho-develop/tests/masks_settings.rs",
       "sha256": "72fdc7f5bf22e2634b5f0e9a70c2ea1e3c5568b38edd5c2be2b4a064f91c484a",
-      "origin": "Issue #65の公開仕様と合成fixtureだけから新規作成した、マスク設定の読み書き・版・互換・未描画時の安全な失敗のRust回帰。実写真・非公開コード・私有参照出力を含まない。\n変更理由: 部分補正（マスク）#66: M1の未描画の失敗を、すべての描画経路で描く回帰に置き換える"
+      "origin": "Issue #65の公開仕様と合成fixtureだけから新規作成した、マスク設定の読み書き・版・互換・未描画時の安全な失敗のRust回帰。実写真・非公開コード・私有参照出力を含まない。\n変更理由: 部分補正（マスク）#66: M1の未描画の失敗を、すべての描画経路で描く回帰に置き換える\n変更理由: PR #81 のマスク描画を最新mainの変更と統合。"
     },
     {
       "path": "packages/develop-engine/crates/niho-develop/tests/fixtures/masks/settings-cases.json",
@@ -9596,6 +9631,41 @@
       "path": "packages/photo-editing/src/editor/browser-photo-editing-loupe-clip.test.tsx",
       "sha256": "634aca00b317f74f216c20905a5d8589b53bda62d2d54cdb13073b8c7faa1abd",
       "origin": "niho-photo#36 のため新規作成。右パネル上端のヒストグラム（RGB の度数・黒つぶれ/白飛びの割合・クリップ領域の印）の計算・表示・test。合成の画素だけを使用。"
+    },
+    {
+      "path": "packages/photo-editing/src/editor/use-browser-photo-compare-view.ts",
+      "sha256": "994ab41fb8e95e6c36a09daff69245b43d290a2e5021114d67cff2536a4efa15",
+      "origin": "niho-photo#41 のため新規作成。補正前と補正後を並べて見比べる表示（並べる・分割・戻す、境界のドラッグとキー操作、Y / Shift+Y）の状態と描画。外部画像・非公開コードを含まない。\n変更理由: niho-photo#41 の比較UIを #72 のヒストグラム・Jキー契約と併存するようmainへ積み直した。"
+    },
+    {
+      "path": "packages/photo-editing/src/editor/photo-editing-compare-split.tsx",
+      "sha256": "9df5b4b46587eb1610c604a491443105394ceee7b80c9b8499f381e3635535e4",
+      "origin": "niho-photo#41 のため新規作成。補正前と補正後を並べて見比べる表示（並べる・分割・戻す、境界のドラッグとキー操作、Y / Shift+Y）の状態と描画。外部画像・非公開コードを含まない。\n変更理由: niho-photo#41 の比較UIを #72 のヒストグラム・Jキー契約と併存するようmainへ積み直した。"
+    },
+    {
+      "path": "packages/photo-editing/src/editor/use-browser-photo-compare-view.test.tsx",
+      "sha256": "d7bc5c1d1b8289f0201fc6df6594d3bd3da8b2add027a07d83a8d479ae49dc55",
+      "origin": "niho-photo#41 のため新規作成。補正前と補正後を並べて見比べる表示（並べる・分割・戻す、境界のドラッグとキー操作、Y / Shift+Y、スマホの上下）の test。合成の DOM と画素だけを使用。\n変更理由: niho-photo#41 の比較UIを #72 のヒストグラム・Jキー契約と併存するようmainへ積み直した。"
+    },
+    {
+      "path": "packages/photo-editing/src/editor/photo-editing-compare-split.test.tsx",
+      "sha256": "40cb90041d14d0b7047c81ebc05b2d417e17da92d0c85cb499b84fa495d3bebe",
+      "origin": "niho-photo#41 のため新規作成。補正前と補正後を並べて見比べる表示（並べる・分割・戻す、境界のドラッグとキー操作、Y / Shift+Y、スマホの上下）の test。合成の DOM と画素だけを使用。\n変更理由: niho-photo#41 の比較UIを #72 のヒストグラム・Jキー契約と併存するようmainへ積み直した。"
+    },
+    {
+      "path": "packages/photo-editing/src/editor/browser-photo-editing-loupe-compare.test.tsx",
+      "sha256": "fe008ae0e234f2191b596e251e90d2b7a787015174f85499d1584f40c980cc11",
+      "origin": "niho-photo#41 のため新規作成。補正前と補正後を並べて見比べる表示（並べる・分割・戻す、境界のドラッグとキー操作、Y / Shift+Y、スマホの上下）の test。合成の DOM と画素だけを使用。\n変更理由: niho-photo#41 の比較UIを #72 のヒストグラム・Jキー契約と併存するようmainへ積み直した。"
+    },
+    {
+      "path": "packages/photo-editing/src/editor/browser-photo-editing-footer-compare.test.tsx",
+      "sha256": "e403d33b4ddb234d9553aa3feb6d43061ab50ed3372657193ced245f98c4da73",
+      "origin": "niho-photo#41 のため新規作成。補正前と補正後を並べて見比べる表示（並べる・分割・戻す、境界のドラッグとキー操作、Y / Shift+Y、スマホの上下）の test。合成の DOM と画素だけを使用。\n変更理由: niho-photo#41 の比較UIを #72 のヒストグラム・Jキー契約と併存するようmainへ積み直した。"
+    },
+    {
+      "path": "packages/photo-editing/src/editor/browser-photo-editing-mobile-editor-compare.test.tsx",
+      "sha256": "b291c03b646a80b68e6904b3e86017dff6da1bd55ab027cd62595f64da838e7e",
+      "origin": "niho-photo#41 のため新規作成。補正前と補正後を並べて見比べる表示（並べる・分割・戻す、境界のドラッグとキー操作、Y / Shift+Y、スマホの上下）の test。合成の DOM と画素だけを使用。\n変更理由: niho-photo#41 の比較UIを #72 のヒストグラム・Jキー契約と併存するようmainへ積み直した。\n変更理由: niho-photo#41 の比較pane追加時に拡大位置を再clampする回帰を検証する。"
     },
     {
       "path": "packages/develop-engine/crates/niho-develop/src/local_render.rs",
