@@ -20,6 +20,19 @@ function recording(answer: (call: Call) => unknown) {
 }
 
 describe("createCameraCommands", () => {
+  it("sets and clears pick / reject flags by entry ID with camera_library_set_flags (niho-photo#47)", async () => {
+    const { calls, commands } = recording(() => ({ updated: ["entry-1"], notFound: ["entry-2"] }));
+    const entryIds: readonly string[] = ["entry-1", "entry-2"];
+    await expect(commands.setFlags(entryIds, "pick")).resolves.toEqual({ updated: ["entry-1"], notFound: ["entry-2"] });
+    await commands.setFlags(["entry-1"], null);
+    expect(calls).toEqual([
+      { command: "camera_library_set_flags", args: { request: { entryIds: ["entry-1", "entry-2"], flag: "pick" } } },
+      { command: "camera_library_set_flags", args: { request: { entryIds: ["entry-1"], flag: null } } },
+    ]);
+    const failing = recording(() => ({ reject: { code: "internal", message: "採用・却下を保存できませんでした。" } }));
+    await expect(failing.commands.setFlags(["entry-1"], "reject")).rejects.toBeInstanceOf(CameraCommandError);
+  });
+
   it("reads an open photo's info with camera_photo_info and unwraps `info` (niho-photo#43)", async () => {
     const info = { camera: { make: "NIHO", model: "Test" }, iso: 400, gps: null };
     const { calls, commands } = recording(() => ({ info }));

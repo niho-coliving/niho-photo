@@ -24,6 +24,7 @@ import { cn } from "niho-ui/cn";
 
 import { BrowserPhotoExportSheet } from "./browser-photo-editing-export-sheet";
 import { BrowserPhotoFavoriteButton, type BrowserPhotoFavoriteControl } from "./browser-photo-editing-favorite-button";
+import { BrowserPhotoFlagButtons, type BrowserPhotoFlagControl } from "./browser-photo-editing-flags";
 import {
   DEVELOP_SAVE_FAILED_TEXT,
   type AddRetry,
@@ -38,7 +39,7 @@ import {
 import { PhotoEditingMenu } from "./photo-editing-menu";
 import type { BrowserPhotoCompareMode } from "./use-browser-photo-compare-view";
 
-/** ブラウザ版の下段（一覧 ⇄ 1 枚の切り替え・状態欄・お気に入りの ♥・「補正前」・「比較」・「書き出す」）。 */
+/** ブラウザ版の下段（一覧 ⇄ 1 枚の切り替え・状態欄・お気に入りの ♥・選別・「補正前」・「比較」・「書き出す」）。 */
 
 /** 状態欄・右パネルの「再試行」（字だけ。押せる範囲は 44px） */
 const RETRY_BUTTON_CLASS_NAME = PHOTO_EDITING_RETRY_TEXT_BUTTON_CLASS_NAME;
@@ -226,6 +227,11 @@ export function BrowserPhotoEditingFooter(props: {
   statusLine: ReactNode;
   /** お気に入りの ♥（選んでいる 1 枚・開いている 1 枚。PC の一覧でも 1 枚でも出す。F5b 移行元設計） */
   favorite?: BrowserPhotoFavoriteControl;
+  /**
+   * 選別の採用・却下・外す（niho-photo#47。一覧で選んでいる写真・開いている 1 枚。PC だけ・♥ の隣）。選別を持たない写真の出どころは
+   * 渡さない
+   */
+  flag?: BrowserPhotoFlagControl;
   /** PC の一覧で 1 枚を選んだときのアルバム操作 */
   albumAction?: { label: string; disabled: boolean; onClick: () => void };
   /** Trusted host が明示的にクラウド共有を接続したときだけ出す。 */
@@ -303,6 +309,7 @@ export function BrowserPhotoEditingFooter(props: {
         // PC だけ（「補正前」と同じ）。狭い幅はスマホの 1 枚の層の上の帯に置き、下段は状態欄の幅を残す
         <BrowserPhotoFavoriteButton {...props.favorite} className="hidden lg:flex" />
       ) : null}
+      {props.flag ? <BrowserPhotoFlagButtons {...props.flag} className="hidden lg:flex" /> : null}
       {props.shareAction ? (
         <button
           type="button"

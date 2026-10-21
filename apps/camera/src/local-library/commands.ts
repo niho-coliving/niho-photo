@@ -36,7 +36,12 @@ export type LibraryEntry = {
   modifiedAt: string;
   /** この Mac に補正を保存した写真か（名前・大きさ・更新日時で見分ける。開けば中身の SHA-256 で補正が付いてくる） */
   hasEdits: boolean;
+  /** 選別のフラグ（付いた写真だけ。名前・大きさ・更新日時で見分ける。niho-photo#47） */
+  flag?: "pick" | "reject";
 };
+
+/** 選別のフラグの付け外しの結果（`entryId` の配列。知らない ID・もう無い写真は `notFound`）。 */
+export type SetFlagsResult = { updated: string[]; notFound: string[] };
 
 /** 追加したフォルダの木。`truncated` は上限・時間の予算で読み切っていない（選ばれたら `listFolder` で読む）。 */
 export type LibraryFolder = {
@@ -188,6 +193,9 @@ export function createCameraCommands(invoke: Invoke = tauriInvoke) {
     forgetPhotos: async () => {
       await call<Record<string, never>>("camera_library_forget_photos");
     },
+    /** 一覧の写真に採用・却下を付ける・外す（null。niho-photo#47）。 */
+    setFlags: (entryIds: readonly string[], flag: "pick" | "reject" | null) =>
+      call<SetFlagsResult>("camera_library_set_flags", { entryIds: [...entryIds], flag }),
     openPhotos: (entryIds: string[]) => call<OpenPhotosResult>("camera_photo_open", { entryIds }),
     closePhotos: async (photoIds: string[]) => {
       await call<Record<string, never>>("camera_photo_close", { photoIds });

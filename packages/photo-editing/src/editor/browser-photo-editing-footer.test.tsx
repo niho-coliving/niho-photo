@@ -113,3 +113,63 @@ describe("BrowserPhotoEditingStatusLine recovery", () => {
     expect(onDiscard).toHaveBeenCalledOnce();
   });
 });
+
+describe("BrowserPhotoEditingFooter flags (niho-photo#47)", () => {
+  let container: HTMLDivElement;
+  let root: Root;
+
+  function FlagHarness(props: { flag?: boolean }) {
+    const exportButtonRef = useRef<HTMLButtonElement | null>(null);
+    return (
+      <BrowserPhotoEditingFooter
+        viewMode="loupe"
+        canOpenLoupe
+        onShowGrid={() => undefined}
+        onShowLoupe={() => undefined}
+        statusLine={null}
+        favorite={{ photoId: "p1", favorite: false, busy: false, disabled: false, onToggle: () => undefined }}
+        flag={
+          props.flag
+            ? { flag: "pick", available: true, busy: false, disabled: false, onSet: () => undefined }
+            : undefined
+        }
+        showCompare={false}
+        compareDisabled={false}
+        compareOriginal={false}
+        onCompareOriginalChange={() => undefined}
+        exportButtonRef={exportButtonRef}
+        exportSheetOpen={false}
+        canExport
+        exportChoices={null}
+        onToggleExportSheet={() => undefined}
+        onExport={() => undefined}
+        onCloseExportSheet={() => undefined}
+      />
+    );
+  }
+
+  beforeEach(() => {
+    container = document.createElement("div");
+    document.body.appendChild(container);
+    root = createRoot(container);
+  });
+
+  afterEach(() => {
+    act(() => root.unmount());
+    container.remove();
+  });
+
+  it("選別の 3 つのボタンを ♥ の隣（PC だけ）に出し、渡さなければ出さない", () => {
+    act(() => root.render(<FlagHarness flag />));
+    const heart = container.querySelector('button[aria-label="お気に入り"]');
+    const group = container.querySelector<HTMLElement>('[role="group"][aria-label="選別"]');
+    expect(group).not.toBeNull();
+    expect(heart?.nextElementSibling).toBe(group);
+    expect(group?.className).toContain("hidden");
+    expect(group?.className).toContain("lg:flex");
+    expect(group?.querySelector('button[aria-label="採用"]')?.getAttribute("aria-pressed")).toBe("true");
+
+    act(() => root.render(<FlagHarness />));
+    expect(container.querySelector('[role="group"][aria-label="選別"]')).toBeNull();
+  });
+});

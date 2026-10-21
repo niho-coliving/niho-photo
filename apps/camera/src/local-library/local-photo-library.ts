@@ -15,6 +15,9 @@
  * - 補正の版（`developVersions`・`saveDevelopVersions`。右パネルの「版」）は、native が補正と同じフォルダの別のファイル
  *   （`<SHA-256>.versions.json`）に配列まるごと読み書きする。鍵は開いたときの中身の SHA-256 で、写真が置き換わっていたら読み書きしない
  * - 消さない（`delete` は何もしない。編集面は置き場が local のとき消す道具を出さない）
+ * - 選別のフラグ（採用 / 却下。`flags`・一覧の `flag`・`list` の `flag` の絞り込み。niho-photo#47）は、native が一覧の写真に添え
+ *   （名前・大きさ・更新日時で見分ける。開かない）、`entryId` で付け外しする（src-tauri の flags.rs）。一覧・付け外しで分かった
+ *   フラグは開いた写真の行にも添える
  */
 import { BrowserPhotoSourceError } from "niho-photo-editing/browser-photo-source";
 import { browserCloudPhotoKind } from "niho-photo-editing/browser-photo-cloud-source";
@@ -30,6 +33,7 @@ import type {
   PhotoLibrary,
   PhotoLibraryCapabilities,
   PhotoLibraryDevelopSourceContext,
+  PhotoLibraryFlag,
   PhotoLibraryFolder,
   PhotoLibraryItem,
   PhotoLibraryListPage,
@@ -106,6 +110,7 @@ export const LOCAL_CLOSED_CAPABILITIES: PhotoLibraryCapabilities = Object.freeze
   addFromDeviceFolder: false,
   info: false,
   versions: false,
+  flags: false,
 });
 
 /** 現像（同梱の sidecar）が使えるかでの、この Mac のできること。 */
@@ -128,6 +133,8 @@ export function localCapabilities(
     info: true,
     // 補正の版は native が補正の隣のファイルに残す（同梱の sidecar に依らない）
     versions: true,
+    // 選別のフラグは native が 1 つのファイルに残す（同梱の sidecar に依らない。niho-photo#47）
+    flags: true,
   };
 }
 
@@ -206,8 +213,13 @@ function savedPart(saved: SavedDevelopSettings | null) {
   };
 }
 
-/** 開いた写真の行（`contentSha256`・補正・版が入る）。 */
-function openedRow(entryId: string, handle: OpenHandle): PhotoLibraryItem & { contentSha256: string } {
+/** native が一覧の写真に添えた選別のフラグ（付いていなければ null）。 */
+function entryFlag(entry: Pick<LibraryEntry, "flag">): PhotoLibraryFlag | null {
+  return entry.flag === "pick" || entry.flag === "reject" ? entry.flag : null;
+}
+
+/** 開いた写真の行（`contentSha256`・補正・版が入る。フラグは library が添える）。 */
+function openedRowOf(entryId: string, handle: OpenHandle): PhotoLibraryItem & { contentSha256: string } {
   return {
     id: entryId,
     fileName: handle.fileName,
@@ -248,6 +260,7 @@ function listedRow(entry: LibraryEntry, handle: OpenHandle | undefined): PhotoLi
     developRevision: 0,
     webRenderedRevision: null,
     favorite: false,
+    flag: entryFlag(entry),
     previewUrl: localThumbnailUrl(entry.entryId),
   };
   return handle ? { ...base, contentSha256: handle.contentSha256, ...savedPart(handle.saved) } : base;
@@ -257,6 +270,8 @@ function matchesQuery(entry: LibraryEntry, query: PhotoLibraryListQuery): boolea
   if (query.kind !== undefined && browserCloudPhotoKind({ fileExtension: fileExtensionOf(entry.fileName) }) !== query.kind) {
     return false;
   }
+  if (query.flag === "pick" && entryFlag(entry) !== "pick") return false;
+  if (query.flag === "notRejected" && entryFlag(entry) === "reject") return false;
   return query.edited === undefined || entry.hasEdits === query.edited;
 }
 
@@ -439,6 +454,16 @@ export function createLocalPhotoLibrary(commands: CameraCommands, options: Local
   const interactivePreviews = new Map<string, CachedInteractivePreview>();
   const interactivePreviewJobs = new Map<string, InteractivePreviewJob>();
   let interactivePreviewSequence = 0;
+  /** 一覧・付け外しで分かった選別のフラグ（entryId → フラグ。開いた写真の行に添える。分からない写真には添えない） */
+  const knownFlags = new Map<string, PhotoLibraryFlag | null>();
+  const rememberFlags = (entries: readonly LibraryEntry[]) => {
+    for (const entry of entries) knownFlags.set(entry.entryId, entryFlag(entry));
+  };
+  /** 開いた写真の行（分かっていればフラグも。分からなければ `flag` を省き、一覧の行の値を上書きしない） */
+  const openedRow = (entryId: string, handle: OpenHandle): PhotoLibraryItem & { contentSha256: string } => {
+    const row = openedRowOf(entryId, handle);
+    return knownFlags.has(entryId) ? { ...row, flag: knownFlags.get(entryId) ?? null } : row;
+  };
 
   const toHandle = (opened: OpenedPhoto): OpenHandle => ({
     nativeId: opened.photoId,
@@ -662,6 +687,7 @@ export function createLocalPhotoLibrary(commands: CameraCommands, options: Local
     entries: readonly LibraryEntry[],
     query: PhotoLibraryListQuery,
   ): PhotoLibraryListPage => {
+    rememberFlags(entries);
     const all = entries.filter((entry) => matchesQuery(entry, query));
     // 「選んだ写真」は前のクラウド表示で覚えた並びに左右されず、選択グループの新しい順・picker の順を保つ。
     const matching = all;
@@ -747,6 +773,7 @@ export function createLocalPhotoLibrary(commands: CameraCommands, options: Local
       const folder = await commands.listFolder(folderId);
       throwIfAborted(requestOptions?.signal);
       const all = flattenEntries(folder);
+      rememberFlags(all);
       const matching = all.filter((entry) => matchesQuery(entry, query)).sort(byModifiedDesc);
       const offset = readOffset(query.cursor);
       const limit = Math.max(1, Math.min(query.limit ?? LOCAL_LIST_PAGE_SIZE, LOCAL_LIST_PAGE_SIZE));
@@ -1022,9 +1049,24 @@ export function createLocalPhotoLibrary(commands: CameraCommands, options: Local
         return entries.length;
       },
       async add() {
-        return (await commands.addPhotos()).map((entry) => listedRow(entry, handles.get(entry.entryId)));
+        const entries = await commands.addPhotos();
+        rememberFlags(entries);
+        return entries.map((entry) => listedRow(entry, handles.get(entry.entryId)));
       },
       forget: () => commands.forgetPhotos(),
+    },
+
+    // 選別のフラグ（niho-photo#47）。native が一覧の写真の名前・大きさ・更新日時で覚える。無い写真は `notFound`
+    flags: {
+      async set(photoIds, flag) {
+        const entryIds = [...new Set(photoIds)];
+        if (entryIds.length === 0) return { updated: 0, skipped: { notFound: 0, noOriginal: 0 } };
+        const result = await commands.setFlags(entryIds, flag);
+        const updated = Array.isArray(result.updated) ? result.updated : [];
+        const notFound = Array.isArray(result.notFound) ? result.notFound : [];
+        for (const entryId of updated) knownFlags.set(entryId, flag);
+        return { updated: updated.length, skipped: { notFound: notFound.length, noOriginal: 0 } };
+      },
     },
 
     presets: {

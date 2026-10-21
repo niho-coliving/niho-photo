@@ -19,7 +19,8 @@ import type { PhotoEditingSettings } from "../photo-editing-types";
  * - library は状態を隠し持たない（一覧の条件・選んだフォルダは `list` の query で渡す）
  * - クラウドだけの道具（お気に入り・アルバム・記事の画像・補正後のプレビュー・ファイルの追加）と、NIHO Desktop だけの道具
  *   （原寸の書き出し・書き出し先のフォルダ・この Mac からの追加）は省略できる。無ければ編集面はその道具を出さない。持っていても
- *   使えるかは `capabilities` で確かめる（クラウドの実装は NIHO Desktop の外でも持ち、そこでは `capabilities` が false）
+ *   使えるかは `capabilities` で確かめる（クラウドの実装は NIHO Desktop の外でも持ち、そこでは `capabilities` が false）。選別の
+ *   フラグ（`flags`）も省略でき、`capabilities.flags` を省けば使えない
  *
  * React からは `PhotoLibraryProvider` で渡し、編集面は `usePhotoLibrary()` で読む（./photo-library-context.tsx。この型は React に依らない）。
  */
@@ -216,6 +217,11 @@ export type PhotoLibrary = {
   readonly selectedPhotos?: PhotoLibrarySelectedPhotos;
   /** お気に入り（♥。`capabilities.favorites`） */
   readonly favorites?: PhotoLibraryFavorites;
+  /**
+   * 選別のフラグ（採用 / 却下。`capabilities.flags`。niho-photo#47。Lightroom のフラグ）。♥ とは別の印で、同じ写真に両方付いてよい。
+   * 却下しても写真は消えない（消すのは {@link PhotoLibrary.delete}）
+   */
+  readonly flags?: PhotoLibraryFlags;
   /** アルバム（`capabilities.albums`） */
   readonly albums?: PhotoLibraryAlbums;
   /** 保存したプリセット（クラウドは拠点のプリセット、この Mac は取り込んだ XMP。同梱 3 本は段 2 の wasm が返す） */
@@ -293,6 +299,11 @@ export type PhotoLibraryCapabilities = {
    * （右端の帯に「版」を出さない）
    */
   versions?: boolean;
+  /**
+   * 選別のフラグ（採用 / 却下）を付け外しし、一覧を絞れる（{@link PhotoLibrary.flags}・{@link PhotoLibraryListQuery.flag}。
+   * niho-photo#47）。省略 = 使えない（P / X / U のキー・下段のボタン・絞り込みの「選別」を出さない）
+   */
+  flags?: boolean;
 };
 
 /** 受入まで拠点を絞る機能（F9 ）。 */
@@ -315,7 +326,7 @@ export type PhotoLibraryLimits = {
   lookupMaxCount: number;
   /** {@link PhotoLibrary.countArticleReferences} 1 回で調べられる数 */
   referencesMaxCount: number;
-  /** お気に入り・アルバムの出し入れ 1 回で送れる写真の数 */
+  /** お気に入り・選別のフラグ・アルバムの出し入れ 1 回で送れる写真の数 */
   photosPerRequest: number;
 };
 
@@ -427,6 +438,8 @@ export type PhotoLibraryPhoto = {
   workQueuedAt?: string | null;
   /** お気に入り（♥） */
   favorite?: boolean;
+  /** 選別のフラグ（採用 / 却下。niho-photo#47）。省略・null はフラグなし。♥ とは別 */
+  flag?: PhotoLibraryFlag | null;
   /** 補正済みか（「初期化」を保存した写真は false） */
   hasEdits?: boolean;
   editedPreview?: PhotoLibraryEditedPreview | null;
@@ -482,6 +495,12 @@ export type PhotoLibrarySort = "added" | "captured";
 /** 一覧の種類の絞り込み（RAW は JPEG / PNG / TIFF / HEIC / HEIF 以外）。 */
 export type PhotoLibraryKindFilter = "raw" | "jpeg" | "heic";
 
+/** 選別のフラグ（`pick` = 採用、`reject` = 却下。niho-photo#47）。 */
+export type PhotoLibraryFlag = "pick" | "reject";
+
+/** 一覧の選別の絞り込み（`pick` = 採用だけ、`notRejected` = 却下を隠す〔採用とフラグなし〕）。 */
+export type PhotoLibraryFlagFilter = "pick" | "notRejected";
+
 export type PhotoLibraryListQuery = {
   /** 続きのページ（前のページの `next`） */
   cursor?: string | null;
@@ -495,6 +514,8 @@ export type PhotoLibraryListQuery = {
   albumId?: string | null;
   /** 補正済み（true）/ 未補正（false） */
   edited?: boolean;
+  /** 選別（`capabilities.flags` の置き場だけ。省くと絞らない。niho-photo#47） */
+  flag?: PhotoLibraryFlagFilter;
   /** フォルダ（{@link PhotoLibraryFolder.folderId}。そのフォルダとその下の写真）。フォルダの無い置き場（クラウド）は読まない */
   folderId?: string;
   /** この Mac の仮想ソース。`folderId` と同時には指定しない。 */
@@ -844,6 +865,17 @@ export type PhotoLibrarySkippedPhotos = { notFound: number; noOriginal: number }
 export type PhotoLibraryFavorites = {
   /** お気に入りを付ける・外す（{@link PhotoLibraryLimits.photosPerRequest} 件まで。オリジナルのある写真だけ） */
   set(photoIds: readonly string[], favorite: boolean): Promise<{ updated: number; skipped: PhotoLibrarySkippedPhotos }>;
+};
+
+export type PhotoLibraryFlags = {
+  /**
+   * 選別のフラグを付ける（`pick` / `reject`）・外す（null）（{@link PhotoLibraryLimits.photosPerRequest} 件まで。オリジナルのある写真
+   * だけ）。同じフラグを付け直しても変わらない（付けたことに数える）。無い写真は `skipped.notFound`
+   */
+  set(
+    photoIds: readonly string[],
+    flag: PhotoLibraryFlag | null,
+  ): Promise<{ updated: number; skipped: PhotoLibrarySkippedPhotos }>;
 };
 
 export type PhotoLibraryAlbum = {

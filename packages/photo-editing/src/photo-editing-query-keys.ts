@@ -13,7 +13,8 @@ export const photoEditingQueryKeys = {
   /**
    * 並び（追加日 / 撮影日）と元の写真の有無・お気に入り・種類・補正済みで絞った一覧（移行元設計 / 移行元設計。`cloudPhotos` の下。
    * null は絞らない。種類・補正済みは省くと null にそろえる）。この Mac のフォルダの一覧（NIHO camera C3 移行元設計）は `folderId` も
-   * 持つ（フォルダの無い一覧は鍵に入れない = クラウドの鍵は変わらない）
+   * 持つ（フォルダの無い一覧は鍵に入れない = クラウドの鍵は変わらない）。選別（niho-photo#47）で絞った一覧だけ `flag` を持つ（絞らない
+   * 一覧の鍵は変わらない）
    */
   cloudPhotosList: (
     spotId: string | null | undefined,
@@ -24,6 +25,7 @@ export const photoEditingQueryKeys = {
       albumId?: string | null;
       kind?: "raw" | "jpeg" | "heic" | null;
       edited?: boolean | null;
+      flag?: "pick" | "notRejected" | null;
       folderId?: string | null;
       localSource?: "selected" | null;
     },
@@ -40,6 +42,7 @@ export const photoEditingQueryKeys = {
         albumId: list.albumId ?? null,
         kind: list.kind ?? null,
         edited: list.edited ?? null,
+        ...(list.flag ? { flag: list.flag } : {}),
         ...(list.folderId ? { folderId: list.folderId } : {}),
         ...(list.localSource ? { localSource: list.localSource } : {}),
       },
