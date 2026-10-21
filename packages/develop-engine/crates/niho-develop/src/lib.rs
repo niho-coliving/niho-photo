@@ -1060,6 +1060,71 @@ impl Session {
         self.niho6_reuse_while_dragging = false;
     }
 
+    /// Start from `parent`'s balanced source (an isolated session of the same
+    /// original: the picker, Auto), so the same head white balance is not
+    /// applied again.
+    fn share_balanced_source(&mut self, parent: &Session) {
+        debug_assert!(Arc::ptr_eq(&self.original, &parent.original));
+        self.source = Arc::clone(&parent.source);
+        self.source_white = parent.source_white;
+    }
+
+    /// The head white balance `settings` apply to this session's source
+    /// (`niho-13` on a raster source; RAW working copies keep the linear
+    /// matrix of their formula).
+    fn head_white_for(&self, settings: &DevelopSettings) -> Option<HeadWhiteBalance> {
+        match self.original.as_ref() {
+            SessionSource::WorkingCopy {
+                meta: WorkingCopyMeta::Raw { .. },
+                ..
+            } => None,
+            _ => HeadWhiteBalance::of(settings),
+        }
+    }
+
+    /// The source `settings` draw from: the kept balanced source when its
+    /// white balance is theirs, else made from the original (not kept).
+    fn balanced_source(&self, white: Option<HeadWhiteBalance>) -> Arc<SessionSource> {
+        if white == self.source_white {
+            return Arc::clone(&self.source);
+        }
+        match white {
+            None => Arc::clone(&self.original),
+            Some(white) => Arc::new(
+                self.original.with_image(
+                    white
+                        .prepare()
+                        .apply_image(self.original.image(), self.original.space()),
+                ),
+            ),
+        }
+    }
+
+    /// Keeps the source balanced for `settings` (whether it changed). A
+    /// different head white balance replaces it and drops everything made
+    /// from the old one (its reductions, window, statistics, point plane and
+    /// master); cubes and effects' planes do not depend on the source and
+    /// stay. The local pass knows the balance it read ([`pipeline::LocalPass`]):
+    /// drag frames may keep it, released frames make their own.
+    fn ensure_head_white(&mut self, settings: &DevelopSettings) -> bool {
+        let white = self.head_white_for(settings);
+        if white == self.source_white {
+            return false;
+        }
+        // Drop the old balanced source first (one balanced copy in memory).
+        self.source = Arc::clone(&self.original);
+        self.source_white = None;
+        self.niho3 = None;
+        self.parked_niho3 = None;
+        self.sized = None;
+        self.framed = None;
+        self.stats.clear();
+        self.color_points = None;
+        self.source = self.balanced_source(white);
+        self.source_white = white;
+        true
+    }
+
     /// The `niho-6` analysis of the whole photo balanced by `white` and
     /// reduced by the active detail settings. The shared LRU keeps two feature
     /// sets keyed by white balance and detail amounts, and two analyses keyed

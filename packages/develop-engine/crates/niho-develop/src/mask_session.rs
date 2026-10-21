@@ -50,8 +50,8 @@ use crate::pipeline::{self, Rendered};
 use crate::settings::DevelopSettings;
 use crate::spatial::{self, Quality};
 use crate::{
-    frame, niho6, rendered_geometry, Error, Framed, ParkedNiho3, PreparedNiho3, RawEngine, Session,
-    SessionSource, SettingsError,
+    frame, niho6, rendered_geometry, Error, Framed, HeadWhiteBalance, ParkedNiho3, PreparedNiho3,
+    RawEngine, Session, SessionSource, SettingsError,
 };
 use std::sync::Arc;
 
@@ -128,7 +128,8 @@ struct LayerCaches {
     cubes: Option<pipeline::SettingsCubes>,
     local: Option<pipeline::LocalPass>,
     color_points: Option<pipeline::ColorPointPlane>,
-    niho6_last_used: Option<Arc<niho6::Analysis>>,
+    niho6_last_used: Option<(Option<HeadWhiteBalance>, Arc<niho6::Analysis>)>,
+    niho6_last_detail: Option<String>,
     niho3: Option<PreparedNiho3>,
     parked_niho3: Option<ParkedNiho3>,
     sized: Option<(usize, SessionSource)>,
@@ -391,7 +392,8 @@ impl Session {
         max_dimension: usize,
         quality: Quality,
     ) -> Result<(), Error> {
-        if !self.ensure_niho3(settings, max_dimension, quality)? {
+        let white_changed = self.ensure_head_white(settings);
+        if !self.ensure_niho3(settings, max_dimension, quality, white_changed)? {
             self.release_master();
         }
         Ok(())
@@ -466,6 +468,7 @@ impl Session {
         std::mem::swap(&mut self.local, &mut caches.local);
         std::mem::swap(&mut self.color_points, &mut caches.color_points);
         std::mem::swap(&mut self.niho6_last_used, &mut caches.niho6_last_used);
+        std::mem::swap(&mut self.niho6_last_detail, &mut caches.niho6_last_detail);
     }
 
     fn swap_source_caches(&mut self, caches: &mut LayerCaches) {
@@ -491,12 +494,25 @@ impl Session {
         let target = self.niho3_preparation_target(settings, max_dimension, quality);
         Ok(Some(match engine {
             RawEngine::Niho6 => {
+                let detail_key = settings.detail.map_or_else(
+                    || "none".to_string(),
+                    |detail| {
+                        format!(
+                            "{}|{:?}",
+                            detail.luminance_noise_reduction, detail.color_noise_reduction
+                        )
+                    },
+                );
                 let exposure = match (
                     quality,
                     self.niho6_reuse_while_dragging,
                     self.niho6_last_used.as_ref(),
                 ) {
-                    (Quality::Interactive, true, Some(analysis)) => analysis.exposure_ev,
+                    (Quality::Interactive, true, Some((_, analysis)))
+                        if self.niho6_last_detail.as_ref() == Some(&detail_key) =>
+                    {
+                        analysis.exposure_ev
+                    }
                     _ => niho6::analysis_exposure(settings),
                 };
                 let (w, h) = target.map_or_else(|| self.source.size(), |t| (t.width, t.height));
