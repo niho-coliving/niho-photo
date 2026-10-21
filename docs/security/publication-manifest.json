@@ -9697,8 +9697,8 @@
     },
     {
       "path": "packages/develop-engine/tools/calibrate/fit_analytic_hs.py",
-      "sha256": "8ea1bf63c881b7390b247f4973237998cca2c8aacd7e766e6b18840edccc7465",
-      "origin": "公開Issue #26 のため独立実装した開発教師上の校正・撮影日fold交差検証・gate計測・一度だけの独立評価の手順。入力は利用者指定のrepository外、非公開の写真・パス・scene名・参照画素をsourceへ含めず匿名集計だけを公開する。sealed・independentのcohortを拒否する。\n変更理由: #26 独立評価(holdout)で欠けた部分集合・設定を許し、必須の書き出しの欠落を開始前に止める\n変更理由: holdoutを凍結tool・両実行物・subset gate・入力指紋でfail-closedにする\n変更理由: #26 案C の写真ごとの目標・ridge（内側の撮影日CV）・end-to-end の微調整・交差検証・gate・採否規則を追加"
+      "sha256": "591962298df7b39d46301328d6d636971abd936bcf804407bb4cc96d8caf7e0b",
+      "origin": "公開Issue #26 のため独立実装した開発教師上の校正・撮影日fold交差検証・gate計測・一度だけの独立評価の手順。入力は利用者指定のrepository外、非公開の写真・パス・scene名・参照画素をsourceへ含めず匿名集計だけを公開する。sealed・independentのcohortを拒否する。\n変更理由: #26 独立評価(holdout)で欠けた部分集合・設定を許し、必須の書き出しの欠落を開始前に止める\n変更理由: holdoutを凍結tool・両実行物・subset gate・入力指紋でfail-closedにする\n変更理由: #26 案C の写真ごとの目標・ridge（内側の撮影日CV）・end-to-end の微調整・交差検証・gate・採否規則を追加\n変更理由: #26 案C の preset 文脈の診断（単独操作の目標を preset に当てた誤差と、写真ごとの preset の上限）を追加"
     },
     {
       "path": "packages/develop-engine/tools/calibrate/tests/test_fit_analytic_hs.py",

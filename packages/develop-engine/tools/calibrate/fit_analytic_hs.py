@@ -28,6 +28,7 @@ colorcheck at 1500px, blur 2, flat pixels.
   fit_analytic_hs.py --repo <checkout> --work <private> cv-c --folds dates
   fit_analytic_hs.py --repo <checkout> --work <private> fit-c
   fit_analytic_hs.py --repo <checkout> --work <private> gate --family C
+  fit_analytic_hs.py --repo <checkout> --work <private> preset-oracle    (diagnostic for C)
   fit_analytic_hs.py --repo <checkout> --work <private> publish-c --out <summary.json> --niho6-cv-rows <private rows>
   fit_analytic_hs.py --repo <checkout> --work <private> holdout --cohort <new-photos> --freeze <freeze.json>
       [--calibrate <frozen analytic_hs_calibrate>] [--probe <frozen analytic_hs_probe>]
@@ -648,6 +649,51 @@ def photo_targets(args) -> None:
     server.close()
 
 
+def preset_oracle(args) -> None:
+    """Diagnostic for C: each photo's single-operation targets applied to its
+    3 presets, and per-photo constants fitted on the photo's own presets
+    (in-sample upper bound in the preset context)."""
+    plan_path = args.work / "plan.json"
+    plan_doc = json.loads(plan_path.read_text())
+    calibrate = binaries(args.repo)["calibrate"]
+    server = Server(calibrate, args.work / "server-config.json")
+    base_rows = surrogate_baseline(
+        server, args.work, plan_doc, plan_path, args.work / "server-config.json", calibrate)
+    targets = json.loads((args.work / "runs" / "photo-targets.json").read_text())
+    path = args.work / "runs" / "preset-oracle.json"
+    done = json.loads(path.read_text()) if path.exists() else {}
+    for j in range(len(plan_doc["scenes"])):
+        if str(j) in done:
+            continue
+        items = [i for i, it in enumerate(plan_doc["items"]) if it["scene"] == j and it["variant"] in PRESETS]
+        theta = np.array(targets[str(j)]["theta"])
+        single = server.eval(constant_candidate(theta), items)
+        objective = Objective(server, plan_doc, items, base_rows)
+
+        def fun(t, objective=objective, items=items):
+            rows = server.eval(constant_candidate(t), items)
+            return loss(rows, objective.base, objective.weights, objective.guarded)
+
+        best, _, _ = minimize(fun, theta, C_TARGET_STEP, C_RANGES[:, 0], C_RANGES[:, 1], args.fev)
+        done[str(j)] = {"items": items, "single": single.tolist(),
+                        "oracle": server.eval(constant_candidate(best), items).tolist(), "theta": best.tolist()}
+        path.write_text(json.dumps(done))
+        print(f"preset-oracle {j + 1}/{len(plan_doc['scenes'])}", flush=True)
+    server.close()
+    summary = {}
+    for key in ("single", "oracle"):
+        rows = np.array([r for entry in done.values() for r in entry[key]])
+        items = [i for entry in done.values() for i in entry["items"]]
+        summary[key] = {}
+        for group in ("all",) + SUBSETS:
+            sel = [k for k, i in enumerate(items)
+                   if group == "all" or plan_doc["scenes"][plan_doc["items"][i]["scene"]]["subset"] == group]
+            summary[key][group] = {"n": len(sel), "mean": round(float(rows[sel, 0].mean()), 3),
+                                   "p99Over8": int((rows[sel, 1] > 8).sum())}
+    (args.work / "runs" / "preset-oracle-summary.json").write_text(json.dumps(summary, indent=1))
+    print(json.dumps(summary, indent=1))
+
+
 def standardize(features: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
     mean = features.mean(axis=0)
     scale = features.std(axis=0)
@@ -895,6 +941,12 @@ def publish_c(args) -> None:
                     "inSample": gate_verdict(tables["all"], "candidateInSample")},
         "adoption": adoption(tables, niho6),
     }
+    diagnostic = args.work / "runs" / "preset-oracle-summary.json"
+    if diagnostic.exists():
+        result["presetContextDiagnostic"] = {
+            "meaning": "surrogate, presets: 'single' = each photo's single-operation targets applied to its presets; 'oracle' = per-photo constants fitted on the photo's own 3 presets (in-sample upper bound)",
+            "summary": json.loads(diagnostic.read_text()),
+        }
     if result["b1OutOfFold"] is not None:
         result["b1OutOfFold"] = {g: {v: t[v].get("candidateOutOfFold") for v in t} for g, t in result["b1OutOfFold"].items()}
     args.out.write_text(json.dumps(result, indent=2, ensure_ascii=False) + "\n")
@@ -1264,6 +1316,8 @@ def main() -> int:
         p = sub.add_parser(name)
         p.add_argument("--folds", choices=("dates", "models"), default="dates")
         p.add_argument("--tune-fev", type=int, default=100)
+    p = sub.add_parser("preset-oracle")
+    p.add_argument("--fev", type=int, default=80)
     p = sub.add_parser("publish-c")
     p.add_argument("--out", required=True, type=Path)
     p.add_argument("--niho6-cv-rows", required=True, type=Path)
@@ -1281,7 +1335,8 @@ def main() -> int:
     args = ap.parse_args()
     guard_work(args.repo, args.work)
     {"plan": plan, "cv": cv, "fit": fit_all, "oracle": oracle, "gate": gate, "publish": publish,
-     "holdout": holdout, "targets": photo_targets, "cv-c": cv_c, "fit-c": fit_all_c, "publish-c": publish_c}[args.command](args)
+     "holdout": holdout, "targets": photo_targets, "cv-c": cv_c, "fit-c": fit_all_c, "publish-c": publish_c,
+     "preset-oracle": preset_oracle}[args.command](args)
     return 0
 
 
