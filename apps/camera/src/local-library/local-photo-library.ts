@@ -98,6 +98,7 @@ export const LOCAL_CLOSED_CAPABILITIES: PhotoLibraryCapabilities = Object.freeze
   exportFolder: false,
   nativeExportRaster: false,
   nativeExportMasks: false,
+  maskSurfaces: false,
   cutout: false,
   favorites: false,
   albums: false,
@@ -127,6 +128,8 @@ export function localCapabilities(
     // 部分補正（`masks`）のある設定は、同梱の niho-develop-render が描ける版のときだけ原寸で書き出す（古い native は返さない = 描けない）
     nativeExportMasks: status.available && status.masks === true,
     exportFolder: status.available,
+    // マスクの面の置き場はアプリ自身のコマンド（同梱の sidecar に依らない）
+    maskSurfaces: true,
     cutout: cutoutAvailable,
     multiSelect: true,
     // 写真の情報は native が ImageIO で読む（同梱の sidecar に依らない）
@@ -997,6 +1000,22 @@ export function createLocalPhotoLibrary(commands: CameraCommands, options: Local
         // 別の操作が先に保存していた。今の版の配列を読み直して返す
         const current = await withStableHandle(photoId, (handle) => commands.photoVersions(handle.nativeId));
         return { kind: "stale", ...readPhotoLibraryDevelopVersions(current) };
+      }
+    },
+
+    // 部分補正のマスクの面（ブラシ・被写体・空。docs/local-adjustments.md「面の受け渡し」）。native は写真の中身の SHA-256 ごとに
+    // 置くので、補正を保存する前でも保存できる。中身が置き換わった写真へ古い操作をやり直さない（withStableHandle）
+    async saveMaskSurface(photoId, png) {
+      return withStableHandle(photoId, (handle) => commands.saveMaskSurface(handle.nativeId, png));
+    },
+
+    async loadMaskSurface(photoId, surfaceId) {
+      try {
+        return await withStableHandle(photoId, (handle) => commands.loadMaskSurface(handle.nativeId, surfaceId));
+      } catch (error) {
+        // 置き場に無い・壊れていた面は「無い」（呼び出し側が面を読めないと伝える）
+        if (isCode(error, "maskSurfaceMissing")) return null;
+        throw error;
       }
     },
 

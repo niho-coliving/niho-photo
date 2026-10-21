@@ -6,7 +6,12 @@ import {
   type BrowserPhotoExportSize,
 } from "./browser-photo-export";
 import { BROWSER_PHOTO_EXPORT_LONG_EDGE } from "./browser-photo-source";
-import type { DevelopEngine } from "./develop-engine/develop-engine-client";
+import {
+  DevelopMaskSurfaceError,
+  type DevelopEngine,
+  type DevelopMaskSurfaceSource,
+} from "./develop-engine/develop-engine-client";
+import { PHOTO_EDITING_MASK_SURFACE_EXPORT_FAILED_TEXT } from "./photo-editing-copy";
 import type { DevelopSettings } from "./develop-engine/develop-settings";
 import {
   DEVELOP_WEB_IMAGE_JPEG_QUALITY,
@@ -52,6 +57,11 @@ export async function renderBrowserPhotoExportJpeg(params: {
   capturedAt: string | null;
   /** JPEG の画質（省略 = 記事用の画像と同じ 90。背景除去を当てる前の画は 100。C4 移行元設計） */
   quality?: number;
+  /**
+   * 描かれる面のマスク（ブラシ・被写体・空。M4 #68）の面の読み口（書き出す写真のもの）。省略 = engine が覚えた面と開いている写真の
+   * 読み口（1 枚で開いている写真）
+   */
+  maskSurfaces?: DevelopMaskSurfaceSource | null;
 }): Promise<BrowserPhotoExportRendered> {
   const { engine, input, settings, size } = params;
   let longEdge = BROWSER_PHOTO_EXPORT_LONG_EDGE;
@@ -61,10 +71,18 @@ export async function renderBrowserPhotoExportJpeg(params: {
     const frame = await engine.geometryOutputSize(settings, source, BROWSER_PHOTO_EXPORT_LONG_EDGE);
     longEdge = browserPhotoExportLongEdge(size, frame);
   }
-  const rendered = await exportDevelopJpeg(engine, input, settings, {
-    maxDimension: longEdge,
-    quality: params.quality ?? DEVELOP_WEB_IMAGE_JPEG_QUALITY,
-  });
+  let rendered: Uint8Array<ArrayBuffer>;
+  try {
+    rendered = await exportDevelopJpeg(engine, input, settings, {
+      maxDimension: longEdge,
+      quality: params.quality ?? DEVELOP_WEB_IMAGE_JPEG_QUALITY,
+      ...(params.maskSurfaces !== undefined ? { maskSurfaces: params.maskSurfaces } : {}),
+    });
+  } catch (error) {
+    // 面を読めないマスクは外して書き出さない（理由と次の一歩を出す）
+    if (error instanceof DevelopMaskSurfaceError) throw new Error(PHOTO_EDITING_MASK_SURFACE_EXPORT_FAILED_TEXT);
+    throw error;
+  }
   const bytes = params.capturedAt ? await withCaptureExifOrPlain(engine, rendered, params.capturedAt) : rendered;
   const pixelSize = readJpegPixelSize(bytes);
   // 寸法を読めない JPEG でも書き出しは止めない（届かなかったとは言わない）

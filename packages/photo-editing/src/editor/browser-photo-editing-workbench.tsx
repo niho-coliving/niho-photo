@@ -866,6 +866,13 @@ export function BrowserPhotoEditingWorkbench(props: {
     settingsRef: open.settingsRef,
     changeSettings: open.changeSettings,
     commitEdit: open.commitEdit,
+    // ブラシ（M4 #68）は面を保存できる写真の出どころだけ。面を読めなかったマスクは描画の失敗から知らせる
+    saveMaskSurface:
+      capabilities.maskSurfaces === true && library.saveMaskSurface
+        ? (photoId: string, png: Uint8Array) => library.saveMaskSurface!(photoId, png)
+        : null,
+    surfaceIssue: open.maskSurfaceIssue,
+    onRetrySurfaces: open.retryMaskSurfaces,
   });
 
   /** 右パネルの今の道具（理由だけを出している「切り抜き」も「切り抜き」） */
