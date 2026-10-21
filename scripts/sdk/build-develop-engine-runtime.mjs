@@ -60,8 +60,12 @@ export function rewriteVersionedRuntimeReferences(name, bytes, version) {
   const text = bytes
     .toString("utf8")
     .replaceAll("niho_develop_wasm_bg.wasm", `niho_develop_wasm_bg-${version}.wasm`)
+    .replaceAll("niho_develop_wasm.d.ts", `niho_develop_wasm-${version}.d.ts`)
     .replaceAll("niho_develop_wasm.js", `niho_develop_wasm-${version}.js`);
-  if (/niho_develop_wasm(?:_bg)?\.(?:js|wasm)/.test(text)) throw new SdkReleaseError("wasm-bindgen output に unversioned runtime 参照が残っています");
+  // web glue の import object key は WASM 内の module ID と一致させる。
+  // この仮想module名は外部JSへの参照ではないため、名前を変えない。
+  const resourceReferences = text.replace(/(["'])\.\/niho_develop_wasm_bg\.js\1\s*:/gu, '"wasm-import-module":');
+  if (/niho_develop_wasm(?:_bg)?\.(?:js|wasm|d\.ts)/.test(resourceReferences)) throw new SdkReleaseError("wasm-bindgen output に unversioned runtime 参照が残っています");
   return Buffer.from(text);
 }
 
