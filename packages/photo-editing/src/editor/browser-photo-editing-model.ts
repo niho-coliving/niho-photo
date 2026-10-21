@@ -198,11 +198,8 @@ export type BrowserPhotoOperationKind = "export" | "delete" | "bulk" | "copy";
 
 export type BrowserViewMode = "grid" | "loupe";
 
-/**
- * 右パネルの道具（補正 / 切り抜き。F3b 移行元設計。背景除去は NIHO camera だけ。C4 移行元設計。マスクは部分補正を描ける wasm の
- * PC の面だけ。M3 #67）。
- */
-export type BrowserPhotoTool = "adjust" | "crop" | "cutout" | "mask";
+/** 右パネルの道具（補正 / 切り抜き。背景除去は NIHO camera だけ。PC の面では部分補正のマスクと修復も使える。M3 #67・#44）。 */
+export type BrowserPhotoTool = "adjust" | "crop" | "cutout" | "heal" | "mask";
 
 /**
  * 道具が「補正」の間に右パネルに出す面（niho-photo#51）。`adjust` は自動 / 白黒・プリセットの行・補正の群、`presets` はプリセットの

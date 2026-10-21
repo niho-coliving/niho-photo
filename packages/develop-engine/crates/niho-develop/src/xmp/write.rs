@@ -524,6 +524,10 @@ pub fn settings_to_xmp(settings: &DevelopSettings, options: &XmpWriteOptions) ->
         // MaskGroupBasedCorrections are read in M6, #69, never written).
         not_written.push("masks".into());
     }
+    if !settings.heal.is_empty() {
+        // Heal marks are photo-specific and never part of an XMP preset.
+        not_written.push("heal".into());
+    }
 
     let monochrome = on(XmpGroup::BlackAndWhite) && settings.grayscale;
     let uuid = options

@@ -30,6 +30,7 @@ import {
   PHOTO_EDITING_TOOL_ADJUST_LABEL,
   PHOTO_EDITING_TOOL_CROP_LABEL,
   PHOTO_EDITING_TOOL_CUTOUT_LABEL,
+  PHOTO_EDITING_TOOL_HEAL_LABEL,
   PHOTO_EDITING_TOOL_INFO_LABEL,
   PHOTO_EDITING_TOOL_MASK_LABEL,
   PHOTO_EDITING_TOOL_VERSIONS_LABEL,
@@ -68,6 +69,7 @@ const TOOL_LABELS: Readonly<Record<BrowserPhotoTool, string>> = {
   adjust: PHOTO_EDITING_TOOL_ADJUST_LABEL,
   crop: PHOTO_EDITING_TOOL_CROP_LABEL,
   cutout: PHOTO_EDITING_TOOL_CUTOUT_LABEL,
+  heal: PHOTO_EDITING_TOOL_HEAL_LABEL,
   mask: PHOTO_EDITING_TOOL_MASK_LABEL,
 };
 
@@ -88,6 +90,9 @@ const TOOL_LABELS: Readonly<Record<BrowserPhotoTool, string>> = {
  *
  * 「版」の面（niho-photo#42。`panel` が `versions` で `versions` を渡したとき）も情報の面と同じ形（見出し行は名前だけ → 版の一覧）。
  * 版の切り替えは取り消し・やり直しの 1 単位なので、↶ ↷ は補正の面とキーで効く。
+ *
+ * 「修復」の道具（niho-photo#44。`tool` が `heal` で `healTools` を渡したとき）は、切り抜き・背景除去と同じく 見出し行（名前と ↶ ↷。
+ * 「初期化」・⋯ は呼ぶ側が出さない）→ 修復の道具。
  */
 
 /**
@@ -163,7 +168,9 @@ export function BrowserPhotoEditingAdjustments(props: {
   cropTools?: ReactNode;
   /** 背景除去の道具（「背景除去」の間、プリセットの節と群の代わりに出す。NIHO camera だけ） */
   cutoutTools?: ReactNode;
-  /** マスクの道具（「マスク」の間、プリセットの節と群の代わりに出す。部分補正を描ける wasm の写真だけ。M3 #67） */
+  /** 修復の道具（「修復」の間、プリセットの節と群の代わりに出す。niho-photo#44） */
+  healTools?: ReactNode;
+  /** マスクの道具（「マスク」の間、部分補正を描ける wasm の写真だけ。M3 #67） */
   maskTools?: ReactNode;
   /** 「自動」（口のある wasm で開いた写真だけ渡す。省くとボタンを出さない） */
   auto?: { pressed: boolean; disabled: boolean; onToggle: () => void; onWarm?: () => void };
@@ -183,9 +190,10 @@ export function BrowserPhotoEditingAdjustments(props: {
   const cropping = tool === "crop" && props.cropTools !== undefined;
   const cutting = tool === "cutout" && props.cutoutTools !== undefined;
   const masking = tool === "mask" && props.maskTools !== undefined;
+  const healing = tool === "heal" && props.healTools !== undefined;
   const presets = props.presets;
   // プリセットの部品が無い写真（S1 の canvas）は、補正の面だけ
-  const showPresetsPanel = !cropping && !cutting && !masking && presets !== undefined && props.panel === "presets";
+  const showPresetsPanel = !cropping && !cutting && !masking && !healing && presets !== undefined && props.panel === "presets";
   // 情報・版の面（写真を直すスライダーの無い面）: 見出し行は名前だけ（ヒストグラムの置き方は下の補正の面と同じ）
   const sideFace =
     props.panel === "info"
@@ -193,7 +201,7 @@ export function BrowserPhotoEditingAdjustments(props: {
       : props.panel === "versions"
         ? { label: PHOTO_EDITING_TOOL_VERSIONS_LABEL, content: props.versions }
         : null;
-  if (!cropping && !cutting && !masking && sideFace !== null && sideFace.content !== undefined) {
+  if (!cropping && !cutting && !masking && !healing && sideFace !== null && sideFace.content !== undefined) {
     return (
       <aside aria-label={sideFace.label} className={props.histogram ? ASIDE_WITH_HISTOGRAM_CLASS_NAME : ASIDE_CLASS_NAME}>
         {props.histogram ? (
@@ -210,11 +218,13 @@ export function BrowserPhotoEditingAdjustments(props: {
     ? TOOL_LABELS.crop
     : cutting
       ? TOOL_LABELS.cutout
-      : masking
-        ? TOOL_LABELS.mask
-        : showPresetsPanel
-          ? PHOTO_EDITING_PRESETS_TITLE
-          : TOOL_LABELS.adjust;
+      : healing
+        ? TOOL_LABELS.heal
+        : masking
+          ? TOOL_LABELS.mask
+          : showPresetsPanel
+            ? PHOTO_EDITING_PRESETS_TITLE
+            : TOOL_LABELS.adjust;
   const auto = props.auto;
   // ポイントカラー（Oklch）はカラーの群の下、カラーミキサーの節の後ろ（Lightroom と同じくカラーの下に並べる。niho-photo#38）
   const afterGroup = props.colorMixer
@@ -375,6 +385,8 @@ export function BrowserPhotoEditingAdjustments(props: {
         props.cropTools
       ) : cutting ? (
         props.cutoutTools
+      ) : healing ? (
+        props.healTools
       ) : masking ? (
         props.maskTools
       ) : showPresetsPanel ? (

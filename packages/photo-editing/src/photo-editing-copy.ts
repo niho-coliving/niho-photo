@@ -465,6 +465,7 @@ export function photoEditingPresetNotWrittenError(fields: readonly string[]): st
     legacySettings: "未対応の補正",
     colorPoints: PHOTO_EDITING_POINT_COLOR_TITLE,
     masks: "部分補正（マスク）",
+    heal: "修復",
   };
   const names = Array.from(new Set(fields.map((field) => labels[field] ?? "未対応の補正")));
   return `プリセットに保存できない補正があります（${names.join("・")}）。対象の補正を外してから、もう一度保存してください。`;
@@ -658,6 +659,50 @@ export function photoEditingCutoutFailureText(code: string): string {
     default:
       return "背景を除去できませんでした。もう一度お試しください。";
   }
+}
+
+/**
+ * 修復の道具（niho-photo#44。右端の帯の「修復」）。写真の上をブラシでなぞると赤い印が付き、離すと周りから埋まる（消す）か、別の
+ * 場所から写す（写す）。印は右パネルの一覧に残り、選び直す・削除できる。
+ */
+export const PHOTO_EDITING_TOOL_HEAL_LABEL = "修復";
+export const PHOTO_EDITING_HEAL_MODE_TITLE = "修復のしかた";
+export const PHOTO_EDITING_HEAL_MODE_REMOVE_LABEL = "消す";
+export const PHOTO_EDITING_HEAL_MODE_CLONE_LABEL = "写す";
+export const PHOTO_EDITING_HEAL_MODE_REMOVE_HINT = "なぞったところを周りから埋めます。";
+export const PHOTO_EDITING_HEAL_MODE_CLONE_HINT = "なぞったところに別の場所を写します。写し元は写真の上の丸で動かせます。";
+export const PHOTO_EDITING_HEAL_BRUSH_TITLE = "ブラシ";
+export const PHOTO_EDITING_HEAL_SIZE_LABEL = "ブラシの大きさ";
+export const PHOTO_EDITING_HEAL_FEATHER_LABEL = "ぼかし";
+export const PHOTO_EDITING_HEAL_MARKS_TITLE = "印";
+export const PHOTO_EDITING_HEAL_MARKS_LIST_LABEL = "印の一覧";
+export const PHOTO_EDITING_HEAL_EMPTY_TEXT = "写真の上をなぞると赤い印が付き、離すと周りから埋まります。";
+export const PHOTO_EDITING_HEAL_FULL_TEXT =
+  "これ以上は描けません（印は 64 個・なぞった点は合計 2048 個まで）。いらない印を削除すると描けます。";
+export const PHOTO_EDITING_HEAL_SHOW_MARKS_LABEL = "印を表示";
+export const PHOTO_EDITING_HEAL_CLEAR_LABEL = "すべての印を消す";
+export const PHOTO_EDITING_HEAL_CLEAR_TITLE = "すべての印を消しますか？";
+export const PHOTO_EDITING_HEAL_CLEAR_DESCRIPTION = "写真は印を付ける前に戻ります。↶ で元に戻せます。";
+export const PHOTO_EDITING_HEAL_CLEAR_CONFIRM_LABEL = "消す";
+export const PHOTO_EDITING_HEAL_HINT_TEXT =
+  "なぞると線を、クリックで点を消します。Shift+クリックで印を選び、[ ] で大きさ、Delete で選んだ印を削除、O で印の表示、Esc で選択を外します。";
+/** 幾何（切り抜き・回転・遠近）のある写真を修復している間の 1 行。 */
+export const PHOTO_EDITING_HEAL_FRAME_NOTE = "修復の間は、切り抜き・回転の前の写真全体を表示します。";
+/** 写真の上のブラシの面の読み上げ名と説明。 */
+export const PHOTO_EDITING_HEAL_BRUSH_AREA_LABEL = "修復のブラシ";
+export const PHOTO_EDITING_HEAL_BRUSH_AREA_DESCRIPTION = "矢印キーでブラシを動かし、Enter かスペースでその場所に印を付けます。";
+/** 「写す」の印の写し元のつまみ。 */
+export const PHOTO_EDITING_HEAL_SOURCE_LABEL = "写し元の位置";
+/** 印の一覧の行（「1 消す」）と削除のボタンの読み上げ名。 */
+export function photoEditingHealMarkLabel(order: number, mode: "remove" | "clone"): string {
+  return `${order} ${mode === "clone" ? PHOTO_EDITING_HEAL_MODE_CLONE_LABEL : PHOTO_EDITING_HEAL_MODE_REMOVE_LABEL}`;
+}
+export function photoEditingHealMarkRemoveLabel(order: number): string {
+  return `印 ${order} を削除`;
+}
+/** 印を選んでいる間のスライダーの上の 1 行。 */
+export function photoEditingHealSelectedNote(order: number): string {
+  return `印 ${order} の値を変えています（Esc で選択を外す）。`;
 }
 
 /** 切り抜きの道具（縦横比・角度補正・90° 回転・左右の反転）。 */

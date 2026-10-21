@@ -1022,7 +1022,7 @@ fn presets_neither_write_nor_drop_the_marks() {
     base.contrast = 20.0;
     let s = with_heal(&base, &heal);
     let written = xmp::settings_to_xmp(&s, &XmpWriteOptions::default());
-    assert!(written.not_written.is_empty(), "{:?}", written.not_written);
+    assert_eq!(written.not_written, vec!["heal"]);
     let text = written.to_value()["xmp"].as_str().unwrap().to_string();
     assert!(!text.contains("heal") && !text.contains("Retouch"));
     let preset = r#"<x:xmpmeta xmlns:x="adobe:ns:meta/"><rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
