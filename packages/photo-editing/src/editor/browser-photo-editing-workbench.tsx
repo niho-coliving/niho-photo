@@ -160,6 +160,7 @@ import { PhotoEditingGrid, countPhotoEditingGridColumns, type PhotoEditingGridIt
 import { PhotoEditingHistogram } from "./photo-editing-histogram";
 import { PhotoEditingMenu, type PhotoEditingMenuItem } from "./photo-editing-menu";
 import { PhotoEditingPresetsPanel } from "./photo-editing-presets-panel";
+import { PhotoEditingToneCurveSection } from "./photo-editing-tone-curve";
 import { useBrowserPhotoAdd } from "./use-browser-photo-add";
 import { useBrowserPhotoAuto } from "./use-browser-photo-auto";
 import { useBrowserPhotoBulk } from "./use-browser-photo-bulk";
@@ -2235,6 +2236,22 @@ export function BrowserPhotoEditingWorkbench(props: {
             raw={loupeItem !== null && isBrowserCloudRawPhoto(loupeItem.photo)}
             settings={settings}
             colorMixer={colorMixer}
+            // ライトの群の下の「カーブ」（niho-photo#37）: ヒストグラムと同じく PC の右パネルで、段 2 の wasm が画を描いている写真だけ
+            // （S1 の canvas・スマホの層・閲覧の面には出さない）。背後の輝度はヒストグラムの度数を使う（数え直さない）
+            afterGroup={
+              histogramAvailable
+                ? {
+                    light: (
+                      <PhotoEditingToneCurveSection
+                        settings={settings}
+                        histogram={histogram.histogram}
+                        disabled={controlsDisabled}
+                        onSettingsChange={open.changeSettings}
+                      />
+                    ),
+                  }
+                : undefined
+            }
             histogram={
               histogramAvailable ? (
                 <PhotoEditingHistogram

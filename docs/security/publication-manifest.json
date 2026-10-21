@@ -664,7 +664,7 @@
         "path": "packages/photo-editing/src/editor/browser-photo-editing-adjustments.tsx",
         "sha256": "2473ef7ca64f61e5ce7a72efb21f436f799f04a90a3a73b114cba15b7b5d23b1"
       },
-      "outputSha256": "e61cf99983580b03f0eb5a0542a93fdb32656779823f7466883d3d982f42df67",
+      "outputSha256": "64b1aaf9a4be01419a4f63dceed851a1165af313f22ae3fd3df4b0edd441ee7c",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
@@ -676,7 +676,9 @@
         "Issue #49の統合確認: プリセットの面の見出し行の⋯をプリセットのメニューにし（⋯を2段に並べない）、右パネルを2段に貫いて窓の底まで伸ばす。",
         "niho-photo#36 ヒストグラムの枠を右パネル最上段に差し込む口を追加。",
         "niho-photo#43 の右パネルの「情報」の面（見出し行と情報の群。↶ ↷・初期化は出さない）を追加。",
-        "PR #77 の情報paneをmainの公開UI変更と統合。"
+        "PR #77 の情報paneをmainの公開UI変更と統合。",
+        "niho-photo#37 補正の面で群の直後に節を差し込む口（afterGroup）を追加。",
+        "PR #78 のトーンカーブを最新情報paneと統合。"
       ]
     },
     {
@@ -1076,7 +1078,7 @@
         "path": "packages/photo-editing/src/editor/browser-photo-editing-workbench.tsx",
         "sha256": "f655136ae0c985d793822ca8bef1668dba26ffd4bb8f13d2ba3d6c2ccb13ceb6"
       },
-      "outputSha256": "b0dcaca1880cf850ae373cdc848c74fdc6ed7ad778424371c5ff74caa37d2a7d",
+      "outputSha256": "efa2802c20934559b50fcc1f5f163b1319fd6d40389bca804ac783cc784e9c05",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
@@ -1117,7 +1119,9 @@
         "niho-photo#41 比較の状態・Y キー・補正前の描画先を組み込み。",
         "niho-photo#41 の比較UIを #72 のヒストグラム・Jキー契約と併存するようmainへ積み直した。",
         "niho-photo#43 の右端の帯の下端に「情報」を置き、右パネルを情報の面にする。",
-        "PR #77 の情報paneをmainの公開UI変更と統合。"
+        "PR #77 の情報paneをmainの公開UI変更と統合。",
+        "niho-photo#37 PC の wasm の写真で、ライトの群の下に「カーブ」の節を置く。",
+        "PR #78 のトーンカーブを最新情報paneと統合。"
       ]
     },
     {
@@ -1184,13 +1188,16 @@
         "path": "packages/photo-editing/src/editor/photo-editing-adjustment-controls.tsx",
         "sha256": "f8950078f7342eb7a6c6f6dfb026828a94f33b8355427d1485ce18a6cbb73773"
       },
-      "outputSha256": "5fbe75b93ce59738a9ccc8678351cdf998ee7c62ba66610c29fdcdc70307a102",
+      "outputSha256": "9e1e8cbf5a3cf2d4b2b93071f7adb7f82eb935a07cf73520479034301d762cae",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
         "niho-photo#51 L2: 右端の道具の帯と補正パネルの並び（見出し行・自動 / 白黒のチップ・プリセットの行・面の切り替え）。",
         "niho-photo#51の補正パネル変更を#35統合後のコントロールへ反映する。",
-        "公開repoでの機能変更（#55）: スライダーを Lightroom の見た目（細い線・白い丸・色温度 / 色かぶり補正の帯・変更ありの太字）にした。"
+        "公開repoでの機能変更（#55）: スライダーを Lightroom の見た目（細い線・白い丸・色温度 / 色かぶり補正の帯・変更ありの太字）にした。",
+        "niho-photo#37 群の見出しの部品を節にも使えるよう公開し、群の直後に差し込む口（afterGroup）を追加。",
+        "afterGroup の有無に依らず群をFragmentで包み、差し込みの出入りで群を作り直さない。",
+        "PR #78 のトーンカーブを最新情報paneと統合。"
       ]
     },
     {
@@ -2100,7 +2107,7 @@
         "path": "packages/photo-editing/src/photo-editing-copy.ts",
         "sha256": "1208d4124dca26c951d73f6f84c560879e69beddfb9a16426e1a9dcc9fd30c27"
       },
-      "outputSha256": "d7ddd783c81d3ee3aa28f45e5068010de82db5802d86747778c47b9ec229f9d9",
+      "outputSha256": "abff9066978db9ec6689a8862b809e684696e757875ada01e897443c2c96fbc7",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
@@ -2115,7 +2122,9 @@
         "niho-photo#41 比較（並べる・分割・比較しない・補正後・境界）の文言を追加。",
         "niho-photo#41 の比較UIを #72 のヒストグラム・Jキー契約と併存するようmainへ積み直した。",
         "niho-photo#43 の右パネルの「情報」の文言（道具の名前・群の見出し・行のラベル）を追加。",
-        "PR #77 の情報paneをmainの公開UI変更と統合。"
+        "PR #77 の情報paneをmainの公開UI変更と統合。",
+        "niho-photo#37 「カーブ」の節・グラフ・点の読み上げの文言を追加。",
+        "PR #78 のトーンカーブを最新情報paneと統合。"
       ]
     },
     {
@@ -9688,6 +9697,46 @@
       "path": "packages/photo-editing/src/editor/browser-photo-editing-info.test.tsx",
       "sha256": "ba7f5c6ca9d63f620cc061e8528d9c0711b5f829ebcd03601a4e47ec7d76ac73",
       "origin": "niho-photo#43 のため新規作成。右パネルの「情報」の面の dl の構造・読み出し・読めないときの表示・情報の面の見出し行の test。合成の値だけを使用。"
+    },
+    {
+      "path": "packages/photo-editing/src/photo-editing-tone-curve.ts",
+      "sha256": "846e69b14a8373f3c07299d555baa0376d59c8f90fc174658b8a466fab6b8394",
+      "origin": "niho-photo#37 のため新規作成。トーンカーブ（ポイントカーブ・RGB 別）の developSettings.toneCurves の読み書き、点の追加・移動・削除、曲線の値（crate の DngSpline と同じ式）、グラフの背後の輝度の度数の純関数。外部コード・実データを含まない。"
+    },
+    {
+      "path": "packages/photo-editing/src/photo-editing-tone-curve.test.ts",
+      "sha256": "c454d0c3c6b36e180c47f6883a0d6592f47880ad1c69418226d2a10a03f9862b",
+      "origin": "niho-photo#37 のため新規作成。トーンカーブの純関数と、補正のコピー・貼り付け・取り消しの履歴に曲線が入ることの test。期待値は crate の式で求めた合成の値だけを使用。"
+    },
+    {
+      "path": "packages/photo-editing/src/photo-editing-advanced-sections-state.ts",
+      "sha256": "aa20a28c9f5eadf7c8bfe1b4096354424fe228e58b1357747e8bb425f3dd77da",
+      "origin": "niho-photo#37 のため新規作成。右パネルの既定で閉じた節の開閉を端末に覚えるフック（開いた節の id の配列）。外部コード・実データを含まない。"
+    },
+    {
+      "path": "packages/photo-editing/src/editor/photo-editing-advanced-section.tsx",
+      "sha256": "d8e5789688be8f64192ad0f7d68102d080e3217b9374c95848c09ca9d807de89",
+      "origin": "niho-photo#37 のため新規作成。補正の群の間に差し込む、既定で閉じた節の見出しの部品。外部コード・実データを含まない。"
+    },
+    {
+      "path": "packages/photo-editing/src/editor/photo-editing-advanced-section.test.tsx",
+      "sha256": "7fdd53fe84709c168048df2ec0586816f9798a5e0b1c6cec12a0d213878335fd",
+      "origin": "niho-photo#37 のため新規作成。既定で閉じた節の開閉と保存値の読み書きの test。合成の値だけを使用。"
+    },
+    {
+      "path": "packages/photo-editing/src/editor/photo-editing-tone-curve.tsx",
+      "sha256": "b04fd7a242eaa842d8969db41ee5a5b6efc876c3b5e1df91210fb4ed86150933",
+      "origin": "niho-photo#37 のため新規作成。右パネルの「カーブ」の節とトーンカーブのグラフ（SVG、点のドラッグ・キー操作、チャンネルの切り替え、曲線だけの初期化）。外部コード・実データを含まない。\n変更理由: commit active tone curve drag on close"
+    },
+    {
+      "path": "packages/photo-editing/src/editor/photo-editing-tone-curve.test.tsx",
+      "sha256": "625295309b95d9e37d6d4e5def26c2b7f854aabc79c54c5e646712e90d9b6494",
+      "origin": "niho-photo#37 のため新規作成。トーンカーブのグラフの操作と「カーブ」の節の開閉・初期化の test。合成の値だけを使用。\n変更理由: cover commit on tone curve unmount"
+    },
+    {
+      "path": "packages/photo-editing/src/editor/photo-editing-adjustment-controls-after-group.test.tsx",
+      "sha256": "f63e195091af1c0c13653067a17cc19a183241b98f03ca66ce3428ac1119322a",
+      "origin": "niho-photo#37 のため新規作成。補正の群の直後に節を差し込む口（afterGroup）の DOM の test。合成の値だけを使用。"
     }
   ],
   "excludedSources": [
