@@ -1397,6 +1397,11 @@ pub struct LocalPass {
 pub(crate) struct RenderCaches<'a> {
     cubes: Option<&'a SettingsCubes>,
     local: &'a mut Option<LocalPass>,
+    /// Another frame's local pass of the same image (a local mask's layer
+    /// reads its global frame's, `mask_session.rs`): taken instead of
+    /// computing one when it is the pass this frame would compute (the same
+    /// input, adaptive parameters and quality). Never written.
+    shared_local: Option<&'a LocalPass>,
     effects: &'a mut EffectsCache,
     color_points: &'a mut Option<ColorPointPlane>,
     noise: &'a mut Option<NoiseCache>,
@@ -1413,11 +1418,25 @@ impl<'a> RenderCaches<'a> {
         Self {
             cubes,
             local,
+            shared_local: None,
             effects,
             color_points,
             noise,
         }
     }
+
+    /// These caches with `shared` as [`RenderCaches::shared_local`].
+    pub(crate) fn sharing_local(mut self, shared: Option<&'a LocalPass>) -> Self {
+        self.shared_local = shared;
+        self
+    }
+}
+
+/// A frame's local pass slot and the shared pass it may read
+/// ([`RenderCaches::shared_local`]).
+struct LocalCaches<'a> {
+    own: &'a mut Option<LocalPass>,
+    shared: Option<&'a LocalPass>,
 }
 
 /// The exact pre-local v6 raster source retained by a Session. The key
@@ -1520,14 +1539,19 @@ fn prepare_local_cache(cache: &mut Option<LocalPass>, spatial_on: bool, input_ke
 /// The local pass for this frame from `cache` or computed (the kept plane
 /// is dropped first: one pass in memory at a time), left in `cache`.
 /// `params` computes the adaptive parameters (statistics), `ln0` the log
-/// luminance of the stages before the pass.
-fn local_pass(
-    cache: &mut Option<LocalPass>,
+/// luminance of the stages before the pass. `shared` (another frame's pass
+/// of the same image, [`RenderCaches::shared_local`]) serves when it has
+/// this frame's input and adaptive parameters and is of this frame's
+/// quality (the pass this frame would compute) or, for a drag frame, a
+/// released pass (which a drag frame takes from its own cache too).
+fn local_pass<'c>(
+    cache: &'c mut Option<LocalPass>,
+    shared: Option<&'c LocalPass>,
     input_key: String,
     quality: Quality,
     params: impl FnOnce() -> SpatialParams,
     ln0: impl FnOnce() -> Plane,
-) -> Option<&LocalPass> {
+) -> Option<&'c LocalPass> {
     let same_input = cache.as_ref().is_some_and(|c| c.input_key == input_key);
     if same_input && quality == Quality::Interactive {
         return cache.as_ref();
@@ -1539,6 +1563,14 @@ fn local_pass(
         .is_some_and(|c| c.quality == Quality::Final && c.params_key == params_key);
     if same_input && same_pass {
         return cache.as_ref();
+    }
+    if let Some(shared) = shared.filter(|c| {
+        c.input_key == input_key
+            && c.params_key == params_key
+            && (c.quality == quality || c.quality == Quality::Final)
+    }) {
+        *cache = None;
+        return Some(shared);
     }
     *cache = None;
     let ln0 = ln0();
@@ -1670,6 +1702,7 @@ pub(crate) fn render_raster_in_session(
     let RenderCaches {
         cubes,
         local,
+        shared_local,
         effects,
         color_points,
         noise,
@@ -1683,7 +1716,10 @@ pub(crate) fn render_raster_in_session(
         quality,
         stats_cache,
         cubes,
-        local,
+        LocalCaches {
+            own: local,
+            shared: shared_local,
+        },
         effects,
         color_points,
         noise,
@@ -1714,7 +1750,10 @@ pub fn render_raster_marking_out_of_srgb(raster: &Raster, s: &DevelopSettings) -
         Quality::Final,
         None,
         None,
-        &mut None,
+        LocalCaches {
+            own: &mut None,
+            shared: None,
+        },
         &mut EffectsCache::default(),
         &mut None,
         &mut None,
@@ -1740,12 +1779,16 @@ fn render_linear(
     quality: Quality,
     stats_cache: Option<AdaptiveStats>,
     cubes_cache: Option<&SettingsCubes>,
-    local_cache: &mut Option<LocalPass>,
+    local_caches: LocalCaches<'_>,
     effects_cache: &mut EffectsCache,
     color_point_cache: &mut Option<ColorPointPlane>,
     noise_cache: &mut Option<NoiseCache>,
     mark_out_of_srgb: bool,
 ) -> (Rendered, SettingsCubes, Option<AdaptiveStats>) {
+    let LocalCaches {
+        own: local_cache,
+        shared: shared_local,
+    } = local_caches;
     // NIHO 3 changes only signed RAW rendering. Raster input inherits the
     // complete NIHO 2 formula, including Interactive preview closures; do
     // this once at the entrance so no RAW-only branch can leak into JPEG.
@@ -1938,6 +1981,7 @@ fn render_linear(
     let local_pass = if spatial_on {
         local_pass(
             local_cache,
+            shared_local,
             input_key,
             quality,
             || {
@@ -2449,10 +2493,15 @@ fn render_working_copy_with(
     let RenderCaches {
         cubes,
         local,
+        shared_local,
         effects,
         color_points,
         noise,
     } = caches;
+    let local = LocalCaches {
+        own: local,
+        shared: shared_local,
+    };
     match wc.meta {
         WorkingCopyMeta::Raster { .. } => {
             // Non-RAW working copies (HEIC / TIFF / large JPEG) are linear
@@ -2718,11 +2767,15 @@ fn render_raw(
     s: &DevelopSettings,
     quality: Quality,
     cubes_cache: Option<&SettingsCubes>,
-    local_cache: &mut Option<LocalPass>,
+    local_caches: LocalCaches<'_>,
     effects_cache: &mut EffectsCache,
     color_point_cache: &mut Option<ColorPointPlane>,
     mark_out_of_srgb: bool,
 ) -> (Rendered, SettingsCubes) {
+    let LocalCaches {
+        own: local_cache,
+        shared: shared_local,
+    } = local_caches;
     // The opt-in candidate deliberately keeps the legacy unsigned-RAW
     // formula. Only its three cubes change precision; signed RAW never
     // reaches this path with niho-8.
@@ -2780,6 +2833,7 @@ fn render_raw(
     let local_pass = if spatial_on {
         local_pass(
             local_cache,
+            shared_local,
             input_key,
             quality,
             || {

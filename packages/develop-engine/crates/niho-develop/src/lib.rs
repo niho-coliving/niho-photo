@@ -23,8 +23,10 @@ pub mod geometry;
 pub mod icc_lut;
 mod jpeg_wb;
 pub mod local_mask;
+pub mod local_render;
 pub mod look;
 pub mod lut;
+mod mask_session;
 mod niho3;
 mod niho4;
 #[allow(dead_code)] // Keep the frozen R317/R364 diagnostic surface intact.
@@ -82,10 +84,12 @@ pub enum Error {
     Niho4Prepare(String),
     Niho6Prepare(String),
     Sample(String),
-    /// The settings carry an active local mask (`masks`), which the renderer
-    /// does not draw yet. Failing keeps a render from silently dropping it.
-    // M2 (#66) replaces this
-    MasksNotRendered,
+    /// An active `brush` / `subject` / `sky` mask (`masks`) whose surface
+    /// this build does not hold (the surface store is M4, #68). Holds the
+    /// mask id. A render fails instead of silently leaving the mask out.
+    MaskSurfaceMissing(String),
+    /// [`Session::mask_plane`] of an id the settings do not have.
+    MaskNotFound(String),
 }
 
 impl fmt::Display for Error {
@@ -104,26 +108,21 @@ impl fmt::Display for Error {
             Error::Niho4Prepare(e) => write!(f, "niho4_prepare_failed: {e}"),
             Error::Niho6Prepare(e) => write!(f, "niho6_prepare_failed: {e}"),
             Error::Sample(e) => write!(f, "sample_failed: {e}"),
-            Error::MasksNotRendered => f.write_str(MASKS_NOT_RENDERED),
+            Error::MaskSurfaceMissing(id) => write!(
+                f,
+                "{MASK_SURFACE_MISSING}: mask {id} needs its surface, which is not loaded"
+            ),
+            Error::MaskNotFound(id) => write!(f, "{MASK_NOT_FOUND}: no mask {id}"),
         }
     }
 }
 
 impl std::error::Error for Error {}
 
-/// Stable code and message of [`Error::MasksNotRendered`].
-pub const MASKS_NOT_RENDERED: &str =
-    "masksNotRendered: local masks are saved but not rendered yet (M2, #66)";
-
-/// Refuses settings whose active local masks the renderer would silently
-/// leave out (M1 only saves and validates `masks`).
-// M2 (#66) replaces this
-fn reject_active_masks(settings: &DevelopSettings) -> Result<(), Error> {
-    if settings.has_active_masks() {
-        return Err(Error::MasksNotRendered);
-    }
-    Ok(())
-}
+/// Stable code of [`Error::MaskSurfaceMissing`] (the start of its message).
+pub const MASK_SURFACE_MISSING: &str = "maskSurfaceMissing";
+/// Stable code of [`Error::MaskNotFound`] (the start of its message).
+pub const MASK_NOT_FOUND: &str = "maskNotFound";
 
 impl From<DecodeError> for Error {
     fn from(e: DecodeError) -> Self {
@@ -218,8 +217,6 @@ pub fn render(
     options: &RenderOptions,
 ) -> Result<Rendered, Error> {
     let settings = parse_settings(settings_json)?;
-    // The raster path below can skip `Session::render`.
-    reject_active_masks(&settings)?;
     if matches!(
         settings.engine.as_str(),
         settings::ENGINE_NIHO_4
@@ -234,7 +231,11 @@ pub fn render(
     }
     if rendered_geometry(&settings).is_none() {
         let raster = decode::decode_raster(input, options.max_dimension, options.filter)?;
-        if niho6::uses_raster_formula(&settings) && niho6::uses_response(&settings) {
+        // Local masks render in layers (`Session::render`); their `R0` is
+        // this path's frame (an unmasked one-shot render).
+        if settings.has_active_masks()
+            || (niho6::uses_raster_formula(&settings) && niho6::uses_response(&settings))
+        {
             // The decoded size is the output size: the Session renders it as is.
             return Session::new(SessionSource::Raster(raster), options.filter).render(
                 &settings,
@@ -294,7 +295,6 @@ pub fn render_camera_linear(
     if !issues.is_empty() {
         return Err(Error::InvalidSettings(issues));
     }
-    reject_active_masks(settings)?;
     if matches!(
         settings.engine.as_str(),
         settings::ENGINE_NIHO_4
@@ -692,6 +692,18 @@ pub struct Session {
     /// for sessions made from another one (preset previews, auto
     /// candidates): each of their frames is drawn at its own exposure.
     niho6_reuse_while_dragging: bool,
+    /// The working image's size that mask coordinates are fractions of
+    /// (`docs/local-adjustments.md` "座標"): a JPEG / PNG's original size
+    /// with its EXIF orientation (also when decoded reduced), a working
+    /// copy's own size.
+    working_size: (usize, usize),
+    /// The layers of local masks (`mask_session.rs`): `None` until a frame
+    /// draws an active mask, dropped by the next frame without one.
+    masks: Option<Box<mask_session::MaskLayers>>,
+    /// While a mask's layer renders from the global frame's image: that
+    /// frame's local pass, read when it is the layer's
+    /// ([`pipeline::RenderCaches::sharing_local`]). `None` otherwise.
+    local_shared: Option<pipeline::LocalPass>,
 }
 
 impl Session {
@@ -716,7 +728,14 @@ impl Session {
     }
 
     fn with_shared_source(source: Arc<SessionSource>, filter: Filter) -> Self {
+        let working_size = match source.as_ref() {
+            SessionSource::Raster(raster) => (raster.info.source_width, raster.info.source_height),
+            SessionSource::WorkingCopy { image, .. } => (image.width, image.height),
+        };
         Self {
+            working_size,
+            masks: None,
+            local_shared: None,
             niho6_analysis: Arc::default(),
             niho6_source: Arc::clone(&source),
             niho6_last_used: None,
@@ -770,9 +789,13 @@ impl Session {
         // one-shot session.
         let mut isolated = Session::with_shared_source(Arc::clone(&self.source), self.filter);
         isolated.preview_max_dimension = self.preview_max_dimension;
+        isolated.working_size = self.working_size;
         isolated.niho3_seed = self.niho3_analysis();
         isolated.share_niho6_analysis(self);
-        isolated.sample_color_isolated(settings, max_dimension, x, y)
+        // The picker reads the global settings: the color points it targets
+        // are global (local masks do not move them).
+        let global = local_render::without_masks(settings);
+        isolated.sample_color_isolated(&global, max_dimension, x, y)
     }
 
     fn sample_color_isolated(
@@ -950,6 +973,8 @@ impl Session {
         } else {
             Session::with_source(self.source.reduced(tw, th, self.filter), self.filter)
         };
+        // Masks keep their place on the photo, not on the reduction.
+        thumbnail.working_size = self.working_size;
         thumbnail.share_niho6_analysis(self);
         thumbnail
     }
@@ -1381,6 +1406,13 @@ impl Session {
                 )
             },
         );
+        // The last frame's analysis at exactly this exposure is the one the
+        // shared cache would give (the same photo's features and exposure):
+        // a released frame takes it too, so frames that alternate exposures
+        // (a local mask's layer and the global frame, `mask_session.rs`)
+        // do not make it again in the cache's single slot. Both the exposure
+        // and the detail amounts identify the cached analysis.
+        let exposure = niho6::analysis_exposure(settings);
         let analysis = match (
             quality,
             self.niho6_reuse_while_dragging,
@@ -1391,7 +1423,13 @@ impl Session {
             {
                 analysis
             }
-            _ => self.niho6_analysis(niho6::analysis_exposure(settings), settings)?,
+            (_, _, Some(analysis))
+                if analysis.exposure_ev.to_bits() == exposure.to_bits()
+                    && self.niho6_last_detail.as_ref() == Some(&detail_key) =>
+            {
+                analysis
+            }
+            _ => self.niho6_analysis(exposure, settings)?,
         };
         self.niho6_last_used = Some(Arc::clone(&analysis));
         self.niho6_last_detail = Some(detail_key);
@@ -1490,7 +1528,9 @@ impl Session {
 
     /// Renders at `max_dimension` (0 = working size; with a geometry, the
     /// cropped frame's size is capped by it and never enlarged,
-    /// [`frame::plan`]).
+    /// [`frame::plan`]). Settings with an active local mask render in
+    /// layers (`docs/local-adjustments.md` "描画と混ぜ方",
+    /// `mask_session.rs`); without one this is the single frame as before.
     pub fn render(
         &mut self,
         settings: &DevelopSettings,
@@ -1502,7 +1542,20 @@ impl Session {
             return Err(Error::InvalidSettings(issues));
         }
         // Every render path (one-shot, wasm, native CLI) ends here.
-        reject_active_masks(settings)?;
+        if settings.has_active_masks() {
+            return self.render_masked(settings, max_dimension, quality);
+        }
+        self.masks = None;
+        self.render_one(settings, max_dimension, quality)
+    }
+
+    /// One frame of `settings` (their `masks` are not read).
+    fn render_one(
+        &mut self,
+        settings: &DevelopSettings,
+        max_dimension: usize,
+        quality: Quality,
+    ) -> Result<Rendered, Error> {
         let max_dimension = self.capped_dimension(max_dimension);
         let use_niho3 = self.ensure_niho3(settings, max_dimension, quality)?;
         if !use_niho3 {
@@ -1548,7 +1601,8 @@ impl Session {
                         &mut self.effects,
                         &mut self.color_points,
                         &mut self.noise,
-                    ),
+                    )
+                    .sharing_local(self.local_shared.as_ref()),
                 );
                 if let (None, Some(s)) = (cached, stats) {
                     self.stats.push((key, quality, s));
@@ -1569,7 +1623,8 @@ impl Session {
                         &mut self.effects,
                         &mut self.color_points,
                         &mut self.noise,
-                    ),
+                    )
+                    .sharing_local(self.local_shared.as_ref()),
                 );
                 self.cubes = Some(cubes);
                 frame
@@ -1651,7 +1706,8 @@ impl Session {
                         &mut self.effects,
                         &mut self.color_points,
                         &mut self.noise,
-                    ),
+                    )
+                    .sharing_local(self.local_shared.as_ref()),
                 );
                 if let (None, Some(s)) = (cached, stats) {
                     self.stats.push((SOURCE_STATS_KEY, quality, s));
@@ -1672,7 +1728,8 @@ impl Session {
                         &mut self.effects,
                         &mut self.color_points,
                         &mut self.noise,
-                    ),
+                    )
+                    .sharing_local(self.local_shared.as_ref()),
                 );
                 self.cubes = Some(cubes);
                 frame
@@ -1697,14 +1754,23 @@ impl Session {
         self.auto_outcome(settings).map(|o| o.settings)
     }
 
-    /// [`Session::auto_settings`] with what it measured.
+    /// [`Session::auto_settings`] with what it measured. Auto reads the
+    /// global settings (`masks` left out) and gives the `masks` back as they
+    /// were (`docs/local-adjustments.md` "版と互換").
     pub fn auto_outcome(&mut self, settings: &DevelopSettings) -> Result<auto::Outcome, Error> {
         let issues = settings.validate();
         if !issues.is_empty() {
             return Err(Error::InvalidSettings(issues));
         }
-        // Its candidates are rendered like the frame, so the same rule holds.
-        reject_active_masks(settings)?;
+        if settings.masks.is_empty() {
+            return self.auto_outcome_global(settings);
+        }
+        let mut outcome = self.auto_outcome_global(&local_render::without_masks(settings))?;
+        outcome.settings.masks = settings.masks.clone();
+        Ok(outcome)
+    }
+
+    fn auto_outcome_global(&mut self, settings: &DevelopSettings) -> Result<auto::Outcome, Error> {
         let use_niho3 = self.niho3_mode(settings)?;
         let source_is_raw = matches!(
             self.source.as_ref(),

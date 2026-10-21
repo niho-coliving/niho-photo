@@ -4,8 +4,8 @@
 //! `develop-masks.test.ts`, so Rust and TypeScript accept, reject and write
 //! the same masks. This file is also run by the wasm-bindgen test command.
 //!
-//! M1 does not draw masks: a settings with an active mask fails every render
-//! with `masksNotRendered` (M2, #66 replaces that).
+//! Every render path draws the active masks (M2, #66; the layered render
+//! itself is `masks_render.rs`).
 
 use niho_develop::local_mask::{MaskKind, MaskShape};
 use niho_develop::settings::{
@@ -338,43 +338,66 @@ fn presets_and_amounts_keep_the_photos_masks() {
 
 #[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
 #[cfg_attr(not(target_arch = "wasm32"), test)]
-fn an_active_mask_fails_every_render_path_until_m2() {
+fn every_render_path_draws_an_active_mask() {
     let png = photo_png();
+    // Exposure -0.7 from y = 0.2 (none) to y = 0.5 (all) of the 24 x 16 photo.
     let active = with_masks(5, json!([linear("a")]));
     let json = active.to_json();
-
-    let is_not_rendered = |error: Error| {
-        assert!(matches!(error, Error::MasksNotRendered), "{error}");
-        let text = error.to_string();
-        assert!(text.starts_with("masksNotRendered"), "{text}");
-        assert!(text.contains("M2"), "{text}");
-    };
-    // The one-shot raster paths.
-    is_not_rendered(render(&png, &json, &options()).unwrap_err());
-    is_not_rendered(export_jpeg(&png, &json, &options(), 90).unwrap_err());
-    is_not_rendered(export_png(&png, &json, &options()).unwrap_err());
-    // With a geometry the one-shot path goes through a Session.
-    let mut framed = active.clone();
-    framed.geometry = Some(niho_develop::Geometry::from_value(&json!({"rotate": 90})).unwrap());
-    framed.v = 5;
-    is_not_rendered(render(&png, &framed.to_json(), &options()).unwrap_err());
-    // A Session, at every quality and size.
-    let mut session = Session::open_raster(&png, 0, Filter::Lanczos3).unwrap();
-    for quality in [Quality::Interactive, Quality::Final] {
-        is_not_rendered(session.render(&active, 0, quality).unwrap_err());
-        is_not_rendered(session.render(&active, 16, quality).unwrap_err());
-    }
-    // The auto candidates are rendered like frames.
-    is_not_rendered(session.auto_settings(&active).unwrap_err());
-
-    // Masks that draw nothing do not stop a render, and the frame is the
-    // same as without them.
     let plain = {
         let mut s = active.clone();
         s.masks.clear();
         s.v = 1;
         s
     };
+    let darker = {
+        let mut s = plain.clone();
+        s.exposure = -0.7;
+        s
+    };
+    let rows = |frame: &niho_develop::Rendered, range: std::ops::Range<usize>| {
+        frame.rgba[range.start * frame.width * 4..range.end * frame.width * 4].to_vec()
+    };
+    // The one-shot paths: above the ramp the photo as without the mask, below
+    // it the photo with the mask's exposure everywhere.
+    let masked = render(&png, &json, &options()).unwrap();
+    let unmasked = render(&png, &plain.to_json(), &options()).unwrap();
+    let all = render(&png, &darker.to_json(), &options()).unwrap();
+    assert_eq!((masked.width, masked.height), (24, 16));
+    assert_eq!(rows(&masked, 0..3), rows(&unmasked, 0..3));
+    assert_eq!(rows(&masked, 8..16), rows(&all, 8..16));
+    assert_ne!(rows(&masked, 4..7), rows(&unmasked, 4..7));
+    assert_ne!(rows(&masked, 4..7), rows(&all, 4..7));
+    assert_eq!(
+        export_png(&png, &json, &options()).unwrap(),
+        encode::encode_png(&masked.rgba, 24, 16).unwrap()
+    );
+    assert!(!export_jpeg(&png, &json, &options(), 90).unwrap().is_empty());
+    // With a geometry the one-shot path goes through a Session.
+    let mut framed = active.clone();
+    framed.geometry = Some(niho_develop::Geometry::from_value(&json!({"rotate": 90})).unwrap());
+    let turned = render(&png, &framed.to_json(), &options()).unwrap();
+    assert_eq!((turned.width, turned.height), (16, 24));
+    // A Session, at every quality and size; the frame at the working size is
+    // the one-shot one.
+    let mut session = Session::open_raster(&png, 0, Filter::Lanczos3).unwrap();
+    for quality in [Quality::Interactive, Quality::Final] {
+        for size in [0usize, 16] {
+            let frame = session.render(&active, size, quality).unwrap();
+            let base = session.render(&plain, size, quality).unwrap();
+            assert_ne!(frame.rgba, base.rgba, "{quality:?} {size}");
+        }
+    }
+    assert_eq!(
+        session.render(&active, 0, Quality::Final).unwrap().rgba,
+        masked.rgba
+    );
+    // Auto reads the global settings and keeps the masks.
+    let auto = session.auto_settings(&active).unwrap();
+    assert_eq!(auto.masks, active.masks);
+    assert_eq!(auto.v, 5);
+
+    // Masks that draw nothing do not stop a render, and the frame is the
+    // same as without them.
     let expected = session.render(&plain, 0, Quality::Final).unwrap().rgba;
     let mut disabled = active.clone();
     disabled.masks[0].enabled = false;
@@ -382,7 +405,7 @@ fn an_active_mask_fails_every_render_path_until_m2() {
         session.render(&disabled, 0, Quality::Final).unwrap().rgba,
         expected
     );
-    let mut empty = active;
+    let mut empty = active.clone();
     empty.masks[0].adjust = Default::default();
     assert_eq!(
         session.render(&empty, 0, Quality::Final).unwrap().rgba,
@@ -392,4 +415,37 @@ fn an_active_mask_fails_every_render_path_until_m2() {
         render(&png, &disabled.to_json(), &options()).unwrap().rgba,
         render(&png, &plain.to_json(), &options()).unwrap().rgba
     );
+}
+
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
+fn a_surface_mask_fails_until_its_surface_can_be_loaded() {
+    let png = photo_png();
+    let surface = json!({
+        "id": "brush1", "kind": "brush",
+        "surface": {"id": "0".repeat(64), "width": 8, "height": 4},
+        "adjust": {"shadows": 25}
+    });
+    let active = with_masks(5, json!([linear("a"), surface]));
+    let missing = |error: Error| {
+        assert!(
+            matches!(&error, Error::MaskSurfaceMissing(id) if id == "brush1"),
+            "{error}"
+        );
+        assert!(
+            error.to_string().starts_with("maskSurfaceMissing"),
+            "{error}"
+        );
+    };
+    missing(render(&png, &active.to_json(), &options()).unwrap_err());
+    missing(export_png(&png, &active.to_json(), &options()).unwrap_err());
+    let mut session = Session::open_raster(&png, 0, Filter::Lanczos3).unwrap();
+    for quality in [Quality::Interactive, Quality::Final] {
+        missing(session.render(&active, 0, quality).unwrap_err());
+    }
+    missing(session.mask_plane(&active, "brush1", 0).unwrap_err());
+    // A disabled one is not drawn, so it does not need its surface.
+    let mut disabled = active.clone();
+    disabled.masks[1].enabled = false;
+    assert!(session.render(&disabled, 0, Quality::Final).is_ok());
 }
