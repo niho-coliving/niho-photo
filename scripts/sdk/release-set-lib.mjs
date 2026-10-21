@@ -24,7 +24,7 @@ const SHA256 = /^[a-f0-9]{64}$/;
 const SIMPLE_ASSET = /^[A-Za-z0-9][A-Za-z0-9._+-]*$/;
 const ROOT_NOTICE_FILES = ["LICENSE.md", "ASSET_LICENSE.md", "TRADEMARKS.md", "THIRD_PARTY_NOTICES.md"];
 const ENGINE_NOTICE_FILES = ["LICENSES.md", "licenses/Adobe-DNG-SDK-LICENSE.txt"];
-const OWNED_SOURCE_PATHS = ["packages/photo-editing", "packages/ui", "packages/niho-cloud-contract", "packages/develop-engine", "packages/desktop-photo", "sdk", "scripts/sdk", ...ROOT_NOTICE_FILES];
+const OWNED_SOURCE_PATHS = ["packages/photo-editing", "packages/ui", "packages/niho-cloud-contract", "packages/develop-engine", "packages/desktop-photo", "sdk", "scripts/sdk", "scripts/ci/cloud-contract-sync.mjs", "scripts/ci/image-metadata.mjs", "scripts/ci/photo-sdk-workflow-lib.mjs", "scripts/ci/publication-lib.mjs", "scripts/ci/release-evidence-lib.mjs", "scripts/ci/workflow-lib.mjs", ...ROOT_NOTICE_FILES];
 const BUILD_TOOLING_PATHS = ["package.json", "package-lock.json"];
 
 export class SdkReleaseError extends Error {}
@@ -329,7 +329,7 @@ function stageSourcePackage({ repoRoot, commit, config, definition, stage, rootN
       crateVersion: config.engine.crateVersion,
       sourceRoot: definition.sourceRoot,
       buildInputs: config.engine.buildInputs,
-      command: "cargo build --locked --manifest-path engine/Cargo.toml --target wasm32-unknown-unknown --release -p niho-develop-wasm",
+      command: "cargo build --locked --config engine/.cargo/config.toml --manifest-path engine/Cargo.toml --target wasm32-unknown-unknown --release -p niho-develop-wasm",
     }));
   } else {
     auditTypeScriptClosure(stage, manifest);

@@ -31,7 +31,7 @@ npm run sdk:build-engine-runtime -- --output packages/develop-engine/public/deve
 
 builder は空の一時 `CARGO_HOME` と `CARGO_TARGET_DIR` を使い、外部の Cargo config、credentials、`RUSTFLAGS` を継承しません。source、build user、Cargo registry、Rust toolchain、一時領域は公開成果物へ絶対 path が残らないよう remap します。出力先は既存なら拒否します。
 
-生成された `niho-photo-sdk-<version>-<full SHA>.json` に package 名、tarball の SHA-256/SRI、engine/recipe contract と build input の SHA-256、runtime file の SHA-256/SRI を記録します。`sourceOwnership` は `photo-editing`、UI、cloud contract、develop engine、desktop photo、SDK 定義・生成器、同梱 notice の内容digestを個別に持ちます。root `package.json` / `package-lock.json` は再現用の `buildTooling` pin として別に記録します。この分離により、Mac app のみの変更は SDK commit と同じ SHA でなくても、共有sourceのdigestが公開済みSDKと一致することを照合できます。
+生成された `niho-photo-sdk-<version>-<full SHA>.json` に package 名、tarball の SHA-256/SRI、engine/recipe contract と build input の SHA-256、runtime file の SHA-256/SRI を記録します。`sourceOwnership` は `photo-editing`、UI、cloud contract、develop engine、desktop photo、SDK 定義・生成器とimportする検査moduleのclosure、同梱 notice の内容digestを個別に持ちます。root `package.json` / `package-lock.json` は再現用の `buildTooling` pin として別に記録します。この分離により、Mac app のみの変更は SDK commit と同じ SHA でなくても、共有sourceのdigestが公開済みSDKと一致することを照合できます。
 
 repo 外 consumer の確認は次で行います。
 
