@@ -1,0 +1,38 @@
+{
+  "coefficientsSha256": "6127d3edbf0bf7c62779e10ed368764dc0313a2e7f8f03faa1f30816c53e76b3",
+  "formula": {
+    "highlightChromaAlpha": 0.8082424902592584,
+    "highlightScale": [
+      1.521035712279051,
+      -0.41490063032749464
+    ],
+    "highlightShift": [
+      5.926678076710395,
+      0.6533824493899317
+    ],
+    "shadowChromaAlpha": 0.9835498105303389,
+    "shadowScale": [
+      0.9237060219835482,
+      0.039401770151360885
+    ],
+    "shadowShift": [
+      0.957363814844238,
+      0.9117467922747456
+    ]
+  },
+  "frozen": true,
+  "residual": {
+    "highlight": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "maxResidualEV": 0.0,
+    "shadow": [
+      0.0,
+      0.0,
+      0.0
+    ]
+  },
+  "schema": "niho.analytic-hs-candidate.v1"
+}
