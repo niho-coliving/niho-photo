@@ -88,6 +88,70 @@ export function photoEditingHistogramLabel(shadowRate: number, highlightRate: nu
   return `ヒストグラム。黒つぶれ ${photoEditingClipRateText(shadowRate)}、白飛び ${photoEditingClipRateText(highlightRate)}`;
 }
 
+/**
+ * ライトの群の下の「カーブ」の節（niho-photo#37。PC の右パネルで、wasm が描いている写真だけ）。既定は閉じる。見出しの横の「初期化」は
+ * 曲線だけを直線に戻す（右パネルの一番上の「初期化」と読み分けるため、読み上げ名は「カーブを初期化」）。
+ */
+export const PHOTO_EDITING_CURVE_TITLE = "カーブ";
+export const PHOTO_EDITING_CURVE_RESET_LABEL = "カーブを初期化";
+/** グラフ（点を足す・動かす面）と、チャンネルの切り替えの読み上げ名。 */
+export const PHOTO_EDITING_CURVE_GRAPH_LABEL = "トーンカーブ";
+export const PHOTO_EDITING_CURVE_CHANNELS_LABEL = "曲線のチャンネル";
+/** チャンネルの切り替え（見た目は短い名前、読み上げは曲線の名前）。 */
+export const PHOTO_EDITING_CURVE_CHANNEL_LABELS = {
+  rgb: { short: "RGB", name: "RGB 曲線" },
+  red: { short: "R", name: "赤の曲線" },
+  green: { short: "G", name: "緑の曲線" },
+  blue: { short: "B", name: "青の曲線" },
+} as const;
+/** 点を選んでいないときにグラフの下に出す案内。 */
+export const PHOTO_EDITING_CURVE_HINT = "グラフを押して点を足し、ドラッグで動かします。ダブルクリックで消します";
+/** 点のキー操作の説明（点の読み上げに添える）。 */
+export const PHOTO_EDITING_CURVE_KEYS_HELP =
+  "矢印キーで動かします（Shift で大きく）。Delete で消し、Enter で隣の点との間に点を足します。両端の点は消せません";
+/** 選んでいる点の入力と出力（0〜100）。 */
+export function photoEditingCurvePointValueText(input: number, output: number): string {
+  return `入力 ${input} / 出力 ${output}`;
+}
+/** 点の読み上げ名（例「RGB 曲線の点 2 / 入力 45 出力 52」）。 */
+export function photoEditingCurvePointLabel(curveName: string, order: number, input: number, output: number): string {
+  return `${curveName}の点 ${order} / 入力 ${input} 出力 ${output}`;
+}
+
+/**
+ * カラーの群の下の「カラーミキサー」の節（niho-photo#38。Lightroom のカラーミキサーの HSL。PC の右パネルで wasm が描いている写真
+ * だけ。スマホは編集の層の道具）。既定は閉じる。見出しの横の「初期化」は 8 色 × 3 の値だけを 0 に戻す（読み上げ名は
+ * 「カラーミキサーを初期化」）。写真から色を拾う Oklch の補正（#30）は Lightroom と同じく「ポイントカラー」と呼び分ける。
+ */
+export const PHOTO_EDITING_HSL_TITLE = "カラーミキサー";
+export const PHOTO_EDITING_HSL_RESET_LABEL = "カラーミキサーを初期化";
+/** 「調整」の切り替え（色相 / 彩度 / 輝度。選んだ軸の値を 8 色ぶん並べる）。 */
+export const PHOTO_EDITING_HSL_AXES_LABEL = "調整";
+export const PHOTO_EDITING_HSL_AXIS_LABELS = {
+  hue: "色相",
+  saturation: "彩度",
+  luminance: "輝度",
+} as const;
+/** その軸に 0 でない色があるときに、切り替えのボタンに添える読み上げ（見た目は小さな点）。 */
+export const PHOTO_EDITING_HSL_AXIS_EDITED_TEXT = "調整あり";
+/** 8 色の名前（スライダーの名前。色の丸だけで伝えない）。 */
+export const PHOTO_EDITING_HSL_BAND_LABELS = {
+  red: "赤",
+  orange: "橙",
+  yellow: "黄",
+  green: "緑",
+  aqua: "水色",
+  blue: "青",
+  purple: "紫",
+  magenta: "マゼンタ",
+} as const;
+/** 8 本のスライダーの群の読み上げ名（例「彩度（8 色）」）。 */
+export function photoEditingHslSlidersLabel(axisLabel: string): string {
+  return `${axisLabel}（8 色）`;
+}
+/** 写真から色を拾って、その色だけを整える Oklch の補正（#30。Lightroom の「ポイントカラー」に当たる）。 */
+export const PHOTO_EDITING_POINT_COLOR_TITLE = "ポイントカラー";
+
 /** 効果の群名の横の ⓘ（押すと群の先頭に項目ごとの説明を出す）。 */
 export const PHOTO_EDITING_EFFECTS_INFO_LABEL = "効果の説明";
 export const PHOTO_EDITING_TEXTURE_DESCRIPTION = "細かな質感を強めたり、和らげたりします";
@@ -331,7 +395,7 @@ export function photoEditingPresetNotWrittenError(fields: readonly string[]): st
     relativeTemperature: "相対の色温度",
     relativeTint: "相対の色かぶり補正",
     legacySettings: "未対応の補正",
-    colorPoints: "色ミキサー",
+    colorPoints: PHOTO_EDITING_POINT_COLOR_TITLE,
     masks: "部分補正（マスク）",
   };
   const names = Array.from(new Set(fields.map((field) => labels[field] ?? "未対応の補正")));
@@ -382,7 +446,7 @@ export const PHOTO_EDITING_PRESET_UNSUPPORTED_LABELS = {
   grain: "粒子",
   colorGradeLuminance: "カラーグレーディングの輝度",
   curveSaturation: "トーンカーブの彩度",
-  pointColors: "Lightroom の色ミキサー",
+  pointColors: "Lightroom のポイントカラー",
   transform: "変形",
   profile: "プロファイル",
 } as const;

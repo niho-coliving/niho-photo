@@ -10,6 +10,7 @@ import {
   type DevelopSettings,
   MAX_COLOR_POINTS,
 } from "../develop-engine/develop-settings";
+import { PHOTO_EDITING_POINT_COLOR_TITLE } from "../photo-editing-copy";
 import type { PhotoEditingSettings } from "../photo-editing-types";
 import { cn } from "niho-ui/cn";
 
@@ -148,7 +149,7 @@ export function PhotoEditingColorMixer(props: {
     <section aria-labelledby={titleId} className={cn("pt-2", props.compact && "px-3 pb-2")}>
       <div className="flex min-h-11 items-center justify-between gap-2">
         <div className="min-w-0">
-          <h4 id={titleId} className="text-xs font-bold text-niho-text">色ミキサー</h4>
+          <h4 id={titleId} className="text-xs font-bold text-niho-text">{PHOTO_EDITING_POINT_COLOR_TITLE}</h4>
           <p className="text-xs leading-relaxed text-niho-text-muted">写真から色を選び、その色だけを自然に整えます。</p>
         </div>
         <button
