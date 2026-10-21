@@ -3586,14 +3586,15 @@
         "path": "apps/camera/README.md",
         "sha256": "d0e1f198e83893a73cd3d84122debf76ad9755e00a5fc5e1b69c242daec8d4eb"
       },
-      "outputSha256": "11f9a86c197e8105b99635ad76f15a112b8404de3ab27436dfaa397fdf96b9f6",
+      "outputSha256": "fd781967dc6ab617f510021953f44b4c14a5bf82ba4c6c241894bd7a957b38b5",
       "modifications": [
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
         "フォルダと個別写真の利用方法、公開契約、および許可するネイティブコマンドを明記",
         "Issue #3のpublic OAuth/PKCE、ローカル専用UI、安全契約と公開依存を新規接続。実issuer・署名検証器が未契約のため本番接続は無効。",
         "Issue #3の公式NIHO app-connect v1契約へ適合。deep link・NIHO接続token/Firebase交換・FileSecretStore・取消と再起動を独立実装し、安全契約をv2へ改版。",
         "Issue #2の公開検証成果物・SBOM・固定SHA取り込み契約と秘密を持たないCI検査を追加。",
-        "Issue #2の実装検証で成果物名・輸送receipt・build設定を強化。"
+        "Issue #2の実装検証で成果物名・輸送receipt・build設定を強化。",
+        "公式candidateのSDK専用asset providerと署名前の実bytes検証を文書化する"
       ]
     },
     {
@@ -4008,7 +4009,7 @@
         "path": "apps/camera/src-tauri/src/lib.rs",
         "sha256": "e6415b3d0633bb4753761b89f8860fffcfa9b67f95832ab971bd9b13eebaaffc"
       },
-      "outputSha256": "cc3d9beaeec8bf968c6c05898b4ff6983f68c1833ee8312bbdab4384ae278d8e",
+      "outputSha256": "e9ae5f00b0bdf9870794cd95f4eb95727a46f1793db1ad0fbdd49fb1407413a1",
       "modifications": [
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
         "共有形式フィルターを使う複数写真pickerと参照削除コマンドを同梱UIの権限内に追加 / 選択写真専用commandをinvoke handlerへ登録。",
@@ -4022,7 +4023,8 @@
         "部分補正（マスク）#68: マスクの面のコマンドを登録する",
         "PR #82: #74 squash merge後に版機能の変更をmainへ積み直し、最終ハッシュを反映。",
         "PR #98を#91マージ後の最新mainへ積み直し、選別保存中の二重操作ガードを保持。",
-        "PR #98で選別フラグの保存経路とUIを更新する。"
+        "PR #98で選別フラグの保存経路とUIを更新する。",
+        "公式配布では検証可能なSDK専用asset sectionをTauri asset providerへ接続する"
       ]
     },
     {
@@ -11253,6 +11255,11 @@
       "path": "packages/photo-editing/src/editor/photo-editing-lens.test.tsx",
       "sha256": "c6fcf83f05f279b462bd2ff8324abeff9e190db68cadebd686f0a5440489ae48",
       "origin": "niho-photo#45 のため新規作成。「レンズ」の節の test（合成の設定だけを使用）。"
+    },
+    {
+      "path": "apps/camera/src-tauri/src/runtime_assets.rs",
+      "sha256": "e4847fae4b704ab530b02d6d9cac82b2cbcce6e8b581cb10de8d8904224d315e",
+      "origin": "NIHO Photo独立配布で実際に配信するSDK runtimeを専用Mach-O sectionから返すため新規実装した。外部sourceのコピーはない。"
     }
   ],
   "excludedSources": [

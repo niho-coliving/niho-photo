@@ -20,6 +20,9 @@ import {
   sha256,
   stageCandidateNotices,
   stagePreparedNodeDependencies,
+  stageRuntimeAssetBundle,
+  machoRuntimeSection,
+  verifyRuntimeAssetBundle,
   validateTarEntries,
   verifyAppNoticeResources,
   verifyCandidateDirectory,
@@ -444,4 +447,41 @@ test("official buildは新規の隔離directoryを作ってから別名pathと�
   const env = officialBuildEnvironment({ HOME: actual, PATH: "/usr/bin" }, { workspace: actual, isolatedRoot, publicFirebaseKey: `AIza${"A".repeat(35)}` });
   assert.ok(env.CARGO_ENCODED_RUSTFLAGS.includes(`${isolatedRoot}=build-temp`));
   assert.ok(env.CARGO_ENCODED_RUSTFLAGS.includes(`${realpathSync(isolatedRoot)}=build-temp`));
+});
+
+
+function runtimeMachoFixture(bundle) {
+  const header = Buffer.alloc(32), segment = Buffer.alloc(152);
+  header.writeUInt32LE(0xfeedfacf); header.writeUInt32LE(0x0100000c, 4); header.writeUInt32LE(2, 12);
+  header.writeUInt32LE(1, 16); header.writeUInt32LE(152, 20);
+  segment.writeUInt32LE(0x19); segment.writeUInt32LE(152, 4); segment.write("__DATA_CONST", 8);
+  segment.writeBigUInt64LE(0x1000000b8n, 24); segment.writeBigUInt64LE(BigInt(bundle.length), 32);
+  segment.writeBigUInt64LE(184n, 40); segment.writeBigUInt64LE(BigInt(bundle.length), 48); segment.writeUInt32LE(1, 64);
+  segment.write("__niho_runtime", 72); segment.write("__DATA_CONST", 88);
+  segment.writeBigUInt64LE(0x1000000b8n, 104); segment.writeBigUInt64LE(BigInt(bundle.length), 112); segment.writeUInt32LE(184, 120);
+  return Buffer.concat([header, segment, bundle]);
+}
+
+test("Tauriが配信する専用sectionのruntime実bytesをSDKへ照合し、URLだけ・改変を拒否する", () => {
+  const workspace = temp("candidate-runtime-bundle-");
+  const values = new Map([["runtime.js", Buffer.from("export {};\n")], ["runtime.wasm", Buffer.from("\0asmfixture")], ["runtime.d.ts", Buffer.from("export {};\n")], ["manifest-0.25.0.json", Buffer.from("{}\n")]]);
+  const record = (name) => ({ name, sha256: sha256(values.get(name)), size: values.get(name).length });
+  const sdk = { engine: { version: "niho-13", runtimeFiles: [...values.keys()].filter((name) => !name.startsWith("manifest-")).map(record), manifest: { ...record("manifest-0.25.0.json"), file: "manifest-0.25.0.json" } } };
+  for (const [name, data] of values) put(workspace, `packages/develop-engine/public/develop-engine/niho-13/${name}`, data);
+  const output = path.join(workspace, "runtime.bundle");
+  stageRuntimeAssetBundle(workspace, sdk, output);
+  const bundle = readFileSync(output);
+  assert.equal(verifyRuntimeAssetBundle(machoRuntimeSection(runtimeMachoFixture(bundle)), sdk), true);
+  const tampered = Buffer.from(bundle); tampered[tampered.length - 1] ^= 1;
+  assert.throws(() => verifyRuntimeAssetBundle(machoRuntimeSection(runtimeMachoFixture(tampered)), sdk), /実bytes/u);
+  assert.throws(() => machoRuntimeSection(Buffer.from("/develop-engine/niho-13/runtime.wasm")), /Mach-O/u);
+  const malformed = runtimeMachoFixture(bundle); malformed.writeUInt32LE(0xffffffff, 32 + 120);
+  assert.throws(() => machoRuntimeSection(malformed), /bounds/u);
+});
+
+
+test("binary string poolで公開configに定数が隣接しても完全一致分だけを除き、別keyは拒否する", () => {
+  const key = `AIza${"A".repeat(35)}`;
+  assert.doesNotThrow(() => assertCandidatePublicBytes(Buffer.from(`prefix${key}nextConstant`), key));
+  assert.throws(() => assertCandidatePublicBytes(Buffer.from(`${key}nextConstant AIza${"B".repeat(35)}`), key), /許可されていない/u);
 });

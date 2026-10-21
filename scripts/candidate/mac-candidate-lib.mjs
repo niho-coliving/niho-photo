@@ -292,9 +292,9 @@ export function officialBuildEnvironment(input, { workspace, isolatedRoot, publi
 
 export function assertCandidatePublicBytes(bytes, allowedPublicFirebaseKey, artifactPath = "candidate bytes") {
   let text = bytes.toString("utf8");
-  const apiKeys = text.match(/AIza[A-Za-z0-9_-]{30,}/gu) ?? [];
-  if (apiKeys.some((value) => value !== allowedPublicFirebaseKey)) throw new CandidateError("candidateに許可されていないAPI keyがあります（値は非表示）");
+  // Rustのstring poolでは隣の定数が区切りなしで続く。許可した完全一致bytesだけを先に除き、残るkeyを拒否する。
   if (allowedPublicFirebaseKey) text = text.replaceAll(allowedPublicFirebaseKey, "P".repeat(allowedPublicFirebaseKey.length));
+  if (/AIza[A-Za-z0-9_-]{30,}/u.test(text)) throw new CandidateError(`${artifactPath}: candidateに許可されていないAPI keyがあります（値は非表示）`);
   try { assertPublicBytes(Buffer.from(text)); } catch (error) { throw new CandidateError(`${artifactPath}: ${error.message}`); }
 }
 
@@ -409,6 +409,7 @@ export function verifyBuiltApp({ appPath, workspace, version, sdkManifest, nativ
   if (!executableName) throw new CandidateError("app executable identityがありません");
   const executable = path.join(contents, "MacOS", executableName);
   const executableBytes = readFileSync(executable);
+  verifyRuntimeAssetBundle(machoRuntimeSection(executableBytes), sdkManifest);
   for (const value of [UPDATER_FEED, EXPECTED_UPDATER_PUBLIC_KEY]) if (!executableBytes.includes(Buffer.from(value))) throw new CandidateError("appに固定updater設定が埋め込まれていません");
   if (!executableBytes.includes(Buffer.from(allowedPublicFirebaseKey))) throw new CandidateError("appに公式public account configが埋め込まれていません");
 
@@ -459,7 +460,7 @@ export function verifyBuiltApp({ appPath, workspace, version, sdkManifest, nativ
     native,
     calibration,
     registries: registryProof,
-    runtime: { engine: sdkManifest.engine.version, crateVersion: sdkManifest.engine.crateVersion, manifest: { name: sdkManifest.engine.manifest.file, sha256: sdkManifest.engine.manifest.sha256 }, files: runtime },
+    runtime: { engine: sdkManifest.engine.version, crateVersion: sdkManifest.engine.crateVersion, manifest: { name: sdkManifest.engine.manifest.file, sha256: sdkManifest.engine.manifest.sha256, bytes: sdkManifest.engine.manifest.size }, files: runtime },
     files,
     notices,
   };
@@ -640,3 +641,84 @@ export const candidateContract = Object.freeze({
   noticePaths: Object.keys(NOTICE_SOURCES),
   maxAssetBytes: MAX_ASSET_BYTES,
 });
+
+const RUNTIME_BUNDLE_MAGIC = Buffer.from("NIHO-PHOTO-RT1\0\0");
+
+function runtimeAssetRecords(sdkManifest) {
+  const engine = sdkManifest.engine;
+  return [...engine.runtimeFiles, { name: engine.manifest.file, sha256: engine.manifest.sha256, size: engine.manifest.size }]
+    .map((record) => ({ ...record, path: `/develop-engine/${engine.version}/${record.name}` }))
+    .sort((a, b) => a.path < b.path ? -1 : a.path > b.path ? 1 : 0);
+}
+
+export function stageRuntimeAssetBundle(workspace, sdkManifest, output) {
+  const records = runtimeAssetRecords(sdkManifest);
+  const payload = [], index = [];
+  let offset = 0;
+  for (const record of records) {
+    const bytes = readFileSync(path.join(workspace, "packages/develop-engine/public", record.path.slice(1)));
+    if (bytes.length !== record.size || sha256(bytes) !== record.sha256) throw new CandidateError("runtime asset bundleの元bytesがSDKと一致しません");
+    index.push({ path: record.path, offset, bytes: bytes.length });
+    payload.push(bytes);
+    offset += bytes.length;
+  }
+  const header = Buffer.alloc(24), encoded = Buffer.from(JSON.stringify(index));
+  RUNTIME_BUNDLE_MAGIC.copy(header);
+  header.writeBigUInt64LE(BigInt(encoded.length), 16);
+  writeFileSync(output, Buffer.concat([header, encoded, ...payload]), { flag: "wx", mode: 0o600 });
+  return output;
+}
+
+export function machoRuntimeSection(binary) {
+  if (binary.length < 32 || binary.readUInt32LE(0) !== 0xfeedfacf || binary.readUInt32LE(4) !== 0x0100000c) throw new CandidateError("runtime sectionにはarm64 thin Mach-Oが必要です");
+  const count = binary.readUInt32LE(16), commandBytes = binary.readUInt32LE(20);
+  if (count > 4096 || commandBytes > binary.length - 32) throw new CandidateError("runtime Mach-O load command範囲が不正です");
+  let cursor = 32;
+  const found = [];
+  const name = (offset) => binary.subarray(offset, offset + 16).toString("ascii").replace(/\0.*$/su, "");
+  for (let i = 0; i < count; i++) {
+    if (cursor + 8 > 32 + commandBytes) throw new CandidateError("runtime Mach-O load commandが短すぎます");
+    const command = binary.readUInt32LE(cursor), size = binary.readUInt32LE(cursor + 4);
+    if (size < 8 || cursor + size > 32 + commandBytes) throw new CandidateError("runtime Mach-O command sizeが不正です");
+    if (command === 0x19) {
+      if (size < 72) throw new CandidateError("runtime segmentが短すぎます");
+      const sections = binary.readUInt32LE(cursor + 64);
+      if (sections > 1024 || size !== 72 + sections * 80) throw new CandidateError("runtime section tableが不正です");
+      for (let j = 0; j < sections; j++) {
+        const section = cursor + 72 + j * 80;
+        if (name(section) !== "__niho_runtime") continue;
+        if (name(section + 16) !== "__DATA_CONST" || name(cursor + 8) !== "__DATA_CONST") throw new CandidateError("runtime section segmentが不正です");
+        const length = binary.readBigUInt64LE(section + 40), offset = binary.readUInt32LE(section + 48);
+        if (length === 0n || length > BigInt(MAX_ASSET_BYTES) || offset < 32 + commandBytes || BigInt(offset) + length > BigInt(binary.length) || (binary.readUInt32LE(section + 64) & 0xff) !== 0) throw new CandidateError("runtime section bounds/typeが不正です");
+        const vm = binary.readBigUInt64LE(cursor + 24), vmSize = binary.readBigUInt64LE(cursor + 32), fileOffset = binary.readBigUInt64LE(cursor + 40), fileSize = binary.readBigUInt64LE(cursor + 48), address = binary.readBigUInt64LE(section + 32);
+        if (fileOffset > BigInt(offset) || BigInt(offset) + length > fileOffset + fileSize || fileOffset + fileSize > BigInt(binary.length) || address < vm || address + length > vm + vmSize || address - vm !== BigInt(offset) - fileOffset) throw new CandidateError("runtime sectionのfile/VM mappingが不正です");
+        found.push(binary.subarray(offset, offset + Number(length)));
+      }
+    }
+    cursor += size;
+  }
+  if (cursor !== 32 + commandBytes || found.length !== 1) throw new CandidateError("SDK runtime sectionは一意でなければなりません");
+  return found[0];
+}
+
+export function verifyRuntimeAssetBundle(bundle, sdkManifest) {
+  if (bundle.length < 24 || !bundle.subarray(0, 16).equals(RUNTIME_BUNDLE_MAGIC)) throw new CandidateError("SDK runtime bundle headerが不正です");
+  const length = bundle.readBigUInt64LE(16);
+  if (length === 0n || length > 65536n || length > BigInt(bundle.length - 24)) throw new CandidateError("SDK runtime index sizeが不正です");
+  const start = 24 + Number(length);
+  let index;
+  try { index = JSON.parse(bundle.subarray(24, start).toString("utf8")); } catch { throw new CandidateError("SDK runtime indexがJSONではありません"); }
+  if (JSON.stringify(index) !== bundle.subarray(24, start).toString("utf8")) throw new CandidateError("SDK runtime indexがcanonical JSONではありません");
+  const records = runtimeAssetRecords(sdkManifest);
+  if (!Array.isArray(index) || index.length !== records.length) throw new CandidateError("SDK runtime asset集合が不正です");
+  let offset = 0;
+  for (let i = 0; i < records.length; i++) {
+    const expected = records[i], actual = index[i];
+    if (!actual || Object.keys(actual).sort().join(",") !== "bytes,offset,path" || actual.path !== expected.path || actual.offset !== offset || actual.bytes !== expected.size) throw new CandidateError("SDK runtime tableがSDKと一致しません");
+    const bytes = bundle.subarray(start + offset, start + offset + actual.bytes);
+    if (bytes.length !== expected.size || sha256(bytes) !== expected.sha256) throw new CandidateError("埋込runtime実bytesがSDK hash/sizeと一致しません");
+    offset += actual.bytes;
+  }
+  if (start + offset !== bundle.length) throw new CandidateError("SDK runtime bundleに余分なpayloadがあります");
+  return true;
+}

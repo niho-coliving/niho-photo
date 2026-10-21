@@ -22,6 +22,7 @@ import {
   sourceOwnership,
   stageCandidateNotices,
   stagePreparedNodeDependencies,
+  stageRuntimeAssetBundle,
   verifyBuiltApp,
   verifyCandidateDirectory,
   verifySdkDirectory,
@@ -162,6 +163,7 @@ export function buildCandidate(values) {
     assertExpectedWorkspaceChanges(sourceBefore, sourceSnapshot(workspace));
     const isolated = path.join(scratch, "isolated");
     const env = officialBuildEnvironment(process.env, { workspace, isolatedRoot: isolated, publicFirebaseKey });
+    const runtimeBundle = stageRuntimeAssetBundle(workspace, sdk.manifest, path.join(isolated, "runtime.assetbundle"));
     const native = buildNative({ sdkDirectory, sdkManifest: sdk.manifest, workspace, scratch, env });
     const notices = stageCandidateNotices(workspace, path.join(scratch, "third-party-notices"));
     const camera = path.join(workspace, "apps/camera");
@@ -180,7 +182,7 @@ export function buildCandidate(values) {
       "--config", path.join(native.output, "tauri.native.conf.json"),
       "--config", JSON.stringify(buildConfig),
       "--", "--locked",
-    ], { cwd: camera, env, stdio: "inherit" });
+    ], { cwd: camera, env: { ...env, NIHO_PHOTO_RUNTIME_BUNDLE: runtimeBundle }, stdio: "inherit" });
     assertExpectedWorkspaceChanges(sourceBefore, sourceSnapshot(workspace));
     const appPath = path.join(env.CARGO_TARGET_DIR, "aarch64-apple-darwin/release/bundle/macos", `${candidateContract.product}.app`);
     const app = verifyBuiltApp({ appPath, workspace, version: values["--version"], sdkManifest: sdk.manifest, nativeManifest: native.manifest, expectedNotices: notices.files, allowedPublicFirebaseKey: publicFirebaseKey });

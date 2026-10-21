@@ -31,6 +31,8 @@ mod photos;
 mod presets;
 mod save;
 mod thumbnail_scheme;
+#[cfg(any(feature = "official-updates", test))]
+mod runtime_assets;
 mod updater;
 
 use serde::Serialize;
@@ -59,6 +61,8 @@ fn camera_app_info() -> CameraAppInfo {
 pub fn run() {
   #[allow(unused_mut)]
   let mut context = tauri::generate_context!();
+  #[cfg(feature = "official-updates")]
+  runtime_assets::install(&mut context);
   let builder = tauri::Builder::default().plugin(tauri_plugin_deep_link::init());
   #[cfg(feature = "e2e")]
   let builder = {
