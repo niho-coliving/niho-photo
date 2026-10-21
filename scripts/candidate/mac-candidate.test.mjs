@@ -18,6 +18,8 @@ import {
   inventoryTree,
   officialBuildEnvironment,
   packAppTar,
+  packDmg,
+  verifyDmgInventory,
   resolveCleanSource,
   sha256,
   stageCandidateNotices,
@@ -532,4 +534,27 @@ test("executable/native/calibrationのproofは同じapp inventoryのhashと一�
     writeFileSync(path.join(fixture.directory, fixture.manifestFile), JSON.stringify(fixture.manifest));
     assert.throws(() => verifyCandidateDirectory(fixture.directory), /inventory/u);
   }
+});
+
+test("実DMGをreadonlyで開き、梱包時の改変・追加・実行属性の違いを検証済みinventoryへ照合する", { skip: process.platform !== "darwin" }, () => {
+  const stage = temp("niho-photo-public-dmg-fixture-");
+  const app = path.join(stage, "NIHO photo.app");
+  put(stage, "NIHO photo.app/Contents/MacOS/niho-camera", "synthetic app data; never executed\n");
+  chmodSync(path.join(app, "Contents/MacOS/niho-camera"), 0o755);
+  const expected = inventoryTree(app);
+  const image = path.join(stage, "valid.dmg");
+  const proof = packDmg(app, image, expected);
+  assert.equal(proof.sha256, sha256(readFileSync(image)));
+  assert.doesNotThrow(() => verifyDmgInventory(image, expected));
+  for (const mutation of [
+    (files) => { files[0].sha256 = "0".repeat(64); },
+    (files) => { files.push({ path: "Contents/extra.txt", sha256: "0".repeat(64), bytes: 1, executable: false }); },
+    (files) => { files[0].executable = false; },
+  ]) {
+    const mismatch = structuredClone(expected);
+    mutation(mismatch);
+    assert.throws(() => verifyDmgInventory(image, mismatch), /DMG.*inventory/u);
+  }
+  put(stage, "NIHO photo.app/Contents/MacOS/niho-camera", "changed after verifyBuiltApp\n");
+  assert.throws(() => packDmg(app, path.join(stage, "changed.dmg"), expected), /DMG.*inventory/u);
 });

@@ -64,6 +64,10 @@ candidate manifestはapp/source tree、run/attempt、SDK mode/version/source/全
 before/after hash、公開account config hash、toolchain、native/calibration/wasm/app file hash、SBOM proof、最終assetの
 SHA-256/sizeを記録します。公開Firebaseのraw値、signing key、credentialは記録しません。
 
+完成tarはPython標準ライブラリで展開・実行せず、全file hash/size/実行属性を検証済みapp inventoryへ照合します。
+builderは完成DMGもreadonly/no-auto-openでmountし、同じinventoryへ照合してからdetachします。画像の検証前後で
+外側hashも固定し、梱包後の差し替えや改変を拒否します。候補のprogram/scriptは起動しません。
+
 ## private signerへのdata-only handoff
 
 public publisherはbuilder outputのmanifest SHA-256、source SHA、run/attemptを指定して次のzero-dependency verifierを実行します。

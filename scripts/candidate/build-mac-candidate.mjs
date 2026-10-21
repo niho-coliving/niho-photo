@@ -195,7 +195,7 @@ export function buildCandidate(values) {
     mkdirSync(output, { recursive: true, mode: 0o755 });
     const tarName = `${base}.app.tar.gz`, dmgName = `${base}.dmg`, sbomName = `${base}.cdx.json`;
     const tar = packAppTar(appPath, path.join(output, tarName));
-    const dmg = packDmg(appPath, path.join(output, dmgName));
+    const dmg = packDmg(appPath, path.join(output, dmgName), app.files, { allowedPublicFirebaseKey: publicFirebaseKey });
     const sbomBytes = candidateSbomBytes(workspace, source.commit);
     writeFileSync(path.join(output, sbomName), sbomBytes, { flag: "wx", mode: 0o644 });
     const manifest = {

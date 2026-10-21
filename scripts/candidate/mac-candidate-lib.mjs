@@ -9,6 +9,7 @@ import {
   mkdtempSync,
   readFileSync,
   readdirSync,
+  readlinkSync,
   rmSync,
   statSync,
   symlinkSync,
@@ -491,7 +492,45 @@ export function packAppTar(appPath, output) {
   return { sha256: sha256(readFileSync(output)), bytes: statSync(output).size };
 }
 
-export function packDmg(appPath, output) {
+export function verifyDmgInventory(dmgPath, expectedFiles, { allowedPublicFirebaseKey } = {}) {
+  if (process.platform !== "darwin") throw new CandidateError("DMG実inventory検証はmacOS専用です");
+  if (!Array.isArray(expectedFiles) || !expectedFiles.length) throw new CandidateError("DMGには検証済みapp inventoryが必要です");
+  const before = boundedOrdinaryFile(dmgPath, "DMG");
+  const digest = sha256(readFileSync(dmgPath));
+  const scratch = mkdtempSync(path.join(tmpdir(), "niho-photo-dmg-verify-"));
+  const mount = path.join(scratch, "volume");
+  mkdirSync(mount, { mode: 0o700 });
+  const env = { PATH: "/usr/bin:/bin:/usr/sbin:/sbin", HOME: scratch };
+  let attached = false;
+  try {
+    run("/usr/bin/hdiutil", ["verify", dmgPath], { env, timeout: 120_000 });
+    run("/usr/bin/hdiutil", ["attach", "-readonly", "-nobrowse", "-noautoopen", "-mountpoint", mount, "-plist", dmgPath], { env, timeout: 120_000 });
+    attached = true;
+    const allowed = new Set([`${PRODUCT}.app`, "Applications", ".DS_Store", ".Trashes", ".fseventsd", ".Spotlight-V100", ".HFS+ Private Directory Data\r"]);
+    const entries = readdirSync(mount);
+    if (!entries.includes(`${PRODUCT}.app`) || entries.some((name) => !allowed.has(name))) throw new CandidateError("DMG rootに想定外の配布物があります");
+    for (const name of entries) {
+      if (name === `${PRODUCT}.app`) continue;
+      const item = path.join(mount, name), stat = lstatSync(item);
+      if (name === "Applications") {
+        if (!stat.isSymbolicLink() || readlinkSync(item) !== "/Applications") throw new CandidateError("DMG Applications linkが不正です");
+      } else if (stat.isSymbolicLink() || (!stat.isFile() && !stat.isDirectory())) throw new CandidateError("DMG root metadataのlink・special fileは禁止です");
+    }
+    // 実際に配布するreadonly imageを読む。候補のprogram/scriptは実行しない。
+    const actual = inventoryTree(path.join(mount, `${PRODUCT}.app`), { allowedPublicFirebaseKey });
+    const normalize = (records) => records.map(({ path: name, sha256: hash, bytes, executable }) => ({ path: name, sha256: hash, bytes, executable })).sort((a, b) => a.path.localeCompare(b.path, "en"));
+    if (JSON.stringify(normalize(actual)) !== JSON.stringify(normalize(expectedFiles))) throw new CandidateError("DMGの実app inventoryが検証済みappと一致しません");
+  } finally {
+    if (attached) run("/usr/bin/hdiutil", ["detach", mount], { env, timeout: 120_000 });
+    // detach失敗時はmount directoryを削除しない。
+    rmSync(scratch, { recursive: true, force: true });
+  }
+  const after = boundedOrdinaryFile(dmgPath, "DMG");
+  if (before.size !== after.size || sha256(readFileSync(dmgPath)) !== digest) throw new CandidateError("DMGが実inventory検証中に変更されました");
+  return { sha256: digest, bytes: after.size };
+}
+
+export function packDmg(appPath, output, expectedFiles, options = {}) {
   if (process.platform !== "darwin") throw new CandidateError("DMG生成はmacOS専用です");
   if (lstatSync(output, { throwIfNoEntry: false })) throw new CandidateError("DMGは上書きできません");
   const stage = mkdtempSync(path.join(tmpdir(), "niho-photo-dmg-"));
@@ -499,7 +538,7 @@ export function packDmg(appPath, output) {
     cpSync(appPath, path.join(stage, path.basename(appPath)), { recursive: true, verbatimSymlinks: true });
     symlinkSync("/Applications", path.join(stage, "Applications"));
     run("hdiutil", ["create", "-volname", PRODUCT, "-srcfolder", stage, "-format", "UDZO", output]);
-    return { sha256: sha256(readFileSync(output)), bytes: statSync(output).size };
+    return verifyDmgInventory(output, expectedFiles, options);
   } finally {
     rmSync(stage, { recursive: true, force: true });
   }
