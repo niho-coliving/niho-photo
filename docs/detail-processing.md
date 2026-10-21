@@ -104,6 +104,8 @@ Lightroom への校正（round 32）の前後を `paired`（同じ入力で前�
 
 校正後はどの入力でも CPU 時間が減る。主な理由は raster のカラー NR を 17×17 の guided filter（ProPhoto への往復つき）から σ 0.9 の色比のぼかし（3 チャンネルの Gaussian 1 回）にしたことと、輝度 NR の log / exp を √ と二乗にしたこと。シャープは Gaussian 1 回（マスクがあるときだけ 2 回追加）。JPEG の確定描画（Final 2048、ディテール全部）は CPU 約 0.46〜0.65 秒で 1 秒以内を保つ。以前（2026-10-21 午前、負荷のやや低い状態の 5 回の中央値）の記録は JPEG 2560 で開いたとき detailFinal 750ms・輝度 NR の drag 165ms だった。
 
+上の表は rebase 前（db0f842 基準）の build で測った。detail を v6 にした rebase 後の build（`run` を 3 回、load average 55〜75）でも JPEG の detailFinal 2048 は 2560 で開いたとき 420〜428ms、原寸で開いたとき 570〜623ms、輝度 NR の drag 1280 は 73〜76ms / 98〜125ms だった。
+
 判断: JPEG / PNG はディテールを全部当てても Final 2048 が 1 秒以内なので、drag 中も NR を描く。RAW の確定描画（Final 2048）は、ディテールを使ったときだけ約 1.4〜2.3 秒になる（旧 RAW は既存の約 0.8 秒から約 1.4 秒、signed RAW は既存の時点で約 2 秒で、NR を変えた直後は master を作り直す。開いた直後の初回は最大約 2.9 秒）。owner 判断により RAW でも群を出し、ディテールを 0 以外にした写真だけ確定描画で当てる（drag 中は NR も計算し直さない。上の表）。ディテールを使わない写真の描画は変わらない。
 
 エディタのプレビュー（長辺 1280px）の流れでの実測（同じ合成チャート、`develop-detail-preview.ts` を通して wasm へ送る。3 回の中央値、ms。負荷のある状態）:
