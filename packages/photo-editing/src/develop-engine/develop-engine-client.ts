@@ -12,6 +12,12 @@ import {
   type DevelopSettingsXmp,
   type DevelopXmpGroup,
 } from "./develop-engine-results";
+import {
+  developDetailNoise,
+  interactiveWorkingCopySettings,
+  withoutInertDetail,
+  type DevelopDetailNoise,
+} from "./develop-detail-preview";
 import { readDevelopSettings, type DevelopSettings } from "./develop-settings";
 
 export {
@@ -44,9 +50,10 @@ export {
  * - 効果（白黒・周辺光量補正・粒子。E1 移行元設計）は口が増えないので、Worker が起こした wasm に効果のある設定（`v: 3`）を
  *   読めるか確かめさせる（`supportsEffects()`。版の比較ではない: 画面と wasm の公開が前後すると、効果のある設定を保存したのに
  *   描けない写真ができる。移行元設計）。読めない wasm では、画面は項目を出さない
- * - ディテール（シャープ・ノイズ軽減。v5。Issue #32）も同じく `supportsDetail()` で確かめる。16bit PNG の作業コピー（RAW など）を
- *   開いている間は、描画・見本・色取得に送る設定から `detail` を外す（wasm の final 長辺 2048px が 1 秒を超えるため。書き出しは外さない。
- *   `docs/detail-processing.md`）
+ * - ディテール（シャープ・ノイズ軽減。v5。Issue #32）も同じく `supportsDetail()` で確かめる。量の無い `detail` は外して送る。
+ *   16bit PNG の作業コピー（RAW など）を開いている間は、drag 中（interactive）の描画で NR を計算し直さない（旧 RAW・raster は
+ *   `detail` を外し、signed RAW は直前の確定描画の NR のまま。`develop-detail-preview.ts`・`docs/detail-processing.md`）。確定描画・
+ *   見本・色取得・書き出しは今の値を送る
  * - `withCaptureExif`（書き出しの JPEG に撮影日時の EXIF を付ける。F7b 移行元設計）は `exportJpeg` と同じく捨てずに順に処理し、
  *   書き出しとして数える（`dispose` は付け終えるまで待つ）。wasm に無ければ reject（呼び出し側は EXIF 無しで続ける）
  * - プリセットの適用量（`applyPreset`）・今の補正の書き出し（`settingsToXmp`）・見本（`renderPresetThumbnail`）は、口が wasm に
@@ -384,15 +391,21 @@ export function createDevelopEngine(options: CreateDevelopEngineOptions = {}): D
   let effectsSupported = false;
   let colorPointsSupported = false;
   let detailSupported = false;
-  // 開いている写真のプレビュー（描画・見本・色取得）にディテール（シャープ・ノイズ軽減。Issue #32）を描くか。16bit PNG の作業コピー
-  // （RAW など）は wasm の final（長辺 2048px）が 1 秒を超える（docs/detail-processing.md の実測）ので、Issue の方針どおり
-  // プレビューでは描かず、書き出し（`exportJpeg` / `exportWorkingCopyJpeg`）だけが描く。JPEG / PNG（`open`）は描く
-  let previewDetail = true;
-  const previewSettingsJson = (settings: object): string => {
-    if (previewDetail || !("detail" in settings)) return JSON.stringify(settings);
-    const { detail: _detail, ...rest } = settings as Record<string, unknown>;
-    return JSON.stringify(rest);
+  // ディテール（シャープ・ノイズ軽減。Issue #32）の送り方（develop-detail-preview.ts）。16bit PNG の作業コピー（RAW など）を開いて
+  // いる間は、drag 中の描画で NR を計算し直さない（signed RAW は直前の確定描画の NR のまま）。確定描画・見本・色取得・書き出しは
+  // 今の値を送る。量の無い detail はどの写真でも外す
+  let workingCopyOpened = false;
+  let committedNoise: DevelopDetailNoise | null = null;
+  const previewSettingsJson = (settings: object, interactive: boolean): string => {
+    const record = settings as Record<string, unknown>;
+    if (!workingCopyOpened || !interactive) {
+      const sent = withoutInertDetail(record);
+      if (workingCopyOpened) committedNoise = developDetailNoise(sent);
+      return JSON.stringify(sent);
+    }
+    return JSON.stringify(interactiveWorkingCopySettings(record, committedNoise));
   };
+  const finalSettingsJson = (settings: object): string => JSON.stringify(withoutInertDetail(settings as Record<string, unknown>));
   // プリセットの適用量・書き出し・見本の口が wasm にある（`ready` の応答で分かる）
   let presetAmountSupported = false;
   let settingsToXmpSupported = false;
@@ -658,7 +671,7 @@ export function createDevelopEngine(options: CreateDevelopEngineOptions = {}): D
         message: {
           type: "sampleColor",
           id,
-          settingsJson: previewSettingsJson(settings),
+          settingsJson: finalSettingsJson(settings),
           maxDimension: options.maxDimension,
           x: options.x,
           y: options.y,
@@ -718,7 +731,8 @@ export function createDevelopEngine(options: CreateDevelopEngineOptions = {}): D
     async open(bytes, workingMaxDimension) {
       dropRenders();
       cancelWarmAutoSettings();
-      previewDetail = true;
+      workingCopyOpened = false;
+      committedNoise = null;
       const response = await request("open", (id) => ({
         message: { type: "open", id, bytes, workingMaxDimension },
         transfer: [bytes],
@@ -731,7 +745,7 @@ export function createDevelopEngine(options: CreateDevelopEngineOptions = {}): D
       return enqueueRender(
         {
           kind: "render",
-          settingsJson: previewSettingsJson(settings),
+          settingsJson: previewSettingsJson(settings, renderOptions.interactive),
           maxDimension: renderOptions.maxDimension,
           interactive: renderOptions.interactive,
         },
@@ -745,7 +759,7 @@ export function createDevelopEngine(options: CreateDevelopEngineOptions = {}): D
       }
       // 見本は丁寧に描く（interactive は Worker へ送らない）。編集の描画を待たせない preview の枠
       return enqueueRender(
-        { kind: "thumbnail", settingsJson: previewSettingsJson(settings), maxDimension, interactive: false },
+        { kind: "thumbnail", settingsJson: finalSettingsJson(settings), maxDimension, interactive: false },
         "preview",
       );
     },
@@ -891,7 +905,8 @@ export function createDevelopEngine(options: CreateDevelopEngineOptions = {}): D
     async openWorkingCopy(png, metaJson) {
       dropRenders();
       cancelWarmAutoSettings();
-      previewDetail = false;
+      workingCopyOpened = true;
+      committedNoise = null;
       const response = await request("openWorkingCopy", (id) => ({
         message: { type: "openWorkingCopy", id, png, metaJson },
         transfer: [png],

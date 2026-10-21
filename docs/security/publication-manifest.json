@@ -269,7 +269,8 @@
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
         "Issue #30 Oklch色ミキサーとengine 10/11対応を反映",
         "Issue 13 progressive RAW open implementation",
-        "Issue #32 detail capabilityと作業コピーのプレビューからdetailを外す挙動を検証する"
+        "Issue #32 detail capabilityと作業コピーのプレビューからdetailを外す挙動を検証する",
+        "owner判断2026-10-21: 作業コピーのdrag中・確定描画・detail無しの設定JSONを検証する"
       ]
     },
     {
@@ -286,7 +287,8 @@
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
         "Issue #30 Oklch色ミキサーとengine 10/11対応を反映",
         "Issue 13 progressive RAW open implementation",
-        "Issue #32 supportsDetailと作業コピーのプレビューでdetailを外す方針を追加"
+        "Issue #32 supportsDetailと作業コピーのプレビューでdetailを外す方針を追加",
+        "owner判断2026-10-21: 作業コピーはdrag中だけNRを計算し直さず、確定描画・見本・色取得は今のdetailを送る"
       ]
     },
     {
@@ -944,7 +946,8 @@
         "Issue #13の段階表示、provisional draft、canonical handoffと書き出し境界を実装。",
         "Issue 13 progressive RAW open implementation",
         "右パネルの補正・プリセット面の切替と段階RAW openを統合し、暫定中の見本生成停止を保つ。",
-        "Issue #32 ディテールを出す入力とPC右パネルの項目を決める"
+        "Issue #32 ディテールを出す入力とPC右パネルの項目を決める",
+        "owner判断2026-10-21: RAWを含むwasmの写真すべてにディテールの群を出す"
       ]
     },
     {
@@ -1114,7 +1117,8 @@
         "可変高のフッター行と中幅画面の折返しに対応する。",
         "niho-photo#36 ヒストグラムとクリップ表示とJキーを組み込み。",
         "閲覧専用のヒストグラムで、Jキーを操作ボタンと同じ条件で有効にする。",
-        "Issue #32 v5を読めるwasmのJPEG/PNGだけにディテールの群を出す"
+        "Issue #32 v5を読めるwasmのJPEG/PNGだけにディテールの群を出す",
+        "owner判断2026-10-21: RAWを含むwasmの写真すべてにディテールの群を出す"
       ]
     },
     {
@@ -2101,7 +2105,8 @@
         "公開repoでの機能変更（#54）: 1 枚の面の下にフィルムストリップを置き、切り抜き・背景除去の間は ← → で写真を替えないようにした。",
         "部分補正（マスク）#65: XMP未書き込み項目に部分補正の表示名を追加",
         "niho-photo#36 ヒストグラムと黒つぶれ白飛び表示の文言を追加。",
-        "Issue #32 ディテールの群・項目・説明とXMPの細かな項目の名前を足す"
+        "Issue #32 ディテールの群・項目・説明とXMPの細かな項目の名前を足す",
+        "owner判断2026-10-21: RAWなどはノイズ軽減も指を離すと反映する旨を説明に足す"
       ]
     },
     {
@@ -9635,7 +9640,7 @@
     {
       "path": "docs/detail-processing.md",
       "sha256": "e807979425bf205ef0c800bd16ba76dc18abecdd8099f71de73eddee33c83fae",
-      "origin": "Issue #32でNIHOが独立作成したdetail処理・保存契約・合成検証または設計文書。実写真・第三者コードは含まない。"
+      "origin": "Issue #32でNIHOが独立作成したdetail処理・保存契約・合成検証または設計文書。実写真・第三者コードは含まない。\n変更理由: owner判断2026-10-21: RAWでも群を出し、作業コピーのdrag中の送り方と1280px確定描画の実測を記録する"
     },
     {
       "path": "packages/develop-engine/crates/niho-develop/src/detail.rs",
@@ -9670,7 +9675,7 @@
     {
       "path": "packages/photo-editing/src/photo-editing-detail.ts",
       "sha256": "cd32ae9da11f5ad862c0088ba99413518ed81548ad7b9e1a7860c36ea58b2b4d",
-      "origin": "Issue #32でNIHOが独立作成したv5 detail（シャープ・ノイズ軽減）の画面の読み書き。実データを含まない。"
+      "origin": "Issue #32でNIHOが独立作成したv5 detail（シャープ・ノイズ軽減）の画面の読み書き。実データを含まない。\n変更理由: signed RAWの数式の一覧をdevelop-detail-previewと共有する"
     },
     {
       "path": "packages/photo-editing/src/photo-editing-detail.test.ts",
@@ -9680,7 +9685,17 @@
     {
       "path": "packages/photo-editing/src/editor/photo-editing-adjustment-controls-detail.test.tsx",
       "sha256": "356d178bbaa602f1a5665b20fdd8fcd997ca32ef3d85cc33498a6f73176493f3",
-      "origin": "Issue #32でNIHOが独立作成した補正パネルのディテールの群の回帰。合成の設定だけを使う。"
+      "origin": "Issue #32でNIHOが独立作成した補正パネルのディテールの群の回帰。合成の設定だけを使う。\n変更理由: owner判断2026-10-21: RAWで群が出ることと旧カラーNRの表示・説明を検証する"
+    },
+    {
+      "path": "packages/photo-editing/src/develop-engine/develop-detail-preview.ts",
+      "sha256": "e2aa6e75d84df199ab3672ffa275b3aa6e6aaa17de41d38037272d7516e36b3f",
+      "origin": "Issue #32 owner判断2026-10-21でNIHOが独立作成した、ディテールをwasmのプレビューへ送る規則（作業コピーのdrag中のNR・量の無いdetail）。実データを含まない。"
+    },
+    {
+      "path": "packages/photo-editing/src/develop-engine/develop-detail-preview.test.ts",
+      "sha256": "1ba38ac3f0f5e9fe52b908f5d141bc02b9432fcf4cfc0858ffd15b9d8c9a9f9e",
+      "origin": "Issue #32 owner判断2026-10-21でNIHOが独立作成した、プレビューへの送り方の回帰。合成の設定だけを使う。"
     }
   ],
   "excludedSources": [

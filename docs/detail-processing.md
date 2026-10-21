@@ -38,7 +38,7 @@ Session の再利用単位は immutable source、NR 量、working size、geometr
 
 ### drag と final
 
-Interactive（つまみを動かしている間）はシャープを省き、Final（離した後・書き出し）は float plane から必ず確定する（Issue の「drag は final だけ」）。NR は Interactive でも描く。合成チャートの全入力で、Interactive のシャープあり / なしが同じ画素になり、Final でエッジの鋭さが上がることをテストで固定する（`tests/detail_effect.rs`）。
+Interactive（つまみを動かしている間）はシャープを省き、Final（離した後・書き出し）は float plane から必ず確定する（Issue の「drag は final だけ」）。crate は NR を Interactive でも描く（RAW などの作業コピーで drag 中に NR を描き直さないのは画面側の送り方。下の「プレビューへの送り方」）。合成チャートの全入力で、Interactive のシャープあり / なしが同じ画素になり、Final でエッジの鋭さが上がることをテストで固定する（`tests/detail_effect.rs`）。
 
 ## XMP（Lightroom のディテール）
 
@@ -72,9 +72,22 @@ Photo Bench はどれも描かなかったので、Photo Bench の level は uns
 
 - PC の右パネルの効果の後ろに「ディテール」の群を足す。並びは Lightroom と同じ: シャープ・半径・ディテール・マスク・ノイズ軽減・カラーノイズの軽減。半径は 0.1 刻みで小数 1 桁、ほかは整数。見出し・ⓘ・スライダーは既存の群と同じ部品（押せる高さ 44px）。
 - スマホの面（道具の帯）にはまだ出さない。帯は今の 7 つの道具（プリセット・自動・ライト・カラー・効果・色ミキサー・切り抜き）で幅いっぱいで、8 つ目を足すと 360〜390px で名前が重なり端が欠ける（同じ CSS の帯で実測: 375px で隣との隙間が -10.5px、430px で +4.5px）。効果と同じく、帯の作り替えと合わせて足す。
-- シャープが 0 の間は半径・ディテール・マスクを薄くして押せなくする（行は出したまま）。群名の横の ⓘ に項目ごとの 1 行の説明（シャープは「指を離すと反映します」）。
-- `v: 5` を読める wasm（Worker の `validateSettings` で最小の v5 を確かめる `ready.detail`）で開いた写真だけに出す。
-- ブラウザ（wasm）で描くプレビューの final が 1 秒の目安を超える入力（下の実測）は、Issue の方針どおりプレビューでは描かず書き出しだけが描く: 16bit PNG の作業コピー（RAW・HEIC / TIFF・大きな PNG）を `openWorkingCopy` で開いている間、engine client は描画・見本・色取得に送る設定から `detail` を外し、`exportWorkingCopyJpeg` / `exportJpeg` は外さない。補正の面もその間はディテールの群を出さない（JPEG / PNG のオリジナルと JPEG の作業コピーだけに出す）。RAW を開いている途中の仮の画も出さない。
+- シャープが 0 の間は半径・ディテール・マスクを薄くして押せなくする（行は出したまま）。群名の横の ⓘ に項目ごとの 1 行の説明。シャープは「指を離すと反映します」、ノイズ軽減・カラーノイズの軽減は JPEG と挙動が違う所だけ「RAW などは指を離すと反映します」を足す。
+- `v: 5` を読める wasm（Worker の `validateSettings` で最小の v5 を確かめる `ready.detail`）で開いた写真に出す。RAW・HEIC / TIFF の作業コピーや、RAW を開いている途中の仮の画にも出す（owner 判断 2026-10-21）。
+
+### プレビューへの送り方（owner 判断 2026-10-21）
+
+「RAW でも群を出す。ディテールを 0 以外にした写真だけ、drag 後の確定描画で当てる（drag 中はシャープを省く）。使わない写真の速さは今のまま」に従い、engine client（`develop-engine-client.ts` と `develop-detail-preview.ts`）が wasm へ送る設定を次のように決める。
+
+| 入力 | drag 中（Interactive） | 確定描画（Final）・見本・色取得・書き出し |
+| --- | --- | --- |
+| JPEG / PNG・JPEG の作業コピー（`open`） | 今の値（NR を描く。シャープは crate が省く） | 今の値 |
+| 旧 RAW・raster の作業コピー（16bit PNG） | `detail` を外す（NR もシャープも描かない） | 今の値 |
+| signed RAW の作業コピー（niho-3/4/5/7/11） | 直前の確定描画の NR のまま（シャープは crate が省く） | 今の値 |
+
+- 量の無い `detail`（シャープ 0・輝度 0・カラーの明示なし）はどの写真でも外して送る。ディテールを使わない写真は今までと同じ設定の JSON・同じ経路・同じ速さで描く。
+- signed RAW は NR が原寸の canonical master の準備に入っている。drag 中に NR を外すと、master の key が変わって確定描画のたびに master を作り直す（実測で指を離すたびに 1.4〜3.1 秒）。直前の確定描画の NR のまま送ると、同じ master を使い回すので、ディテールを使っていない写真と同じ速さになる。NR を動かした後の確定描画では、今の NR で master を作り直す。
+- drag 中の見た目が確定描画で変わるのは許容する（RAW などの NR とシャープは指を離すと反映）。
 
 ## 性能（Mac Studio M1 Max・wasm・Node 24 単スレッド）
 
@@ -89,7 +102,20 @@ Photo Bench はどれも描かなかったので、Photo Bench の level は uns
 
 段ごとの目安（Final 2048、ディテールの各段を足したときの増分）: JPEG ではシャープ 約 125ms・輝度 NR 約 135ms・カラー NR 約 445ms、旧 RAW ではシャープ 約 90ms・輝度 NR 約 150ms・カラー NR 約 360ms。signed RAW は NR が canonical master の準備に入るので、NR を変えるたびに master を作り直す（既存の Final 2048 も約 2 秒で、ディテールで目立って増えない）。
 
-判断: JPEG / PNG はディテールを全部当てても Final 2048 が 1 秒以内なので、ブラウザでもプレビューに描く。RAW 作業コピーは旧 RAW で 1 秒を超え（既存の約 0.8 秒から約 1.4 秒）、signed RAW は既存の時点で約 2 秒のため、Issue の方針どおりブラウザのプレビューでは描かず書き出しだけが描く（native の原寸書き出し `niho-develop-render` は常に描く）。raster 作業コピーは未実測なので同じく書き出しだけにする。RAW のプレビューで描くには、signed RAW の master 準備と CNR の高速化が先に要る。
+判断: JPEG / PNG はディテールを全部当てても Final 2048 が 1 秒以内なので、drag 中も NR を描く。RAW の確定描画（Final 2048）は、ディテールを使ったときだけ約 1.4〜2.3 秒になる（旧 RAW は既存の約 0.8 秒から約 1.4 秒、signed RAW は既存の時点で約 2 秒で、NR を変えた直後は master を作り直す。開いた直後の初回は最大約 2.9 秒）。owner 判断により RAW でも群を出し、ディテールを 0 以外にした写真だけ確定描画で当てる（drag 中は NR も計算し直さない。上の表）。ディテールを使わない写真の描画は変わらない。
+
+エディタのプレビュー（長辺 1280px）の流れでの実測（同じ合成チャート、`develop-detail-preview.ts` を通して wasm へ送る。3 回の中央値、ms。負荷のある状態）:
+
+| 入力 | 動かす項目 | ディテール | drag 1 コマ | 指を離した後の確定描画 |
+| --- | --- | --- | --- | --- |
+| signed RAW | コントラスト | なし | 85 | 849 |
+| signed RAW | コントラスト | あり（シャープ 70・輝度 40・カラー 25） | 88 | 837 |
+| signed RAW | ノイズ軽減 | あり | 40 | 1046（最小 708） |
+| 旧 RAW | コントラスト | なし | 65 | 383 |
+| 旧 RAW | コントラスト | あり | 64 | 508 |
+| 旧 RAW | ノイズ軽減 | あり | 43 | 478 |
+
+以前（drag 中も NR を描き直す）は signed RAW のノイズ軽減の drag が 1 コマ約 670ms だった。
 
 再現: `cargo +1.98.1 build --locked --release --config packages/develop-engine/.cargo/config.toml --manifest-path packages/develop-engine/Cargo.toml --target wasm32-unknown-unknown -p niho-develop-wasm` と `wasm-bindgen --target web` の出力を `--pkg` に渡し、`node scripts/bench-session.mjs run --pkg <dir> --cases <cases.json> --case <id> --scenario detail`。cases.json は作業コピー（`png` / `meta`）か JPEG（`raster` / `workingMaxDimension`）を指す。
 

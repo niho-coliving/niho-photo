@@ -10,7 +10,7 @@ import { PHOTO_EDITING_BASE_CONTROL_KEYS, type PhotoEditingControlKey } from "..
 import { PHOTO_EDITING_DETAIL_KEYS } from "../photo-editing-detail";
 import { PHOTO_EDITING_EFFECT_KEYS } from "../photo-editing-effects";
 
-import { browserAdjustmentKeys, detailPreviewable } from "./browser-photo-editing-model";
+import { browserAdjustmentKeys, detailControlsAvailable } from "./browser-photo-editing-model";
 import { PhotoEditingAdjustmentGroups, type PhotoEditingSliderPhase } from "./photo-editing-adjustment-controls";
 
 /**
@@ -138,14 +138,26 @@ describe("ディテールの群は opt-in", () => {
     expect(detailOnly).toEqual(expect.arrayContaining([...PHOTO_EDITING_DETAIL_KEYS]));
   });
 
-  it("プレビューに描ける入力（JPEG / PNG のオリジナル・JPEG の作業コピー）だけに出す。RAW などの 16bit 作業コピーは書き出しだけ", () => {
+  it("RAW を含む wasm で開いた写真（オリジナル・作業コピー・RAW を開いている途中の仮の画）のどれにも出す（owner 判断 2026-10-21）", () => {
     const file = new File([], "a.jpg");
     const workingCopy = { kind: "workingCopy" as const, bytes: new ArrayBuffer(0), metaJson: "{}", baseVersion: "raw-apple.1" };
-    expect(detailPreviewable({ kind: "original", file })).toBe(true);
-    expect(detailPreviewable({ ...workingCopy, encoding: "jpeg8" })).toBe(true);
-    expect(detailPreviewable({ ...workingCopy, encoding: "png16" })).toBe(false);
-    expect(detailPreviewable({ kind: "provisional", file, contentSha256: "0", width: 1, height: 1 })).toBe(false);
-    expect(detailPreviewable(null)).toBe(false);
+    expect(detailControlsAvailable({ kind: "original", file })).toBe(true);
+    expect(detailControlsAvailable({ ...workingCopy, encoding: "jpeg8" })).toBe(true);
+    expect(detailControlsAvailable({ ...workingCopy, encoding: "png16" })).toBe(true);
+    expect(detailControlsAvailable({ kind: "provisional", file, contentSha256: "0", width: 1, height: 1 })).toBe(true);
+    expect(detailControlsAvailable(null)).toBe(false);
+  });
+
+  it("signed RAW の写真でも群が出て、カラーノイズの軽減は描いている旧の値（50 で頭打ち）を見せる", async () => {
+    const raw = { ...NEUTRAL, engine: "niho-11", look: "niho-standard-5", colorNoiseReduction: 25 };
+    await render({ initial: raw, visibleKeys: browserAdjustmentKeys({ effects: true, detail: true }) });
+    expect(groupTitles()).toContain("ディテール");
+    expect(slider("ディテール", "カラーノイズの軽減").value).toBe("25");
+    // 旧の値と同じに戻すと明示を消す（R209 と同じ画素・detail ごと消えて v5 にしない）
+    await moveSlider(slider("ディテール", "カラーノイズの軽減"), "10");
+    expect(changes.at(-1)?.settings.detail).toMatchObject({ colorNoiseReduction: 10 });
+    await moveSlider(slider("ディテール", "カラーノイズの軽減"), "25");
+    expect(changes.at(-1)?.settings).not.toHaveProperty("detail");
   });
 });
 
@@ -188,5 +200,7 @@ describe("ディテールのスライダー", () => {
     const lines = Array.from(list?.querySelectorAll("li") ?? []).map((item) => item.textContent);
     expect(lines).toHaveLength(6);
     expect(lines[0]).toBe("シャープ輪郭をくっきりさせます。指を離すと反映します");
+    // RAW などの作業コピーは NR も drag 中に反映しない（JPEG と違う所だけ書く）
+    expect(lines[4]).toBe("ノイズ軽減明るさのざらつきを滑らかにします。RAW などは指を離すと反映します");
   });
 });

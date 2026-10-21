@@ -279,13 +279,12 @@ const BROWSER_BASE_DETAIL_ADJUSTMENT_KEYS: ReadonlyArray<PhotoEditingControlKey>
 ];
 
 /**
- * ディテール（シャープ・ノイズ軽減。Issue #32）をプレビューに描ける入力か。wasm の final（長辺 2048px）が 1 秒に収まると実測した
- * JPEG / PNG のオリジナルと JPEG の作業コピー（`open` で開く）だけ。16bit PNG の作業コピー（RAW など）・RAW を開いている途中の仮の画は、
- * プレビューでは描かず書き出しだけが描く（engine の `openWorkingCopy` の後の描画はディテールを外す）ので、補正の面にも出さない。
+ * ディテール（シャープ・ノイズ軽減。Issue #32）の群を出す入力か。wasm で開いた写真はどれも出す（owner 判断 2026-10-21: RAW でも
+ * 出す）。JPEG / PNG は drag 中も NR を描き、16bit PNG の作業コピー（RAW・HEIC / TIFF など）は drag 中は NR も計算し直さず、指を
+ * 離した後の確定描画で当てる（engine client の `develop-detail-preview.ts`）。ディテールを 0 以外にしない写真の描画は変わらない。
  */
-export function detailPreviewable(input: DevelopSourceInput | null | undefined): boolean {
-  if (!input) return false;
-  return input.kind === "original" || (input.kind === "workingCopy" && input.encoding === "jpeg8");
+export function detailControlsAvailable(input: DevelopSourceInput | null | undefined): boolean {
+  return input !== null && input !== undefined;
 }
 
 /**

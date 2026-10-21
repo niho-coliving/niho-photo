@@ -83,7 +83,8 @@ export const PHOTO_EDITING_GRAIN_DESCRIPTION = "フィルムのような粒を�
 
 /**
  * ディテール（シャープ・ノイズ軽減。Issue #32）。v5 の `detail` を読める wasm で開いた写真にだけ、効果の後ろの群として出す。名前は
- * Lightroom のディテールと同じ。シャープは書き出しとつまみを離した後の表示で確定し、動かしている間は反映しない（説明は ⓘ に出す）。
+ * Lightroom のディテールと同じ。シャープは書き出しとつまみを離した後の表示で確定し、動かしている間は反映しない。RAW などの作業
+ * コピーは、ノイズ軽減も動かしている間は反映しない（JPEG / PNG は反映する）。説明は ⓘ に出す。
  */
 export const PHOTO_EDITING_DETAIL_GROUP_TITLE = "ディテール";
 export const PHOTO_EDITING_DETAIL_INFO_LABEL = "ディテールの説明";
@@ -97,8 +98,8 @@ export const PHOTO_EDITING_SHARPEN_DESCRIPTION = "輪郭をくっきりさせま
 export const PHOTO_EDITING_SHARPEN_RADIUS_DESCRIPTION = "くっきりさせる輪郭の幅です";
 export const PHOTO_EDITING_SHARPEN_DETAIL_DESCRIPTION = "細かな模様まで強めるかを決めます";
 export const PHOTO_EDITING_SHARPEN_MASKING_DESCRIPTION = "空や肌などの平らな所にはかけず、輪郭だけにかけます";
-export const PHOTO_EDITING_LUMINANCE_NOISE_DESCRIPTION = "明るさのざらつきを滑らかにします";
-export const PHOTO_EDITING_COLOR_NOISE_DESCRIPTION = "色のまだらなざらつきを抑えます";
+export const PHOTO_EDITING_LUMINANCE_NOISE_DESCRIPTION = "明るさのざらつきを滑らかにします。RAW などは指を離すと反映します";
+export const PHOTO_EDITING_COLOR_NOISE_DESCRIPTION = "色のまだらなざらつきを抑えます。RAW などは指を離すと反映します";
 
 /** スライダーの右の値を押して開く、値の直接入力の欄の読み上げ名。 */
 export function photoEditingValueInputLabel(label: string): string {

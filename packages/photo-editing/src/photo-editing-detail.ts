@@ -1,5 +1,7 @@
 import type { PhotoEditingSettings } from "./photo-editing-types";
 
+import { SIGNED_RAW_DETAIL_ENGINES } from "./develop-engine/develop-detail-preview";
+
 import {
   PHOTO_EDITING_COLOR_NOISE_DESCRIPTION,
   PHOTO_EDITING_COLOR_NOISE_LABEL,
@@ -129,8 +131,6 @@ const SHARPENING_COMPANION_KEYS: ReadonlySet<PhotoEditingDetailKey> = new Set<Ph
   "sharpenMasking",
 ]);
 
-/** 旧 top-level の `colorNoiseReduction` を描く signed RAW の数式（crate の `renders_legacy_raw_cnr`）。 */
-const LEGACY_RAW_COLOR_NOISE_ENGINES: ReadonlySet<string> = new Set(["niho-3", "niho-4", "niho-5", "niho-7", "niho-11"]);
 /** 旧の値は R209 の経路で 50 まで効く。 */
 const LEGACY_RAW_COLOR_NOISE_MAX = 50;
 
@@ -168,7 +168,7 @@ function readDetail(settings: PhotoEditingSettings): DetailValue {
 
 /** `detail` に明示の値が無いときに描くカラーノイズの軽減（signed RAW は旧の値・50 で頭打ち、ほかは 0）。 */
 function inheritedColorNoiseReduction(settings: PhotoEditingSettings): number {
-  if (typeof settings.engine !== "string" || !LEGACY_RAW_COLOR_NOISE_ENGINES.has(settings.engine)) return 0;
+  if (typeof settings.engine !== "string" || !SIGNED_RAW_DETAIL_ENGINES.has(settings.engine)) return 0;
   return Math.min(Math.max(finiteOr(settings.colorNoiseReduction, 0), 0), LEGACY_RAW_COLOR_NOISE_MAX);
 }
 

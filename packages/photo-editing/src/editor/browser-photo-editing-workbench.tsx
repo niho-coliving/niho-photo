@@ -118,7 +118,7 @@ import {
   browserAdjustmentKeys,
   browserPhotoTileUrl,
   cloudKey,
-  detailPreviewable,
+  detailControlsAvailable,
   isBrowserItemInPlace,
   isWideWindow,
   type BrowserItem,
@@ -543,14 +543,13 @@ export function BrowserPhotoEditingWorkbench(props: {
     engineRef: develop.engineRef,
     photoKey: wasmPhotoKey,
   });
-  // ディテール（シャープ・ノイズ軽減。v: 5。Issue #32）を描ける wasm か（同じく 1 回確かめる）。RAW などの作業コピーはプレビューに
-  // 描かない（書き出しだけ）ので出さない
+  // ディテール（シャープ・ノイズ軽減。v: 5。Issue #32）を描ける wasm か（同じく 1 回確かめる）。RAW を含む wasm の写真に出す
   const detailWasmSupported = useBrowserPhotoDetailSupport({
     mountedRef,
     engineRef: develop.engineRef,
     photoKey: wasmPhotoKey,
   });
-  const detailSupported = detailWasmSupported && detailPreviewable(opened?.input);
+  const detailSupported = detailWasmSupported && detailControlsAvailable(opened?.input);
   // プリセットの適用量・今の補正の保存・見本を出せる wasm か（同じく 1 回確かめて覚える。右パネルを閉じても行の形を変えない）
   const presetSupport = useBrowserPhotoPresetSupport({ mountedRef, engineRef: develop.engineRef, photoKey: wasmPhotoKey });
   const mobilePresetThumbnails = useBrowserPresetThumbnails({
