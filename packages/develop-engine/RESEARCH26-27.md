@@ -143,9 +143,9 @@ niho-10（H/S は niho-6 と同じ）の応答はこの 57 場面で学習済み
 
 封印済みの既存 independent は使わない（開かない）。owner が新しく撮る。
 
-1. 撮る場面: 夜（屋外の夜景・街灯、band dark = ISO > 640）、暗い室内（band dark）、明るい iPhone（iPhone・band bright = ISO ≤ 100、明るい窓や空を含む）を**各 8 場面以上**。教師（teachers / teachers2）と封印済み independent のどの撮影日とも重ならない別の撮影日、1 撮影日 1 場面。選ぶのは撮影日・機種・ISO の metadata だけで、画素を見て選ばない。入力の 90% 以上が白飛び（8bit で 250 以上）の場面は除外する（既存の決まり）。案A の教師を撮る場合も、独立評価と撮影日を重ねない。
+1. 撮る場面: 夜（屋外の夜景・街灯、band dark = ISO > 640）、暗い室内（band dark）、明るい iPhone（iPhone・band bright = ISO ≤ 100、明るい窓や空を含む）を**各 8 場面以上**（夜と暗い室内はどちらも band dark の部分集合に入る）。昼光（カメラの明・中、iPhone の中）も悪化の確認のため 8 場面以上撮る（`holdout` は 3 つの部分集合それぞれに白飛び除外後 8 場面以上を要求する）。教師（teachers / teachers2）と封印済み independent のどの撮影日とも重ならない別の撮影日、1 撮影日 1 場面。選ぶのは撮影日・機種・ISO の metadata だけで、画素を見て選ばない。入力の 90% 以上が白飛び（8bit で 250 以上）の場面は除外する（既存の決まり）。案A の教師を撮る場合も、独立評価と撮影日を重ねない。
 2. Lightroom の書き出し: `make_lr_p3_jpeg.py` の 22 設定、少なくとも neutral＋preset 3 本（bluesky2 / pastel / colorful）。JPEG 100%・sRGB・フルサイズ・出力シャープ OFF・レンズ補正 OFF。置き方は教師と同じ（`manifest.json`、`inputs/<scene>__neutral.jpg`、`lr-export/<scene>__<variant>.jpg`）。写真と書き出しは公開しない。
-3. 凍結の確認: `sourceCommit` と `executableBuildCommit` の crates / `Cargo.lock` が一致し、`sourceCommit` の colorcheck と、freeze に記録した評価スクリプトの SHA-256 が一致することを確認する。`analytic_hs_calibrate` と `analytic_hs_probe` は両方とも凍結記録の SHA-256 に一致するものを使う（`--calibrate` / `--probe` で非公開作業ディレクトリの実行ファイルを指定できる）。`analytic-hs-candidate.json` も file と係数の SHA-256 を照合し、どれかが違えば評価しない。
+3. 凍結の確認: 評価 tool は freeze の `evaluationToolSha256` と一致する版を使う（B1 の freeze では commit `258903e` の `fit_analytic_hs.py`。その後の案C の追加で tool は変わっているので、B1 の独立評価はその commit を checkout して行う）。`sourceCommit` と `executableBuildCommit` の crates / `Cargo.lock` が一致し、`sourceCommit` の colorcheck と、freeze に記録した評価スクリプトの SHA-256 が一致することを確認する。`analytic_hs_calibrate` と `analytic_hs_probe` は両方とも凍結記録の SHA-256 に一致するものを使う（`--calibrate` / `--probe` で非公開作業ディレクトリの実行ファイルを指定できる）。`analytic-hs-candidate.json` も file と係数の SHA-256 を照合し、どれかが違えば評価しない。
 4. 実行は 1 回だけ: `python3 packages/develop-engine/tools/calibrate/fit_analytic_hs.py --repo <checkout> --work <新しい非公開ディレクトリ> holdout --cohort <新しい撮影> --freeze packages/develop-engine/fixtures/color/review-2026-10-21/analytic-hs-freeze.json --calibrate <保管した analytic_hs_calibrate> --probe <保管した analytic_hs_probe>`。必要な入力・書き出しを確認し、白飛び入力を除いた後に暗所・明るい iPhone・日中の各部分集合が最低 8 場面あることを検査する。不足時は `holdout-started.json` を作らず停止する。条件を満たした場合は、参照を読む前に同 marker を書き、2 回目を拒否する。2048px 描画（A=niho-10、B=候補）→ colorcheck 1500px・blur 2・平坦画素。中立 mean ≤ 2、preset mean ≤ 3、p99 ≤ 8（全件）と JPEG gate（p99 > 8 が 15% 以下）を全体と各部分集合で、niho-10 との対の悪化と一緒に報告する。結果JSONの `verdict` は全体を `all`、部分集合ごとの合否を `bySubset` に出す（`holdout-summary-sanitized.json`）。
 5. 結果を見て係数・式・閾値・場面を変えない。不合格なら候補 B は採用せず、次の候補にはさらに別の独立評価が要る。
 
@@ -166,3 +166,80 @@ python3 $T --repo . --work <private> publish --family B1 --out <summary.json>
 ```
 
 Studio（10 コア、他の計測と同時、`nice -n 10`・4 並列）で oracle 6 分、交差検証 1 時間 45 分、全件 fit 30 分、gate 57 分。残りは owner の撮影後の独立評価 1 回と、案A を選ぶ場合の教師の追加・比較。新しい engine 版としての採用は独立評価の合格が前提で、現時点では行わない。
+
+## 2026-10-21 案C: 写真ごとの強さを niho-6 の 26 特徴から予測する（owner 判断 2026-10-21）
+
+案B の切り分け（写真ごとの定数なら演算子は niho-10 より Lightroom に近い。足りないのは 2 統計 → 強さの写像）を受け、演算子は案B のまま（局所ラプラシアン＋振幅/shift＋色差の指数、残差なし）、写真ごとの 6 値を小さな有界モデルで予測した。封印済みの独立評価セットは開いていない（読んだ画像 0 枚）。[匿名集計](fixtures/color/review-2026-10-21/analytic-hs-teachers-C.json)。
+
+### 形と特徴
+
+- 入力（`photo_features`、39 個）: niho-6 の応答網と同じ 26 特徴（750px の解析画像、σ1 のぼかし後）を写真ごとに要約したもの。平均 log 輝度、7 分位の平均との差、平均との差の画素標準偏差、残り 15 個の画素特徴（色の強さ、4 つの尺度の細部・局所の明るさ・局所の分散、色度）の画素平均と画素標準偏差。露出は平均 log 輝度だけを動かす（R20 と同じ）。
+- 出力（6 個）: ln kH、sH − m、αH、ln kS、sS − q、αS。固定の範囲で頭打ち（kH 0.05..3.5、kS 0.05..2.5、sH − m 0..12、sS − q −4..8、αH 0..1.5、αS 0.5..1.5）。入力は学習写真で標準化して ±3 で切る。niho-10 の網（画素ごとの 26 特徴 → tanh → tanh → softplus）と違い、教師の外側の特徴でも出力は範囲の端で止まる（unit test で検査）。
+- 学習: ① 写真ごとの目標（その写真の単独 H 3 条件・単独 S 3 条件だけで 6 値を当てはめる。データに依らない弱い事前分布つき）→ ② 出力ごとの ridge（λ は学習写真の内側の撮影日 CV で 0.1〜100 から）→ ③ end-to-end の微調整（出力ごとの bias のずれと傾きの倍率の 12 係数を、案B と同じ目的関数で学習写真の全 H/S 11 設定に当てはめる）。
+- 凍結の形は `niho.analytic-hs-candidate.v2`（v1 の係数＋モデル。係数を 12 桁に丸めて digest を安定させる）。案B の v1 の digest と画素は変わらない（B1 の gate の描画とバイト一致を確認）。
+
+### 交差検証の前に固定した規則（commit `7c4f8b5` で push してから実行）
+
+- fold は案B と同じ撮影日 5 fold。目標の回帰・λ の選択・微調整は学習側の写真だけで行う。写真ごとの目標はその写真自身のデータだけで決まり、fold 外の写真の目標は使わない。目的関数は案B と同じ。
+- 採否は gate と同じ測り方の fold 外で判定する。preset の mean と p99 > 8 の件数がどちらも niho-6 の撮影日 CV を下回り、夜・暗い室内（band dark）と明るい iPhone の preset p99 > 8 も、niho-6 CV の同じ部分集合を下回ること。満たさなければ C は凍結しない。
+- niho-6 の撮影日 CV は NIHO6.md R23/R24 の最終候補（LEGACY_SHARE 0.5）を fold ごとに学習し直して描いたもの（同じ 5 fold、2048px、colorcheck 1500・blur 2・平坦画素）。preset 計 2.611 / 26 件、夜・暗所 2.62 / 10 件、明るい iPhone 2.75 / 8 件。preset 3 本と h100・s100・h60s30 の場面ごとの行がある。
+
+### 結果（2048px 描画 → 長辺 1500・blur 2・平坦画素。mean / p99 平均 / p99 最大 / p99 > 8 の件数）
+
+| 設定（57 場面） | niho-6 撮影日 CV | B1 fold 外 | C fold 外 | C in-sample | C fold 外の niho-6 CV 比: mean 悪化件数 / p99 +2 以上 |
+| --- | --- | --- | --- | --- | --- |
+| bluesky2 | 2.26 / 5.12 / 12.95 / 4 | 2.37 / 5.32 / 12.46 / 5 | 2.33 / 5.27 / 12.83 / 3 | 2.24 / 5.09 / 10.91 / 4 | 27 / 3 |
+| pastel | 2.88 / 6.56 / 10.91 / 10 | 2.90 / 6.34 / 12.94 / 7 | 2.92 / 6.65 / 13.24 / 11 | 2.74 / 6.29 / 11.42 / 9 | 27 / 4 |
+| colorful | 2.69 / 6.84 / 21.91 / 12 | 3.04 / 7.83 / 21.94 / 20 | 2.99 / 7.60 / 17.52 / 20 | 2.90 / 7.15 / 13.23 / 21 | 37 / 11 |
+| preset 計（171） | **2.61** / 6.17 / 21.91 / **26** | 2.77 / 6.49 / 21.94 / 32 | **2.75** / 6.51 / 17.52 / **34** | 2.63 / 6.18 / 13.23 / 34 | 91 / 18 |
+| h100 | 2.44 / 8.01 / 31.46 / 24 | 2.95 / 9.60 / 30.04 / 29 | 2.48 / 8.92 / 21.26 / 25 | 2.28 / 8.06 / 19.95 / 24 | 30 / 15 |
+| s100 | 2.03 / 7.37 / 19.23 / 21 | 2.66 / 8.80 / 22.12 / 29 | 2.37 / 8.25 / 19.00 / 22 | 2.18 / 7.72 / 17.38 / 21 | 36 / 15 |
+| h60s30 | 1.52 / 4.40 / 16.77 / 2 | 1.77 / 5.17 / 20.19 / 3 | 1.55 / 5.01 / 15.43 / 6 | 1.43 / 4.49 / 13.76 / 2 | 30 / 7 |
+
+niho-6 CV に行の無い設定（C fold 外 / B1 fold 外 / niho-10 in-sample の mean / p99 > 8）: h30 0.84/1・0.99/1・0.70/0、h60 1.54/7・1.84/7・1.23/1、s30 0.77/0・0.83/0・0.62/0、s60 1.42/6・1.56/7・1.08/2、h100s100 3.33/28・3.75/36・3.11/23。中立は全候補で niho-10 と同一（0.26）。
+
+部分集合の preset 3 本（fold 外、mean / p99 > 8 の件数）:
+
+| 部分集合 | 条件 | niho-6 CV | B1 | C | C の niho-6 CV 比 mean 悪化 / p99 +2 以上 |
+| --- | ---: | --- | --- | --- | --- |
+| 夜・暗い室内 | 69 | 2.62 / 10 | 2.75 / 15 | 2.73 / 16 | 34 / 9 |
+| 明るい iPhone | 54 | 2.75 / 8 | 2.87 / 10 | 2.85 / 10 | 28 / 7 |
+| その他（昼光） | 48 | 2.43 / 8 | 2.69 / 7 | 2.67 / 8 | 29 / 2 |
+
+単独の Highlights は niho-6 CV に並んだ（fold 外 h100: 全体 2.48 対 2.44、夜・暗所 1.59/6 対 1.61/6）。Shadows（s100 2.37 対 2.03）と preset は届かない。
+
+**採否: 不採用（凍結しない）。** 固定した 4 条件はすべて満たさない（preset mean 2.75 ≥ 2.61、p99 > 8 34 ≥ 26、夜・暗所 16 ≥ 10、明るい iPhone 10 ≥ 8）。gate でも fold 外の p99 > 8 が 19.9% で、全件 p99 ≤ 8・JPEG gate の 15% 以下をともに満たさない（preset mean ≤ 3 は満たす）。B1 の凍結は記録として残し、独立評価の手順は B1 のまま変えない。
+
+### 原因の切り分け
+
+1. **写真特徴 → 強さの写像は単独の H では効いた。** fold 外の h100 は B1 2.95 → C 2.48（niho-6 CV 2.44）。案B の 2 統計の限界は、26 特徴の写真要約でおおむね越えられる。
+2. **preset で届かないのは、目標が単独操作の強さだから。** 代理評価で、写真ごとの単独操作の目標をそのまま preset に当てると 171 条件で mean 2.64・p99 > 8 が 43 件、写真自身の preset 3 本で当てはめた定数（in-sample の上限）なら 2.20・11 件（夜・暗所 2.33/7、明るい iPhone 2.17/1、昼光 2.03/3）。演算子は preset でも写真ごとには十分合うが、preset の文脈（露出 +0.37〜0.56、コントラスト・白・黒・パラメトリック・テクスチャ）での最適な強さは単独操作のそれと違い、bias と傾きの倍率 12 係数の end-to-end ではその差を写真ごとに埋められない。C の in-sample でも preset は 2.63・34 件で niho-6 CV に届かない。niho-6 は R23 で preset の文脈の目標（preset と preset_nohs の差）を学習に足している。
+3. **汎化の差は B より大きい。** preset mean は in-sample 2.63 → fold 外 2.75（B1 は 0.03）。57 場面に対して 39 入力 × 6 出力の ridge は、強い正則化でも分散が残る。
+4. Shadows は写真ごとの目標（代理評価で s100 1.57）に比べて予測が弱い（fold 外 2.37）。暗部の強さは写真要約の特徴だけでは決まりにくい。
+
+次に試すなら、写真ごとの目標に preset の文脈（各 preset の写真ごとの最適値、または preset の露出・トーン設定を入力に足す）を含めることだが、本 Issue の範囲では行わない。案A（教師の追加）は C の汎化の差（3）には効く見込みがあるが、目標の文脈の違い（2）は教師を増やしても残る。
+
+### 再現（案C）
+
+```sh
+cargo +1.98.1 build --release --locked --manifest-path packages/develop-engine/Cargo.toml \
+  -p niho-develop --example analytic_hs_calibrate --example analytic_hs_probe
+T=packages/develop-engine/tools/calibrate/fit_analytic_hs.py
+python3 $T --repo . --work <private> targets
+python3 $T --repo . --work <private> cv-c --folds dates
+python3 $T --repo . --work <private> fit-c
+python3 $T --repo . --work <private> gate --family C
+python3 $T --repo . --work <private> preset-oracle
+python3 $T --repo . --work <private> publish-c --out <summary.json> --niho6-cv-rows <private niho-6 CV rows>
+```
+
+実行ファイルは commit `7c4f8b5` の build（`analytic_hs_probe` `7d3c115f…3dda`、`analytic_hs_calibrate` `1e62ea97…d5a5`）。Studio（他の重い計測と同時、load 100 前後、`nice -n 10`・4 並列）で目標 6 分、交差検証 59 分、全件 fit 11 分、gate 47 分、preset の診断 6 分。
+
+## 2026-10-21 案C′: preset の文脈を目標に入れる（owner 判断 2026-10-21、1 回だけ）
+
+案C の原因（写真ごとの目標が単独操作の強さで、preset の文脈での最適な強さと違う）を受けた 1 回だけの試行。届かなければ #26 は niho-10 のままで閉じる。以下は交差検証の前に固定し、この節を含む commit を push してから実行した。
+
+- 演算子・入力特徴・有界出力・end-to-end の微調整・目的関数・fold は案C と同じ。
+- 目標: 写真ごとの 6 値を、その写真の全 H/S 11 設定（preset 3 本は重み 2、単独 H/S と組み合わせは重み 1。全体の目的関数と同じ重み）の損失＋案C と同じ弱い事前分布で、6 値まとめて当てはめる（preset を当てた文脈＝露出・トーン・パラメトリック・テクスチャの後の ΔE。NIHO6.md R23 と同じ考え）。開始点はその写真の案C の目標、評価 150 回。目標はその写真自身のデータだけで決まる。
+- ridge の λ: 汎化を優先して 1〜1000 から（案C は 0.1〜100。in-sample と fold 外の差が 0.12 あった）。
+- 採否（案C と同じ）: gate と同じ測り方の fold 外で、preset の mean と p99 > 8 の件数がどちらも niho-6 の撮影日 CV（2.611、26/171）を下回り、夜・暗い室内（10/69）と明るい iPhone（8/54）の preset p99 > 8 も下回ること。届けば候補C′ として凍結し独立評価の手順へ入れる。届かなければ数値と原因を残して止める。結果を見て規則・係数・式を変えない。
