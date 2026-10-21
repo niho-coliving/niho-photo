@@ -483,7 +483,11 @@ fn failures_are_one_json_line_with_a_fixed_exit_code() {
     let with = |name: &str, body: &str| dir.write(name, body);
     let no_v = with("no-v.json", r#"{"engine":"niho-1"}"#);
     let no_engine = with("no-engine.json", r#"{"v":1}"#);
-    let v5 = with("v5.json", r#"{"v":5,"engine":"niho-1"}"#);
+    let v6 = with("v6.json", r#"{"v":6,"engine":"niho-1"}"#);
+    let masks = with(
+        "masks.json",
+        r#"{"v":5,"engine":"niho-1","masks":[{"id":"m1","kind":"linear","zero":{"x":0.5,"y":0.2},"full":{"x":0.5,"y":0.5},"adjust":{"exposure":-0.7}}]}"#,
+    );
     // A turned crop whose corners do not make a rectangle on this photo.
     let crop = with(
         "crop.json",
@@ -623,7 +627,15 @@ fn failures_are_one_json_line_with_a_fixed_exit_code() {
             "unsupported_settings",
             2,
         ),
-        ("v 5", raster(&v5, &jpeg, &out), "unsupported_settings", 2),
+        ("v 6", raster(&v6, &jpeg, &out), "unsupported_settings", 2),
+        // Saved and valid (v 5), but not drawn until M2 (#66): never a frame
+        // without the mask.
+        (
+            "active local masks",
+            raster(&masks, &jpeg, &out),
+            "unsupported_settings",
+            2,
+        ),
         (
             "turned crop that is not a rectangle",
             raster(&crop, &jpeg, &out),
@@ -740,7 +752,8 @@ fn failures_are_one_json_line_with_a_fixed_exit_code() {
     kept.extend([
         no_v.as_path(),
         no_engine.as_path(),
-        v5.as_path(),
+        v6.as_path(),
+        masks.as_path(),
         crop.as_path(),
         crop_v1.as_path(),
         look.as_path(),

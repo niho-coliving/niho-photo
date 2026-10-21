@@ -21,6 +21,7 @@ pub mod frame;
 pub mod geometry;
 pub mod icc_lut;
 mod jpeg_wb;
+pub mod local_mask;
 pub mod look;
 pub mod lut;
 mod niho3;
@@ -80,6 +81,10 @@ pub enum Error {
     Niho4Prepare(String),
     Niho6Prepare(String),
     Sample(String),
+    /// The settings carry an active local mask (`masks`), which the renderer
+    /// does not draw yet. Failing keeps a render from silently dropping it.
+    // M2 (#66) replaces this
+    MasksNotRendered,
 }
 
 impl fmt::Display for Error {
@@ -98,11 +103,26 @@ impl fmt::Display for Error {
             Error::Niho4Prepare(e) => write!(f, "niho4_prepare_failed: {e}"),
             Error::Niho6Prepare(e) => write!(f, "niho6_prepare_failed: {e}"),
             Error::Sample(e) => write!(f, "sample_failed: {e}"),
+            Error::MasksNotRendered => f.write_str(MASKS_NOT_RENDERED),
         }
     }
 }
 
 impl std::error::Error for Error {}
+
+/// Stable code and message of [`Error::MasksNotRendered`].
+pub const MASKS_NOT_RENDERED: &str =
+    "masksNotRendered: local masks are saved but not rendered yet (M2, #66)";
+
+/// Refuses settings whose active local masks the renderer would silently
+/// leave out (M1 only saves and validates `masks`).
+// M2 (#66) replaces this
+fn reject_active_masks(settings: &DevelopSettings) -> Result<(), Error> {
+    if settings.has_active_masks() {
+        return Err(Error::MasksNotRendered);
+    }
+    Ok(())
+}
 
 impl From<DecodeError> for Error {
     fn from(e: DecodeError) -> Self {
@@ -136,9 +156,10 @@ fn geometry_error(e: SettingsError) -> Error {
     Error::InvalidSettings(vec![e])
 }
 
-/// "補正前": the color adjustments back to neutral, keeping `v`, `engine`,
-/// `look`, `base` and `geometry` (the before view is the same frame, only
-/// the colors are the original's).
+/// "補正前": the color adjustments (and the local `masks`) back to neutral,
+/// keeping `v`, `engine`, `look`, `base` and `geometry` (the before view is
+/// the same frame, only the colors are the original's). `v` stays the
+/// saved one (at least what the kept parts need), as with color points.
 pub fn before_settings(settings_json: &str) -> Result<String, Error> {
     let s = parse_settings(settings_json)?;
     let before = DevelopSettings {
@@ -196,6 +217,8 @@ pub fn render(
     options: &RenderOptions,
 ) -> Result<Rendered, Error> {
     let settings = parse_settings(settings_json)?;
+    // The raster path below can skip `Session::render`.
+    reject_active_masks(&settings)?;
     if matches!(
         settings.engine.as_str(),
         settings::ENGINE_NIHO_4
@@ -270,6 +293,7 @@ pub fn render_camera_linear(
     if !issues.is_empty() {
         return Err(Error::InvalidSettings(issues));
     }
+    reject_active_masks(settings)?;
     if matches!(
         settings.engine.as_str(),
         settings::ENGINE_NIHO_4
@@ -1361,6 +1385,8 @@ impl Session {
         if !issues.is_empty() {
             return Err(Error::InvalidSettings(issues));
         }
+        // Every render path (one-shot, wasm, native CLI) ends here.
+        reject_active_masks(settings)?;
         let max_dimension = self.capped_dimension(max_dimension);
         let use_niho3 = self.ensure_niho3(settings, max_dimension, quality)?;
         if !use_niho3 {
@@ -1557,6 +1583,8 @@ impl Session {
         if !issues.is_empty() {
             return Err(Error::InvalidSettings(issues));
         }
+        // Its candidates are rendered like the frame, so the same rule holds.
+        reject_active_masks(settings)?;
         let use_niho3 = self.niho3_mode(settings)?;
         let source_is_raw = matches!(
             self.source.as_ref(),

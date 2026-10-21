@@ -54,4 +54,7 @@ export const photoEditingQueryKeys = {
   /** この Mac の「選んだ写真」の現在も読める件数。 */
   selectedPhotos: (place: "cloud" | "local", ownerScope?: string) =>
     ["admin", "photoEditing", "selectedPhotos", place, ownerScope ?? null] as const,
+  /** 写真の情報（`PhotoLibrary.info`。右パネルの「情報」。置き場・写真・中身ごと。niho-photo#43） */
+  photoInfo: (place: "cloud" | "local", photoId: string, contentSha256: string | null) =>
+    ["admin", "photoEditing", "photoInfo", place, photoId, contentSha256] as const,
 };

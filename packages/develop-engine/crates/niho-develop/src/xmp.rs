@@ -1877,6 +1877,8 @@ pub fn preset_settings(
         // Adobe XMP has no public representation for NIHO's independently
         // authored OKLCH points. Applying a preset must never erase them.
         settings.color_points = b.color_points.clone();
+        // Local masks are the photo's own edit as well (never in a preset).
+        settings.masks = b.masks.clone();
     }
     // NIHO effects are not in Photo Bench's `EditSettings`, so they do not go
     // through the converter (`CONVERTER_VERSION` is unchanged): the base's

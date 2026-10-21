@@ -1,12 +1,12 @@
-//! `developSettings` v1 / v2 / v3 / v4: the saved edit of one photo.
+//! `developSettings` v1 / v2 / v3 / v4 / v5: the saved edit of one photo.
 //!
 //! The JSON shape is Photo Bench `EditSettings` (`docs/ENGINE_PROTOCOL.md`,
 //! `EditSettings.swift`'s `CodingKeys`) plus `v`, `engine`, `look`, `base`
-//! and `geometry` (spec `niho-develop-engine.md` "段 2"). `v` is 4 when color
-//! points exist, 3 when an effect is active, 2 when geometry is not the
-//! identity (`geometry.rs`), else 1, so an older reader refuses an edit it
-//! cannot render instead of silently dropping it. Differences from
-//! `EditSettings`:
+//! and `geometry` (spec `niho-develop-engine.md` "段 2"). `v` is 5 when a local
+//! mask exists, 4 when color points exist, 3 when an effect is active, 2 when
+//! geometry is not the identity (`geometry.rs`), else 1, so an older reader
+//! refuses an edit it cannot render instead of silently dropping it.
+//! Differences from `EditSettings`:
 //!
 //! - `whiteBalance.mode` is `asShot | absolute | relative`. `absolute` keeps
 //!   the RAW Kelvin/tint in `whiteBalance.temperature` / `whiteBalance.tint`;
@@ -19,6 +19,8 @@
 //!   defaults.
 //! - `colorPoints` is NIHO's independent OKLCH mixer, written only when at
 //!   least one point exists.
+//! - `masks` are the local adjustments of Epic #31 (`local_mask.rs`,
+//!   `docs/local-adjustments.md`), written only when at least one exists.
 //!
 //! `hsl` keeps Photo Bench's JSON encoding (Swift encodes a dictionary with
 //! enum keys as an alternating `[band, adjustment, ...]` array); an object
@@ -27,6 +29,7 @@
 //! trip fields it does not understand.
 
 pub use crate::geometry::{Geometry, GEOMETRY_SETTINGS_VERSION};
+pub use crate::local_mask::LocalMask;
 use serde_json::{Map, Value};
 use std::fmt;
 
@@ -37,10 +40,16 @@ pub const EFFECTS_SETTINGS_VERSION: u32 = 3;
 /// Shape version required when at least one independent OKLCH color point is
 /// present. Older readers must refuse the edit instead of dropping the mixer.
 pub const COLOR_POINTS_SETTINGS_VERSION: u32 = 4;
+/// Shape version required when at least one local mask (`masks`) is present.
+/// Another in-flight feature (#32 detail) also wants 5: whichever merges first
+/// keeps 5 and the other renumbers.
+pub const MASKS_SETTINGS_VERSION: u32 = 5;
 /// Highest shape version this crate reads.
-pub const MAX_SETTINGS_VERSION: u32 = COLOR_POINTS_SETTINGS_VERSION;
+pub const MAX_SETTINGS_VERSION: u32 = MASKS_SETTINGS_VERSION;
 /// The UI and renderer intentionally share this small upper bound.
 pub const MAX_COLOR_POINTS: usize = 8;
+/// At most this many local masks (`masks`); the renderer draws one layer each.
+pub const MAX_LOCAL_MASKS: usize = 8;
 /// Formula version (`engine`). Bump only with a new formula set; old saved
 /// settings keep rendering with the engine they name.
 pub const ENGINE_NIHO_1: &str = "niho-1";
@@ -558,6 +567,8 @@ pub struct DevelopSettings {
     pub tone_curves: Vec<ToneCurve>,
     pub hsl: HslAdjustments,
     pub color_points: Vec<ColorPoint>,
+    /// Local adjustments (`masks`, Epic #31); empty = none.
+    pub masks: Vec<LocalMask>,
     pub calibration: CalibrationSettings,
     pub color_grading: ColorGradingSettings,
     pub parametric_shadows: f64,
@@ -617,6 +628,7 @@ impl DevelopSettings {
             tone_curves: Vec::new(),
             hsl: HslAdjustments::default(),
             color_points: Vec::new(),
+            masks: Vec::new(),
             calibration: CalibrationSettings::default(),
             color_grading: ColorGradingSettings::default(),
             parametric_shadows: 0.0,
@@ -645,10 +657,12 @@ impl DevelopSettings {
         settings
     }
 
-    /// The `v` these settings need: 4 for color points, 3 for active effects,
-    /// 2 for non-identity geometry, and 1 otherwise.
+    /// The `v` these settings need: 5 for local masks, 4 for color points, 3
+    /// for active effects, 2 for non-identity geometry, and 1 otherwise.
     pub fn required_version(&self) -> u32 {
-        if !self.color_points.is_empty() {
+        if !self.masks.is_empty() {
+            MASKS_SETTINGS_VERSION
+        } else if !self.color_points.is_empty() {
             COLOR_POINTS_SETTINGS_VERSION
         } else if self.grayscale || self.vignette.is_active() || self.grain.is_active() {
             EFFECTS_SETTINGS_VERSION
@@ -662,6 +676,13 @@ impl DevelopSettings {
 
     pub fn has_active_color_points(&self) -> bool {
         self.color_points.iter().any(|point| !point.delta.is_zero())
+    }
+
+    /// Whether at least one local mask would change pixels: enabled with a
+    /// non-zero `adjust` (a mask whose surface turns out to be all 0 is only
+    /// known to the renderer, M2).
+    pub fn has_active_masks(&self) -> bool {
+        self.masks.iter().any(LocalMask::is_active)
     }
 
     /// Whether rendering these settings changes nothing (the Photo Bench
@@ -716,6 +737,7 @@ impl DevelopSettings {
             && grading.iter().all(|v| *v == 0.0)
             && self.hsl.is_zero()
             && !self.has_active_color_points()
+            && !self.has_active_masks()
             && crate::tone_ops::curves_are_identity(&self.tone_curves, 1e-9)
             && white_balance_neutral
             && !self.grayscale
@@ -755,11 +777,12 @@ impl DevelopSettings {
                         _ if n == 2.0 => 2,
                         _ if n == 3.0 => 3,
                         _ if n == 4.0 => 4,
+                        _ if n == 5.0 => 5,
                         _ => {
                             return Err(SettingsError::new(
                                 path,
                                 "unsupportedVersion",
-                                "only v = 1, v = 2, v = 3, and v = 4 are supported",
+                                "only v = 1, v = 2, v = 3, v = 4, and v = 5 are supported",
                             ))
                         }
                     };
@@ -815,6 +838,7 @@ impl DevelopSettings {
                 "toneCurves" => s.tone_curves = parse_tone_curves(v)?,
                 "hsl" => s.hsl = parse_hsl(v)?,
                 "colorPoints" => s.color_points = parse_color_points(v)?,
+                "masks" => s.masks = crate::local_mask::parse_masks(v)?,
                 "calibration" => s.calibration = parse_calibration(v)?,
                 "colorGrading" => s.color_grading = parse_color_grading(v)?,
                 "parametricShadows" => s.parametric_shadows = number(v, path)?,
@@ -859,6 +883,14 @@ impl DevelopSettings {
             }
         }
         s.extra = extra;
+        // `masks` are checked strictly on read (shape, ranges, ids, and the
+        // white-balance rule, which needs `whiteBalance` parsed above).
+        if let Some(issue) = crate::local_mask::validate_masks(&s.masks, s.white_balance.mode)
+            .into_iter()
+            .next()
+        {
+            return Err(issue);
+        }
         let matched = match s.engine.as_str() {
             ENGINE_NIHO_3 => s.look == LOOK_NIHO_STANDARD_2,
             ENGINE_NIHO_4 => s.look == LOOK_NIHO_STANDARD_3,
@@ -998,6 +1030,9 @@ impl DevelopSettings {
                 "colorPoints".into(),
                 Value::Array(self.color_points.iter().map(color_point_value).collect()),
             );
+        }
+        if !self.masks.is_empty() {
+            o.insert("masks".into(), crate::local_mask::masks_value(&self.masks));
         }
         let c = &self.calibration;
         let mut cal = Map::new();
@@ -1295,6 +1330,10 @@ impl DevelopSettings {
             WhiteBalanceMode::AsShot | WhiteBalanceMode::Relative => {}
         }
         issues.extend(color_point_issues);
+        issues.extend(crate::local_mask::validate_masks(
+            &self.masks,
+            self.white_balance.mode,
+        ));
         if self.white_balance.mode != WhiteBalanceMode::Relative
             && (self.relative_temperature != 0.0 || self.relative_tint != 0.0)
         {
@@ -1320,7 +1359,7 @@ impl DevelopSettings {
             issues.push(SettingsError::new(
                 "v",
                 "versionTooLow",
-                "color points need v = 4, active effects need v = 3, and non-identity geometry needs v = 2",
+                "local masks need v = 5, color points need v = 4, active effects need v = 3, and non-identity geometry needs v = 2",
             ));
         }
         let matched = match self.engine.as_str() {
@@ -1397,7 +1436,7 @@ impl fmt::Display for SettingsError {
 
 impl std::error::Error for SettingsError {}
 
-fn number(v: &Value, path: &str) -> Result<f64, SettingsError> {
+pub(crate) fn number(v: &Value, path: &str) -> Result<f64, SettingsError> {
     let n = v
         .as_f64()
         .ok_or_else(|| SettingsError::new(path, "invalidType", "must be a number"))?;
@@ -1407,13 +1446,16 @@ fn number(v: &Value, path: &str) -> Result<f64, SettingsError> {
     Ok(n)
 }
 
-fn string(v: &Value, path: &str) -> Result<String, SettingsError> {
+pub(crate) fn string(v: &Value, path: &str) -> Result<String, SettingsError> {
     v.as_str()
         .map(str::to_string)
         .ok_or_else(|| SettingsError::new(path, "invalidType", "must be a string"))
 }
 
-fn object<'a>(v: &'a Value, path: &str) -> Result<&'a Map<String, Value>, SettingsError> {
+pub(crate) fn object<'a>(
+    v: &'a Value,
+    path: &str,
+) -> Result<&'a Map<String, Value>, SettingsError> {
     v.as_object()
         .ok_or_else(|| SettingsError::new(path, "invalidType", "must be an object"))
 }
@@ -1951,8 +1993,9 @@ mod tests {
             .get("geometry")
             .is_none());
         assert!(DevelopSettings::from_json(r#"{"v":4}"#).is_ok());
+        assert!(DevelopSettings::from_json(r#"{"v":5}"#).is_ok());
         assert_eq!(
-            DevelopSettings::from_json(r#"{"v":5}"#).unwrap_err().code,
+            DevelopSettings::from_json(r#"{"v":6}"#).unwrap_err().code,
             "unsupportedVersion"
         );
         assert_eq!(

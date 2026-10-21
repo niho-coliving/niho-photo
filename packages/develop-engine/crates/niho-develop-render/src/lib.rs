@@ -140,6 +140,11 @@ impl From<niho_develop::Error> for CliError {
         match e {
             niho_develop::Error::Decode(d) => d.into(),
             niho_develop::Error::Encode(m) => Self::new(ErrorCode::EncodeFailed, m),
+            // A shape (`masks`) this build saves but does not draw yet.
+            niho_develop::Error::MasksNotRendered => Self::new(
+                ErrorCode::UnsupportedSettings,
+                niho_develop::MASKS_NOT_RENDERED,
+            ),
             other => Self::new(ErrorCode::InvalidSettings, other.to_string()),
         }
     }

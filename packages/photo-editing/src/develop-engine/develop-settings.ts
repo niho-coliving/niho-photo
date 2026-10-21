@@ -4,15 +4,22 @@ import {
 } from "../browser-photo-adjustments";
 import { hasActiveDevelopEffects, isInactiveDevelopEffect } from "../photo-editing-effects";
 import { PHOTO_EDITING_ZERO_DEFAULT_KEYS, isNeutralPhotoEditingSettings } from "../photo-editing-settings-neutral";
+import {
+  DEVELOP_MASKS_SETTINGS_VERSION,
+  hasActiveDevelopMasks,
+  hasDevelopMasks,
+  hasValidDevelopMasks,
+} from "./develop-masks";
 
 /**
  * NIHO の現像エンジンの編集内容 `developSettings`（移行元設計。移行時の設計文書「段 2」）。Photo Bench の
  * `EditSettings` の上位集合に `v`・`engine`・`look`・`base`・`geometry` を足したもの。ブラウザは基本補正の 13 項目（NIHO Photo 段 1
  * F1 移行元設計。S1 の canvas では露光量・コントラスト・彩度と相対の色温度 / 色かぶり補正だけ）を直し、ほかの項目（HSL など）はそのまま
- * 持って返す。形の版 `v` は、色ポイントがあれば 4、効果が有効なら 3、幾何（回転・反転・角度補正・切り抜き。F3 移行元設計）が恒等でなければ 2、ほかは 1
+ * 持って返す。形の版 `v` は、部分補正（マスク。`develop-masks.ts`）があれば 5、色ポイントがあれば 4、効果が有効なら 3、幾何（回転・反転・角度補正・
+ * 切り抜き。F3 移行元設計）が恒等でなければ 2、ほかは 1
  * （古い画面は未知の版を編集も描画もしないので、効果や切り抜きを知らない画面が補正を落とした画を作らない）。
  */
-/** API schemaの設定型（v1〜v4）を画面で扱う型。未知の項目はそのまま保持する。 */
+/** API schemaの設定型（v1〜v5）を画面で扱う型。未知の項目はそのまま保持する。 */
 export type DevelopSettings = {
   v: DevelopSettingsVersion;
   engine: string;
@@ -93,11 +100,11 @@ function numberOrZero(value: unknown): number {
   return typeof value === "number" && Number.isFinite(value) ? value : 0;
 }
 
-/** この画面が読む `developSettings` の形の版（1: 基本、2: 幾何、3: 効果、4: 色ミキサー）。 */
-export type DevelopSettingsVersion = 1 | 2 | 3 | 4;
+/** この画面が読む `developSettings` の形の版（1: 基本、2: 幾何、3: 効果、4: 色ミキサー、5: 部分補正〔マスク〕）。 */
+export type DevelopSettingsVersion = 1 | 2 | 3 | 4 | 5;
 
 function isDevelopSettingsVersion(value: unknown): value is DevelopSettingsVersion {
-  return value === 1 || value === 2 || value === 3 || value === 4;
+  return value === 1 || value === 2 || value === 3 || value === 4 || value === 5;
 }
 
 export const MAX_COLOR_POINTS = 8;
@@ -206,8 +213,9 @@ export function hasNullDevelopGeometryField(value: unknown): boolean {
   return isRecord(crop) && ["left", "top", "right", "bottom"].some((key) => Object.hasOwn(crop, key) && crop[key] === null);
 }
 
-/** 編集内容に要る形の版（色ポイントがあれば 4、効果が有効なら 3、幾何が恒等でなければ 2。crate の `required_version`）。 */
+/** 編集内容に要る形の版（マスクがあれば 5、色ポイントがあれば 4、効果が有効なら 3、幾何が恒等でなければ 2。crate の `required_version`）。 */
 export function developSettingsVersion(settings: Record<string, unknown>): DevelopSettingsVersion {
+  if (hasDevelopMasks(settings)) return DEVELOP_MASKS_SETTINGS_VERSION;
   if (hasDevelopColorPoints(settings)) return 4;
   if (hasActiveDevelopEffects(settings)) return 3;
   return hasDevelopGeometry(settings) ? 2 : 1;
@@ -382,17 +390,20 @@ export function developSettingsOnWorkingCopy(
   return { ...next, v: developSettingsVersion(next) };
 }
 
-/** API の値を編集内容として読む（形の版が 1〜4 でなければ null）。 */
+/** API の値を編集内容として読む（形の版が 1〜5 でない・色ポイントやマスクの形が壊れている・必要な版より低ければ null）。 */
 export function readDevelopSettings(value: unknown): DevelopSettings | null {
-  if (!isRecord(value) || !isDevelopSettingsVersion(value.v) || !hasValidDevelopColorPoints(value)) return null;
+  if (!isRecord(value) || !isDevelopSettingsVersion(value.v) || !hasValidDevelopColorPoints(value) || !hasValidDevelopMasks(value)) {
+    return null;
+  }
   if (hasDevelopColorPoints(value) && value.v < 4) return null;
+  if (hasDevelopMasks(value) && value.v < DEVELOP_MASKS_SETTINGS_VERSION) return null;
   const engine = value.engine;
   if (typeof engine !== "string") return null;
   return { ...value, v: value.v, engine };
 }
 
 /**
- * このブラウザの版で続きを直せる編集内容か。まだ無い（null）なら直せる。形の版が 1〜4 で数式の版がこの画面の知っている版
+ * このブラウザの版で続きを直せる編集内容か。まだ無い（null）なら直せる。形の版が 1〜5 で数式の版がこの画面の知っている版
  * （niho-1 / niho-2 / niho-3 / niho-4 / niho-6 / niho-7 / niho-10 / niho-11 / niho-12）、ルックがその数式の描ける版（無ければ恒等。
  * niho-6 / niho-10 / niho-12 は interim-1 / standard-1 だけ）のときだけ直せる（新しい版の NIHO で保存した設定を古い数式・ルックで読み替えない）。恒等でない
  * 幾何を v1 で持つ壊れた設定は直さない。幾何を扱えない面（NIHO Desktop。移行元設計）は `{ geometry: false }` を渡し、幾何のある設定を
@@ -400,7 +411,9 @@ export function readDevelopSettings(value: unknown): DevelopSettings | null {
  */
 export function isEditableDevelopSettings(value: unknown, options: { geometry?: boolean } = {}): boolean {
   if (value === null || value === undefined) return true;
-  if (!isRecord(value) || !isDevelopSettingsVersion(value.v) || !hasValidDevelopColorPoints(value)) return false;
+  if (!isRecord(value) || !isDevelopSettingsVersion(value.v) || !hasValidDevelopColorPoints(value) || !hasValidDevelopMasks(value)) {
+    return false;
+  }
   const legacyEngine = value.engine === NIHO2_DEVELOP_SETTINGS_ENGINE || value.engine === LEGACY_DEVELOP_SETTINGS_ENGINE;
   const niho6Engine = value.engine === NIHO6_DEVELOP_SETTINGS_ENGINE || value.engine === NIHO10_DEVELOP_SETTINGS_ENGINE;
   const niho12Engine = value.engine === DEVELOP_SETTINGS_ENGINE;
@@ -428,7 +441,7 @@ function isNiho6Look(look: unknown): boolean {
 
 /**
  * 右パネルの「初期化」で保存する編集内容: 色の補正だけを neutral に戻し、幾何（切り抜き・回転）と形の版は保つ（F3 移行元設計「初期化は
- * 色だけを戻し、切り抜きは戻さない」）。効果（白黒・周辺光量補正・粒子）も色の補正として外す（「補正前」の画も同じ）。`engine`・`look` は
+ * 色だけを戻し、切り抜きは戻さない」）。効果（白黒・周辺光量補正・粒子）と部分補正（`masks`）も色の補正として外す（「補正前」の画も同じ）。`engine`・`look` は
  * 現在の数式とルックのまま保ち（今の編集内容が無ければ `base` の neutral と同じ数式。{@link newDevelopSettingsEngine}）、`base` は今の
  * 作業コピーの版（小さな JPEG / PNG は null）。
  */
@@ -457,6 +470,9 @@ export function presetDevelopSettings(base: DevelopSettings, presetResult: Devel
   // XMP プリセットを当てても写真自身の編集として保持する。
   if (base.colorPoints === undefined) delete next.colorPoints;
   else next.colorPoints = base.colorPoints;
+  // 部分補正（マスク）も写真自身の編集で、プリセット（XMP）には入らない
+  if (base.masks === undefined) delete next.masks;
+  else next.masks = base.masks;
   if (base.look === undefined) delete next.look;
   else next.look = base.look;
   if (isRecord(base.geometry)) next.geometry = base.geometry;
@@ -484,12 +500,12 @@ export function autoDevelopSettings(before: DevelopSettings, autoResult: Develop
 /**
  * コピーした補正（「補正をコピー」。F5a-2 移行元設計）。色の補正（HSL・効果など、この画面が知らない項目も含む全部）を持ち、貼り付け先の
  * ものを保つ項目（数式の版・ルック・土台の版・幾何）は持たない。RAW の絶対のホワイトバランス（撮影時の白との絶対値で、写真ごとの
- * 値）も写さない。
+ * 値）も、部分補正（`masks`。画像の内容に付いた編集）も写さない。
  */
 export type CopiedDevelopSettings = Record<string, unknown>;
 
 export function copyDevelopSettings(settings: DevelopSettings): CopiedDevelopSettings {
-  const { v: _v, engine: _engine, look: _look, base: _base, geometry: _geometry, ...rest } = settings;
+  const { v: _v, engine: _engine, look: _look, base: _base, geometry: _geometry, masks: _masks, ...rest } = settings;
   const copied: CopiedDevelopSettings = { ...rest };
   if (isRecord(copied.whiteBalance) && copied.whiteBalance.mode === "absolute") delete copied.whiteBalance;
   return copied;
@@ -499,7 +515,7 @@ export function copyDevelopSettings(settings: DevelopSettings): CopiedDevelopSet
  * コピーした補正を今の編集内容 `base` に貼り付けた結果（「補正を貼り付け」。取り消しの 1 単位で確定する）。色の補正はコピーした
  * 全部に置き換え（コピーに無い項目は neutral）、数式の版・ルック・土台の版と幾何（切り抜き・回転）は貼り付け先のまま。ホワイト
  * バランスは、コピーに無い（RAW の絶対値だった）とき・貼り付け先が絶対値（RAW で撮影時の白から直した）ときは mode と相対値を含めて貼り付け先のまま。
- * 形の版 `v` は保った幾何から決め直す。
+ * 部分補正（`masks`）も貼り付け先のまま（コピーに入っていても使わない）。形の版 `v` は保った幾何とマスクから決め直す。
  */
 export function pasteDevelopSettings(base: DevelopSettings, copied: CopiedDevelopSettings): DevelopSettings {
   const baseVersion = typeof base.base === "string" ? base.base : null;
@@ -508,6 +524,8 @@ export function pasteDevelopSettings(base: DevelopSettings, copied: CopiedDevelo
   else next.look = base.look;
   if (isRecord(base.geometry)) next.geometry = base.geometry;
   else delete next.geometry;
+  if (base.masks === undefined) delete next.masks;
+  else next.masks = base.masks;
   const baseWhiteBalance = isRecord(base.whiteBalance) ? base.whiteBalance : null;
   if (copied.whiteBalance === undefined || baseWhiteBalance?.mode === "absolute") {
     if (baseWhiteBalance) next.whiteBalance = baseWhiteBalance;
@@ -639,6 +657,8 @@ export function isNeutralDevelopColors(value: unknown): boolean {
   for (const [key, item] of Object.entries(value)) {
     if (DEVELOP_METADATA_KEYS.has(key) || key === "legacySettings" || key === "geometry") continue;
     if (key === "colorPoints" && !hasActiveDevelopColorPoints(value)) continue;
+    // 画を変えないマスク（無効・何も動かさない）は色の補正ではない。形が壊れていれば残して neutral にしない
+    if (key === "masks" && hasValidDevelopMasks(value) && !hasActiveDevelopMasks(value)) continue;
     if (DEVELOP_DEFAULT_VALUES.has(key) && item === DEVELOP_DEFAULT_VALUES.get(key)) continue;
     // 画に効いていない効果の項目は除く（効いている・形の壊れた項目は残り、下の判定で neutral にならない）
     if (isInactiveDevelopEffect(key, item) === true) continue;
@@ -712,6 +732,8 @@ export function developSettingsToEditSettings(value: unknown): Record<string, un
   // 効いている効果（白黒・周辺光量補正・粒子。E1 移行元設計）も旧エンジンの形に無い。落として写すと、白黒の写真が色つきで出る
   if (DEVELOP_EFFECT_SETTINGS_KEYS.some((key) => isInactiveDevelopEffect(key, settings[key]) === false)) return null;
   if (hasDevelopColorPoints(settings)) return null;
+  // 部分補正（マスク）も旧エンジンの形に無い。落として写すと、局所の補正が消えた画になる
+  if (hasDevelopMasks(settings)) return null;
   const result: Record<string, unknown> = {};
   for (const key of EDIT_SETTINGS_KEYS) {
     if (settings[key] !== undefined) result[key] = settings[key];

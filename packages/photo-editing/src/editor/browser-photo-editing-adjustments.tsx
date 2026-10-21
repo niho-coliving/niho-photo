@@ -30,6 +30,7 @@ import {
   PHOTO_EDITING_TOOL_ADJUST_LABEL,
   PHOTO_EDITING_TOOL_CROP_LABEL,
   PHOTO_EDITING_TOOL_CUTOUT_LABEL,
+  PHOTO_EDITING_TOOL_INFO_LABEL,
   PHOTO_EDITING_UNDO_LABEL,
   PHOTO_EDITING_UNDO_TITLE,
 } from "../photo-editing-copy";
@@ -55,6 +56,11 @@ const TEXT_ACTION_BUTTON_CLASS_NAME = "min-h-11 px-2 text-xs font-bold text-niho
 /** 補正の面の一番上のチップ（自動 / 白黒）。押された表示は `aria-pressed` で地の色を変える */
 const QUICK_CHIP_CLASS_NAME =
   "inline-flex h-7 items-center gap-1 rounded-lg border border-niho-border px-3 text-xs font-bold text-niho-text-sub transition enabled:hover:bg-niho-pale/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-niho-accent-ink aria-pressed:border-transparent aria-pressed:bg-niho-accent-soft aria-pressed:text-niho-accent-ink disabled:cursor-not-allowed disabled:opacity-40";
+const ASIDE_CLASS_NAME =
+  "hidden min-h-0 overflow-y-auto border-l border-niho-border bg-[var(--photo-editing-surface,white)] px-3 py-2 lg:row-span-2 lg:block";
+/** ヒストグラムを置くときは、上の余白をヒストグラムの枠（sticky）の中に持たせる（下だけ py-2 と同じ） */
+const ASIDE_WITH_HISTOGRAM_CLASS_NAME =
+  "hidden min-h-0 overflow-y-auto border-l border-niho-border bg-[var(--photo-editing-surface,white)] px-3 pb-2 lg:row-span-2 lg:block";
 /** 見出し行の名前（道具の名前。「補正」の間はプリセットの面なら「プリセット」） */
 const TOOL_LABELS: Readonly<Record<BrowserPhotoTool, string>> = {
   adjust: PHOTO_EDITING_TOOL_ADJUST_LABEL,
@@ -69,6 +75,13 @@ const TOOL_LABELS: Readonly<Record<BrowserPhotoTool, string>> = {
  * 「プリセット」の面は 見出し行 → プリセットの一覧。白黒は群の中に描かず、チップで切り替える。プリセットの面の見出し行の ⋯ は
  * プリセットのメニュー（今の補正を保存・取り込み。一覧の部品が `actionsSlot` へ描く）で、補正のコピー / 貼り付けの ⋯ は出さない
  * （⋯ を 2 つ並べない。niho-photo#49）。
+ *
+ * ヒストグラム（niho-photo#36。`histogram` を渡したときだけ）は、どの道具・面のときも見出し行の上、パネルの一番上に置く
+ * （パネルを送っても上端に残す）。
+ *
+ * 「情報」の面（niho-photo#43。`panel` が `info` で `info` を渡したとき）は 見出し行（名前だけ）→ 情報の群。写真を直す面ではないので、
+ * ↶ ↷ ⋯・「初期化」・作業コピーの状態・閲覧のみの 1 行は出さない（キーの取り消し・やり直しは今までどおり効く）。ヒストグラムは
+ * ほかの面と同じく一番上に残す（撮影条件と分布を一緒に見る。白飛び・黒つぶれの印の切り替えも消さない）。
  */
 
 /**
@@ -107,6 +120,11 @@ export function BrowserPhotoEditingAdjustments(props: {
   /** Oklch の独立した色ミキサー（対応する wasm の写真だけ）。 */
   colorMixer?: ReactNode;
   /**
+   * 一番上のヒストグラム（niho-photo#36。画を描ける wasm の写真だけ渡す）。道具・面〔補正 / プリセット / 切り抜き / 背景除去〕に
+   * 依らず見出し行の上に出し、パネルを送っても上端に残す
+   */
+  histogram?: ReactNode;
+  /**
    * プリセットの部品（S1 の canvas の写真には渡さない）。補正の面では群の上の 1 行（`row`。押すと `onOpenPresets`）、プリセットの面
    * では一覧（`panel`）として、どちらか一方だけを描く
    */
@@ -120,6 +138,8 @@ export function BrowserPhotoEditingAdjustments(props: {
   tool?: BrowserPhotoTool;
   /** 道具が「補正」の間に出す面（省略時は補正の面。プリセットの部品が無い写真は補正の面だけ） */
   panel?: BrowserPhotoAdjustPanel;
+  /** 「情報」の面の中身（niho-photo#43。`panel` が `info` の間だけ描く。渡さなければ情報の面は出さない） */
+  info?: ReactNode;
   /** プリセットの行から、プリセットの面を開く */
   onOpenPresets?: () => void;
   /** 切り抜きの道具（「切り抜き」の間、プリセットの節と群の代わりに出す） */
@@ -146,6 +166,23 @@ export function BrowserPhotoEditingAdjustments(props: {
   const presets = props.presets;
   // プリセットの部品が無い写真（S1 の canvas）は、補正の面だけ
   const showPresetsPanel = !cropping && !cutting && presets !== undefined && props.panel === "presets";
+  if (!cropping && !cutting && props.info !== undefined && props.panel === "info") {
+    // 情報の面: 見出し行は名前だけ（ヒストグラムの置き方は下の補正の面と同じ）
+    return (
+      <aside
+        aria-label={PHOTO_EDITING_TOOL_INFO_LABEL}
+        className={props.histogram ? ASIDE_WITH_HISTOGRAM_CLASS_NAME : ASIDE_CLASS_NAME}
+      >
+        {props.histogram ? (
+          <div className="sticky top-0 z-10 -mx-3 bg-[var(--photo-editing-surface,white)] px-3 pb-1 pt-2">{props.histogram}</div>
+        ) : null}
+        <div className="flex min-h-11 items-center gap-1">
+          <h2 className="min-w-0 flex-1 truncate text-sm font-bold text-niho-text">{PHOTO_EDITING_TOOL_INFO_LABEL}</h2>
+        </div>
+        {props.info}
+      </aside>
+    );
+  }
   const heading = cropping
     ? TOOL_LABELS.crop
     : cutting
@@ -191,7 +228,12 @@ export function BrowserPhotoEditingAdjustments(props: {
       </div>
     ) : null;
   return (
-    <aside aria-label="補正" className="hidden min-h-0 overflow-y-auto border-l border-niho-border bg-[var(--photo-editing-surface,white)] px-3 py-2 lg:row-span-2 lg:block">
+    <aside aria-label="補正" className={props.histogram ? ASIDE_WITH_HISTOGRAM_CLASS_NAME : ASIDE_CLASS_NAME}>
+      {props.histogram ? (
+        // パネルの上端に固定する（補正しながら見る。下の群を送っても残る）。sticky の上端がパネルの上の余白に左右されないよう、
+        // パネルの上の余白（py-2 の上）は持たず、ここの pt-2 に置く
+        <div className="sticky top-0 z-10 -mx-3 bg-[var(--photo-editing-surface,white)] px-3 pb-1 pt-2">{props.histogram}</div>
+      ) : null}
       {/* 見出し行: 左に今の面の名前、右に ↶ ↷ ⋯ と「初期化」 */}
       <div className="flex min-h-11 items-center gap-1">
         <h2 className="min-w-0 flex-1 truncate text-sm font-bold text-niho-text">{heading}</h2>

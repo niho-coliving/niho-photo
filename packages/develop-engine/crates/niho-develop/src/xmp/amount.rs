@@ -94,6 +94,7 @@ fn blend(
     r.look = base.look.clone();
     r.base = base.base.clone();
     r.extra = base.extra.clone();
+    r.masks = base.masks.clone();
     for key in &SCALAR_KEYS {
         if key.field.is_grade_hue() {
             continue;

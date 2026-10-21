@@ -107,6 +107,7 @@ pub fn run() {
       library::camera_photo_cancel_interactive_preview,
       photos::camera_photo_open,
       photos::camera_photo_close,
+      photos::camera_photo_info,
       photos::camera_photo_save_settings,
       develop::camera_develop_status,
       develop::camera_develop_source,
