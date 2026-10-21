@@ -1,14 +1,14 @@
 # Issue #26 / #27 公開研究経路
 
-どちらも production renderer から隔離した候補である。`niho-8` や既存 engine の既定には接続せず、private Lightroom reference や独立 holdout の合格を主張しない。
+#26 と #27 の不採用の候補は production renderer から隔離した研究経路である。`niho-8` や既存 engine の既定には接続せず、private Lightroom reference や独立 holdout の合格を主張しない。#27 で採用した方式は `niho-13` として production に入った（下）。
 
-## #27 linear ProPhoto JPEG WB
+## #27 JPEG の相対 WB: 採用した方式
 
-`research::linear_jpeg_wb` は input linear ProPhoto D50 上で Bradford XYZ adaptation を評価する。既存 `color.rs` の `xy_from_temperature`、`bradford_xyz`、ProPhoto D50 matrix を使い、production の `jpeg_wb` LUT は変更しない。Core Image `relative_wb` の `30 K / 0.5 tint` scale は使わない。
+採用したのは、測った変換（`calibration/jpeg-incremental-wb-v1.bin` の差分 LUT と同じ節点・補間・組の残差）を、出力の最後ではなく処理の先頭（入力の符号化 sRGB）に float で当てる方式で、新 engine [`niho-13`](NIHO13.md) として raster・旧 RAW の新規編集の既定にした（owner 判断 2026-10-21）。合成 17³ 色見本の Lightroom 書き出し（round27）で、WB 単独の mean の平均は 0.49 → 0.15、WB と編集を重ねた 44 組の mean の平均は 2.77 → 1.99（`niho-12` の出力側 → `niho-13`）。p99 の悪化は端の飽和色に集まり、測定の範囲（8bit で clip された色見本の外側）の限界として残す。数値・限界・再現手順は [NIHO13.md](NIHO13.md)。
 
-fit が読むのは公開 `calibration/jpeg-incremental-wb-v1.bin` の axis 8 variant（temperature ±30/±80、tint ±20/±50）だけである。slider temperature は5000K周りのmired差、tintはDNG tintへ写し、測定済みの各非ゼロ節点を別々にfitする。mired差は−160..160、tintは−150..150の有限範囲でcoarse bracket＋golden-sectionを使い、節点間は線形補間する。ゼロは厳密な恒等とする。 `wb_cool` / `wb_warm` の2 variant は optimizer から隠し、fit 凍結後の validation で初めて読む。
+### 不採用: linear ProPhoto の色順応
 
-別 pass の validation は全10 variantについて 17³ node の measured chart に対する CIEDE2000 mean / p99 を JSON に出し、全 variant のそれぞれの mean `<= 0.5` を真偽値で示す。これは同じ公開 chart 内の calibration/validation であり、独立写真の Lightroom gate ではない。
+最初の候補は、入力の linear ProPhoto D50 上で Bradford の色順応を当てる `research::linear_jpeg_wb` だった（production renderer から隔離。`color.rs` の `xy_from_temperature`・`bradford_xyz`・ProPhoto D50 行列を使い、Core Image の `relative_wb` の尺度は使わない）。fit は公開測定の軸 8 条件（温度 ±30/±80、tint ±20/±50）だけを読み、温度は 5000K 周りのミレッド差、tint は DNG tint に写して節点ごとに当てはめ、節点間は線形補間した。`wb_cool` / `wb_warm` の 2 条件は fit から隠して validation で初めて読んだ。
 
 ```sh
 cargo +1.98.1 run --release --locked \
@@ -17,9 +17,9 @@ cargo +1.98.1 run --release --locked \
   > /tmp/linear-jpeg-wb-fit.json
 ```
 
-2026-10-20、Studioで固定Rust 1.98.1のfitを実行した。[公開chartの測定結果](fixtures/color/review-2026-10-20/linear-jpeg-wb.json)は全10条件meanΔE00=6.3315、fit未使用の2複合条件mean=5.2123で、各条件mean≤0.5のgateに未達だった。このBradford候補は採用しない。表示色の測定結果であり、方式一般の不可能性を示すものではない。
+2026-10-20 の [公開 chart の測定](fixtures/color/review-2026-10-20/linear-jpeg-wb.json)は全 10 条件の mean ΔE00 = 6.3315、fit 未使用の 2 複合条件の mean = 5.2123 で、各条件 mean ≤ 0.5 の gate に届かなかった。
 
-Studio 結果で `validationAllTen.meanGateMet` が false なら候補は calibration gate 不合格、true でも preset + WB の独立 Lightroom reference が無いため production へ入れない。
+さらに、制約の無い線形光の 3×3（Bradford・CAT16・対角はすべてその特殊形）を 10 条件それぞれに当てはめても、最小二乗で mean 0.84〜10.55、平均 ΔE00 を直接最小化しても 0.57〜6.83 で、どの条件も gate に届かない（[当てはめ](fixtures/color/review-2026-10-21/round27-linear-3x3.json)、`tools/calibrate/fit_linear_wb_3x3.py`）。Lightroom の JPEG の相対 WB は白（255）を動かさず中間調を大きく持ち上げる非線形な処理で、線形の色順応では表せない。この research path は比較の記録として残し、production には入れない。
 
 ## #26 analytic image-adaptive H/S candidate B
 

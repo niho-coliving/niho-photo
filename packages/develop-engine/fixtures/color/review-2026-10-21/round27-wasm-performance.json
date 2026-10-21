@@ -1,0 +1,274 @@
+{
+  "schema": "niho.color-review-wasm-timing.v3-aggregate",
+  "environment": "Node wasm SIMD on Mac Studio (M1 Max); browser/device performance remains separate",
+  "node": "v24.18.0",
+  "engineBundle": "niho-develop 0.20.0 (engine niho-13)",
+  "sourceCommit": "7ba870647415de42920216a4c96849ed9056040c",
+  "tool": "packages/develop-engine/tools/color-review-wasm-bench.cjs <glue.js> niho-12,niho-13 niho-12,niho-13 <WIDTHxHEIGHT>",
+  "protocol": "per size 6 processes; odd runs list niho-12 first, even runs niho-13 first; median and min per metric. whiteBalance*: 5 Interactive ticks of relativeTemperature 6..30 after the contrast drag, then one Final",
+  "targets": {
+    "editedInteractiveMaxMs": 100,
+    "whiteBalanceInteractiveMaxMs": 100,
+    "finalMs": 1000
+  },
+  "sizes": [
+    {
+      "dimensions": [
+        1024,
+        768
+      ],
+      "inputSha256": "95c149d7585cb77d833e21943d494e6bfbd3c5501b1a66123cc6269c125a9e5a",
+      "legacyRawWorkingCopySha256": "751df8b1eb89482438b6ed97e11607e151a95b42960f9705b80f3f9881da397c",
+      "rows": [
+        {
+          "source": "raster",
+          "engine": "niho-12",
+          "runs": 6,
+          "medianMs": {
+            "coldInteractive": 1123.0,
+            "coldFinal": 738.3,
+            "cachedInteractive": 30.2,
+            "cachedFinal": 606.3,
+            "editedInteractiveMedian": 105.2,
+            "editedInteractiveMax": 107.7,
+            "releasedFinal": 620.5,
+            "whiteBalanceInteractiveMedian": 51.1,
+            "whiteBalanceInteractiveMax": 52.8,
+            "whiteBalanceReleasedFinal": 643.9
+          },
+          "minMs": {
+            "coldInteractive": 1006.5,
+            "coldFinal": 708.7,
+            "cachedInteractive": 28.7,
+            "cachedFinal": 577.8,
+            "editedInteractiveMedian": 99.6,
+            "editedInteractiveMax": 100.7,
+            "releasedFinal": 605.7,
+            "whiteBalanceInteractiveMedian": 48.6,
+            "whiteBalanceInteractiveMax": 49.5,
+            "whiteBalanceReleasedFinal": 619.0
+          }
+        },
+        {
+          "source": "raster",
+          "engine": "niho-13",
+          "runs": 6,
+          "medianMs": {
+            "coldInteractive": 1128.3,
+            "coldFinal": 746.7,
+            "cachedInteractive": 30.2,
+            "cachedFinal": 604.2,
+            "editedInteractiveMedian": 104.3,
+            "editedInteractiveMax": 106.9,
+            "releasedFinal": 625.1,
+            "whiteBalanceInteractiveMedian": 69.3,
+            "whiteBalanceInteractiveMax": 74.1,
+            "whiteBalanceReleasedFinal": 1594.2
+          },
+          "minMs": {
+            "coldInteractive": 969.5,
+            "coldFinal": 698.9,
+            "cachedInteractive": 29.1,
+            "cachedFinal": 583.5,
+            "editedInteractiveMedian": 101.5,
+            "editedInteractiveMax": 102.2,
+            "releasedFinal": 607.3,
+            "whiteBalanceInteractiveMedian": 67.8,
+            "whiteBalanceInteractiveMax": 69.2,
+            "whiteBalanceReleasedFinal": 1525.4
+          }
+        },
+        {
+          "source": "legacyRaw",
+          "engine": "niho-12",
+          "runs": 6,
+          "medianMs": {
+            "coldInteractive": 210.8,
+            "coldFinal": 808.5,
+            "cachedInteractive": 38.7,
+            "cachedFinal": 734.5,
+            "editedInteractiveMedian": 68.6,
+            "editedInteractiveMax": 77.4,
+            "releasedFinal": 814.9,
+            "whiteBalanceInteractiveMedian": 57.1,
+            "whiteBalanceInteractiveMax": 66.8,
+            "whiteBalanceReleasedFinal": 775.3
+          },
+          "minMs": {
+            "coldInteractive": 172.8,
+            "coldFinal": 791.9,
+            "cachedInteractive": 36.5,
+            "cachedFinal": 700.5,
+            "editedInteractiveMedian": 65.4,
+            "editedInteractiveMax": 74.9,
+            "releasedFinal": 799.8,
+            "whiteBalanceInteractiveMedian": 55.4,
+            "whiteBalanceInteractiveMax": 64.4,
+            "whiteBalanceReleasedFinal": 763.9
+          }
+        },
+        {
+          "source": "legacyRaw",
+          "engine": "niho-13",
+          "runs": 6,
+          "medianMs": {
+            "coldInteractive": 218.1,
+            "coldFinal": 808.9,
+            "cachedInteractive": 36.9,
+            "cachedFinal": 733.0,
+            "editedInteractiveMedian": 70.4,
+            "editedInteractiveMax": 77.4,
+            "releasedFinal": 821.2,
+            "whiteBalanceInteractiveMedian": 57.8,
+            "whiteBalanceInteractiveMax": 66.2,
+            "whiteBalanceReleasedFinal": 775.2
+          },
+          "minMs": {
+            "coldInteractive": 174.8,
+            "coldFinal": 791.6,
+            "cachedInteractive": 36.4,
+            "cachedFinal": 717.7,
+            "editedInteractiveMedian": 64.3,
+            "editedInteractiveMax": 76.7,
+            "releasedFinal": 788.1,
+            "whiteBalanceInteractiveMedian": 54.4,
+            "whiteBalanceInteractiveMax": 63.2,
+            "whiteBalanceReleasedFinal": 737.7
+          }
+        }
+      ]
+    },
+    {
+      "dimensions": [
+        1280,
+        960
+      ],
+      "inputSha256": "29a4d83584f5c7a3c0be63328aa3a66cce411a6ab3bc81cce356c44ecca858d0",
+      "legacyRawWorkingCopySha256": "14c4ffd2042f786df2f776d5029a4fc837b5658a365fdb9a86f4b03fe25ea5dd",
+      "rows": [
+        {
+          "source": "raster",
+          "engine": "niho-12",
+          "runs": 6,
+          "medianMs": {
+            "coldInteractive": 1107.7,
+            "coldFinal": 849.6,
+            "cachedInteractive": 48.6,
+            "cachedFinal": 673.6,
+            "editedInteractiveMedian": 122.2,
+            "editedInteractiveMax": 124.6,
+            "releasedFinal": 697.0,
+            "whiteBalanceInteractiveMedian": 79.3,
+            "whiteBalanceInteractiveMax": 82.3,
+            "whiteBalanceReleasedFinal": 728.0
+          },
+          "minMs": {
+            "coldInteractive": 1007.9,
+            "coldFinal": 799.7,
+            "cachedInteractive": 45.7,
+            "cachedFinal": 641.2,
+            "editedInteractiveMedian": 117.6,
+            "editedInteractiveMax": 117.9,
+            "releasedFinal": 664.5,
+            "whiteBalanceInteractiveMedian": 75.6,
+            "whiteBalanceInteractiveMax": 76.0,
+            "whiteBalanceReleasedFinal": 714.0
+          }
+        },
+        {
+          "source": "raster",
+          "engine": "niho-13",
+          "runs": 6,
+          "medianMs": {
+            "coldInteractive": 1123.9,
+            "coldFinal": 886.3,
+            "cachedInteractive": 47.4,
+            "cachedFinal": 672.8,
+            "editedInteractiveMedian": 121.5,
+            "editedInteractiveMax": 124.2,
+            "releasedFinal": 698.2,
+            "whiteBalanceInteractiveMedian": 106.3,
+            "whiteBalanceInteractiveMax": 113.2,
+            "whiteBalanceReleasedFinal": 1754.4
+          },
+          "minMs": {
+            "coldInteractive": 1033.4,
+            "coldFinal": 801.8,
+            "cachedInteractive": 42.1,
+            "cachedFinal": 644.0,
+            "editedInteractiveMedian": 115.1,
+            "editedInteractiveMax": 121.3,
+            "releasedFinal": 659.4,
+            "whiteBalanceInteractiveMedian": 101.4,
+            "whiteBalanceInteractiveMax": 106.2,
+            "whiteBalanceReleasedFinal": 1666.3
+          }
+        },
+        {
+          "source": "legacyRaw",
+          "engine": "niho-12",
+          "runs": 6,
+          "medianMs": {
+            "coldInteractive": 211.6,
+            "coldFinal": 1049.0,
+            "cachedInteractive": 53.4,
+            "cachedFinal": 928.7,
+            "editedInteractiveMedian": 84.1,
+            "editedInteractiveMax": 94.8,
+            "releasedFinal": 1078.7,
+            "whiteBalanceInteractiveMedian": 73.3,
+            "whiteBalanceInteractiveMax": 81.1,
+            "whiteBalanceReleasedFinal": 979.2
+          },
+          "minMs": {
+            "coldInteractive": 170.0,
+            "coldFinal": 1034.0,
+            "cachedInteractive": 50.3,
+            "cachedFinal": 904.4,
+            "editedInteractiveMedian": 80.4,
+            "editedInteractiveMax": 88.4,
+            "releasedFinal": 1024.1,
+            "whiteBalanceInteractiveMedian": 69.1,
+            "whiteBalanceInteractiveMax": 77.4,
+            "whiteBalanceReleasedFinal": 934.4
+          }
+        },
+        {
+          "source": "legacyRaw",
+          "engine": "niho-13",
+          "runs": 6,
+          "medianMs": {
+            "coldInteractive": 218.3,
+            "coldFinal": 1052.3,
+            "cachedInteractive": 53.2,
+            "cachedFinal": 928.7,
+            "editedInteractiveMedian": 83.9,
+            "editedInteractiveMax": 94.2,
+            "releasedFinal": 1064.4,
+            "whiteBalanceInteractiveMedian": 73.1,
+            "whiteBalanceInteractiveMax": 82.1,
+            "whiteBalanceReleasedFinal": 981.6
+          },
+          "minMs": {
+            "coldInteractive": 163.4,
+            "coldFinal": 1009.7,
+            "cachedInteractive": 50.5,
+            "cachedFinal": 907.8,
+            "editedInteractiveMedian": 81.2,
+            "editedInteractiveMax": 89.7,
+            "releasedFinal": 1055.1,
+            "whiteBalanceInteractiveMedian": 72.4,
+            "whiteBalanceInteractiveMax": 79.1,
+            "whiteBalanceReleasedFinal": 964.8
+          }
+        }
+      ]
+    }
+  ],
+  "notes": [
+    "Load average on the host during the runs: 9-28 (other processes; single-threaded wasm timings carry that noise)",
+    "niho-13 white-balance drag ticks rebuild the balanced source and the niho-6 master from the kept response gains; they reuse the last frame's niho-6 analysis and local pass (drag frames only)",
+    "The released white-balance Final re-analyses the balanced photo for the niho-6 H/S response (features and networks), which these settings use (highlights -75, shadows 55); settings without the response release like niho-12",
+    "Legacy unsigned RAW working copies render niho-12 pixels with niho-13; their timings are the same"
+  ]
+}
