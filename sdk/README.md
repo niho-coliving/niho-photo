@@ -11,6 +11,12 @@
 
 workspace 内の package 名と import は変更しません。pack 用の一時領域でだけ `niho-ui` を `niho-photo-ui` に置き換えます。editor の `appDialog` と host が別 package instance にならないよう、consumer は `niho-photo-editing/sdk-dialog-host` の `PhotoEditingDialogHost` を描画します。この export は editor と同じ `niho-photo-ui` から host を再 export します。既存 app の `niho-ui/components/app-dialog-host` を代用してはいけません。`packages/photo-editing` は引き続き PhotoLibrary だけを host 境界にし、Next/API/Tauri や account client を SDK に含めません。
 
+### host と SDK の「戻る」操作
+
+SDK と host の UI はそれぞれの dialog request store を保持します。一方、同じ画面の Dialog / Popover / Sheet の開いた順は、browser の `window[Symbol.for("niho.ui.dismiss-layers.v1")]` にある `{ version: 1, layers: Array<{ id: symbol, close: () => void }> }` で共有します。host の `registerDismissLayer` / `dismissTopLayer` もこの v1 契約に接続してください。Android の hardware back は `dismissTopLayer()` を呼び、最も新しい面の close callback だけを実行します。面の解除は登録時に返した関数で行います。
+
+registry は同じ window 内に限り、SDK の別 copy や HMR の再 import でも保持します。iframe / 別 window / SSR の request 間には共有しません。SSR での登録は何も保持せず、dismiss は false を返します。一般 UI 全体の alias や SDK の dialog store の置換は不要です。
+
 recipe contract は `packages/photo-editing/src/develop-engine/develop-settings.ts` とその純粋 TypeScript dependency closure を正本にします。pack は選択した Git object からこの closure を取り出し、相対 import に `.js` を付けた Node ESM JavaScript と `.d.ts` を生成します。`niho-photo-contract` は TypeScript loader、React、DOM を必要とせず、`readDevelopSettings`、`isEditableDevelopSettings`、`developSettingsOnWorkingCopy`、signed RAW 判定と engine/look の世代情報を提供します。validator や既定値のロジックは別実装へ転記しません。
 
 ## 生成
