@@ -115,7 +115,7 @@ function numberOrZero(value: unknown): number {
 /** この画面が読む `developSettings` の形の版（1〜9。5: 部分補正、6: detail、7: 遠近、8: 修復、9: レンズ補正）。 */
 export const DEVELOP_DETAIL_SETTINGS_VERSION = 6;
 export type DevelopSettingsVersion = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
-function isDevelopSettingsVersion(value: unknown): value is DevelopSettingsVersion {
+export function isDevelopSettingsVersion(value: unknown): value is DevelopSettingsVersion {
   return (
     value === 1 || value === 2 || value === 3 || value === 4 || value === 5 || value === 6 || value === 7 || value === 8 || value === 9
   );
