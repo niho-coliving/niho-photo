@@ -23,7 +23,7 @@
 - 権利未確認の第三者アイコン、フォント、画像、カラープロファイル、モデル、校正入力・派生値
 - 署名済み成果物、本番配布用の権限付き workflow
 
-機械検査の初期設定は [publication-policy.json](publication-policy.json) に置く。禁止パス・機密拡張子・サイズ上限と、初回移植の出典manifestを求める契約を定義した。所有資産の公開許可はオーナーの包括的な宣言を根拠とし、候補ごとの由来とmetadata検査結果を台帳に残す。大きなRAW等は、公開リポジトリのサイズ上限に収まる最小fixtureか、[#2](https://github.com/niho-coliving/niho-photo/issues/2)で定義する公開成果物経路へ分ける。
+機械検査の初期設定は [publication-policy.json](publication-policy.json) に置く。禁止パス・機密拡張子・サイズ上限と、初回移植の出典manifestを求める契約を定義した。所有資産の公開許可はオーナーの包括的な宣言を根拠とし、候補ごとの由来とmetadata検査結果を台帳に残す。大きなRAW等は、公開リポジトリのサイズ上限に収まる最小fixtureか、[#2](https://github.com/niho-life/niho-photo/issues/2)で定義する公開成果物経路へ分ける。
 
 既存DCP 8件は、7件にLibRaw由来行列、1件にrawtoaces-data由来部分があるため、オーナーの個別判断で公開対象から除外し、所有RAWとカメラJPEGから独立推定した新しいDCPへ置換する。新DCPは色の対応対・source hash・未使用写真での検証結果と生成bytesの再現を要求し、旧8件はhashと転記行列で継続して拒否する。チャート測色の精度は保証しない。
 
@@ -39,7 +39,7 @@
 
 ## 報告と記録
 
-公開 Issue・PR には検出件数、分類、影響範囲、修正 commit だけを書く。secret の値、検出行の原文、private URL、実画像やログを貼らない。脆弱性は公開 Issue にせず、[GitHub の非公開報告窓口](https://github.com/niho-coliving/niho-photo/security/advisories)を使う。窓口を利用できない場合も公開Issueへ投稿せず、メンテナーへ非公開で連絡する。監査の元レポートは非公開環境で保持し、公開側には値を除いた [検出台帳](gitleaks-findings.csv) だけ置く。
+公開 Issue・PR には検出件数、分類、影響範囲、修正 commit だけを書く。secret の値、検出行の原文、private URL、実画像やログを貼らない。脆弱性は公開 Issue にせず、[GitHub の非公開報告窓口](https://github.com/niho-life/niho-photo/security/advisories)を使う。窓口を利用できない場合も公開Issueへ投稿せず、メンテナーへ非公開で連絡する。監査の元レポートは非公開環境で保持し、公開側には値を除いた [検出台帳](gitleaks-findings.csv) だけ置く。
 
 ## Docs / Photo 共通contract
 

@@ -33,7 +33,7 @@ export function createArtifactReceipt({ artifactId, artifactDigest, artifactName
   return [
     "## Public release evidence artifact",
     "",
-    "- Repository: `niho-coliving/niho-photo`",
+    "- Repository: `niho-life/niho-photo`",
     `- Commit: \`${commit}\``,
     `- Workflow run: \`${runId}\` (attempt \`${runAttempt}\`)`,
     `- Artifact name: \`${name}\``,
@@ -161,7 +161,7 @@ export function createManifest({ commit, tree, arch, runId, runAttempt, tools, l
   const account = JSON.parse(contracts[contractFiles[0]]), cloud = JSON.parse(contracts[contractFiles[1]]), cases = JSON.parse(contracts[contractFiles[2]]), source = JSON.parse(contracts[contractFiles[3]]);
   if (account.version !== 2 || cloud.name !== "@niho/cloud-contract" || cloud.version !== "1.0.0" || cases.contractVersion !== "1" || source.repository !== "niho-coliving/niho-docs" || !/^[a-f0-9]{40}$/.test(source.commit)) throw new Error("contract pinの更新審査が必要です");
   return {
-    schemaVersion: 1, repository: "niho-coliving/niho-photo", commit, tree,
+    schemaVersion: 1, repository: "niho-life/niho-photo", commit, tree,
     platform: { os: "macos", arch }, workflowRun: { id: runId, attempt: runAttempt },
     build: { mode: "release", signing: "ad-hoc", updaterArtifacts: false, officialUpdates: false, checkedFiles }, tools,
     locks: lockfiles.map((file) => ({ path: file, sha256: hash(locks[file]) })),

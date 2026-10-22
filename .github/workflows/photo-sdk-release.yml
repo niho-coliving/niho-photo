@@ -46,7 +46,7 @@
             "SDK_WORKFLOW_REF": "${{ github.ref }}",
             "SDK_DISPATCH_SOURCE_SHA": "${{ inputs.source_sha }}"
           },
-          "run": "set -euo pipefail\nif [[ \"$SDK_WORKFLOW_REF\" != \"refs/heads/main\" ]]; then exit 1; fi\nsource_sha=\"$SDK_DISPATCH_SOURCE_SHA\"\nif ! [[ \"$source_sha\" =~ ^[a-f0-9]{40}$ ]]; then exit 1; fi\ngit fetch --no-tags origin main:refs/remotes/origin/main \"$source_sha\"\ngit merge-base --is-ancestor \"$source_sha\" refs/remotes/origin/main\ngit checkout --detach \"$source_sha\"\nprintf 'source-sha=%s\\n' \"$source_sha\" >> \"$GITHUB_OUTPUT\""
+          "run": "set -euo pipefail\nif [[ \"$SDK_WORKFLOW_REF\" != \"refs/heads/main\" ]]; then exit 1; fi\nsource_sha=\"$SDK_DISPATCH_SOURCE_SHA\"\nif ! [[ \"$source_sha\" =~ ^[a-f0-9]{40}$ ]]; then exit 1; fi\ngit fetch --no-tags origin main:refs/remotes/origin/main \"$source_sha\"\ngit merge-base --is-ancestor \"$source_sha\" refs/remotes/origin/main\ngit checkout --detach \"$source_sha\"\nif [[ \"$(node -p 'require(\"./sdk/release-set.json\").repository')\" != \"niho-life/niho-photo\" ]]; then exit 1; fi\nprintf 'source-sha=%s\\n' \"$source_sha\" >> \"$GITHUB_OUTPUT\""
         },
         {
           "uses": "actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020",
@@ -92,7 +92,7 @@
         {
           "id": "upload",
           "name": "dispatch成果物を保存",
-          "if": "github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && github.repository == 'niho-coliving/niho-photo'",
+          "if": "github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && github.repository == 'niho-life/niho-photo'",
           "uses": "actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9",
           "with": {
             "name": "${{ steps.names.outputs.artifact-name }}",
@@ -110,7 +110,7 @@
       "needs": [
         "build"
       ],
-      "if": "github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && github.repository == 'niho-coliving/niho-photo'",
+      "if": "github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && github.repository == 'niho-life/niho-photo'",
       "runs-on": "ubuntu-24.04",
       "timeout-minutes": 10,
       "permissions": {
@@ -176,7 +176,7 @@
             "SDK_SOURCE_SHA": "${{ needs.build.outputs.source-sha }}",
             "SDK_VERSION": "${{ needs.build.outputs.version }}"
           },
-          "run": "set -euo pipefail\nif ! [[ \"$SDK_SOURCE_SHA\" =~ ^[a-f0-9]{40}$ ]]; then exit 1; fi\ntag=\"photo-sdk-v$SDK_VERSION\"\nrelease_flags=(--latest=false)\nrelease_core=\"${SDK_VERSION%%+*}\"\nif [[ \"$release_core\" == *-* ]]; then release_flags+=(--prerelease); fi\ngh api --method POST repos/niho-coliving/niho-photo/git/refs -f ref=\"refs/tags/$tag\" -f sha=\"$SDK_SOURCE_SHA\" >/dev/null\ngh release create \"$tag\" --verify-tag --target \"$SDK_SOURCE_SHA\" \"${release_flags[@]}\" --title \"NIHO photo SDK v$SDK_VERSION\" --notes \"source $SDK_SOURCE_SHA に固定したNIHO photo SDKリリースセットです。\" \"$SDK_ARTIFACT_DIR\"/*.tgz \"$SDK_ARTIFACT_DIR\"/*.json \"$SDK_RECEIPT_FILE\""
+          "run": "set -euo pipefail\nif ! [[ \"$SDK_SOURCE_SHA\" =~ ^[a-f0-9]{40}$ ]]; then exit 1; fi\ntag=\"photo-sdk-v$SDK_VERSION\"\nrelease_flags=(--latest=false)\nrelease_core=\"${SDK_VERSION%%+*}\"\nif [[ \"$release_core\" == *-* ]]; then release_flags+=(--prerelease); fi\ngh api --method POST repos/niho-life/niho-photo/git/refs -f ref=\"refs/tags/$tag\" -f sha=\"$SDK_SOURCE_SHA\" >/dev/null\ngh release create \"$tag\" --verify-tag --target \"$SDK_SOURCE_SHA\" \"${release_flags[@]}\" --title \"NIHO photo SDK v$SDK_VERSION\" --notes \"source $SDK_SOURCE_SHA に固定したNIHO photo SDKリリースセットです。\" \"$SDK_ARTIFACT_DIR\"/*.tgz \"$SDK_ARTIFACT_DIR\"/*.json \"$SDK_RECEIPT_FILE\""
         }
       ]
     }

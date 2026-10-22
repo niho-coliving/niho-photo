@@ -9,6 +9,7 @@ const SHA256 = /^[a-f0-9]{64}$/u;
 const COMMIT = /^[a-f0-9]{40}$/u;
 const SEMVER = /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-([0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?(?:\+([0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?$/u;
 const SAFE_FILE = /^[A-Za-z0-9][A-Za-z0-9._+-]*$/u;
+const RELEASE_REPOSITORIES = new Set(["niho-coliving/niho-photo", "niho-life/niho-photo"]);
 const PACKAGES = new Map([
   ["ui", "niho-photo-ui"],
   ["photo-editing", "niho-photo-editing"],
@@ -71,7 +72,7 @@ function tarEntries(tarball) {
 
 export function validateReleaseManifest(manifest, expectedSource) {
   strictSemver(manifest?.version);
-  if (manifest?.schemaVersion !== 1 || manifest.releaseReady !== true || manifest.repository !== "niho-coliving/niho-photo" || !COMMIT.test(manifest.source?.commit ?? "") || !COMMIT.test(manifest.source?.tree ?? "") || (expectedSource !== undefined && manifest.source.commit !== expectedSource)) throw new ReleaseArtifactError("release manifest基本契約が不正です");
+  if (manifest?.schemaVersion !== 1 || manifest.releaseReady !== true || !RELEASE_REPOSITORIES.has(manifest.repository) || !COMMIT.test(manifest.source?.commit ?? "") || !COMMIT.test(manifest.source?.tree ?? "") || (expectedSource !== undefined && manifest.source.commit !== expectedSource)) throw new ReleaseArtifactError("release manifest基本契約が不正です");
   if (!Array.isArray(manifest.packages) || manifest.packages.length !== PACKAGES.size) throw new ReleaseArtifactError("SDK package集合が不正です");
   const ids = new Set();
   const names = new Set();

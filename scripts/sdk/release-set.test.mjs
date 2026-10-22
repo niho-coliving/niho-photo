@@ -21,7 +21,7 @@ import {
 } from "./release-set-lib.mjs";
 import { smokeConsumer } from "./smoke-consumer.mjs";
 import { rewriteVersionedRuntimeReferences, runtimeBuildEnvironment, versionedRuntimeFileName } from "./build-develop-engine-runtime.mjs";
-import { normalizeArtifactDigest, verifyReleaseArtifact } from "./verify-release-artifact.mjs";
+import { normalizeArtifactDigest, validateReleaseManifest, verifyReleaseArtifact } from "./verify-release-artifact.mjs";
 import { nativeBuildEnvironment, swiftSourcePrefixArguments, validateNativeSourceClosure } from "../../packages/develop-engine/build-macos-native.mjs";
 
 const realRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
@@ -64,7 +64,7 @@ function runtimeFixture(root, config, source = { commit: "a".repeat(40), tree: "
     schemaVersion: 1,
     engine: config.engine.version,
     version: config.engine.crateVersion,
-    source: { repository: "niho-coliving/niho-photo", ...source },
+    source: { repository: config.repository ?? "niho-life/niho-photo", ...source },
     build: { rustToolchain: "1.98.1", wasmBindgen: "0.2.129", target: "wasm32-unknown-unknown", profile: "release" },
     files: Object.fromEntries(Object.entries(values).map(([name, value]) => {
       const bytes = Buffer.isBuffer(value) ? value : Buffer.from(value);
@@ -185,6 +185,7 @@ test("展開先のdirectoryがsymlinkでもnative CLIを実行する", () => {
 test("release-set 定義は package/path/version の改変を拒否する", () => {
   const config = JSON.parse(readFileSync(path.join(realRoot, "sdk/release-set.json"), "utf8"));
   assert.equal(validateConfig(config), config);
+  assert.throws(() => validateConfig({ ...config, repository: "niho-coliving/niho-photo" }), /基本契約/);
   assert.throws(() => validateConfig({ ...config, version: "latest" }), /semver/);
   const escaped = structuredClone(config);
   escaped.packages[0].sourceRoot = "../niho-app";
@@ -261,6 +262,9 @@ test("clean Git object から決定的 tarball を作り repo 外 consumer で T
   }
   const manifestPath = path.join(first, one.manifestName);
   assert.deepEqual(verifyReleaseManifestFiles(manifestPath).packages, one.manifest.packages);
+  const historicalManifest = structuredClone(one.manifest);
+  historicalManifest.repository = "niho-coliving/niho-photo";
+  assert.equal(validateReleaseManifest(historicalManifest, fixture.source.commit).repository, "niho-coliving/niho-photo");
   const manifestSha256 = sha256(readFileSync(manifestPath));
   assert.equal(verifyReleaseArtifact({ directory: first, expectedSource: fixture.source.commit, expectedManifestSha256: manifestSha256 }).manifestSha256, manifestSha256);
   assert.throws(() => verifyReleaseArtifact({ directory: first, expectedSource: fixture.source.commit, expectedManifestSha256: "f".repeat(64) }), /輸送hash/);
