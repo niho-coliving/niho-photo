@@ -202,7 +202,7 @@ function candidateFixture() {
   });
   const manifest = {
     schemaVersion: 1,
-    repository: "niho-coliving/niho-photo",
+    repository: "niho-life/niho-photo",
     product: "NIHO photo",
     bundleId: "life.niho.camera",
     version,
@@ -246,12 +246,12 @@ const pinnedRecords = (paths, marker) => paths.map((name, index) => {
   return { path: name, sha256: digest, integrity: integrity(digest), size: 1 };
 });
 
-function sdkManifestFixture(candidate) {
+function sdkManifestFixture(candidate, repository = "niho-life/niho-photo") {
   const runtimeDigest = "8".repeat(64), manifestDigest = "9".repeat(64);
   return {
     schemaVersion: 1,
     releaseReady: true,
-    repository: "niho-coliving/niho-photo",
+    repository,
     version: candidate.manifest.sdk.version,
     source: candidate.manifest.sdk.source,
     packages: candidate.manifest.sdk.packages.map(({ bytes: size, ...item }) => ({ ...item, size, integrity: integrity(item.sha256) })),
@@ -270,15 +270,15 @@ function sdkManifestFixture(candidate) {
   };
 }
 
-function sdkProofFixture(candidate) {
+function sdkProofFixture(candidate, sdkRepository = "niho-life/niho-photo") {
   const directory = temp("niho-photo-sdk-proof-");
-  const sdkManifest = sdkManifestFixture(candidate);
+  const sdkManifest = sdkManifestFixture(candidate, sdkRepository);
   const manifestBytes = Buffer.from(`${JSON.stringify(sdkManifest, null, 2)}\n`);
   candidate.manifest.sdk.manifestSha256 = sha256(manifestBytes);
   writeFileSync(path.join(directory, candidate.manifest.sdk.manifestFile), manifestBytes);
   const receipt = {
     schemaVersion: 1,
-    repository: candidate.manifest.repository,
+    repository: sdkManifest.repository,
     sourceSha: candidate.manifest.sdk.source.commit,
     sourceOwnershipDigest: candidate.manifest.sourceOwnership.digest,
     version: candidate.manifest.sdk.version,
@@ -330,6 +330,7 @@ test("candidate data verifierはasset集合/hash/identity/updater/versionを固�
   assert.throws(() => verifyCandidateDirectory(linkedManifest.directory), /通常file/);
 
   for (const mutate of [
+    (value) => { value.repository = "other/repository"; },
     (value) => { value.version = "v1"; },
     (value) => { value.app.identity.bundleId = "other.bundle"; },
     (value) => { delete value.app.notices; },
@@ -342,6 +343,22 @@ test("candidate data verifierはasset集合/hash/identity/updater/versionを固�
     writeFileSync(path.join(fixture.directory, fixture.manifestFile), `${JSON.stringify(fixture.manifest, null, 2)}\n`);
     assert.throws(() => verifyCandidateDirectory(fixture.directory));
   }
+});
+
+test("移管前candidateと旧repositoryの公開SDK proofを引き続き検証する", () => {
+  const historicalCandidate = candidateFixture();
+  historicalCandidate.manifest.repository = "niho-coliving/niho-photo";
+  writeFileSync(path.join(historicalCandidate.directory, historicalCandidate.manifestFile), `${JSON.stringify(historicalCandidate.manifest, null, 2)}\n`);
+  assert.equal(verifyCandidateDirectory(historicalCandidate.directory).manifest.repository, "niho-coliving/niho-photo");
+
+  const currentCandidate = candidateFixture();
+  const historicalSdkProof = sdkProofFixture(currentCandidate, "niho-coliving/niho-photo");
+  assert.equal(verifySdkProofDirectory({
+    directory: historicalSdkProof.directory,
+    candidateManifest: currentCandidate.manifest,
+    expectedSdkVersion: currentCandidate.manifest.sdk.version,
+    expectedSdkManifestSha256: currentCandidate.manifest.sdk.manifestSha256,
+  }).manifest.repository, "niho-coliving/niho-photo");
 });
 
 test("published SDK proofはmanifest schema/source ownership/release receiptをcandidateへ固定する", () => {

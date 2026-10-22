@@ -200,7 +200,7 @@ export function buildCandidate(values) {
     writeFileSync(path.join(output, sbomName), sbomBytes, { flag: "wx", mode: 0o644 });
     const manifest = {
       schemaVersion: 1,
-      repository: "niho-coliving/niho-photo",
+      repository: "niho-life/niho-photo",
       product: candidateContract.product,
       bundleId: candidateContract.bundleId,
       version: values["--version"],

@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://github.com/niho-coliving/niho-photo/blob/main/docs/releases/manifest-v1.schema.json",
+  "$id": "https://github.com/niho-life/niho-photo/blob/main/docs/releases/manifest-v1.schema.json",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -22,7 +22,10 @@
       "const": 1
     },
     "repository": {
-      "const": "niho-coliving/niho-photo"
+      "enum": [
+        "niho-coliving/niho-photo",
+        "niho-life/niho-photo"
+      ]
     },
     "commit": {
       "type": "string",

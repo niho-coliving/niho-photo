@@ -1,6 +1,6 @@
 # 公開検証成果物と固定SHA取り込み契約 v1
 
-Issue #2。公開リポジトリ `niho-coliving/niho-photo` の完全なcommit SHAを、検証用Mac app、SBOM、lockfile、toolchain、認証・共有contractへ結び付ける。公開mergeによって本番への署名・公証・配布・更新公開は始まらない。非公開側の取り込み実装は別の作業とする。
+Issue #2。公開リポジトリ `niho-life/niho-photo` の完全なcommit SHAを、検証用Mac app、SBOM、lockfile、toolchain、認証・共有contractへ結び付ける。公開mergeによって本番への署名・公証・配布・更新公開は始まらない。非公開側の取り込み実装は別の作業とする。移管前に公開済みの成果物は、manifestに記録された `niho-coliving/niho-photo` を履歴上のsource repositoryとして引き続き検証する。
 
 この文書のmain push artifactはvalidation-onlyの旧経路である。Issue #113の手動Mac candidate prereleaseは、公開済みSDKの
 manifest/receipt/release metadata、完全native closure、candidate manifest、Actions artifact receipt/provenanceを追加で固定する

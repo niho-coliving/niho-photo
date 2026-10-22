@@ -6,7 +6,7 @@ const pins = new Map([
   ["actions/download-artifact", "d3f86a106a0bac45b974a628896c90dbdf5c8093"],
 ]);
 
-export const publishCondition = "github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && github.repository == 'niho-coliving/niho-photo'";
+export const publishCondition = "github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && github.repository == 'niho-life/niho-photo'";
 export const buildCommand = "set -euo pipefail\nnpm run sdk:build-engine-runtime -- --output \"$SDK_RUNTIME_DIR\"\nnpm run sdk:pack -- --output \"$SDK_RELEASE_DIR\" --source \"$SDK_SOURCE_SHA\" --engine-assets \"$SDK_RUNTIME_DIR\"\nmanifest=\"$SDK_RELEASE_DIR/niho-photo-sdk-$(node -p 'require(\"./sdk/release-set.json\").version')-$SDK_SOURCE_SHA.json\"\nnpm run sdk:smoke -- --manifest \"$manifest\"\nnpm run sdk:smoke-real-engine -- --manifest \"$manifest\"";
 export const publishVerifyCommand = "node scripts/sdk/verify-release-artifact.mjs --directory \"$SDK_ARTIFACT_DIR\" --expected-source \"$SDK_SOURCE_SHA\" --expected-manifest-sha256 \"$SDK_MANIFEST_SHA256\" --receipt \"$SDK_RECEIPT_FILE\" --artifact-id \"$SDK_ARTIFACT_ID\" --artifact-digest \"$SDK_ARTIFACT_DIGEST\" --artifact-name \"$SDK_ARTIFACT_NAME\" --run-id \"$SDK_RUN_ID\" --run-attempt \"$SDK_RUN_ATTEMPT\"";
 
@@ -48,7 +48,7 @@ export function photoSdkWorkflowFailures(workflow) {
     }
   }
   const source = build?.steps?.find((step) => step.id === "source");
-  if (!source?.run?.includes("refs/heads/main") || !source.run.includes("^[a-f0-9]{40}$") || !source.run.includes("git merge-base --is-ancestor") || !source.run.includes("refs/remotes/origin/main") || source["continue-on-error"]) fail("dispatch sourceはmainのfull SHA祖先に限定する必要があります");
+  if (!source?.run?.includes("refs/heads/main") || !source.run.includes("^[a-f0-9]{40}$") || !source.run.includes("git merge-base --is-ancestor") || !source.run.includes("refs/remotes/origin/main") || !source.run.includes('"niho-life/niho-photo"') || source["continue-on-error"]) fail("dispatch sourceは新repository契約を持つmainのfull SHA祖先に限定する必要があります");
   const actualBuild = build?.steps?.find((step) => step.name === "実WASMをbuildしてSDKを検証");
   if (actualBuild?.run !== buildCommand || actualBuild?.env?.SDK_SOURCE_SHA !== "${{ steps.source.outputs.source-sha }}") fail("SDK buildは実WASM→pack→外部consumerを固定順で検証する必要があります");
   const release = build?.steps?.find((step) => step.id === "release");
@@ -64,7 +64,7 @@ export function photoSdkWorkflowFailures(workflow) {
   const verify = publish?.steps?.find((step) => step.name === "mainのverifierで輸送内容を再検証");
   if (verify?.run !== publishVerifyCommand || verify?.env?.SDK_MANIFEST_SHA256 !== "${{ needs.build.outputs.manifest-sha256 }}" || verify?.env?.SDK_ARTIFACT_DIGEST !== "${{ needs.build.outputs.artifact-digest }}") fail("publishはmanifest hashと輸送receiptをmain verifierで照合する必要があります");
   const releaseStep = publish?.steps?.find((step) => step.name === "新規tagとGitHub Releaseを作成");
-  if (!releaseStep?.run?.includes("gh api --method POST") || !releaseStep.run.includes("refs/tags/$tag") || !releaseStep.run.includes("gh release create") || !releaseStep.run.includes("--verify-tag") || !releaseStep.run.includes("--latest=false") || !releaseStep.run.includes('release_core="${SDK_VERSION%%+*}"') || !releaseStep.run.includes("release_flags+=(--prerelease)") || !releaseStep.run.includes("$SDK_RECEIPT_FILE") || /(?:--clobber|--force|release upload)/u.test(releaseStep?.run ?? "") || releaseStep?.env?.GH_TOKEN !== "${{ github.token }}") fail("SDK releaseはlatestを変更せず新規tagと検証済みassetだけを公開する必要があります");
+  if (!releaseStep?.run?.includes("gh api --method POST repos/niho-life/niho-photo/git/refs") || !releaseStep.run.includes("refs/tags/$tag") || !releaseStep.run.includes("gh release create") || !releaseStep.run.includes("--verify-tag") || !releaseStep.run.includes("--latest=false") || !releaseStep.run.includes('release_core="${SDK_VERSION%%+*}"') || !releaseStep.run.includes("release_flags+=(--prerelease)") || !releaseStep.run.includes("$SDK_RECEIPT_FILE") || /(?:--clobber|--force|release upload)/u.test(releaseStep?.run ?? "") || releaseStep?.env?.GH_TOKEN !== "${{ github.token }}") fail("SDK releaseは新repositoryでlatestを変更せず新規tagと検証済みassetだけを公開する必要があります");
   const attest = publish?.steps?.find((step) => step.id === "attest");
   const expectedAttest = {"subject-path": "${{ runner.temp }}/photo-sdk-download/niho-photo-sdk-${{ needs.build.outputs.version }}-${{ needs.build.outputs.source-sha }}.json", "create-storage-record": false};
   if (attest?.uses !== "actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6" || JSON.stringify(attest?.with) !== JSON.stringify(expectedAttest) || publish.steps.indexOf(attest) <= publish.steps.indexOf(verify) || publish.steps.indexOf(attest) >= publish.steps.length - 1) fail("公開manifestの公式workflow attestationが不足しています");

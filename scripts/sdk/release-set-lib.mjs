@@ -107,7 +107,7 @@ export function matchesPackagePath(relative, definition) {
 }
 
 export function validateConfig(config) {
-  if (!config || config.schemaVersion !== 1 || config.repository !== "niho-coliving/niho-photo") throw new SdkReleaseError("release-set の基本契約が不正です");
+  if (!config || config.schemaVersion !== 1 || config.repository !== "niho-life/niho-photo") throw new SdkReleaseError("release-set の基本契約が不正です");
   assertStrictSemver(config.version);
   if (!Array.isArray(config.packages) || config.packages.length !== 5) throw new SdkReleaseError("release-set は UI/editor/cloud contract/Node contract/engine source の 5 package が必要です");
   const ids = new Set();
@@ -485,7 +485,7 @@ export function validateRuntimeAssets({ assetDirectory, engine, expectedSource }
   if (manifest.engine !== engine.version || manifest.version !== engine.crateVersion || !manifest.files || typeof manifest.files !== "object" || Array.isArray(manifest.files)) throw new SdkReleaseError("engine runtime manifest の pin が release-set と一致しません");
   if (
     !expectedSource ||
-    manifest.source?.repository !== "niho-coliving/niho-photo" ||
+    manifest.source?.repository !== "niho-life/niho-photo" ||
     manifest.source?.commit !== expectedSource.commit ||
     manifest.source?.tree !== expectedSource.tree ||
     manifest.build?.rustToolchain !== "1.98.1" ||
