@@ -3486,10 +3486,11 @@
         "path": "packages/ui/src/dismiss-layers.ts",
         "sha256": "b7ac8cbfbeee95cc53fb0a339006edc8ac28fc63e0fa122a3b7a41d80b10a49e"
       },
-      "outputSha256": "e6337003fd662079dc7bd30b84fbc9879e7972bc44ede9ffb9b2cc23bb0c5cf3",
+      "outputSha256": "974ca374f0e894a411eb6e705c198894785f8fd14eead8b76c8696a1f8a3ced6",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
-        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。"
+        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
+        "SDKとhostのbrowser内dismiss順序を共有しSSRではcallbackを保持しない契約へ更新。"
       ]
     },
     {
@@ -11261,6 +11262,11 @@
       "path": "apps/camera/src-tauri/src/runtime_assets.rs",
       "sha256": "e4847fae4b704ab530b02d6d9cac82b2cbcce6e8b581cb10de8d8904224d315e",
       "origin": "NIHO Photo独立配布で実際に配信するSDK runtimeを専用Mach-O sectionから返すため新規実装した。外部sourceのコピーはない。"
+    },
+    {
+      "path": "packages/ui/src/dismiss-layers.test.ts",
+      "sha256": "e7e92ecca332e66d6dd511f1ebf99127c8ea6bb0d4752cf3567319540d81952d",
+      "origin": "niho-photo#117のため新規作成。別module copy、HMR、SSR、途中解除のdismiss契約を合成callbackで確認する。外部sourceのコピーはない。"
     }
   ],
   "excludedSources": [
