@@ -1,6 +1,6 @@
 "use client";
 
-import { useId } from "react";
+import { Fragment, useId } from "react";
 import { CircleDot, Cloud, Copy, Eye, EyeOff, FlipVertical2, Paintbrush, Rows3, Trash2, User, type LucideIcon } from "lucide-react";
 
 import type { DevelopMask, DevelopMaskAdjustKey } from "../develop-engine/develop-masks";
@@ -37,6 +37,7 @@ import { cn } from "niho-ui/cn";
 
 import { WHITE_BALANCE_TRACK_CLASS_NAMES, type PhotoEditingSliderPhase } from "./photo-editing-adjustment-controls";
 import { PhotoEditingMaskBrushTools } from "./photo-editing-mask-brush-tools";
+import { PhotoEditingMaskHslSection } from "./photo-editing-mask-hsl";
 import { PhotoEditingSlider } from "./photo-editing-slider";
 import type { BrowserPhotoMaskTool, PhotoEditingMaskAddKind } from "./use-browser-photo-masks";
 
@@ -54,14 +55,16 @@ const ROW_ICON_BUTTON_CLASS_NAME = cn(
   FOCUS_RING_CLASS_NAME,
 );
 
-const KIND_ICONS: Readonly<Record<string, LucideIcon>> = {
+/** マスクの種類の印（一覧・足すボタン。スマホの段も使う） */
+export const PHOTO_EDITING_MASK_KIND_ICONS: Readonly<Record<string, LucideIcon>> = {
   linear: Rows3,
   radial: CircleDot,
   brush: Paintbrush,
   subject: User,
   sky: Cloud,
 };
-const ADD_LABELS: Readonly<Record<PhotoEditingMaskAddKind, string>> = {
+/** 足すボタンの名前（スマホの段は読み上げ名に使う） */
+export const PHOTO_EDITING_MASK_ADD_LABELS: Readonly<Record<PhotoEditingMaskAddKind, string>> = {
   linear: PHOTO_EDITING_MASK_ADD_LINEAR_LABEL,
   radial: PHOTO_EDITING_MASK_ADD_RADIAL_LABEL,
   brush: PHOTO_EDITING_MASK_ADD_BRUSH_LABEL,
@@ -87,11 +90,18 @@ export type PhotoEditingMaskToolsProps = Pick<
   | "changeAdjust"
   | "changeFeather"
 > &
-  Partial<Pick<BrowserPhotoMaskTool, "brush" | "addingBrush" | "notice" | "canRetrySurfaces" | "retrySurfaces">> & {
+  Partial<
+    Pick<
+      BrowserPhotoMaskTool,
+      // 局所のカラーミキサー（niho-photo#93。渡したときだけ節を出す）
+      "brush" | "addingBrush" | "notice" | "canRetrySurfaces" | "retrySurfaces" | "changeHsl" | "resetHsl" | "grayscale"
+    >
+  > & {
     disabled: boolean;
   };
 
-function formatMaskAdjust(key: DevelopMaskAdjustKey, value: number): string {
+/** 局所の差分の値の見せ方（露光量は全体と同じ書き方、ほかは符号つきの整数）。スマホの段（niho-photo#93）も使う。 */
+export function formatPhotoEditingMaskAdjust(key: DevelopMaskAdjustKey, value: number): string {
   return key === "exposure" ? formatAdjustmentValue("exposure", value) : formatSignedInteger(value);
 }
 
@@ -99,7 +109,8 @@ function formatMaskAdjust(key: DevelopMaskAdjustKey, value: number): string {
  * 右パネルのマスクの面（部分補正。M3 #67。見出し行・↶ ↷・「初期化」は右パネルが持つ）。上から「マスクを追加」（wasm が描ける
  * 種類だけ。8 枚・原寸の書き出しが描けないときは押せず、理由を出す）、マスクの一覧（種類の印・名前・目〔当てる / 外す〕・反転・
  * 複製・削除）、範囲の重ね表示の切り替え（O）、選んだマスクの局所の補正（全体と同じ ライト／カラー／効果。値は全体への差分で
- * 0 が既定。相対の白は全体の白が `absolute` の間は出さない）と、円形のぼかし。
+ * 0 が既定。相対の白は全体の白が `absolute` の間は出さない。カラーの群の後ろに既定で閉じた局所のカラーミキサー〔niho-photo#93〕）と、
+ * 円形のぼかし。
  */
 export function PhotoEditingMaskTools(props: PhotoEditingMaskToolsProps) {
   const idPrefix = useId();
@@ -124,7 +135,7 @@ export function PhotoEditingMaskTools(props: PhotoEditingMaskToolsProps) {
         max={definition.max}
         step={definition.step}
         value={value}
-        valueText={formatMaskAdjust(definition.key, value)}
+        valueText={formatPhotoEditingMaskAdjust(definition.key, value)}
         disabled={disabled}
         onChange={(next: number, phase: PhotoEditingSliderPhase) => props.changeAdjust(mask.id, definition.key, next, phase)}
         onReset={() => props.changeAdjust(mask.id, definition.key, 0, "commit")}
@@ -142,7 +153,7 @@ export function PhotoEditingMaskTools(props: PhotoEditingMaskToolsProps) {
         </h3>
         <div className="grid grid-cols-1 gap-1.5">
           {props.kinds.map((kind) => {
-            const Icon = KIND_ICONS[kind] ?? CircleDot;
+            const Icon = PHOTO_EDITING_MASK_KIND_ICONS[kind] ?? CircleDot;
             return (
               <button
                 key={kind}
@@ -153,7 +164,7 @@ export function PhotoEditingMaskTools(props: PhotoEditingMaskToolsProps) {
                 className={ADD_BUTTON_CLASS_NAME}
               >
                 <Icon className="h-4 w-4 shrink-0 text-niho-text-sub" aria-hidden />
-                {ADD_LABELS[kind]}
+                {PHOTO_EDITING_MASK_ADD_LABELS[kind]}
               </button>
             );
           })}
@@ -189,7 +200,7 @@ export function PhotoEditingMaskTools(props: PhotoEditingMaskToolsProps) {
           <ul className="space-y-0.5">
             {masks.map((mask, index) => {
               const name = photoEditingMaskLabel(mask.kind, index);
-              const Icon = KIND_ICONS[mask.kind] ?? CircleDot;
+              const Icon = PHOTO_EDITING_MASK_KIND_ICONS[mask.kind] ?? CircleDot;
               const isSelected = selected?.id === mask.id;
               return (
                 <li
@@ -313,18 +324,32 @@ export function PhotoEditingMaskTools(props: PhotoEditingMaskToolsProps) {
             const adjustments = group.adjustments.filter((definition) => !(definition.whiteBalance && props.whiteBalanceAbsolute));
             if (adjustments.length === 0) return null;
             return (
-              <div key={group.id} role="group" aria-labelledby={`${idPrefix}-group-${group.id}`} className="pt-1">
-                <h4 id={`${idPrefix}-group-${group.id}`} className={cn(SECTION_TITLE_CLASS_NAME, "py-1")}>
-                  {group.title}
-                </h4>
-                {adjustments.map((definition) =>
-                  renderSlider(
-                    selected,
-                    definition,
-                    definition.key === "relativeTemperature" ? "temperature" : definition.key === "relativeTint" ? "tint" : null,
-                  ),
-                )}
-              </div>
+              <Fragment key={group.id}>
+                <div role="group" aria-labelledby={`${idPrefix}-group-${group.id}`} className="pt-1">
+                  <h4 id={`${idPrefix}-group-${group.id}`} className={cn(SECTION_TITLE_CLASS_NAME, "py-1")}>
+                    {group.title}
+                  </h4>
+                  {adjustments.map((definition) =>
+                    renderSlider(
+                      selected,
+                      definition,
+                      definition.key === "relativeTemperature" ? "temperature" : definition.key === "relativeTint" ? "tint" : null,
+                    ),
+                  )}
+                </div>
+                {group.id === "color" && props.changeHsl && props.resetHsl ? (
+                  // 局所のカラーミキサー（niho-photo#93。全体の右パネルと同じくカラーの群の後ろ・既定は閉じる）
+                  <div className="pt-1" data-testid="photo-mask-hsl">
+                    <PhotoEditingMaskHslSection
+                      mask={selected}
+                      disabled={disabled}
+                      grayscale={props.grayscale === true}
+                      onChange={props.changeHsl}
+                      onReset={props.resetHsl}
+                    />
+                  </div>
+                ) : null}
+              </Fragment>
             );
           })}
           {selected.kind === "radial" ? (

@@ -5,7 +5,7 @@ import { act, useRef, useState } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import type { DevelopEngine, DevelopFrame } from "../develop-engine/develop-engine-client";
+import type { DevelopEngine, DevelopFrame, DevelopRenderOptions } from "../develop-engine/develop-engine-client";
 import { writeDevelopGeometry } from "../develop-engine/develop-geometry";
 import { addDevelopHealMark } from "../develop-engine/develop-heal-editing";
 import { neutralDevelopSettings, type DevelopSettings } from "../develop-engine/develop-settings";
@@ -920,5 +920,287 @@ describe("useBrowserPhotoOpen progressive RAW integration", () => {
     await run(() => firstWork.resolve(readyWork()));
     await settleUntil(() => currentViewMode === "loupe", "second remains open");
     expect(current.opened?.key).toBe(second.key);
+  });
+});
+
+describe("useBrowserPhotoOpen の描いた順（つまみを動かしている間の途中の画）", () => {
+  type HeldRender = { settings: DevelopSettings; options: DevelopRenderOptions; result: Deferred<DevelopFrame | null> };
+
+  const mainCanvas = () => container.querySelector<HTMLCanvasElement>("canvas:not([data-testid])");
+  /** 1 枚の表示の canvas に描いた画の印（`frame(marker)` の marker）を描いた順に */
+  const mainPaints = () =>
+    paintFrame.mock.calls.filter(([canvas]) => canvas === mainCanvas()).map(([, painted]) => (painted as DevelopFrame).rgba[0]);
+  const sleep = (ms: number) => act(async () => {
+    await new Promise((resolve) => setTimeout(resolve, ms));
+  });
+
+  /**
+   * 正式な入力（作業コピー）で開き、開いた画を描き終えた後の描画（比較の 2 枚目の background を除く）を手で返せるエンジン。
+   * `editedPreview` は、保存済みの同じ版の補正後のプレビューを見せて開く（開くだけでは描かない）
+   */
+  async function openHeld(id: string, options: { editedPreview?: boolean } = {}) {
+    const engine = createEngine({ marker: 9 });
+    const held: HeldRender[] = [];
+    let holding = options.editedPreview === true;
+    vi.mocked(engine.render).mockImplementation(async (settings, renderOptions) => {
+      if (!holding || renderOptions.priority === "background") return frame(9);
+      const result = deferred<DevelopFrame | null>();
+      held.push({ settings: settings as DevelopSettings, options: renderOptions, result });
+      return result.promise;
+    });
+    engineFactory.mockReturnValue(engine);
+    const fixture = createLibrary(async () => readyWork());
+    vi.mocked(fixture.library.loadInteractivePreview!).mockRejectedValue(new Error("preview unavailable"));
+    const base = item(id);
+    let target = base;
+    if (options.editedPreview) {
+      const edited = { revision: 0, width: 1280, height: 853, url: `https://example.invalid/${id}-edited.jpg`, thumbUrl: null };
+      target = { ...base, photo: { ...base.photo, editedPreview: edited } };
+      vi.mocked(fixture.library.openOriginal).mockImplementation(async (photoId: string) => ({
+        source: { ref: "original-ref", expiresAt: null },
+        photo: { ...photo(photoId), editedPreview: edited },
+      }));
+    }
+    await mount(fixture.library, [target]);
+    await run(() => current.openItem(target));
+    expect(current.opened?.input?.kind).toBe("workingCopy");
+    if (!options.editedPreview) await settleUntil(() => mainPaints().length > 0, "opened frame painted");
+    holding = true;
+    return { engine, held, target };
+  }
+
+  it("つまみを動かしている間は、描き終えた途中の画を古い順に描き、後の要求に追い越された古い画は描かない", async () => {
+    const { held } = await openHeld("drag-progress");
+    const before = mainPaints().length;
+    const drag = (exposure: number) => run(() => current.changeSettings((settings) => ({ ...settings, exposure }), "drag"));
+    await drag(0.1);
+    await drag(0.2);
+    await drag(0.3);
+    expect(held.map(({ settings, options }) => [settings.exposure, options.interactive])).toEqual([
+      [0.1, true],
+      [0.2, true],
+      [0.3, true],
+    ]);
+
+    // 操作が描画より速くても（まだ新しい要求がある）、描き終えた途中の画を描く（最新の要求だけを描くと、離すまで 1 枚も描けない）
+    await run(() => held[0]!.result.resolve(frame(11)));
+    expect(mainPaints().slice(before)).toEqual([11]);
+    await drag(0.4);
+    await run(() => held[1]!.result.resolve(frame(12)));
+    expect(mainPaints().slice(before)).toEqual([11, 12]);
+    // 後から出した要求（0.4）が先に描き終えたら、それより古い要求（0.3）の画は後から返っても描かない（描いた順を戻さない）
+    await run(() => held[3]!.result.resolve(frame(14)));
+    await run(() => held[2]!.result.resolve(frame(13)));
+    expect(mainPaints().slice(before)).toEqual([11, 12, 14]);
+    // 描いた画だけをヒストグラムの口へ渡す
+    expect(framePainted.mock.calls.slice(-3).map(([, painted]) => (painted as DevelopFrame).rgba[0])).toEqual([11, 12, 14]);
+    expect(framePainted).toHaveBeenCalledTimes(paintFrame.mock.calls.length);
+  });
+
+  it("離したら丁寧な画を最後に描き、途中の速い画は丁寧な画として覚えない", async () => {
+    const { held } = await openHeld("drag-release");
+    const before = mainPaints().length;
+    const drag = (exposure: number) => run(() => current.changeSettings((settings) => ({ ...settings, exposure }), "drag"));
+    await drag(0.1);
+    await drag(0.2);
+    await run(() => held[0]!.result.resolve(frame(21)));
+    await drag(0.1);
+    await run(() => held[1]!.result.resolve(frame(22)));
+    // 0.1 で離す（描き途中の 0.1 の速い画がある）
+    await run(() => current.changeSettings((settings) => ({ ...settings, exposure: 0.1 }), "commit"));
+    expect(held.map(({ settings, options }) => [settings.exposure, options.interactive])).toEqual([
+      [0.1, true],
+      [0.2, true],
+      [0.1, true],
+      [0.1, false],
+    ]);
+    // 離す前に出した速い画は、離した後に描き終えても描く（丁寧な画より古い要求だが、まだ描いた画より新しい）
+    await run(() => held[2]!.result.resolve(frame(23)));
+    await run(() => held[3]!.result.resolve(frame(31)));
+    expect(mainPaints().slice(before)).toEqual([21, 22, 23, 31]);
+
+    // 覚えているのは丁寧な画（31）: 別の値を確定してから取り消すと、wasm に描かせずにその画を描き、描き途中の画は描かない
+    await run(() => current.changeSettings((settings) => ({ ...settings, exposure: 0.6 }), "commit"));
+    expect(held).toHaveLength(5);
+    await run(() => current.undo());
+    expect(current.settings.exposure).toBe(0.1);
+    expect(held).toHaveLength(5);
+    expect(mainPaints().at(-1)).toBe(31);
+    await run(() => held[4]!.result.resolve(frame(40)));
+    expect(mainPaints().slice(before)).toEqual([21, 22, 23, 31, 31]);
+  });
+
+  it("途中の速い画で丁寧な画の覚えを汚さない（同じ設定で離したら丁寧に描き直す）", async () => {
+    const { held } = await openHeld("drag-cache");
+    const before = mainPaints().length;
+    await run(() => current.changeSettings((settings) => ({ ...settings, exposure: 0.3 }), "drag"));
+    await run(() => held[0]!.result.resolve(frame(51)));
+    await run(() => current.changeSettings((settings) => ({ ...settings, exposure: 0.3 }), "commit"));
+    // 0.3 の速い画（51）は描いたが覚えていない: 離したら丁寧な画を描かせる
+    expect(held.map(({ options }) => options.interactive)).toEqual([true, false]);
+    await run(() => held[1]!.result.resolve(frame(52)));
+    expect(mainPaints().slice(before)).toEqual([51, 52]);
+  });
+
+  it("覚えている画へ戻した（取り消した・つまみを元の値へ戻した）ら、進行中の古い描画を描かない", async () => {
+    const { held } = await openHeld("undo-cache");
+    const before = mainPaints().length;
+    await run(() => current.changeSettings((settings) => ({ ...settings, exposure: 0.5 }), "commit"));
+    await run(() => current.undo());
+    // 開いたときの丁寧な画（9）を描き直す
+    expect(mainPaints().slice(before)).toEqual([9]);
+    await run(() => held[0]!.result.resolve(frame(15)));
+    expect(mainPaints().slice(before)).toEqual([9]);
+
+    // つまみを動かしている途中で、覚えている画の値に戻した
+    const opened = current.settings.exposure;
+    await run(() => current.changeSettings((settings) => ({ ...settings, exposure: 0.2 }), "drag"));
+    await run(() => current.changeSettings((settings) => ({ ...settings, exposure: opened }), "drag"));
+    expect(held).toHaveLength(2);
+    expect(mainPaints().slice(before)).toEqual([9, 9]);
+    await run(() => held[1]!.result.resolve(frame(16)));
+    expect(mainPaints().slice(before)).toEqual([9, 9]);
+    // その後に動かした分は、また途中の画を描く
+    await run(() => current.changeSettings((settings) => ({ ...settings, exposure: 0.3 }), "drag"));
+    await run(() => current.changeSettings((settings) => ({ ...settings, exposure: 0.4 }), "drag"));
+    await run(() => held[2]!.result.resolve(frame(17)));
+    expect(mainPaints().slice(before)).toEqual([9, 9, 17]);
+  });
+
+  it("保存済みの同じ版のプレビューを見せている間に元へ戻したら、進行中の古い描画を描かない", async () => {
+    const { held } = await openHeld("undo-saved-preview", { editedPreview: true });
+    expect(current.opened?.previewPending).toBe(true);
+    expect(current.opened?.previewCurrent).toBe(true);
+    // 開いただけでは描かない（保存済みの同じ版の補正後のプレビューのまま）
+    expect(held).toHaveLength(0);
+    expect(mainPaints()).toEqual([]);
+    const opened = current.settings.exposure;
+
+    // 動かしてから元の値へ戻す（ドラッグの途中）
+    await run(() => current.changeSettings((settings) => ({ ...settings, exposure: 0.3 }), "drag"));
+    await run(() => current.changeSettings((settings) => ({ ...settings, exposure: opened }), "drag"));
+    expect(held).toHaveLength(1);
+    await run(() => held[0]!.result.resolve(frame(61)));
+    expect(mainPaints()).toEqual([]);
+    expect(current.opened?.previewPending).toBe(true);
+    await run(() => current.changeSettings((settings) => ({ ...settings, exposure: opened }), "commit"));
+
+    // 確定してから取り消す
+    await run(() => current.changeSettings((settings) => ({ ...settings, exposure: 0.5 }), "commit"));
+    expect(held).toHaveLength(2);
+    await run(() => current.undo());
+    expect(current.settings.exposure).toBe(opened);
+    expect(held).toHaveLength(2);
+    await run(() => held[1]!.result.resolve(frame(62)));
+    expect(mainPaints()).toEqual([]);
+    expect(current.opened?.previewPending).toBe(true);
+  });
+
+  it("「補正前」を押している間は、押す前の途中の画を描かない（離した後はまた途中の画を描く）", async () => {
+    const { held } = await openHeld("compare-original");
+    const before = mainPaints().length;
+    await run(() => current.changeSettings((settings) => ({ ...settings, exposure: 0.2 }), "drag"));
+    await run(() => current.setCompareOriginal(true));
+    expect(held).toHaveLength(2);
+    expect(held[1]!.settings.exposure ?? 0).toBe(0);
+    await run(() => held[0]!.result.resolve(frame(71)));
+    expect(mainPaints().slice(before)).toEqual([]);
+    await run(() => held[1]!.result.resolve(frame(5)));
+    expect(mainPaints().slice(before)).toEqual([5]);
+    await run(() => current.setCompareOriginal(false));
+    await run(() => current.changeSettings((settings) => ({ ...settings, exposure: 0.3 }), "drag"));
+    expect(held.slice(2).map(({ options }) => options.interactive)).toEqual([true, true]);
+    await run(() => held[2]!.result.resolve(frame(72)));
+    expect(mainPaints().slice(before)).toEqual([5, 72]);
+    await run(() => held[3]!.result.resolve(frame(73)));
+    expect(mainPaints().slice(before)).toEqual([5, 72, 73]);
+  });
+
+  it("切り抜きの道具に入ったら、入る前の途中の画・丁寧な画を描かない。道具の中でつまみを動かす間は途中の画を描く", async () => {
+    const { held } = await openHeld("crop-tool");
+    const before = mainPaints().length;
+    await settleUntil(() => current.crop.available, "crop available");
+    await run(() => current.changeSettings((settings) => ({ ...settings, exposure: 0.3 }), "drag"));
+    await run(() => current.changeSettings((settings) => ({ ...settings, exposure: 0.3 }), "commit"));
+    expect(held).toHaveLength(2);
+    await run(() => current.crop.enter());
+    await settleUntil(() => current.crop.active && held.length === 3, "crop frame requested");
+    await run(() => held[0]!.result.resolve(frame(74)));
+    await run(() => held[1]!.result.resolve(frame(75)));
+    expect(mainPaints().slice(before)).toEqual([]);
+    await run(() => held[2]!.result.resolve(frame(81)));
+    expect(mainPaints().slice(before)).toEqual([81]);
+
+    await run(() => current.changeSettings((settings) => ({ ...settings, exposure: 0.4 }), "drag"));
+    await run(() => current.changeSettings((settings) => ({ ...settings, exposure: 0.5 }), "drag"));
+    expect(held.slice(3).map(({ options }) => options.interactive)).toEqual([true, true]);
+    await run(() => held[3]!.result.resolve(frame(82)));
+    expect(mainPaints().slice(before)).toEqual([81, 82]);
+    await run(() => current.changeSettings((settings) => ({ ...settings, exposure: 0.5 }), "commit"));
+    expect(held[5]!.options.interactive).toBe(false);
+    await run(() => held[4]!.result.resolve(frame(83)));
+    await run(() => held[5]!.result.resolve(frame(84)));
+    expect(mainPaints().slice(before)).toEqual([81, 82, 83, 84]);
+  });
+
+  it("修復の道具に入ったら、入る前の途中の画・丁寧な画を描かない", async () => {
+    const { held, target } = await openHeld("heal-tool");
+    await settleUntil(() => current.heal.available, "heal available");
+    const before = mainPaints().length;
+    await run(() => current.changeSettings((settings) => ({ ...settings, exposure: 0.6 }), "drag"));
+    await run(() => current.changeSettings((settings) => ({ ...settings, exposure: 0.6 }), "commit"));
+    expect(held).toHaveLength(2);
+    await run(() => current.heal.enter());
+    await settleUntil(() => held.length === 3, "heal frame requested");
+    await run(() => held[0]!.result.resolve(frame(91)));
+    await run(() => held[1]!.result.resolve(frame(92)));
+    expect(mainPaints().slice(before)).toEqual([]);
+    await run(() => held[2]!.result.resolve(frame(93)));
+    expect(mainPaints().slice(before)).toEqual([93]);
+    expect(framePainted).toHaveBeenLastCalledWith(target.key, expect.objectContaining({ rgba: frame(93).rgba }));
+    expect(current.heal.ready).toBe(true);
+  });
+
+  it("行に載せたプリセットの仮の表示は、前の仮の表示・補正の描き途中の画を描かない。適用量を動かす間は途中の画を描く", async () => {
+    const { held } = await openHeld("preview");
+    const before = mainPaints().length;
+    const bright = { key: "builtin:bright", name: "明るい", xmp: "<xmp />" };
+    const dark = { key: "builtin:dark", name: "暗い", xmp: "<xmp dark />" };
+    await run(() => current.changeSettings((settings) => ({ ...settings, exposure: 0.2 }), "commit"));
+    expect(held).toHaveLength(1);
+    await run(() => current.presets.requestPreview(bright));
+    await sleep(200);
+    await settleUntil(() => held.length === 2, "bright preview requested");
+    await run(() => current.presets.requestPreview(dark));
+    await sleep(200);
+    await settleUntil(() => held.length === 3, "dark preview requested");
+    expect(held.slice(1).map(({ options }) => options.interactive)).toEqual([false, false]);
+    await run(() => held[0]!.result.resolve(frame(101)));
+    await run(() => held[1]!.result.resolve(frame(102)));
+    expect(mainPaints().slice(before)).toEqual([]);
+    await run(() => held[2]!.result.resolve(frame(103)));
+    expect(mainPaints().slice(before)).toEqual([103]);
+    await run(() => current.presets.requestPreview(null));
+    await sleep(200);
+    await settleUntil(() => held.length === 4, "back to settings");
+    await run(() => held[3]!.result.resolve(frame(104)));
+    expect(mainPaints().slice(before)).toEqual([103, 104]);
+
+    // 適用量（仮の表示を速い描き方で描く間）
+    await run(() => current.presets.apply(bright));
+    await settleUntil(() => current.presets.appliedPresetKey === bright.key && held.length === 5, "preset applied");
+    await run(() => held[4]!.result.resolve(frame(105)));
+    await run(() => current.presets.changeAmount(60, "drag"));
+    await settleUntil(() => held.length === 6, "amount 60");
+    await run(() => current.presets.changeAmount(70, "drag"));
+    await settleUntil(() => held.length === 7, "amount 70");
+    expect(held.slice(5).map(({ settings, options }) => [settings.contrast, options.interactive])).toEqual([
+      [60, true],
+      [70, true],
+    ]);
+    await run(() => held[5]!.result.resolve(frame(106)));
+    expect(mainPaints().slice(before)).toEqual([103, 104, 105, 106]);
+    await run(() => held[6]!.result.resolve(frame(107)));
+    expect(mainPaints().slice(before)).toEqual([103, 104, 105, 106, 107]);
   });
 });

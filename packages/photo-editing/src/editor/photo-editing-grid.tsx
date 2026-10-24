@@ -61,10 +61,23 @@ export function PhotoEditingTileImage({
   geometry: Record<string, unknown> | null;
   cellAspect?: number;
 }) {
-  const [size, setSize] = useState<{ width: number; height: number } | null>(null);
+  // 読んだ画像の実寸（どの URL の画像か一緒に持つ。URL が替わったら前の画像の実寸は使わない）
+  const [measured, setMeasured] = useState<{ url: string; width: number; height: number } | null>(null);
+  const size = measured && measured.url === url ? measured : null;
+  const imageRef = useRef<HTMLImageElement | null>(null);
   const styles = geometry && size ? photoEditingTileGeometryStyles(geometry, size.width, size.height, cellAspect) : null;
+  // 幾何が後から付いた（1 枚で回転・切り抜きを確定した直後の帯のタイルなど）とき、画像はもう読み込み済みで `load` は二度と来ない。
+  // `onLoad` だけに頼ると実寸が分からないまま透明で残り、タイルが空白になるので、読み込み済みならここで実寸を読む
+  useEffect(() => {
+    if (!geometry || size) return;
+    const element = imageRef.current;
+    if (element && element.complete && element.naturalWidth > 0 && element.naturalHeight > 0) {
+      setMeasured({ url, width: element.naturalWidth, height: element.naturalHeight });
+    }
+  }, [geometry, size, url]);
   const image = (style?: CSSProperties, className?: string) => (
     <img
+      ref={imageRef}
       src={url}
       alt=""
       loading="lazy"
@@ -73,7 +86,8 @@ export function PhotoEditingTileImage({
       style={style}
       onLoad={
         geometry
-          ? (event) => setSize({ width: event.currentTarget.naturalWidth, height: event.currentTarget.naturalHeight })
+          ? (event) =>
+              setMeasured({ url, width: event.currentTarget.naturalWidth, height: event.currentTarget.naturalHeight })
           : undefined
       }
     />

@@ -247,9 +247,9 @@ export const PHOTO_EDITING_GRAIN_DESCRIPTION = "フィルムのような粒を�
 export const PHOTO_EDITING_DETAIL_GROUP_TITLE = "ディテール";
 export const PHOTO_EDITING_DETAIL_INFO_LABEL = "ディテールの説明";
 export const PHOTO_EDITING_SHARPEN_LABEL = "シャープ";
-export const PHOTO_EDITING_SHARPEN_RADIUS_LABEL = "半径";
-export const PHOTO_EDITING_SHARPEN_DETAIL_LABEL = "ディテール";
-export const PHOTO_EDITING_SHARPEN_MASKING_LABEL = "マスク";
+export const PHOTO_EDITING_SHARPEN_RADIUS_LABEL = "シャープの半径";
+export const PHOTO_EDITING_SHARPEN_DETAIL_LABEL = "シャープの細部";
+export const PHOTO_EDITING_SHARPEN_MASKING_LABEL = "シャープのマスク";
 export const PHOTO_EDITING_LUMINANCE_NOISE_LABEL = "ノイズ軽減";
 export const PHOTO_EDITING_COLOR_NOISE_LABEL = "カラーノイズの軽減";
 export const PHOTO_EDITING_SHARPEN_DESCRIPTION = "輪郭をくっきりさせます。指を離すと反映します";
@@ -350,6 +350,13 @@ export const PHOTO_EDITING_EXPORT_FULL_SIZE_COLOR_GRADING_UNSUPPORTED_TEXT = "�
 /** native の複数枚原寸書き出しで、未対応の輝度設定を含む写真を飛ばすときの失敗理由。 */
 export const PHOTO_EDITING_EXPORT_FULL_SIZE_COLOR_GRADING_UNSUPPORTED_FAILED_TEXT =
   "中間調・全体の輝度を使っている写真は、原寸で書き出せません。";
+/** 原寸の native renderer が描けない補正の名前（「原寸は〇〇に未対応です」の〇〇。`photo-editing-native-export.ts`）。 */
+export const PHOTO_EDITING_EXPORT_FULL_SIZE_NATIVE_BLOCKER_LABELS = {
+  colorGradingLuminance: "中間調・全体の輝度",
+  perspective: "遠近",
+  heal: "修復",
+  lens: "レンズ補正",
+} as const;
 /**
  * 原寸の書き出しが形式（HEIC / TIFF）を断ったときの失敗の 1 行（複数枚をフォルダへ書き出すとき、Desktop へ落とす前に同じ文で
  * 失敗にする。NIHO Desktop の `unsupportedSource` の文も同じ定数）。
@@ -945,6 +952,27 @@ export const PHOTO_EDITING_MASK_SURFACE_RETRY_LABEL = "もう一度読み込む"
 /** 書き出す写真のマスクの面を読めなかった。 */
 export const PHOTO_EDITING_MASK_SURFACE_EXPORT_FAILED_TEXT =
   "マスクの面を読めないため書き出せませんでした。そのマスクを削除するか、塗り直してから書き出してください。";
+
+// 局所のカラーミキサーと、スマホの編集の層のマスクの道具（niho-photo#93）。
+/** 選んだマスクのカラーミキサーの「初期化」の読み上げ名（全体の「カラーミキサーを初期化」と呼び分ける）。 */
+export const PHOTO_EDITING_MASK_HSL_RESET_LABEL = "このマスクのカラーミキサーを初期化";
+/** スマホの足すボタンの見える名前（読み上げは PC と同じ「線形グラデーション」など）。 */
+export const PHOTO_EDITING_MASK_ADD_SHORT_LABELS = { linear: "線形", radial: "円形", brush: "ブラシ" } as const;
+/** スマホの範囲の重ね表示の切り替え（キーの O は添えない）。 */
+export const PHOTO_EDITING_MASK_OVERLAY_SHORT_LABEL = "範囲を表示";
+/** スマホの選んだマスクの操作の見える名前（読み上げは「線形 1 を反転」など）。 */
+export const PHOTO_EDITING_MASK_ACTION_LABELS = { enabled: "表示", invert: "反転", duplicate: "複製", delete: "削除" } as const;
+/** スマホのつまみの説明（キーの説明の代わりに指の操作）。 */
+export const PHOTO_EDITING_MASK_HINT_MOBILE_TEXT = "写真の上の点をドラッグして、位置・幅・向きを変えます。2 本の指で拡大・移動できます。";
+/** スマホのブラシの説明。 */
+export const PHOTO_EDITING_MASK_BRUSH_HINT_MOBILE_TEXT =
+  "1 本の指で写真をなぞって塗ります。2 本の指で拡大・移動できます（塗っている途中の線は取り消します）。";
+/** スマホのマスクの道具の段の読み上げ名。 */
+export const PHOTO_EDITING_MASK_MOBILE_ADD_LABEL = "マスクを追加";
+export const PHOTO_EDITING_MASK_MOBILE_LIST_LABEL = "マスクの一覧";
+export function photoEditingMaskMobileActionsLabel(name: string): string {
+  return `${name} の操作`;
+}
 
 /**
  * ブラウザ版の一覧の複数選択（F5a-2 移行元設計）。スマホの上の行の「選択」ボタンと、複数を選んでいる間の選択バー

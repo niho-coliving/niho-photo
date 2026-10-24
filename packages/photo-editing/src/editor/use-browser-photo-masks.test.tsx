@@ -194,6 +194,30 @@ describe("useBrowserPhotoMasks", () => {
     expect(readDevelopMasks(settingsRef.current)[0]!.adjust).toEqual({});
   });
 
+  it("局所のカラーミキサー: drag は履歴に積まず commit で 1 単位、正規形（0 の値は書かない）で書く。初期化は hsl だけを外す（niho-photo#93）", async () => {
+    await render();
+    await enter();
+    await act(async () => tool.add("linear"));
+    const id = tool.selected!.id;
+    await act(async () => tool.changeAdjust(id, "exposure", -0.5, "commit"));
+    commits = 0;
+    phases = [];
+    await act(async () => tool.changeHsl(id, "blue", "saturation", -40, "drag"));
+    await act(async () => tool.changeHsl(id, "blue", "saturation", -100, "drag"));
+    await act(async () => tool.changeHsl(id, "blue", "saturation", -100, "commit"));
+    expect(phases).toEqual(["drag", "drag", "commit"]);
+    expect(commits).toBe(1);
+    expect(tool.selected?.adjust.hsl).toEqual({ blue: { hue: 0, saturation: -100, luminance: 0 } });
+    const stored = (settingsRef.current.masks as Array<{ adjust: Record<string, unknown> }>)[0]!.adjust;
+    expect(stored).toEqual({ exposure: -0.5, hsl: ["blue", { saturation: -100 }] });
+    expect(readable(settingsRef.current)).toBe(true);
+    expect(tool.grayscale).toBe(false);
+
+    await act(async () => tool.resetHsl(id));
+    expect(commits).toBe(2);
+    expect((settingsRef.current.masks as Array<{ adjust: Record<string, unknown> }>)[0]!.adjust).toEqual({ exposure: -0.5 });
+  });
+
   it("写真の上で動かした形は、補正の差分を変えずに形だけを当てる", async () => {
     await render();
     await enter();
