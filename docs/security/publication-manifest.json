@@ -32,10 +32,11 @@
         "path": "packages/photo-editing/package.json",
         "sha256": "515f9303d52be7ff4ae82fac2d73b370427516721073d422a0e6b9d17fa0b3ad"
       },
-      "outputSha256": "3843f80553da63bfbb6cc318e998f8d60e5da65b9fb873d6702fb8a566dea4b6",
+      "outputSha256": "e2f36affd6c84b0a2b97b9a6b10dfb8985bd3815295fbb0e9aa88ea17b4b766d",
       "modifications": [
         "公開workspace向け説明・依存解決・公開export範囲を調整。npm publishはprivate設定で禁止。",
-        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。"
+        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
+        "写真編集の型検査とテストをMac miniで開始前に停止する。"
       ]
     },
     {
@@ -10185,13 +10186,13 @@
     },
     {
       "path": "docs/ci/public-ci.md",
-      "sha256": "c5495600f29888f489b0710ead96db0d5d6a4f1b54eb3c6a5f6cf23a0425cc0a",
-      "origin": "Issue #2の公開成果物・SBOM・固定SHA取り込み契約のため独立作成。公開仕様と既存公開CIから生成器・schema・guard・検証・責務境界を定義し、外部コード・秘密・実ユーザーデータを含まない。\n変更理由: Issue #2の公開検証成果物・SBOM・固定SHA取り込み契約と秘密を持たないCI検査を追加。\n変更理由: Issue #2の実装検証で成果物名・輸送receipt・build設定を強化。\n変更理由: Issue #113のcandidate proof selectorとvalidation-only成果物との差を追記。\n変更理由: 現行Issue URLをniho-lifeへ移管"
+      "sha256": "ea5f40dd736159412a839ffdabf50f856cf86290ec0760aff9dad7a545cdd92e",
+      "origin": "Issue #2の公開成果物・SBOM・固定SHA取り込み契約のため独立作成。公開仕様と既存公開CIから生成器・schema・guard・検証・責務境界を定義し、外部コード・秘密・実ユーザーデータを含まない。\n変更理由: Issue #2の公開検証成果物・SBOM・固定SHA取り込み契約と秘密を持たないCI検査を追加。\n変更理由: Issue #2の実装検証で成果物名・輸送receipt・build設定を強化。\n変更理由: Issue #113のcandidate proof selectorとvalidation-only成果物との差を追記。\n変更理由: 現行Issue URLをniho-lifeへ移管\n変更理由: Mac miniの重処理ガードとStudioでの先行検証手順を記録する。"
     },
     {
       "path": "package.json",
-      "sha256": "fbb78899e106e5c4e36bc28bb94283676ee4641281034986369ec535ba781d43",
-      "origin": "Issue #2の公開成果物・SBOM・固定SHA取り込み契約のため独立作成。公開仕様と既存公開CIから生成器・schema・guard・検証・責務境界を定義し、外部コード・秘密・実ユーザーデータを含まない。\n変更理由: Issue #2の公開検証成果物・SBOM・固定SHA取り込み契約と秘密を持たないCI検査を追加。\n変更理由: Issue #2の実装検証で成果物名・輸送receipt・build設定を強化。\n変更理由: Issue #112のSDK release set生成・検証・外部consumer smoke入口を追加。\n変更理由: Issue #112の実WASMとNode契約smoke入口を追加\n変更理由: Issue #113のMac candidate build・data-only検証・fixture test入口を追加。"
+      "sha256": "2f4c24c28a0d7ae081e533d05a12d4f88e670547cc8c83fd305277cde31fc649",
+      "origin": "Issue #2の公開成果物・SBOM・固定SHA取り込み契約のため独立作成。公開仕様と既存公開CIから生成器・schema・guard・検証・責務境界を定義し、外部コード・秘密・実ユーザーデータを含まない。\n変更理由: Issue #2の公開検証成果物・SBOM・固定SHA取り込み契約と秘密を持たないCI検査を追加。\n変更理由: Issue #2の実装検証で成果物名・輸送receipt・build設定を強化。\n変更理由: Issue #112のSDK release set生成・検証・外部consumer smoke入口を追加。\n変更理由: Issue #112の実WASMとNode契約smoke入口を追加\n変更理由: Issue #113のMac candidate build・data-only検証・fixture test入口を追加。\n変更理由: rootの重いnpm scriptをMac miniで開始前に停止する。"
     },
     {
       "path": "packages/develop-engine/build-macos-native.mjs",
@@ -11332,6 +11333,16 @@
       "path": "packages/photo-editing/src/editor/browser-photo-editing-mobile-editor-detail.test.tsx",
       "sha256": "3a3e7811287624ad0492e80072a83055ff225961c7b7828c7f63797824dd2426",
       "origin": "niho-photo#86 のため新規作成。スマホの編集の層の道具の帯の末尾に置くディテールと、その項目の並び・操作の test。合成の値だけを使用。"
+    },
+    {
+      "path": "scripts/ci/guard-local-heavy.mjs",
+      "sha256": "eafc281299e58797ff4b4db4e6bfba0721116d38d5bd9a85b04640e4ff2a98af",
+      "origin": "Mac miniでの重いローカル検証を実行前に停止するため独立作成。公開CIの構成と端末実行先の契約に基づく。"
+    },
+    {
+      "path": "scripts/ci/guard-local-heavy.test.mjs",
+      "sha256": "6a4bc7dbf50605efe2a3c890f3aa9b6607147ee1919849fb3aaadb3968f26459",
+      "origin": "端末名の優先順とMac mini停止条件を合成入力で検証するため独立作成。"
     },
     {
       "path": "packages/photo-editing/src/editor/photo-editing-mask-hsl.tsx",
