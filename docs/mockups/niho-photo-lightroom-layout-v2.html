@@ -1,0 +1,555 @@
+<!doctype html>
+<!--
+  mock: NIHO photo（Mac）の画面を Lightroom 型の配置にして、地を白基調にする（v2: 2026-10-21 の配置検討を反映）
+  配置案（2026-10-21）: 地は Claude アプリの白（#FCFBF9）・中央はパネルと同じ・道具の帯・フィルムストリップあり・切り抜きは Enter で確定（Esc で取り消し）。
+  論点:
+    1) 地の色。白（#FFFFFF）/ ほんのり（#FDFBF8・推奨）/ 今の生成り（#FFFCF5）を上の切替で見比べる。
+    2) 中央の地。パネルと同じ色にするか、Lightroom のように少しだけ暗くして写真を浮かせるか。
+    3) 右端に道具の帯（プリセット / 補正 / 切り抜き / 背景除去）を置き、右パネルは道具ごとに丸ごと入れ替える（今の「補正 / 切り抜き / 背景除去」のタブの代わり）。
+    4) 補正パネルの並び: ヒストグラム → 見出し行（↶ ↷ ⋯ 初期化）→ 自動 / 白黒 → プリセットの行 → ライト / カラー / 効果。スライダーは Lightroom と同じ「名前と数値の行＋細い線」。
+    5) プリセットはサムネイルの 2 列の一覧にし、載せている間だけ写真で見せる。下に「量」。
+    6) 切り抜きは Lightroom と同じ並び（縦横比 → 角度補正 → グリッド → 反転と回転）。写真の上には枠と 3×3 のグリッド、外側は暗く。
+    7) 下の帯（フィルムストリップ）で 1 枚の編集中に次の写真へ移れる。下段は 一覧 / 1枚 ・ ♥ ・ 補正前 ・ 全体 ・ 書き出す。
+    8) 下の余白をなくし、画面を窓の底まで使う。「版」は左パネルの底へ。
+  作っていない:
+    - スライダーは数値とつまみだけ動き、写真には反映しない。ヒストグラムは絵。
+    - プリセットの見た目は CSS filter の代用。「量」も見た目だけ。拠点のプリセットは仮の名前。
+    - 切り抜きの枠は固定で、角は掴めない。縦横比・グリッドのメニューは開かない。反転と回転は押しても動かない。
+    - 背景除去は「除去した後」の状態を置いただけで、押しても動かない。
+    - フィルムストリップは 8 枚の固定。押すと中央の写真だけ切り替わる。一覧 / 1枚 の切り替えは見た目だけ。
+    - アカウントのメニュー、書き出し、フォルダの追加、情報（EXIF）、補正のメニュー（⋯）は開かない。
+  参照: apps/camera/src/App.tsx、packages/photo-editing/src/editor/browser-photo-editing-workbench.tsx（lg:h-[calc(100dvh-12rem)] が下の余白の原因）、
+        packages/photo-editing/src/editor/photo-editing-crop-tools.tsx、photo-editing-presets-panel.tsx、docs/design/design-guide.md、
+        Adobe Lightroom（デスクトップ版）の編集・プリセット・切り抜きパネル（2026-10-20 に実機で確認）
+-->
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>NIHO photo | Lightroom 型の配置と白基調の地</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --text: #1C1C1A; --sub: #4A4A44; --mute: #8A8A82;
+      --line: #E9E6E0; --line-strong: #DCD8D0;
+      --green: #4B9E5E; --green-ink: #46811F; --pale: #EEF6E1; --pale-line: #CFE3BE;
+      --primary: linear-gradient(140deg, #7DBA3A 0%, #63A109 100%);
+      --primary-hover: linear-gradient(140deg, #74B033 0%, #5C9508 100%);
+      font-family: "Hiragino Maru Gothic ProN", "Hiragino Sans", "Yu Gothic", system-ui, sans-serif;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; color: var(--text); background: #ECEEE9; }
+    button { font: inherit; color: inherit; cursor: pointer; border: 0; background: none; padding: 0; }
+    img { display: block; }
+    .i { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+    .i.sm { width: 15px; height: 15px; }
+
+    /* 上の切替 */
+    .switcher { display: flex; align-items: center; gap: 22px; flex-wrap: wrap; min-height: 62px; padding: 10px max(24px, calc((100vw - 1320px) / 2)); background: #fff; border-bottom: 1px solid #DCE0D7; }
+    .switch-group { display: flex; align-items: center; gap: 4px; }
+    .switch-group .group-name { margin-right: 6px; color: #6D756C; font-size: 12px; font-weight: 700; }
+    .switch-group button { min-height: 32px; border: 1px solid transparent; color: #525A52; border-radius: 9px; padding: 5px 11px; font-size: 13px; font-weight: 700; }
+    .switch-group button:hover { background: #F4F7F0; }
+    .switch-group button[aria-pressed="true"] { border-color: #D3E1C8; background: #EEF6E9; color: #326D39; }
+
+    /* 窓 */
+    .stage { padding: 22px; overflow: auto; }
+    .window { width: min(1320px, 100%); min-width: 1080px; height: 820px; margin: 0 auto; display: flex; flex-direction: column; overflow: hidden; border: 1px solid #CFD3CC; border-radius: 12px; background: var(--bg); box-shadow: 0 18px 50px rgba(40,47,36,.12);
+      --bg: #FDFBF8; --canvas-dim: #F4F1EB; --card: #FFFFFF; }
+    body[data-bg="white"] .window { --bg: #FCFBF9; --canvas-dim: #F3F1ED; }
+    body[data-bg="soft"]  .window { --bg: #FDFBF8; --canvas-dim: #F4F1EB; }
+    body[data-bg="now"]   .window { --bg: #FFFCF5; --canvas-dim: #F5F1E8; }
+
+    .titlebar { display: flex; align-items: center; height: 35px; flex: none; border-bottom: 1px solid var(--line); background: var(--bg); padding: 0 13px; gap: 7px; }
+    .lights { display: flex; gap: 7px; align-items: center; margin-right: 62px; }
+    .lights i { display: block; width: 12px; height: 12px; border-radius: 50%; border: 1px solid rgba(0,0,0,.08); }
+    .lights i:nth-child(1){background:#FF615B}.lights i:nth-child(2){background:#FFBD42}.lights i:nth-child(3){background:#38CA50}
+    .titlebar img { width: 17px; height: 17px; object-fit: contain; }
+    .window-title { font-size: 12px; font-weight: 700; color: var(--sub); }
+
+    .toolbar { display: flex; align-items: center; gap: 10px; height: 42px; flex: none; padding: 0 10px 0 8px; border-bottom: 1px solid var(--line); background: var(--bg); }
+    .icon-btn { display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px; border-radius: 8px; color: var(--sub); }
+    .icon-btn:hover { background: rgba(28,28,26,.06); color: var(--text); }
+    .icon-btn[aria-pressed="true"] { background: var(--pale); color: var(--green-ink); }
+    .crumbs { display: flex; align-items: center; gap: 8px; min-width: 0; flex: 1; font-size: 13px; color: var(--sub); }
+    .crumbs .sep { color: var(--mute); }
+    .crumbs b { color: var(--text); font-weight: 700; }
+    .avatar { width: 30px; height: 30px; border-radius: 50%; overflow: hidden; border: 1px solid var(--line-strong); }
+    .avatar { display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; }
+
+    .body { display: grid; grid-template-columns: 224px minmax(0,1fr) 252px 44px; min-height: 0; flex: 1; }
+    body[data-left="off"] .body { grid-template-columns: minmax(0,1fr) 252px 44px; }
+    body[data-left="off"] .left { display: none; }
+
+    /* 左 */
+    .left { display: flex; flex-direction: column; min-height: 0; border-right: 1px solid var(--line); background: var(--bg); }
+    .left-head { display: flex; align-items: center; justify-content: space-between; height: 40px; padding: 0 8px 0 14px; font-size: 13px; font-weight: 700; color: var(--sub); }
+    .folders { list-style: none; margin: 0; padding: 0 8px; flex: 1; overflow: auto; }
+    .folders li { display: flex; align-items: center; gap: 8px; height: 32px; padding: 0 8px; border-radius: 8px; font-size: 13px; color: var(--sub); cursor: pointer; }
+    .folders li:hover { background: rgba(28,28,26,.05); }
+    .folders li.on { background: var(--pale); color: var(--green-ink); font-weight: 700; }
+    .folders li .count { margin-left: auto; font-size: 11px; color: var(--mute); font-weight: 500; }
+    .left-foot { padding: 8px 14px; font-size: 11px; color: var(--mute); border-top: 1px solid var(--line); }
+
+    /* 中央 */
+    .center { display: grid; grid-template-rows: minmax(0,1fr) auto 40px; min-height: 0; min-width: 0; }
+    .canvas { position: relative; min-height: 0; display: flex; align-items: center; justify-content: center; padding: 18px; background: var(--bg); }
+    body[data-canvas="dim"] .canvas { background: var(--canvas-dim); }
+    .photo-wrap { position: relative; max-width: 100%; max-height: 100%; overflow: hidden; }
+    .photo-wrap img { max-width: 100%; max-height: calc(820px - 35px - 42px - 40px - 86px - 36px); width: auto; height: auto; object-fit: contain; }
+    body[data-strip="off"] .photo-wrap img { max-height: calc(820px - 35px - 42px - 40px - 36px); }
+    .compare-tag { position: absolute; left: 10px; top: 10px; padding: 3px 8px; border-radius: 6px; background: rgba(28,28,26,.72); color: #fff; font-size: 11px; font-weight: 700; display: none; }
+    body[data-compare="on"] .compare-tag { display: block; }
+    body[data-compare="on"] .photo-wrap img { filter: none !important; }
+
+    /* 切り抜きの枠 */
+    .crop-frame { position: absolute; inset: 7% 6%; border: 1px solid rgba(255,255,255,.95); box-shadow: 0 0 0 9999px rgba(20,20,18,.42); display: none; }
+    body[data-tool="crop"] .crop-frame { display: block; }
+    .crop-frame::before, .crop-frame::after { content: ""; position: absolute; pointer-events: none; border: 0 solid rgba(255,255,255,.55); }
+    .crop-frame::before { left: 33.33%; right: 33.33%; top: 0; bottom: 0; border-width: 0 1px; }
+    .crop-frame::after  { top: 33.33%; bottom: 33.33%; left: 0; right: 0; border-width: 1px 0; }
+    .crop-frame i { position: absolute; width: 16px; height: 16px; border: 3px solid #fff; }
+    .crop-frame i:nth-child(1){ left:-2px; top:-2px; border-right:0; border-bottom:0; }
+    .crop-frame i:nth-child(2){ right:-2px; top:-2px; border-left:0; border-bottom:0; }
+    .crop-frame i:nth-child(3){ left:-2px; bottom:-2px; border-right:0; border-top:0; }
+    .crop-frame i:nth-child(4){ right:-2px; bottom:-2px; border-left:0; border-top:0; }
+
+    /* 下の帯 */
+    .filmstrip { display: flex; gap: 6px; height: 86px; padding: 8px 12px; overflow-x: auto; border-top: 1px solid var(--line); background: var(--bg); }
+    body[data-strip="off"] .filmstrip { display: none; }
+    .thumb { flex: none; height: 70px; aspect-ratio: 3/2; border-radius: 6px; overflow: hidden; border: 2px solid transparent; opacity: .82; }
+    .thumb img { width: 100%; height: 100%; object-fit: cover; }
+    .thumb:hover { opacity: 1; }
+    .thumb.on { border-color: var(--green); opacity: 1; }
+
+    .bottombar { display: flex; align-items: center; gap: 8px; padding: 0 10px; border-top: 1px solid var(--line); background: var(--bg); }
+    .seg-group { display: inline-flex; gap: 2px; padding: 2px; border-radius: 9px; background: rgba(28,28,26,.05); }
+    .seg { width: 30px; height: 26px; display: inline-flex; align-items: center; justify-content: center; border-radius: 7px; color: var(--sub); }
+    .seg[aria-pressed="true"] { background: var(--card); color: var(--green-ink); box-shadow: 0 1px 2px rgba(0,0,0,.08); }
+    .status { flex: 1; font-size: 12px; color: var(--mute); padding-left: 6px; }
+    .pill { display: inline-flex; align-items: center; gap: 6px; height: 30px; padding: 0 12px; border-radius: 999px; border: 1px solid var(--line-strong); font-size: 13px; font-weight: 700; color: var(--sub); background: var(--card); }
+    .pill:hover { background: #F6F5F1; color: var(--text); }
+    .pill.ghost { border-color: transparent; background: transparent; }
+    .pill.ghost:hover { background: rgba(28,28,26,.05); }
+    .primary { display: inline-flex; align-items: center; height: 32px; padding: 0 16px; border-radius: 999px; background: var(--primary); color: #fff; font-size: 13px; font-weight: 700; }
+    .primary:hover { background: var(--primary-hover); }
+
+    /* 右パネル */
+    .right { min-height: 0; overflow-y: auto; border-left: 1px solid var(--line); background: var(--bg); }
+    .panel[hidden] { display: none; }
+    .histogram { height: 86px; padding: 10px 12px 0; border-bottom: 1px solid var(--line); }
+    .histogram svg { width: 100%; height: 100%; display: block; }
+    .panel-head { display: flex; align-items: center; gap: 2px; height: 44px; padding: 0 8px 0 14px; }
+    .panel-head h2 { margin: 0; flex: 1; font-size: 14px; font-weight: 700; }
+    .panel-head .icon-btn { width: 28px; height: 28px; }
+    .text-btn { height: 28px; padding: 0 8px; border-radius: 7px; font-size: 12px; font-weight: 700; color: var(--green-ink); }
+    .text-btn:hover { background: var(--pale); }
+    .quick { display: flex; gap: 6px; padding: 0 14px 10px; }
+    .chip { height: 28px; padding: 0 12px; border-radius: 8px; border: 1px solid var(--line-strong); background: var(--card); font-size: 12px; font-weight: 700; color: var(--sub); }
+    .chip:hover { background: #F6F5F1; color: var(--text); }
+    .chip[aria-pressed="true"] { border-color: var(--pale-line); background: var(--pale); color: var(--green-ink); }
+    .row { display: flex; align-items: center; gap: 8px; padding: 0 14px; height: 36px; font-size: 12px; color: var(--sub); }
+    .row .label { color: var(--mute); flex: none; white-space: nowrap; }
+    .row .select { display: inline-flex; align-items: center; gap: 4px; height: 26px; padding: 0 6px; border-radius: 6px; font-size: 12px; font-weight: 700; color: var(--text); white-space: nowrap; }
+    .row .select:hover { background: rgba(28,28,26,.06); }
+    .row .end { margin-left: auto; display: inline-flex; gap: 2px; }
+    .divider { height: 1px; background: var(--line); margin: 4px 0; }
+
+    .section { border-top: 1px solid var(--line); }
+    .section-head { display: flex; align-items: center; gap: 6px; width: 100%; height: 40px; padding: 0 10px; text-align: left; font-size: 13px; font-weight: 700; }
+    .section-head:hover { background: rgba(28,28,26,.03); }
+    .section-head .i { width: 16px; height: 16px; color: var(--mute); transition: transform .15s; }
+    .section.closed .section-head .i { transform: rotate(-90deg); }
+    .section-head .end { margin-left: auto; display: inline-flex; gap: 2px; }
+    .section-body { padding: 2px 14px 12px; }
+    .section.closed .section-body { display: none; }
+
+    .slider { padding: 5px 0 7px; user-select: none; }
+    .slider-row { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 7px; }
+    .slider-row .slider-label { color: var(--sub); }
+    .slider-row .slider-value { color: var(--text); font-variant-numeric: tabular-nums; }
+    .slider-track { position: relative; height: 14px; cursor: pointer; }
+    .slider-track::before { content: ""; position: absolute; left: 0; right: 0; top: 6px; height: 2px; border-radius: 2px; background: var(--line-strong); }
+    .slider[data-tone="temp"] .slider-track::before { background: linear-gradient(90deg, #9CBBF0, #E4E0D8 50%, #F0C978); }
+    .slider[data-tone="tint"] .slider-track::before { background: linear-gradient(90deg, #A9D59A, #E4E0D8 50%, #EBA6DB); }
+    .slider-tick { position: absolute; left: 50%; top: 4px; width: 1px; height: 6px; background: var(--mute); opacity: .7; }
+    .slider-knob { position: absolute; top: 1px; width: 12px; height: 12px; margin-left: -6px; border-radius: 50%; background: #fff; border: 1.5px solid #7A7A72; box-shadow: 0 1px 2px rgba(0,0,0,.15); }
+    .slider.changed .slider-knob { border-color: var(--green-ink); }
+    .slider.changed .slider-value { color: var(--green-ink); font-weight: 700; }
+    .slider-top { display: flex; justify-content: center; font-size: 11px; color: var(--mute); margin: -4px 0 0; }
+
+    /* プリセット */
+    .tabs { display: flex; gap: 2px; padding: 0 14px 8px; }
+    .tab { height: 28px; padding: 0 10px; border-radius: 7px; font-size: 12px; font-weight: 700; color: var(--mute); }
+    .tab[aria-pressed="true"] { color: var(--green-ink); background: var(--pale); }
+    .preset-group { padding: 4px 14px 10px; }
+    .preset-group h3 { margin: 6px 0 8px; font-size: 12px; font-weight: 700; color: var(--mute); display: flex; align-items: center; gap: 6px; }
+    .preset-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .preset { border-radius: 8px; overflow: hidden; text-align: left; border: 2px solid transparent; background: var(--card); }
+    .preset:hover { border-color: var(--pale-line); }
+    .preset[aria-pressed="true"] { border-color: var(--green); }
+    .preset img { width: 100%; aspect-ratio: 3/2; object-fit: cover; }
+    .preset span { display: block; padding: 5px 7px 6px; font-size: 11px; font-weight: 700; color: var(--sub); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .preset[aria-pressed="true"] span { color: var(--green-ink); }
+    .preset-amount { position: sticky; bottom: 0; padding: 6px 14px 10px; background: var(--bg); border-top: 1px solid var(--line); }
+
+    /* 反転と回転 */
+    .tool-row { display: flex; gap: 6px; padding: 2px 14px 10px; }
+    .tool-btn { width: 44px; height: 36px; display: inline-flex; align-items: center; justify-content: center; border-radius: 8px; border: 1px solid var(--line-strong); background: var(--card); color: var(--sub); }
+    .tool-btn:hover { background: #F6F5F1; color: var(--text); }
+    .block-btn { display: flex; width: 100%; height: 36px; align-items: center; justify-content: center; border-radius: 9px; font-size: 13px; font-weight: 700; }
+    .block-btn.primary-block { background: var(--primary); color: #fff; }
+    .block-btn.ghost-block { border: 1px solid var(--line-strong); background: var(--card); color: var(--sub); }
+    .swatches { display: flex; gap: 8px; padding: 2px 14px 12px; }
+    .swatch { display: inline-flex; align-items: center; gap: 6px; height: 28px; padding: 0 10px; border-radius: 8px; border: 1px solid var(--line-strong); background: var(--card); font-size: 12px; font-weight: 700; color: var(--sub); }
+    .swatch[aria-pressed="true"] { border-color: var(--pale-line); background: var(--pale); color: var(--green-ink); }
+    .swatch i { width: 12px; height: 12px; border-radius: 50%; border: 1px solid rgba(0,0,0,.12); }
+    .swatch i.transparent { background: repeating-conic-gradient(#D9D6CF 0 25%, #fff 0 50%) 0 0 / 8px 8px; }
+
+    /* 右端の道具の帯 */
+    .rail { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 8px 0; border-left: 1px solid var(--line); background: var(--bg); }
+    .rail button { width: 34px; height: 34px; display: inline-flex; align-items: center; justify-content: center; border-radius: 9px; color: var(--sub); position: relative; }
+    .rail button:hover { background: rgba(28,28,26,.06); color: var(--text); }
+    .rail button.on { background: var(--pale); color: var(--green-ink); }
+    .rail .spacer { flex: 1; }
+    .rail .sep { width: 20px; height: 1px; background: var(--line); margin: 4px 0; }
+  </style>
+</head>
+<body data-bg="white" data-canvas="same" data-tool="edit" data-strip="on" data-left="on" data-compare="off">
+
+  <div class="switcher">
+    <div class="switch-group"><span class="group-name">地の色</span>
+      <button data-set="bg:white">Claude の白</button><button data-set="bg:soft">ほんのり</button><button data-set="bg:now">今の生成り</button></div>
+    <div class="switch-group"><span class="group-name">中央</span>
+      <button data-set="canvas:same">パネルと同じ</button><button data-set="canvas:dim">少し暗く</button></div>
+    <div class="switch-group"><span class="group-name">道具</span>
+      <button data-set="tool:presets">プリセット</button><button data-set="tool:edit">補正</button><button data-set="tool:crop">切り抜き</button><button data-set="tool:cutout">背景除去</button></div>
+    <div class="switch-group"><span class="group-name">左</span>
+      <button data-set="left:on">表示</button><button data-set="left:off">隠す</button></div>
+    <div class="switch-group"><span class="group-name">下の帯</span>
+      <button data-set="strip:on">表示</button><button data-set="strip:off">隠す</button></div>
+  </div>
+
+  <div class="stage">
+    <div class="window">
+      <div class="titlebar">
+        <div class="lights"><i></i><i></i><i></i></div>
+        <img src="../../apps/camera/src-tauri/icons/icon.png" alt="" />
+        <span class="window-title">NIHO photo</span>
+      </div>
+
+      <div class="toolbar">
+        <button class="icon-btn" id="leftToggle" aria-label="左のパネル" aria-pressed="true">
+          <svg class="i" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2.5"/><path d="M9 4v16"/></svg>
+        </button>
+        <nav class="crumbs" aria-label="場所">
+          <span>この Mac</span><span class="sep">›</span><span>camera-legacy-inputs</span><span class="sep">›</span><b>legacy18399-fx30.ARW</b>
+        </nav>
+        <button class="avatar" aria-label="アカウント"><span aria-hidden="true">NI</span></button>
+      </div>
+
+      <div class="body">
+        <aside class="left" aria-label="フォルダ">
+          <div class="left-head"><span>この Mac</span>
+            <button class="icon-btn" aria-label="フォルダを追加"><svg class="i" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button>
+          </div>
+          <ul class="folders">
+            <li class="on"><svg class="i sm" viewBox="0 0 24 24"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z"/></svg>camera-legacy-inputs<span class="count">128</span></li>
+            <li><svg class="i sm" viewBox="0 0 24 24"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z"/></svg>2026-10 鎌倉<span class="count">64</span></li>
+            <li><svg class="i sm" viewBox="0 0 24 24"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z"/></svg>イベント<span class="count">212</span></li>
+          </ul>
+          <div class="left-foot">版 0.1.24</div>
+        </aside>
+
+        <div class="center">
+          <div class="canvas">
+            <div class="photo-wrap">
+              <img id="mainPhoto" src="../../packages/develop-engine/fixtures/golden/input/dsc02072.jpg" alt="" />
+              <span class="compare-tag">補正前</span>
+              <div class="crop-frame" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+            </div>
+          </div>
+
+          <div class="filmstrip" aria-label="このフォルダの写真">
+            <button class="thumb" data-src="../../packages/develop-engine/fixtures/golden/input/dsc02072.jpg"><img src="../../packages/develop-engine/fixtures/golden/input/dsc02072.jpg" alt="" /></button>
+            <button class="thumb on" data-src="../../packages/develop-engine/fixtures/golden/input/dsc02072.jpg"><img src="../../packages/develop-engine/fixtures/golden/input/dsc02072.jpg" alt="" /></button>
+            <button class="thumb" data-src="../../packages/develop-engine/fixtures/golden/input/dsc02078.jpg"><img src="../../packages/develop-engine/fixtures/golden/input/dsc02078.jpg" alt="" /></button>
+            <button class="thumb" data-src="../../packages/develop-engine/fixtures/golden/input/dsc02150.jpg"><img src="../../packages/develop-engine/fixtures/golden/input/dsc02150.jpg" alt="" /></button>
+            <button class="thumb" data-src="../../packages/develop-engine/fixtures/golden/input/dsc02072.jpg"><img src="../../packages/develop-engine/fixtures/golden/input/dsc02072.jpg" alt="" /></button>
+            <button class="thumb" data-src="../../packages/develop-engine/fixtures/golden/input/dsc02078.jpg"><img src="../../packages/develop-engine/fixtures/golden/input/dsc02078.jpg" alt="" /></button>
+            <button class="thumb" data-src="../../packages/develop-engine/fixtures/golden/input/dsc02078.jpg"><img src="../../packages/develop-engine/fixtures/golden/input/dsc02078.jpg" alt="" /></button>
+            <button class="thumb" data-src="../../packages/develop-engine/fixtures/golden/input/dsc02150.jpg"><img src="../../packages/develop-engine/fixtures/golden/input/dsc02150.jpg" alt="" /></button>
+          </div>
+
+          <div class="bottombar">
+            <div class="seg-group" role="group" aria-label="表示">
+              <button class="seg" aria-label="一覧" aria-pressed="false"><svg class="i" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/></svg></button>
+              <button class="seg" aria-label="1枚" aria-pressed="true"><svg class="i" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2.5"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.1-3.1a2 2 0 0 0-2.8 0L6 21"/></svg></button>
+            </div>
+            <span class="status">保存済み</span>
+            <button class="icon-btn" aria-label="お気に入り"><svg class="i" viewBox="0 0 24 24"><path d="M19 14c1.5-1.4 3-3.2 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.8 0-3 .9-4.5 2.3C10.5 3.9 9.3 3 7.5 3A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.1 3 5.5l7 7Z"/></svg></button>
+            <button class="pill" id="compareBtn">補正前</button>
+            <button class="pill ghost">全体<svg class="i sm" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg></button>
+            <button class="primary">書き出す</button>
+          </div>
+        </div>
+
+        <aside class="right" aria-label="道具">
+          <div class="histogram" aria-hidden="true">
+            <svg viewBox="0 0 224 76" preserveAspectRatio="none">
+              <path d="M0 76 L0 70 C 20 66, 40 60, 60 52 C 80 44, 95 30, 110 40 C 125 50, 140 64, 160 56 C 180 48, 200 20, 212 8 L 224 2 L224 76 Z" fill="#9FB9E8" opacity=".55"/>
+              <path d="M0 76 L0 72 C 25 68, 50 62, 75 50 C 95 40, 110 24, 130 36 C 150 48, 170 60, 190 44 C 205 32, 215 14, 224 6 L224 76 Z" fill="#8FCB8A" opacity=".55"/>
+              <path d="M0 76 L0 73 C 30 70, 60 64, 85 56 C 105 50, 120 30, 140 30 C 160 30, 180 54, 200 38 C 210 30, 218 16, 224 10 L224 76 Z" fill="#E89A8E" opacity=".55"/>
+            </svg>
+          </div>
+
+          <!-- 補正 -->
+          <div class="panel" data-panel="edit">
+            <div class="panel-head">
+              <h2>補正</h2>
+              <button class="icon-btn" aria-label="取り消す"><svg class="i" viewBox="0 0 24 24"><path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 0-15-6.7L3 13"/></svg></button>
+              <button class="icon-btn" aria-label="やり直す"><svg class="i" viewBox="0 0 24 24"><path d="M21 7v6h-6"/><path d="M3 17a9 9 0 0 1 15-6.7L21 13"/></svg></button>
+              <button class="icon-btn" aria-label="補正のメニュー"><svg class="i" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.2" fill="currentColor"/><circle cx="12" cy="12" r="1.2" fill="currentColor"/><circle cx="19" cy="12" r="1.2" fill="currentColor"/></svg></button>
+              <button class="text-btn">初期化</button>
+            </div>
+            <div class="quick">
+              <button class="chip" aria-pressed="false">自動</button>
+              <button class="chip" aria-pressed="false">白黒</button>
+            </div>
+            <div class="row">
+              <span class="label">プリセット</span>
+              <button class="select" id="presetSelect">なし<svg class="i sm" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg></button>
+              <span class="end"><button class="icon-btn" aria-label="プリセットの一覧" data-go="presets"><svg class="i" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/></svg></button></span>
+            </div>
+
+            <section class="section">
+              <button class="section-head" aria-expanded="true"><svg class="i" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg>ライト</button>
+              <div class="section-body">
+                <div class="slider" data-min="-5" data-max="5" data-value="0" data-step="0.01" data-balanced><div class="slider-row"><span class="slider-label">露光量</span><span class="slider-value"></span></div><div class="slider-track"><span class="slider-tick"></span><span class="slider-knob"></span></div></div>
+                <div class="slider" data-min="-100" data-max="100" data-value="0" data-balanced><div class="slider-row"><span class="slider-label">コントラスト</span><span class="slider-value"></span></div><div class="slider-track"><span class="slider-tick"></span><span class="slider-knob"></span></div></div>
+                <div class="slider" data-min="-100" data-max="100" data-value="-60" data-balanced><div class="slider-row"><span class="slider-label">ハイライト</span><span class="slider-value"></span></div><div class="slider-track"><span class="slider-tick"></span><span class="slider-knob"></span></div></div>
+                <div class="slider" data-min="-100" data-max="100" data-value="0" data-balanced><div class="slider-row"><span class="slider-label">シャドウ</span><span class="slider-value"></span></div><div class="slider-track"><span class="slider-tick"></span><span class="slider-knob"></span></div></div>
+                <div class="slider" data-min="-100" data-max="100" data-value="0" data-balanced><div class="slider-row"><span class="slider-label">白レベル</span><span class="slider-value"></span></div><div class="slider-track"><span class="slider-tick"></span><span class="slider-knob"></span></div></div>
+                <div class="slider" data-min="-100" data-max="100" data-value="0" data-balanced><div class="slider-row"><span class="slider-label">黒レベル</span><span class="slider-value"></span></div><div class="slider-track"><span class="slider-tick"></span><span class="slider-knob"></span></div></div>
+              </div>
+            </section>
+
+            <section class="section">
+              <button class="section-head" aria-expanded="true"><svg class="i" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg>カラー</button>
+              <div class="section-body">
+                <div class="slider" data-min="-100" data-max="100" data-value="0" data-balanced data-tone="temp"><div class="slider-row"><span class="slider-label">色温度</span><span class="slider-value"></span></div><div class="slider-track"><span class="slider-tick"></span><span class="slider-knob"></span></div></div>
+                <div class="slider" data-min="-100" data-max="100" data-value="0" data-balanced data-tone="tint"><div class="slider-row"><span class="slider-label">色かぶり補正</span><span class="slider-value"></span></div><div class="slider-track"><span class="slider-tick"></span><span class="slider-knob"></span></div></div>
+                <div class="slider" data-min="-100" data-max="100" data-value="0" data-balanced><div class="slider-row"><span class="slider-label">自然な彩度</span><span class="slider-value"></span></div><div class="slider-track"><span class="slider-tick"></span><span class="slider-knob"></span></div></div>
+                <div class="slider" data-min="-100" data-max="100" data-value="0" data-balanced><div class="slider-row"><span class="slider-label">彩度</span><span class="slider-value"></span></div><div class="slider-track"><span class="slider-tick"></span><span class="slider-knob"></span></div></div>
+              </div>
+            </section>
+
+            <section class="section">
+              <button class="section-head" aria-expanded="true"><svg class="i" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg>効果
+                <span class="end"><span class="icon-btn" aria-label="効果の説明" role="button"><svg class="i sm" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg></span></span>
+              </button>
+              <div class="section-body">
+                <div class="slider" data-min="-100" data-max="100" data-value="0" data-balanced><div class="slider-row"><span class="slider-label">テクスチャ</span><span class="slider-value"></span></div><div class="slider-track"><span class="slider-tick"></span><span class="slider-knob"></span></div></div>
+                <div class="slider" data-min="-100" data-max="100" data-value="0" data-balanced><div class="slider-row"><span class="slider-label">明瞭度</span><span class="slider-value"></span></div><div class="slider-track"><span class="slider-tick"></span><span class="slider-knob"></span></div></div>
+                <div class="slider" data-min="-100" data-max="100" data-value="0" data-balanced><div class="slider-row"><span class="slider-label">かすみの除去</span><span class="slider-value"></span></div><div class="slider-track"><span class="slider-tick"></span><span class="slider-knob"></span></div></div>
+                <div class="slider" data-min="-100" data-max="100" data-value="0" data-balanced><div class="slider-row"><span class="slider-label">周辺光量補正</span><span class="slider-value"></span></div><div class="slider-track"><span class="slider-tick"></span><span class="slider-knob"></span></div></div>
+                <div class="slider" data-min="0" data-max="100" data-value="0"><div class="slider-row"><span class="slider-label">粒子</span><span class="slider-value"></span></div><div class="slider-track"><span class="slider-knob"></span></div></div>
+                <div class="slider" data-min="0" data-max="100" data-value="25"><div class="slider-row"><span class="slider-label">粒子のサイズ</span><span class="slider-value"></span></div><div class="slider-track"><span class="slider-knob"></span></div></div>
+              </div>
+            </section>
+          </div>
+
+          <!-- プリセット -->
+          <div class="panel" data-panel="presets" hidden>
+            <div class="panel-head">
+              <h2>プリセット</h2>
+              <button class="icon-btn" aria-label="プリセットを追加"><svg class="i" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button>
+              <button class="icon-btn" aria-label="プリセットのメニュー"><svg class="i" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.2" fill="currentColor"/><circle cx="12" cy="12" r="1.2" fill="currentColor"/><circle cx="19" cy="12" r="1.2" fill="currentColor"/></svg></button>
+            </div>
+            <div class="tabs" role="tablist">
+              <button class="tab" role="tab" aria-pressed="true">自分</button>
+              <button class="tab" role="tab" aria-pressed="false">拠点</button>
+            </div>
+            <div class="preset-group">
+              <div class="preset-grid" id="presetGrid">
+                <button class="preset" data-name="なし" data-filter="none" aria-pressed="true"><img src="../../packages/develop-engine/fixtures/golden/input/dsc02072.jpg" alt="" /><span>なし</span></button>
+                <button class="preset" data-name="青空" data-filter="saturate(1.25) hue-rotate(-6deg) brightness(1.03)" aria-pressed="false"><img src="../../packages/develop-engine/fixtures/golden/input/dsc02072.jpg" alt="" style="filter:saturate(1.25) hue-rotate(-6deg) brightness(1.03)" /><span>青空</span></button>
+                <button class="preset" data-name="パステル" data-filter="saturate(.72) brightness(1.1) contrast(.9)" aria-pressed="false"><img src="../../packages/develop-engine/fixtures/golden/input/dsc02072.jpg" alt="" style="filter:saturate(.72) brightness(1.1) contrast(.9)" /><span>パステル</span></button>
+                <button class="preset" data-name="鮮やか" data-filter="saturate(1.55) contrast(1.08)" aria-pressed="false"><img src="../../packages/develop-engine/fixtures/golden/input/dsc02072.jpg" alt="" style="filter:saturate(1.55) contrast(1.08)" /><span>鮮やか</span></button>
+                <button class="preset" data-name="フィルム" data-filter="contrast(.92) saturate(.85) sepia(.18)" aria-pressed="false"><img src="../../packages/develop-engine/fixtures/golden/input/dsc02072.jpg" alt="" style="filter:contrast(.92) saturate(.85) sepia(.18)" /><span>フィルム</span></button>
+                <button class="preset" data-name="白黒" data-filter="grayscale(1) contrast(1.06)" aria-pressed="false"><img src="../../packages/develop-engine/fixtures/golden/input/dsc02072.jpg" alt="" style="filter:grayscale(1) contrast(1.06)" /><span>白黒</span></button>
+              </div>
+            </div>
+            <div class="preset-group">
+              <h3>拠点のプリセット</h3>
+              <div class="preset-grid">
+                <button class="preset" data-name="鎌倉の午後" data-filter="sepia(.22) saturate(1.1) brightness(1.02)" aria-pressed="false"><img src="../../packages/develop-engine/fixtures/golden/input/dsc02072.jpg" alt="" style="filter:sepia(.22) saturate(1.1) brightness(1.02)" /><span>鎌倉の午後</span></button>
+                <button class="preset" data-name="木漏れ日" data-filter="brightness(1.06) contrast(.95) sepia(.12)" aria-pressed="false"><img src="../../packages/develop-engine/fixtures/golden/input/dsc02072.jpg" alt="" style="filter:brightness(1.06) contrast(.95) sepia(.12)" /><span>木漏れ日</span></button>
+              </div>
+            </div>
+            <div class="preset-amount">
+              <div class="slider" data-min="0" data-max="200" data-value="100"><div class="slider-row"><span class="slider-label">量</span><span class="slider-value"></span></div><div class="slider-track"><span class="slider-knob"></span></div></div>
+            </div>
+          </div>
+
+          <!-- 切り抜き -->
+          <div class="panel" data-panel="crop" hidden>
+            <div class="panel-head">
+              <h2>切り抜き</h2>
+              <button class="icon-btn" aria-label="取り消す"><svg class="i" viewBox="0 0 24 24"><path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 0-15-6.7L3 13"/></svg></button>
+              <button class="icon-btn" aria-label="やり直す"><svg class="i" viewBox="0 0 24 24"><path d="M21 7v6h-6"/><path d="M3 17a9 9 0 0 1 15-6.7L21 13"/></svg></button>
+              <button class="text-btn">初期化</button>
+            </div>
+            <div class="row">
+              <span class="label">縦横比</span>
+              <button class="select">元の比率 3:2<svg class="i sm" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg></button>
+              <span class="end">
+                <button class="icon-btn" aria-label="縦横の入れ替え"><svg class="i" viewBox="0 0 24 24"><path d="M3 7h13l-3-3"/><path d="M21 17H8l3 3"/></svg></button>
+                <button class="icon-btn" aria-label="比率を固定" aria-pressed="true"><svg class="i" viewBox="0 0 24 24"><rect width="18" height="11" x="3" y="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></button>
+              </span>
+            </div>
+            <div class="section-body">
+              <div class="slider" data-min="-45" data-max="45" data-value="0" data-step="0.1" data-balanced><div class="slider-row"><span class="slider-label">角度補正</span><span class="slider-value"></span></div><div class="slider-track"><span class="slider-tick"></span><span class="slider-knob"></span></div></div>
+            </div>
+            <section class="section">
+              <button class="section-head" aria-expanded="true"><svg class="i" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg>反転と回転</button>
+              <div class="tool-row">
+                <button class="tool-btn" aria-label="左に 90° 回転"><svg class="i" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg></button>
+                <button class="tool-btn" aria-label="右に 90° 回転"><svg class="i" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/></svg></button>
+                <button class="tool-btn" aria-label="左右の反転"><svg class="i" viewBox="0 0 24 24"><path d="M8 3H5a2 2 0 0 0-2 2v14c0 1.1.9 2 2 2h3"/><path d="M16 3h3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-3"/><path d="M12 20v2"/><path d="M12 14v2"/><path d="M12 8v2"/><path d="M12 2v2"/></svg></button>
+                <button class="tool-btn" aria-label="上下の反転"><svg class="i" viewBox="0 0 24 24"><path d="M21 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v3"/><path d="M21 16v3a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-3"/><path d="M4 12H2"/><path d="M10 12H8"/><path d="M16 12h-2"/><path d="M22 12h-2"/></svg></button>
+              </div>
+            </section>
+            <div class="section-body" style="padding-top:12px;display:flex;flex-direction:column;gap:8px">
+              <button class="block-btn primary-block" id="cropDone">完了<span style="margin-left:8px;opacity:.75;font-size:11px">⏎</span></button>
+              <button class="block-btn ghost-block" id="cropCancel">キャンセル<span style="margin-left:8px;opacity:.6;font-size:11px">esc</span></button>
+            </div>
+            <div class="row" style="height:auto;padding:10px 14px 14px;color:var(--mute)">書き出し 2048 × 1365</div>
+          </div>
+
+          <!-- 背景除去 -->
+          <div class="panel" data-panel="cutout" hidden>
+            <div class="panel-head">
+              <h2>背景除去</h2>
+              <button class="icon-btn" aria-label="取り消す"><svg class="i" viewBox="0 0 24 24"><path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 0-15-6.7L3 13"/></svg></button>
+              <button class="icon-btn" aria-label="やり直す"><svg class="i" viewBox="0 0 24 24"><path d="M21 7v6h-6"/><path d="M3 17a9 9 0 0 1 15-6.7L21 13"/></svg></button>
+              <button class="text-btn">初期化</button>
+            </div>
+            <div class="section-body">
+              <button class="block-btn primary-block">背景を除去する</button>
+            </div>
+            <section class="section">
+              <button class="section-head" aria-expanded="true"><svg class="i" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg>ブラシ</button>
+              <div class="quick">
+                <button class="chip" aria-pressed="true">復元</button>
+                <button class="chip" aria-pressed="false">消去</button>
+              </div>
+              <div class="section-body">
+                <div class="slider" data-min="1" data-max="100" data-value="40"><div class="slider-row"><span class="slider-label">ブラシの大きさ</span><span class="slider-value"></span></div><div class="slider-track"><span class="slider-knob"></span></div></div>
+              </div>
+            </section>
+            <section class="section">
+              <button class="section-head" aria-expanded="true"><svg class="i" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg>背景</button>
+              <div class="swatches">
+                <button class="swatch" aria-pressed="true"><i class="transparent"></i>透明</button>
+                <button class="swatch" aria-pressed="false"><i style="background:#fff"></i>白</button>
+                <button class="swatch" aria-pressed="false"><i style="background:#EADFCB"></i>色</button>
+              </div>
+            </section>
+            <div class="section-body" style="padding-top:12px">
+              <button class="block-btn ghost-block">背景除去を外す</button>
+            </div>
+          </div>
+        </aside>
+
+        <nav class="rail" aria-label="道具の切り替え">
+          <button data-tool="presets" aria-label="プリセット" title="プリセット"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 1 0 18z" fill="currentColor" stroke="none"/></svg></button>
+          <button data-tool="edit" aria-label="補正" title="補正"><svg class="i" viewBox="0 0 24 24"><path d="M21 4h-7M10 4H3M21 12h-9M8 12H3M21 20h-5M12 20H3"/><path d="M14 2v4M8 10v4M16 18v4"/></svg></button>
+          <button data-tool="crop" aria-label="切り抜き" title="切り抜き"><svg class="i" viewBox="0 0 24 24"><path d="M6 2v14a2 2 0 0 0 2 2h14"/><path d="M18 22V8a2 2 0 0 0-2-2H2"/></svg></button>
+          <button data-tool="cutout" aria-label="背景除去" title="背景除去"><svg class="i" viewBox="0 0 24 24"><circle cx="6" cy="6" r="3"/><path d="M8.12 8.12 12 12"/><path d="M20 4 8.12 15.88"/><circle cx="6" cy="18" r="3"/><path d="M14.8 14.8 20 20"/></svg></button>
+          <div class="spacer"></div>
+          <div class="sep"></div>
+          <button aria-label="情報" title="情報"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg></button>
+        </nav>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const body = document.body;
+    const panels = document.querySelectorAll('.panel');
+    const railButtons = document.querySelectorAll('.rail button[data-tool]');
+    const switchButtons = document.querySelectorAll('.switch-group button[data-set]');
+
+    function sync() {
+      switchButtons.forEach((b) => { const [k, v] = b.dataset.set.split(':'); b.setAttribute('aria-pressed', String(body.dataset[k] === v)); });
+      railButtons.forEach((b) => b.classList.toggle('on', b.dataset.tool === body.dataset.tool));
+      panels.forEach((p) => { p.hidden = p.dataset.panel !== body.dataset.tool; });
+      document.getElementById('leftToggle').setAttribute('aria-pressed', String(body.dataset.left === 'on'));
+    }
+    switchButtons.forEach((b) => b.addEventListener('click', () => { const [k, v] = b.dataset.set.split(':'); body.dataset[k] = v; sync(); }));
+    railButtons.forEach((b) => b.addEventListener('click', () => { body.dataset.tool = b.dataset.tool; sync(); }));
+    document.querySelectorAll('[data-go]').forEach((b) => b.addEventListener('click', () => { body.dataset.tool = b.dataset.go; sync(); }));
+    document.getElementById('leftToggle').addEventListener('click', () => { body.dataset.left = body.dataset.left === 'on' ? 'off' : 'on'; sync(); });
+
+    // 群の開閉
+    document.querySelectorAll('.section-head').forEach((h) => h.addEventListener('click', (e) => {
+      if (e.target.closest('.icon-btn')) return;
+      const s = h.closest('.section'); s.classList.toggle('closed'); h.setAttribute('aria-expanded', String(!s.classList.contains('closed')));
+    }));
+
+    // スライダー（数値と位置だけ）
+    function fmt(v, step) { const d = step < 1 ? (step < 0.1 ? 2 : 1) : 0; const s = v.toFixed(d); return (v < 0 ? '−' + s.slice(1) : (d > 0 && v > 0 ? '+' + s : s)); }
+    document.querySelectorAll('.slider').forEach((el) => {
+      const min = +el.dataset.min, max = +el.dataset.max, step = +(el.dataset.step || 1), init = +el.dataset.value;
+      const knob = el.querySelector('.slider-knob'), val = el.querySelector('.slider-value'), track = el.querySelector('.slider-track');
+      let v = init;
+      const render = () => { knob.style.left = ((v - min) / (max - min) * 100) + '%'; val.textContent = fmt(v, step); el.classList.toggle('changed', Math.abs(v - init) > 1e-9 && el.hasAttribute('data-balanced')); };
+      const set = (x) => { const r = track.getBoundingClientRect(); let n = min + Math.min(1, Math.max(0, (x - r.left) / r.width)) * (max - min); n = Math.round(n / step) * step; v = Math.min(max, Math.max(min, n)); render(); };
+      track.addEventListener('pointerdown', (e) => { track.setPointerCapture(e.pointerId); set(e.clientX); const mv = (ev) => set(ev.clientX); track.addEventListener('pointermove', mv); track.addEventListener('pointerup', () => track.removeEventListener('pointermove', mv), { once: true }); });
+      el.addEventListener('dblclick', () => { v = init; render(); });
+      render();
+    });
+
+    // プリセット（載せている間だけ写真で見せる）
+    const mainPhoto = document.getElementById('mainPhoto');
+    const presetSelect = document.getElementById('presetSelect');
+    let chosen = 'none';
+    function applyFilter(f) { mainPhoto.style.filter = f === 'none' ? '' : f; }
+    document.querySelectorAll('.preset').forEach((p) => {
+      p.addEventListener('mouseenter', () => applyFilter(p.dataset.filter));
+      p.addEventListener('mouseleave', () => applyFilter(chosen));
+      p.addEventListener('click', () => {
+        chosen = p.dataset.filter; applyFilter(chosen);
+        document.querySelectorAll('.preset').forEach((q) => q.setAttribute('aria-pressed', String(q === p)));
+        presetSelect.firstChild.textContent = p.dataset.name;
+      });
+    });
+
+    // 補正前（押している間）
+    const compareBtn = document.getElementById('compareBtn');
+    const down = () => { body.dataset.compare = 'on'; }, up = () => { body.dataset.compare = 'off'; };
+    compareBtn.addEventListener('pointerdown', down); compareBtn.addEventListener('pointerup', up); compareBtn.addEventListener('pointerleave', up);
+
+    // 切り抜き: Enter で確定・Esc で取り消し（どちらも補正へ戻る）
+    const cropExit = () => { body.dataset.tool = 'edit'; sync(); };
+    document.getElementById('cropDone').addEventListener('click', cropExit);
+    document.getElementById('cropCancel').addEventListener('click', cropExit);
+    document.addEventListener('keydown', (e) => { if (body.dataset.tool !== 'crop' || e.target.closest('input')) return; if (e.key === 'Enter' || e.key === 'Escape') { e.preventDefault(); cropExit(); } });
+
+    // 下の帯
+    document.querySelectorAll('.thumb').forEach((t) => t.addEventListener('click', () => {
+      document.querySelectorAll('.thumb').forEach((q) => q.classList.toggle('on', q === t));
+      mainPhoto.src = t.dataset.src;
+      document.querySelectorAll('.preset img').forEach((img) => { img.src = t.dataset.src; });
+    }));
+
+    // 一覧 / 1枚（見た目だけ）
+    document.querySelectorAll('.seg').forEach((s) => s.addEventListener('click', () => document.querySelectorAll('.seg').forEach((q) => q.setAttribute('aria-pressed', String(q === s)))));
+
+    // 共有用: #tool=crop&bg=white&canvas=same&strip=off&left=off
+    new URLSearchParams(location.hash.slice(1)).forEach((v, k) => { if (['bg', 'canvas', 'tool', 'strip', 'left'].includes(k)) body.dataset[k] = v; });
+    sync();
+  </script>
+</body>
+</html>

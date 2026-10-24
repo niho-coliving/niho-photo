@@ -190,6 +190,7 @@ function createEngine(options: EngineOptions): DevelopEngine {
     supportsColorPoints: vi.fn(async () => false),
     supportsDetail: vi.fn(async () => false),
     supportsHeal: vi.fn(async () => true),
+    supportsLens: vi.fn(async () => true),
     imageSize: vi.fn(async () => ({ width: 3000, height: 2000 })),
     rasterDecodeSize: vi.fn(async () => 1280),
     geometryOutputSize: vi.fn(async () => ({ width: 1280, height: 853 })),

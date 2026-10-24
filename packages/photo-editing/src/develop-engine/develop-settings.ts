@@ -12,13 +12,20 @@ import {
 } from "./develop-masks";
 import { presetMasksForPhoto, type PresetMasksPlacement } from "./develop-preset-masks";
 import { HEAL_SETTINGS_VERSION, hasDevelopHeal, hasValidDevelopHeal } from "./develop-heal";
+import {
+  LENS_SETTINGS_VERSION,
+  hasActiveDevelopLens,
+  hasValidDevelopLens,
+  isActiveDevelopLens,
+  readDevelopLens,
+} from "./develop-lens";
 /**
  * NIHO の現像エンジンの編集内容 `developSettings`（移行元設計。移行時の設計文書「段 2」）。Photo Bench の
- * `EditSettings` の上位集合に `v`・`engine`・`look`・`base`・`geometry`・`heal` を足したもの。ブラウザは基本補正の 13 項目（NIHO Photo 段 1
+ * `EditSettings` の上位集合に `v`・`engine`・`look`・`base`・`geometry`・`heal`・`lens` を足したもの。ブラウザは基本補正の 13 項目（NIHO Photo 段 1
  * F1 移行元設計。S1 の canvas では露光量・コントラスト・彩度と相対の色温度 / 色かぶり補正だけ）を直し、ほかの項目（HSL など）はそのまま
- * 持って返す。形の版 `v` は、修復の印があれば 8、遠近（`geometry.perspective`）があれば 7、detail があれば 6、部分補正（マスク）があれば
+ * 持って返す。形の版 `v` は、レンズ補正が画を変えれば 9、修復の印があれば 8、遠近（`geometry.perspective`）があれば 7、detail があれば 6、部分補正（マスク）があれば
  * 5、色ポイントがあれば 4、効果が有効なら 3、幾何が恒等でなければ 2、ほかは 1。古い画面は知らない形を落とさないため、未対応の版を読まない。 */
-/** API schemaの設定型（v1〜v8）を画面で扱う型。未知の項目はそのまま保持する。 */
+/** API schemaの設定型（v1〜v9）を画面で扱う型。未知の項目はそのまま保持する。 */
 export type DevelopSettings = {
   v: DevelopSettingsVersion;
   engine: string;
@@ -105,11 +112,14 @@ function numberOrZero(value: unknown): number {
   return typeof value === "number" && Number.isFinite(value) ? value : 0;
 }
 
-/** この画面が読む `developSettings` の形の版（1〜8。5: 部分補正、6: detail、7: 遠近、8: 修復）。 */
+/** この画面が読む `developSettings` の形の版（1〜9。5: 部分補正、6: detail、7: 遠近、8: 修復、9: レンズ補正）。 */
 export const DEVELOP_DETAIL_SETTINGS_VERSION = 6;
-export type DevelopSettingsVersion = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
-function isDevelopSettingsVersion(value: unknown): value is DevelopSettingsVersion {
-  return value === 1 || value === 2 || value === 3 || value === 4 || value === 5 || value === 6 || value === 7 || value === 8;}
+export type DevelopSettingsVersion = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
+export function isDevelopSettingsVersion(value: unknown): value is DevelopSettingsVersion {
+  return (
+    value === 1 || value === 2 || value === 3 || value === 4 || value === 5 || value === 6 || value === 7 || value === 8 || value === 9
+  );
+}
 
 export type DevelopDetailSettings = {
   sharpening: { amount: number; radius: number; detail: number; masking: number };
@@ -282,7 +292,12 @@ export function hasNullDevelopGeometryField(value: unknown): boolean {
   return isRecord(crop) && ["left", "top", "right", "bottom"].some((key) => Object.hasOwn(crop, key) && crop[key] === null);
 }
 
-/** 編集内容に要る形の版（修復の印なら8、遠近なら7、detailなら6、マスクなら5、色ポイントなら4、効果なら3、幾何なら2。crateの `required_version`）。 */export function developSettingsVersion(settings: Record<string, unknown>): DevelopSettingsVersion {
+/**
+ * 編集内容に要る形の版（画を変えるレンズ補正なら9、修復の印なら8、遠近なら7、detailなら6、マスクなら5、色ポイントなら4、効果なら3、
+ * 幾何なら2。crateの `required_version`）。
+ */
+export function developSettingsVersion(settings: Record<string, unknown>): DevelopSettingsVersion {
+  if (hasActiveDevelopLens(settings)) return LENS_SETTINGS_VERSION;
   if (hasDevelopHeal(settings)) return HEAL_SETTINGS_VERSION;
   if (hasDevelopPerspective(settings)) return 7;
   if (hasDevelopDetail(settings)) return DEVELOP_DETAIL_SETTINGS_VERSION;
@@ -461,13 +476,18 @@ export function developSettingsOnWorkingCopy(
   return { ...next, v: developSettingsVersion(next) };
 }
 
-/** API の値を編集内容として読む（形の版が1〜8でない・色ポイント、マスク、detail、遠近、修復の形が壊れている・必要な版より低ければ null）。 */export function readDevelopSettings(value: unknown): DevelopSettings | null {
+/**
+ * API の値を編集内容として読む（形の版が1〜9でない・色ポイント、マスク、detail、遠近、修復、レンズ補正の形が壊れている・必要な版より
+ * 低ければ null）。
+ */
+export function readDevelopSettings(value: unknown): DevelopSettings | null {
   if (
     !isRecord(value) ||
     !isDevelopSettingsVersion(value.v) ||
     !hasValidDevelopColorPoints(value) ||
     !hasValidDevelopMasks(value) ||
-    !hasValidDevelopDetail(value)
+    !hasValidDevelopDetail(value) ||
+    !hasValidDevelopLens(value)
   ) {
     return null;
   }
@@ -489,7 +509,7 @@ export function developSettingsOnWorkingCopy(
 }
 
 /**
- * このブラウザの版で続きを直せる編集内容か。まだ無い（null）なら直せる。形の版が1〜8で、この画面が知る数式とルックのときだけ直せる。
+ * このブラウザの版で続きを直せる編集内容か。まだ無い（null）なら直せる。形の版が1〜9で、この画面が知る数式とルックのときだけ直せる。
  * 未対応の項目を落として描かない。恒等でない幾何をv1で持つ壊れた設定は直さず、幾何を扱えない面は `{ geometry: false }` を渡す。
  * 閲覧だけにする（切り抜きを落として描かない・保存しない）。
  */
@@ -501,7 +521,8 @@ export function isEditableDevelopSettings(value: unknown, options: { geometry?: 
     !hasValidDevelopColorPoints(value) ||
     !hasValidDevelopMasks(value) ||
     !hasValidDevelopDetail(value) ||
-    !hasValidDevelopHeal(value)
+    !hasValidDevelopHeal(value) ||
+    !hasValidDevelopLens(value)
   ) {
     return false;
   }
@@ -540,6 +561,7 @@ function isNiho6Look(look: unknown): boolean {
 
 /**
  * 右パネルの「初期化」で保存する編集内容: 色の補正だけを neutral に戻し、幾何と修復の印（写真の中身の直し）は保つ。効果や部分補正は色の補正として外す。
+ * レンズ補正（`lens`。niho-photo#45）も右パネルの補正なので外す（「補正前」も手動のレンズ補正の無い写真と比べる）。
  * `engine`・`look`・`base` は現在の値を保ち、形の版は残した幾何と修復の印から決め直す。 */
 export function resetDevelopSettingsColors(current: DevelopSettings | null, base: string | null): DevelopSettings {
   const neutral: DevelopSettings = neutralDevelopSettings(base);
@@ -632,7 +654,8 @@ export function autoDevelopSettings(before: DevelopSettings, autoResult: Develop
 }
 
 /**
- * コピーした補正（「補正をコピー」。F5a-2 移行元設計）。色の補正（HSL・効果など、この画面が知らない項目も含む全部）を持ち、貼り付け先の
+ * コピーした補正（「補正をコピー」。F5a-2 移行元設計）。色の補正（HSL・効果・レンズ補正〔レンズと撮影の特性。niho-photo#45〕など、この画面が
+ * 知らない項目も含む全部）を持ち、貼り付け先の
  * ものを保つ項目（数式の版・ルック・土台の版・幾何・マスク・修復の印）は持たない。RAW の絶対のホワイトバランスも写さない。
  * マスクと修復の印は写真固有の編集なので、ほかの写真へは運ばない。 */
 export type CopiedDevelopSettings = Record<string, unknown>;
@@ -782,7 +805,7 @@ export function isNeutralDevelopSettings(value: unknown): boolean {
 
 /**
  * 色の補正が何も当たっていないか（幾何と修復の印は見ない。右パネルの「初期化」を押せるかに使う。初期化は色だけを戻し、切り抜きと
- * 修復の印は戻さない）。
+ * 修復の印は戻さない）。画を変えるレンズ補正（`lens`）は初期化で戻すので数える（中点・色相の範囲だけの `lens` は数えない）。
  * ほかは {@link isNeutralDevelopSettings} と同じ。効果（白黒・周辺光量補正・粒子。E1 移行元設計）は crate の `is_neutral` と同じ規則で
  * 数える: 白黒がオン・周辺光量補正か粒子の量が 0 でなければ neutral にしない（量が 0 の `vignette` / `grain` と、白黒でないときの
  * `grayMixer` は画に効かないので neutral のまま）。
@@ -797,6 +820,10 @@ export function isNeutralDevelopColors(value: unknown): boolean {
     if (key === "colorPoints" && !hasActiveDevelopColorPoints(value)) continue;
     // 画を変えないマスク（無効・何も動かさない）は色の補正ではない。形が壊れていれば残して neutral にしない
     if (key === "masks" && hasValidDevelopMasks(value) && !hasActiveDevelopMasks(value)) continue;
+    if (key === "lens") {
+      const lens = readDevelopLens(item);
+      if (lens !== null && !isActiveDevelopLens(lens)) continue;
+    }
     if (key === "detail") {
       const detail = readDevelopDetail(item);
       if (
@@ -868,7 +895,7 @@ const DEVELOP_EFFECT_SETTINGS_KEYS = ["grayscale", "grayMixer", "vignette", "gra
  * 描くとき・原寸の書き出しのときに使う。crate の `convert::to_edit_settings_value` と同じ規則）。版の情報（`v`・`engine`・`look`・`base`）と知らない項目は落とし、白は
  * `absolute` → `custom`、ほか（撮影時・相対）→ `asShot`（相対の値はそのまま残る）。作業コピーの上で直した RAW などの補正
  * （`base` がある。移行元設計）も同じ規則で戻し、Desktop は自分の土台で描く（owner 決定 2026-09-29「写真 1 枚に補正 1 つ」）。
- * 変換できなかった値（`legacySettings`）か恒等でない幾何・修復の印があれば戻せないので null。
+ * 変換できなかった値（`legacySettings`）か恒等でない幾何・修復の印・画を変えるレンズ補正があれば戻せないので null。
  */
 export function developSettingsToEditSettings(value: unknown): Record<string, unknown> | null {
   const settings = readDevelopSettings(value);
@@ -878,6 +905,8 @@ export function developSettingsToEditSettings(value: unknown): Record<string, un
   if (hasDevelopGeometry(settings)) return null;
   // 修復の印も旧エンジンの形に無い（落として写すと、消したものが戻る）
   if (hasDevelopHeal(settings)) return null;
+  // 画を変えるレンズ補正も旧エンジンの形に無い（落として写すと、直した歪み・周辺光量・色収差が戻る）
+  if (hasActiveDevelopLens(settings)) return null;
   // 効いている効果（白黒・周辺光量補正・粒子。E1 移行元設計）も旧エンジンの形に無い。落として写すと、白黒の写真が色つきで出る
   if (DEVELOP_EFFECT_SETTINGS_KEYS.some((key) => isInactiveDevelopEffect(key, settings[key]) === false)) return null;
   if (hasDevelopColorPoints(settings)) return null;

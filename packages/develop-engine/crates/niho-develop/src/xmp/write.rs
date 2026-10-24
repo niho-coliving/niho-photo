@@ -64,10 +64,16 @@ pub enum XmpGroup {
     /// (niho-photo#46). Not in [`Self::DEFAULT`]: the geometry belongs to
     /// each photo, like the exposure.
     Transform,
+    /// The Lens Corrections panel's manual values, chromatic aberration and
+    /// defringe (niho-photo#45; `LensManualDistortionAmount`,
+    /// `VignetteAmount` / `VignetteMidpoint`, `AutoLateralCA`, `Defringe*`).
+    /// Profile corrections are never written (the working copy carries
+    /// them).
+    Lens,
 }
 
 impl XmpGroup {
-    pub const ALL: [XmpGroup; 14] = [
+    pub const ALL: [XmpGroup; 15] = [
         XmpGroup::Exposure,
         XmpGroup::WhiteBalance,
         XmpGroup::Tone,
@@ -82,12 +88,15 @@ impl XmpGroup {
         XmpGroup::NoiseReduction,
         XmpGroup::Sharpening,
         XmpGroup::Transform,
+        XmpGroup::Lens,
     ];
 
     /// The default of "save the current edit as a preset": everything but
     /// the exposure, white balance and transform, which belong to each photo
     /// (so the preset stacks on a photo's own edit, whichever comes first).
-    pub const DEFAULT: [XmpGroup; 11] = [
+    /// The lens corrections are in it: they belong to the lens and the
+    /// shot, like Lightroom's Lens Corrections in a preset.
+    pub const DEFAULT: [XmpGroup; 12] = [
         XmpGroup::Tone,
         XmpGroup::Presence,
         XmpGroup::ToneCurve,
@@ -99,6 +108,7 @@ impl XmpGroup {
         XmpGroup::Grain,
         XmpGroup::NoiseReduction,
         XmpGroup::Sharpening,
+        XmpGroup::Lens,
     ];
 
     pub fn as_str(self) -> &'static str {
@@ -117,6 +127,7 @@ impl XmpGroup {
             XmpGroup::NoiseReduction => "noiseReduction",
             XmpGroup::Sharpening => "sharpening",
             XmpGroup::Transform => "transform",
+            XmpGroup::Lens => "lens",
         }
     }
 
@@ -510,6 +521,35 @@ pub fn settings_to_xmp(settings: &DevelopSettings, options: &XmpWriteOptions) ->
             "CropConstrainToWarp",
             if geometry.constrain { "1" } else { "0" }.into(),
         );
+    }
+    if on(XmpGroup::Lens) {
+        // Lightroom keeps these as integers; the fringe amounts on its
+        // 0..20 scale (NIHO's 0..100 / 5).
+        let lens = &settings.lens;
+        let int = |v: f64, signed: bool| number(libm::round(v), signed);
+        put("LensManualDistortionAmount", int(lens.distortion, true));
+        put("VignetteAmount", int(lens.vignetting, true));
+        put("VignetteMidpoint", int(lens.vignetting_midpoint, false));
+        put(
+            "AutoLateralCA",
+            if lens.remove_chromatic_aberration {
+                "1"
+            } else {
+                "0"
+            }
+            .into(),
+        );
+        for (prefix, band) in [
+            ("DefringePurple", &lens.defringe.purple),
+            ("DefringeGreen", &lens.defringe.green),
+        ] {
+            put(
+                &format!("{prefix}Amount"),
+                int(band.amount / super::lens::DEFRINGE_AMOUNT_SCALE, false),
+            );
+            put(&format!("{prefix}HueLo"), int(band.hue_lo, false));
+            put(&format!("{prefix}HueHi"), int(band.hue_hi, false));
+        }
     }
     if settings.legacy_settings.is_some() {
         not_written.push("legacySettings".into());

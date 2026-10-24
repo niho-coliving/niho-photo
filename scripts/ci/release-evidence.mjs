@@ -12,7 +12,7 @@ let isolatedRoot;
 try {
   const commit = process.env.GITHUB_SHA;
   const name = artifactName(commit, process.arch);
-  if (process.platform !== "darwin" || process.env.GITHUB_REPOSITORY !== "niho-coliving/niho-photo" || process.env.GITHUB_EVENT_NAME !== "push" || process.env.GITHUB_REF !== "refs/heads/main" || !/^[1-9][0-9]*$/.test(process.env.GITHUB_RUN_ID ?? "") || !/^[1-9][0-9]*$/.test(process.env.GITHUB_RUN_ATTEMPT ?? "")) throw new Error("公開main push専用です");
+  if (process.platform !== "darwin" || process.env.GITHUB_REPOSITORY !== "niho-life/niho-photo" || process.env.GITHUB_EVENT_NAME !== "push" || process.env.GITHUB_REF !== "refs/heads/main" || !/^[1-9][0-9]*$/.test(process.env.GITHUB_RUN_ID ?? "") || !/^[1-9][0-9]*$/.test(process.env.GITHUB_RUN_ATTEMPT ?? "")) throw new Error("公開main push専用です");
   if (run("git", ["rev-parse", "HEAD"]).trim() !== commit || run("git", ["status", "--porcelain", "--untracked-files=normal"]).trim()) throw new Error("exact SHAのclean checkoutが必要です");
   const committedLocks = run("git", ["ls-files", "-z"]).split("\0").filter((file) => /(?:^|\/)(?:package-lock\.json|Cargo\.lock|yarn\.lock|pnpm-lock\.yaml|Package\.resolved)$/.test(file)).sort();
   if (JSON.stringify(committedLocks) !== JSON.stringify(lockfiles)) throw new Error("全lockfileの収録範囲を更新してください");
