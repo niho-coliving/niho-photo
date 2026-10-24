@@ -3643,9 +3643,10 @@
         "path": "apps/camera/develop-sidecars.lock.json",
         "sha256": "3220ab6ce2a2330819e54aca55bf96464cb5cca4d9a5289784595ec1d70d60ff"
       },
-      "outputSha256": "a6e138be84a1194882ad3d9c143a0b76f298b6ef61f71fbf9a9b0d3581a78ea5",
+      "outputSha256": "75dc521ff1efebc4aa02cf4da32ee0dd359f26e0969049fce3f2af320591ee0e",
       "modifications": [
-        "候補buildのrenderer版を公開SDK 0.25.0へ合わせ、共有source固定はSDK sourceOwnershipへ一本化。"
+        "候補buildのrenderer版を公開SDK 0.25.0へ合わせ、共有source固定はSDK sourceOwnershipへ一本化。",
+        "Issue #89: niho-14 の crate 0.26.0 に合わせ、Mac candidate の renderer lock を更新。"
       ]
     },
     {
