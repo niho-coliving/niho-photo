@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, type MutableRefObjec
 import {
   developSettingsKey,
   developSettingsVersion,
+  isDevelopSettingsVersion,
   neutralDevelopSettings,
   readDevelopSettings,
   resetDevelopSettingsColors,
@@ -214,7 +215,10 @@ export function useBrowserPhotoEditSettings(params: {
     else if (phase === "commit") setDragging(false);
     const current = editableOpened();
     if (!current) return;
-    const updated = readDevelopSettings(update(settingsRef.current));
+    const candidate = update(settingsRef.current);
+    if (!isDevelopSettingsVersion(candidate.v)) return;
+    // 画面内の項目追加で必要版が上がる。外部データのreaderを緩めず、検証前に既知の版だけ昇格する。
+    const updated = readDevelopSettings({ ...candidate, v: Math.max(candidate.v, developSettingsVersion(candidate)) });
     if (!updated) return;
     if (phase === "commit") {
       commitEdit(updated);
