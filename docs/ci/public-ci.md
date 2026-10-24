@@ -20,6 +20,21 @@ rulesetへ登録する名称は **`Public CI required`** です。常に出る�
 
 `.github/`・`scripts/`・root package/lock・`docs/security/`・`docs/legal/`・`docs/ci/` の変更では、導入済みの全scopeを実行します。PRはeventのbase SHAとcheckoutしたmerge commitを比較します。pushはbefore SHAを使い、初回pushは全scopeです。削除も差分に含め、branch名・PRタイトルをshellへ展開しません。
 
+## Mac mini のローカル重処理ガード
+
+個人用 Mac mini では、写真編集の `typecheck` / `test`、root の全件 `typecheck` / `test` / `verify`、SDK runtime と Mac candidate のローカルビルドを npm script の実行前に exit 97 で止めます。`verify:publication` のような軽い確認はそのまま実行できます。CI の `Photo editing` と `Photo Mac candidate proof` は GitHub-hosted runner で動き、このガードは妨げません。
+
+先行確認が必要なら、変更を commit・push して clean なブランチ HEAD にした後、Mac mini の repo root から `studio-exec.sh` で Mac Studio に送ります。`doctor` で SSH・ホスト鍵・helper を先に確認します。Studio 側の detached mirror で依存を準備してから対象コマンドを実行します。
+
+```sh
+S="$HOME/.codex/skills/ssh-personal-macs/scripts/studio-exec.sh"
+"$S" doctor
+"$S" run --class heavy --name photo-editing-typecheck -- bash -c 'npm ci --ignore-scripts --no-audit --no-fund && npm -C packages/photo-editing run typecheck'
+"$S" run --class heavy --name photo-editing-tests -- bash -c 'npm ci --ignore-scripts --no-audit --no-fund && npm -C packages/photo-editing test -- src/editor/<対象>.test.tsx'
+```
+
+通常は push 後の必須 CI を待ちます。Mac candidate の実ビルドは `macos-26` の GitHub-hosted runner に任せ、Mac mini 上では起動しません。
+
 Mac candidate proofのselectorは通常のnative matrixとは独立し、文書だけの変更では実行しません。proof用Firebase Web configは
 形式・長さが本番公開configと同じ固定dummyですが、認証先の実構成ではなくproduction login成功とは扱いません。workflowは
 `contents: read`、credential非保持で、secret、repository variable、OIDC、artifact uploadを使いません。
