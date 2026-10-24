@@ -1062,7 +1062,7 @@
         "path": "packages/photo-editing/src/editor/browser-photo-editing-mobile-editor.tsx",
         "sha256": "cf0ebc1e3a23b7a2e8ecea7538cc6f2d9880cbf4e181d79db61f26dc293c3d1a"
       },
-      "outputSha256": "e33e90579a1d6b2b219588652ed61f55a730c874323efb8c431d714f063f9c9d",
+      "outputSha256": "518f1f93cc5bc418602b16ab39e117316ad9c1d9bcde9e94462107a492b77d28",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
@@ -1076,7 +1076,8 @@
         "PR #79 のHSL mixerを最新tone curveとinfo UIへ統合。",
         "PR #79のHSL mixerを最新mainから取り込み、公開出力ハッシュを更新。",
         "niho-photo#39 スマホの編集の層にカラーグレーディングの道具を足した。",
-        "PR #80 のカラーグレーディングを最新HSL UIと統合。"
+        "PR #80 のカラーグレーディングを最新HSL UIと統合。",
+        "niho-photo#86: スマホの道具の帯の末尾にディテールを置き、項目はよく使う 3 つを先・シャープの応用の 3 つを後ろへ"
       ]
     },
     {
@@ -1115,6 +1116,7 @@
         "path": "packages/photo-editing/src/editor/browser-photo-editing-model.ts",
         "sha256": "98c0a3ee8ff431c0f6f0b63a9666b1e5f723e75c5b9e2d33f17199f40f69c41d"
       },
+      "outputSha256": "b5b20dbe335b57c383abcdc4f645e89279d966dfc5050931d56f1c0aa1827e3e",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
@@ -1136,9 +1138,9 @@
         "squash済みPR #77のmainをマスク描画へ同期する。",
         "部分補正（マスク）#67: 道具に mask を足し、画を変えるマスクがある間の drag の長辺を色ポイントと同じ 640px にする",
         "PR #82: #74 squash merge後に版機能の変更をmainへ積み直し、最終ハッシュを反映。",
-        "PR #97の修復ツール型を#96のマスクツール型と統合。"
-      ],
-      "outputSha256": "612b57398611f8e2039d3362b9ab17c35899825180f1de914d9c36538dacd62b"
+        "PR #97の修復ツール型を#96のマスクツール型と統合。",
+        "niho-photo#86: スマホの道具の帯の末尾にディテールを置き、項目はよく使う 3 つを先・シャープの応用の 3 つを後ろへ"
+      ]
     },
     {
       "path": "packages/photo-editing/src/editor/browser-photo-editing-open-flow.ts",
@@ -1345,9 +1347,11 @@
         "PR #101を更新済み#97へ積み直し、レンズ補正をv9として統合。修復併用時の色収差推定は元画から行う。",
         "PR #101 のレンズUIを既存のマスク道具と同じworkbenchへ統合。",
         "PR #101の再積みでマスク機能判定hookを保持。",
-        "PR #102を更新済み#101へ積み直し、原寸native書き出し直前に最新保存設定を再判定する。"
+        "PR #102を更新済み#101へ積み直し、原寸native書き出し直前に最新保存設定を再判定する。",
+        "niho-photo#86: スマホの道具の帯の末尾にディテールを置き、項目はよく使う 3 つを先・シャープの応用の 3 つを後ろへ",
+        "niho-photo#86: main とスマホのディテールの変更を merge"
       ],
-      "outputSha256": "73f957710bb196e831e2672c5ab0c842143ba7610febab17332642bdd2cbc258"
+      "outputSha256": "5e8ea450df820df045a97d2a481e751fce1b85be23723faf15278640d4a4bdfb"
     },
     {
       "path": "packages/photo-editing/src/editor/photo-editing-adjustment-controls-effects.test.tsx",
@@ -2352,14 +2356,15 @@
         "path": "packages/photo-editing/src/photo-editing-adjustments.ts",
         "sha256": "5b5f9dd72b1bda8f15c13e3c4299e8c1c35ac5b6b9fbd8143f25d0d6934b9ceb"
       },
-      "outputSha256": "829b58a960eca206fa73978a2cd2233c5049b6a7cc94e0a90f31a916eca4c0fc",
+      "outputSha256": "82c62742c563507dd6b3b9f281cec75d56ee6e8193cbf90ffc15b31bb0544f4e",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
         "Issue #30 Oklch色ミキサーとengine 10/11対応を反映",
         "Issue #32 効果の後ろにディテールの群を足す",
         "Issue #32 detail uses v6 because Issue #31 masks already owns v5; synchronize the Rust and TypeScript contract, probe, tests, and documentation.",
-        "Issue #32 detail v6 を、先行する masks v5 と #72 の histogram/Jキー契約に同期する。"
+        "Issue #32 detail v6 を、先行する masks v5 と #72 の histogram/Jキー契約に同期する。",
+        "niho-photo#86: スマホの道具の帯の末尾にディテールを置き、項目はよく使う 3 つを先・シャープの応用の 3 つを後ろへ"
       ]
     },
     {
@@ -2444,9 +2449,11 @@
         "PR #99を#91マージ後のmainへ積み直し、遠近補正後のブラシ半径を局所ヤコビアンで写す。",
         "PR #99のマスク面の描画・読み書きと遠近対応の変更を反映する。",
         "PR #101を更新済み#97へ積み直し、レンズ補正をv9として統合。修復併用時の色収差推定は元画から行う。",
-        "PR #102を更新済み#101へ積み直し、原寸native書き出し直前に最新保存設定を再判定する。"
+        "PR #102を更新済み#101へ積み直し、原寸native書き出し直前に最新保存設定を再判定する。",
+        "niho-photo#86: スマホの道具の帯の末尾にディテールを置き、項目はよく使う 3 つを先・シャープの応用の 3 つを後ろへ",
+        "niho-photo#86: main とスマホのディテールの変更を merge"
       ],
-      "outputSha256": "9d68d83b5a1fd15b52dad95c940700e5368a837f07d7b3b09e084e53dee8e32f"
+      "outputSha256": "be3cc4c7be20ac3456f223f9ecb0719a61fbfa233237dcfc73e41ee1562a6cc6"
     },
     {
       "path": "packages/photo-editing/src/photo-editing-crop.test.ts",
@@ -10379,8 +10386,8 @@
     },
     {
       "path": "docs/detail-processing.md",
-      "sha256": "27d397a9674dee152fa7f9c95c370c39a130971110899f8c9bf999e60ef70f66",
-      "origin": "Issue #32でNIHOが独立作成したdetail処理・保存契約・合成検証または設計文書。実写真・第三者コードは含まない。\n変更理由: owner判断2026-10-21: RAWでも群を出し、作業コピーのdrag中の送り方と1280px確定描画の実測を記録する\n変更理由: Issue #32 detail uses v6 because Issue #31 masks already owns v5; synchronize the Rust and TypeScript contract, probe, tests, and documentation.\n変更理由: Issue #32 detail v6 を、先行する masks v5 と #72 の histogram/Jキー契約に同期する。\n変更理由: #32 の Lightroom 校正（round 32）の方法・写し方・誤差表・残る差と性能の再計測を記録\n変更理由: rebase 後（detail v6）の build で JPEG の確定描画の時間を再計測して追記"
+      "sha256": "17cda6f6e9a60d440ca8144b494db5f01573dc77cbdc7e36c7adcfc4cef7b74c",
+      "origin": "Issue #32でNIHOが独立作成したdetail処理・保存契約・合成検証または設計文書。実写真・第三者コードは含まない。\n変更理由: owner判断2026-10-21: RAWでも群を出し、作業コピーのdrag中の送り方と1280px確定描画の実測を記録する\n変更理由: Issue #32 detail uses v6 because Issue #31 masks already owns v5; synchronize the Rust and TypeScript contract, probe, tests, and documentation.\n変更理由: Issue #32 detail v6 を、先行する masks v5 と #72 の histogram/Jキー契約に同期する。\n変更理由: #32 の Lightroom 校正（round 32）の方法・写し方・誤差表・残る差と性能の再計測を記録\n変更理由: rebase 後（detail v6）の build で JPEG の確定描画の時間を再計測して追記\n変更理由: niho-photo#86: スマホの道具の帯の末尾にディテールを置き、項目はよく使う 3 つを先・シャープの応用の 3 つを後ろへ"
     },
     {
       "path": "packages/develop-engine/crates/niho-develop/src/detail.rs",
@@ -10414,8 +10421,8 @@
     },
     {
       "path": "packages/photo-editing/src/photo-editing-detail.ts",
-      "sha256": "022eafa0d230af33418a5223c7e78b731a1ac6b94d65915f5a5a8cf94d48738b",
-      "origin": "変更理由: signed RAWの数式の一覧をdevelop-detail-previewと共有する\nIssue #32でNIHOが独立作成したv6 detail（シャープ・ノイズ軽減）の画面の読み書き。実データを含まない。\n変更理由: Issue #32 detail uses v6 because Issue #31 masks already owns v5; synchronize the Rust and TypeScript contract, probe, tests, and documentation.\n変更理由: Issue #32 detail v6 を、先行する masks v5 と #72 の histogram/Jキー契約に同期する。"
+      "sha256": "e7d318981ce28eea339b4deacf857d6e74774414fb240e98b3e28307a2c0928c",
+      "origin": "変更理由: signed RAWの数式の一覧をdevelop-detail-previewと共有する\nIssue #32でNIHOが独立作成したv6 detail（シャープ・ノイズ軽減）の画面の読み書き。実データを含まない。\n変更理由: Issue #32 detail uses v6 because Issue #31 masks already owns v5; synchronize the Rust and TypeScript contract, probe, tests, and documentation.\n変更理由: Issue #32 detail v6 を、先行する masks v5 と #72 の histogram/Jキー契約に同期する。\n変更理由: niho-photo#86: スマホの道具の帯の末尾にディテールを置き、項目はよく使う 3 つを先・シャープの応用の 3 つを後ろへ"
     },
     {
       "path": "packages/photo-editing/src/photo-editing-detail.test.ts",
@@ -10424,8 +10431,8 @@
     },
     {
       "path": "packages/photo-editing/src/editor/photo-editing-adjustment-controls-detail.test.tsx",
-      "sha256": "8cd22d72de76e7e9ef4302707c776ecc246b228036d18b47826dc16d0d3cf761",
-      "origin": "Issue #32でNIHOが独立作成した補正パネルのディテールの群の回帰。合成の設定だけを使う。\n変更理由: owner判断2026-10-21: RAWで群が出ることと旧カラーNRの表示・説明を検証する\n変更理由: Issue #32 detail uses v6 because Issue #31 masks already owns v5; synchronize the Rust and TypeScript contract, probe, tests, and documentation.\n変更理由: Issue #32 detail v6 を、先行する masks v5 と #72 の histogram/Jキー契約に同期する。"
+      "sha256": "37aabe0d4245576b7a9136489b01e6891cf7963563cfcc52f83dd4af50b6a033",
+      "origin": "Issue #32でNIHOが独立作成した補正パネルのディテールの群の回帰。合成の設定だけを使う。\n変更理由: owner判断2026-10-21: RAWで群が出ることと旧カラーNRの表示・説明を検証する\n変更理由: Issue #32 detail uses v6 because Issue #31 masks already owns v5; synchronize the Rust and TypeScript contract, probe, tests, and documentation.\n変更理由: Issue #32 detail v6 を、先行する masks v5 と #72 の histogram/Jキー契約に同期する。\n変更理由: niho-photo#86: スマホの道具の帯の末尾にディテールを置き、項目はよく使う 3 つを先・シャープの応用の 3 つを後ろへ"
     },
     {
       "path": "packages/photo-editing/src/develop-engine/develop-detail-preview.ts",
@@ -11316,6 +11323,11 @@
       "path": "packages/photo-editing/src/photo-editing-native-export.test.ts",
       "sha256": "3a3d10988b0e8e10c96196d25406e87b0e3e51fba8b1d76dc610f08a1b7251f4",
       "origin": "原寸の native renderer が描けない補正の判定と文言の単体テスト。新規作成。"
+    },
+    {
+      "path": "packages/photo-editing/src/editor/browser-photo-editing-mobile-editor-detail.test.tsx",
+      "sha256": "3a3e7811287624ad0492e80072a83055ff225961c7b7828c7f63797824dd2426",
+      "origin": "niho-photo#86 のため新規作成。スマホの編集の層の道具の帯の末尾に置くディテールと、その項目の並び・操作の test。合成の値だけを使用。"
     }
   ],
   "excludedSources": [

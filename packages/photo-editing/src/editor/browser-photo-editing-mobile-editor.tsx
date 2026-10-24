@@ -39,6 +39,7 @@ import type {
 import { workWaitText, type WorkWait } from "../develop-engine/develop-work-wait";
 import {
   visiblePhotoEditingAdjustmentGroups,
+  type PhotoEditingAdjustmentGroup,
   type PhotoEditingAdjustmentGroupId,
   type PhotoEditingControlKey,
 } from "../photo-editing-adjustments";
@@ -113,6 +114,8 @@ import { usePhotoEditingZoom } from "./use-photo-editing-zoom";
  */
 
 /** プリセットの道具（補正の群の id と重ならない） */
+/** 帯の末尾（切り抜きの後ろ）に置く補正の群。応用の道具で、使う人が少ない */
+const TRAILING_GROUP_IDS: ReadonlySet<PhotoEditingAdjustmentGroupId> = new Set(["detail"]);
 const PRESETS_TOOL_ID = "presets";
 const AUTO_TOOL_ID = "auto";
 const CROP_TOOL_ID = "crop";
@@ -296,14 +299,19 @@ export function BrowserPhotoEditingMobileEditor(props: {
     presetsCurrent || autoCurrent || cropCurrent || colorMixerCurrent || hslMixerCurrent || colorGradingCurrent
       ? null
       : (groups.find((candidate) => candidate.id === toolId) ?? groups[0] ?? null);
-  // 道具の帯（プリセットは先頭。カラーミキサー → カラーグレーディング → ポイントカラーは補正の群の後ろ。Lightroom と同じくカラーの続き）
-  const tools: { id: MobileToolId; title: string }[] = groups.map((candidate) => ({ id: candidate.id, title: candidate.title }));
+  // 道具の帯（プリセットは先頭。カラーミキサー → カラーグレーディング → ポイントカラーは補正の群の後ろ。Lightroom と同じくカラーの続き）。
+  // ディテール（シャープ・ノイズ軽減。niho-photo#86）は応用の道具なので、切り抜きの後ろの末尾に置く（帯は横に送れる）
+  const toolOf = (candidate: PhotoEditingAdjustmentGroup) => ({ id: candidate.id, title: candidate.title });
+  const tools: { id: MobileToolId; title: string }[] = groups
+    .filter((candidate) => !TRAILING_GROUP_IDS.has(candidate.id))
+    .map(toolOf);
   if (presets) tools.unshift({ id: PRESETS_TOOL_ID, title: PHOTO_EDITING_MOBILE_PRESETS_LABEL });
   if (auto) tools.splice(presets ? 1 : 0, 0, { id: AUTO_TOOL_ID, title: "自動" });
   if (hslMixer) tools.push({ id: HSL_MIXER_TOOL_ID, title: PHOTO_EDITING_HSL_TITLE });
   if (colorGrading) tools.push({ id: COLOR_GRADING_TOOL_ID, title: PHOTO_EDITING_COLOR_GRADING_TITLE });
   if (colorMixer) tools.push({ id: COLOR_MIXER_TOOL_ID, title: PHOTO_EDITING_POINT_COLOR_TITLE });
   if (crop) tools.push({ id: CROP_TOOL_ID, title: "切り抜き" });
+  tools.push(...groups.filter((candidate) => TRAILING_GROUP_IDS.has(candidate.id)).map(toolOf));
   const currentToolId: MobileToolId | null = presetsCurrent
     ? PRESETS_TOOL_ID
     : autoCurrent
