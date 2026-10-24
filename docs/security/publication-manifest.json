@@ -11278,6 +11278,16 @@
       "path": "packages/photo-editing/src/editor/use-browser-photo-edit-settings.effects.test.tsx",
       "sha256": "1f1c71b2124f56bc04d24d0bad6cd057132b63d234ae6d243d4de20985439244",
       "origin": "niho-photo#119のため新規作成。合成recipeと本物の編集hookで効果操作の版昇格・保存・undo/redo・旧engineと未知fieldの保持・不正設定の拒否を確認する。外部sourceのコピーはない。"
+    },
+    {
+      "path": "docs/mockups/niho-photo-lightroom-layout-v1.html",
+      "sha256": "ea2193fef151d4b85f311112a0177c4c964b7bd72ba488a64627ed674a8b7ff9",
+      "origin": "NIHO所有の画面案を公開用に再作成。出典 niho-app afff6aa10ddc652e8bb4fc69dd561fe02bb1e5c0 の idea/mock/niho-photo-lightroom-layout-v1.html、原本 SHA-256 e751a520f1283f160b20d6c48807abbc9fe7d67825631548b1a7aa97623076bb。個人プロフィール画像と未監査画像を除き、既存公開fixtureとアプリアイコンに置換。認証・保存・写真処理は行わない。"
+    },
+    {
+      "path": "docs/mockups/niho-photo-lightroom-layout-v2.html",
+      "sha256": "344a5136603798fb1185f26d65267b8b7ba3c1b8cafa3faed36e68392f278c8b",
+      "origin": "NIHO所有の画面案を公開用に再作成。出典 niho-app afff6aa10ddc652e8bb4fc69dd561fe02bb1e5c0 の idea/mock/niho-photo-lightroom-layout-v2.html、原本 SHA-256 12e4f8a1bc4be31da5dc46a310f60138f3007650db3cae6a84e73bed4f2548c8。個人プロフィール画像と未監査画像を除き、既存公開fixtureとアプリアイコンに置換。認証・保存・写真処理は行わない。"
     }
   ],
   "excludedSources": [
