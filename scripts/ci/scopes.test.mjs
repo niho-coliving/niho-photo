@@ -5,7 +5,7 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
-import { scopes, selectScopes, changedFiles } from "./scopes.mjs";
+import { scopes, selectPhotoCandidate, selectPhotoSdk, selectScopes, changedFiles } from "./scopes.mjs";
 import { scopeCommands } from "./run-scope.mjs";
 const all = Object.values(scopes).map((s) => s.root);
 const selected = (files, present = all) => selectScopes(files, present).filter((s) => s.selected && s.present).map((s) => s.scope);
@@ -19,6 +19,16 @@ test("文書変更でもpublicationはworkflow側で常時実行、package実行
   assert.deepEqual(selected(["apps/camera/src-tauri/main.rs"]), ["camera"]);
   assert.deepEqual(selected(["packages/desktop-account/login.ts"]), ["camera", "desktop-photo", "desktop-account"]);
   for (const name of [".github/workflows/public-ci.yml", "scripts/ci/scopes.mjs", "package-lock.json", "docs/security/publication-manifest.json"]) assert.equal(selected([name]).length, 5);
+});
+
+test("SDK実buildは所有sourceと生成器だけを選択する", () => {
+  for (const name of ["packages/photo-editing/src/index.ts", "packages/ui/src/cn.ts", "packages/niho-cloud-contract/src/v1.ts", "packages/develop-engine/Cargo.toml", "packages/desktop-photo/Cargo.toml", "sdk/release-set.json", "scripts/sdk/release-set-lib.mjs", "package.json", "package-lock.json", "LICENSE.md", ".github/workflows/photo-sdk-release.yml"]) assert.equal(selectPhotoSdk([name]), true, name);
+  for (const name of ["apps/camera/src/main.ts", "packages/desktop-account/Cargo.toml", "README.md"]) assert.equal(selectPhotoSdk([name]), false, name);
+});
+
+test("Mac candidate proofはapp・SDK所有source・account・builder契約だけを選択する", () => {
+  for (const name of ["apps/camera/src/main.ts", "packages/photo-editing/src/index.ts", "packages/ui/src/cn.ts", "packages/niho-cloud-contract/src/v1.ts", "packages/develop-engine/build-macos-native.mjs", "packages/desktop-photo/Cargo.toml", "packages/desktop-account/Cargo.toml", "sdk/release-set.json", "scripts/sdk/release-set-lib.mjs", "scripts/candidate/mac-candidate-lib.mjs", "package.json", "package-lock.json", "LICENSE.md", ".github/workflows/photo-candidate-release.yml", ".github/workflows/photo-sdk-release.yml", "scripts/ci/photo-candidate-workflow-lib.mjs", "scripts/ci/release-evidence-lib.mjs"]) assert.equal(selectPhotoCandidate([name]), true, name);
+  for (const name of ["README.md", "docs/ci/public-ci.md", "docs/security/publication-gates.md"]) assert.equal(selectPhotoCandidate([name]), false, name);
 });
 
 test("未導入scopeを成功したテストと扱わず、ディレクトリ導入時に自動で選択", () => {
@@ -76,8 +86,8 @@ test("desktop-accountはTSとRustの両方を検査する", async (t) => {
 });
 
 test("aggregateは想定外skip、失敗、取消を拒否する", () => {
-  const needs = Object.fromEntries(["plan", "publication", "secrets", "dependencies", "photo-editing", "native", "swift"].map((name) => [name, { result: "success" }]));
-  needs.plan.outputs = { "photo-editing": "true", "has-native": "true", "has-swift": "true" };
+  const needs = Object.fromEntries(["plan", "publication", "secrets", "dependencies", "photo-editing", "photo-sdk", "photo-candidate", "native", "swift"].map((name) => [name, { result: "success" }]));
+  needs.plan.outputs = { "photo-editing": "true", "photo-sdk": "true", "photo-candidate": "true", "has-native": "true", "has-swift": "true" };
   const script = fileURLToPath(new URL("./aggregate.mjs", import.meta.url));
   const run = () => spawnSync(process.execPath, [script], { env: { ...process.env, GITHUB_EVENT_NAME: "pull_request", CI_NEEDS: JSON.stringify(needs) }, encoding: "utf8" }).status;
   assert.equal(run(), 0);
@@ -88,6 +98,10 @@ test("aggregateは想定外skip、失敗、取消を拒否する", () => {
   assert.equal(run(), 1);
   needs.swift.result = "skipped";
   needs.plan.outputs["has-swift"] = "false";
+  needs["photo-sdk"].result = "skipped";
+  needs.plan.outputs["photo-sdk"] = "false";
+  needs["photo-candidate"].result = "skipped";
+  needs.plan.outputs["photo-candidate"] = "false";
   assert.equal(run(), 0);
 });
 

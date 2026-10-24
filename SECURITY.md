@@ -6,7 +6,7 @@ NIHO photoの公開クライアントコードと、現在サポートしてい�
 
 ## 非公開の報告先
 
-[GitHubのNIHO photo Security Advisories](https://github.com/niho-coliving/niho-photo/security/advisories)から **Report a vulnerability** を選んでください。Private vulnerability reportingは有効です。再現手順、影響する版、影響範囲、必要最小限の検証結果を記載してください。
+[GitHubのNIHO photo Security Advisories](https://github.com/niho-life/niho-photo/security/advisories)から **Report a vulnerability** を選んでください。Private vulnerability reportingは有効です。再現手順、影響する版、影響範囲、必要最小限の検証結果を記載してください。
 
 公開Issue・PR・Discussion・CIログには、未修正の脆弱性、exploit、token、個人情報、実利用データ、内部URLを投稿しないでください。報告後の公開時期と内容は、メンテナーと非公開で調整します。
 
