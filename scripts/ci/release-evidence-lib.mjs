@@ -33,7 +33,7 @@ export function createArtifactReceipt({ artifactId, artifactDigest, artifactName
   return [
     "## Public release evidence artifact",
     "",
-    "- Repository: `niho-coliving/niho-photo`",
+    "- Repository: `niho-life/niho-photo`",
     `- Commit: \`${commit}\``,
     `- Workflow run: \`${runId}\` (attempt \`${runAttempt}\`)`,
     `- Artifact name: \`${name}\``,
@@ -46,7 +46,9 @@ export function createArtifactReceipt({ artifactId, artifactDigest, artifactName
 export function assertPublicBytes(bytes, forbiddenRoots = []) {
   const text = bytes.toString("utf8");
   const normalized = text.replace(/\\+/g, "/");
-  if (containsPrivateReference(text) || forbiddenRoots.filter(Boolean).some((root) => text.includes(root)) || /(?:^|[\s\x00\x22\x27\x60(=])\/(?:Users|Volumes|home|private|root)\//i.test(normalized) || /(?:^|[\s\x00\x22\x27\x60(=])file:\/\/\/(?:Users|Volumes|home|private|root)\//i.test(normalized) || /(?:^|[\s\x00\x22\x27\x60(=])[a-z]:\/Users\//i.test(normalized)) throw new Error("成果物に非公開参照があります（値は非表示）");
+  if (containsPrivateReference(text)) throw new Error("成果物に非公開参照があります [private-reference]（値は非表示）");
+  if (forbiddenRoots.filter(Boolean).some((root) => text.includes(root))) throw new Error("成果物に非公開参照があります [build-root]（値は非表示）");
+  if (/(?:^|[\s\x00\x22\x27\x60(=])\/(?:Users|Volumes|home|private|root)\//i.test(normalized) || /(?:^|[\s\x00\x22\x27\x60(=])file:\/\/\/(?:Users|Volumes|home|private|root)\//i.test(normalized) || /(?:^|[\s\x00\x22\x27\x60(=])[a-z]:\/Users\//i.test(normalized)) throw new Error("成果物に非公開参照があります [absolute-path]（値は非表示）");
   if (/sourceMappingURL\s*=|-----BEGIN (?:[A-Z]+ )?PRIVATE KEY-----|\b(?:gh[pousr]_[A-Za-z0-9]{20,}|github_pat_[A-Za-z0-9_]{20,}|AKIA[A-Z0-9]{16}|AIza[A-Za-z0-9_-]{30,}|eyJ[A-Za-z0-9_-]+\.eyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+)\b/.test(text) || /["']?(?:access_token|refresh_token|id_token|client_secret|password)["']?\s*[:=]\s*["'][^"']{8,}["']/i.test(text)) throw new Error("成果物に秘密またはsource mapがあります（値は非表示）");
 }
 
@@ -159,7 +161,7 @@ export function createManifest({ commit, tree, arch, runId, runAttempt, tools, l
   const account = JSON.parse(contracts[contractFiles[0]]), cloud = JSON.parse(contracts[contractFiles[1]]), cases = JSON.parse(contracts[contractFiles[2]]), source = JSON.parse(contracts[contractFiles[3]]);
   if (account.version !== 2 || cloud.name !== "@niho/cloud-contract" || cloud.version !== "1.0.0" || cases.contractVersion !== "1" || source.repository !== "niho-coliving/niho-docs" || !/^[a-f0-9]{40}$/.test(source.commit)) throw new Error("contract pinの更新審査が必要です");
   return {
-    schemaVersion: 1, repository: "niho-coliving/niho-photo", commit, tree,
+    schemaVersion: 1, repository: "niho-life/niho-photo", commit, tree,
     platform: { os: "macos", arch }, workflowRun: { id: runId, attempt: runAttempt },
     build: { mode: "release", signing: "ad-hoc", updaterArtifacts: false, officialUpdates: false, checkedFiles }, tools,
     locks: lockfiles.map((file) => ({ path: file, sha256: hash(locks[file]) })),

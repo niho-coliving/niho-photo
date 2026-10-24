@@ -12,16 +12,38 @@ function xmp(attributes: string, body = ""): string {
 }
 
 describe("summarizeUnsupportedPresetItems", () => {
-  it("crate の UNSUPPORTED_KNOWN を Lightroom の日本語の名前にまとめる（同じ名前は 1 つ・表の順）", () => {
+  it("crate の使えない項目を Lightroom の日本語の名前にまとめる（同じ名前は 1 つ・表の順）", () => {
     expect(
       summarizeUnsupportedPresetItems([
         "IncrementalTemperature",
         "IncrementalTint",
-        "AutoLateralCA",
+        "Defringe",
         "LensProfileEnable",
-        "LensProfileSetup",
+        "LensProfileDistortionScale",
       ]),
-    ).toEqual({ labels: ["色収差の除去", "レンズ補正", "色温度・色かぶり補正"], otherCount: 0 });
+    ).toEqual({ labels: ["フリンジ軽減", "レンズ補正", "色温度・色かぶり補正"], otherCount: 0 });
+  });
+
+  it("レンズ補正の手動の値・色収差の除去・フリンジ軽減は描ける（エンジン 0.23.0〜。niho-photo#45）ので、知らせの名前を持たない", () => {
+    expect(Object.keys(PHOTO_EDITING_PRESET_UNSUPPORTED_LABELS)).not.toContain("chromaticAberration");
+    // 読めない値だけが crate の `unsupported` に来る（表に無い項目として数える）
+    expect(summarizeUnsupportedPresetItems(["AutoLateralCA", "LensManualDistortionAmount", "VignetteAmount"])).toEqual({
+      labels: [],
+      otherCount: 3,
+    });
+    // プロファイル補正のオフ（0）は Lightroom の既定と同じなので知らせない。オンで量を変えたプロファイルは知らせる
+    expect(
+      summarizeUnsupportedPresetItems(["LensProfileEnable"], xmp('crs:LensProfileEnable="0" crs:LensProfileSetup="LensDefaults"')),
+    ).toEqual({ labels: [], otherCount: 0 });
+    expect(
+      summarizeUnsupportedPresetItems(
+        ["LensProfileDistortionScale"],
+        xmp('crs:LensProfileEnable="1" crs:LensProfileDistortionScale="60"'),
+      ),
+    ).toEqual({ labels: ["レンズ補正"], otherCount: 0 });
+    // 旧方式の `Defringe` は 0 なら知らせない
+    expect(summarizeUnsupportedPresetItems(["Defringe"], xmp('crs:Defringe="0"'))).toEqual({ labels: [], otherCount: 0 });
+    expect(summarizeUnsupportedPresetItems(["Defringe"], xmp('crs:Defringe="1"')).labels).toEqual(["フリンジ軽減"]);
   });
 
   it("シャープ・ノイズ軽減は描けるので、届くのは読めない値と既定でない細かな項目だけ（Issue #32）", () => {
