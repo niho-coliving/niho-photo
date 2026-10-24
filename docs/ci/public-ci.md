@@ -12,12 +12,17 @@ rulesetへ登録する名称は **`Public CI required`** です。常に出る�
 | Secret scan | 全実行。checkoutした公開Git履歴の全refをgitleaksで走査。検出値は完全redact。PR側のignore/allow commentは採用しない |
 | Dependency review | 全PR。GitHub依存グラフの差分からmoderate以上の脆弱性とAGPLの追加を拒否。runtime/development/unknownを含む。PRコメント権限なし |
 | Photo editing | `packages/photo-editing`・`packages/niho-cloud-contract`・`packages/ui` 変更。`npm ci --ignore-scripts` 後、Photo editing / UIのtypecheck / test / lint とDocs固定SHAとのcontract同期確認 |
+| Photo Mac candidate proof | camera、SDK所有source/生成器、desktop account契約、candidate helper、native helper、root lock/config、関連workflow変更。macOS 26 ARM64でcurrent full SHAから実WASM→local SDK pack→native/Tauri candidate build→data verifierを実行。成果物は保存・公開しない |
 | Camera | `apps/camera` 導入後。camera、account、写真関連パッケージ変更時。npmのtypecheck / test / lint / `build:unsigned` と宣言されたnative検査 |
 | Desktop photo | `packages/desktop-photo` 導入後。desktop-photo、account、photo-editing、ui、develop-engine変更時。Cargoのfmt / clippy / test。能力レジストリの合成signatureと公開サニタイズRW2の境界検査を含む |
 | Desktop account | `packages/desktop-account` 導入後。同パス・UI変更時。`ts`をroot workspaceへ登録し、npmのtypecheck / test / lint とRustのfmt / clippy / test |
 | Develop engine | `packages/develop-engine` 導入後。同パス変更時。Cargoのfmt / clippy / test と宣言されたSwift test |
 
 `.github/`・`scripts/`・root package/lock・`docs/security/`・`docs/legal/`・`docs/ci/` の変更では、導入済みの全scopeを実行します。PRはeventのbase SHAとcheckoutしたmerge commitを比較します。pushはbefore SHAを使い、初回pushは全scopeです。削除も差分に含め、branch名・PRタイトルをshellへ展開しません。
+
+Mac candidate proofのselectorは通常のnative matrixとは独立し、文書だけの変更では実行しません。proof用Firebase Web configは
+形式・長さが本番公開configと同じ固定dummyですが、認証先の実構成ではなくproduction login成功とは扱いません。workflowは
+`contents: read`、credential非保持で、secret、repository variable、OIDC、artifact uploadを使いません。
 
 現在の公開treeはphoto-editing・UI・camera・desktop-photoです。cameraとdesktop-photoのnative scopeは有効です。desktop-accountは#3で導入し、TS・Rustの両方を検証します。develop-engineの検証契約は#9に従います。scopeのディレクトリが追加されると検査が自動で有効になり、メタデータ不足は失敗になります。アカウントのversioned正本・Rust/TS・Photoのdigest pinは `scripts/ci/account-contract.test.mjs` で検証します。Docs側の採用と双方CIの連動は#8の統合条件です。Docs / Photo共通contractは `packages/niho-cloud-contract` にDocsの完全SHAからコピーし、Publication guardで同一内容を検査します。新しい公開packageが増えたらscopeの依存関係もレビューしてください。
 
@@ -52,7 +57,7 @@ npm run verify:publication
 
 ガードは禁止path/basename/拡張子、50 MiB上限、symlink/submodule、非公開URL/package参照、非npm registry依存、manifest重複・欠落・hash不一致を拒否します。既存禁止項目と上限はpolicy JSONを消しても緩まりません。全公開候補が対象で、packages外の文書・画像も検査します。検出内容の値をログへ出しません。
 
-画像・font・binary・校正・fixture等はmanifestに加え、資産台帳の「公開可能」とpath・SHA-256・サイズが一致する必要があります。NIHO所有資産は個別の許可申請ではなく由来の宣言と不要metadataの確認を台帳へ記録します。監査済みPNG/ICNSを追加する場合もexact bytesを照合します。要置換・非公開維持の元hashはrenameしても拒否します。独立した合成fixtureのJSON/CSV/TXTはgeneratedに生成方法を記録できます。所有者撮影のRAW・音声fixtureもメタデータ確認後に登録できますが、現在のGit treeでは50 MiB上限を超えるファイルを拒否します。大きなfixtureの経路は[#2](https://github.com/niho-coliving/niho-photo/issues/2)で定義します。旧DCP8件はhashと元の行列で拒否します。独立DCPは所有測定の入力hash、再現可能なfit/spec/検証report、生成DCP bytesの一致を要求します。
+画像・font・binary・校正・fixture等はmanifestに加え、資産台帳の「公開可能」とpath・SHA-256・サイズが一致する必要があります。NIHO所有資産は個別の許可申請ではなく由来の宣言と不要metadataの確認を台帳へ記録します。監査済みPNG/ICNSを追加する場合もexact bytesを照合します。要置換・非公開維持の元hashはrenameしても拒否します。独立した合成fixtureのJSON/CSV/TXTはgeneratedに生成方法を記録できます。所有者撮影のRAW・音声fixtureもメタデータ確認後に登録できますが、現在のGit treeでは50 MiB上限を超えるファイルを拒否します。大きなfixtureの経路は[#2](https://github.com/niho-life/niho-photo/issues/2)で定義します。旧DCP8件はhashと元の行列で拒否します。独立DCPは所有測定の入力hash、再現可能なfit/spec/検証report、生成DCP bytesの一致を要求します。
 
 private URL検査は既知のprivate repo/host・LAN・内部ドメイン・認証付きURL、package検査はregistry外参照を扱います。任意の新しいprivateサービスの権利や機密性までは自動判定できません。出所、第三者ライセンス、個人情報、ICC/EXIF、入力の実データ混入はCODEOWNERSを含むレビューで確認してください。CI成功で公開許可が新たに与えられることはありません。
 
@@ -90,3 +95,7 @@ PRの公開CI実行、dependency graph更新、外部forkでの初回承認か�
 ## 公開検証成果物
 
 main pushのcamera検証後にrelease modeのad-hoc app、CycloneDX SBOM、exact SHA/hash manifestを生成し、認証済みActions artifactとして30日保管する。Actions artifact名にfull commit SHA・run ID・attemptを含めて再実行時の衝突を防ぎ、upload後にartifact IDとSHA-256 digestをjob summaryへ記録する。文書だけのmain pushもcameraを実行する。PRやfork側のmain pushでは生成・uploadしない。既存のrequired aggregateはこのstepの失敗もnative jobの失敗として扱う。[固定SHA取り込み契約](../releases/public-artifact-contract.md) に範囲、schema、guard、private側の採用・rollback入力を定義する。公開mergeから署名・公証・本番配布は起動しない。
+
+この旧来のmain push成果物はsource/contract検証用で、手動candidate prereleaseとは別物です。candidateは公開済みSDKを選び、
+macOS 26で完全native appを作り、SDK proofとActions輸送receiptをGitHub prereleaseへ保存しますが、同じくad-hoc・未公証で、
+private signerやupdaterへ自動接続しません。操作手順とrollbackは [`scripts/candidate/README.md`](../../scripts/candidate/README.md) を参照してください。
