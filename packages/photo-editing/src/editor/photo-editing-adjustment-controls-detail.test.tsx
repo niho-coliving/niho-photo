@@ -111,16 +111,16 @@ describe("ディテールの群は opt-in", () => {
     expect(groupTitles()).toEqual(["ライト", "カラー", "効果"]);
   });
 
-  it("キーを渡すと効果の後ろに Lightroom と同じ並びで出る（内部の名前は見せない）", async () => {
+  it("キーを渡すと効果の後ろに出る。よく使う 3 つが先、シャープの応用の 3 つが後ろ（内部の名前は見せない）", async () => {
     await render({ initial: NEUTRAL, visibleKeys: DETAIL_KEYS });
     expect(groupTitles()).toEqual(["ライト", "カラー", "効果", "ディテール"]);
     expect(groupSliders("ディテール").map((input) => input.getAttribute("aria-label"))).toEqual([
       "シャープ",
-      "半径",
-      "ディテール",
-      "マスク",
       "ノイズ軽減",
       "カラーノイズの軽減",
+      "シャープの半径",
+      "シャープの細部",
+      "シャープのマスク",
     ]);
     expect(container.textContent).not.toMatch(/sharpen|luminanceNoise|colorNoise|detail/);
     // 見出しは押せる高さ 44px の開閉ボタン
@@ -162,11 +162,11 @@ describe("ディテールの群は opt-in", () => {
 });
 
 describe("ディテールのスライダー", () => {
-  it("シャープが 0 の間は半径・ディテール・マスクを押せず、動かすと v6 の detail を書いて押せるようになる", async () => {
+  it("シャープが 0 の間はシャープの半径・細部・マスクを押せず、動かすと v6 の detail を書いて押せるようになる", async () => {
     await render({ initial: NEUTRAL, visibleKeys: DETAIL_KEYS });
-    expect(["半径", "ディテール", "マスク"].map((label) => slider("ディテール", label).disabled)).toEqual([true, true, true]);
+    expect(["シャープの半径", "シャープの細部", "シャープのマスク"].map((label) => slider("ディテール", label).disabled)).toEqual([true, true, true]);
     expect(slider("ディテール", "ノイズ軽減").disabled).toBe(false);
-    expect(slider("ディテール", "半径").value).toBe("1");
+    expect(slider("ディテール", "シャープの半径").value).toBe("1");
 
     await moveSlider(slider("ディテール", "シャープ"), "60");
     expect(changes.at(-1)?.phase).toBe("commit");
@@ -174,10 +174,10 @@ describe("ディテールのスライダー", () => {
       sharpening: { amount: 60, radius: 1, detail: 25, masking: 0 },
       luminanceNoiseReduction: 0,
     });
-    expect(slider("ディテール", "半径").disabled).toBe(false);
+    expect(slider("ディテール", "シャープの半径").disabled).toBe(false);
     // 半径は 0.1 刻み
-    expect(slider("ディテール", "半径").step).toBe("0.1");
-    await moveSlider(slider("ディテール", "半径"), "1.7");
+    expect(slider("ディテール", "シャープの半径").step).toBe("0.1");
+    await moveSlider(slider("ディテール", "シャープの半径"), "1.7");
     expect(changes.at(-1)?.settings.detail).toMatchObject({ sharpening: { radius: 1.7 } });
     expect(container.textContent).toContain("1.7");
   });
@@ -201,6 +201,6 @@ describe("ディテールのスライダー", () => {
     expect(lines).toHaveLength(6);
     expect(lines[0]).toBe("シャープ輪郭をくっきりさせます。指を離すと反映します");
     // RAW などの作業コピーは NR も drag 中に反映しない（JPEG と違う所だけ書く）
-    expect(lines[4]).toBe("ノイズ軽減明るさのざらつきを滑らかにします。RAW などは指を離すと反映します");
+    expect(lines[1]).toBe("ノイズ軽減明るさのざらつきを滑らかにします。RAW などは指を離すと反映します");
   });
 });

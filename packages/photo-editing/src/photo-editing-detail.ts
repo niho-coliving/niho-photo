@@ -39,14 +39,18 @@ export type PhotoEditingDetailKey =
   | "luminanceNoiseReduction"
   | "colorNoiseReduction";
 
-/** ディテールの項目の並び（Lightroom のディテールと同じ: シャープ → 半径 → ディテール → マスク → ノイズ軽減 → カラー）。 */
+/**
+ * ディテールの項目の並び。よく使う 3 つ（シャープ → ノイズ軽減 → カラーノイズの軽減）を先に、シャープの効き方を決める応用の 3 つ
+ * （半径 → 細部 → マスク）を後ろに置く（owner 2026-10-21: 応用的な機能は目立たない下の方へ）。後ろの 3 つは名前に「シャープの」を
+ * 付け、離れていても何の設定か分かるようにする。
+ */
 export const PHOTO_EDITING_DETAIL_KEYS: ReadonlyArray<PhotoEditingDetailKey> = [
   "sharpenAmount",
+  "luminanceNoiseReduction",
+  "colorNoiseReduction",
   "sharpenRadius",
   "sharpenDetail",
   "sharpenMasking",
-  "luminanceNoiseReduction",
-  "colorNoiseReduction",
 ];
 
 export type PhotoEditingDetailSliderDefinition = {
@@ -74,6 +78,24 @@ export const PHOTO_EDITING_DETAIL_SLIDERS: ReadonlyArray<PhotoEditingDetailSlide
     description: PHOTO_EDITING_SHARPEN_DESCRIPTION,
   },
   {
+    key: "luminanceNoiseReduction",
+    label: PHOTO_EDITING_LUMINANCE_NOISE_LABEL,
+    min: 0,
+    max: 100,
+    step: 1,
+    defaultValue: 0,
+    description: PHOTO_EDITING_LUMINANCE_NOISE_DESCRIPTION,
+  },
+  {
+    key: "colorNoiseReduction",
+    label: PHOTO_EDITING_COLOR_NOISE_LABEL,
+    min: 0,
+    max: 100,
+    step: 1,
+    defaultValue: 0,
+    description: PHOTO_EDITING_COLOR_NOISE_DESCRIPTION,
+  },
+  {
     key: "sharpenRadius",
     label: PHOTO_EDITING_SHARPEN_RADIUS_LABEL,
     min: 0.5,
@@ -99,24 +121,6 @@ export const PHOTO_EDITING_DETAIL_SLIDERS: ReadonlyArray<PhotoEditingDetailSlide
     step: 1,
     defaultValue: SHARPENING_DEFAULTS.masking,
     description: PHOTO_EDITING_SHARPEN_MASKING_DESCRIPTION,
-  },
-  {
-    key: "luminanceNoiseReduction",
-    label: PHOTO_EDITING_LUMINANCE_NOISE_LABEL,
-    min: 0,
-    max: 100,
-    step: 1,
-    defaultValue: 0,
-    description: PHOTO_EDITING_LUMINANCE_NOISE_DESCRIPTION,
-  },
-  {
-    key: "colorNoiseReduction",
-    label: PHOTO_EDITING_COLOR_NOISE_LABEL,
-    min: 0,
-    max: 100,
-    step: 1,
-    defaultValue: 0,
-    description: PHOTO_EDITING_COLOR_NOISE_DESCRIPTION,
   },
 ];
 

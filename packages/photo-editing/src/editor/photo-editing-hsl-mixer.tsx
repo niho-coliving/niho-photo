@@ -26,6 +26,7 @@ import {
   writePhotoEditingHsl,
   type PhotoEditingHslAxis,
   type PhotoEditingHslBand,
+  type PhotoEditingHslValues,
 } from "../photo-editing-hsl";
 import type { PhotoEditingSettings } from "../photo-editing-types";
 
@@ -95,15 +96,19 @@ type HslMixerProps = {
   onSettingsChange: (update: PhotoEditingSettingsUpdate, phase: PhotoEditingSliderPhase) => void;
 };
 
-function ResetButton(props: HslMixerProps) {
-  const canReset = !props.disabled && props.settings.grayscale !== true && hasPhotoEditingHslEdits(props.settings);
-  const onSettingsChange = props.onSettingsChange;
+/** 全体のカラーミキサーの「初期化」を押せるか（押せる・白黒でない・どれかが 0 でない）。 */
+function canResetGlobalHsl(props: HslMixerProps): boolean {
+  return !props.disabled && props.settings.grayscale !== true && hasPhotoEditingHslEdits(props.settings);
+}
+
+/** 「初期化」のボタン（節の見出しの横・スマホの道具の切り替えの右）。 */
+function ResetButton(props: { label: string; canReset: boolean; onReset: () => void }) {
   return (
     <button
       type="button"
-      aria-label={PHOTO_EDITING_HSL_RESET_LABEL}
-      disabled={!canReset}
-      onClick={() => onSettingsChange(resetPhotoEditingHsl, "commit")}
+      aria-label={props.label}
+      disabled={!props.canReset}
+      onClick={props.onReset}
       className={PHOTO_EDITING_SECTION_RESET_BUTTON_CLASS_NAME}
     >
       {PHOTO_EDITING_RESET_LABEL}
@@ -111,20 +116,36 @@ function ResetButton(props: HslMixerProps) {
   );
 }
 
+/** 値を持つ側（全体の設定・マスクの差分）に依らないカラーミキサーの見た目（{@link PhotoEditingHslMixerView}）。 */
+export type PhotoEditingHslMixerViewProps = {
+  /** 8 色 × 3 の今の値（各 -100〜100） */
+  values: PhotoEditingHslValues;
+  /** スライダーを押せない（閲覧のみ・操作の途中・白黒など。「調整」の切り替えは見るだけなので押せる） */
+  disabled: boolean;
+  /** 1 色の 1 つの軸を変える（ドラッグの間は `drag`、離したら・ダブルクリックで 0 に戻したら `commit`） */
+  onChange: (band: PhotoEditingHslBand, axis: PhotoEditingHslAxis, value: number, phase: PhotoEditingSliderPhase) => void;
+  /** 渡したときだけ、切り替えの右に「初期化」を置く（24 の値を 0 に戻す） */
+  onResetAll?: () => void;
+  /** 「初期化」を押せる */
+  canReset: boolean;
+  /** 「初期化」の読み上げ名（既定は全体の「カラーミキサーを初期化」） */
+  resetLabel?: string;
+};
+
 /**
- * カラーミキサー（HSL。niho-photo#38）の中身。PC の右パネルの節とスマホの編集の層の道具が同じものを使う（1 つの縦の並び）。
+ * カラーミキサー（HSL。niho-photo#38）の中身。PC の右パネルの節とスマホの編集の層の道具が同じものを使う（1 つの縦の並び）。値は
+ * 持たない（全体は {@link PhotoEditingHslMixer}、マスクの差分は部分補正の面が渡す。niho-photo#93）。
  *
  * - 上に「調整」の切り替え（色相 / 彩度 / 輝度）。その軸に 0 でない色があるボタンには小さな点（読み上げは「調整あり」）
  * - 下に 8 色のスライダーを縦に（赤 → マゼンタ）。名前は色の名前で、左に色の丸（飾り）。線には軸ごとの色の帯。値は -100〜100
  *   （既定 0。ダブルクリックで 0）で、0 でない値は「変更あり」の目印。ドラッグの間は `drag`、離したら `commit`（スライダーの部品のまま）
- * - `reset` を渡した面（スマホの道具）だけ、切り替えの右に「初期化」を置く（PC は節の見出しの横）
+ * - `onResetAll` を渡した面（スマホの道具）だけ、切り替えの右に「初期化」を置く（PC は節の見出しの横）
  * - 写真の上を押して色を選ぶ操作（Lightroom のターゲット調整）は第 2 段（ここには無い）
  */
-export function PhotoEditingHslMixer(props: HslMixerProps & { reset?: boolean }) {
-  const { settings, disabled, onSettingsChange } = props;
+export function PhotoEditingHslMixerView(props: PhotoEditingHslMixerViewProps) {
+  const { values, disabled, onChange } = props;
   const [axis, setAxis] = useState<PhotoEditingHslAxis>("hue");
   const idPrefix = useId();
-  const values = useMemo(() => readPhotoEditingHsl(settings), [settings]);
 
   return (
     <div data-testid="photo-hsl-mixer">
@@ -152,9 +173,13 @@ export function PhotoEditingHslMixer(props: HslMixerProps & { reset?: boolean })
             );
           })}
         </div>
-        {props.reset ? (
+        {props.onResetAll ? (
           <div className="shrink-0">
-            <ResetButton settings={settings} disabled={disabled} onSettingsChange={onSettingsChange} />
+            <ResetButton
+              label={props.resetLabel ?? PHOTO_EDITING_HSL_RESET_LABEL}
+              canReset={props.canReset}
+              onReset={props.onResetAll}
+            />
           </div>
         ) : null}
       </div>
@@ -179,9 +204,9 @@ export function PhotoEditingHslMixer(props: HslMixerProps & { reset?: boolean })
                 step={PHOTO_EDITING_HSL_STEP}
                 value={value}
                 valueText={formatSignedInteger(value)}
-                disabled={disabled || settings.grayscale === true}
-                onChange={(next, phase) => onSettingsChange((current) => writePhotoEditingHsl(current, band, axis, next), phase)}
-                onReset={() => onSettingsChange((current) => writePhotoEditingHsl(current, band, axis, 0), "commit")}
+                disabled={disabled}
+                onChange={(next, phase) => onChange(band, axis, next, phase)}
+                onReset={() => onChange(band, axis, 0, "commit")}
                 changed={value !== 0}
                 trackClassName={TRACK_CLASS_NAME}
               />
@@ -194,12 +219,41 @@ export function PhotoEditingHslMixer(props: HslMixerProps & { reset?: boolean })
 }
 
 /**
+ * 全体のカラーミキサー（`developSettings.hsl`）。値を読み、書くのは {@link writePhotoEditingHsl}（白黒の間はスライダーを押せない）。
+ * `reset` を渡した面（スマホの道具）だけ、切り替えの右に「初期化」を置く。
+ */
+export function PhotoEditingHslMixer(props: HslMixerProps & { reset?: boolean }) {
+  const { settings, disabled, onSettingsChange } = props;
+  const values = useMemo(() => readPhotoEditingHsl(settings), [settings]);
+  return (
+    <PhotoEditingHslMixerView
+      values={values}
+      disabled={disabled || settings.grayscale === true}
+      onChange={(band, axis, next, phase) => onSettingsChange((current) => writePhotoEditingHsl(current, band, axis, next), phase)}
+      onResetAll={props.reset ? () => onSettingsChange(resetPhotoEditingHsl, "commit") : undefined}
+      canReset={canResetGlobalHsl(props)}
+    />
+  );
+}
+
+/**
  * カラーの群の下の「カラーミキサー」の節（niho-photo#38。既定は閉じる。開閉は端末に覚える）。見出しの横の「初期化」は 8 色 × 3 の
  * 値だけを 0 に戻して `commit` する（取り消しの 1 単位。どれも 0・押せない間は押せない表示）。
  */
 export function PhotoEditingHslMixerSection(props: HslMixerProps) {
+  const onSettingsChange = props.onSettingsChange;
   return (
-    <PhotoEditingAdvancedSection id="colorMixer" title={PHOTO_EDITING_HSL_TITLE} accessory={<ResetButton {...props} />}>
+    <PhotoEditingAdvancedSection
+      id="colorMixer"
+      title={PHOTO_EDITING_HSL_TITLE}
+      accessory={
+        <ResetButton
+          label={PHOTO_EDITING_HSL_RESET_LABEL}
+          canReset={canResetGlobalHsl(props)}
+          onReset={() => onSettingsChange(resetPhotoEditingHsl, "commit")}
+        />
+      }
+    >
       <PhotoEditingHslMixer {...props} />
     </PhotoEditingAdvancedSection>
   );

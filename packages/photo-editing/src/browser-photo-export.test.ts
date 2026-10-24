@@ -47,6 +47,7 @@ function choices(overrides: Partial<Omit<ExportInput, "photo">> & { photo?: Expo
     engineUsable: overrides.engineUsable ?? true,
     desktopFullSize: overrides.desktopFullSize,
     nativeFullSizeUnsupported: overrides.nativeFullSizeUnsupported,
+    nativeFullSizeUnsupportedText: overrides.nativeFullSizeUnsupportedText,
     ...(overrides.desktopFullSizeRaster ? { desktopFullSizeRaster: overrides.desktopFullSizeRaster } : {}),
     ...(overrides.cutout ? { cutout: overrides.cutout } : {}),
   });
@@ -446,6 +447,59 @@ describe("大きさの「原寸」（NIHO Desktop の口。K2-3a #17148）", () 
         photo: photo({ developSettings: { v: 1, engine: "niho-1", colorGrading: { shadow: { luminance: 25 } } } }),
       }).jpeg.fullSize,
     ).toEqual(FULL);
+  });
+});
+
+describe("原寸の native renderer が描けない補正（遠近・修復・レンズ補正）", () => {
+  const FULL = { enabled: true, detail: "この Mac に保存" };
+  const TRANSPARENT = { transparent: true, fullSize: false };
+  const LOUPE = { loupe: true, editing: "wasm" as const };
+  const unsupported = (text: string) => ({ enabled: false, detail: text });
+  const withSettings = (extra: Record<string, unknown>) =>
+    choices({ desktopFullSize: true, photo: photo({ developSettings: { v: 9, engine: "niho-1", ...extra } }) }).jpeg.fullSize;
+
+  it("遠近・修復の印・画を変えるレンズ補正を使う間は、保存済みの原寸カードも押せない", () => {
+    expect(withSettings({ geometry: { perspective: { vertical: -20 } } })).toEqual(unsupported("原寸は遠近に未対応です"));
+    expect(withSettings({ heal: [{ id: "a", mode: "remove", radius: 0.02, feather: 0.5, points: [[0.5, 0.5]] }] })).toEqual(
+      unsupported("原寸は修復に未対応です"),
+    );
+    expect(withSettings({ lens: { distortion: 10 } })).toEqual(unsupported("原寸はレンズ補正に未対応です"));
+    expect(withSettings({ lens: { removeChromaticAberration: true } })).toEqual(unsupported("原寸はレンズ補正に未対応です"));
+  });
+
+  it("複数あれば、名前を並べる（輝度だけのときは従来の文のまま）", () => {
+    expect(
+      withSettings({
+        geometry: { perspective: { vertical: -20 } },
+        heal: [{ id: "a", mode: "remove", radius: 0.02, feather: 0.5, points: [[0.5, 0.5]] }],
+        lens: { distortion: 10 },
+      }),
+    ).toEqual(unsupported("原寸は遠近、修復、レンズ補正に未対応です"));
+    expect(withSettings({ colorGrading: { global: { luminance: 20 } }, lens: { vignetting: 5 } })).toEqual(
+      unsupported("原寸は中間調・全体の輝度、レンズ補正に未対応です"),
+    );
+  });
+
+  it("恒等の遠近・印の無い修復・中点だけのレンズ・余白を埋める / Upright だけなら、原寸を押せる", () => {
+    expect(withSettings({ geometry: { perspective: { vertical: 0, scale: 100 } } })).toEqual(FULL);
+    expect(withSettings({ geometry: { constrain: true, upright: 3 } })).toEqual(FULL);
+    expect(withSettings({ heal: [] })).toEqual(FULL);
+    expect(withSettings({ lens: { vignettingMidpoint: 30 } })).toEqual(FULL);
+  });
+
+  it("編集中の設定から渡した理由の文が使われ、背景除去の原寸も押せない", () => {
+    expect(
+      choices({ desktopFullSize: true, nativeFullSizeUnsupported: true, nativeFullSizeUnsupportedText: "原寸は遠近に未対応です" })
+        .jpeg.fullSize,
+    ).toEqual(unsupported("原寸は遠近に未対応です"));
+    expect(
+      choices({
+        ...LOUPE,
+        cutout: { ...TRANSPARENT, fullSize: true },
+        nativeFullSizeUnsupported: true,
+        nativeFullSizeUnsupportedText: "原寸は修復に未対応です",
+      }).jpeg.fullSize,
+    ).toEqual(unsupported("原寸は修復に未対応です"));
   });
 });
 
