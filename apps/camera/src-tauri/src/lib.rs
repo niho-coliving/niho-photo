@@ -29,6 +29,8 @@ mod mask_surfaces;
 mod photo_bench;
 mod photos;
 mod presets;
+#[cfg(any(feature = "official-updates", test))]
+mod runtime_assets;
 mod save;
 mod thumbnail_scheme;
 mod updater;
@@ -59,6 +61,8 @@ fn camera_app_info() -> CameraAppInfo {
 pub fn run() {
   #[allow(unused_mut)]
   let mut context = tauri::generate_context!();
+  #[cfg(feature = "official-updates")]
+  runtime_assets::install(&mut context);
   let builder = tauri::Builder::default().plugin(tauri_plugin_deep_link::init());
   #[cfg(feature = "e2e")]
   let builder = {

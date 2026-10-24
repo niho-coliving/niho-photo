@@ -1,5 +1,6 @@
 node_modules/
 dist/
+sdk-dist/
 coverage/
 .vitest/
 .DS_Store
@@ -12,6 +13,7 @@ coverage/
 **/__pycache__/
 **/.build/
 packages/develop-engine/fixtures/golden/out/
+packages/develop-engine/public/develop-engine/
 
 # OAuth実値はOS資格情報ストアだけ。runtimeのコピーをGit候補にしない。
 **/account-secrets/

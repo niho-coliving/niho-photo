@@ -146,8 +146,11 @@ fn builtin_presets_match_photo_bench_engine() {
             "{id} unsupported"
         );
         // NIHO renders effects, the graded-luminance approximation, the
-        // Detail panel, and Transform with Constrain Crop; Photo Bench keeps
-        // these values unsupported.
+        // Detail panel, Transform with Constrain Crop and the Lens
+        // Corrections' manual values (a profile that is on is the working
+        // copy's, kept as metadata); Photo Bench keeps these values
+        // unsupported.
+        let profile_on = text.contains(r#"crs:LensProfileEnable="1""#);
         let niho_renders = |p: &str| {
             xmp::effect_field(p).is_some()
                 || matches!(
@@ -156,6 +159,8 @@ fn builtin_presets_match_photo_bench_engine() {
                 )
                 || xmp::DETAIL_KEYS.contains(&p)
                 || niho_develop::geometry::PerspectiveField::from_xmp(p).is_some()
+                || xmp::LENS_KEYS.contains(&p)
+                || (profile_on && p.starts_with("LensProfile"))
         };
         let niho_unsupported: Vec<String> = want_unsupported
             .iter()

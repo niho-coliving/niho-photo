@@ -161,7 +161,10 @@ fn xmp_cnr_reaches_rasters_through_detail_and_keeps_the_niho3_field() {
     let detail = raster.detail.expect("v6 detail");
     assert_eq!(detail.color_noise_reduction, Some(25.0));
     assert_eq!(detail.sharpening.amount, 40.0);
-    assert_eq!(raster.v, 6);
+    // colorful also turns on the chromatic aberration removal
+    // (`AutoLateralCA`, niho-photo#45), which needs v 9.
+    assert!(raster.lens.remove_chromatic_aberration);
+    assert_eq!(raster.v, 9);
 
     let base = niho3();
     let result = xmp::preset_settings(preset, Some(&base)).unwrap();

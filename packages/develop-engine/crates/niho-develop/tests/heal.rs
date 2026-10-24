@@ -959,8 +959,10 @@ fn working_copies_heal_their_master() {
 #[cfg_attr(not(target_arch = "wasm32"), test)]
 fn marks_need_v8_and_round_trip() {
     assert_eq!(HEAL_SETTINGS_VERSION, 8);
-    assert_eq!(MAX_SETTINGS_VERSION, 8);
-    assert!((1..=8).all(|version| READABLE_SETTINGS_VERSIONS.contains(&version)));
+    assert_eq!(MAX_SETTINGS_VERSION, 9);
+    assert!(READABLE_SETTINGS_VERSIONS.contains(&8));
+    // 5 and 6 are the local masks' and detail's versions (readable too).
+    assert!(READABLE_SETTINGS_VERSIONS.contains(&5) && READABLE_SETTINGS_VERSIONS.contains(&6));
     let heal = format!(
         "[{}]",
         mark(
@@ -997,9 +999,9 @@ fn marks_need_v8_and_round_trip() {
             .iter()
             .any(|e| e.path == "v" && e.code == "versionTooLow"));
     }
-    // A reader that does not know v8 refuses it.
+    // A reader that does not know the next version refuses it.
     let mut text = s.to_value();
-    text["v"] = 9.into();
+    text["v"] = 10.into();
     assert_eq!(
         DevelopSettings::from_value(&text).unwrap_err().code,
         "unsupportedVersion"
