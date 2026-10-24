@@ -1,5 +1,5 @@
 import type { DevelopFrame } from "./develop-engine/develop-engine-client";
-import type { PhotoLibraryPhoto } from "./library/photo-library";
+import type { PhotoLibrary, PhotoLibraryPhoto } from "./library/photo-library";
 
 /**
  * 写真の補正後のプレビューを上げる（K3 移行元設計・Epic 移行元設計 の決めごと 15。写真ライブラリの派生物の入力・表示・出力の 3 役のうち
@@ -23,6 +23,14 @@ export const EDITED_PREVIEW_THUMB_MAX_BYTES = 256 * 1024;
 const EDITED_PREVIEW_JPEG_QUALITIES = [0.85, 0.78, 0.7, 0.6] as const;
 /** 違う写真を同時に上げてよい数。 */
 export const EDITED_PREVIEW_UPLOAD_CONCURRENCY = 2;
+
+/**
+ * 補正後のプレビューを付ける口（{@link PhotoLibrary.attachEditedPreview}）を持つ置き場か。この Mac の置き場は持たない。持たない置き場で
+ * 上げようとしても必ず失敗し、JPEG の縮小と余分な描画だけが走って `console.warn` が出る（実エンジンでの確認で判明）ので、上げない。
+ */
+export function libraryCanAttachEditedPreview(library: Pick<PhotoLibrary, "attachEditedPreview">): boolean {
+  return typeof library.attachEditedPreview === "function";
+}
 
 export type EditedPreviewJpeg = { blob: Blob; width: number; height: number };
 export type EditedPreviewJpegs = { preview: EditedPreviewJpeg; thumb: EditedPreviewJpeg };

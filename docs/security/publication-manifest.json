@@ -835,9 +835,10 @@
         "squash済みPR #77のmainをマスク描画へ同期する。",
         "部分補正（マスク）#67: 右パネルに「マスク」の道具の面（見出しと maskTools）を足す",
         "PR #82: #74 squash merge後に版機能の変更をmainへ積み直し、最終ハッシュを反映。",
-        "PR #97を#96へ積み直し、修復とマスクの右パネルを併存。"
+        "PR #97を#96へ積み直し、修復とマスクの右パネルを併存。",
+        "版の面の取り消し/やり直しと補正後プレビューの抑止に伴う変更。"
       ],
-      "outputSha256": "0715ee6aeb03a6138a3c8688f47e6e645c2a97441a93aa415042ffb1206f8f05"
+      "outputSha256": "09d308d4d7354383e0c0e9b4b06ddc1a3e05fb015435eafa85e8cc73823bb92b"
     },
     {
       "path": "packages/photo-editing/src/editor/browser-photo-editing-albums.tsx",
@@ -1240,7 +1241,7 @@
         "path": "packages/photo-editing/src/editor/browser-photo-editing-workbench-folders.test.tsx",
         "sha256": "2466702c26e46adadb579736eb8edef22cc420e4b0189283fd7d4b762a62869e"
       },
-      "outputSha256": "179da86a510dd7ae62de2aed31919b3217a7102019edf2c64cdbfe8c3927cf60",
+      "outputSha256": "7eb044fff97cfc48f604580848676f94cc297c1273c47cee1fe1c1e9215511dd",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
@@ -1259,7 +1260,8 @@
         "niho-photo#43 の「情報」の帯の項目と情報の面の切り替えの test を追加。",
         "PR #77 の情報paneをmainの公開UI変更と統合。",
         "squash済みPR #77のmainをマスク描画へ同期する。",
-        "PR #82: #74 squash merge後に版機能の変更をmainへ積み直し、最終ハッシュを反映。"
+        "PR #82: #74 squash merge後に版機能の変更をmainへ積み直し、最終ハッシュを反映。",
+        "版の面の取り消し/やり直しと補正後プレビューの抑止に伴う変更。"
       ]
     },
     {
@@ -1851,14 +1853,15 @@
         "path": "packages/photo-editing/src/editor/use-browser-photo-develop.ts",
         "sha256": "491153dcf3675cfd0b822a008f101a77125411c9e18966ea7b7fb96e18ce8228"
       },
-      "outputSha256": "1d71bb3d7ea6897e6ea155c537bf978e767989cc4d59e3533ad58b86c1ee37ed",
+      "outputSha256": "f4959eaa239cb323bf34b647d083cfe662c94099be5f083e6cb086701fc27afb",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
         "Issue #13の段階表示、provisional draft、canonical handoffと書き出し境界を実装。",
         "Issue 13 progressive RAW open implementation",
         "PR #99を#91マージ後のmainへ積み直し、遠近補正後のブラシ半径を局所ヤコビアンで写す。",
-        "PR #99のマスク面の描画・読み書きと遠近対応の変更を反映する。"
+        "PR #99のマスク面の描画・読み書きと遠近対応の変更を反映する。",
+        "版の面の取り消し/やり直しと補正後プレビューの抑止に伴う変更。"
       ]
     },
     {
@@ -2262,10 +2265,11 @@
         "path": "packages/photo-editing/src/photo-cloud-edited-preview.ts",
         "sha256": "24e7b4de9d0f036035a759d41e5e3ff2a7d75f2783a441cc453b9798b8ad4cd3"
       },
-      "outputSha256": "d55724cbb755327ca745ff11a455188a27ce929d0fc2455b60159b92502bfa27",
+      "outputSha256": "c957d10abec440bfbd5444a1b6a3b31316e49658ecb42429cbb46eca6eea50e2",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
-        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。"
+        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
+        "版の面の取り消し/やり直しと補正後プレビューの抑止に伴う変更。"
       ]
     },
     {
@@ -9964,8 +9968,8 @@
     },
     {
       "path": "packages/photo-editing/src/editor/browser-photo-editing-adjustments.test.tsx",
-      "sha256": "35a8afc9d349fdaabaab0caeaac4ed09bfe9958034119190a0ec2c032b66a542",
-      "origin": "niho-photo#51 のため新規作成。右端の道具の帯と右パネルの面の部品・test。\n変更理由: Issue #49の統合確認: プリセットの面の見出し行の⋯の合成テストを追加。\n変更理由: niho-photo#36 ヒストグラムの位置と各道具での表示を検証。"
+      "sha256": "94d8728b192e998d30f14002b39e028dfd0c86d70eae816bbb2262086ae31355",
+      "origin": "niho-photo#51 のため新規作成。右端の道具の帯と右パネルの面の部品・test。\n変更理由: Issue #49の統合確認: プリセットの面の見出し行の⋯の合成テストを追加。\n変更理由: niho-photo#36 ヒストグラムの位置と各道具での表示を検証。\n変更理由: 版の面の取り消し/やり直しと補正後プレビューの抑止に伴う変更。"
     },
     {
       "path": "packages/photo-editing/src/editor/browser-photo-editing-tool-rail.test.tsx",
@@ -10734,8 +10738,8 @@
     },
     {
       "path": "packages/photo-editing/src/editor/browser-photo-editing-versions.test.tsx",
-      "sha256": "d8a7b1d488c2a6186127bac7c7438a55532a777b2d2fd74e921022c572e9a97a",
-      "origin": "niho-photo#42 のため新規作成。版の面の一覧・0 件・読み込み中・失敗・作成・名前の変更・削除・切り替え・押せない間・小さな見た目・右パネルの見出しの test。合成の値だけを使用。"
+      "sha256": "e47985020c85497d44dd95854f7f0955dc3d87b9316ead88568e4f1d4ca80f84",
+      "origin": "niho-photo#42 のため新規作成。版の面の一覧・0 件・読み込み中・失敗・作成・名前の変更・削除・切り替え・押せない間・小さな見た目・右パネルの見出しの test。合成の値だけを使用。\n変更理由: 版の面の取り消し/やり直しと補正後プレビューの抑止に伴う変更。"
     },
     {
       "path": "packages/photo-editing/src/editor/use-browser-photo-versions.ts",
@@ -11291,6 +11295,11 @@
       "path": "docs/mockups/niho-photo-lightroom-layout-v2.html",
       "sha256": "344a5136603798fb1185f26d65267b8b7ba3c1b8cafa3faed36e68392f278c8b",
       "origin": "NIHO所有の画面案を公開用に再作成。出典 niho-app afff6aa10ddc652e8bb4fc69dd561fe02bb1e5c0 の idea/mock/niho-photo-lightroom-layout-v2.html、原本 SHA-256 12e4f8a1bc4be31da5dc46a310f60138f3007650db3cae6a84e73bed4f2548c8。個人プロフィール画像と未監査画像を除き、既存公開fixtureとアプリアイコンに置換。認証・保存・写真処理は行わない。"
+    },
+    {
+      "path": "packages/photo-editing/src/photo-cloud-edited-preview-attach.test.ts",
+      "sha256": "d557fb61baa9890d5196a85e8d2cae88c271c2f4bf2c95f1fb3c307610eb454b",
+      "origin": "補正後のプレビューを付ける口を持つ置き場かの判定の単体テスト。実エンジンでの確認で見つかった不具合の修正として新規作成。"
     }
   ],
   "excludedSources": [
