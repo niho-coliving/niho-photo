@@ -1,14 +1,17 @@
 "use client";
 
 import { useId } from "react";
-import { CircleDot, Copy, Eye, EyeOff, FlipVertical2, Rows3, Trash2, type LucideIcon } from "lucide-react";
+import { CircleDot, Cloud, Copy, Eye, EyeOff, FlipVertical2, Paintbrush, Rows3, Trash2, User, type LucideIcon } from "lucide-react";
 
 import type { DevelopMask, DevelopMaskAdjustKey } from "../develop-engine/develop-masks";
 import { formatAdjustmentValue, formatSignedInteger } from "../photo-editing-adjustments";
 import {
+  PHOTO_EDITING_MASK_ADD_BRUSH_LABEL,
   PHOTO_EDITING_MASK_ADD_LINEAR_LABEL,
   PHOTO_EDITING_MASK_ADD_RADIAL_LABEL,
   PHOTO_EDITING_MASK_ADD_TITLE,
+  PHOTO_EDITING_MASK_DETECTED_TEXT,
+  PHOTO_EDITING_MASK_SURFACE_RETRY_LABEL,
   PHOTO_EDITING_MASK_FEATHER_LABEL,
   PHOTO_EDITING_MASK_HINT_TEXT,
   PHOTO_EDITING_MASK_LIST_EMPTY_TEXT,
@@ -29,13 +32,13 @@ import {
   PHOTO_EDITING_MASK_ADJUST_GROUPS,
   PHOTO_EDITING_RADIAL_MASK_DEFAULT_FEATHER,
   readPhotoEditingMaskAdjust,
-  type PhotoEditingMaskShapeKind,
 } from "../photo-editing-masks";
 import { cn } from "niho-ui/cn";
 
 import { WHITE_BALANCE_TRACK_CLASS_NAMES, type PhotoEditingSliderPhase } from "./photo-editing-adjustment-controls";
+import { PhotoEditingMaskBrushTools } from "./photo-editing-mask-brush-tools";
 import { PhotoEditingSlider } from "./photo-editing-slider";
-import type { BrowserPhotoMaskTool } from "./use-browser-photo-masks";
+import type { BrowserPhotoMaskTool, PhotoEditingMaskAddKind } from "./use-browser-photo-masks";
 
 const FOCUS_RING_CLASS_NAME = "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-niho-accent-ink";
 const SECTION_TITLE_CLASS_NAME = "text-xs font-bold text-niho-text-muted";
@@ -51,10 +54,17 @@ const ROW_ICON_BUTTON_CLASS_NAME = cn(
   FOCUS_RING_CLASS_NAME,
 );
 
-const KIND_ICONS: Readonly<Record<string, LucideIcon>> = { linear: Rows3, radial: CircleDot };
-const ADD_LABELS: Readonly<Record<PhotoEditingMaskShapeKind, string>> = {
+const KIND_ICONS: Readonly<Record<string, LucideIcon>> = {
+  linear: Rows3,
+  radial: CircleDot,
+  brush: Paintbrush,
+  subject: User,
+  sky: Cloud,
+};
+const ADD_LABELS: Readonly<Record<PhotoEditingMaskAddKind, string>> = {
   linear: PHOTO_EDITING_MASK_ADD_LINEAR_LABEL,
   radial: PHOTO_EDITING_MASK_ADD_RADIAL_LABEL,
+  brush: PHOTO_EDITING_MASK_ADD_BRUSH_LABEL,
 };
 
 /** 右パネルのマスクの面の値（{@link BrowserPhotoMaskTool} から必要な分だけ。テストで直接渡せる形）。 */
@@ -76,7 +86,10 @@ export type PhotoEditingMaskToolsProps = Pick<
   | "toggleInvert"
   | "changeAdjust"
   | "changeFeather"
-> & { disabled: boolean };
+> &
+  Partial<Pick<BrowserPhotoMaskTool, "brush" | "addingBrush" | "notice" | "canRetrySurfaces" | "retrySurfaces">> & {
+    disabled: boolean;
+  };
 
 function formatMaskAdjust(key: DevelopMaskAdjustKey, value: number): string {
   return key === "exposure" ? formatAdjustmentValue("exposure", value) : formatSignedInteger(value);
@@ -149,6 +162,20 @@ export function PhotoEditingMaskTools(props: PhotoEditingMaskToolsProps) {
           <p id={reasonId} className={NOTE_CLASS_NAME}>
             {props.addBlockedReason}
           </p>
+        ) : null}
+        {props.notice ? (
+          <div role="status" data-testid="photo-mask-notice" className="space-y-1 rounded-lg bg-niho-pale/60 px-2.5 py-2">
+            <p className={NOTE_CLASS_NAME}>{props.notice}</p>
+            {props.canRetrySurfaces && props.retrySurfaces ? (
+              <button
+                type="button"
+                onClick={props.retrySurfaces}
+                className={cn("text-xs font-bold text-niho-accent-ink underline-offset-2 hover:underline", FOCUS_RING_CLASS_NAME)}
+              >
+                {PHOTO_EDITING_MASK_SURFACE_RETRY_LABEL}
+              </button>
+            ) : null}
+          </div>
         ) : null}
       </section>
 
@@ -273,10 +300,14 @@ export function PhotoEditingMaskTools(props: PhotoEditingMaskToolsProps) {
           <h3 id={`${idPrefix}-selected`} className="text-sm font-bold text-niho-text">
             {photoEditingMaskAdjustTitle(selectedName)}
           </h3>
-          {selected.kind !== "linear" && selected.kind !== "radial" ? (
-            <p className={NOTE_CLASS_NAME}>{PHOTO_EDITING_MASK_SURFACE_TEXT}</p>
-          ) : (
+          {selected.kind === "linear" || selected.kind === "radial" ? (
             <p className={NOTE_CLASS_NAME}>{PHOTO_EDITING_MASK_HINT_TEXT}</p>
+          ) : selected.kind === "subject" || selected.kind === "sky" ? (
+            <p className={NOTE_CLASS_NAME}>{PHOTO_EDITING_MASK_DETECTED_TEXT}</p>
+          ) : props.brush?.available && props.brush.mask?.id === selected.id ? (
+            <PhotoEditingMaskBrushTools brush={props.brush} disabled={disabled} />
+          ) : (
+            <p className={NOTE_CLASS_NAME}>{PHOTO_EDITING_MASK_SURFACE_TEXT}</p>
           )}
           {PHOTO_EDITING_MASK_ADJUST_GROUPS.map((group) => {
             const adjustments = group.adjustments.filter((definition) => !(definition.whiteBalance && props.whiteBalanceAbsolute));

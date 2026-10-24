@@ -6,10 +6,21 @@ type DismissLayer = {
   close: () => void;
 };
 
-const layers: DismissLayer[] = [];
+// SDK と host の UI が別 module instance でも、同じ画面の開いた順を共有する。
+// SSR では callback を保持せず、別 request の面が混ざるのを防ぐ。
+const registryKey = Symbol.for("niho.ui.dismiss-layers.v1");
+type DismissLayerRegistry = { version: 1; layers: DismissLayer[] };
+
+function browserLayers(): DismissLayer[] | null {
+  if (typeof window === "undefined") return null;
+  const realm = window as Window & { [registryKey]?: DismissLayerRegistry };
+  return (realm[registryKey] ??= { version: 1, layers: [] }).layers;
+}
 
 /** 面を積む（開いた順）。返す関数で外す。 */
 export function registerDismissLayer(close: () => void): () => void {
+  const layers = browserLayers();
+  if (!layers) return () => {};
   const layer = { id: Symbol("dismiss-layer"), close };
   layers.push(layer);
 
@@ -21,7 +32,7 @@ export function registerDismissLayer(close: () => void): () => void {
 
 /** 一番新しい面を閉じる。閉じる面が無ければ false。 */
 export function dismissTopLayer(): boolean {
-  const layer = layers.at(-1);
+  const layer = browserLayers()?.at(-1);
   if (!layer) return false;
   layer.close();
   return true;

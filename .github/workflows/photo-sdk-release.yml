@@ -1,0 +1,184 @@
+{
+  "name": "Photo SDK release",
+  "on": {
+    "workflow_dispatch": {
+      "inputs": {
+        "source_sha": {
+          "description": "origin/mainに含まれるSDK sourceのfull commit SHA",
+          "required": true,
+          "type": "string"
+        }
+      }
+    }
+  },
+  "permissions": {
+    "contents": "read"
+  },
+  "concurrency": {
+    "group": "photo-sdk-${{ github.workflow }}-${{ github.run_id }}",
+    "cancel-in-progress": false
+  },
+  "jobs": {
+    "build": {
+      "name": "Build and verify SDK",
+      "runs-on": "ubuntu-24.04",
+      "timeout-minutes": 60,
+      "outputs": {
+        "artifact-id": "${{ steps.upload.outputs.artifact-id }}",
+        "artifact-digest": "${{ steps.upload.outputs.artifact-digest }}",
+        "artifact-name": "${{ steps.names.outputs.artifact-name }}",
+        "manifest-sha256": "${{ steps.release.outputs.manifest-sha256 }}",
+        "source-sha": "${{ steps.release.outputs.source-sha }}",
+        "version": "${{ steps.release.outputs.version }}"
+      },
+      "steps": [
+        {
+          "uses": "actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683",
+          "with": {
+            "persist-credentials": false,
+            "fetch-depth": 0
+          }
+        },
+        {
+          "id": "source",
+          "name": "対象sourceを固定",
+          "env": {
+            "SDK_WORKFLOW_REF": "${{ github.ref }}",
+            "SDK_DISPATCH_SOURCE_SHA": "${{ inputs.source_sha }}"
+          },
+          "run": "set -euo pipefail\nif [[ \"$SDK_WORKFLOW_REF\" != \"refs/heads/main\" ]]; then exit 1; fi\nsource_sha=\"$SDK_DISPATCH_SOURCE_SHA\"\nif ! [[ \"$source_sha\" =~ ^[a-f0-9]{40}$ ]]; then exit 1; fi\ngit fetch --no-tags origin main:refs/remotes/origin/main \"$source_sha\"\ngit merge-base --is-ancestor \"$source_sha\" refs/remotes/origin/main\ngit checkout --detach \"$source_sha\"\nif [[ \"$(node -p 'require(\"./sdk/release-set.json\").repository')\" != \"niho-life/niho-photo\" ]]; then exit 1; fi\nprintf 'source-sha=%s\\n' \"$source_sha\" >> \"$GITHUB_OUTPUT\""
+        },
+        {
+          "uses": "actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020",
+          "with": {
+            "node-version": "24.15.0"
+          }
+        },
+        {
+          "name": "Node依存を固定lockから準備",
+          "run": "npm ci --ignore-scripts --no-audit --no-fund"
+        },
+        {
+          "name": "固定Rust/WASM toolchainを準備",
+          "run": "rustup toolchain install 1.98.1 --profile minimal --target wasm32-unknown-unknown\ncargo +1.98.1 install wasm-bindgen-cli --version 0.2.129 --locked"
+        },
+        {
+          "name": "実WASMをbuildしてSDKを検証",
+          "env": {
+            "SDK_SOURCE_SHA": "${{ steps.source.outputs.source-sha }}",
+            "SDK_RUNTIME_DIR": "${{ runner.temp }}/photo-sdk-runtime",
+            "SDK_RELEASE_DIR": "${{ github.workspace }}/sdk-dist/release"
+          },
+          "run": "set -euo pipefail\nnpm run sdk:build-engine-runtime -- --output \"$SDK_RUNTIME_DIR\"\nnpm run sdk:pack -- --output \"$SDK_RELEASE_DIR\" --source \"$SDK_SOURCE_SHA\" --engine-assets \"$SDK_RUNTIME_DIR\"\nmanifest=\"$SDK_RELEASE_DIR/niho-photo-sdk-$(node -p 'require(\"./sdk/release-set.json\").version')-$SDK_SOURCE_SHA.json\"\nnpm run sdk:smoke -- --manifest \"$manifest\"\nnpm run sdk:smoke-real-engine -- --manifest \"$manifest\""
+        },
+        {
+          "id": "release",
+          "name": "release asset集合を検証",
+          "env": {
+            "SDK_SOURCE_SHA": "${{ steps.source.outputs.source-sha }}",
+            "SDK_RELEASE_DIR": "${{ github.workspace }}/sdk-dist/release"
+          },
+          "run": "node scripts/sdk/verify-release-artifact.mjs --directory \"$SDK_RELEASE_DIR\" --expected-source \"$SDK_SOURCE_SHA\" --github-output \"$GITHUB_OUTPUT\""
+        },
+        {
+          "id": "names",
+          "env": {
+            "SDK_SOURCE_SHA": "${{ steps.release.outputs.source-sha }}",
+            "SDK_RUN_ID": "${{ github.run_id }}",
+            "SDK_RUN_ATTEMPT": "${{ github.run_attempt }}"
+          },
+          "run": "if ! [[ \"$SDK_SOURCE_SHA\" =~ ^[a-f0-9]{40}$ && \"$SDK_RUN_ID\" =~ ^[1-9][0-9]*$ && \"$SDK_RUN_ATTEMPT\" =~ ^[1-9][0-9]*$ ]]; then exit 1; fi\nprintf 'artifact-name=niho-photo-sdk-%s-run-%s-attempt-%s\\n' \"$SDK_SOURCE_SHA\" \"$SDK_RUN_ID\" \"$SDK_RUN_ATTEMPT\" >> \"$GITHUB_OUTPUT\""
+        },
+        {
+          "id": "upload",
+          "name": "dispatch成果物を保存",
+          "if": "github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && github.repository == 'niho-life/niho-photo'",
+          "uses": "actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9",
+          "with": {
+            "name": "${{ steps.names.outputs.artifact-name }}",
+            "path": "sdk-dist/release/",
+            "if-no-files-found": "error",
+            "retention-days": 30,
+            "compression-level": 0,
+            "include-hidden-files": false
+          }
+        }
+      ]
+    },
+    "publish": {
+      "name": "Publish immutable SDK release",
+      "needs": [
+        "build"
+      ],
+      "if": "github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && github.repository == 'niho-life/niho-photo'",
+      "runs-on": "ubuntu-24.04",
+      "timeout-minutes": 10,
+      "permissions": {
+        "actions": "read",
+        "contents": "write",
+        "id-token": "write",
+        "attestations": "write"
+      },
+      "steps": [
+        {
+          "uses": "actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683",
+          "with": {
+            "persist-credentials": false,
+            "fetch-depth": 1,
+            "ref": "${{ github.sha }}"
+          }
+        },
+        {
+          "uses": "actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020",
+          "with": {
+            "node-version": "24.15.0"
+          }
+        },
+        {
+          "name": "build artifactをdataとして取得",
+          "uses": "actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093",
+          "with": {
+            "artifact-ids": "${{ needs.build.outputs.artifact-id }}",
+            "path": "${{ runner.temp }}/photo-sdk-download",
+            "merge-multiple": true
+          }
+        },
+        {
+          "name": "mainのverifierで輸送内容を再検証",
+          "env": {
+            "SDK_ARTIFACT_DIR": "${{ runner.temp }}/photo-sdk-download",
+            "SDK_ARTIFACT_DIGEST": "${{ needs.build.outputs.artifact-digest }}",
+            "SDK_ARTIFACT_ID": "${{ needs.build.outputs.artifact-id }}",
+            "SDK_ARTIFACT_NAME": "${{ needs.build.outputs.artifact-name }}",
+            "SDK_MANIFEST_SHA256": "${{ needs.build.outputs.manifest-sha256 }}",
+            "SDK_RUN_ATTEMPT": "${{ github.run_attempt }}",
+            "SDK_RUN_ID": "${{ github.run_id }}",
+            "SDK_SOURCE_SHA": "${{ needs.build.outputs.source-sha }}",
+            "SDK_RECEIPT_FILE": "${{ runner.temp }}/photo-sdk-artifact-receipt.json"
+          },
+          "run": "node scripts/sdk/verify-release-artifact.mjs --directory \"$SDK_ARTIFACT_DIR\" --expected-source \"$SDK_SOURCE_SHA\" --expected-manifest-sha256 \"$SDK_MANIFEST_SHA256\" --receipt \"$SDK_RECEIPT_FILE\" --artifact-id \"$SDK_ARTIFACT_ID\" --artifact-digest \"$SDK_ARTIFACT_DIGEST\" --artifact-name \"$SDK_ARTIFACT_NAME\" --run-id \"$SDK_RUN_ID\" --run-attempt \"$SDK_RUN_ATTEMPT\""
+        },
+        {
+          "name": "SDK manifestを公式workflow identityへ署名する",
+          "id": "attest",
+          "uses": "actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6",
+          "with": {
+            "subject-path": "${{ runner.temp }}/photo-sdk-download/niho-photo-sdk-${{ needs.build.outputs.version }}-${{ needs.build.outputs.source-sha }}.json",
+            "create-storage-record": false
+          }
+        },
+        {
+          "name": "新規tagとGitHub Releaseを作成",
+          "env": {
+            "GH_TOKEN": "${{ github.token }}",
+            "SDK_ARTIFACT_DIR": "${{ runner.temp }}/photo-sdk-download",
+            "SDK_RECEIPT_FILE": "${{ runner.temp }}/photo-sdk-artifact-receipt.json",
+            "SDK_SOURCE_SHA": "${{ needs.build.outputs.source-sha }}",
+            "SDK_VERSION": "${{ needs.build.outputs.version }}"
+          },
+          "run": "set -euo pipefail\nif ! [[ \"$SDK_SOURCE_SHA\" =~ ^[a-f0-9]{40}$ ]]; then exit 1; fi\ntag=\"photo-sdk-v$SDK_VERSION\"\nrelease_flags=(--latest=false)\nrelease_core=\"${SDK_VERSION%%+*}\"\nif [[ \"$release_core\" == *-* ]]; then release_flags+=(--prerelease); fi\ngh api --method POST repos/niho-life/niho-photo/git/refs -f ref=\"refs/tags/$tag\" -f sha=\"$SDK_SOURCE_SHA\" >/dev/null\ngh release create \"$tag\" --verify-tag --target \"$SDK_SOURCE_SHA\" \"${release_flags[@]}\" --title \"NIHO photo SDK v$SDK_VERSION\" --notes \"source $SDK_SOURCE_SHA に固定したNIHO photo SDKリリースセットです。\" \"$SDK_ARTIFACT_DIR\"/*.tgz \"$SDK_ARTIFACT_DIR\"/*.json \"$SDK_RECEIPT_FILE\""
+        }
+      ]
+    }
+  }
+}

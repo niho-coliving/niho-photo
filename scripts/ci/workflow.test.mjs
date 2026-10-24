@@ -4,6 +4,12 @@ import { readFile } from "node:fs/promises";
 import { workflowFailures } from "./workflow-lib.mjs";
 const workflow = JSON.parse(await readFile(new URL("../../.github/workflows/public-ci.yml", import.meta.url), "utf8"));
 test("公開workflowの権限、runner、pin、aggregate契約", () => assert.deepEqual(workflowFailures(workflow), []));
+test("PR proofはダミー公開値を実行時生成し通常形式のapp版を使う", () => {
+  const command = workflow.jobs["photo-candidate"].steps.find((step) => step.name === "current SHAから完全Mac candidateを実build").run;
+  assert.doesNotMatch(command, /AIza[A-Za-z0-9_-]{30,}/u);
+  assert.ok(command.includes('"AIza" + "0".repeat(35)'));
+  assert.ok(command.includes('candidate_version="0.0.0"'));
+});
 const swiftPackage = await readFile(new URL("../../packages/develop-engine/tools/apple-raw-linear/Package.swift", import.meta.url), "utf8");
 const swiftToolsVersion = swiftPackage.match(/^\/\/ swift-tools-version: (\d+\.\d+)/m)?.[1];
 test("現像Swift packageは新しいCore Image SDKのGitHub-hosted runnerで検証する", () => {
@@ -30,6 +36,11 @@ for (const [name, mutate] of [
   ["concurrency disabled", (w) => { w.concurrency["cancel-in-progress"] = false; }],
   ["unreviewed advisory exception", (w) => { w.jobs.dependencies.steps[1].with["allow-ghsas"] += ",GHSA-0000-0000-0000"; }],
   ["weaker vulnerability threshold", (w) => { w.jobs.dependencies.steps[1].with["fail-on-severity"] = "high"; }],
+  ["SDK consumer smoke omitted", (w) => { w.jobs["photo-editing"].steps = w.jobs["photo-editing"].steps.filter((step) => step.run !== "npm run sdk:test"); }],
+  ["SDK real engine smoke omitted", (w) => { w.jobs["photo-sdk"].steps.find((step) => step.name === "実WASM・pack・repo外consumerを検証").run = "npm run sdk:smoke"; }],
+  ["candidate proof skipped", (w) => { w.jobs["photo-candidate"].if = "false"; }],
+  ["candidate fixture omitted", (w) => { w.jobs["photo-candidate"].steps = w.jobs["photo-candidate"].steps.filter((step) => step.name !== "candidate data fixtureを検証"); }],
+  ["candidate local SDK pin omitted", (w) => { w.jobs["photo-candidate"].steps.find((step) => step.name === "current SHAから完全Mac candidateを実build").run = "npm run candidate:build"; }],
 ]) test(`workflowの危険な変更を拒否: ${name}`, () => {
   const changed = structuredClone(workflow);
   mutate(changed);

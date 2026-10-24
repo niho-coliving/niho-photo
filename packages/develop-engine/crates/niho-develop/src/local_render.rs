@@ -5,9 +5,10 @@
 //!
 //! - [`SourceMap`]: an output pixel's centre `((i + 0.5) / W, (j + 0.5) / H)`
 //!   back to the working image `(u, v)` (`0..1`, EXIF orientation applied,
-//!   before the geometry), the same map as TypeScript's
-//!   `geometryOutputToSource` (`tests/fixtures/masks/geometry-map-cases.json`
-//!   holds its values; both sides check them).
+//!   before the geometry, the perspective included), the same map as
+//!   TypeScript's `geometryOutputToSource`
+//!   (`tests/fixtures/masks/geometry-map-cases.json` holds its values; both
+//!   sides check them).
 //! - [`mask_weights`]: the plane `m` of one mask in `f32` with IEEE `+ - * /
 //!   sqrt` only (the radial angle's sine and cosine once per mask, `libm`;
 //!   a surface's bilinear sample with `floor`, [`crate::mask_surface::Sampler`]),
@@ -19,9 +20,10 @@
 //!   255)` per 8-bit channel (`i32`, arithmetic shift), alpha 255; the sum is
 //!   independent of the masks' order.
 
-use crate::geometry::Geometry;
+use crate::geometry::{CropCorners, Geometry};
 use crate::local_mask::{LocalAdjust, LocalMask, MaskShape};
 use crate::mask_surface::{MaskSurface, Sampler};
+use crate::perspective::{constrain_corners, Warp};
 use crate::settings::{DevelopSettings, WhiteBalanceMode};
 
 /// The weight of `m = 1`.
@@ -31,11 +33,24 @@ pub const FULL_WEIGHT: u32 = 65536;
 const MIN_RADIAL_FEATHER: f32 = 0.002;
 
 /// Maps output pixel centres to working-image positions (`u`, `v` in `0..1`
-/// of the working image's width and height, y down) through a geometry:
-/// the crop on the frame (a turned crop whose corners leave the frame
-/// shrunk about its centre, as the renderer does), then the flips undone,
-/// then the quarter turn undone. Without a geometry (or an identity one)
-/// the output is the working image itself.
+/// of the working image's width and height, y down) through a geometry, in
+/// the order the renderer draws it (`frame.rs`): the crop box on the canvas
+/// (the frame itself without a perspective; a turned crop whose corners
+/// leave it shrunk about its centre, and with a perspective and `constrain`
+/// kept inside the corrected photo by [`constrain_corners`], as the
+/// renderer does), then the perspective's inverse warp onto the frame
+/// ([`Warp`]), then the flips undone, then the quarter turn undone. Without
+/// a geometry (or an identity one) the output is the working image itself.
+///
+/// A point the warp has no preimage for (past the vanishing line: TypeScript
+/// returns `null`, [`Self::checked_source_of`] `None`) keeps the map total
+/// in [`Self::source_of`]: it continues as the renderer's
+/// [`Warp::sample_point`] (the homogeneous coordinate held at its floor), a
+/// position far out of the photo in that direction, continuous with the
+/// points next to it. A plane there is its value far out (the renderer
+/// draws the photo's nearest edge there). Points with a preimage outside
+/// the photo (the corners a perspective uncovers without `constrain`) map
+/// outside `0..1`, as in TypeScript.
 #[derive(Debug, Clone, PartialEq)]
 pub struct SourceMap {
     /// The working image's size (`Ws x Hs`).
@@ -52,14 +67,18 @@ struct TurnedMap {
     /// The frame (the working image turned by `rotate`).
     frame_width: f64,
     frame_height: f64,
-    /// The crop box on the frame: its centre and size.
+    /// The crop box on the canvas (the frame without a perspective): its
+    /// centre and size.
     cx: f64,
     cy: f64,
     box_width: f64,
     box_height: f64,
-    /// The crop's axes on the frame: `(cos a, sin a)` and `(-sin a, cos a)`.
+    /// The crop's axes on the canvas: `(cos a, sin a)` and `(-sin a, cos a)`.
     u: [f64; 2],
     v: [f64; 2],
+    /// The perspective's warp of the frame onto the canvas (`None` without
+    /// one).
+    warp: Option<Warp>,
 }
 
 /// The crop does not make a rectangle on this frame (the renderer's
@@ -85,11 +104,16 @@ impl SourceMap {
             });
         };
         let rotate = g.rotate % 360;
-        let (fw, fh) = if rotate % 180 == 90 {
-            (sh, sw)
+        let (frame_px_width, frame_px_height) = if rotate % 180 == 90 {
+            (height, width)
         } else {
-            (sw, sh)
+            (width, height)
         };
+        let (fw, fh) = (frame_px_width as f64, frame_px_height as f64);
+        // The renderer's warp of this frame (`frame.rs` `warp_of`).
+        let warp = g
+            .active_perspective()
+            .and_then(|p| Warp::new(p, frame_px_width, frame_px_height));
         let theta = g.angle * core::f64::consts::PI / 180.0;
         let (cos, sin) = (libm::cos(theta), libm::sin(theta));
         let u = [cos, sin];
@@ -99,8 +123,8 @@ impl SourceMap {
         let top = c.top * fh;
         let dx = c.right * fw - left;
         let dy = c.bottom * fh - top;
-        let cx = left + dx / 2.0;
-        let cy = top + dy / 2.0;
+        let mut cx = left + dx / 2.0;
+        let mut cy = top + dy / 2.0;
         let mut box_width = dx * u[0] + dy * u[1];
         let mut box_height = dx * v[0] + dy * v[1];
         if !(box_width > 0.0 && box_height > 0.0) {
@@ -132,6 +156,29 @@ impl SourceMap {
                 box_height *= scale;
             }
         }
+        // "余白を埋める" (TypeScript `constrainedCropBox`): the renderer's
+        // `constrain_corners` on this box's corners.
+        if let Some(warp) = warp.as_ref().filter(|_| g.constrain) {
+            let across = [box_width * u[0], box_width * u[1]];
+            let down = [box_height * v[0], box_height * v[1]];
+            let corners = CropCorners {
+                top_left: [
+                    cx - (across[0] + down[0]) / 2.0,
+                    cy - (across[1] + down[1]) / 2.0,
+                ],
+                across,
+                down,
+                width: box_width,
+                height: box_height,
+            };
+            let fitted = constrain_corners(corners, warp);
+            if fitted != corners {
+                cx = fitted.top_left[0] + (fitted.across[0] + fitted.down[0]) / 2.0;
+                cy = fitted.top_left[1] + (fitted.across[1] + fitted.down[1]) / 2.0;
+                box_width = fitted.width;
+                box_height = fitted.height;
+            }
+        }
         Ok(Self {
             width: sw,
             height: sh,
@@ -147,6 +194,7 @@ impl SourceMap {
                 box_height,
                 u,
                 v,
+                warp,
             }),
         })
     }
@@ -157,16 +205,40 @@ impl SourceMap {
     }
 
     /// The working-image position `(u, v)` of output position `(px, py)`
-    /// (`0..1` of the output; a pixel centre is `(i + 0.5) / W`).
+    /// (`0..1` of the output; a pixel centre is `(i + 0.5) / W`). Total:
+    /// past a perspective's vanishing line it continues as the renderer's
+    /// sample point (the type's docs).
     #[inline]
     pub fn source_of(&self, px: f64, py: f64) -> [f64; 2] {
+        self.map(px, py, |warp, q| Some(warp.sample_point(q)))
+            .unwrap_or([px, py])
+    }
+
+    /// [`Self::source_of`] where it is TypeScript's `geometryOutputToSource`
+    /// exactly: `None` (TypeScript's `null`) for a point past the
+    /// perspective's vanishing line, which has no position on the working
+    /// image.
+    pub fn checked_source_of(&self, px: f64, py: f64) -> Option<[f64; 2]> {
+        self.map(px, py, Warp::to_frame)
+    }
+
+    #[inline(always)]
+    fn map(
+        &self,
+        px: f64,
+        py: f64,
+        unwarp: impl Fn(&Warp, [f64; 2]) -> Option<[f64; 2]>,
+    ) -> Option<[f64; 2]> {
         let Some(t) = &self.turned else {
-            return [px, py];
+            return Some([px, py]);
         };
         let a = (px - 0.5) * t.box_width;
         let b = (py - 0.5) * t.box_height;
         let mut x = t.cx + a * t.u[0] + b * t.v[0];
         let mut y = t.cy + a * t.u[1] + b * t.v[1];
+        if let Some(warp) = &t.warp {
+            [x, y] = unwarp(warp, [x, y])?;
+        }
         if t.flip_h {
             x = t.frame_width - x;
         }
@@ -179,7 +251,7 @@ impl SourceMap {
             270 => (self.width - y, x),
             _ => (x, y),
         };
-        [sx / self.width, sy / self.height]
+        Some([sx / self.width, sy / self.height])
     }
 
     /// What the planes of this map depend on (a cache key).
@@ -703,6 +775,121 @@ mod tests {
             ),
             Err(InvalidCrop)
         );
+    }
+
+    #[test]
+    fn a_perspective_map_is_where_the_renderer_samples() {
+        // A pixel centre maps to the frame point the renderer samples for it
+        // (`frame::Plan::turned_point`: crop on the canvas, "余白を埋める",
+        // the inverse warp), with the flips and the quarter turn undone.
+        let (sw, sh) = (300usize, 200usize);
+        for json in [
+            r#"{"perspective":{"vertical":-40}}"#,
+            r#"{"perspective":{"vertical":-40},"constrain":true}"#,
+            r#"{"rotate":90,"flipH":true,"angle":5,"crop":{"left":0.1,"top":0.05,"right":0.9,"bottom":0.9},"perspective":{"horizontal":30,"rotate":-4,"aspect":20,"scale":90,"x":10},"constrain":true}"#,
+            r#"{"rotate":270,"flipV":true,"perspective":{"vertical":60,"y":-20}}"#,
+            r#"{"rotate":180,"perspective":{"x":-100,"y":100,"scale":50},"constrain":true}"#,
+            // Past the vanishing line at the top-left corner.
+            r#"{"perspective":{"vertical":100,"horizontal":100,"scale":50}}"#,
+        ] {
+            let g = geometry(json);
+            let map = SourceMap::new(Some(&g), sw, sh).unwrap();
+            let plan = crate::frame::plan(&g, sw, sh, 0).unwrap();
+            let (fw, fh) = plan.frame_size();
+            let (w, h) = (plan.width, plan.height);
+            for j in (0..h).step_by(7).chain([h - 1]) {
+                for i in (0..w).step_by(7).chain([w - 1]) {
+                    let [mut x, mut y] = plan.turned_point(i, j).unwrap();
+                    if g.flip_h {
+                        x = fw as f64 - x;
+                    }
+                    if g.flip_v {
+                        y = fh as f64 - y;
+                    }
+                    let (sx, sy) = match g.rotate {
+                        90 => (y, sh as f64 - x),
+                        180 => (sw as f64 - x, sh as f64 - y),
+                        270 => (sw as f64 - y, x),
+                        _ => (x, y),
+                    };
+                    let want = [sx / sw as f64, sy / sh as f64];
+                    let got =
+                        map.source_of((i as f64 + 0.5) / w as f64, (j as f64 + 0.5) / h as f64);
+                    for k in 0..2 {
+                        assert!(
+                            (got[k] - want[k]).abs() <= 1e-9 * want[k].abs().max(1.0),
+                            "{json} ({i}, {j}): {got:?} vs {want:?}"
+                        );
+                    }
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn past_the_vanishing_line_the_map_stays_total() {
+        let map = SourceMap::new(
+            Some(&geometry(
+                r#"{"perspective":{"vertical":100,"horizontal":100,"scale":50}}"#,
+            )),
+            640,
+            640,
+        )
+        .unwrap();
+        // The output's top-left corner has no position on the photo
+        // (TypeScript's `null`); the total map goes far out up and left.
+        assert_eq!(map.checked_source_of(0.0, 0.0), None);
+        let [u, v] = map.source_of(0.0, 0.0);
+        assert!(
+            u.is_finite() && v.is_finite() && u < -100.0 && v < -100.0,
+            "{u} {v}"
+        );
+        // Elsewhere both are the same position.
+        let centre = map.checked_source_of(0.5, 0.5).unwrap();
+        assert_eq!(centre, map.source_of(0.5, 0.5));
+        assert!((centre[0] - 0.5).abs() < 1e-12 && (centre[1] - 0.5).abs() < 1e-12);
+        // The plane there is the shape's far-out value: a radial is 0.
+        let spot = radial((0.5, 0.5), (0.3, 0.3), 0.0, 50.0);
+        let w = plane(&spot, &map, 8, 8);
+        assert_eq!(w[0], 0);
+    }
+
+    #[test]
+    fn constrain_keeps_the_mapped_corners_inside_the_photo() {
+        let corners = [(0.0, 0.0), (1.0, 0.0), (0.0, 1.0), (1.0, 1.0)];
+        let map = |json: &str| SourceMap::new(Some(&geometry(json)), 300, 200).unwrap();
+        let open = map(r#"{"perspective":{"vertical":-60}}"#);
+        let fitted = map(r#"{"perspective":{"vertical":-60},"constrain":true}"#);
+        // Without constrain the bottom corners (where the photo narrows)
+        // come from outside it.
+        assert!(open.source_of(0.0, 1.0)[0] < 0.0 && open.source_of(1.0, 1.0)[0] > 1.0);
+        for (px, py) in corners {
+            let [u, v] = fitted.source_of(px, py);
+            assert!(
+                (-1e-9..=1.0 + 1e-9).contains(&u) && (-1e-9..=1.0 + 1e-9).contains(&v),
+                "({px}, {py}): ({u}, {v})"
+            );
+        }
+        // Without a perspective constrain changes nothing (the map is the
+        // one without it); an identity perspective is no perspective.
+        assert_eq!(
+            map(r#"{"rotate":90,"angle":4,"constrain":true}"#),
+            map(r#"{"rotate":90,"angle":4}"#)
+        );
+        assert_eq!(
+            SourceMap::new(
+                Some(&geometry(
+                    r#"{"perspective":{"vertical":0,"scale":100},"constrain":true}"#
+                )),
+                300,
+                200
+            )
+            .unwrap(),
+            SourceMap::new(None, 300, 200).unwrap()
+        );
+        // The perspective is part of the planes' cache key.
+        assert_ne!(open.key(), fitted.key());
+        assert_ne!(open.key(), map(r#"{"perspective":{"vertical":-61}}"#).key());
     }
 
     #[test]

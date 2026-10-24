@@ -2,7 +2,12 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState, type MutableRefObject } from "react";
 
-import type { DevelopEngine, DevelopMaskCapabilities, DevelopMaskPlane } from "../develop-engine/develop-engine-client";
+import {
+  DevelopMaskSurfaceError,
+  type DevelopEngine,
+  type DevelopMaskCapabilities,
+  type DevelopMaskPlane,
+} from "../develop-engine/develop-engine-client";
 import { readDevelopGeometry, type DevelopSize } from "../develop-engine/develop-geometry";
 import {
   MAX_DEVELOP_MASKS,
@@ -12,7 +17,18 @@ import {
   type DevelopMaskAdjustKey,
 } from "../develop-engine/develop-masks";
 import type { DevelopSettings } from "../develop-engine/develop-settings";
-import { PHOTO_EDITING_MASK_EXPORT_UNSUPPORTED_TEXT, photoEditingMaskLimitText } from "../photo-editing-copy";
+import {
+  PHOTO_EDITING_MASK_BRUSH_ADD_FAILED_TEXT,
+  PHOTO_EDITING_MASK_EXPORT_UNSUPPORTED_TEXT,
+  photoEditingMaskLabel,
+  photoEditingMaskLimitText,
+  photoEditingMaskSurfaceUnreadableText,
+} from "../photo-editing-copy";
+import {
+  filledPhotoEditingMaskSurface,
+  photoEditingMaskSurfaceSize,
+  type PhotoEditingMaskSurfaceData,
+} from "../photo-editing-mask-brush";
 import {
   PHOTO_EDITING_MASK_SHAPE_KINDS,
   addPhotoEditingMask,
@@ -36,6 +52,13 @@ import type { PhotoEditingShortcut } from "../use-photo-editing-shortcuts";
 import { DEVELOP_COLOR_POINT_DRAG_MAX_DIMENSION, DEVELOP_PREVIEW_MAX_DIMENSION, type DevelopSession } from "./browser-photo-editing-model";
 import type { PhotoEditingSettingsUpdate, PhotoEditingSliderPhase } from "./photo-editing-adjustment-controls";
 import { readCropSource } from "./use-browser-photo-crop";
+import { useBrowserPhotoMaskBrush } from "./use-browser-photo-mask-brush";
+
+/** 画面で足せる種類（線形・円形と、面を保存できる写真の出どころのブラシ。M4 #68）。 */
+export type PhotoEditingMaskAddKind = PhotoEditingMaskShapeKind | "brush";
+
+/** 写真の描画が面を読めなかったマスク（`useBrowserPhotoOpen` が描画の失敗から知らせる）。 */
+export type PhotoEditingMaskSurfaceIssue = { photoKey: string; maskIds: string[] };
 
 /**
  * 部分補正（マスク）を描ける wasm か（`engine.supportsMasks()`。wasm の `capabilities()`）。wasm で開いた写真を 1 枚で見ているときに
@@ -87,10 +110,15 @@ export function photoEditingMaskExportBlocked(capabilities: {
   return (capabilities.nativeExport || capabilities.nativeExportUpdateRequired) && capabilities.nativeExportMasks !== true;
 }
 
-/** 足せる種類（wasm が描ける種類のうち、画面で形を作れるもの。ブラシは M4）。 */
-function shapeKinds(support: DevelopMaskCapabilities | null): PhotoEditingMaskShapeKind[] {
+/**
+ * 足せる種類（wasm が描ける種類のうち、画面で作れるもの）。ブラシは面を受け渡せる wasm（`surfaces`）で、写真の出どころが面を保存
+ * できる（`canSaveSurfaces`）ときだけ。
+ */
+function addKinds(support: DevelopMaskCapabilities | null, canSaveSurfaces: boolean): PhotoEditingMaskAddKind[] {
   if (!support) return [];
-  return PHOTO_EDITING_MASK_SHAPE_KINDS.filter((kind) => support.kinds.includes(kind));
+  const kinds: PhotoEditingMaskAddKind[] = PHOTO_EDITING_MASK_SHAPE_KINDS.filter((kind) => support.kinds.includes(kind));
+  if (canSaveSurfaces && support.surfaces === true && support.kinds.includes("brush")) kinds.push("brush");
+  return kinds;
 }
 
 /**
@@ -124,13 +152,26 @@ export function useBrowserPhotoMasks(params: {
   changeSettings: (update: PhotoEditingSettingsUpdate, phase: PhotoEditingSliderPhase) => void;
   /** 取り消しの 1 単位として確定する（「初期化」で使う） */
   commitEdit: (next: DevelopSettings, options?: { resetDone?: boolean }) => boolean;
+  /**
+   * マスクの面を写真に保存する口（写真の出どころの `saveMaskSurface`。`capabilities.maskSurfaces` のときだけ渡す。無ければブラシを
+   * 出さない）。写真は開いている session の `photoId`
+   */
+  saveMaskSurface?: ((photoId: string, png: Uint8Array) => Promise<{ id: string }>) | null;
+  /** 写真の描画が面を読めなかったマスク（無ければ null） */
+  surfaceIssue?: PhotoEditingMaskSurfaceIssue | null;
+  /** 面を読み直して描き直す */
+  onRetrySurfaces?: () => void;
   /** id の乱数（テスト用） */
   random?: () => number;
+  /** 面の PNG を値に戻す（テスト用） */
+  decodeMaskSurface?: (png: Uint8Array) => Promise<PhotoEditingMaskSurfaceData>;
 }) {
   const { mountedRef, engineRef, developSessionRef, wide, photoKey, support, settings, settingsRef, changeSettings, commitEdit } =
     params;
   const random = params.random ?? Math.random;
-  const available = wide && photoKey !== null && shapeKinds(support).length > 0;
+  const saveMaskSurface = params.saveMaskSurface ?? null;
+  const kinds = addKinds(support, saveMaskSurface !== null);
+  const available = wide && photoKey !== null && kinds.length > 0;
   const [active, setActive] = useState(false);
   const [source, setSource] = useState<{ key: string; size: DevelopSize } | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -182,7 +223,7 @@ export function useBrowserPhotoMasks(params: {
   );
   const frameValid = isPhotoEditingMaskFrameValid(frame);
   const selected = masks.find((mask) => mask.id === selectedId) ?? null;
-  const kinds = shapeKinds(support);
+  const selectedIndex = selected ? masks.indexOf(selected) : -1;
   const max = Math.min(support?.max ?? MAX_DEVELOP_MASKS, MAX_DEVELOP_MASKS);
   const whiteBalanceAbsolute = isPhotoEditingWhiteBalanceAbsolute(settings);
   const addBlockedReason = params.exportBlocked
@@ -190,7 +231,26 @@ export function useBrowserPhotoMasks(params: {
     : masks.length >= max
       ? photoEditingMaskLimitText(max)
       : null;
-  const canAdd = active && !params.disabled && addBlockedReason === null && frameValid;
+  /** ブラシのマスクを足している途中（空の面を作って保存している間。ほかの追加も止める） */
+  const [addingBrush, setAddingBrush] = useState(false);
+  const [addNotice, setAddNotice] = useState<string | null>(null);
+  useEffect(() => {
+    setAddingBrush(false);
+    setAddNotice(null);
+  }, [photoKey]);
+  const canAdd = active && !params.disabled && addBlockedReason === null && frameValid && !addingBrush;
+  /** 面を写真に保存する口（開いている session の写真に結ぶ） */
+  const saveSurface = useMemo(
+    () =>
+      saveMaskSurface
+        ? (png: Uint8Array) => {
+            const session = developSessionRef.current;
+            if (!session) return Promise.reject(new Error("no photo is open"));
+            return saveMaskSurface(session.photoId, png);
+          }
+        : null,
+    [developSessionRef, saveMaskSurface],
+  );
 
   /** 最新の設定のマスクを書き換える（壊れる・変わらない書き換えは設定を返したまま）。 */
   const changeMasks = useCallback(
@@ -207,8 +267,73 @@ export function useBrowserPhotoMasks(params: {
     [changeSettings],
   );
 
-  const add = (kind: PhotoEditingMaskShapeKind) => {
+  const brush = useBrowserPhotoMaskBrush({
+    mountedRef,
+    engineRef,
+    photoKey,
+    active,
+    disabled: params.disabled,
+    mask: selected,
+    maskName: selected ? photoEditingMaskLabel(selected.kind, selectedIndex) : null,
+    frame: frameValid ? frame : null,
+    saveSurface,
+    settingsRef,
+    changeMasks,
+    decode: params.decodeMaskSurface,
+  });
+
+  /**
+   * ブラシのマスクを足す: 作業画像の縦横比の空の面（長辺 1024・全部 0）を PNG にして写真に保存し、`{ kind: "brush", surface }` を
+   * 1 単位で足して選ぶ（選ぶと塗る）。作っている間は足すボタンを押せない。写真を替えたら足さない。
+   */
+  const addBrush = () => {
+    const engine = engineRef.current;
+    if (!frame || !saveSurface || !engine?.encodeMaskSurface) return;
+    const size = photoEditingMaskSurfaceSize(frame.source);
+    const generation = generationRef.current;
+    setAddingBrush(true);
+    setAddNotice(null);
+    void (async () => {
+      const encoded = await engine.encodeMaskSurface!(size.width, size.height, filledPhotoEditingMaskSurface(size.width, size.height, 0));
+      const saved = await saveSurface(encoded.png);
+      if (saved.id !== encoded.id) throw new Error("saved mask surface has another id");
+      return encoded.id;
+    })().then(
+      (surfaceId) => {
+        if (!mountedRef.current) return;
+        setAddingBrush(false);
+        // 写真を替えた・道具を離れたら足さない（保存した空の面は使われないだけ）
+        if (generation !== generationRef.current) return;
+        const id = createPhotoEditingMaskId(readDevelopMasks(settingsRef.current), random);
+        let added = false;
+        changeMasks((current) => {
+          if (current.length >= max) return current;
+          added = true;
+          return addPhotoEditingMask(current, {
+            id,
+            kind: "brush",
+            enabled: true,
+            invert: false,
+            surface: { id: surfaceId, ...size },
+            adjust: {},
+          });
+        }, "commit");
+        if (added) setSelectedId(id);
+      },
+      () => {
+        if (!mountedRef.current) return;
+        setAddingBrush(false);
+        if (generation === generationRef.current) setAddNotice(PHOTO_EDITING_MASK_BRUSH_ADD_FAILED_TEXT);
+      },
+    );
+  };
+
+  const add = (kind: PhotoEditingMaskAddKind) => {
     if (!canAdd || !kinds.includes(kind) || !frame) return;
+    if (kind === "brush") {
+      addBrush();
+      return;
+    }
     const id = createPhotoEditingMaskId(readDevelopMasks(settingsRef.current), random);
     changeMasks((current, develop) => {
       if (current.length >= max) return current;
@@ -287,7 +412,9 @@ export function useBrowserPhotoMasks(params: {
     if (shortcut === "escape") {
       if (selectedId === null) return false;
       event.preventDefault();
-      setSelectedId(null);
+      // ブラシで塗っている間は、塗るのをやめるだけ（マスクは選んだまま。もう一度で選択を外す）
+      if (brush.layerVisible) brush.leavePaint();
+      else setSelectedId(null);
       return true;
     }
     if (shortcut === "delete") {
@@ -295,7 +422,46 @@ export function useBrowserPhotoMasks(params: {
       if (selected) remove(selected.id);
       return true;
     }
+    // E: 塗っている間は消しゴムの切り替え（1 枚の表示へ移るキーとしては使わない）
+    if (shortcut === "loupe" && brush.layerVisible) {
+      event.preventDefault();
+      brush.toggleErase();
+      return true;
+    }
     return false;
+  };
+
+  // 面を読めないマスク（描画・重ね表示が面を読めなかった）の理由の 1 行
+  const [planeIssue, setPlaneIssue] = useState<{ photoKey: string; maskId: string } | null>(null);
+  /** 重ね表示の面を読めた・読めなかった（面の失敗だけを理由にする） */
+  const reportPlane = useCallback(
+    (maskId: string, error: unknown) => {
+      if (photoKey === null) return;
+      if (error === null) {
+        setPlaneIssue((current) => (current?.maskId === maskId ? null : current));
+        return;
+      }
+      if (error instanceof DevelopMaskSurfaceError) setPlaneIssue({ photoKey, maskId });
+    },
+    [photoKey],
+  );
+  const issueMaskIds = new Set<string>([
+    ...(params.surfaceIssue?.photoKey === photoKey ? params.surfaceIssue.maskIds : []),
+    ...(planeIssue?.photoKey === photoKey ? [planeIssue.maskId] : []),
+  ]);
+  const issueNames = masks
+    .map((mask, index) => (issueMaskIds.has(mask.id) ? photoEditingMaskLabel(mask.kind, index) : null))
+    .filter((name): name is string => name !== null);
+  const surfaceNotice = issueNames.length > 0 ? photoEditingMaskSurfaceUnreadableText(issueNames.join("・")) : null;
+  /** 右パネルのマスクの面の理由の 1 行（足せなかった・塗った範囲を保存できなかった・面を読めない） */
+  const notice = addNotice ?? brush.notice ?? surfaceNotice;
+  /** 面を読み直す（読めなかった面を忘れて描き直し、重ね表示とブラシの面も読み直す） */
+  const retrySurfaces = () => {
+    engineRef.current?.retryMaskSurfaces?.();
+    setPlaneIssue(null);
+    setAddNotice(null);
+    params.onRetrySurfaces?.();
+    brush.retry();
   };
 
   return {
@@ -331,6 +497,14 @@ export function useBrowserPhotoMasks(params: {
     canReset,
     reset,
     handleShortcut,
+    /** ブラシ（塗る状態。M4 #68） */
+    brush,
+    addingBrush,
+    notice,
+    /** 理由の 1 行が面を読めないこと（読み直せる）か */
+    canRetrySurfaces: addNotice === null && (brush.status === "unreadable" || surfaceNotice !== null),
+    retrySurfaces,
+    reportPlane,
   };
 }
 
@@ -445,7 +619,7 @@ function planeShapeKey(mask: DevelopMask): string {
 /**
  * 選んでいるマスクの面（重ね表示）。`enabled` の間、選んでいるマスクの形・幾何・寸法が変わるたびに取りに行く（rAF でまとめ、
  * 同時に 1 つ。{@link createPhotoEditingMaskPlaneLoader}）。形を動かしている間は 640px（drag の画と同じ）、離したら画と同じ長辺で
- * 取り直す。面の口の無い wasm では null。
+ * 取り直す。面の口の無い wasm では null。面のマスクは `surface`（面の id）が替わるたびに取り直す（塗った後の赤い面）。
  */
 export function useBrowserPhotoMaskPlane(params: {
   engineRef: MutableRefObject<DevelopEngine | null>;
@@ -454,17 +628,28 @@ export function useBrowserPhotoMaskPlane(params: {
   mask: DevelopMask | null;
   enabled: boolean;
   dragging: boolean;
+  /** 面を取れた（`error` は null）・取れなかった（面のマスクの面を読めないなど）ことを知らせる */
+  onResult?: (maskId: string, error: unknown) => void;
 }): DevelopMaskPlane | null {
   const { engineRef, photoKey, settings, mask, enabled, dragging } = params;
   const [plane, setPlane] = useState<DevelopMaskPlane | null>(null);
   const loaderRef = useRef<ReturnType<typeof createPhotoEditingMaskPlaneLoader> | null>(null);
+  const onResultRef = useRef(params.onResult);
+  onResultRef.current = params.onResult;
 
   useEffect(() => {
     const loader = createPhotoEditingMaskPlaneLoader({
       request: async (request) => {
         const engine = engineRef.current;
         if (!engine?.maskPlane) return null;
-        return engine.maskPlane(request.settings, request.maskId, { maxDimension: request.maxDimension });
+        try {
+          const plane = await engine.maskPlane(request.settings, request.maskId, { maxDimension: request.maxDimension });
+          if (plane) onResultRef.current?.(request.maskId, null);
+          return plane;
+        } catch (error) {
+          onResultRef.current?.(request.maskId, error);
+          throw error;
+        }
       },
       schedule: (callback) => {
         if (typeof requestAnimationFrame !== "function") {
@@ -491,7 +676,8 @@ export function useBrowserPhotoMaskPlane(params: {
   useEffect(() => {
     const loader = loaderRef.current;
     if (!loader) return;
-    if (!enabled || !mask || photoKey === null || shapeKey === null || (mask.kind !== "linear" && mask.kind !== "radial")) {
+    // 面のマスク（ブラシ・被写体・空。M4 #68）も、エンジンが面を持てば同じ口で取れる
+    if (!enabled || !mask || photoKey === null || shapeKey === null) {
       loader.want(null);
       return;
     }

@@ -1,0 +1,199 @@
+#!/usr/bin/env node
+import { createHash } from "node:crypto";
+import { lstatSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import path from "node:path";
+import { execFileSync, spawnSync } from "node:child_process";
+import { fileURLToPath } from "node:url";
+
+import { SdkReleaseError, assertRelativePath, validateConfig } from "./release-set-lib.mjs";
+
+const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
+
+function git(args, encoding = "utf8") {
+  try {
+    return execFileSync("git", ["-C", repoRoot, ...args], { encoding, maxBuffer: 64 * 1024 * 1024 });
+  } catch {
+    throw new SdkReleaseError("engine runtime build の Git source を確認できません");
+  }
+}
+
+function toolVersion(command, args, pattern, label) {
+  let output;
+  try {
+    output = execFileSync(command, args, { cwd: repoRoot, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] }).trim();
+  } catch {
+    throw new SdkReleaseError(`${label} がありません`);
+  }
+  if (!pattern.test(output)) throw new SdkReleaseError(`${label} の版が固定値と一致しません`);
+  return output;
+}
+
+function run(command, args, env) {
+  const result = spawnSync(command, args, { cwd: repoRoot, stdio: "inherit", env });
+  if (result.error || result.status !== 0) throw new SdkReleaseError(`engine runtime build に失敗しました: ${command}`);
+}
+
+function hash(bytes) {
+  return createHash("sha256").update(bytes).digest("hex");
+}
+
+function option(argv, name) {
+  const index = argv.indexOf(name);
+  if (index === -1) return undefined;
+  if (!argv[index + 1] || argv[index + 1].startsWith("--")) throw new SdkReleaseError(`${name} に値が必要です`);
+  return argv[index + 1];
+}
+
+export function versionedRuntimeFileName(name, version) {
+  const mapping = new Map([
+    ["niho_develop_wasm.js", `niho_develop_wasm-${version}.js`],
+    ["niho_develop_wasm.d.ts", `niho_develop_wasm-${version}.d.ts`],
+    ["niho_develop_wasm_bg.wasm", `niho_develop_wasm_bg-${version}.wasm`],
+    ["niho_develop_wasm_bg.wasm.d.ts", `niho_develop_wasm_bg-${version}.wasm.d.ts`],
+  ]);
+  return mapping.get(name);
+}
+
+export function rewriteVersionedRuntimeReferences(name, bytes, version) {
+  if (!/\.(?:js|d\.ts)$/.test(name)) return bytes;
+  const text = bytes
+    .toString("utf8")
+    .replaceAll("niho_develop_wasm_bg.wasm", `niho_develop_wasm_bg-${version}.wasm`)
+    .replaceAll("niho_develop_wasm.d.ts", `niho_develop_wasm-${version}.d.ts`)
+    .replaceAll("niho_develop_wasm.js", `niho_develop_wasm-${version}.js`);
+  // web glue の import object key は WASM 内の module ID と一致させる。
+  // この仮想module名は外部JSへの参照ではないため、名前を変えない。
+  const resourceReferences = text.replace(/(["'])\.\/niho_develop_wasm_bg\.js\1\s*:/gu, '"wasm-import-module":');
+  if (/niho_develop_wasm(?:_bg)?\.(?:js|wasm|d\.ts)/.test(resourceReferences)) throw new SdkReleaseError("wasm-bindgen output に unversioned runtime 参照が残っています");
+  return Buffer.from(text);
+}
+
+// ビルド結果へ実行hostの絶対pathや任意のCargo設定を混入させない。
+// CARGO_ENCODED_RUSTFLAGSはrepositoryのwasm SIMD設定を明示的に再現する。
+export function runtimeBuildEnvironment(input, scratch) {
+  const required = ["home", "cargoHome", "temporary", "target"];
+  if (required.some((name) => !path.isAbsolute(scratch?.[name] ?? ""))) throw new SdkReleaseError("隔離した engine runtime build path が必要です");
+  const cargoHome = scratch.cargoHome;
+  const rustupHome = input.RUSTUP_HOME || (input.HOME ? path.join(input.HOME, ".rustup") : undefined);
+  for (const [label, value] of [["CARGO_HOME", cargoHome], ["RUSTUP_HOME", rustupHome]]) {
+    if (value && !path.isAbsolute(value)) throw new SdkReleaseError(`${label} は絶対pathが必要です`);
+  }
+  const remap = [
+    [repoRoot, "source"],
+    [input.HOME, "build-user"],
+    [cargoHome, "cargo-registry"],
+    [rustupHome, "toolchain"],
+    [scratch.temporary, "build-temp"],
+  ]
+    .filter(([value]) => value)
+    .sort(([left], [right]) => right.length - left.length)
+    .map(([from, to]) => `--remap-path-prefix=${from}=${to}`);
+  return {
+    ...Object.fromEntries(["PATH", "LANG"].filter((key) => input[key]).map((key) => [key, input[key]])),
+    ...(cargoHome ? { CARGO_HOME: cargoHome } : {}),
+    ...(rustupHome ? { RUSTUP_HOME: rustupHome } : {}),
+    HOME: scratch.home,
+    TMPDIR: scratch.temporary,
+    CARGO_TARGET_DIR: scratch.target,
+    CARGO_INCREMENTAL: "0",
+    CARGO_PROFILE_RELEASE_DEBUG: "0",
+    CARGO_PROFILE_RELEASE_STRIP: "debuginfo",
+    CARGO_ENCODED_RUSTFLAGS: ["-C", "target-feature=+simd128", ...remap].join("\x1f"),
+    RUSTUP_TOOLCHAIN: "1.98.1",
+    SOURCE_DATE_EPOCH: "0",
+    CI: "true",
+  };
+}
+
+export function buildDevelopEngineRuntime(outputDirectory) {
+  if (!path.isAbsolute(outputDirectory)) throw new SdkReleaseError("output は絶対 path が必要です");
+  try {
+    lstatSync(outputDirectory);
+    throw new SdkReleaseError("既存の engine runtime output は上書きできません");
+  } catch (error) {
+    if (error instanceof SdkReleaseError) throw error;
+    if (error?.code !== "ENOENT") throw new SdkReleaseError("engine runtime output を確認できません");
+  }
+  if (git(["status", "--porcelain=v1", "--untracked-files=all"]).length !== 0) throw new SdkReleaseError("engine runtime は clean working tree からだけ build できます");
+  const commit = git(["rev-parse", "HEAD^{commit}"]).trim();
+  const tree = git(["rev-parse", "HEAD^{tree}"]).trim();
+  const configBytes = git(["show", `${commit}:sdk/release-set.json`], null);
+  const config = validateConfig(JSON.parse(configBytes.toString("utf8")));
+  const rustc = toolVersion("rustc", ["+1.98.1", "--version"], /^rustc 1\.98\.1\b/, "rustc 1.98.1");
+  const wasmBindgen = toolVersion("wasm-bindgen", ["--version"], /^wasm-bindgen 0\.2\.129$/, "wasm-bindgen 0.2.129");
+  const scratch = mkdtempSync(path.join(tmpdir(), "niho-photo-wasm-build-"));
+  try {
+    const isolated = {
+      home: path.join(scratch, "home"),
+      cargoHome: path.join(scratch, "cargo-home"),
+      temporary: path.join(scratch, "tmp"),
+      target: path.join(scratch, "target"),
+    };
+    for (const directory of Object.values(isolated)) mkdirSync(directory, { recursive: true, mode: 0o700 });
+    const buildEnv = runtimeBuildEnvironment(process.env, isolated);
+    run("cargo", [
+      "+1.98.1",
+      "build",
+      "--locked",
+      "--config",
+      "packages/develop-engine/.cargo/config.toml",
+      "--manifest-path",
+      "packages/develop-engine/Cargo.toml",
+      "--target",
+      "wasm32-unknown-unknown",
+      "--release",
+      "-p",
+      "niho-develop-wasm",
+    ], buildEnv);
+    const wasmInput = path.join(isolated.target, "wasm32-unknown-unknown/release/niho_develop_wasm.wasm");
+    const bindgenOutput = path.join(scratch, "wasm-bindgen");
+    mkdirSync(bindgenOutput, { mode: 0o700 });
+    run("wasm-bindgen", ["--target", "web", "--out-dir", bindgenOutput, "--out-name", "niho_develop_wasm", wasmInput], buildEnv);
+    const generated = readdirSync(bindgenOutput).sort().map((name) => {
+      assertRelativePath(name, "wasm-bindgen output");
+      const renamed = versionedRuntimeFileName(name, config.engine.crateVersion);
+      if (!renamed) throw new SdkReleaseError(`予期しない wasm-bindgen output です: ${name}`);
+      const full = path.join(bindgenOutput, name);
+      const stat = lstatSync(full);
+      if (!stat.isFile() || stat.isSymbolicLink()) throw new SdkReleaseError("wasm-bindgen output の特殊ファイルは禁止です");
+      const bytes = rewriteVersionedRuntimeReferences(name, readFileSync(full), config.engine.crateVersion);
+      return { name: renamed, bytes, sha256: hash(bytes), size: bytes.length };
+    });
+    if (![".js", ".wasm", ".d.ts"].every((extension) => generated.some(({ name }) => name.endsWith(extension)))) throw new SdkReleaseError("wasm-bindgen runtime dependency closure が不足しています");
+    const manifest = {
+      schemaVersion: 1,
+      engine: config.engine.version,
+      version: config.engine.crateVersion,
+      source: { repository: config.repository, commit, tree },
+      build: {
+        rustToolchain: "1.98.1",
+        wasmBindgen: "0.2.129",
+        target: "wasm32-unknown-unknown",
+        profile: "release",
+        rustc,
+        wasmBindgenCli: wasmBindgen,
+      },
+      files: Object.fromEntries(generated.map((file) => [file.name, { sha256: file.sha256, bytes: file.size }])),
+    };
+    mkdirSync(outputDirectory, { recursive: true, mode: 0o755 });
+    for (const file of generated) writeFileSync(path.join(outputDirectory, file.name), file.bytes, { flag: "wx", mode: 0o644 });
+    writeFileSync(path.join(outputDirectory, config.engine.manifestName), `${JSON.stringify(manifest, null, 2)}\n`, { flag: "wx", mode: 0o644 });
+    return { manifest, outputDirectory };
+  } finally {
+    rmSync(scratch, { recursive: true, force: true });
+  }
+}
+
+if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  try {
+    const argv = process.argv.slice(2);
+    if (argv.length !== 2 || argv[0] !== "--output") throw new SdkReleaseError("使い方: build-develop-engine-runtime.mjs --output <新規directory>");
+    const output = option(argv, "--output");
+    const result = buildDevelopEngineRuntime(path.resolve(output));
+    console.log(`engine runtime を生成しました: ${result.outputDirectory}`);
+  } catch (error) {
+    console.error(error instanceof Error ? error.message : "engine runtime build に失敗しました");
+    process.exitCode = 1;
+  }
+}

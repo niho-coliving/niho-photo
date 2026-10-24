@@ -9,6 +9,10 @@
 //! (resampled in linear light) -> the crop -> the output size. The crop's
 //! coordinates are on the canvas; "余白を埋める" (`constrain`) keeps it
 //! inside the corrected photo ([`crate::perspective::constrain_corners`]).
+//! The lens (niho-photo#45, [`crate::lens`]) is the end of the inverse map
+//! nearest the photo: its distortion and chromatic aberration resample the
+//! frame through the Turned path ([`plan_with_lens`]), its vignetting and
+//! fringe removal act on the window right after.
 //!
 //! - **Output size, never enlarged** ([`plan`]). Angle 0: the crop of a
 //!   "virtual whole", the frame reduced as a whole render would be, at the
@@ -43,6 +47,7 @@
 
 use crate::decode::{DecodeError, LinearImage};
 use crate::geometry::{CropCorners, Geometry};
+use crate::lens::{defringe_radius, defringe_window, LensMap, LensRender};
 use crate::perspective::{constrain_corners, Warp};
 use crate::resize::{fitted_size, resample_window, Filter};
 use crate::settings::SettingsError;
@@ -183,6 +188,8 @@ pub struct Plan {
     pub output: Rect,
     orientation: Orientation,
     sampling: Sampling,
+    /// The lens rendered with the frame ([`plan_with_lens`]).
+    lens: Option<LensRender>,
 }
 
 impl Plan {
@@ -210,7 +217,8 @@ impl Plan {
 
     /// The frame point (continuous frame pixels, pixel `n`'s center at
     /// `n + 0.5`) where output pixel `(i, j)`'s center comes from, at an
-    /// angle or with a perspective. `None` at angle 0 without one.
+    /// angle, with a perspective or with a lens that warps (green's point).
+    /// `None` at angle 0 without one.
     pub fn turned_point(&self, i: usize, j: usize) -> Option<[f64; 2]> {
         match &self.sampling {
             Sampling::Turned {
@@ -222,7 +230,14 @@ impl Plan {
                     c.top_left[0] + a * c.across[0] + b * c.down[0],
                     c.top_left[1] + a * c.across[1] + b * c.down[1],
                 ];
-                Some(warp.as_ref().map_or(q, |w| w.sample_point(q)))
+                let p = warp.as_ref().map_or(q, |w| w.sample_point(q));
+                Some(match self.lens.filter(LensRender::warps) {
+                    Some(lens) => {
+                        let (fw, fh) = self.orientation.frame_size();
+                        LensMap::new(&lens, fw, fh).source(p)
+                    }
+                    None => p,
+                })
             }
             Sampling::Aligned { .. } => None,
         }
@@ -257,6 +272,7 @@ impl Plan {
                 self.orientation.is_identity()
                     && (*virtual_width, *virtual_height) == (fw, fh)
                     && *window == Rect::whole(fw, fh)
+                    && self.lens.is_none()
             }
             Sampling::Turned { .. } => false,
         }
@@ -362,15 +378,32 @@ pub fn plan(
     source_height: usize,
     max_dimension: usize,
 ) -> Result<Plan, SettingsError> {
+    plan_with_lens(g, None, source_width, source_height, max_dimension)
+}
+
+/// [`plan`] with a lens (niho-photo#45): one that warps (distortion,
+/// chromatic aberration) renders through the Turned path even at angle 0;
+/// one that only shades or removes fringes keeps the plan and acts on the
+/// window ([`working_image`]). The output size does not change.
+pub fn plan_with_lens(
+    g: &Geometry,
+    lens: Option<&LensRender>,
+    source_width: usize,
+    source_height: usize,
+    max_dimension: usize,
+) -> Result<Plan, SettingsError> {
     let orientation = Orientation::new(g, source_width, source_height);
     let (fw, fh) = orientation.frame_size();
     let warp = warp_of(g, fw, fh);
     let corners = framed_corners(g, fw, fh, warp.as_ref())?;
-    Ok(if g.angle == 0.0 && warp.is_none() {
+    let lens = lens.copied();
+    let mut plan = if g.angle == 0.0 && warp.is_none() && !lens.is_some_and(|l| l.warps()) {
         aligned_plan(g, orientation, max_dimension)
     } else {
-        turned_plan(corners, orientation, max_dimension, warp)
-    })
+        turned_plan(corners, orientation, max_dimension, warp, lens.as_ref())
+    };
+    plan.lens = lens;
+    Ok(plan)
 }
 
 /// Angle 0 (module docs): the virtual whole `(Wv, Hv)` is the frame when
@@ -437,6 +470,7 @@ fn aligned_plan(g: &Geometry, orientation: Orientation, m: usize) -> Plan {
             virtual_height: vh,
             window,
         },
+        lens: None,
     }
 }
 
@@ -445,6 +479,7 @@ fn turned_plan(
     orientation: Orientation,
     m: usize,
     warp: Option<Warp>,
+    lens: Option<&LensRender>,
 ) -> Plan {
     let (fw, fh) = orientation.frame_size();
     let k = if m == 0 {
@@ -462,24 +497,32 @@ fn turned_plan(
     };
     let (width, height) = (side(corners.width), side(corners.height));
     let scale_long_edge = (libm::round(fw.max(fh) as f64 * k) as usize).max(1);
-    let reduced = match &warp {
-        None => {
+    // A lens that warps magnifies the photo by its zoom at the center.
+    let lens_scale = lens
+        .filter(|l| l.warps())
+        .map(|l| LensMap::new(l, fw, fh).center_scale());
+    let reduced_to = |r: f64| {
+        if r < 1.0 {
+            fitted_size(fw, fh, (libm::round(fw.max(fh) as f64 * r) as usize).max(1))
+        } else {
+            (fw, fh)
+        }
+    };
+    let reduced = match (&warp, lens_scale) {
+        (None, None) => {
             if k < 1.0 {
                 fitted_size(fw, fh, scale_long_edge)
             } else {
                 (fw, fh)
             }
         }
-        Some(warp) => {
+        (None, Some(z)) => reduced_to((k / z).min(1.0)),
+        (Some(warp), z) => {
             // An output pixel spans `inverse_scale / k` frame pixels at the
             // crop's center: reduce the frame to about one per output pixel
             // (never enlarged).
-            let r = (k / warp.inverse_scale(corners_center(&corners))).min(1.0);
-            if r < 1.0 {
-                fitted_size(fw, fh, (libm::round(fw.max(fh) as f64 * r) as usize).max(1))
-            } else {
-                (fw, fh)
-            }
+            let spread = warp.inverse_scale(corners_center(&corners)) * z.unwrap_or(1.0);
+            reduced_to((k / spread).min(1.0))
         }
     };
     let (_, pad) = margin(scale_long_edge);
@@ -502,6 +545,7 @@ fn turned_plan(
             reduced,
             warp: warp.map(Box::new),
         },
+        lens: None,
     }
 }
 
@@ -530,6 +574,19 @@ pub fn frame_key(g: &Geometry, max_dimension: usize) -> String {
         c.right,
         c.bottom
     )
+}
+
+/// [`frame_key`] with the lens a plan renders ([`plan_with_lens`]).
+pub fn frame_key_with_lens(
+    g: &Geometry,
+    lens: Option<&LensRender>,
+    max_dimension: usize,
+) -> String {
+    let key = frame_key(g, max_dimension);
+    match lens {
+        Some(lens) => format!("{key}|lens:{}", lens.key()),
+        None => key,
+    }
 }
 
 /// The long edge to decode a JPEG / PNG original of `width x height` (EXIF
@@ -634,7 +691,7 @@ pub fn working_image(source: &LinearImage, plan: &Plan, filter: Filter) -> Linea
         "the plan's source size"
     );
     let (fw, fh) = o.frame_size();
-    let data = match &plan.sampling {
+    let mut data = match &plan.sampling {
         Sampling::Aligned {
             virtual_width,
             virtual_height,
@@ -670,10 +727,46 @@ pub fn working_image(source: &LinearImage, plan: &Plan, filter: Filter) -> Linea
             filter,
         ),
     };
+    if let Some(lens) = &plan.lens {
+        lens_window(&mut data, plan, lens);
+    }
     LinearImage {
         width: plan.window_width,
         height: plan.window_height,
         data,
+    }
+}
+
+/// The lens's work on a window after the resampling: an aligned window's
+/// vignetting (a warped one is shaded while it is sampled) and the fringes.
+fn lens_window(data: &mut [f32], plan: &Plan, lens: &LensRender) {
+    if let Sampling::Aligned {
+        virtual_width,
+        virtual_height,
+        window,
+    } = &plan.sampling
+    {
+        let (fw, fh) = plan.orientation.frame_size();
+        if let Some(shading) = LensMap::new(lens, fw, fh).shading() {
+            let (kx, ky) = (
+                fw as f64 / *virtual_width as f64,
+                fh as f64 / *virtual_height as f64,
+            );
+            for (j, row) in data.chunks_exact_mut(window.width * 3).enumerate() {
+                let y = ((window.y + j) as f64 + 0.5) * ky;
+                for (i, px) in row.chunks_exact_mut(3).enumerate() {
+                    let gain = shading.gain([((window.x + i) as f64 + 0.5) * kx, y]);
+                    for c in px {
+                        *c *= gain;
+                    }
+                }
+            }
+        }
+    }
+    if lens.defringes() {
+        let (_, pad) = margin(plan.scale_long_edge);
+        let radius = defringe_radius(plan.scale_long_edge, pad);
+        defringe_window(data, plan.window_width, plan.window_height, lens, radius);
     }
 }
 
@@ -756,7 +849,44 @@ fn turned_window(
     };
     let (ww, wh) = (plan.window_width, plan.window_height);
     let corners = [(0, 0), (ww - 1, 0), (0, wh - 1), (ww - 1, wh - 1)];
-    let ends = corners.map(|(i, j)| point(i, j));
+    // A lens that warps: green's point (and red's and blue's) of each window
+    // pixel on the reduced frame, and its vignetting gain.
+    let lens = plan
+        .lens
+        .filter(LensRender::warps)
+        .map(|l| LensMap::new(&l, fw, fh));
+    let shading = lens.as_ref().and_then(LensMap::shading);
+    let reduce = |p: [f64; 2]| [(p[0] * sx).clamp(-4.0, cx), (p[1] * sy).clamp(-4.0, cy)];
+    let lens_sample = |map: &LensMap, i: usize, j: usize| -> LensSample {
+        let q = canvas(i, j);
+        let p = warp.map_or(q, |warp| warp.sample_point(q));
+        let g = map.source(p);
+        LensSample {
+            green: reduce(g),
+            red_blue: map
+                .has_chromatic()
+                .then(|| [reduce(map.channel(g, 0)), reduce(map.channel(g, 1))]),
+            gain: shading.as_ref().map_or(1.0, |s| s.gain(g)),
+        }
+    };
+    let ends: Vec<[f64; 2]> = match &lens {
+        None => corners.map(|(i, j)| point(i, j)).to_vec(),
+        // The lens bends the window's edges: their image is bounded by
+        // samples along them (every 8 pixels), each channel's.
+        Some(map) => {
+            let mut ends = Vec::new();
+            let along = |n: usize| (0..n).step_by(8).chain(std::iter::once(n - 1));
+            let edges = along(ww)
+                .flat_map(|i| [(i, 0), (i, wh - 1)])
+                .chain(along(wh).flat_map(|j| [(0, j), (ww - 1, j)]));
+            for (i, j) in edges {
+                let s = lens_sample(map, i, j);
+                ends.push(s.green);
+                ends.extend(s.red_blue.into_iter().flatten());
+            }
+            ends
+        }
+    };
     // The warp keeps the window a convex quadrilateral (its corners'
     // bounding box holds it) unless the window reaches the vanishing line:
     // then the whole frame is read.
@@ -777,11 +907,55 @@ fn turned_window(
             .map(|p| p[axis])
             .fold(f64::NEG_INFINITY, f64::max);
         let last = (n - 1) as f64;
-        let first = (libm::floor(lo - 0.5) - 2.0).clamp(0.0, last) as usize;
-        let end = (libm::floor(hi - 0.5) + 3.0).clamp(0.0, last) as usize + 1;
+        // Between the lens's samples an edge can bulge a little further.
+        let slack = if lens.is_some() { 2.0 } else { 0.0 };
+        let first = (libm::floor(lo - 0.5) - 2.0 - slack).clamp(0.0, last) as usize;
+        let end = (libm::floor(hi - 0.5) + 3.0 + slack).clamp(0.0, last) as usize + 1;
         first..end
     };
     let (xs, ys) = (range(0, rw), range(1, rh));
+    if let Some(map) = &lens {
+        // Through the lens: the pixels read as one block (the source
+        // itself when it is the frame, else the frame's or the reduced
+        // frame's footprint).
+        let sample = |i, j| lens_sample(map, i, j);
+        if reduced == (fw, fh) && o.is_identity() {
+            let grid = Grid {
+                data: &source.data,
+                stride: fw,
+                x0: 0,
+                y0: 0,
+            };
+            return lens_window_samples(plan, sample, reduced, &xs, &ys, &grid);
+        }
+        let region = if reduced == (fw, fh) {
+            let r = Rect {
+                x: xs.start,
+                y: ys.start,
+                width: xs.len(),
+                height: ys.len(),
+            };
+            frame_region(source, o, r)
+        } else {
+            resample_window(
+                fw,
+                fh,
+                rw,
+                rh,
+                filter,
+                xs.clone(),
+                ys.clone(),
+                |y, first, out| o.frame_row(source, y, first, out),
+            )
+        };
+        let grid = Grid {
+            data: &region,
+            stride: xs.len(),
+            x0: xs.start,
+            y0: ys.start,
+        };
+        return lens_window_samples(plan, sample, reduced, &xs, &ys, &grid);
+    }
     if reduced == (fw, fh) {
         // Unreduced: the source read through the turns, without a copy of
         // the frame.
@@ -805,6 +979,127 @@ fn turned_window(
         let i = (y - ys.start) * stride + (x - xs.start) * 3;
         [region[i], region[i + 1], region[i + 2]]
     })
+}
+
+/// Where a window pixel samples through a lens that warps (on the reduced
+/// frame) and its vignetting gain.
+struct LensSample {
+    green: [f64; 2],
+    /// Red's and blue's points with a chromatic aberration.
+    red_blue: Option<[[f64; 2]; 2]>,
+    gain: f32,
+}
+
+/// Pixels held as one row-major block from `(x0, y0)`, `stride` pixels a
+/// row (interleaved RGB).
+struct Grid<'a> {
+    data: &'a [f32],
+    stride: usize,
+    x0: usize,
+    y0: usize,
+}
+
+impl Grid<'_> {
+    /// The row `y`'s pixels from column `x0`.
+    #[inline]
+    fn row(&self, y: usize) -> &[f32] {
+        let start = (y - self.y0) * self.stride * 3;
+        &self.data[start..start + self.stride * 3]
+    }
+}
+
+/// [`catmull_rom_taps`] with the columns as offsets into a [`Grid`] row.
+#[inline]
+fn grid_taps(coordinate: f64, n: usize, range: &Range<usize>, x0: usize) -> ([usize; 4], [f32; 4]) {
+    let (taps, weights) = catmull_rom_taps(coordinate, n, range);
+    (taps.map(|x| (x - x0) * 3), weights)
+}
+
+/// Catmull-Rom of all three channels at `p` on a `size` image whose pixels
+/// `xs x ys` `grid` holds.
+#[inline]
+fn catmull_rom_at(
+    p: [f64; 2],
+    size: (usize, usize),
+    xs: &Range<usize>,
+    ys: &Range<usize>,
+    grid: &Grid,
+) -> [f32; 3] {
+    let (cols, wx) = grid_taps(p[0], size.0, xs, grid.x0);
+    let (rows, wy) = catmull_rom_taps(p[1], size.1, ys);
+    let mut acc = [0.0f32; 3];
+    for (&row, wr) in rows.iter().zip(wy) {
+        let line = grid.row(row);
+        let mut h = [0.0f32; 3];
+        for (&col, wc) in cols.iter().zip(wx) {
+            let px = &line[col..col + 3];
+            h[0] += wc * px[0];
+            h[1] += wc * px[1];
+            h[2] += wc * px[2];
+        }
+        acc[0] += wr * h[0];
+        acc[1] += wr * h[1];
+        acc[2] += wr * h[2];
+    }
+    acc
+}
+
+/// [`catmull_rom_at`] of channel `c` only.
+#[inline]
+fn catmull_rom_channel(
+    p: [f64; 2],
+    size: (usize, usize),
+    xs: &Range<usize>,
+    ys: &Range<usize>,
+    grid: &Grid,
+    c: usize,
+) -> f32 {
+    let (cols, wx) = grid_taps(p[0], size.0, xs, grid.x0);
+    let (rows, wy) = catmull_rom_taps(p[1], size.1, ys);
+    let mut acc = 0.0f32;
+    for (&row, wr) in rows.iter().zip(wy) {
+        let line = grid.row(row);
+        let mut h = 0.0f32;
+        for (&col, wc) in cols.iter().zip(wx) {
+            h += wc * line[col + c];
+        }
+        acc += wr * h;
+    }
+    acc
+}
+
+/// [`catmull_rom_window`] through a lens: green at its point, red and blue
+/// at theirs with a chromatic aberration, times the vignetting gain.
+fn lens_window_samples(
+    plan: &Plan,
+    sample: impl Fn(usize, usize) -> LensSample,
+    size: (usize, usize),
+    xs: &Range<usize>,
+    ys: &Range<usize>,
+    grid: &Grid,
+) -> Vec<f32> {
+    let (ww, wh) = (plan.window_width, plan.window_height);
+    let mut data = Vec::with_capacity(ww * wh * 3);
+    for j in 0..wh {
+        for i in 0..ww {
+            let s = sample(i, j);
+            let mut px = match s.red_blue {
+                None => catmull_rom_at(s.green, size, xs, ys, grid),
+                Some([red, blue]) => [
+                    catmull_rom_channel(red, size, xs, ys, grid, 0),
+                    catmull_rom_channel(s.green, size, xs, ys, grid, 1),
+                    catmull_rom_channel(blue, size, xs, ys, grid, 2),
+                ],
+            };
+            if s.gain != 1.0 {
+                for c in &mut px {
+                    *c *= s.gain;
+                }
+            }
+            data.extend_from_slice(&px);
+        }
+    }
+    data
 }
 
 /// Catmull-Rom at every window pixel's center (`point(i, j)`) on a

@@ -173,6 +173,17 @@ export type PhotoLibrary = {
     versions: readonly PhotoLibraryDevelopVersion[],
     options: { expectedRevision: number },
   ): Promise<PhotoLibraryDevelopVersionsSaveResult>;
+  /**
+   * 部分補正のマスク（ブラシ・被写体・空）の面を写真に保存する（`capabilities.maskSurfaces`。`docs/local-adjustments.md`「面の受け渡し」）。
+   * `png` は 8bit グレーの PNG（wasm の `encodeMaskSurface` が作る形・8 MiB 以下・1〜4096 画素）。`id` は中身の sha256 で、同じ中身は
+   * 同じ `id`（補正を保存する前でも保存できる）。補正の `masks[].surface` は `id` で面を呼ぶ。保存できなければ投げる
+   */
+  saveMaskSurface?(photoId: string, png: Uint8Array): Promise<{ id: string; width: number; height: number }>;
+  /**
+   * 写真の面の PNG（中身の sha256 を `surfaceId` と照らしたもの）。置き場に無ければ null（被写体・空の面も同じ口で読む。
+   * `maskSurfaces` が無い置き場でも、読めるなら読む）
+   */
+  loadMaskSurface?(photoId: string, surfaceId: string): Promise<Uint8Array | null>;
 
   // ---- 書き出す
   /** 「オリジナル」の書き出し（オリジナルのバイト列と元の名前）。補正を当てた JPEG は編集面が段 2 の wasm で描く */
@@ -271,6 +282,11 @@ export type PhotoLibraryCapabilities = {
    * 描けない。画面の扱いは M3 #67）
    */
   nativeExportMasks?: boolean;
+  /**
+   * マスクの面（ブラシ）を写真に保存できる（{@link PhotoLibrary.saveMaskSurface}。省略 = 保存できない = 画面はブラシを出さない。
+   * 面を読むだけなら {@link PhotoLibrary.loadMaskSurface} の有無で決まる）
+   */
+  maskSurfaces?: boolean;
   /** 背景除去（C4） */
   cutout: boolean;
   favorites: boolean;

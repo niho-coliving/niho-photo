@@ -3,7 +3,6 @@
 import {
   useCallback,
   useEffect,
-  useLayoutEffect,
   useRef,
   useState,
   type KeyboardEvent as ReactKeyboardEvent,
@@ -29,12 +28,12 @@ import {
 import { isPhotoEditingTypingTarget } from "../use-photo-editing-shortcuts";
 import { cn } from "niho-ui/cn";
 
+import { PhotoEditingMaskBrushOverlay } from "./photo-editing-mask-brush-overlay";
 import { fillPhotoEditingMaskOverlay, useBrowserPhotoMaskPlane, type BrowserPhotoMaskTool } from "./use-browser-photo-masks";
+import { usePhotoEditingTargetBox, type PhotoEditingTargetBox } from "./use-photo-editing-target-box";
 
-type OverlayBox = { left: number; top: number; width: number; height: number };
+type OverlayBox = PhotoEditingTargetBox;
 
-/** 位置の誤差（px）。これ以下の違いでは測り直した値に置き換えない（置き換えると再描画が止まらない） */
-const BOX_EPSILON = 0.5;
 /** 回転のつまみを、上の端から画面で離す距離（px） */
 const ROTATE_HANDLE_OFFSET = 28;
 /** 矢印キーの 1 回の動き（見えている短い辺に対する割合。⇧ で大きく） */
@@ -57,51 +56,6 @@ const HANDLE_MARK_CLASS_NAME =
 const PIN_CLASS_NAME =
   "absolute flex h-6 w-6 -translate-x-1/2 -translate-y-1/2 touch-none items-center justify-center rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-niho-accent-ink";
 
-function sameBox(a: OverlayBox | null, b: OverlayBox): boolean {
-  return (
-    a !== null &&
-    Math.abs(a.left - b.left) < BOX_EPSILON &&
-    Math.abs(a.top - b.top) < BOX_EPSILON &&
-    Math.abs(a.width - b.width) < BOX_EPSILON &&
-    Math.abs(a.height - b.height) < BOX_EPSILON
-  );
-}
-
-/** 写真の canvas の、重ねる入れ物（親）の中での位置と大きさ（クリップ領域の印と同じ測り方）。 */
-function useTargetBox(targetRef: RefObject<HTMLCanvasElement | null>, elementRef: RefObject<HTMLElement | null>) {
-  const [box, setBox] = useState<OverlayBox | null>(null);
-  const measure = useCallback(() => {
-    const element = elementRef.current;
-    const target = targetRef.current;
-    const parent = element?.parentElement;
-    if (!element || !target || !parent) return;
-    const measured = target.getBoundingClientRect();
-    const origin = parent.getBoundingClientRect();
-    const next: OverlayBox = {
-      left: measured.left - origin.left - parent.clientLeft,
-      top: measured.top - origin.top - parent.clientTop,
-      width: measured.width,
-      height: measured.height,
-    };
-    setBox((current) => (sameBox(current, next) ? current : next));
-  }, [elementRef, targetRef]);
-  useLayoutEffect(() => {
-    measure();
-  });
-  useEffect(() => {
-    window.addEventListener("resize", measure);
-    const observer = typeof ResizeObserver === "undefined" ? null : new ResizeObserver(measure);
-    const target = targetRef.current;
-    const parent = elementRef.current?.parentElement;
-    if (observer && target) observer.observe(target);
-    if (observer && parent) observer.observe(parent);
-    return () => {
-      observer?.disconnect();
-      window.removeEventListener("resize", measure);
-    };
-  }, [elementRef, measure, targetRef]);
-  return box;
-}
 
 /** 動かしている途中（どのマスクのどのつまみを、どの形から）。 */
 type Gesture = {
@@ -279,7 +233,7 @@ export function PhotoEditingMaskOverlay(props: {
 }) {
   const { masks, frame, disabled } = props;
   const rootRef = useRef<HTMLDivElement | null>(null);
-  const box = useTargetBox(props.targetRef, rootRef);
+  const box = usePhotoEditingTargetBox(props.targetRef, rootRef);
   const gestureRef = useRef<Gesture | null>(null);
   const [draft, setDraft] = useState<DevelopMask | null>(null);
   const draftRef = useRef<DevelopMask | null>(null);
@@ -522,30 +476,43 @@ export function PhotoEditingMaskOverlay(props: {
 
 /**
  * 写真の面に置くマスクの操作（`BrowserPhotoMaskTool` の値をつなぎ、選んでいるマスクの面を取りに行く）。範囲の重ね表示は O・右パネルの
- * 切り替えで出し、つまみを動かしている間も出す。
+ * 切り替えで出し、つまみを動かしている間も出す。ブラシのマスクを塗っている間（M4 #68）は、その上に塗る面を重ね、赤い面は塗る面が
+ * 描く（塗っている途中の dab を同じ canvas に重ねるため）。
  */
 export function BrowserPhotoEditingMaskLayer(props: { tool: BrowserPhotoMaskTool; targetRef: RefObject<HTMLCanvasElement | null> }) {
   const { tool } = props;
+  const painting = tool.brush.layerVisible;
   const plane = useBrowserPhotoMaskPlane({
     engineRef: tool.engineRef,
     photoKey: tool.photoKey,
     settings: tool.settings,
     mask: tool.selected,
-    enabled: tool.overlayVisible || tool.shapeDragging,
+    enabled: tool.overlayVisible || tool.shapeDragging || painting,
     dragging: tool.shapeDragging,
+    onResult: tool.reportPlane,
   });
   return (
-    <PhotoEditingMaskOverlay
-      targetRef={props.targetRef}
-      masks={tool.masks}
-      selectedId={tool.selected?.id ?? null}
-      frame={tool.frame}
-      disabled={tool.disabled}
-      plane={plane}
-      onSelect={tool.select}
-      onShapeChange={tool.changeShape}
-      onDraggingChange={tool.setShapeDragging}
-      onToggleOverlay={() => tool.setOverlayVisible((visible) => !visible)}
-    />
+    <>
+      <PhotoEditingMaskOverlay
+        targetRef={props.targetRef}
+        masks={tool.masks}
+        selectedId={tool.selected?.id ?? null}
+        frame={tool.frame}
+        disabled={tool.disabled}
+        plane={painting ? null : plane}
+        onSelect={tool.select}
+        onShapeChange={tool.changeShape}
+        onDraggingChange={tool.setShapeDragging}
+        onToggleOverlay={() => tool.setOverlayVisible((visible) => !visible)}
+      />
+      {painting ? (
+        <PhotoEditingMaskBrushOverlay
+          targetRef={props.targetRef}
+          brush={tool.brush}
+          plane={plane}
+          overlayVisible={tool.overlayVisible}
+        />
+      ) : null}
+    </>
   );
 }

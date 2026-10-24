@@ -195,6 +195,33 @@ export function photoEditingColorGradingSlidersLabel(zoneLabel: string): string 
   return `${zoneLabel}の色と輝度`;
 }
 
+/**
+ * 効果の群の下の「レンズ」の節（niho-photo#45。手動の歪み・周辺光量と、色収差・フリンジの除去。PC の右パネルで wasm が描いている写真
+ * だけ）。既定は閉じる。見出しの横の「初期化」はレンズ補正の全部を既定に戻す（読み上げ名は「レンズ補正を初期化」）。プロファイル
+ * による補正は作らない（RAW の作業コピーが撮影データで適用済み。状態だけを読み取りで見せる）。
+ */
+export const PHOTO_EDITING_LENS_TITLE = "レンズ";
+export const PHOTO_EDITING_LENS_RESET_LABEL = "レンズ補正を初期化";
+export const PHOTO_EDITING_LENS_SLIDER_LABELS = {
+  distortion: "歪み",
+  vignetting: "周辺光量",
+  vignettingMidpoint: "中点",
+  defringePurple: "紫",
+  defringeGreen: "緑",
+} as const;
+export const PHOTO_EDITING_LENS_CHROMATIC_ABERRATION_LABEL = "色収差を除去";
+/** フリンジの 2 本（紫・緑）の上の小見出し。 */
+export const PHOTO_EDITING_LENS_DEFRINGE_HEADING = "フリンジ";
+/**
+ * 作業コピーに焼き込まれたプロファイル補正の状態（読み取り専用の 1 行。`_source.lensCorrection.mode`）。適用済みなら、手動の値は
+ * その上の微調整であることも添える。
+ */
+export const PHOTO_EDITING_LENS_PROFILE_TEXT = {
+  apple: "歪み補正: 撮影データのプロファイルで適用済み（Apple）。手動の値はその上の微調整です",
+  embedded: "歪み・周辺光量の補正: 撮影データのプロファイルで適用済み（埋め込み）。手動の値はその上の微調整です",
+  none: "歪み補正: なし（この機種のプロファイルはありません）",
+} as const;
+
 /** 効果の群名の横の ⓘ（押すと群の先頭に項目ごとの説明を出す）。 */
 export const PHOTO_EDITING_EFFECTS_INFO_LABEL = "効果の説明";
 export const PHOTO_EDITING_TEXTURE_DESCRIPTION = "細かな質感を強めたり、和らげたりします";
@@ -508,7 +535,6 @@ export const PHOTO_EDITING_PRESET_UNSUPPORTED_LABELS = {
   noiseReductionDetail: "ノイズ軽減のディテール・コントラスト",
   colorNoiseReduction: "カラーノイズの軽減",
   colorNoiseReductionDetail: "カラーノイズの軽減のディテール・滑らかさ",
-  chromaticAberration: "色収差の除去",
   defringe: "フリンジ軽減",
   lensCorrection: "レンズ補正",
   incrementalWhiteBalance: "色温度・色かぶり補正",
@@ -889,6 +915,36 @@ export const PHOTO_EDITING_MASK_HANDLE_LABELS = {
     rotate: "円形グラデーションの回転",
   },
 } as const;
+
+// ブラシ（M4 #68）と、被写体・空のマスク（面のマスク）。
+export const PHOTO_EDITING_MASK_ADD_BRUSH_LABEL = "ブラシ";
+export const PHOTO_EDITING_MASK_BRUSH_TITLE = "ブラシ";
+/** 描く / 消しゴムの切り替え（`aria-pressed`）。 */
+export const PHOTO_EDITING_MASK_BRUSH_PAINT_LABEL = "描く";
+export const PHOTO_EDITING_MASK_BRUSH_ERASE_LABEL = "消しゴム";
+export const PHOTO_EDITING_MASK_BRUSH_SIZE_LABEL = "大きさ";
+export const PHOTO_EDITING_MASK_BRUSH_FLOW_LABEL = "流量";
+export const PHOTO_EDITING_MASK_BRUSH_CLEAR_LABEL = "全体を消す";
+export const PHOTO_EDITING_MASK_BRUSH_FILL_LABEL = "全体を塗る";
+/** 塗るのをやめた後（esc）に、もう一度写真に塗る。 */
+export const PHOTO_EDITING_MASK_BRUSH_RESUME_LABEL = "写真に塗る";
+export const PHOTO_EDITING_MASK_BRUSH_HINT_TEXT =
+  "写真をなぞって範囲を塗ります。[ ] で大きさ、E（⌥ を押している間も）で消しゴム、esc で塗るのをやめます。";
+/** 写真の上の塗る面の読み上げ名。 */
+export const PHOTO_EDITING_MASK_BRUSH_AREA_LABEL = "ブラシで塗る";
+export const PHOTO_EDITING_MASK_BRUSH_LOADING_TEXT = "マスクの面を読み込んでいます…";
+export const PHOTO_EDITING_MASK_BRUSH_SAVE_FAILED_TEXT = "塗った範囲を保存できませんでした。もう一度塗ってください。";
+export const PHOTO_EDITING_MASK_BRUSH_ADD_FAILED_TEXT = "ブラシのマスクを追加できませんでした。もう一度お試しください。";
+/** 被写体・空（写真から選んだ範囲。この画面では塗らない）。 */
+export const PHOTO_EDITING_MASK_DETECTED_TEXT = "この範囲は写真から選んだものです。補正・反転・当てる / 外す・削除ができます。";
+/** 面を読めない（置き場に無い・壊れている）マスクの理由と次の一歩。 */
+export function photoEditingMaskSurfaceUnreadableText(name: string): string {
+  return `マスクの面を読めません（${name}）。もう一度読み込むか、このマスクを削除してください。`;
+}
+export const PHOTO_EDITING_MASK_SURFACE_RETRY_LABEL = "もう一度読み込む";
+/** 書き出す写真のマスクの面を読めなかった。 */
+export const PHOTO_EDITING_MASK_SURFACE_EXPORT_FAILED_TEXT =
+  "マスクの面を読めないため書き出せませんでした。そのマスクを削除するか、塗り直してから書き出してください。";
 
 /**
  * ブラウザ版の一覧の複数選択（F5a-2 移行元設計）。スマホの上の行の「選択」ボタンと、複数を選んでいる間の選択バー
