@@ -51,7 +51,7 @@ describe("computePhotoEditingHistogram", () => {
     expect(result.clipMask).toBeNull();
   });
 
-  it("0 から 255 までのグラデーションは、どの階調にも同じ数が入り、両端の画素だけがクリップになる", () => {
+  it("0 から 255 までのグラデーションは、どの階調にも同じ数が入り、両端の 2 段ずつ（0〜1 / 254〜255）だけがクリップになる", () => {
     const rgba = new Uint8ClampedArray(PHOTO_EDITING_HISTOGRAM_LEVELS * 4);
     for (let level = 0; level < PHOTO_EDITING_HISTOGRAM_LEVELS; level += 1) {
       rgba.set([level, level, level, 255], level * 4);
@@ -60,10 +60,28 @@ describe("computePhotoEditingHistogram", () => {
     for (const counts of [result.red, result.green, result.blue]) {
       expect(Array.from(counts).every((count) => count === 1)).toBe(true);
     }
+    expect(result.shadowClipped).toBe(2);
+    expect(result.highlightClipped).toBe(2);
+    expect(result.shadowRate).toBeCloseTo(2 / 256, 10);
+    expect(result.highlightRate).toBeCloseTo(2 / 256, 10);
+  });
+
+  it("端から 1 段まで数える: 1 と 254 は入り、2 と 253 は入らない（エンジンは補正を掛けると白を 254 までしか出さない）", () => {
+    const rgba = new Uint8ClampedArray([
+      1, 128, 128, 255,
+      128, 128, 254, 255,
+      2, 128, 128, 255,
+      128, 128, 253, 255,
+    ]);
+    const result = computePhotoEditingHistogram(rgba, 2, 2, { mask: true });
+    expect(Array.from(result.clipMask?.flags ?? [])).toEqual([
+      PHOTO_EDITING_CLIP_SHADOW_FLAG,
+      PHOTO_EDITING_CLIP_HIGHLIGHT_FLAG,
+      0,
+      0,
+    ]);
     expect(result.shadowClipped).toBe(1);
     expect(result.highlightClipped).toBe(1);
-    expect(result.shadowRate).toBeCloseTo(1 / 256, 10);
-    expect(result.highlightRate).toBeCloseTo(1 / 256, 10);
   });
 
   it("全黒は全画素が黒つぶれ（白飛びは 0）、全白は全画素が白飛び（黒つぶれは 0）", () => {
@@ -77,13 +95,13 @@ describe("computePhotoEditingHistogram", () => {
     expect(white.shadowRate).toBe(0);
   });
 
-  it("いずれかのチャンネルが 0 / 255 の画素を数える（純色の赤は黒つぶれにも白飛びにも入る）", () => {
+  it("いずれかのチャンネルが端（0〜1 / 254〜255）の画素を数える（純色の赤は黒つぶれにも白飛びにも入る）", () => {
     // 画素 0: R だけ 0（黒つぶれ） / 画素 1: B だけ 255（白飛び） / 画素 2: 純色の赤（両方） / 画素 3: どちらでもない
     const rgba = new Uint8ClampedArray([
       0, 100, 100, 255,
       100, 100, 255, 255,
       255, 0, 0, 255,
-      1, 254, 128, 255,
+      2, 253, 128, 255,
     ]);
     const result = computePhotoEditingHistogram(rgba, 2, 2, { mask: true });
     expect(result.shadowClipped).toBe(2);
