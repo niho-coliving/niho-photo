@@ -18,6 +18,10 @@ const manifest = () => createManifest(options);
 test("manifestは全lock・contract・archive・SBOMの実bytesをSHA-256へ結び付ける", () => {
   const value = manifest();
   validateManifest(value, schema);
+  assert.equal(value.repository, "niho-life/niho-photo");
+  const historical = structuredClone(value);
+  historical.repository = "niho-coliving/niho-photo";
+  assert.doesNotThrow(() => validateManifest(historical, schema));
   assert.equal(value.artifact.sha256, hash(options.artifactBytes));
   assert.equal(value.artifact.bytes, options.artifactBytes.length);
   assert.equal(value.sbom.sha256, hash(options.sbomBytes));
@@ -33,6 +37,7 @@ for (const [name, mutate] of [
   ["short SHA", (v) => { v.commit = "a".repeat(7); }],
   ["mutable ref", (v) => { v.commit = "main"; }],
   ["unknown field", (v) => { v.token = "unapproved"; }],
+  ["unknown repository", (v) => { v.repository = "other/repository"; }],
   ["artifact mismatch", (v) => { v.artifact.name = "latest.zip"; }],
   ["platform mismatch", (v) => { v.platform.arch = "x64"; }],
   ["lock missing", (v) => { v.locks.pop(); }],
@@ -66,6 +71,7 @@ test("upload receiptはActions artifact ID/digestとworkflow識別子の整合�
   const digest = "a".repeat(64);
   const input = { artifactId: "987", artifactDigest: digest, artifactName: workflowArtifactName(commit, "arm64", "123", "2"), commit, runId: "123", runAttempt: "2" };
   const receipt = createArtifactReceipt(input);
+  assert.ok(receipt.includes("Repository: `niho-life/niho-photo`"));
   assert.ok(receipt.includes("Artifact ID: `987`"));
   assert.ok(receipt.includes(`Artifact digest (SHA-256): \`${digest}\``));
   for (const changed of [
@@ -192,7 +198,7 @@ fs.writeFileSync(require("node:path").join(require("node:path").dirname(process.
 });
 
 test("公開artifact入口はPR contextを拒否し子processの値を表示しない", () => {
-  const result = spawnSync(process.execPath, [fileURLToPath(new URL("scripts/ci/release-evidence.mjs", root))], { encoding: "utf8", env: { PATH: process.env.PATH, GITHUB_SHA: commit, GITHUB_REPOSITORY: "niho-coliving/niho-photo", GITHUB_EVENT_NAME: "pull_request", GITHUB_REF: "refs/heads/main", GITHUB_RUN_ID: "123", GITHUB_RUN_ATTEMPT: "1" } });
+  const result = spawnSync(process.execPath, [fileURLToPath(new URL("scripts/ci/release-evidence.mjs", root))], { encoding: "utf8", env: { PATH: process.env.PATH, GITHUB_SHA: commit, GITHUB_REPOSITORY: "niho-life/niho-photo", GITHUB_EVENT_NAME: "pull_request", GITHUB_REF: "refs/heads/main", GITHUB_RUN_ID: "123", GITHUB_RUN_ATTEMPT: "1" } });
   assert.equal(result.status, 1);
   assert.equal(result.stdout, "");
   assert.match(result.stderr, /context\/clean checkout/);

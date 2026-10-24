@@ -1,11 +1,11 @@
 {
   "schemaVersion": 1,
-  "$comment": "apps/camera に同梱する現像の sidecar（apple-raw-linear・niho-develop-render）と校正の登録表の固定。NIHO Desktop の lock（apps/desktop/develop-sidecars.lock.json）と同じ公開済みのソースを指す。エンジンの公開 PR で packages/develop-engine/scripts/release-engine.mjs release が NIHO Desktop の lock と一緒に更新し、その app の版を上げる（ops/runbooks/develop-engine-release.md）。",
+  "$comment": "Mac candidateに同梱するtool版とcalibration bytesの固定。共有sourceの版・内容digestは選択した公開SDK manifestのsourceOwnershipで検証する。",
   "appleRawLinear": {
     "version": "0.5.2"
   },
   "nihoDevelopRender": {
-    "version": "0.16.0"
+    "version": "0.25.0"
   },
   "calibration": {
     "registry": "apple-registry.json",
@@ -22,15 +22,7 @@
       "sony-zv-e10m2/apple-v3.json": "de10e39ca524cd26c31614a4a404b0713ab696a8b034a64ef2778fff00d16cf0"
     }
   },
-  "sources": {
-    "fingerprint": "7825e0151c307ffef7d33379b97801d8cfd0062e16cbaca4151267fb0ea1b092",
-    "fileCount": 95
-  },
   "nihoCameraCutout": {
-    "version": "0.2.0",
-    "sources": {
-      "fingerprint": "02f3f680e76c8c552668aaf0bda3d776c55e56a7eb51c9b8e67ce817e966e2ae",
-      "fileCount": 10
-    }
+    "version": "0.2.0"
   }
 }

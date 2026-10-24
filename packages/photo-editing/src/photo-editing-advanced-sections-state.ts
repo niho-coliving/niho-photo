@@ -11,7 +11,7 @@ import { useCallback, useState } from "react";
  * アイコンにも効くので増やさない）。保存値の知らない id（新しい版で開いた節）は、書き戻すときも残す。
  */
 // `maskHsl` はマスクの道具の局所のカラーミキサー（niho-photo#93）
-export const PHOTO_EDITING_ADVANCED_SECTION_IDS = ["curve", "colorMixer", "colorGrading", "geometry", "maskHsl"] as const;
+export const PHOTO_EDITING_ADVANCED_SECTION_IDS = ["curve", "colorMixer", "colorGrading", "geometry", "lens", "maskHsl"] as const;
 
 export type PhotoEditingAdvancedSectionId = (typeof PHOTO_EDITING_ADVANCED_SECTION_IDS)[number];
 

@@ -35,6 +35,7 @@ import {
 } from "../browser-photo-batch-export";
 import { hasDevelopGeometry, isNeutralDevelopColors, type DevelopSettings } from "../develop-engine/develop-settings";
 import { hasPhotoEditingColorGradingNativeExportUnsupportedLuminance } from "../photo-editing-color-grading";
+import { readWorkingCopyLensProfile } from "../photo-editing-lens";
 import { isDevelopWorkTarget } from "../develop-engine/develop-work-target";
 import {
   isWorkPending,
@@ -180,6 +181,7 @@ import { PhotoEditingGrid, countPhotoEditingGridColumns, type PhotoEditingGridIt
 import { PhotoEditingHistogram } from "./photo-editing-histogram";
 import { PhotoEditingColorGrading, PhotoEditingColorGradingSection } from "./photo-editing-color-grading";
 import { PhotoEditingHslMixer, PhotoEditingHslMixerSection } from "./photo-editing-hsl-mixer";
+import { PhotoEditingLensSection } from "./photo-editing-lens";
 import { PhotoEditingMenu, type PhotoEditingMenuItem } from "./photo-editing-menu";
 import { PhotoEditingPresetsPanel } from "./photo-editing-presets-panel";
 import { PhotoEditingToneCurveSection } from "./photo-editing-tone-curve";
@@ -198,6 +200,7 @@ import {
   useBrowserPhotoColorPointsSupport,
   useBrowserPhotoDetailSupport,
   useBrowserPhotoEffectsSupport,
+  useBrowserPhotoLensSupport,
 } from "./use-browser-photo-effects";
 import { photoEditingMaskExportBlocked, useBrowserPhotoMasks, useBrowserPhotoMasksSupport } from "./use-browser-photo-masks";
 import { useBrowserPhotoExportAndDelete } from "./use-browser-photo-export-delete";
@@ -595,6 +598,8 @@ export function BrowserPhotoEditingWorkbench(props: {
   const detailSupported = detailWasmSupported && detailControlsAvailable(opened?.input);
   // 部分補正（マスク。M3 #67）を描ける wasm か（`capabilities()`。同じく 1 回確かめて覚える）
   const masksSupport = useBrowserPhotoMasksSupport({ mountedRef, engineRef: develop.engineRef, photoKey: wasmPhotoKey });
+  const lensSupported = useBrowserPhotoLensSupport({ mountedRef, engineRef: develop.engineRef, photoKey: wasmPhotoKey });
+  const lensProfile = readWorkingCopyLensProfile(opened?.input?.kind === "workingCopy" ? opened.input.metaJson : null);
   // プリセットの適用量・今の補正の保存・見本を出せる wasm か（同じく 1 回確かめて覚える。右パネルを閉じても行の形を変えない）
   const presetSupport = useBrowserPhotoPresetSupport({ mountedRef, engineRef: develop.engineRef, photoKey: wasmPhotoKey });
   const mobilePresetThumbnails = useBrowserPresetThumbnails({
@@ -2581,6 +2586,18 @@ export function BrowserPhotoEditingWorkbench(props: {
                         />
                       </>
                     ),
+                    ...(lensSupported
+                      ? {
+                          effects: (
+                            <PhotoEditingLensSection
+                              settings={settings}
+                              disabled={controlsDisabled}
+                              profile={lensProfile}
+                              onSettingsChange={open.changeSettings}
+                            />
+                          ),
+                        }
+                      : {}),
                   }
                 : undefined
             }

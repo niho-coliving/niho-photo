@@ -66,6 +66,18 @@ export function useBrowserPhotoDetailSupport(params: {
   return useEngineSupport(params, "detail");
 }
 
+/**
+ * 「レンズ」の節（レンズ補正。niho-photo#45）を出せるか。レンズ補正のある設定は `v: 9` で保存するので、ディテールと同じく起こした
+ * wasm が読めると確かめてから出す（確かめている間・読めない wasm・wasm を使えないときは false）。
+ */
+export function useBrowserPhotoLensSupport(params: {
+  mountedRef: MutableRefObject<boolean>;
+  engineRef: MutableRefObject<DevelopEngine | null>;
+  photoKey: string | null;
+}): boolean {
+  return useEngineSupport(params, "lens");
+}
+
 /** 写真を 1 枚で見ているときに 1 回だけ wasm の口を確かめ、画面を開いている間覚える。 */
 function useEngineSupport(
   params: {
@@ -73,7 +85,7 @@ function useEngineSupport(
     engineRef: MutableRefObject<DevelopEngine | null>;
     photoKey: string | null;
   },
-  capability: "colorPoints" | "detail",
+  capability: "colorPoints" | "detail" | "lens",
 ): boolean {
   const { mountedRef, engineRef, photoKey } = params;
   const [supported, setSupported] = useState<boolean | null>(null);
@@ -83,7 +95,14 @@ function useEngineSupport(
     const engine = engineRef.current;
     if (!engine) return;
     let cancelled = false;
-    (capability === "detail" ? engine.supportsDetail() : engine.supportsColorPoints()).then(
+    // レンズの口は新しいので、確かめられない engine（口の無い差し替え）は使えない扱い（編集は止めない）
+    const check =
+      capability === "lens"
+        ? Promise.resolve().then(() => engine.supportsLens())
+        : capability === "detail"
+          ? engine.supportsDetail()
+          : engine.supportsColorPoints();
+    check.then(
       (value) => {
         if (!cancelled && mountedRef.current) setSupported(value === true);
       },
