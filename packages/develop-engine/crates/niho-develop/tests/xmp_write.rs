@@ -579,7 +579,8 @@ fn options_are_read_from_json() {
             "grain",
             "noiseReduction",
             "sharpening",
-            "transform"
+            "transform",
+            "lens"
         ]
     );
 }
