@@ -347,7 +347,7 @@ describe("版の小さな見た目", () => {
 });
 
 describe("右パネルの版の面（BrowserPhotoEditingAdjustments）", () => {
-  it("見出し行は「版」だけ（↶ ↷ ⋯・初期化は出さない）、ヒストグラムは一番上", async () => {
+  it("見出し行は「版」と ↶ ↷ だけ（⋯・初期化は出さない）、ヒストグラムは一番上", async () => {
     await act(async () =>
       root.render(
         <BrowserPhotoEditingAdjustments
@@ -378,7 +378,9 @@ describe("右パネルの版の面（BrowserPhotoEditingAdjustments）", () => {
     if (!aside) throw new Error("versions face not found");
     expect(aside.firstElementChild?.querySelector('[data-testid="histogram"]')).not.toBeNull();
     expect(aside.querySelector("h2")?.textContent).toBe("版");
-    expect(aside.querySelector('button[aria-label="取り消す"]')).toBeNull();
+    // 切り替えは 1 回の取り消し単位なので、版の面にも ↶ ↷ を出す（⋯・初期化は出さない）
+    expect(aside.querySelector('button[aria-label="取り消す"]')).not.toBeNull();
+    expect(aside.querySelector('button[aria-label="やり直す"]')).not.toBeNull();
     expect(buttonByText("初期化", aside)).toBeUndefined();
     expect(aside.querySelector('input[type="range"]')).toBeNull();
     expect(aside.textContent).not.toContain("情報の中身");

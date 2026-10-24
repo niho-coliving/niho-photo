@@ -194,6 +194,31 @@ export function BrowserPhotoEditingAdjustments(props: {
   const presets = props.presets;
   // プリセットの部品が無い写真（S1 の canvas）は、補正の面だけ
   const showPresetsPanel = !cropping && !cutting && !masking && !healing && presets !== undefined && props.panel === "presets";
+  // ↶ ↷（補正・修復・版の面で同じもの。情報の面には出さない）
+  const historyButtons = (
+    <>
+      <button
+        type="button"
+        aria-label={PHOTO_EDITING_UNDO_LABEL}
+        title={PHOTO_EDITING_UNDO_TITLE}
+        disabled={props.controlsDisabled || !props.canUndo}
+        onClick={props.onUndo}
+        className={HISTORY_BUTTON_CLASS_NAME}
+      >
+        <Undo2 className="h-[18px] w-[18px]" aria-hidden />
+      </button>
+      <button
+        type="button"
+        aria-label={PHOTO_EDITING_REDO_LABEL}
+        title={PHOTO_EDITING_REDO_TITLE}
+        disabled={props.controlsDisabled || !props.canRedo}
+        onClick={props.onRedo}
+        className={HISTORY_BUTTON_CLASS_NAME}
+      >
+        <Redo2 className="h-[18px] w-[18px]" aria-hidden />
+      </button>
+    </>
+  );
   // 情報・版の面（写真を直すスライダーの無い面）: 見出し行は名前だけ（ヒストグラムの置き方は下の補正の面と同じ）
   const sideFace =
     props.panel === "info"
@@ -209,6 +234,8 @@ export function BrowserPhotoEditingAdjustments(props: {
         ) : null}
         <div className="flex min-h-11 items-center gap-1">
           <h2 className="min-w-0 flex-1 truncate text-sm font-bold text-niho-text">{sideFace.label}</h2>
+          {/* 版の面は、切り替えが 1 回の取り消し単位なので ↶ ↷ を出す（情報の面は直すものが無いので出さない） */}
+          {props.panel === "versions" ? <div className="flex shrink-0 items-center">{historyButtons}</div> : null}
         </div>
         {sideFace.content}
       </aside>
@@ -285,26 +312,7 @@ export function BrowserPhotoEditingAdjustments(props: {
       <div className="flex min-h-11 items-center gap-1">
         <h2 className="min-w-0 flex-1 truncate text-sm font-bold text-niho-text">{heading}</h2>
         <div className="flex shrink-0 items-center">
-          <button
-            type="button"
-            aria-label={PHOTO_EDITING_UNDO_LABEL}
-            title={PHOTO_EDITING_UNDO_TITLE}
-            disabled={props.controlsDisabled || !props.canUndo}
-            onClick={props.onUndo}
-            className={HISTORY_BUTTON_CLASS_NAME}
-          >
-            <Undo2 className="h-[18px] w-[18px]" aria-hidden />
-          </button>
-          <button
-            type="button"
-            aria-label={PHOTO_EDITING_REDO_LABEL}
-            title={PHOTO_EDITING_REDO_TITLE}
-            disabled={props.controlsDisabled || !props.canRedo}
-            onClick={props.onRedo}
-            className={HISTORY_BUTTON_CLASS_NAME}
-          >
-            <Redo2 className="h-[18px] w-[18px]" aria-hidden />
-          </button>
+          {historyButtons}
           {showPresetsPanel ? (
             <div ref={setPresetActionsSlot} className="flex shrink-0 items-center" />
           ) : props.clipboard ? (
