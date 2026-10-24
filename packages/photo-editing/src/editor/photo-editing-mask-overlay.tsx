@@ -30,12 +30,16 @@ import { cn } from "niho-ui/cn";
 
 import { PhotoEditingMaskBrushOverlay } from "./photo-editing-mask-brush-overlay";
 import { fillPhotoEditingMaskOverlay, useBrowserPhotoMaskPlane, type BrowserPhotoMaskTool } from "./use-browser-photo-masks";
+import { usePhotoEditingCoarsePointer } from "./use-photo-editing-coarse-pointer";
 import { usePhotoEditingTargetBox, type PhotoEditingTargetBox } from "./use-photo-editing-target-box";
 
 type OverlayBox = PhotoEditingTargetBox;
 
-/** 回転のつまみを、上の端から画面で離す距離（px） */
+/** 回転のつまみを、上の端から画面で離す距離（px）。指（押せる範囲 44px）では上の端のつまみと重ならないよう 44px 離す */
 const ROTATE_HANDLE_OFFSET = 28;
+const ROTATE_HANDLE_OFFSET_COARSE = 44;
+/** これより動かしたら、写真の何も無い所のタップ（選択を外す）にしない（px。ピンチ・拡大中の送りと分ける） */
+const TAP_MOVE_TOLERANCE_PX = 10;
 /** 矢印キーの 1 回の動き（見えている短い辺に対する割合。⇧ で大きく） */
 const KEY_STEP = 0.01;
 const KEY_STEP_LARGE = 0.05;
@@ -47,14 +51,22 @@ const ARROW_DIRECTIONS: Readonly<Record<string, Vec2>> = {
   ArrowDown: [0, 1],
 };
 
-/** つまみ（押せる範囲 28px の中心が形の点。見た目は小さな丸。NIHO photo の密な画面の最小 24px を満たす）。 */
+/**
+ * つまみ（押せる範囲 28px の中心が形の点。見た目は小さな丸。NIHO photo の密な画面の最小 24px を満たす）。指（`pointer: coarse`）では
+ * 押せる範囲だけを 44px にする（見た目の丸は同じ。niho-photo#93）。
+ */
 const HANDLE_CLASS_NAME =
-  "absolute flex h-7 w-7 -translate-x-1/2 -translate-y-1/2 touch-none items-center justify-center rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-niho-accent-ink enabled:cursor-grab enabled:active:cursor-grabbing disabled:cursor-default";
+  "absolute flex h-7 w-7 -translate-x-1/2 -translate-y-1/2 touch-none items-center justify-center rounded-full pointer-coarse:h-11 pointer-coarse:w-11 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-niho-accent-ink enabled:cursor-grab enabled:active:cursor-grabbing disabled:cursor-default";
+/**
+ * 中心のつまみ（全体を動かす）は、指では端のつまみより上に重ねる（小さな形でも中心を押せる。端のつまみは中心から外側の半分で
+ * 押せる）。Tab の順（中心が先）は DOM の順のまま
+ */
+const CENTER_HANDLE_CLASS_NAME = "pointer-coarse:z-10";
 const HANDLE_MARK_CLASS_NAME =
   "pointer-events-none block rounded-full border border-niho-text/60 bg-niho-surface shadow-[0_0_0_1px_rgba(0,0,0,0.25)]";
-/** 選んでいないマスクの印（押すと選ぶ。押せる範囲 24px） */
+/** 選んでいないマスクの印（押すと選ぶ。押せる範囲 24px、指では 44px） */
 const PIN_CLASS_NAME =
-  "absolute flex h-6 w-6 -translate-x-1/2 -translate-y-1/2 touch-none items-center justify-center rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-niho-accent-ink";
+  "absolute flex h-6 w-6 -translate-x-1/2 -translate-y-1/2 touch-none items-center justify-center rounded-full pointer-coarse:h-11 pointer-coarse:w-11 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-niho-accent-ink";
 
 
 /** 動かしている途中（どのマスクのどのつまみを、どの形から）。 */
@@ -73,8 +85,13 @@ type Gesture = {
 
 type HandleView = { handle: PhotoEditingMaskHandle; left: number; top: number };
 
-/** 画面の px でのつまみの位置（回転のつまみは上の端の外に足す）。 */
-function handleViews(mask: DevelopMask, frame: PhotoEditingMaskFrame | null, box: OverlayBox): HandleView[] | null {
+/** 画面の px でのつまみの位置（回転のつまみは上の端の外に `rotateOffset` px 離して足す）。 */
+function handleViews(
+  mask: DevelopMask,
+  frame: PhotoEditingMaskFrame | null,
+  box: OverlayBox,
+  rotateOffset = ROTATE_HANDLE_OFFSET,
+): HandleView[] | null {
   const points = photoEditingMaskHandles(mask, frame);
   if (!points) return null;
   const views = points.map((point) => ({ handle: point.handle, left: point.x * box.width, top: point.y * box.height }));
@@ -86,7 +103,7 @@ function handleViews(mask: DevelopMask, frame: PhotoEditingMaskFrame | null, box
       const dy = top.top - center.top;
       const length = Math.hypot(dx, dy);
       if (length > 1e-6) {
-        views.push({ handle: "rotate", left: top.left + (dx / length) * ROTATE_HANDLE_OFFSET, top: top.top + (dy / length) * ROTATE_HANDLE_OFFSET });
+        views.push({ handle: "rotate", left: top.left + (dx / length) * rotateOffset, top: top.top + (dy / length) * rotateOffset });
       }
     }
   }
@@ -216,7 +233,10 @@ function MaskPlaneCanvas(props: { plane: DevelopMaskPlane }) {
  *   離したら 1 回 `"commit"`（取り消しの 1 単位）。止められたら動かし始めの形に戻す
  * - キーボード: つまみの上の矢印で見えている短い辺の 1%（⇧ で 5%）動かし、キーを離す・フォーカスが外れると確定。O で範囲の
  *   重ね表示を切り替える（文字の入力欄の上では効かない）。⌫ / Delete・Esc は写真の編集のキーとして面が扱う
- * - 写真の何も無い所を押すと選択を外す。描けない幾何の間は何も出さない
+ * - 写真の何も無い所をタップすると選択を外す（指 1 本で、離すまでにほとんど動かさなかったとき。ピンチの 1 本目・拡大中の送りでは
+ *   外さない。niho-photo#93）。つまみを動かしている途中に別の指が写真に触れたら、動かし始めの形に戻す。描けない幾何の間は何も出さない
+ * - 指（`pointer: coarse`）では、つまみと印の押せる範囲を 44px にし、回転のつまみを上の端から 44px 離す
+ * - スマホの編集の層の拡大（ピンチ・送り）に合わせて測り直す（`usePhotoEditingTargetBox`）
  */
 export function PhotoEditingMaskOverlay(props: {
   targetRef: RefObject<HTMLCanvasElement | null>;
@@ -234,7 +254,13 @@ export function PhotoEditingMaskOverlay(props: {
   const { masks, frame, disabled } = props;
   const rootRef = useRef<HTMLDivElement | null>(null);
   const box = usePhotoEditingTargetBox(props.targetRef, rootRef);
+  const coarse = usePhotoEditingCoarsePointer();
+  const rotateOffset = coarse ? ROTATE_HANDLE_OFFSET_COARSE : ROTATE_HANDLE_OFFSET;
   const gestureRef = useRef<Gesture | null>(null);
+  /** 写真の何も無い所に今触れている指（2 本目からはタップにしない） */
+  const backdropPointersRef = useRef(new Set<number>());
+  /** 選択を外すタップの候補（押した指と位置） */
+  const tapRef = useRef<{ pointerId: number; x: number; y: number } | null>(null);
   const [draft, setDraft] = useState<DevelopMask | null>(null);
   const draftRef = useRef<DevelopMask | null>(null);
   const callbacksRef = useRef(props);
@@ -302,7 +328,13 @@ export function PhotoEditingMaskOverlay(props: {
   const startPointer = (event: ReactPointerEvent<HTMLButtonElement>, mask: DevelopMask, view: HandleView) => {
     if (disabled || !box || gestureRef.current || event.button !== 0) return;
     event.stopPropagation();
-    event.currentTarget.setPointerCapture?.(event.pointerId);
+    // つまみを押したら、写真の何も無い所に残っている指は選択を外すタップにしない
+    tapRef.current = null;
+    try {
+      event.currentTarget.setPointerCapture?.(event.pointerId);
+    } catch {
+      // 取り込めないポインタ（合成のイベントなど）でも、このつまみの上で動かす分は続ける
+    }
     gestureRef.current = {
       kind: "pointer",
       pointerId: event.pointerId,
@@ -377,14 +409,35 @@ export function PhotoEditingMaskOverlay(props: {
       }
     >
       {props.plane ? <MaskPlaneCanvas plane={props.plane} /> : null}
-      {/* 写真の何も無い所: 押すと選択を外す */}
+      {/* 写真の何も無い所: タップで選択を外す（押した時点では外さない。ピンチ・拡大中の送りは写真の面の指の操作へ渡す） */}
       <div
         aria-hidden
         data-testid="photo-mask-backdrop"
         className="absolute inset-0"
         onPointerDown={(event) => {
-          if (event.button !== 0) return;
+          const pointers = backdropPointersRef.current;
+          // 最初の指が降りたのに前の指が残っているのは、離した通知が届かなかったとき。持ち越さない
+          if (event.isPrimary) pointers.clear();
+          pointers.add(event.pointerId);
+          // つまみを動かしている途中に別の指が触れた（ピンチを始めた）: 動かし始めの形に戻し、この指もタップにしない
+          const gesture = gestureRef.current;
+          tapRef.current =
+            pointers.size === 1 && event.button === 0 && gesture === null
+              ? { pointerId: event.pointerId, x: event.clientX, y: event.clientY }
+              : null;
+          if (gesture?.kind === "pointer" && gesture.pointerId !== event.pointerId) finish(false);
+        }}
+        onPointerUp={(event) => {
+          backdropPointersRef.current.delete(event.pointerId);
+          const tap = tapRef.current;
+          tapRef.current = null;
+          if (!tap || tap.pointerId !== event.pointerId || gestureRef.current) return;
+          if (Math.hypot(event.clientX - tap.x, event.clientY - tap.y) > TAP_MOVE_TOLERANCE_PX) return;
           props.onSelect(null);
+        }}
+        onPointerCancel={(event) => {
+          backdropPointersRef.current.delete(event.pointerId);
+          tapRef.current = null;
         }}
       />
       {ready ? (
@@ -399,7 +452,7 @@ export function PhotoEditingMaskOverlay(props: {
             {selectedMask
               ? (() => {
                   const current = shown(selectedMask);
-                  const views = handleViews(current, frame, box);
+                  const views = handleViews(current, frame, box, rotateOffset);
                   return views ? <MaskShape mask={current} views={views} box={box} /> : null;
                 })()
               : null}
@@ -431,7 +484,7 @@ export function PhotoEditingMaskOverlay(props: {
           {selectedMask
             ? (() => {
                 const current = shown(selectedMask);
-                const views = handleViews(current, frame, box);
+                const views = handleViews(current, frame, box, rotateOffset);
                 if (!views) return null;
                 const labels =
                   current.kind === "linear" ? PHOTO_EDITING_MASK_HANDLE_LABELS.linear : PHOTO_EDITING_MASK_HANDLE_LABELS.radial;
@@ -444,7 +497,7 @@ export function PhotoEditingMaskOverlay(props: {
                     aria-label={(labels as Record<string, string>)[view.handle] ?? view.handle}
                     disabled={disabled}
                     data-mask-handle={view.handle}
-                    className={HANDLE_CLASS_NAME}
+                    className={cn(HANDLE_CLASS_NAME, view.handle === "center" && CENTER_HANDLE_CLASS_NAME)}
                     style={{ left: view.left, top: view.top }}
                     onPointerDown={(event) => startPointer(event, selectedMask, view)}
                     onPointerMove={movePointer}
