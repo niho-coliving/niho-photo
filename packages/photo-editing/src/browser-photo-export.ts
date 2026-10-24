@@ -13,7 +13,6 @@ import {
   PHOTO_EDITING_EXPORT_ENGINE_UNAVAILABLE_TEXT,
   PHOTO_EDITING_EXPORT_FULL_SIZE_DETAIL,
   PHOTO_EDITING_EXPORT_FULL_SIZE_TEXT,
-  PHOTO_EDITING_EXPORT_FULL_SIZE_COLOR_GRADING_UNSUPPORTED_TEXT,
   PHOTO_EDITING_EXPORT_FULL_SIZE_UNSUPPORTED_SOURCE_TEXT,
   PHOTO_EDITING_EXPORT_ORIGINAL_TEXT,
   PHOTO_EDITING_EXPORT_PNG_NO_EXIF_TEXT,
@@ -21,7 +20,7 @@ import {
   photoEditingBatchFolderExportText,
 } from "./photo-editing-copy";
 import { photoEditingFileStem } from "./photo-editing-file-names";
-import { hasPhotoEditingColorGradingNativeExportUnsupportedLuminance } from "./photo-editing-color-grading";
+import { photoEditingNativeExportBlockers, photoEditingNativeExportUnsupportedText } from "./photo-editing-native-export";
 
 /**
  * ブラウザ版の写真編集の「書き出す」（移行元設計・F7b 移行元設計・移行時の設計文書「書き出す」）。下段の主ボタンを
@@ -321,8 +320,10 @@ export function resolveBrowserPhotoExportChoices(input: {
   desktopFullSize?: boolean;
   /** 原寸の書き出しで HEIC / HEIF・TIFF も描ける（`capabilities.nativeExportRaster`。NIHO camera。省略 = 描けない） */
   desktopFullSizeRaster?: boolean;
-  /** 現在の補正に native renderer が描けない中間調・全体の輝度がある（省略時は保存済み設定から判定） */
+  /** 現在の補正に native renderer が描けない補正〔中間調・全体の輝度・遠近・修復・レンズ補正〕がある（省略時は保存済み設定から判定） */
   nativeFullSizeUnsupported?: boolean;
+  /** 上の理由の 1 行（原寸のカードの副文。省略時は保存済み設定から作る） */
+  nativeFullSizeUnsupportedText?: string;
   /**
    * 書き出す写真に背景除去を重ねている（NIHO camera だけ。C4 移行元設計。省略 = 無い）。`transparent` は背景が透明、`fullSize` は
    * camera の原寸の書き出しの口がある
@@ -330,8 +331,10 @@ export function resolveBrowserPhotoExportChoices(input: {
   cutout?: { transparent: boolean; fullSize: boolean };
 }): BrowserPhotoExportChoices {
   const { photo, locked } = input;
-  const nativeFullSizeUnsupported =
-    input.nativeFullSizeUnsupported ?? hasPhotoEditingColorGradingNativeExportUnsupportedLuminance(photo.developSettings ?? {});
+  const savedNativeBlockers = photoEditingNativeExportBlockers(photo.developSettings ?? {});
+  const nativeFullSizeUnsupported = input.nativeFullSizeUnsupported ?? savedNativeBlockers.length > 0;
+  const nativeFullSizeUnsupportedText =
+    input.nativeFullSizeUnsupportedText ?? photoEditingNativeExportUnsupportedText(savedNativeBlockers);
 
   let jpeg: BrowserPhotoExportJpegChoice;
   if (input.editing === "wasm") {
@@ -381,7 +384,7 @@ export function resolveBrowserPhotoExportChoices(input: {
   if (input.cutout && input.editing === "wasm") {
     const fullSize: BrowserPhotoExportChoice | undefined = input.cutout.fullSize
       ? nativeFullSizeUnsupported
-        ? { enabled: false, detail: PHOTO_EDITING_EXPORT_FULL_SIZE_COLOR_GRADING_UNSUPPORTED_TEXT }
+        ? { enabled: false, detail: nativeFullSizeUnsupportedText }
         : { enabled: true, detail: PHOTO_EDITING_EXPORT_FULL_SIZE_DETAIL }
       : undefined;
     return {
@@ -396,7 +399,7 @@ export function resolveBrowserPhotoExportChoices(input: {
     jpeg = {
       ...jpeg,
       fullSize: nativeFullSizeUnsupported
-        ? { enabled: false, detail: PHOTO_EDITING_EXPORT_FULL_SIZE_COLOR_GRADING_UNSUPPORTED_TEXT }
+        ? { enabled: false, detail: nativeFullSizeUnsupportedText }
         : fullSizeChoice(photo, jpeg, original, input.desktopFullSizeRaster === true),
     };
   }
