@@ -15,6 +15,7 @@ import {
   writeDevelopMasks,
   type DevelopMask,
   type DevelopMaskAdjustKey,
+  type DevelopMaskHslBand,
 } from "../develop-engine/develop-masks";
 import type { DevelopSettings } from "../develop-engine/develop-settings";
 import {
@@ -38,8 +39,10 @@ import {
   isPhotoEditingMaskFrameValid,
   isPhotoEditingWhiteBalanceAbsolute,
   removePhotoEditingMask,
+  resetPhotoEditingMaskHsl,
   setPhotoEditingMaskAdjust,
   setPhotoEditingMaskFeather,
+  setPhotoEditingMaskHsl,
   togglePhotoEditingMaskEnabled,
   togglePhotoEditingMaskInvert,
   updatePhotoEditingMask,
@@ -47,6 +50,7 @@ import {
   type PhotoEditingMaskFrame,
   type PhotoEditingMaskShapeKind,
 } from "../photo-editing-masks";
+import type { PhotoEditingHslAxis } from "../photo-editing-hsl";
 import type { PhotoEditingShortcut } from "../use-photo-editing-shortcuts";
 
 import { DEVELOP_COLOR_POINT_DRAG_MAX_DIMENSION, DEVELOP_PREVIEW_MAX_DIMENSION, type DevelopSession } from "./browser-photo-editing-model";
@@ -124,8 +128,8 @@ function addKinds(support: DevelopMaskCapabilities | null, canSaveSurfaces: bool
 /**
  * ブラウザ版の右パネルのマスクの道具（部分補正。Epic #31 M3 #67。契約は `docs/local-adjustments.md`）の状態。
  *
- * - 出す条件（`available`）: PC の幅・wasm で開いて 1 枚で見ている写真・描ける種類のある wasm（`useBrowserPhotoMasksSupport`）。
- *   スマホの面には出さない
+ * - 出す条件（`available`）: 直せる幅（PC の幅か、スマホの全画面の編集の層。niho-photo#93）・wasm で開いて 1 枚で見ている写真・
+ *   描ける種類のある wasm（`useBrowserPhotoMasksSupport`）
  * - 入るとき（`enter`）に座標の基準（作業画像の大きさ。切り抜きと同じ `readCropSource`）を読む。読めるまで足すボタンは押せない
  * - 編集はすべて `changeSettings(update, phase)` を通す（`drag` は速い描き方で履歴に積まず、`commit` が取り消しの 1 単位。自動保存・
  *   下書きの退避・取り消しはそのまま効く）。`update` は呼ばれた時点の最新の設定のマスクに当てる
@@ -136,7 +140,7 @@ export function useBrowserPhotoMasks(params: {
   mountedRef: MutableRefObject<boolean>;
   engineRef: MutableRefObject<DevelopEngine | null>;
   developSessionRef: MutableRefObject<DevelopSession | null>;
-  /** PC の幅（スマホの面には出さない） */
+  /** 直せる幅（PC の幅か、スマホの全画面の編集の層。どちらでもない狭い幅には出さない） */
   wide: boolean;
   /** wasm で開いて 1 枚で見ている写真の key（ほかは null） */
   photoKey: string | null;
@@ -382,6 +386,23 @@ export function useBrowserPhotoMasks(params: {
     );
   };
 
+  /** 局所のカラーミキサー（niho-photo#93。`drag` は途中、`commit` が取り消しの 1 単位） */
+  const changeHsl = (
+    id: string,
+    band: DevelopMaskHslBand,
+    axis: PhotoEditingHslAxis,
+    value: number,
+    phase: PhotoEditingSliderPhase,
+  ) => {
+    changeMasks((current) => updatePhotoEditingMask(current, id, (mask) => setPhotoEditingMaskHsl(mask, band, axis, value)), phase);
+  };
+
+  /** 局所のカラーミキサーの「初期化」（24 の値を 0 に戻す。取り消しの 1 単位） */
+  const resetHsl = (id: string) => {
+    if (params.disabled) return;
+    changeMasks((current) => updatePhotoEditingMask(current, id, resetPhotoEditingMaskHsl), "commit");
+  };
+
   const changeFeather = (id: string, value: number, phase: PhotoEditingSliderPhase) => {
     changeMasks((current) => updatePhotoEditingMask(current, id, (mask) => setPhotoEditingMaskFeather(mask, value)), phase);
   };
@@ -481,6 +502,8 @@ export function useBrowserPhotoMasks(params: {
     canAdd,
     addBlockedReason,
     whiteBalanceAbsolute,
+    /** 全体が白黒（局所のカラーミキサーも全体と同じく押せない） */
+    grayscale: (settings as Record<string, unknown>).grayscale === true,
     overlayVisible,
     setOverlayVisible,
     shapeDragging,
@@ -492,6 +515,8 @@ export function useBrowserPhotoMasks(params: {
     toggleEnabled,
     toggleInvert,
     changeAdjust,
+    changeHsl,
+    resetHsl,
     changeFeather,
     changeShape,
     canReset,

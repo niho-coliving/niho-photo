@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState, type MutableRefObject, type ReactElement, type ReactNode } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { Bandage, Contrast, Crop, FolderOpen, History, Info, Laptop, Plus, Scissors, SlidersHorizontal, Trash2 } from "lucide-react";
+import { Bandage, CircleDashed, Contrast, Crop, FolderOpen, History, Info, Laptop, Plus, Scissors, SlidersHorizontal, Trash2 } from "lucide-react";
 
 import { formatPhotoCloudUsage } from "../photo-library-usage";
 import { inertAttribute } from "niho-ui/inert-attribute";
@@ -65,6 +65,7 @@ import {
   PHOTO_EDITING_TOOL_CUTOUT_LABEL,
   PHOTO_EDITING_TOOL_HEAL_LABEL,
   PHOTO_EDITING_TOOL_INFO_LABEL,
+  PHOTO_EDITING_TOOL_MASK_LABEL,
   PHOTO_EDITING_TOOL_VERSIONS_LABEL,
 } from "../photo-editing-copy";
 import { movePhotoEditingPhotoId } from "../photo-editing-selection";
@@ -171,6 +172,9 @@ import {
 } from "./photo-editing-button-classes";
 import { PhotoEditingCropTools } from "./photo-editing-crop-tools";
 import { PhotoEditingCutoutTools } from "./photo-editing-cutout-tools";
+import { PhotoEditingMaskMobileTools } from "./photo-editing-mask-mobile-tools";
+import { BrowserPhotoEditingMaskLayer } from "./photo-editing-mask-overlay";
+import { PhotoEditingMaskTools } from "./photo-editing-mask-tools";
 import { PhotoEditingDropOverlay } from "./photo-editing-drop-overlay";
 import { PhotoEditingHealTools } from "./photo-editing-heal-tools";
 import { PhotoEditingAddFolderEmptyState, PhotoEditingAddPhotosEmptyState } from "./photo-editing-empty-states";
@@ -199,6 +203,7 @@ import {
   useBrowserPhotoEffectsSupport,
   useBrowserPhotoLensSupport,
 } from "./use-browser-photo-effects";
+import { photoEditingMaskExportBlocked, useBrowserPhotoMasks, useBrowserPhotoMasksSupport } from "./use-browser-photo-masks";
 import { useBrowserPhotoExportAndDelete } from "./use-browser-photo-export-delete";
 import { useBrowserPhotoFlagKeys } from "./use-browser-photo-flag-keys";
 import { useBrowserPhotoFolders } from "./use-browser-photo-folders";
@@ -206,7 +211,6 @@ import { useBrowserPhotoHealKeys } from "./use-browser-photo-heal";
 import { useBrowserPhotoHistogram, type PhotoEditingFrameSink } from "./use-browser-photo-histogram";
 import { useBrowserPhotoItems, useBrowserPhotoListView } from "./use-browser-photo-items";
 import { useBrowserPhotoLeaveGuards } from "./use-browser-photo-leave-guards";
-import { photoEditingMaskExportBlocked, useBrowserPhotoMasks, useBrowserPhotoMasksSupport } from "./use-browser-photo-masks";
 import { useBrowserPhotoOpen } from "./use-browser-photo-open";
 import { useBrowserPhotoSelection } from "./use-browser-photo-selection";
 import { useBrowserPhotoPresetSupport } from "./use-browser-photo-preset-support";
@@ -593,15 +597,9 @@ export function BrowserPhotoEditingWorkbench(props: {
     photoKey: wasmPhotoKey,
   });
   const detailSupported = detailWasmSupported && detailControlsAvailable(opened?.input);
-  // 部分補正（マスク。M3 #67）を描ける wasm か（同じく1回だけ確認）。
+  // 部分補正（マスク。M3 #67）を描ける wasm か（`capabilities()`。同じく 1 回確かめて覚える）
   const masksSupport = useBrowserPhotoMasksSupport({ mountedRef, engineRef: develop.engineRef, photoKey: wasmPhotoKey });
-  // レンズ補正（v: 9。niho-photo#45）を描ける wasm か（同じく 1 回確かめる）。右パネルの「レンズ」の節を出す
-  const lensSupported = useBrowserPhotoLensSupport({
-    mountedRef,
-    engineRef: develop.engineRef,
-    photoKey: wasmPhotoKey,
-  });
-  // 作業コピーに焼き込まれたプロファイル補正（`_source.lensCorrection.mode`）。オリジナル・読めない meta は null（状態を出さない）
+  const lensSupported = useBrowserPhotoLensSupport({ mountedRef, engineRef: develop.engineRef, photoKey: wasmPhotoKey });
   const lensProfile = readWorkingCopyLensProfile(opened?.input?.kind === "workingCopy" ? opened.input.metaJson : null);
   // プリセットの適用量・今の補正の保存・見本を出せる wasm か（同じく 1 回確かめて覚える。右パネルを閉じても行の形を変えない）
   const presetSupport = useBrowserPhotoPresetSupport({ mountedRef, engineRef: develop.engineRef, photoKey: wasmPhotoKey });
@@ -860,12 +858,13 @@ export function BrowserPhotoEditingWorkbench(props: {
   }, [crop, cropping, cutoutBlocksCrop, wasmPhotoKey]);
   // 修復の道具（niho-photo#44）を開いている（1 枚で見ている wasm の写真）
   const healing = heal.active && loupeOpened !== null;
-  // マスクの道具（部分補正。M3 #67。PC の面で、切り抜き・背景除去・修復とは同時に使わない）
+  // マスクの道具（部分補正。M3 #67。PC の面とスマホの全画面の編集の層〔niho-photo#93〕で、切り抜き・背景除去・修復とは同時に
+  // 使わない）
   const maskTool = useBrowserPhotoMasks({
     mountedRef,
     engineRef: develop.engineRef,
     developSessionRef: develop.developSessionRef,
-    wide,
+    wide: editingAllowed,
     photoKey: wasmPhotoKey,
     support: masksSupport,
     exportBlocked: photoEditingMaskExportBlocked(capabilities),
@@ -893,7 +892,9 @@ export function BrowserPhotoEditingWorkbench(props: {
         ? "heal"
         : cropBlocked
           ? "crop"
-          : "adjust";
+          : maskTool.active
+            ? "mask"
+            : "adjust";
   /** 道具が「補正」の間に右パネルに出す面（右端の帯の「プリセット」「補正」。写真を替えても保つ。niho-photo#51） */
   const [adjustPanel, setAdjustPanel] = useState<BrowserPhotoAdjustPanel>("adjust");
   /** この写真で使える道具（右端の帯に並べる） */
@@ -901,10 +902,20 @@ export function BrowserPhotoEditingWorkbench(props: {
   if (crop.available) tools.push("crop");
   if (heal.available) tools.push("heal");
   if (cutout.available) tools.push("cutout");
+  if (maskTool.available) tools.push("mask");
   /** 道具を選ぶ（切り替え・R・Esc）。背景除去の推論の途中は替えない */
   const chooseTool = (next: BrowserPhotoTool) => {
     if (cutout.running) return;
     open.clearResetDone();
+    if (next === "mask") {
+      cutout.leave();
+      heal.leave();
+      crop.leave();
+      setCropBlockedKey(null);
+      maskTool.enter();
+      return;
+    }
+    maskTool.leave();
     if (next === "cutout") {
       crop.leave();
       heal.leave();
@@ -937,13 +948,13 @@ export function BrowserPhotoEditingWorkbench(props: {
     !cutoutActive &&
     !healing &&
     !cropBlocked &&
-    (cropping ? hasDevelopGeometry(settings) : !isNeutralDevelopColors(settings));
+    (cropping ? hasDevelopGeometry(settings) : maskTool.active ? maskTool.canReset : !isNeutralDevelopColors(settings));
   // 「自動」（F4b 移行元設計）: wasm で開いた写真を 1 枚で見ている間だけ。押せない間・切り抜き / 背景除去の道具の間は押せない
   const auto = useBrowserPhotoAuto({
     mountedRef,
     engineRef: develop.engineRef,
     photoKey: wasmPhotoKey,
-    disabled: controlsDisabled || crop.active || cutout.active,
+    disabled: controlsDisabled || crop.active || cutout.active || healing || maskTool.active,
     settingsKey: open.settingsKey,
     settingsRef: open.settingsRef,
     commitEdit: open.commitEdit,
@@ -984,13 +995,13 @@ export function BrowserPhotoEditingWorkbench(props: {
     setColorPickError(null);
   }, [wasmPhotoKey]);
   useEffect(() => {
-    if (compareOriginal || cropping || cutoutActive || healing || opened?.previewPending || presets.previewName !== null) {
+    if (compareOriginal || cropping || cutoutActive || healing || maskTool.active || opened?.previewPending || presets.previewName !== null) {
       colorPickGenerationRef.current += 1;
       setColorPicking(false);
     }
-  }, [compareOriginal, cropping, cutoutActive, healing, opened?.previewPending, presets.previewName]);
+  }, [compareOriginal, cropping, cutoutActive, healing, maskTool.active, opened?.previewPending, presets.previewName]);
   const colorMixerAvailable = wasmPhotoKey !== null && !canvasOnly && colorPointsSupported;
-  const colorMixerDisabled = controlsDisabled || cropping || cutoutActive || healing || compareOriginal || opened?.previewPending === true || presets.previewName !== null;
+  const colorMixerDisabled = controlsDisabled || cropping || cutoutActive || healing || maskTool.active || compareOriginal || opened?.previewPending === true || presets.previewName !== null;
   const latestColorPickContextRef = useRef({
     photoKey: "",
     settingsJson: "",
@@ -1162,6 +1173,16 @@ export function BrowserPhotoEditingWorkbench(props: {
       onDeselect: () => chooseTool("adjust"),
     });
   }
+  if (tools.includes("mask")) {
+    toolRailItems.push({
+      key: "mask",
+      label: PHOTO_EDITING_TOOL_MASK_LABEL,
+      icon: CircleDashed,
+      pressed: toolValue === "mask",
+      disabled: toolSwitchDisabled,
+      onSelect: () => chooseTool("mask"),
+    });
+  }
   if (tools.includes("cutout")) {
     toolRailItems.push({
       key: "cutout",
@@ -1263,6 +1284,8 @@ export function BrowserPhotoEditingWorkbench(props: {
         }
         return;
       }
+      // マスクの道具の間は Esc（選択を外す）と ⌫ / Delete（選んだマスクを削除。写真は消さない）を先に扱う
+      if (viewModeRef.current === "loupe" && toolValue === "mask" && maskTool.handleShortcut(shortcut, event)) return;
       switch (shortcut) {
         case "grid":
           event.preventDefault();
@@ -1285,7 +1308,7 @@ export function BrowserPhotoEditingWorkbench(props: {
             if (heal.selectedId !== null) heal.select(null);
             else chooseTool("adjust");
           } else if (viewModeRef.current === "loupe" && cropping) crop.leave();
-          else if (viewModeRef.current === "loupe" && (cutoutActive || cropBlocked)) chooseTool("adjust");
+          else if (viewModeRef.current === "loupe" && (cutoutActive || cropBlocked || toolValue === "mask")) chooseTool("adjust");
           else if (viewModeRef.current === "loupe") showGrid();
           // 書き出し・一括の補正の途中は選択を解かない（［キャンセル］と同じく止める）
           else if (!operationRef.current) selection.clear();
@@ -2277,6 +2300,9 @@ export function BrowserPhotoEditingWorkbench(props: {
                       }
                     : null
                 }
+                maskOverlay={
+                  toolValue === "mask" ? <BrowserPhotoEditingMaskLayer tool={maskTool} targetRef={canvasRef} /> : undefined
+                }
                 canvasRef={canvasRef}
                 colorPicker={colorMixerAvailable ? {
                   active: colorPicking,
@@ -2371,6 +2397,10 @@ export function BrowserPhotoEditingWorkbench(props: {
                 onReload={selectedItem
                   ? () => void (opened?.input?.kind === "provisional" ? open.retryCanonical() : openItem(selectedItem, { reload: true }))
                   : null}
+                // マスクの道具（niho-photo#93）: PC の 1 枚の面と同じ写真の上の操作（拡大に合わせて測り直す）
+                maskOverlay={
+                  toolValue === "mask" ? <BrowserPhotoEditingMaskLayer tool={maskTool} targetRef={canvasRef} /> : undefined
+                }
                 unclipped
               />
             }
@@ -2462,6 +2492,26 @@ export function BrowserPhotoEditingWorkbench(props: {
                   }
                 : undefined
             }
+            // マスク（部分補正。niho-photo#93）: PC と同じ hook。「初期化」はマスクの道具の間はマスクだけを外す
+            mask={
+              maskTool.available
+                ? {
+                    active: maskTool.active,
+                    edited: maskTool.masks.length > 0,
+                    disabled: controlsDisabled,
+                    enter: () => chooseTool("mask"),
+                    leave: maskTool.leave,
+                    band: (
+                      <PhotoEditingMaskMobileTools
+                        {...maskTool}
+                        disabled={controlsDisabled}
+                        canReset={canReset}
+                        onReset={maskTool.reset}
+                      />
+                    ),
+                  }
+                : undefined
+            }
             canEdit={props.canEdit}
             canCompare={editable && !cropping}
             compareView={
@@ -2485,7 +2535,7 @@ export function BrowserPhotoEditingWorkbench(props: {
             onBack={showGrid}
             onUndo={open.undo}
             onRedo={open.redo}
-            onReset={open.resetSettings}
+            onReset={toolValue === "mask" ? maskTool.reset : open.resetSettings}
             onRetryWork={() => void open.retryWork()}
             onSettingsChange={open.changeSettings}
             onCompareOriginalChange={open.setCompareOriginal}
@@ -2513,7 +2563,7 @@ export function BrowserPhotoEditingWorkbench(props: {
             // ライトの群の下の「カーブ」（niho-photo#37）とカラーの群の下の「カラーミキサー」（niho-photo#38）: ヒストグラムと同じく PC の
             // 右パネルで、段 2 の wasm が画を描いている写真だけ（S1 の canvas・スマホの層・閲覧の面には出さない）。カーブの背後の輝度は
             // ヒストグラムの度数を使う（数え直さない）。カラーミキサーの節の下に「カラーグレーディング」（niho-photo#39）を続け、
-            // ポイントカラー（`colorMixer`）はその下に並ぶ。効果の群の下に「レンズ」（niho-photo#45。v: 9 を描ける wasm だけ）
+            // ポイントカラー（`colorMixer`）はその下に並ぶ
             afterGroup={
               histogramAvailable
                 ? {
@@ -2689,10 +2739,11 @@ export function BrowserPhotoEditingWorkbench(props: {
                 />
               ) : undefined
             }
+            maskTools={toolValue === "mask" ? <PhotoEditingMaskTools {...maskTool} disabled={controlsDisabled} /> : undefined}
             clipboard={
               // 別の端末の補正を読み直している間は当てない（読み直した補正が入る）。写すのは閲覧のみでもできる。切り抜き・背景除去・
               // 修復の道具の間は出さない（写す・当てるのは色の補正）
-              canvasOnly || cropping || cutoutActive || healing || cropBlocked
+              canvasOnly || cropping || cutoutActive || healing || maskTool.active || cropBlocked
                 ? undefined
                 : {
                     canCopy: open.clipboard.canCopy && !staleReloading && !draftRecoveryPending,
@@ -2701,7 +2752,7 @@ export function BrowserPhotoEditingWorkbench(props: {
                     onPaste: open.clipboard.paste,
                   }
             }
-            onReset={cropping ? crop.reset : open.resetSettings}
+            onReset={cropping ? crop.reset : toolValue === "mask" ? maskTool.reset : open.resetSettings}
             onUndo={cutoutActive ? cutout.undo : open.undo}
             onRedo={cutoutActive ? cutout.redo : open.redo}
             onRetryWork={() => void open.retryWork()}

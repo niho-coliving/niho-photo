@@ -18,13 +18,17 @@ import {
   createPhotoEditingMaskId,
   dragPhotoEditingMaskHandle,
   duplicatePhotoEditingMask,
+  hasPhotoEditingMaskHslEdits,
   isPhotoEditingWhiteBalanceAbsolute,
   photoEditingMaskHandlePoint,
   photoEditingMaskHandles,
   photoEditingMaskOutputToSource,
+  readPhotoEditingMaskHsl,
   removePhotoEditingMask,
+  resetPhotoEditingMaskHsl,
   setPhotoEditingMaskAdjust,
   setPhotoEditingMaskFeather,
+  setPhotoEditingMaskHsl,
   togglePhotoEditingMaskEnabled,
   togglePhotoEditingMaskInvert,
   type PhotoEditingMaskFrame,
@@ -415,5 +419,63 @@ describe("並び・状態・局所の補正", () => {
         .filter((definition) => definition.whiteBalance)
         .map((definition) => definition.label),
     ).toEqual(["色温度", "色かぶり補正"]);
+  });
+});
+
+describe("局所のカラーミキサー（adjust.hsl。niho-photo#93）", () => {
+  const frame = frameOf({ width: 3000, height: 2000 });
+
+  it("無い色・値は 0 で読み、書いた値は ±100 の整数に収める", () => {
+    const lin = linear(frame);
+    const values = readPhotoEditingMaskHsl(lin);
+    expect(Object.keys(values)).toEqual(["red", "orange", "yellow", "green", "aqua", "blue", "purple", "magenta"]);
+    expect(values.blue).toEqual({ hue: 0, saturation: 0, luminance: 0 });
+    expect(hasPhotoEditingMaskHslEdits(lin)).toBe(false);
+    const set = setPhotoEditingMaskHsl(lin, "blue", "saturation", -140.4);
+    expect(set.adjust.hsl).toEqual({ blue: { hue: 0, saturation: -100, luminance: 0 } });
+    expect(setPhotoEditingMaskHsl(lin, "red", "hue", 12.6).adjust.hsl).toEqual({ red: { hue: 13, saturation: 0, luminance: 0 } });
+    expect(readPhotoEditingMaskHsl(set).blue.saturation).toBe(-100);
+    expect(hasPhotoEditingMaskHslEdits(set)).toBe(true);
+    // -0 は 0・数でない値・同じ値は変えない（渡したマスクのまま）
+    expect(setPhotoEditingMaskHsl(lin, "blue", "hue", -0.2)).toBe(lin);
+    expect(setPhotoEditingMaskHsl(lin, "blue", "hue", Number.NaN)).toBe(lin);
+    expect(setPhotoEditingMaskHsl(set, "blue", "saturation", -100)).toBe(set);
+  });
+
+  it("写して書き換え（元のマスクは変えない）、3 値とも 0 の色は消し、色が残らなければ adjust.hsl ごと消す（ほかの差分は残す）", () => {
+    const base: DevelopMask = { ...linear(frame), adjust: { exposure: -0.5 } };
+    const one = setPhotoEditingMaskHsl(base, "blue", "saturation", -100);
+    const two = setPhotoEditingMaskHsl(one, "orange", "luminance", 20);
+    expect(one.adjust.hsl).toEqual({ blue: { hue: 0, saturation: -100, luminance: 0 } });
+    expect(two.adjust.hsl).toEqual({
+      blue: { hue: 0, saturation: -100, luminance: 0 },
+      orange: { hue: 0, saturation: 0, luminance: 20 },
+    });
+    const backToOne = setPhotoEditingMaskHsl(two, "orange", "luminance", 0);
+    expect(backToOne.adjust.hsl).toEqual({ blue: { hue: 0, saturation: -100, luminance: 0 } });
+    const cleared = setPhotoEditingMaskHsl(backToOne, "blue", "saturation", 0);
+    expect(cleared.adjust).toEqual({ exposure: -0.5 });
+    expect("hsl" in cleared.adjust).toBe(false);
+    expect(base.adjust).toEqual({ exposure: -0.5 });
+    // 初期化は hsl だけを外す
+    expect(resetPhotoEditingMaskHsl(two).adjust).toEqual({ exposure: -0.5 });
+    expect(resetPhotoEditingMaskHsl(base)).toBe(base);
+  });
+
+  it("保存は正規形の交互の配列（色の順・0 の値は書かない）で、読み直すと同じ値", () => {
+    const lin = linear(frame, "mask-a");
+    const edited = setPhotoEditingMaskHsl(setPhotoEditingMaskHsl(lin, "blue", "saturation", -100), "red", "hue", 15);
+    const written = writeDevelopMasks(neutralDevelopSettings(), [edited]);
+    const stored = (written.masks as Array<{ adjust: Record<string, unknown> }>)[0]!.adjust;
+    expect(stored.hsl).toEqual(["red", { hue: 15 }, "blue", { saturation: -100 }]);
+    expect(
+      (writeDevelopMasks(neutralDevelopSettings(), [setPhotoEditingMaskHsl(lin, "blue", "saturation", -100)]).masks as Array<{
+        adjust: Record<string, unknown>;
+      }>)[0]!.adjust,
+    ).toEqual({ hsl: ["blue", { saturation: -100 }] });
+    const read = readDevelopMasks(JSON.parse(JSON.stringify(written)) as unknown);
+    expect(readPhotoEditingMaskHsl(read[0]!).blue.saturation).toBe(-100);
+    expect(readPhotoEditingMaskHsl(read[0]!).red.hue).toBe(15);
+    expectReadable([edited]);
   });
 });

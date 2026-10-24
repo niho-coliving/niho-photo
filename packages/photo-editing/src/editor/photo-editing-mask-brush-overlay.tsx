@@ -17,6 +17,7 @@ import { cn } from "niho-ui/cn";
 
 import type { BrowserPhotoMaskBrush, PhotoEditingMaskStrokeHandle } from "./use-browser-photo-mask-brush";
 import { fillPhotoEditingMaskOverlay } from "./use-browser-photo-masks";
+import { usePhotoEditingCoarsePointer } from "./use-photo-editing-coarse-pointer";
 import { usePhotoEditingTargetBox } from "./use-photo-editing-target-box";
 
 /** 塗っている途中の dab の赤（重ね表示と同じ色。重ね表示は値 255 で不透明度 0.5） */
@@ -26,9 +27,13 @@ const LIVE_RED_MAX_ALPHA = 0.5;
 const HOLD_AFTER_SAVE_MS = 4000;
 /** dab の縁の段数（滑らかな縁を放射グラデーションで近づける） */
 const GRADIENT_STOPS = 8;
+/** 指で大きさを変えたとき、写真の中央に筆の輪の見本を出す時間（ms。指の下の輪は指に隠れるので出さない） */
+const SIZE_PREVIEW_MS = 900;
 
 type Gesture = {
   pointerId: number;
+  /** 指で始めたストローク（別の指が触れたら捨てる） */
+  touch: boolean;
   stroke: PhotoEditingMaskStrokeHandle;
   /** 前の dab の位置（写真の canvas の画面の px） */
   last: Vec2;
@@ -89,7 +94,7 @@ function paintLiveDab(
 }
 
 /**
- * 写真の上のブラシの面（部分補正のブラシ。M4 #68。PC の面だけ）。写真の canvas（`targetRef`）と同じ位置・大きさに重ねる。
+ * 写真の上のブラシの面（部分補正のブラシ。M4 #68。PC の面とスマホの編集の層〔niho-photo#93〕）。写真の canvas（`targetRef`）と同じ位置・大きさに重ねる。
  *
  * - 押してから離すまでが 1 ストローク（pointer capture・`touch-action: none`）。ポインタの道に沿って、半径の 25% ごとに dab を置く
  *   （面の値はフックが面の画素に重ね、見た目はこの canvas に赤で描く。エンジンでは描かない）。離したら確定に回す（取り消しの
@@ -97,6 +102,10 @@ function paintLiveDab(
  * - 消しゴムは右パネルの切り替え・E、または ⌥ を押しながら塗る。`[` `]` で大きさを変える（文字の入力欄の上・修飾キーでは効かない）
  * - 筆の大きさの輪（直径 = 2 × 見えている短い辺 × 大きさ%）がポインタに付いてくる（消しゴムは破線）
  * - 赤い面は、O で重ねている・マスクの補正がまだ何も無い・塗っている途中と、塗った後に新しい面が届くまで出す
+ * - 指（niho-photo#93）: 指 1 本で塗る。2 本目の指が写真のどこかに触れたら、塗っている途中のストロークを確定せずに捨て、2 本目の
+ *   指では塗らない（写真の面の指の操作がピンチで拡大・送る。この面はピンチにだけ数える印を持ち、指の押下を止めない）。指の下の
+ *   輪は指に隠れるので出さず、塗っている途中の赤で見せる。指で大きさを変えたら、写真の中央に輪の見本を少しの間出す。マウス・ペンは
+ *   今までどおり（押下を写真の面へ渡さない）
  */
 export function PhotoEditingMaskBrushOverlay(props: {
   targetRef: RefObject<HTMLCanvasElement | null>;
@@ -114,6 +123,10 @@ export function PhotoEditingMaskBrushOverlay(props: {
   const [hold, setHold] = useState(false);
   const [cursor, setCursor] = useState<Cursor | null>(null);
   const [altHeld, setAltHeld] = useState(false);
+  /** 今どこかに触れている指（2 本目の指は塗らない） */
+  const touchesRef = useRef(new Set<number>());
+  const coarse = usePhotoEditingCoarsePointer();
+  const [sizePreview, setSizePreview] = useState(false);
   const brushRef = useRef(brush);
   brushRef.current = brush;
   const savingRef = useRef(brush.saving);
@@ -157,6 +170,65 @@ export function PhotoEditingMaskBrushOverlay(props: {
     setStroking(false);
     repaintRef.current();
   }, [interactive]);
+
+  /** 塗っている途中のストロークを確定せずに捨てる（2 本目の指・止められた）。 */
+  const cancelStroke = () => {
+    const gesture = gestureRef.current;
+    if (!gesture) return;
+    gestureRef.current = null;
+    setStroking(false);
+    gesture.stroke.finish(false);
+    setHold(false);
+    repaintRef.current();
+  };
+  const cancelStrokeRef = useRef(cancelStroke);
+  cancelStrokeRef.current = cancelStroke;
+
+  // 指: 触れている指を数え（写真の外も）、指で塗っている途中に別の指が触れたらストロークを捨てる（この面の押下より先に聞く）
+  useEffect(() => {
+    const handleDown = (event: globalThis.PointerEvent) => {
+      if (event.pointerType !== "touch") return;
+      const touches = touchesRef.current;
+      // 最初の指が降りたのに前の指が残っているのは、離した通知が届かなかったとき。持ち越さない
+      if (event.isPrimary) touches.clear();
+      touches.add(event.pointerId);
+      const gesture = gestureRef.current;
+      if (gesture?.touch && gesture.pointerId !== event.pointerId) cancelStrokeRef.current();
+    };
+    const handleUp = (event: globalThis.PointerEvent) => {
+      if (event.pointerType === "touch") touchesRef.current.delete(event.pointerId);
+    };
+    document.addEventListener("pointerdown", handleDown, true);
+    document.addEventListener("pointerup", handleUp, true);
+    document.addEventListener("pointercancel", handleUp, true);
+    return () => {
+      document.removeEventListener("pointerdown", handleDown, true);
+      document.removeEventListener("pointerup", handleUp, true);
+      document.removeEventListener("pointercancel", handleUp, true);
+    };
+  }, []);
+
+  // 指で大きさを変えたら、写真の中央に輪の見本を少しの間出す（指の下の輪は見えないので。マウスはポインタの輪で見える）
+  const size = brush.brush.size;
+  const sizeRef = useRef(size);
+  const previewTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => {
+    if (sizeRef.current === size) return;
+    sizeRef.current = size;
+    if (!coarse) return;
+    setSizePreview(true);
+    if (previewTimerRef.current !== null) clearTimeout(previewTimerRef.current);
+    previewTimerRef.current = setTimeout(() => {
+      previewTimerRef.current = null;
+      setSizePreview(false);
+    }, SIZE_PREVIEW_MS);
+  }, [coarse, size]);
+  useEffect(
+    () => () => {
+      if (previewTimerRef.current !== null) clearTimeout(previewTimerRef.current);
+    },
+    [],
+  );
 
   // [ ] で大きさ、⌥ を押している間は消しゴム（文字の入力・ほかが使ったキーは扱わない）
   useEffect(() => {
@@ -216,9 +288,12 @@ export function PhotoEditingMaskBrushOverlay(props: {
 
   const start = (event: ReactPointerEvent<HTMLDivElement>) => {
     if (event.button !== 0) return;
-    // 塗る面の上の押下は、写真の選択を外す・マスクを選ぶには使わない
-    event.stopPropagation();
+    const touch = event.pointerType === "touch";
+    // 塗る面の上の押下は、写真の選択を外す・マスクを選ぶには使わない。指は写真の面の指の操作（ピンチ）へ渡す（ピンチにだけ数える印）
+    if (!touch) event.stopPropagation();
     if (!interactive || gestureRef.current) return;
+    // 2 本目の指では塗らない（1 本目のストロークは、文書の押下を聞く係が捨てている）
+    if (touch && touchesRef.current.size > 1) return;
     const local = localPoint(event.clientX, event.clientY);
     if (!local) return;
     const stroke = brush.startStroke(brush.brush.erase || event.altKey);
@@ -231,6 +306,7 @@ export function PhotoEditingMaskBrushOverlay(props: {
     }
     const gesture: Gesture = {
       pointerId: event.pointerId,
+      touch,
       stroke,
       last: local.point,
       carry: 0,
@@ -242,12 +318,15 @@ export function PhotoEditingMaskBrushOverlay(props: {
     // canvas はいつも今の赤い面（と確定を待っている塗り）を描いてある。その上に塗る
     setStroking(true);
     setHold(true);
-    moveCursor(event.clientX, event.clientY);
+    setSizePreview(false);
+    // 指の下の輪は指に隠れるので出さない（塗っている途中の赤で見せる）
+    if (touch) setCursor(null);
+    else moveCursor(event.clientX, event.clientY);
     placeDab(gesture, local.point, local.width, local.height);
   };
 
   const move = (event: ReactPointerEvent<HTMLDivElement>) => {
-    moveCursor(event.clientX, event.clientY);
+    if (event.pointerType !== "touch") moveCursor(event.clientX, event.clientY);
     const gesture = gestureRef.current;
     if (!gesture || gesture.pointerId !== event.pointerId) return;
     const coalesced = event.nativeEvent.getCoalescedEvents?.() ?? [];
@@ -280,6 +359,10 @@ export function PhotoEditingMaskBrushOverlay(props: {
   const showRed = props.overlayVisible || stroking || hold || (mask !== null && !isActiveDevelopMask(mask));
   const diameter = box ? 2 * (clampPhotoEditingMaskBrushSize(brush.brush.size) / 100) * Math.min(box.width, box.height) : 0;
   const ready = box !== null && box.width > 0 && box.height > 0;
+  const ringClassName = cn(
+    "pointer-events-none absolute -translate-x-1/2 -translate-y-1/2 rounded-full border border-niho-surface outline outline-1 outline-niho-text/40",
+    erasing ? "border-dashed" : null,
+  );
   return (
     <div
       ref={rootRef}
@@ -288,6 +371,9 @@ export function PhotoEditingMaskBrushOverlay(props: {
       aria-disabled={interactive ? undefined : true}
       data-testid="photo-mask-brush-area"
       data-erasing={erasing ? "true" : undefined}
+      // 指は塗る。写真の面の指の操作は、この面の上の指をピンチにだけ数える（送り・長押し・ダブルタップにしない。
+      // `PHOTO_EDITING_ZOOM_PINCH_ONLY_ATTRIBUTE`）
+      data-photo-zoom-pinch-only=""
       className={cn("absolute touch-none select-none", interactive ? "cursor-none" : "cursor-not-allowed")}
       style={
         ready
@@ -296,7 +382,10 @@ export function PhotoEditingMaskBrushOverlay(props: {
       }
       onPointerDown={start}
       onPointerMove={move}
-      onPointerUp={(event) => end(event, true)}
+      onPointerUp={(event) => {
+        end(event, true);
+        if (event.pointerType === "touch") setCursor(null);
+      }}
       onPointerCancel={(event) => end(event, false)}
       onLostPointerCapture={(event) => end(event, false)}
       onPointerLeave={() => {
@@ -313,11 +402,17 @@ export function PhotoEditingMaskBrushOverlay(props: {
         <span
           aria-hidden
           data-testid="photo-mask-brush-cursor"
-          className={cn(
-            "pointer-events-none absolute -translate-x-1/2 -translate-y-1/2 rounded-full border border-niho-surface outline outline-1 outline-niho-text/40",
-            erasing ? "border-dashed" : null,
-          )}
+          className={ringClassName}
           style={{ left: cursor.left, top: cursor.top, width: diameter, height: diameter }}
+        />
+      ) : null}
+      {interactive && sizePreview && !cursor && !stroking && ready && diameter > 0 ? (
+        // 指で大きさを変えた: 写真の中央に輪の見本
+        <span
+          aria-hidden
+          data-testid="photo-mask-brush-size-preview"
+          className={ringClassName}
+          style={{ left: box.width / 2, top: box.height / 2, width: diameter, height: diameter }}
         />
       ) : null}
     </div>

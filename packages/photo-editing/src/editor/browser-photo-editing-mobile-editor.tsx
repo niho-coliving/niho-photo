@@ -14,6 +14,7 @@ import { createPortal } from "react-dom";
 import {
   Aperture,
   Blend,
+  CircleDashed,
   Crop,
   ChevronLeft,
   Droplet,
@@ -59,6 +60,7 @@ import {
   PHOTO_EDITING_RESET_LABEL,
   PHOTO_EDITING_RESET_WHITE_BALANCE_LABEL,
   PHOTO_EDITING_RETRY_LABEL,
+  PHOTO_EDITING_TOOL_MASK_LABEL,
   PHOTO_EDITING_UNDO_LABEL,
   photoEditingMobileItemsLabel,
 } from "../photo-editing-copy";
@@ -95,7 +97,7 @@ import { usePhotoEditingZoom } from "./use-photo-editing-zoom";
  * スマホ（1024px 未満）の 1 枚の編集の層（NIHO Photo 段 1 F6c 移行元設計・モック `idea/mock/photo-editing-mobile-v1.html`）。
  * host のヘッダーとサブタブを隠す全画面の層で、上から 上の帯（‹・取り消す・やり直す／♥・補正前・書き出す）→ 写真（残り全部）
  * → 状態の 1 行 → 道具別の操作段 → 道具の帯（プリセット／自動／ライト／カラー／効果／カラーミキサー／カラーグレーディング／
- * ポイントカラー／切り抜き）。
+ * ポイントカラー／マスク／切り抜き）。
  *
  * - 層の地は白 1 色（帯・写真・段・書き出すのシートを塗り分けない。owner 決定 2026-10-01）。PC の 1 枚の面と同じ地で、
  *   肌色は白の見え方を寄せるので敷かない。地を持つのは層だけで、帯と写真の面は塗らない。
@@ -124,7 +126,9 @@ const COLOR_MIXER_TOOL_ID = "color-mixer";
 const HSL_MIXER_TOOL_ID = "hsl-mixer";
 /** カラーグレーディング（niho-photo#39）の道具 */
 const COLOR_GRADING_TOOL_ID = "color-grading";
-/** 道具の帯の道具（プリセット・自動・補正の群・カラーミキサー・カラーグレーディング・ポイントカラー・切り抜き） */
+/** マスク（部分補正。niho-photo#93）の道具 */
+const MASK_TOOL_ID = "mask";
+/** 道具の帯の道具（プリセット・自動・補正の群・カラーミキサー・カラーグレーディング・ポイントカラー・マスク・切り抜き） */
 type MobileToolId =
   | typeof PRESETS_TOOL_ID
   | typeof AUTO_TOOL_ID
@@ -132,6 +136,7 @@ type MobileToolId =
   | typeof COLOR_MIXER_TOOL_ID
   | typeof HSL_MIXER_TOOL_ID
   | typeof COLOR_GRADING_TOOL_ID
+  | typeof MASK_TOOL_ID
   | PhotoEditingAdjustmentGroupId;
 
 const TOOL_ICONS: Record<MobileToolId, LucideIcon> = {
@@ -146,6 +151,7 @@ const TOOL_ICONS: Record<MobileToolId, LucideIcon> = {
   "hsl-mixer": Palette,
   "color-grading": Blend,
   "color-mixer": Pipette,
+  mask: CircleDashed,
 };
 
 const BAND_CLASS_NAME = "shrink-0 border-t border-niho-border";
@@ -208,6 +214,13 @@ export function BrowserPhotoEditingMobileEditor(props: {
     reset: () => void;
     setLiveAngle: (angle: number | null) => void;
   };
+  /**
+   * マスク（部分補正。niho-photo#93。マスクを描ける wasm の写真だけ）。渡したときだけ道具の帯の「切り抜き」の前に出し、道具の段に
+   * `band`（足す・一覧・選んだマスクの補正）を出す（段の高さを超える分は段の中で送る）。入る・出るはマスクの hook の `enter` / `leave`
+   * で、hook がひとりでに出た（写真を替えた・使えなくなった）ら、ここも今の道具を既定に戻す。マスクの間も写真の拡大（ピンチ）は使え、
+   * 長押しの補正前は使わない（指は形を動かす・塗るのに使う）
+   */
+  mask?: { active: boolean; edited: boolean; disabled: boolean; enter: () => void; leave: () => void; band: ReactNode };
   canEdit: boolean;
   /** 「補正前」を出す（補正の入力を開けていて、直せる） */
   canCompare: boolean;
@@ -265,8 +278,14 @@ export function BrowserPhotoEditingMobileEditor(props: {
   const stripRef = useRef<HTMLDivElement | null>(null);
   const toolStripRef = useRef<HTMLElement | null>(null);
   const exportButtonRef = useRef<HTMLButtonElement | null>(null);
-  // 今の道具（null はまだ選んでいない: プリセットがあればプリセット、無ければ先頭の補正の群）
-  const [toolId, setToolId] = useState<MobileToolId | null>(null);
+  // 今の道具（null はまだ選んでいない: プリセットがあればプリセット、無ければ先頭の補正の群）。マスクは hook が入っている間だけ
+  // マスク（hook がひとりでに出たら既定の道具。層を開いたときに入っていれば〔PC の幅から狭めた〕マスクから始める）
+  const [selectedToolId, setToolId] = useState<MobileToolId | null>(() => (props.mask?.active ? MASK_TOOL_ID : null));
+  const mask = props.mask ?? null;
+  const toolId = selectedToolId === MASK_TOOL_ID && mask?.active !== true ? null : selectedToolId;
+  useEffect(() => {
+    if (selectedToolId === MASK_TOOL_ID && mask?.active !== true) setToolId(null);
+  }, [mask?.active, selectedToolId]);
   // 補正の群ごとの、最後に選んでいた項目（道具を切り替えて戻ったときに続きから）
   const [itemByTool, setItemByTool] = useState<Partial<Record<PhotoEditingAdjustmentGroupId, PhotoEditingControlKey>>>({});
   const [exportOpen, setExportOpen] = useState(false);
@@ -285,6 +304,7 @@ export function BrowserPhotoEditingMobileEditor(props: {
   const colorMixerCurrent = !presetsCurrent && colorMixer !== null && toolId === COLOR_MIXER_TOOL_ID;
   const hslMixerCurrent = !presetsCurrent && hslMixer !== null && toolId === HSL_MIXER_TOOL_ID;
   const colorGradingCurrent = !presetsCurrent && colorGrading !== null && toolId === COLOR_GRADING_TOOL_ID;
+  const maskCurrent = !presetsCurrent && mask !== null && toolId === MASK_TOOL_ID;
   // カラーミキサー・カラーグレーディングに調整が入っている（道具の帯のその道具に点を添える。プリセット・自動の点と同じ）
   const hslEdited = hslMixer !== null && hasPhotoEditingHslEdits(props.settings);
   const colorGradingEdited = colorGrading !== null && hasPhotoEditingColorGradingEdits(props.settings);
@@ -296,7 +316,7 @@ export function BrowserPhotoEditingMobileEditor(props: {
     if (autoWarmable) onAutoWarmRef.current?.();
   }, [autoWarmable, auto?.pressed]);
   const group =
-    presetsCurrent || autoCurrent || cropCurrent || colorMixerCurrent || hslMixerCurrent || colorGradingCurrent
+    presetsCurrent || autoCurrent || cropCurrent || colorMixerCurrent || hslMixerCurrent || colorGradingCurrent || maskCurrent
       ? null
       : (groups.find((candidate) => candidate.id === toolId) ?? groups[0] ?? null);
   // 道具の帯（プリセットは先頭。カラーミキサー → カラーグレーディング → ポイントカラーは補正の群の後ろ。Lightroom と同じくカラーの続き）。
@@ -310,6 +330,8 @@ export function BrowserPhotoEditingMobileEditor(props: {
   if (hslMixer) tools.push({ id: HSL_MIXER_TOOL_ID, title: PHOTO_EDITING_HSL_TITLE });
   if (colorGrading) tools.push({ id: COLOR_GRADING_TOOL_ID, title: PHOTO_EDITING_COLOR_GRADING_TITLE });
   if (colorMixer) tools.push({ id: COLOR_MIXER_TOOL_ID, title: PHOTO_EDITING_POINT_COLOR_TITLE });
+  // マスク（部分補正）は全体の補正の後ろ・切り抜きの前
+  if (mask) tools.push({ id: MASK_TOOL_ID, title: PHOTO_EDITING_TOOL_MASK_LABEL });
   if (crop) tools.push({ id: CROP_TOOL_ID, title: "切り抜き" });
   tools.push(...groups.filter((candidate) => TRAILING_GROUP_IDS.has(candidate.id)).map(toolOf));
   const currentToolId: MobileToolId | null = presetsCurrent
@@ -324,7 +346,9 @@ export function BrowserPhotoEditingMobileEditor(props: {
             ? HSL_MIXER_TOOL_ID
             : colorGradingCurrent
               ? COLOR_GRADING_TOOL_ID
-              : (group?.id ?? null);
+              : maskCurrent
+                ? MASK_TOOL_ID
+                : (group?.id ?? null);
   const control = group
     ? (group.controls.find((candidate) => candidate.key === itemByTool[group.id]) ?? group.controls[0] ?? null)
     : null;
@@ -344,6 +368,8 @@ export function BrowserPhotoEditingMobileEditor(props: {
   const selectTool = (next: MobileToolId) => {
     if (next === CROP_TOOL_ID) crop?.enter();
     else crop?.leave();
+    if (next === MASK_TOOL_ID) mask?.enter();
+    else if (mask?.active) mask.leave();
     setToolId(next);
   };
 
@@ -389,7 +415,7 @@ export function BrowserPhotoEditingMobileEditor(props: {
   if (sheetPhotoKey !== photoKey) {
     setSheetPhotoKey(photoKey);
     setExportOpen(false);
-    if (toolId === CROP_TOOL_ID) setToolId(presets ? PRESETS_TOOL_ID : (groups[0]?.id ?? null));
+    if (toolId === CROP_TOOL_ID || toolId === MASK_TOOL_ID) setToolId(presets ? PRESETS_TOOL_ID : (groups[0]?.id ?? null));
   }
   // 書き出せなくなったら（写真を読み込み直している途中など）開かない。書き出している間は、結果を出すまで開いたままにする
   const exportChoices = props.exportChoices;
@@ -427,7 +453,8 @@ export function BrowserPhotoEditingMobileEditor(props: {
   const zoom = usePhotoEditingZoom({
     photoKey,
     enabled: !cropCurrent && props.colorPicking !== true,
-    holdEnabled: compareEnabled && !comparing,
+    // マスクの間は、指を形のつまみ・塗るのに使う（長押しの補正前にしない。ピンチの拡大は使える）
+    holdEnabled: compareEnabled && !comparing && !maskCurrent,
     onHoldChange: setCompareOriginal,
   });
 
@@ -438,6 +465,9 @@ export function BrowserPhotoEditingMobileEditor(props: {
       event.preventDefault();
       if (cropCurrent || crop?.active) {
         crop?.leave();
+        setToolId(presets ? PRESETS_TOOL_ID : (groups[0]?.id ?? null));
+      } else if (maskCurrent && mask) {
+        mask.leave();
         setToolId(presets ? PRESETS_TOOL_ID : (groups[0]?.id ?? null));
       } else props.onBack();
       return;
@@ -569,6 +599,8 @@ export function BrowserPhotoEditingMobileEditor(props: {
       <div
         ref={zoom.surfaceRef}
         data-testid="photo-editing-mobile-photo"
+        // 写真の上の印（マスクのつまみ・ブラシ）が、拡大の変化を見て測り直す印（`PHOTO_EDITING_ZOOM_SURFACE_ATTRIBUTE`）
+        data-photo-zoom-surface=""
         data-zoomed={zoom.zoomed ? "true" : undefined}
         onPointerDown={zoom.onPointerDown}
         onPointerMove={zoom.onPointerMove}
@@ -678,6 +710,14 @@ export function BrowserPhotoEditingMobileEditor(props: {
         >
           {hslMixer}
         </div>
+      ) : maskCurrent && mask ? (
+        // マスク（部分補正。niho-photo#93）: 足す・一覧・選んだマスクの補正を縦に（段の高さを超える分は段の中で送る）
+        <div
+          data-testid="photo-editing-mobile-mask"
+          className={cn(BAND_CLASS_NAME, "max-h-[17rem] overflow-y-auto overscroll-y-contain")}
+        >
+          {mask.band}
+        </div>
       ) : colorGradingCurrent && colorGrading ? (
         // 帯の 4 択・色相環・スライダーを縦に（段の高さを超える分は段の中で送る。帯と写真は動かさない）
         <div
@@ -773,7 +813,11 @@ export function BrowserPhotoEditingMobileEditor(props: {
                   key={candidate.id}
                   type="button"
                   aria-current={current ? "true" : undefined}
-                  disabled={(candidate.id === AUTO_TOOL_ID && auto?.disabled) || (candidate.id === CROP_TOOL_ID && crop?.disabled)}
+                  disabled={
+                    (candidate.id === AUTO_TOOL_ID && auto?.disabled) ||
+                    (candidate.id === CROP_TOOL_ID && crop?.disabled) ||
+                    (candidate.id === MASK_TOOL_ID && mask?.disabled && !maskCurrent)
+                  }
                   onClick={() => selectTool(candidate.id)}
                   className={cn(
                     "relative flex min-w-11 shrink-0 flex-col items-center justify-center gap-0.5 whitespace-nowrap rounded-xl px-1.5 pb-1 text-xs transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-niho-accent-ink disabled:cursor-not-allowed disabled:opacity-40",
@@ -786,7 +830,8 @@ export function BrowserPhotoEditingMobileEditor(props: {
                   {(candidate.id === AUTO_TOOL_ID && auto?.pressed) ||
                   (candidate.id === PRESETS_TOOL_ID && presets?.appliedPresetKey !== null) ||
                   (candidate.id === HSL_MIXER_TOOL_ID && hslEdited) ||
-                  (candidate.id === COLOR_GRADING_TOOL_ID && colorGradingEdited) ? (
+                  (candidate.id === COLOR_GRADING_TOOL_ID && colorGradingEdited) ||
+                  (candidate.id === MASK_TOOL_ID && mask?.edited) ? (
                     <span aria-hidden className="absolute right-1.5 top-1.5 h-1.5 w-1.5 rounded-full bg-niho-text" />
                   ) : null}
                   {current ? (
