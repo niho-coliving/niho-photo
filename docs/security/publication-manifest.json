@@ -681,7 +681,7 @@
         "path": "packages/photo-editing/src/develop-engine/develop-settings.ts",
         "sha256": "b32fdf32b5eafb093a9691d609ae4719a576e662507776e6c409ab0e4c98722a"
       },
-      "outputSha256": "ff74a12fdbd17fb31022c284dcb76d9caacb298fcc7a9e080cf58446dad912f7",
+      "outputSha256": "ee8869f7b7a7e641452ac65f7739c8f4ad8f1615c423c16fe5dbbca3fd2a6008",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
@@ -703,7 +703,8 @@
         "niho-photo#46 で遠近のある設定を v7 にし、プリセットの結果の変形を入れ、自動は幾何を保つようにした。",
         "niho-photo#44 前半で修復の印（heal）の形の版 8・読み取り・直せる判定・コピーと貼り付け・プリセット・初期化・neutral の規則を足した。",
         "PR #96統合でcrate 0.24・v8対応",
-        "PR #101を更新済み#97へ積み直し、レンズ補正をv9として統合。修復併用時の色収差推定は元画から行う。"
+        "PR #101を更新済み#97へ積み直し、レンズ補正をv9として統合。修復併用時の色収差推定は元画から行う。",
+        "niho-photo#119: UI更新もcanonicalな既知版predicateで検査できるよう既存関数を公開する"
       ]
     },
     {
@@ -1863,12 +1864,14 @@
         "path": "packages/photo-editing/src/editor/use-browser-photo-edit-settings.ts",
         "sha256": "15df905e2b7834e1041ad45fda83d1a753e68dbc94f79a0f1025cc3f28148c41"
       },
-      "outputSha256": "4bf29241fc71cd6c41f5c229f135838a99fc66b89fe8593f4d1b1bc495c48a3c",
+      "outputSha256": "6aca2e534c8e8f037d080ee952c46ed01ff3b178ff5f110f1e921efc1706a117",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
         "Issue #13の段階表示、provisional draft、canonical handoffと書き出し境界を実装。",
-        "Issue 13 progressive RAW open implementation"
+        "Issue 13 progressive RAW open implementation",
+        "niho-photo#119: 画面操作の効果追加を既知の必要版へ昇格してから厳密検証する",
+        "niho-photo#119: 効果操作の版昇格前に未知の版を拒否し外部readerの厳密性を保つ"
       ]
     },
     {
@@ -3481,10 +3484,11 @@
         "path": "packages/ui/src/dismiss-layers.ts",
         "sha256": "b7ac8cbfbeee95cc53fb0a339006edc8ac28fc63e0fa122a3b7a41d80b10a49e"
       },
-      "outputSha256": "e6337003fd662079dc7bd30b84fbc9879e7972bc44ede9ffb9b2cc23bb0c5cf3",
+      "outputSha256": "974ca374f0e894a411eb6e705c198894785f8fd14eead8b76c8696a1f8a3ced6",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
-        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。"
+        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
+        "SDKとhostのbrowser内dismiss順序を共有しSSRではcallbackを保持しない契約へ更新。"
       ]
     },
     {
@@ -3581,14 +3585,15 @@
         "path": "apps/camera/README.md",
         "sha256": "d0e1f198e83893a73cd3d84122debf76ad9755e00a5fc5e1b69c242daec8d4eb"
       },
-      "outputSha256": "11f9a86c197e8105b99635ad76f15a112b8404de3ab27436dfaa397fdf96b9f6",
+      "outputSha256": "fd781967dc6ab617f510021953f44b4c14a5bf82ba4c6c241894bd7a957b38b5",
       "modifications": [
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
         "フォルダと個別写真の利用方法、公開契約、および許可するネイティブコマンドを明記",
         "Issue #3のpublic OAuth/PKCE、ローカル専用UI、安全契約と公開依存を新規接続。実issuer・署名検証器が未契約のため本番接続は無効。",
         "Issue #3の公式NIHO app-connect v1契約へ適合。deep link・NIHO接続token/Firebase交換・FileSecretStore・取消と再起動を独立実装し、安全契約をv2へ改版。",
         "Issue #2の公開検証成果物・SBOM・固定SHA取り込み契約と秘密を持たないCI検査を追加。",
-        "Issue #2の実装検証で成果物名・輸送receipt・build設定を強化。"
+        "Issue #2の実装検証で成果物名・輸送receipt・build設定を強化。",
+        "公式candidateのSDK専用asset providerと署名前の実bytes検証を文書化する"
       ]
     },
     {
@@ -3599,8 +3604,10 @@
         "path": "apps/camera/develop-sidecars.lock.json",
         "sha256": "3220ab6ce2a2330819e54aca55bf96464cb5cca4d9a5289784595ec1d70d60ff"
       },
-      "outputSha256": "3220ab6ce2a2330819e54aca55bf96464cb5cca4d9a5289784595ec1d70d60ff",
-      "modifications": []
+      "outputSha256": "a6e138be84a1194882ad3d9c143a0b76f298b6ef61f71fbf9a9b0d3581a78ea5",
+      "modifications": [
+        "候補buildのrenderer版を公開SDK 0.25.0へ合わせ、共有source固定はSDK sourceOwnershipへ一本化。"
+      ]
     },
     {
       "path": "apps/camera/index.html",
@@ -3621,12 +3628,13 @@
         "path": "apps/camera/package.json",
         "sha256": "c8a02fb7558712e146296e67114a29f704677064714dd4d5e87697c906756b07"
       },
-      "outputSha256": "db60bf3ba26f3fee0ce6ada771580e6e8b5cac1e69d6c9a4ec23c048d6535260",
+      "outputSha256": "f3d6d9693aef8fc7d9e9e9ac7823a84f17b21bd00aedece3c4416c24b2127f97",
       "modifications": [
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
         "Issue #3のpublic OAuth/PKCE、ローカル専用UI、安全契約と公開依存を新規接続。実issuer・署名検証器が未契約のため本番接続は無効。",
         "Issue #2の公開検証成果物・SBOM・固定SHA取り込み契約と秘密を持たないCI検査を追加。",
-        "Issue #2の実装検証で成果物名・輸送receipt・build設定を強化。"
+        "Issue #2の実装検証で成果物名・輸送receipt・build設定を強化。",
+        "repository URLをniho-lifeへ移管"
       ]
     },
     {
@@ -3700,11 +3708,12 @@
         "path": "apps/camera/src-tauri/Cargo.toml",
         "sha256": "698e7a0710d11006400920a5844e8ae1206cc37fbf7e7cd3c449658bfb2e255d"
       },
-      "outputSha256": "e13186e0d1a1334ea55f1501ad0b08456c5eb59716d71dcd87605810ff711234",
+      "outputSha256": "96206b4cbc1a3c137dcfecd1d1dbcc347467bf61a50fb208d694673b56d71950",
       "modifications": [
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
         "Issue #3のpublic OAuth/PKCE、ローカル専用UI、安全契約と公開依存を新規接続。実issuer・署名検証器が未契約のため本番接続は無効。",
-        "Issue #3の公式NIHO app-connect v1契約へ適合。deep link・NIHO接続token/Firebase交換・FileSecretStore・取消と再起動を独立実装し、安全契約をv2へ改版。"
+        "Issue #3の公式NIHO app-connect v1契約へ適合。deep link・NIHO接続token/Firebase交換・FileSecretStore・取消と再起動を独立実装し、安全契約をv2へ改版。",
+        "repository URLをniho-lifeへ移管"
       ]
     },
     {
@@ -4001,7 +4010,7 @@
         "path": "apps/camera/src-tauri/src/lib.rs",
         "sha256": "e6415b3d0633bb4753761b89f8860fffcfa9b67f95832ab971bd9b13eebaaffc"
       },
-      "outputSha256": "cc3d9beaeec8bf968c6c05898b4ff6983f68c1833ee8312bbdab4384ae278d8e",
+      "outputSha256": "9b5edd17563f6e627c543e7cac62a02fe26cdfa8f6299e9744eed6a712997bfa",
       "modifications": [
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
         "共有形式フィルターを使う複数写真pickerと参照削除コマンドを同梱UIの権限内に追加 / 選択写真専用commandをinvoke handlerへ登録。",
@@ -4015,7 +4024,9 @@
         "部分補正（マスク）#68: マスクの面のコマンドを登録する",
         "PR #82: #74 squash merge後に版機能の変更をmainへ積み直し、最終ハッシュを反映。",
         "PR #98を#91マージ後の最新mainへ積み直し、選別保存中の二重操作ガードを保持。",
-        "PR #98で選別フラグの保存経路とUIを更新する。"
+        "PR #98で選別フラグの保存経路とUIを更新する。",
+        "公式配布では検証可能なSDK専用asset sectionをTauri asset providerへ接続する",
+        "新規runtime asset moduleの宣言順をcargo fmtの規約へ合わせる"
       ]
     },
     {
@@ -4515,9 +4526,10 @@
         "path": "packages/desktop-photo/Cargo.toml",
         "sha256": "125119616132f1df7e69b76bf6d482b75a964ca435544f6eec06f2cf02fe013c"
       },
-      "outputSha256": "13309c61856c2aabf4eac4de2d137df7efc16e7297ad44a895dad09008d586cd",
+      "outputSha256": "7d523ce1dacb48e8ba0992e8355bb5ac96b93f0808183479b637317f17faa9d2",
       "modifications": [
-        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。"
+        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
+        "repository URLをniho-lifeへ移管"
       ]
     },
     {
@@ -5172,9 +5184,9 @@
         "path": "packages/develop-engine/calibration/panasonic-dc-s5/apple-v1.json",
         "sha256": "85995e52e8a8a9e958d78a3a35a1c9d5de7916b804bd5fca2fd29a81b88ece18"
       },
-      "outputSha256": "f24a1b8261c6e47e5af3da0fdb04107c1c37d0ebc6180b6eddcba3ca54cce901",
+      "outputSha256": "85995e52e8a8a9e958d78a3a35a1c9d5de7916b804bd5fca2fd29a81b88ece18",
       "modifications": [
-        "公開SSOT向けに内部絶対path・private repository URL・行末を正規化。"
+        "旧公開抽出時に追加された末尾LFを除去し、承認済みsource byte列へ完全復旧。"
       ]
     },
     {
@@ -5185,9 +5197,9 @@
         "path": "packages/develop-engine/calibration/panasonic-dc-s5/apple-v2.json",
         "sha256": "19a0b544394c5434c0fa352fed47502d68634263a971cafb36eacfa372e97cad"
       },
-      "outputSha256": "04a638e9d0df65d0a2178dd859ed26aacd62354525388f8c1a9177874ba9be08",
+      "outputSha256": "19a0b544394c5434c0fa352fed47502d68634263a971cafb36eacfa372e97cad",
       "modifications": [
-        "公開SSOT向けに内部絶対path・private repository URL・行末を正規化。"
+        "旧公開抽出時に追加された末尾LFを除去し、承認済みsource byte列へ完全復旧。"
       ]
     },
     {
@@ -9659,8 +9671,8 @@
   "generatedFiles": [
     {
       "path": "packages/desktop-photo/src/capabilities.rs",
-      "sha256": "fa479ac2df91c88af6f68726dfb8a2d335c4f7b5ecd2f7613dc9a836bc49f963",
-      "origin": "Issue #5のため独立作成。公開仕様から拡張子・MIME・UTType・magic bytes・処理段階の能力レジストリと権利安全な合成signatureテストを実装。外部コード・画像・個体metadataを含まない。\n変更理由: Issue #5親レビューに従い形式検査・エラー保持・実decoder公開CI回帰を補強。\n変更理由: AVIFをHEICと誤認しない拡張子不一致回帰を追加。"
+      "sha256": "096dd18e819707063ad4983a6fa1f1b3b6562353fba0ea4ee603804fe17e9a95",
+      "origin": "Issue #5のため独立作成。公開仕様から拡張子・MIME・UTType・magic bytes・処理段階の能力レジストリと権利安全な合成signatureテストを実装。外部コード・画像・個体metadataを含まない。\n変更理由: Issue #5親レビューに従い形式検査・エラー保持・実decoder公開CI回帰を補強。\n変更理由: AVIFをHEICと誤認しない拡張子不一致回帰を追加。\n変更理由: 並行testの一時directory名をatomic連番でも分離しclock分解能によるfixture削除衝突を防ぐ。"
     },
     {
       "path": "packages/photo-editing/src/fixtures/cutout-brush-parity.json",
@@ -10139,38 +10151,43 @@
     },
     {
       "path": ".github/workflows/public-ci.yml",
-      "sha256": "2f3ce4dba09f3827e72f6959ca1a904e26bd9c7961ef01de97b3bbd9d71cd33f",
-      "origin": "Issue #2の公開成果物・SBOM・固定SHA取り込み契約のため独立作成。公開仕様と既存公開CIから生成器・schema・guard・検証・責務境界を定義し、外部コード・秘密・実ユーザーデータを含まない。\n変更理由: Issue #2の公開検証成果物・SBOM・固定SHA取り込み契約と秘密を持たないCI検査を追加。\n変更理由: Issue #2の実装検証で成果物名・輸送receipt・build設定を強化。"
+      "sha256": "6085f1da2f40854662f903504cbd0a29e0f98827289c64e38f66a74770c797bd",
+      "origin": "Issue #2の公開成果物・SBOM・固定SHA取り込み契約のため独立作成。公開仕様と既存公開CIから生成器・schema・guard・検証・責務境界を定義し、外部コード・秘密・実ユーザーデータを含まない。\n変更理由: Issue #2の公開検証成果物・SBOM・固定SHA取り込み契約と秘密を持たないCI検査を追加。\n変更理由: Issue #2の実装検証で成果物名・輸送receipt・build設定を強化。\n変更理由: Issue #112のSDK packageとrepo外consumer smokeをPublic CIへ追加。\n変更理由: Issue #112の実WASM SDK buildをrequired CIへ追加\n変更理由: Issue #113のrequired Mac candidate実build proof jobを追加。\n変更理由: Issue #113のcandidate manifestをapp version入力にも固定。\n変更理由: PR proofのダミー公開値を実行時生成し、app版は通常形式0.0.0に固定。\n変更理由: repository allowlistをniho-lifeへ移管"
     },
     {
       "path": "docs/ci/public-ci.md",
-      "sha256": "d6f7e8e22785771a4a0435c1d23ead472852073ee2f10ef42423aec7a8df5a98",
-      "origin": "Issue #2の公開成果物・SBOM・固定SHA取り込み契約のため独立作成。公開仕様と既存公開CIから生成器・schema・guard・検証・責務境界を定義し、外部コード・秘密・実ユーザーデータを含まない。\n変更理由: Issue #2の公開検証成果物・SBOM・固定SHA取り込み契約と秘密を持たないCI検査を追加。\n変更理由: Issue #2の実装検証で成果物名・輸送receipt・build設定を強化。"
+      "sha256": "c5495600f29888f489b0710ead96db0d5d6a4f1b54eb3c6a5f6cf23a0425cc0a",
+      "origin": "Issue #2の公開成果物・SBOM・固定SHA取り込み契約のため独立作成。公開仕様と既存公開CIから生成器・schema・guard・検証・責務境界を定義し、外部コード・秘密・実ユーザーデータを含まない。\n変更理由: Issue #2の公開検証成果物・SBOM・固定SHA取り込み契約と秘密を持たないCI検査を追加。\n変更理由: Issue #2の実装検証で成果物名・輸送receipt・build設定を強化。\n変更理由: Issue #113のcandidate proof selectorとvalidation-only成果物との差を追記。\n変更理由: 現行Issue URLをniho-lifeへ移管"
     },
     {
       "path": "package.json",
-      "sha256": "b1bb69763a169a35f46a0fcd9a8003924be9f942a4ba7fad331a02d40438b544",
-      "origin": "Issue #2の公開成果物・SBOM・固定SHA取り込み契約のため独立作成。公開仕様と既存公開CIから生成器・schema・guard・検証・責務境界を定義し、外部コード・秘密・実ユーザーデータを含まない。\n変更理由: Issue #2の公開検証成果物・SBOM・固定SHA取り込み契約と秘密を持たないCI検査を追加。\n変更理由: Issue #2の実装検証で成果物名・輸送receipt・build設定を強化。"
+      "sha256": "fbb78899e106e5c4e36bc28bb94283676ee4641281034986369ec535ba781d43",
+      "origin": "Issue #2の公開成果物・SBOM・固定SHA取り込み契約のため独立作成。公開仕様と既存公開CIから生成器・schema・guard・検証・責務境界を定義し、外部コード・秘密・実ユーザーデータを含まない。\n変更理由: Issue #2の公開検証成果物・SBOM・固定SHA取り込み契約と秘密を持たないCI検査を追加。\n変更理由: Issue #2の実装検証で成果物名・輸送receipt・build設定を強化。\n変更理由: Issue #112のSDK release set生成・検証・外部consumer smoke入口を追加。\n変更理由: Issue #112の実WASMとNode契約smoke入口を追加\n変更理由: Issue #113のMac candidate build・data-only検証・fixture test入口を追加。"
+    },
+    {
+      "path": "packages/develop-engine/build-macos-native.mjs",
+      "sha256": "b0b4a3e63a4318c33b7df2ca47795e825fc241dfdd548c6c8bfe71b2a6988a51",
+      "origin": "Issue #113のSDK native build closure用に公開sourceだけから独立作成。固定Rust/lock/target、隔離環境、3 native toolのversion・system dylib・calibration registry/hash検査を実装し、signing key・credential・private sourceを含まない。\n変更理由: native helperの実装レビューで不要importとindentを整理。\n変更理由: 独立native builderでSDK sourceとtool lockを事前照合し、既定Rust toolchainの保存先を隔離HOMEから独立して保持。\n変更理由: macOSの別名一時pathから実行してもnative CLIが起動するよう実pathでentrypointを照合。\n変更理由: Swift packageの製品buildでも解決されるtest targetとfixtureをSDK source closureに含める\n変更理由: Swiftのfile/debug prefix mapとRustの別名path・実path mapを追加し公開artifactからbuild pathを除く\n変更理由: System絶対pathのdylibだけを使うnative toolから未使用のSwiftPM探索pathを削除しad-hoc再署名する"
     },
     {
       "path": "scripts/ci/scopes.mjs",
-      "sha256": "5e606c8738a85074b6e666003e30604ee38585283b4a2cd76b4c4fb733745f99",
-      "origin": "Issue #2の公開成果物・SBOM・固定SHA取り込み契約のため独立作成。公開仕様と既存公開CIから生成器・schema・guard・検証・責務境界を定義し、外部コード・秘密・実ユーザーデータを含まない。\n変更理由: Issue #2の公開検証成果物・SBOM・固定SHA取り込み契約と秘密を持たないCI検査を追加。\n変更理由: Issue #2の実装検証で成果物名・輸送receipt・build設定を強化。"
+      "sha256": "5e061e50a4698e835cb0fab25c6985414096c0c403e180e16cb707a48d9c1f01",
+      "origin": "Issue #2の公開成果物・SBOM・固定SHA取り込み契約のため独立作成。公開仕様と既存公開CIから生成器・schema・guard・検証・責務境界を定義し、外部コード・秘密・実ユーザーデータを含まない。\n変更理由: Issue #2の公開検証成果物・SBOM・固定SHA取り込み契約と秘密を持たないCI検査を追加。\n変更理由: Issue #2の実装検証で成果物名・輸送receipt・build設定を強化。\n変更理由: Issue #112のSDK所有source変更範囲を選択\n変更理由: Issue #113のMac candidate変更範囲selectorを追加。\n変更理由: Mac candidateが直接依存するrelease evidence helper変更でもproof CIを起動する。"
     },
     {
       "path": "scripts/ci/scopes.test.mjs",
-      "sha256": "2d9511018e835007b09271061cca519257c440bc59d2729edda7cb0eeb9767ba",
-      "origin": "Issue #2の公開成果物・SBOM・固定SHA取り込み契約のため独立作成。公開仕様と既存公開CIから生成器・schema・guard・検証・責務境界を定義し、外部コード・秘密・実ユーザーデータを含まない。\n変更理由: Issue #2の公開検証成果物・SBOM・固定SHA取り込み契約と秘密を持たないCI検査を追加。\n変更理由: Issue #2の実装検証で成果物名・輸送receipt・build設定を強化。\n変更理由: Issue #32 detail v6 を、先行する masks v5 と #72 の histogram/Jキー契約に同期する。\n変更理由: PR #81 のマスク描画を最新mainの変更と統合。\n変更理由: PR #76 detailとPR #81 maskを統合し、公開出力ハッシュを更新。\n変更理由: PR #88 main rebase and perspective integration with develop engine 0.22.0\n変更理由: Upright自動推定を作者更新後の遠近crate v0.23.0へ統合\n変更理由: PR #96統合でcrate 0.24・v8対応\n変更理由: PR #101を更新済み#97へ積み直し、レンズ補正をv9として統合。修復併用時の色収差推定は元画から行う。"
+      "sha256": "94a9c93daa6732078d1d76e5c1551566cadc282eec821887dd47805047173f47",
+      "origin": "Issue #2の公開成果物・SBOM・固定SHA取り込み契約のため独立作成。公開仕様と既存公開CIから生成器・schema・guard・検証・責務境界を定義し、外部コード・秘密・実ユーザーデータを含まない。\n変更理由: Issue #2の公開検証成果物・SBOM・固定SHA取り込み契約と秘密を持たないCI検査を追加。\n変更理由: Issue #2の実装検証で成果物名・輸送receipt・build設定を強化。\n変更理由: Issue #32 detail v6 を、先行する masks v5 と #72 の histogram/Jキー契約に同期する。\n変更理由: PR #81 のマスク描画を最新mainの変更と統合。\n変更理由: PR #76 detailとPR #81 maskを統合し、公開出力ハッシュを更新。\n変更理由: PR #88 main rebase and perspective integration with develop engine 0.22.0\n変更理由: Upright自動推定を作者更新後の遠近crate v0.23.0へ統合\n変更理由: PR #96統合でcrate 0.24・v8対応\n変更理由: PR #101を更新済み#97へ積み直し、レンズ補正をv9として統合。修復併用時の色収差推定は元画から行う。\n変更理由: Issue #112のSDK変更範囲とaggregateを回帰検証\n変更理由: Issue #113のcandidate selectorとrequired aggregate回帰を追加。\n変更理由: release evidence helper単独変更でもMac candidate proofが選択される回帰例を追加する。"
     },
     {
       "path": "scripts/ci/workflow-lib.mjs",
-      "sha256": "0f35b8166e6e63481514433c0702fc1058678410e0ba4d3f39ea009ddf3cd0c8",
-      "origin": "Issue #2の公開成果物・SBOM・固定SHA取り込み契約のため独立作成。公開仕様と既存公開CIから生成器・schema・guard・検証・責務境界を定義し、外部コード・秘密・実ユーザーデータを含まない。\n変更理由: Issue #2の公開検証成果物・SBOM・固定SHA取り込み契約と秘密を持たないCI検査を追加。\n変更理由: Issue #2の実装検証で成果物名・輸送receipt・build設定を強化。"
+      "sha256": "c06851efa94aea4ffc7462b91367081cb4f76a34ec6620d4fa9a4d72c5e799df",
+      "origin": "Issue #2の公開成果物・SBOM・固定SHA取り込み契約のため独立作成。公開仕様と既存公開CIから生成器・schema・guard・検証・責務境界を定義し、外部コード・秘密・実ユーザーデータを含まない。\n変更理由: Issue #2の公開検証成果物・SBOM・固定SHA取り込み契約と秘密を持たないCI検査を追加。\n変更理由: Issue #2の実装検証で成果物名・輸送receipt・build設定を強化。\n変更理由: Issue #112のSDK consumer smoke必須契約をPublic CI guardへ追加。\n変更理由: Issue #112の実WASM SDK jobを必須契約へ追加\n変更理由: Issue #113のrequired Mac candidate proof静的guardを追加。\n変更理由: Issue #113のcandidate proof app version照合を静的guardへ追加。\n変更理由: PR proofのダミー公開値の実行時生成と通常形式app版を契約に固定。\n変更理由: workflow repository allowlistを移管"
     },
     {
       "path": "scripts/ci/workflow.test.mjs",
-      "sha256": "ae67f56568408609a918575252505fe2200568e973ef0f63b7194476a076d747",
-      "origin": "Issue #2の公開成果物・SBOM・固定SHA取り込み契約のため独立作成。公開仕様と既存公開CIから生成器・schema・guard・検証・責務境界を定義し、外部コード・秘密・実ユーザーデータを含まない。\n変更理由: Issue #2の公開検証成果物・SBOM・固定SHA取り込み契約と秘密を持たないCI検査を追加。\n変更理由: Issue #2の実装検証で成果物名・輸送receipt・build設定を強化。"
+      "sha256": "d741ba893c4d5257634ce3aad6530a23ea6713fc319ec903c83bc3939eabcd5c",
+      "origin": "Issue #2の公開成果物・SBOM・固定SHA取り込み契約のため独立作成。公開仕様と既存公開CIから生成器・schema・guard・検証・責務境界を定義し、外部コード・秘密・実ユーザーデータを含まない。\n変更理由: Issue #2の公開検証成果物・SBOM・固定SHA取り込み契約と秘密を持たないCI検査を追加。\n変更理由: Issue #2の実装検証で成果物名・輸送receipt・build設定を強化。\n変更理由: Issue #112のSDK consumer smoke省略を拒否する回帰testを追加。\n変更理由: Issue #112の実engine smoke省略を拒否する検査を追加\n変更理由: Issue #113のcandidate proof省略を拒否する回帰を追加。\n変更理由: ダミー公開値をliteralとして履歴へ入れず実行時生成し、PR proofのapp版を通常形式にする回帰検査。"
     },
     {
       "path": "apps/camera/scripts/build-release-evidence.mjs",
@@ -10179,28 +10196,28 @@
     },
     {
       "path": "docs/releases/manifest-v1.schema.json",
-      "sha256": "fb7ac95b4e59c9f1255339d86d43a358d4eed95410de5c7bcaa89858a8bcfe3f",
-      "origin": "Issue #2の公開成果物・SBOM・固定SHA取り込み契約のため独立作成。公開仕様と既存公開CIから生成器・schema・guard・検証・責務境界を定義し、外部コード・秘密・実ユーザーデータを含まない。\n変更理由: Issue #2の公開検証成果物・SBOM・固定SHA取り込み契約と秘密を持たないCI検査を追加。\n変更理由: Issue #2の実装検証で成果物名・輸送receipt・build設定を強化。"
+      "sha256": "b428220406c1ad5a9838b39eacace772c6dda182220b73a6526d12014b98bc05",
+      "origin": "Issue #2の公開成果物・SBOM・固定SHA取り込み契約のため独立作成。公開仕様と既存公開CIから生成器・schema・guard・検証・責務境界を定義し、外部コード・秘密・実ユーザーデータを含まない。\n変更理由: Issue #2の公開検証成果物・SBOM・固定SHA取り込み契約と秘密を持たないCI検査を追加。\n変更理由: Issue #2の実装検証で成果物名・輸送receipt・build設定を強化。\n変更理由: repository移管と旧成果物互換を反映"
     },
     {
       "path": "docs/releases/public-artifact-contract.md",
-      "sha256": "099d28bd956d97ee8405fe10a13a46a5464bfd023f6a4dbc053b237cbf28fd32",
-      "origin": "Issue #2の公開成果物・SBOM・固定SHA取り込み契約のため独立作成。公開仕様と既存公開CIから生成器・schema・guard・検証・責務境界を定義し、外部コード・秘密・実ユーザーデータを含まない。\n変更理由: Issue #2の公開検証成果物・SBOM・固定SHA取り込み契約と秘密を持たないCI検査を追加。\n変更理由: Issue #2の実装検証で成果物名・輸送receipt・build設定を強化。"
+      "sha256": "5131a1b4ac302ee0f3929bcb6d7f69e3d11af029942c9049380820b990984d5d",
+      "origin": "Issue #2の公開成果物・SBOM・固定SHA取り込み契約のため独立作成。公開仕様と既存公開CIから生成器・schema・guard・検証・責務境界を定義し、外部コード・秘密・実ユーザーデータを含まない。\n変更理由: Issue #2の公開検証成果物・SBOM・固定SHA取り込み契約と秘密を持たないCI検査を追加。\n変更理由: Issue #2の実装検証で成果物名・輸送receipt・build設定を強化。\n変更理由: Issue #113のcandidate prereleaseと旧validation-only artifactの境界を追記。\n変更理由: repository移管と旧成果物互換を明記"
     },
     {
       "path": "scripts/ci/release-evidence-lib.mjs",
-      "sha256": "788102560082caa8b11ce6c41830985d99704df0ba216d7fa6f49091791c2f18",
-      "origin": "Issue #2の公開成果物・SBOM・固定SHA取り込み契約のため独立作成。公開仕様と既存公開CIから生成器・schema・guard・検証・責務境界を定義し、外部コード・秘密・実ユーザーデータを含まない。\n変更理由: Issue #2の公開検証成果物・SBOM・固定SHA取り込み契約と秘密を持たないCI検査を追加。\n変更理由: Issue #2の実装検証で成果物名・輸送receipt・build設定を強化。"
+      "sha256": "9835d282cea7723ee5dffcfc90e6fdc06443d712b61cabe988a87afe1933a775",
+      "origin": "Issue #2の公開成果物・SBOM・固定SHA取り込み契約のため独立作成。公開仕様と既存公開CIから生成器・schema・guard・検証・責務境界を定義し、外部コード・秘密・実ユーザーデータを含まない。\n変更理由: Issue #2の公開検証成果物・SBOM・固定SHA取り込み契約と秘密を持たないCI検査を追加。\n変更理由: Issue #2の実装検証で成果物名・輸送receipt・build設定を強化。\n変更理由: 検出値を表示せず非公開参照の種別だけを診断に加え、既存の公開拒否条件を維持する\n変更理由: 新repositoryの成果物metadataへ移管"
     },
     {
       "path": "scripts/ci/release-evidence.mjs",
-      "sha256": "a49c6a29426ca07304e9e44b3f3d47da31c02aba8798d4aabd20ab6989dd590f",
-      "origin": "Issue #2の公開成果物・SBOM・固定SHA取り込み契約のため独立作成。公開仕様と既存公開CIから生成器・schema・guard・検証・責務境界を定義し、外部コード・秘密・実ユーザーデータを含まない。\n変更理由: Issue #2の公開検証成果物・SBOM・固定SHA取り込み契約と秘密を持たないCI検査を追加。\n変更理由: Issue #2の実装検証で成果物名・輸送receipt・build設定を強化。"
+      "sha256": "dea9093811d814364c8ba6d68131f6ad8339f73e8ee31c5b673595b57842cce8",
+      "origin": "Issue #2の公開成果物・SBOM・固定SHA取り込み契約のため独立作成。公開仕様と既存公開CIから生成器・schema・guard・検証・責務境界を定義し、外部コード・秘密・実ユーザーデータを含まない。\n変更理由: Issue #2の公開検証成果物・SBOM・固定SHA取り込み契約と秘密を持たないCI検査を追加。\n変更理由: Issue #2の実装検証で成果物名・輸送receipt・build設定を強化。\n変更理由: main push repository allowlistを移管"
     },
     {
       "path": "scripts/ci/release-evidence.test.mjs",
-      "sha256": "20cf0c14cd2d2cb8af49641b164f31d2f1cbd43a8d8d261cf3ad4effbd59db5d",
-      "origin": "Issue #2の公開成果物・SBOM・固定SHA取り込み契約のため独立作成。公開仕様と既存公開CIから生成器・schema・guard・検証・責務境界を定義し、外部コード・秘密・実ユーザーデータを含まない。\n変更理由: Issue #2の公開検証成果物・SBOM・固定SHA取り込み契約と秘密を持たないCI検査を追加。\n変更理由: Issue #2の実装検証で成果物名・輸送receipt・build設定を強化。"
+      "sha256": "cca1632af92f16e931f90cb1d9379670ce2196c80f7be52f50b64737501a2733",
+      "origin": "Issue #2の公開成果物・SBOM・固定SHA取り込み契約のため独立作成。公開仕様と既存公開CIから生成器・schema・guard・検証・責務境界を定義し、外部コード・秘密・実ユーザーデータを含まない。\n変更理由: Issue #2の公開検証成果物・SBOM・固定SHA取り込み契約と秘密を持たないCI検査を追加。\n変更理由: Issue #2の実装検証で成果物名・輸送receipt・build設定を強化。\n変更理由: repository移管契約のtestを更新\n変更理由: 新repository receipt assertionを追加"
     },
     {
       "path": "scripts/ci/write-artifact-receipt.mjs",
@@ -11241,6 +11258,31 @@
       "path": "packages/photo-editing/src/editor/photo-editing-lens.test.tsx",
       "sha256": "c6fcf83f05f279b462bd2ff8324abeff9e190db68cadebd686f0a5440489ae48",
       "origin": "niho-photo#45 のため新規作成。「レンズ」の節の test（合成の設定だけを使用）。"
+    },
+    {
+      "path": "apps/camera/src-tauri/src/runtime_assets.rs",
+      "sha256": "e4847fae4b704ab530b02d6d9cac82b2cbcce6e8b581cb10de8d8904224d315e",
+      "origin": "NIHO Photo独立配布で実際に配信するSDK runtimeを専用Mach-O sectionから返すため新規実装した。外部sourceのコピーはない。"
+    },
+    {
+      "path": "packages/ui/src/dismiss-layers.test.ts",
+      "sha256": "e7e92ecca332e66d6dd511f1ebf99127c8ea6bb0d4752cf3567319540d81952d",
+      "origin": "niho-photo#117のため新規作成。別module copy、HMR、SSR、途中解除のdismiss契約を合成callbackで確認する。外部sourceのコピーはない。"
+    },
+    {
+      "path": "packages/photo-editing/src/editor/use-browser-photo-edit-settings.effects.test.tsx",
+      "sha256": "1f1c71b2124f56bc04d24d0bad6cd057132b63d234ae6d243d4de20985439244",
+      "origin": "niho-photo#119のため新規作成。合成recipeと本物の編集hookで効果操作の版昇格・保存・undo/redo・旧engineと未知fieldの保持・不正設定の拒否を確認する。外部sourceのコピーはない。"
+    },
+    {
+      "path": "docs/mockups/niho-photo-lightroom-layout-v1.html",
+      "sha256": "ea2193fef151d4b85f311112a0177c4c964b7bd72ba488a64627ed674a8b7ff9",
+      "origin": "NIHO所有の画面案を公開用に再作成。出典 niho-app afff6aa10ddc652e8bb4fc69dd561fe02bb1e5c0 の idea/mock/niho-photo-lightroom-layout-v1.html、原本 SHA-256 e751a520f1283f160b20d6c48807abbc9fe7d67825631548b1a7aa97623076bb。個人プロフィール画像と未監査画像を除き、既存公開fixtureとアプリアイコンに置換。認証・保存・写真処理は行わない。"
+    },
+    {
+      "path": "docs/mockups/niho-photo-lightroom-layout-v2.html",
+      "sha256": "344a5136603798fb1185f26d65267b8b7ba3c1b8cafa3faed36e68392f278c8b",
+      "origin": "NIHO所有の画面案を公開用に再作成。出典 niho-app afff6aa10ddc652e8bb4fc69dd561fe02bb1e5c0 の idea/mock/niho-photo-lightroom-layout-v2.html、原本 SHA-256 12e4f8a1bc4be31da5dc46a310f60138f3007650db3cae6a84e73bed4f2548c8。個人プロフィール画像と未監査画像を除き、既存公開fixtureとアプリアイコンに置換。認証・保存・写真処理は行わない。"
     },
     {
       "path": "packages/photo-editing/src/editor/browser-photo-editing-mobile-editor-detail.test.tsx",
