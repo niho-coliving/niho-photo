@@ -6,6 +6,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
   PhotoEditingGrid,
+  PhotoEditingTileImage,
   countPhotoEditingGridColumns,
   type PhotoEditingGridItem,
   type PhotoEditingGridMore,
@@ -363,5 +364,66 @@ describe("countPhotoEditingGridColumns", () => {
     expect(countPhotoEditingGridColumns(list)).toBe(3);
     expect(countPhotoEditingGridColumns(null)).toBe(1);
     expect(countPhotoEditingGridColumns(document.createElement("ul"))).toBe(1);
+  });
+});
+
+describe("PhotoEditingTileImage（幾何が後から付いたタイル）", () => {
+  let tileContainer: HTMLDivElement;
+  let tileRoot: Root;
+
+  beforeEach(() => {
+    tileContainer = document.createElement("div");
+    document.body.appendChild(tileContainer);
+    tileRoot = createRoot(tileContainer);
+  });
+
+  afterEach(async () => {
+    await act(async () => tileRoot.unmount());
+    tileContainer.remove();
+  });
+
+  /** jsdom は画像を読み込まないので、読み込み済み（`complete`・実寸）の状態を要素に与える */
+  function markLoaded(image: HTMLImageElement | null, width: number, height: number) {
+    if (!image) throw new Error("img not found");
+    Object.defineProperty(image, "complete", { value: true, configurable: true });
+    Object.defineProperty(image, "naturalWidth", { value: width, configurable: true });
+    Object.defineProperty(image, "naturalHeight", { value: height, configurable: true });
+  }
+
+  it("画像を読み込んだ後で幾何が付いても、実寸を読んで幾何を当てる（空白のまま残らない）", async () => {
+    const url = "https://example.test/tile.jpg";
+    await act(async () => tileRoot.render(<PhotoEditingTileImage url={url} geometry={null} />));
+    markLoaded(tileContainer.querySelector("img"), 512, 341);
+    expect(tileContainer.querySelector("img")?.style.opacity).toBe("");
+    // 1 枚で 90° 回転を確定した直後: 画像は読み込み済みで load は来ない
+    await act(async () =>
+      tileRoot.render(<PhotoEditingTileImage url={url} geometry={{ rotate: 90, flipH: false, flipV: false, angle: 0 }} />),
+    );
+    const image = tileContainer.querySelector("img");
+    expect(image).not.toBeNull();
+    expect(image?.style.opacity).not.toBe("0");
+    expect(image?.parentElement?.tagName).toBe("SPAN");
+  });
+
+  it("まだ読み込んでいない間は、幾何があっても透明にする（切り抜く前の画を見せない）", async () => {
+    const url = "https://example.test/tile.jpg";
+    await act(async () =>
+      tileRoot.render(<PhotoEditingTileImage url={url} geometry={{ rotate: 90, flipH: false, flipV: false, angle: 0 }} />),
+    );
+    expect(tileContainer.querySelector("img")?.style.opacity).toBe("0");
+  });
+
+  it("URL が替わったら、前の画像の実寸は使わず読み直す", async () => {
+    const geometry = { rotate: 90, flipH: false, flipV: false, angle: 0 };
+    await act(async () => tileRoot.render(<PhotoEditingTileImage url="https://example.test/a.jpg" geometry={geometry} />));
+    markLoaded(tileContainer.querySelector("img"), 512, 341);
+    await act(async () => tileRoot.render(<PhotoEditingTileImage url="https://example.test/a.jpg" geometry={{ ...geometry }} />));
+    expect(tileContainer.querySelector("img")?.parentElement?.tagName).toBe("SPAN");
+    // 別の画像（まだ読み込んでいない）に替わる
+    await act(async () => tileRoot.render(<PhotoEditingTileImage url="https://example.test/b.jpg" geometry={geometry} />));
+    const next = tileContainer.querySelector("img");
+    expect(next?.getAttribute("src")).toBe("https://example.test/b.jpg");
+    expect(next?.parentElement?.tagName).not.toBe("SPAN");
+    expect(next?.style.opacity).toBe("0");
   });
 });

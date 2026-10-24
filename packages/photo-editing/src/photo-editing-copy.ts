@@ -247,9 +247,9 @@ export const PHOTO_EDITING_GRAIN_DESCRIPTION = "フィルムのような粒を�
 export const PHOTO_EDITING_DETAIL_GROUP_TITLE = "ディテール";
 export const PHOTO_EDITING_DETAIL_INFO_LABEL = "ディテールの説明";
 export const PHOTO_EDITING_SHARPEN_LABEL = "シャープ";
-export const PHOTO_EDITING_SHARPEN_RADIUS_LABEL = "半径";
-export const PHOTO_EDITING_SHARPEN_DETAIL_LABEL = "ディテール";
-export const PHOTO_EDITING_SHARPEN_MASKING_LABEL = "マスク";
+export const PHOTO_EDITING_SHARPEN_RADIUS_LABEL = "シャープの半径";
+export const PHOTO_EDITING_SHARPEN_DETAIL_LABEL = "シャープの細部";
+export const PHOTO_EDITING_SHARPEN_MASKING_LABEL = "シャープのマスク";
 export const PHOTO_EDITING_LUMINANCE_NOISE_LABEL = "ノイズ軽減";
 export const PHOTO_EDITING_COLOR_NOISE_LABEL = "カラーノイズの軽減";
 export const PHOTO_EDITING_SHARPEN_DESCRIPTION = "輪郭をくっきりさせます。指を離すと反映します";
@@ -350,6 +350,13 @@ export const PHOTO_EDITING_EXPORT_FULL_SIZE_COLOR_GRADING_UNSUPPORTED_TEXT = "�
 /** native の複数枚原寸書き出しで、未対応の輝度設定を含む写真を飛ばすときの失敗理由。 */
 export const PHOTO_EDITING_EXPORT_FULL_SIZE_COLOR_GRADING_UNSUPPORTED_FAILED_TEXT =
   "中間調・全体の輝度を使っている写真は、原寸で書き出せません。";
+/** 原寸の native renderer が描けない補正の名前（「原寸は〇〇に未対応です」の〇〇。`photo-editing-native-export.ts`）。 */
+export const PHOTO_EDITING_EXPORT_FULL_SIZE_NATIVE_BLOCKER_LABELS = {
+  colorGradingLuminance: "中間調・全体の輝度",
+  perspective: "遠近",
+  heal: "修復",
+  lens: "レンズ補正",
+} as const;
 /**
  * 原寸の書き出しが形式（HEIC / TIFF）を断ったときの失敗の 1 行（複数枚をフォルダへ書き出すとき、Desktop へ落とす前に同じ文で
  * 失敗にする。NIHO Desktop の `unsupportedSource` の文も同じ定数）。

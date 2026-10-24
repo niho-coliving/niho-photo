@@ -28,6 +28,7 @@ import {
 } from "../develop-engine/develop-settings-draft";
 import {
   createEditedPreviewUploader,
+  libraryCanAttachEditedPreview,
   type EditedPreviewUploader,
 } from "../photo-cloud-edited-preview";
 import { photoEditingQueryKeys } from "../photo-editing-query-keys";
@@ -317,13 +318,17 @@ export function useBrowserPhotoDevelop(params: {
     return uploader;
   }, [host, library, queryClient, spotId]);
 
-  /** 補正後のプレビューを上げてよい写真か（直せる operator の、この画面の拠点の写真だけ）。 */
+  /**
+   * 補正後のプレビューを上げてよい写真か（直せる operator の、この画面の拠点の写真だけ。付ける口〔`attachEditedPreview`〕の無い置き場
+   * ──この Mac──では上げない。作っても必ず失敗し、JPEG の縮小と余分な描画だけが走って `console.warn` が出る）。
+   */
   const canUploadEditedPreview = useCallback(
     (session: DevelopSession): boolean => {
+      if (!libraryCanAttachEditedPreview(library)) return false;
       const access = latestAccessRef.current;
       return access.canEdit && access.spotId === session.spotId && session.spotId === spotId;
     },
-    [latestAccessRef, spotId],
+    [latestAccessRef, library, spotId],
   );
 
   /** 補正後のプレビューに、この版の画を送る（待たない。縮めて上げるのは上げ係）。 */

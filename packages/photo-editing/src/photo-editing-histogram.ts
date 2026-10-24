@@ -7,9 +7,17 @@
 /** 階調の数（8bit） */
 export const PHOTO_EDITING_HISTOGRAM_LEVELS = 256;
 
-/** クリップ領域の印の bit: いずれかのチャンネルが 0 の画素（黒つぶれ） */
+/**
+ * 黒つぶれ・白飛びとみなす 8bit の端。エンジンの自動補正（`auto.rs` の『全チャンネルが 254 以上 / 1 以下』）と同じく、端から 1 段
+ * までを数える。エンジンは補正を 1 つでも掛けると、純白の入力でも出力が 254 までしか届かない（露光 +0.05 でも 255 → 254）ので、
+ * `=== 255` で判定すると白飛びが一切出ない（実エンジンでの確認で判明）。
+ */
+export const PHOTO_EDITING_CLIP_SHADOW_MAX = 1;
+export const PHOTO_EDITING_CLIP_HIGHLIGHT_MIN = 254;
+
+/** クリップ領域の印の bit: いずれかのチャンネルが {@link PHOTO_EDITING_CLIP_SHADOW_MAX} 以下の画素（黒つぶれ） */
 export const PHOTO_EDITING_CLIP_SHADOW_FLAG = 1;
-/** クリップ領域の印の bit: いずれかのチャンネルが 255 の画素（白飛び） */
+/** クリップ領域の印の bit: いずれかのチャンネルが {@link PHOTO_EDITING_CLIP_HIGHLIGHT_MIN} 以上の画素（白飛び） */
 export const PHOTO_EDITING_CLIP_HIGHLIGHT_FLAG = 2;
 
 /**
@@ -36,7 +44,7 @@ export type PhotoEditingHistogram = {
   red: Uint32Array;
   green: Uint32Array;
   blue: Uint32Array;
-  /** いずれかのチャンネルが 0 / 255 の画素の数 */
+  /** いずれかのチャンネルが端〔0〜1 / 254〜255。{@link PHOTO_EDITING_CLIP_SHADOW_MAX}・{@link PHOTO_EDITING_CLIP_HIGHLIGHT_MIN}〕の画素の数 */
   shadowClipped: number;
   highlightClipped: number;
   /** 上の数を画素の数で割った割合（0〜1。画素が無ければ 0） */
@@ -51,7 +59,7 @@ function normalizedSize(value: number): number {
 }
 
 /**
- * RGBA の画から 256 階調 × RGB の度数と、黒つぶれ（いずれかのチャンネルが 0）/ 白飛び（いずれかが 255）の割合を数える。
+ * RGBA の画から 256 階調 × RGB の度数と、黒つぶれ（いずれかのチャンネルが 1 以下）/ 白飛び（いずれかが 254 以上）の割合を数える。
  * アルファは見ない。`rgba` が `width * height` 画素より短ければ、ある分だけ数える。`mask: true` のときは重ね表示用の印も作る
  * （全画素の 1 回の走査の中で作るので、印が要らないときは渡さない）。
  */
@@ -80,11 +88,11 @@ export function computePhotoEditingHistogram(
       green[g] += 1;
       blue[b] += 1;
       let flag = 0;
-      if (r === 0 || g === 0 || b === 0) {
+      if (r <= PHOTO_EDITING_CLIP_SHADOW_MAX || g <= PHOTO_EDITING_CLIP_SHADOW_MAX || b <= PHOTO_EDITING_CLIP_SHADOW_MAX) {
         shadowClipped += 1;
         flag = PHOTO_EDITING_CLIP_SHADOW_FLAG;
       }
-      if (r === 255 || g === 255 || b === 255) {
+      if (r >= PHOTO_EDITING_CLIP_HIGHLIGHT_MIN || g >= PHOTO_EDITING_CLIP_HIGHLIGHT_MIN || b >= PHOTO_EDITING_CLIP_HIGHLIGHT_MIN) {
         highlightClipped += 1;
         flag |= PHOTO_EDITING_CLIP_HIGHLIGHT_FLAG;
       }
@@ -98,8 +106,8 @@ export function computePhotoEditingHistogram(
       red[r] += 1;
       green[g] += 1;
       blue[b] += 1;
-      if (r === 0 || g === 0 || b === 0) shadowClipped += 1;
-      if (r === 255 || g === 255 || b === 255) highlightClipped += 1;
+      if (r <= PHOTO_EDITING_CLIP_SHADOW_MAX || g <= PHOTO_EDITING_CLIP_SHADOW_MAX || b <= PHOTO_EDITING_CLIP_SHADOW_MAX) shadowClipped += 1;
+      if (r >= PHOTO_EDITING_CLIP_HIGHLIGHT_MIN || g >= PHOTO_EDITING_CLIP_HIGHLIGHT_MIN || b >= PHOTO_EDITING_CLIP_HIGHLIGHT_MIN) highlightClipped += 1;
     }
   }
   return {

@@ -304,7 +304,7 @@ export function detailControlsAvailable(input: DevelopSourceInput | null | undef
 /**
  * wasm で開いた PC の右パネルに出す項目（`visibleKeys`。省くと基本の 13 項目）。効果（v: 3）・ディテール（シャープ・ノイズ軽減。
  * v: 6。Issue #32）は、それぞれ読めると確かめた wasm の写真にだけ足す。並びは群の定義のまま（ディテールは効果の後ろ）。スマホの面は
- * 道具の帯が 7 つで幅いっぱい（375px で実測）なので、効果と同じくまだ足さない。
+ * {@link browserMobileAdjustmentKeys}。
  */
 export function browserAdjustmentKeys(options: {
   effects: boolean;
@@ -312,6 +312,14 @@ export function browserAdjustmentKeys(options: {
 }): ReadonlyArray<PhotoEditingControlKey> | undefined {
   if (options.detail) return options.effects ? BROWSER_EFFECTS_DETAIL_ADJUSTMENT_KEYS : BROWSER_BASE_DETAIL_ADJUSTMENT_KEYS;
   return options.effects ? BROWSER_EFFECTS_ADJUSTMENT_KEYS : undefined;
+}
+/**
+ * スマホの 1 枚の編集の層に出す項目（`visibleKeys`。省くと基本の 13 項目）。ディテールは PC と同じく、読めると確かめた wasm の写真に
+ * だけ足す（道具の帯の末尾。niho-photo#86）。効果（白黒の切り替え・周辺光量のスタイル等）はスライダー以外の部品が要り、層の段では
+ * まだ描けないので足さない。
+ */
+export function browserMobileAdjustmentKeys(options: { detail: boolean }): ReadonlyArray<PhotoEditingControlKey> | undefined {
+  return options.detail ? BROWSER_BASE_DETAIL_ADJUSTMENT_KEYS : undefined;
 }
 /** ブラウザは RAW も相対で直すので、絶対の白は使わない（撮影時の白を渡さない。RAW の K 表示は S11 の後の別の slice）。 */
 export const BROWSER_WHITE_BALANCE_SOURCE: Pick<PhotoEditingPhoto, "asShotWhiteBalance"> = { asShotWhiteBalance: null };

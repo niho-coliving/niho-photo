@@ -34,7 +34,7 @@ import {
   type BrowserPhotoBatchExportTarget,
 } from "../browser-photo-batch-export";
 import { hasDevelopGeometry, isNeutralDevelopColors, type DevelopSettings } from "../develop-engine/develop-settings";
-import { hasPhotoEditingColorGradingNativeExportUnsupportedLuminance } from "../photo-editing-color-grading";
+import { photoEditingNativeExportBlockers, photoEditingNativeExportUnsupportedText } from "../photo-editing-native-export";
 import { readWorkingCopyLensProfile } from "../photo-editing-lens";
 import { isDevelopWorkTarget } from "../develop-engine/develop-work-target";
 import {
@@ -128,6 +128,7 @@ import {
   BROWSER_CANVAS_ADJUSTMENT_KEYS,
   FAVORITE_FAILED_TEXT,
   browserAdjustmentKeys,
+  browserMobileAdjustmentKeys,
   browserPhotoTileUrl,
   cloudKey,
   detailControlsAvailable,
@@ -1547,7 +1548,8 @@ export function BrowserPhotoEditingWorkbench(props: {
     selectedItem && viewMode === "loupe" && opened?.key === selectedItem.key
       ? open.settingsRef.current
       : selectedItem?.photo.developSettings ?? {};
-  const nativeFullSizeUnsupported = hasPhotoEditingColorGradingNativeExportUnsupportedLuminance(selectedExportSettings);
+  const nativeExportBlockers = photoEditingNativeExportBlockers(selectedExportSettings);
+  const nativeFullSizeUnsupported = nativeExportBlockers.length > 0;
   const exportChoices = selectedItem
     ? resolveBrowserPhotoExportChoices({
         photo: selectedItem.photo,
@@ -1559,6 +1561,7 @@ export function BrowserPhotoEditingWorkbench(props: {
         // 原寸（K2-3a 移行元設計）は、原寸の書き出しに対応した NIHO Desktop の口があるときだけ（PC のシートに出す）
         desktopFullSize: capabilities.nativeExport || capabilities.nativeExportUpdateRequired,
         nativeFullSizeUnsupported,
+        nativeFullSizeUnsupportedText: photoEditingNativeExportUnsupportedText(nativeExportBlockers),
         // HEIC / HEIF・TIFF の原寸は、描ける口（NIHO camera）だけ
         desktopFullSizeRaster: capabilities.nativeExportRaster === true,
         // 背景除去（C4 移行元設計）: PNG を足し、原寸は camera の口があるときだけ
@@ -2439,7 +2442,7 @@ export function BrowserPhotoEditingWorkbench(props: {
               ) : undefined
             }
             colorPicking={colorPicking}
-            visibleKeys={canvasOnly ? BROWSER_CANVAS_ADJUSTMENT_KEYS : undefined}
+            visibleKeys={canvasOnly ? BROWSER_CANVAS_ADJUSTMENT_KEYS : browserMobileAdjustmentKeys({ detail: detailSupported })}
             presets={
               // PC の右パネルと同じ: S1 の canvas（段 2 を使えない）の写真には出さない。閲覧のみ・操作の途中は押せない
               canvasOnly
