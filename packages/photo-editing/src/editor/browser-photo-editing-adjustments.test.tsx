@@ -326,3 +326,35 @@ describe("ヒストグラム（niho-photo#36）", () => {
     expect(aside().contains(histogramBox())).toBe(true);
   });
 });
+
+describe("版の面の ↶ ↷", () => {
+  it("版の面には ↶ ↷ を出し（切り替えが 1 回の取り消し単位）、押すと取り消し / やり直しを呼ぶ", async () => {
+    const onUndo = vi.fn();
+    const onRedo = vi.fn();
+    await render({ panel: "versions", versions: <p>版の中身</p>, canUndo: true, canRedo: true, onUndo, onRedo });
+    const versionsAside = container.querySelector<HTMLElement>('aside[aria-label="版"]');
+    if (!versionsAside) throw new Error("versions panel not found");
+    const undo = versionsAside.querySelector<HTMLButtonElement>('button[aria-label="取り消す"]');
+    const redo = versionsAside.querySelector<HTMLButtonElement>('button[aria-label="やり直す"]');
+    expect(undo?.disabled).toBe(false);
+    expect(redo?.disabled).toBe(false);
+    await act(async () => undo?.click());
+    await act(async () => redo?.click());
+    expect(onUndo).toHaveBeenCalledTimes(1);
+    expect(onRedo).toHaveBeenCalledTimes(1);
+    // 初期化・⋯ のメニューは版の面には出さない
+    expect(versionsAside.textContent).not.toContain("初期化");
+  });
+
+  it("取り消せるものが無い間は押せず、閲覧のみ・操作中も押せない。情報の面には出さない", async () => {
+    await render({ panel: "versions", versions: <p>版の中身</p>, canUndo: false, canRedo: false });
+    let versionsAside = container.querySelector<HTMLElement>('aside[aria-label="版"]');
+    expect(versionsAside?.querySelector<HTMLButtonElement>('button[aria-label="取り消す"]')?.disabled).toBe(true);
+    expect(versionsAside?.querySelector<HTMLButtonElement>('button[aria-label="やり直す"]')?.disabled).toBe(true);
+    await render({ panel: "versions", versions: <p>版の中身</p>, canUndo: true, canRedo: true, controlsDisabled: true });
+    versionsAside = container.querySelector<HTMLElement>('aside[aria-label="版"]');
+    expect(versionsAside?.querySelector<HTMLButtonElement>('button[aria-label="取り消す"]')?.disabled).toBe(true);
+    await render({ panel: "info", info: <p>情報の中身</p>, canUndo: true, canRedo: true });
+    expect(container.querySelector('aside[aria-label="情報"]')?.querySelectorAll("button")).toHaveLength(0);
+  });
+});

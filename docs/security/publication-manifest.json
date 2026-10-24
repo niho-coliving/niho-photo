@@ -837,9 +837,10 @@
         "squash済みPR #77のmainをマスク描画へ同期する。",
         "部分補正（マスク）#67: 右パネルに「マスク」の道具の面（見出しと maskTools）を足す",
         "PR #82: #74 squash merge後に版機能の変更をmainへ積み直し、最終ハッシュを反映。",
-        "PR #97を#96へ積み直し、修復とマスクの右パネルを併存。"
+        "PR #97を#96へ積み直し、修復とマスクの右パネルを併存。",
+        "版の面の取り消し/やり直しと補正後プレビューの抑止に伴う変更。"
       ],
-      "outputSha256": "0715ee6aeb03a6138a3c8688f47e6e645c2a97441a93aa415042ffb1206f8f05"
+      "outputSha256": "09d308d4d7354383e0c0e9b4b06ddc1a3e05fb015435eafa85e8cc73823bb92b"
     },
     {
       "path": "packages/photo-editing/src/editor/browser-photo-editing-albums.tsx",
@@ -1242,7 +1243,7 @@
         "path": "packages/photo-editing/src/editor/browser-photo-editing-workbench-folders.test.tsx",
         "sha256": "2466702c26e46adadb579736eb8edef22cc420e4b0189283fd7d4b762a62869e"
       },
-      "outputSha256": "179da86a510dd7ae62de2aed31919b3217a7102019edf2c64cdbfe8c3927cf60",
+      "outputSha256": "7eb044fff97cfc48f604580848676f94cc297c1273c47cee1fe1c1e9215511dd",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
@@ -1261,7 +1262,8 @@
         "niho-photo#43 の「情報」の帯の項目と情報の面の切り替えの test を追加。",
         "PR #77 の情報paneをmainの公開UI変更と統合。",
         "squash済みPR #77のmainをマスク描画へ同期する。",
-        "PR #82: #74 squash merge後に版機能の変更をmainへ積み直し、最終ハッシュを反映。"
+        "PR #82: #74 squash merge後に版機能の変更をmainへ積み直し、最終ハッシュを反映。",
+        "版の面の取り消し/やり直しと補正後プレビューの抑止に伴う変更。"
       ]
     },
     {
@@ -1624,9 +1626,10 @@
         "path": "packages/photo-editing/src/editor/photo-editing-grid.test.tsx",
         "sha256": "7d3c1c32e7bea6ab62c3eca9f3a7455ae4a6a9c51b3349111c9923049f6a386a"
       },
-      "outputSha256": "cafb0050a52e12de39ca55eef48bc0d77285916bda13c8a8e54d87a60a44bcc0",
+      "outputSha256": "0e477611ab8f2bf5b1587a52e0a5bb65793a5556e11a7eaf8d55da5b54167735",
       "modifications": [
-        "Issue #50の背景色トークン変更に合わせ既存testを更新。"
+        "Issue #50の背景色トークン変更に合わせ既存testを更新。",
+        "幾何が後から付いた読み込み済みのタイルで実寸を読み、空白のまま残らないようにした。"
       ]
     },
     {
@@ -1637,11 +1640,12 @@
         "path": "packages/photo-editing/src/editor/photo-editing-grid.tsx",
         "sha256": "1b6e669fa72c10a2fd80f68fdc8ccb7141b06d6073741e87118a07cd1ad4a6a2"
       },
-      "outputSha256": "f437a4999c6dc44ec1edb92c9ebbf726753bb6abc304593067e0ea9211adf45b",
+      "outputSha256": "f7d586994e36575ae33b808653e6ab262cbe448f9a6248d8ef54ceb695a316e2",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
-        "Issue #50のMac画面配置・表示色・パネル・版位置の変更。"
+        "Issue #50のMac画面配置・表示色・パネル・版位置の変更。",
+        "幾何が後から付いた読み込み済みのタイルで実寸を読み、空白のまま残らないようにした。"
       ]
     },
     {
@@ -1852,14 +1856,15 @@
         "path": "packages/photo-editing/src/editor/use-browser-photo-develop.ts",
         "sha256": "491153dcf3675cfd0b822a008f101a77125411c9e18966ea7b7fb96e18ce8228"
       },
-      "outputSha256": "1d71bb3d7ea6897e6ea155c537bf978e767989cc4d59e3533ad58b86c1ee37ed",
+      "outputSha256": "f4959eaa239cb323bf34b647d083cfe662c94099be5f083e6cb086701fc27afb",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
         "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
         "Issue #13の段階表示、provisional draft、canonical handoffと書き出し境界を実装。",
         "Issue 13 progressive RAW open implementation",
         "PR #99を#91マージ後のmainへ積み直し、遠近補正後のブラシ半径を局所ヤコビアンで写す。",
-        "PR #99のマスク面の描画・読み書きと遠近対応の変更を反映する。"
+        "PR #99のマスク面の描画・読み書きと遠近対応の変更を反映する。",
+        "版の面の取り消し/やり直しと補正後プレビューの抑止に伴う変更。"
       ]
     },
     {
@@ -2040,9 +2045,10 @@
         "niho-photo#46 で切り抜きの間にジオメトリのスライダーを動かす間は速い描き方にした。",
         "PR #97を最新の#96エンジンと遠近表示の契約へ積み直し。",
         "PR #99を#91マージ後のmainへ積み直し、遠近補正後のブラシ半径を局所ヤコビアンで写す。",
-        "PR #99のマスク面の描画・読み書きと遠近対応の変更を反映する。"
+        "PR #99のマスク面の描画・読み書きと遠近対応の変更を反映する。",
+        "ドラッグ中の描画の順序管理の修正に伴う変更。"
       ],
-      "outputSha256": "f5983a991145457d44b55a1ce73cb97a9ae44127a6b027d35393b6a7bc6206e9"
+      "outputSha256": "323955e92f94a1a7e62be3edb48316f48ea2c816c7103ed443c84ea1406cec76"
     },
     {
       "path": "packages/photo-editing/src/editor/use-browser-photo-preset-support.ts",
@@ -2264,10 +2270,11 @@
         "path": "packages/photo-editing/src/photo-cloud-edited-preview.ts",
         "sha256": "24e7b4de9d0f036035a759d41e5e3ff2a7d75f2783a441cc453b9798b8ad4cd3"
       },
-      "outputSha256": "d55724cbb755327ca745ff11a455188a27ce929d0fc2455b60159b92502bfa27",
+      "outputSha256": "c957d10abec440bfbd5444a1b6a3b31316e49658ecb42429cbb46eca6eea50e2",
       "modifications": [
         "非公開ソースのパス・Issue・設計文書参照を公開用コメントへ整理。テストURLを予約済み.testドメインへ変更。",
-        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。"
+        "公開SSOTのローカルMac実行に独立化。認証・非公開API/構成参照の削除、workspace依存・公開校正配置・合成テスト・無署名ビルド契約へ調整。",
+        "版の面の取り消し/やり直しと補正後プレビューの抑止に伴う変更。"
       ]
     },
     {
@@ -9967,8 +9974,8 @@
     },
     {
       "path": "packages/photo-editing/src/editor/browser-photo-editing-adjustments.test.tsx",
-      "sha256": "35a8afc9d349fdaabaab0caeaac4ed09bfe9958034119190a0ec2c032b66a542",
-      "origin": "niho-photo#51 のため新規作成。右端の道具の帯と右パネルの面の部品・test。\n変更理由: Issue #49の統合確認: プリセットの面の見出し行の⋯の合成テストを追加。\n変更理由: niho-photo#36 ヒストグラムの位置と各道具での表示を検証。"
+      "sha256": "94d8728b192e998d30f14002b39e028dfd0c86d70eae816bbb2262086ae31355",
+      "origin": "niho-photo#51 のため新規作成。右端の道具の帯と右パネルの面の部品・test。\n変更理由: Issue #49の統合確認: プリセットの面の見出し行の⋯の合成テストを追加。\n変更理由: niho-photo#36 ヒストグラムの位置と各道具での表示を検証。\n変更理由: 版の面の取り消し/やり直しと補正後プレビューの抑止に伴う変更。"
     },
     {
       "path": "packages/photo-editing/src/editor/browser-photo-editing-tool-rail.test.tsx",
@@ -10157,8 +10164,8 @@
     },
     {
       "path": "packages/photo-editing/src/editor/use-browser-photo-progressive-open.test.tsx",
-      "origin": "Issue #13のため独立作成。actual React hooksと合成library/engine/frameだけで、provisional編集、canonical handoff、history、retry、abort、旧frame遮断を検証。外部画像・非公開コード・個体metadataを含まない。\n変更理由: 公開signed RAW契約に合う合成metadataで実hookの正規切替を検証。\n変更理由: preview取得失敗でも正規入力の実hookで補正を続けられる回帰を追加。\n変更理由: fallback後の補正を実際にflushし通常保存のbaseと値まで検証。\n変更理由: preset適用・量drag・量commitを未解決のままhandoffに重ねるfailure injectionを追加。\n変更理由: 非同期プリセットfixtureにも実契約のversionとengineを含め型検査する\n変更理由: 同一内容draftの再表示から正規base確定後の既存saverまで実hookで回帰検証する\n変更理由: draft復元テストでも一覧復帰の成功値を明示確認しact補助のvoid型契約に合わせる\n変更理由: Expect current niho-11 default in handoff tests\n変更理由: niho-photo#36 描いた画をヒストグラムへ渡すことを検証。\n変更理由: niho-photo#41 比較の間の補正前の描画（描き直さない・ヒストグラムへ渡さない・canonical差し替え）を検証。\n変更理由: niho-photo#41 の比較UIを #72 のヒストグラム・Jキー契約と併存するようmainへ積み直した。\n変更理由: PR #88 main rebase and perspective integration with develop engine 0.22.0\n変更理由: niho-photo#46 で engine の mock に supportsPerspective を足した。\n変更理由: PR #97積み直し後の現行develop engine能力stubに更新。\n変更理由: PR #101を更新済み#97へ積み直し、レンズ補正をv9として統合。修復併用時の色収差推定は元画から行う。",
-      "sha256": "754d521bd15d758f365926016345ed0e599d6f87939f2a298f72f8bebc8a2f89"
+      "origin": "Issue #13のため独立作成。actual React hooksと合成library/engine/frameだけで、provisional編集、canonical handoff、history、retry、abort、旧frame遮断を検証。外部画像・非公開コード・個体metadataを含まない。\n変更理由: 公開signed RAW契約に合う合成metadataで実hookの正規切替を検証。\n変更理由: preview取得失敗でも正規入力の実hookで補正を続けられる回帰を追加。\n変更理由: fallback後の補正を実際にflushし通常保存のbaseと値まで検証。\n変更理由: preset適用・量drag・量commitを未解決のままhandoffに重ねるfailure injectionを追加。\n変更理由: 非同期プリセットfixtureにも実契約のversionとengineを含め型検査する\n変更理由: 同一内容draftの再表示から正規base確定後の既存saverまで実hookで回帰検証する\n変更理由: draft復元テストでも一覧復帰の成功値を明示確認しact補助のvoid型契約に合わせる\n変更理由: Expect current niho-11 default in handoff tests\n変更理由: niho-photo#36 描いた画をヒストグラムへ渡すことを検証。\n変更理由: niho-photo#41 比較の間の補正前の描画（描き直さない・ヒストグラムへ渡さない・canonical差し替え）を検証。\n変更理由: niho-photo#41 の比較UIを #72 のヒストグラム・Jキー契約と併存するようmainへ積み直した。\n変更理由: PR #88 main rebase and perspective integration with develop engine 0.22.0\n変更理由: niho-photo#46 で engine の mock に supportsPerspective を足した。\n変更理由: PR #97積み直し後の現行develop engine能力stubに更新。\n変更理由: PR #101を更新済み#97へ積み直し、レンズ補正をv9として統合。修復併用時の色収差推定は元画から行う。\n変更理由: ドラッグ中の描画の順序管理の修正に伴う変更。",
+      "sha256": "4b1e29763378a2663b503dab6c738054a1cb7d3e68a80f15b20c155711b67bab"
     },
     {
       "path": ".github/workflows/public-ci.yml",
@@ -10272,13 +10279,13 @@
     },
     {
       "path": "packages/photo-editing/src/photo-editing-histogram.ts",
-      "sha256": "1ba0097140e8fdd277edede90a1c57dac12ed3ded030f10276370d89502e9194",
-      "origin": "niho-photo#36 のため新規作成。右パネル上端のヒストグラム（RGB の度数・黒つぶれ/白飛びの割合・クリップ領域の印）の計算・表示・test。合成の画素だけを使用。"
+      "sha256": "4775725a616bafe271a37cc21277815b0bf0ddaec59106303a8676b8d4230413",
+      "origin": "niho-photo#36 のため新規作成。右パネル上端のヒストグラム（RGB の度数・黒つぶれ/白飛びの割合・クリップ領域の印）の計算・表示・test。合成の画素だけを使用。\n変更理由: 白飛び・黒つぶれの判定をエンジンと同じ端から1段（254以上/1以下）にそろえた。"
     },
     {
       "path": "packages/photo-editing/src/photo-editing-histogram.test.ts",
-      "sha256": "18e80541bca4ecf59688e7bed005872b749c6697be5ae8478a7ececca34d3c1b",
-      "origin": "niho-photo#36 のため新規作成。右パネル上端のヒストグラム（RGB の度数・黒つぶれ/白飛びの割合・クリップ領域の印）の計算・表示・test。合成の画素だけを使用。"
+      "sha256": "a04b3f35cfa390bcea03fffb84ee4be84becd6ea84202a4f73459a1d4bcefb41",
+      "origin": "niho-photo#36 のため新規作成。右パネル上端のヒストグラム（RGB の度数・黒つぶれ/白飛びの割合・クリップ領域の印）の計算・表示・test。合成の画素だけを使用。\n変更理由: 白飛び・黒つぶれの判定をエンジンと同じ端から1段（254以上/1以下）にそろえた。"
     },
     {
       "path": "packages/photo-editing/src/editor/photo-editing-histogram.tsx",
@@ -10737,8 +10744,8 @@
     },
     {
       "path": "packages/photo-editing/src/editor/browser-photo-editing-versions.test.tsx",
-      "sha256": "d8a7b1d488c2a6186127bac7c7438a55532a777b2d2fd74e921022c572e9a97a",
-      "origin": "niho-photo#42 のため新規作成。版の面の一覧・0 件・読み込み中・失敗・作成・名前の変更・削除・切り替え・押せない間・小さな見た目・右パネルの見出しの test。合成の値だけを使用。"
+      "sha256": "e47985020c85497d44dd95854f7f0955dc3d87b9316ead88568e4f1d4ca80f84",
+      "origin": "niho-photo#42 のため新規作成。版の面の一覧・0 件・読み込み中・失敗・作成・名前の変更・削除・切り替え・押せない間・小さな見た目・右パネルの見出しの test。合成の値だけを使用。\n変更理由: 版の面の取り消し/やり直しと補正後プレビューの抑止に伴う変更。"
     },
     {
       "path": "packages/photo-editing/src/editor/use-browser-photo-versions.ts",
@@ -11294,6 +11301,11 @@
       "path": "docs/mockups/niho-photo-lightroom-layout-v2.html",
       "sha256": "344a5136603798fb1185f26d65267b8b7ba3c1b8cafa3faed36e68392f278c8b",
       "origin": "NIHO所有の画面案を公開用に再作成。出典 niho-app afff6aa10ddc652e8bb4fc69dd561fe02bb1e5c0 の idea/mock/niho-photo-lightroom-layout-v2.html、原本 SHA-256 12e4f8a1bc4be31da5dc46a310f60138f3007650db3cae6a84e73bed4f2548c8。個人プロフィール画像と未監査画像を除き、既存公開fixtureとアプリアイコンに置換。認証・保存・写真処理は行わない。"
+    },
+    {
+      "path": "packages/photo-editing/src/photo-cloud-edited-preview-attach.test.ts",
+      "sha256": "d557fb61baa9890d5196a85e8d2cae88c271c2f4bf2c95f1fb3c307610eb454b",
+      "origin": "補正後のプレビューを付ける口を持つ置き場かの判定の単体テスト。実エンジンでの確認で見つかった不具合の修正として新規作成。"
     },
     {
       "path": "packages/photo-editing/src/photo-editing-native-export.ts",
